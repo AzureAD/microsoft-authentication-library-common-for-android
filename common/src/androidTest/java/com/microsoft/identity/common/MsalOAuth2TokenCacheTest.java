@@ -284,21 +284,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ats = new ArrayList<>();
         final List<Credential> ids = new ArrayList<>();
 
-        for (final Credential credential : credentials) {
-            switch (CredentialType.fromString(credential.getCredentialType())) {
-                case AccessToken:
-                    ats.add(credential);
-                    break;
-                case RefreshToken:
-                    rts.add(credential);
-                    break;
-                case IdToken:
-                    ids.add(credential);
-                    break;
-                default:
-                    fail("Unexpected value: " + credential.getCredentialType());
-            }
-        }
+        sortResultToLists(credentials, rts, ats, ids);
 
         assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
         assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
@@ -327,21 +313,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ats = new ArrayList<>();
         final List<Credential> ids = new ArrayList<>();
 
-        for (final Credential credential : credentials) {
-            switch (CredentialType.fromString(credential.getCredentialType())) {
-                case AccessToken:
-                    ats.add(credential);
-                    break;
-                case RefreshToken:
-                    rts.add(credential);
-                    break;
-                case IdToken:
-                    ids.add(credential);
-                    break;
-                default:
-                    fail("Unexpected value: " + credential.getCredentialType());
-            }
-        }
+        sortResultToLists(credentials, rts, ats, ids);
 
         assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
         assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
@@ -349,6 +321,43 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Verify that our junk data still exists
         assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+    }
+
+    @Test
+    public void saveTokensWithMalformedDataInCacheReverseOrder() throws Exception {
+        // Prepopulate valid data into the cache
+        mOauth2TokenCache.save(
+                mockStrategy,
+                mockRequest,
+                mockResponse
+        );
+
+        // Then insert unparseable, junk data
+        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+
+        final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
+        assertEquals(1, accounts.size());
+        assertEquals(defaultTestBundleV2.mGeneratedAccount, accounts.get(0));
+
+        final List<Credential> credentials = accountCredentialCache.getCredentials();
+        assertEquals(3, credentials.size());
+
+        final List<Credential> rts = new ArrayList<>();
+        final List<Credential> ats = new ArrayList<>();
+        final List<Credential> ids = new ArrayList<>();
+
+        sortResultToLists(credentials, rts, ats, ids);
+
+        validateResultListContents(rts, ats, ids);
+
+        // Verify that our junk data still exists
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+    }
+
+    private void validateResultListContents(List<Credential> rts, List<Credential> ats, List<Credential> ids) {
+        assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
+        assertEquals(defaultTestBundleV2.mGeneratedIdToken, ids.get(0));
     }
 
     @Test
@@ -574,6 +583,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ats = new ArrayList<>();
         final List<Credential> ids = new ArrayList<>();
 
+        sortResultToLists(credentials, rts, ats, ids);
+
+        assertEquals(defaultTestBundleV1.mGeneratedIdToken, ids.get(0));
+    }
+
+    private void sortResultToLists(List<Credential> credentials, List<Credential> rts, List<Credential> ats, List<Credential> ids) {
         for (final Credential credential : credentials) {
             switch (CredentialType.fromString(credential.getCredentialType())) {
                 case AccessToken:
@@ -589,8 +604,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                     fail("Unexpected value: " + credential.getCredentialType());
             }
         }
-
-        assertEquals(defaultTestBundleV1.mGeneratedIdToken, ids.get(0));
     }
 
     @Test
@@ -632,21 +645,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ats = new ArrayList<>();
         final List<Credential> ids = new ArrayList<>();
 
-        for (final Credential credential : credentials) {
-            switch (CredentialType.fromString(credential.getCredentialType())) {
-                case AccessToken:
-                    ats.add(credential);
-                    break;
-                case RefreshToken:
-                    rts.add(credential);
-                    break;
-                case IdToken:
-                    ids.add(credential);
-                    break;
-                default:
-                    fail("Unexpected value: " + credential.getCredentialType());
-            }
-        }
+        sortResultToLists(credentials, rts, ats, ids);
 
         assertEquals(defaultTestBundleV2.mGeneratedAccessToken, ats.get(0));
         assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, rts.get(0));
