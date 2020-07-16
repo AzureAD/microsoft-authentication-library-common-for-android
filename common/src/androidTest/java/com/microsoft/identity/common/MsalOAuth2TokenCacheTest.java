@@ -285,14 +285,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ids = new ArrayList<>();
 
         for (final Credential credential : credentials) {
-            if (credential.getCredentialType().equalsIgnoreCase(AccessToken.name())) {
-                ats.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(RefreshToken.name())) {
-                rts.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(IdToken.name())) {
-                ids.add(credential);
-            } else {
-                fail();
+            switch (CredentialType.fromString(credential.getCredentialType())) {
+                case AccessToken:
+                    ats.add(credential);
+                    break;
+                case RefreshToken:
+                    rts.add(credential);
+                    break;
+                case IdToken:
+                    ids.add(credential);
+                    break;
+                default:
+                    fail("Unexpected value: " + credential.getCredentialType());
             }
         }
 
@@ -365,14 +369,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ids = new ArrayList<>();
 
         for (final Credential credential : credentials) {
-            if (credential.getCredentialType().equalsIgnoreCase(AccessToken.name())) {
-                ats.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(RefreshToken.name())) {
-                rts.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(V1IdToken.name())) {
-                ids.add(credential);
-            } else {
-                fail();
+            switch (CredentialType.fromString(credential.getCredentialType())) {
+                case AccessToken:
+                    ats.add(credential);
+                    break;
+                case RefreshToken:
+                    rts.add(credential);
+                    break;
+                case V1IdToken:
+                    ids.add(credential);
+                    break;
+                default:
+                    fail("Unexpected value: " + credential.getCredentialType());
             }
         }
 
@@ -567,16 +575,21 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ids = new ArrayList<>();
 
         for (final Credential credential : credentials) {
-            if (credential.getCredentialType().equalsIgnoreCase(AccessToken.name())) {
-                ats.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(RefreshToken.name())) {
-                rts.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(V1IdToken.name())) {
-                ids.add(credential);
-            } else {
-                fail();
+            switch (CredentialType.fromString(credential.getCredentialType())) {
+                case AccessToken:
+                    ats.add(credential);
+                    break;
+                case RefreshToken:
+                    rts.add(credential);
+                    break;
+                case IdToken:
+                    ids.add(credential);
+                    break;
+                default:
+                    fail("Unexpected value: " + credential.getCredentialType());
             }
         }
+
         assertEquals(defaultTestBundleV1.mGeneratedIdToken, ids.get(0));
     }
 
@@ -620,14 +633,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final List<Credential> ids = new ArrayList<>();
 
         for (final Credential credential : credentials) {
-            if (credential.getCredentialType().equalsIgnoreCase(AccessToken.name())) {
-                ats.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(RefreshToken.name())) {
-                rts.add(credential);
-            } else if (credential.getCredentialType().equalsIgnoreCase(IdToken.name())) {
-                ids.add(credential);
-            } else {
-                fail();
+            switch (CredentialType.fromString(credential.getCredentialType())) {
+                case AccessToken:
+                    ats.add(credential);
+                    break;
+                case RefreshToken:
+                    rts.add(credential);
+                    break;
+                case IdToken:
+                    ids.add(credential);
+                    break;
+                default:
+                    fail("Unexpected value: " + credential.getCredentialType());
             }
         }
 
