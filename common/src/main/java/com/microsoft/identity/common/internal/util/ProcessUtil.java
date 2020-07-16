@@ -35,6 +35,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 public class ProcessUtil {
 
+    private ProcessUtil(){}
+
     /**
      * Returns true if the calling app is the auth process.
      */
@@ -48,7 +50,10 @@ public class ProcessUtil {
                 cpAuthProcess.equalsIgnoreCase(processName);
     }
 
-    public static String getProcessName(final Context context) {
+    /**
+     * Returns the running process name.
+     */
+    public static String getProcessName(@NonNull final Context context) {
         final int pid = android.os.Process.myPid();
         final ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
         final List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
