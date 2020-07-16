@@ -87,6 +87,9 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
+    private static final String JUNK_KEY = "9ac15f53-27ad-471a-ad57-033cdacb0ee9";
+    private  static final String JUNK_VALUE = "OWFjMTVmNTMtMjdhZC00NzFhLWFkNTctMDMzY2RhY2IwZWU5";
+
     private MsalOAuth2TokenCache<
             MicrosoftStsOAuth2Strategy,
             MicrosoftStsAuthorizationRequest,
@@ -123,8 +126,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     AccountCredentialTestBundle defaultTestBundleV2;
 
     IAccountCredentialCache accountCredentialCache;
-    public static final String JUNK_KEY = "9ac15f53-27ad-471a-ad57-033cdacb0ee9";
-    public static final String JUNK_VALUE = "OWFjMTVmNTMtMjdhZC00NzFhLWFkNTctMDMzY2RhY2IwZWU5";
 
     public static class AccountCredentialTestBundle {
 
