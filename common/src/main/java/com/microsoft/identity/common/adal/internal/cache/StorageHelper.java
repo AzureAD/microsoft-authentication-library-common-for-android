@@ -216,6 +216,11 @@ public class StorageHelper implements IStorageHelper {
         return mContext.getPackageName();
     }
 
+    // Exposed to be overridden by mock tests.
+    protected boolean isBrokerProcess() {
+        return ProcessUtil.isBrokerProcess(mContext);
+    }
+
     @Override
     public String encrypt(final String clearText)
             throws GeneralSecurityException, IOException {
@@ -415,7 +420,7 @@ public class StorageHelper implements IStorageHelper {
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
-            if (ProcessUtil.isBrokerProcess(mContext)){
+            if (isBrokerProcess()){
                 if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                     keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                     keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
@@ -517,7 +522,7 @@ public class StorageHelper implements IStorageHelper {
         }
 
         // The current app runtime is the broker; load its secret key.
-        if (!sShouldEncryptWithKeyStoreKey && ProcessUtil.isBrokerProcess(mContext)) {
+        if (!sShouldEncryptWithKeyStoreKey && isBrokerProcess()) {
             // Try to read keystore key - to verify how often this is invoked before the migration is done.
             // TODO: remove this whole try-catch clause once the experiment is done.
             if (mTelemetryCallback != null) {
