@@ -1,3 +1,12 @@
+Version 2.0.13
+-----------
+- Create abstract b2c login component handler
+- Changes to add enrollment id to the token request in the interrupt flow
+- Catch JsonSyntaxException while performing ADAL -> MSAL migration
+- Close 959
+- Fix MSAL issue 1096
+
+
 Version 2.0.12
 -----------
 - Hotfix for NPE when sub_error is null.
