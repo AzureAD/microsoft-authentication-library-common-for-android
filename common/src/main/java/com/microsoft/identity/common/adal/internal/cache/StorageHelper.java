@@ -29,6 +29,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -188,6 +189,7 @@ public class StorageHelper implements IStorageHelper {
     private SecretKey mEncryptionKey = null;
     private SecretKey mEncryptionHMACKey = null;
     private SecretKey mCachedKeyStoreEncryptedKey = null;
+    private KeyType mCurrentEncryptionKeyType = null;
 
     /**
      * Constructor for {@link StorageHelper}.
@@ -230,7 +232,7 @@ public class StorageHelper implements IStorageHelper {
             throw new IllegalArgumentException("Input is empty or null");
         }
 
-        Logger.verbose(TAG + methodName, "Starting encryption");
+        Logger.verbose(TAG + methodName, "Starting encryption with key: " + mCurrentEncryptionKeyType.name());
 
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
@@ -417,10 +419,13 @@ public class StorageHelper implements IStorageHelper {
                                                   @NonNull final String packageName) throws IOException {
         List<KeyType> keyTypeList = new ArrayList<>();
 
+        final String methodName = ":getKeysForDecryptionType";
+
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
             if (isBrokerProcess()){
+                Logger.info(TAG + methodName, "Use broker key to decrypt");
                 if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                     keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                     keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
@@ -431,9 +436,11 @@ public class StorageHelper implements IStorageHelper {
                     throw new IllegalStateException("Unexpected Broker package name.");
                 }
             } else {
+                Logger.info(TAG + methodName, "Use ADAL user defined key to decrypt");
                 keyTypeList.add(KeyType.ADAL_USER_DEFINED_KEY);
             }
         } else if (encryptionType == EncryptionType.ANDROID_KEY_STORE) {
+            Logger.info(TAG + methodName, "Use keystore key to decrypt");
             keyTypeList.add(KeyType.KEYSTORE_ENCRYPTED_KEY);
         }
 
@@ -518,29 +525,20 @@ public class StorageHelper implements IStorageHelper {
         // Loading key only once for performance. If API is upgraded, it will
         // restart the device anyway. It will load the correct key for new API.
         if (mEncryptionKey != null && mEncryptionHMACKey != null) {
+            Logger.info(TAG + methodName, "Encryption key is already set.");
             return mEncryptionKey;
         }
 
         // The current app runtime is the broker; load its secret key.
         if (!sShouldEncryptWithKeyStoreKey && isBrokerProcess()) {
-            // Try to read keystore key - to verify how often this is invoked before the migration is done.
-            // TODO: remove this whole try-catch clause once the experiment is done.
-            if (mTelemetryCallback != null) {
-                try {
-                    final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
-                    if (key == null) {
-                        mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
-                    }
-                } catch (final Exception e) {
-                    // Best effort.
-                    mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
-                }
-            }
-
             setBlobVersion(VERSION_USER_DEFINED);
             if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
+                Logger.info(TAG + methodName, "Set Encryption Key to broker AuthApp Key");
+                mCurrentEncryptionKeyType = KeyType.LEGACY_AUTHENTICATOR_APP_KEY;
                 return loadSecretKey(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
             } else {
+                Logger.info(TAG + methodName, "Set Encryption Key to broker CP key");
+                mCurrentEncryptionKeyType = KeyType.LEGACY_COMPANY_PORTAL_KEY;
                 return loadSecretKey(KeyType.LEGACY_COMPANY_PORTAL_KEY);
             }
         }
@@ -548,6 +546,8 @@ public class StorageHelper implements IStorageHelper {
         // Try to get user defined key (ADAL/MSAL).
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() != null) {
             setBlobVersion(VERSION_USER_DEFINED);
+            Logger.info(TAG + methodName, "Set Encryption Key to ADAL user defined key");
+            mCurrentEncryptionKeyType = KeyType.ADAL_USER_DEFINED_KEY;
             return loadSecretKey(KeyType.ADAL_USER_DEFINED_KEY);
         }
 
@@ -556,13 +556,15 @@ public class StorageHelper implements IStorageHelper {
         try {
             SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
             if (key != null) {
+                Logger.info(TAG + methodName, "Set Encryption Key to keystore encrypted key");
+                mCurrentEncryptionKeyType = KeyType.KEYSTORE_ENCRYPTED_KEY;
                 return key;
             }
         } catch (final IOException | GeneralSecurityException e) {
             // If we fail to load key, proceed and generate a new one.
         }
 
-        Logger.verbose(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
+        Logger.info(TAG + methodName, "Keystore-encrypted key does not exist, try to generate new keys.");
         return generateKeyStoreEncryptedKey();
     }
 

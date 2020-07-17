@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.adal.internal;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -112,6 +113,8 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("rawKey");
         }
 
+        Logger.info("AuthSettings:setSecretKey", "setting a new secret key");
+
         mSecretKeyData.set(rawKey);
     }
 
@@ -135,6 +138,7 @@ public enum AuthenticationSettings {
                 throw new IllegalArgumentException("Passed in raw key is null or length is not as expected. ");
             }
 
+            Logger.info("AuthSettings:setSecretKey", "setting broker secret key");
             mBrokerSecretKeys.put(entry.getKey(), entry.getValue());
         }
     }
