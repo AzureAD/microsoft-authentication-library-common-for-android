@@ -35,11 +35,15 @@ public class DeviceCodeFlowCommand extends TokenCommand {
      * Relevant error codes and messages go here
      */
 
+    public static DCFCommandCallback dcfCallback;
+
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
                                  @NonNull CommandCallback callback,
                                  @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
+
+        dcfCallback = (DCFCommandCallback) callback;
     }
 
     @Override
