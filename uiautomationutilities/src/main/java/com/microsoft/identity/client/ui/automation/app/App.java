@@ -119,4 +119,8 @@ public abstract class App implements IApp {
     public void forceStop() {
         AdbShellUtils.forceStopPackage(packageName);
     }
+
+    public boolean isInstalled() {
+        return CommonUtils.isPackageInstalled(getPackageName());
+    }
 }

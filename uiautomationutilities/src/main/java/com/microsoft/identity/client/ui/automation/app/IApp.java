@@ -68,4 +68,6 @@ public interface IApp {
     void grantPermission(String permission);
 
     void forceStop();
+
+    boolean isInstalled();
 }
