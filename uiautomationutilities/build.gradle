@@ -1,0 +1,36 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion rootProject.ext.compileSdkVersion
+    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    defaultConfig {
+        minSdkVersion rootProject.ext.automationAppMinSDKVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
+    implementation 'junit:junit:4.13'
+    implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
+    implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
+    implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
+    implementation project(':testutils')
+    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
+}
