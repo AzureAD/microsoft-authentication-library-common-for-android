@@ -52,6 +52,8 @@ public abstract class App implements IApp {
 
     protected String localApkFileName = null;
 
+    protected boolean shouldHandleFirstRun = true;
+
     public App(@NonNull final String packageName) {
         this.packageName = packageName;
         this.appInstaller = new PlayStore();
@@ -82,7 +84,7 @@ public abstract class App implements IApp {
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
             appInstaller.installApp(localApkFileName);
         } else {
-            appInstaller.installApp(appName != null ? appName : packageName);
+            appInstaller.installApp(packageName);
         }
     }
 

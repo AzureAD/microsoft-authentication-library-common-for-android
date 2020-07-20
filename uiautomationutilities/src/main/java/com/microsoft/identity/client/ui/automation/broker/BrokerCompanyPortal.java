@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -68,6 +69,17 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         throw new UnsupportedOperationException("Unimplemented!");
     }
 
+    @Nullable
+    @Override
+    public String obtainDeviceId() {
+        throw new UnsupportedOperationException("Not implemented!");
+    }
+
+    @Override
+    public void enableBrowserAccess() {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
     @Override
     public void handleFirstRun() {
         return; // nothing need here
@@ -85,9 +97,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                 .prompt(PromptParameter.LOGIN)
                 .consentPageExpected(false)
-                .expectingNonZeroAccountsInCookie(false)
+                .expectingLoginPageAccountPicker(false)
                 .sessionExpected(false)
-                .loginHintProvided(false)
+                .loginHint(null)
                 .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);

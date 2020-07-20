@@ -43,6 +43,8 @@ import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadP
 
 import org.junit.Assert;
 
+import java.util.Calendar;
+
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
@@ -56,7 +58,7 @@ public class SettingsUtils {
     private static void launchIntent(final String action) {
         final Context context = ApplicationProvider.getApplicationContext();
         Intent intent = new Intent(action);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         context.startActivity(intent);
     }
 
@@ -69,7 +71,7 @@ public class SettingsUtils {
                 SETTINGS_PKG,
                 SETTINGS_PKG + ".DeviceAdminSettings")
         );
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         final Context context = ApplicationProvider.getApplicationContext();
         context.startActivity(intent);
 
@@ -172,7 +174,7 @@ public class SettingsUtils {
             final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                     .broker(expectedBroker)
                     .prompt(PromptParameter.SELECT_ACCOUNT)
-                    .loginHintProvided(true)
+                    .loginHint(username)
                     .sessionExpected(false)
                     .build();
 
@@ -205,10 +207,60 @@ public class SettingsUtils {
     }
 
     public static void launchDateTimeSettingsPage() {
-        final Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(Settings.ACTION_DATE_SETTINGS);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        context.startActivity(intent);
+        launchIntent(Settings.ACTION_DATE_SETTINGS);
     }
 
+    public static void changeDeviceTime() {
+        AdbShellUtils.disableAutomaticTimeZone();
+        launchDateTimeSettingsPage();
+
+        try {
+            final UiObject setTimeBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
+            setTimeBtn.click();
+
+            final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/date_picker_header_date");
+            Assert.assertTrue(datePicker.exists());
+
+            final Calendar cal = Calendar.getInstance();
+
+            // add one to move to next day
+            cal.add(Calendar.DATE, 1);
+
+            // this is the new date
+            final int dateToSet = cal.get(Calendar.DATE);
+
+            if (dateToSet == 1) {
+                // looks we are into the next month, so let's update month here too
+                UiAutomatorUtils.handleButtonClick("android:id/next");
+            }
+
+            UiObject specifiedDateIcon = obtainUiObjectWithExactText(
+                    String.valueOf(dateToSet)
+            );
+            specifiedDateIcon.click();
+
+            final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
+            okBtn.click();
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
+
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given text
+     *
+     * @param text the text of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithExactText(@NonNull final String text) {
+        final UiDevice mDevice =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = mDevice.findObject(new UiSelector()
+                .text(text));
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
 }

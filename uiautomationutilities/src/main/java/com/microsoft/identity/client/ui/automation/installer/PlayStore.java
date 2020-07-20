@@ -22,7 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.installer;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.widget.Button;
+
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -44,6 +50,13 @@ public class PlayStore implements IAppInstaller {
 
     // wait at least 5 mins for app installation from Play Store
     private static final long PLAY_STORE_INSTALL_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
+
+    private void launchMarketPageForPackage(final String appPackageName) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)); //sets the intent to start your app
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
+        context.startActivity(intent);
+    }
 
     private void searchAppOnGooglePlay(@NonNull final String hint) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
@@ -106,38 +119,39 @@ public class PlayStore implements IAppInstaller {
         }
     }
 
-    private void installOrOpenAppFromGooglePlay() {
+    private void installAppFromMarketPage() {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
-        final UiObject installButton = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "right_button")
-        ));
+
         try {
-            installButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            installButton.click();
+            final UiObject installBtn = device.findObject(
+                    new UiSelector().className(Button.class).text("Install").enabled(true)
+            );
+
+            installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            installBtn.click();
+
+            final UiObject openButton = device.findObject(
+                    new UiSelector().className(Button.class).text("Open").enabled(true)
+            );
+
+            // if we see open button, then we know that the installation is complete
+            openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
-
-        final UiObject openButton = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "right_button")
-        ).textContains("Open").enabled(true));
-        // if we see uninstall button, then we know that the installation is complete
-        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
     }
 
     @Override
     public void installApp(@NonNull final String searchHint) {
-        searchAppOnGooglePlay(searchHint);
         if (isStringPackageName(searchHint)) {
-            try {
-                selectGooglePlayAppFromAppList();
-            } catch (UiObjectNotFoundException e) {
-                Assert.fail(e.getMessage());
-            }
+            launchMarketPageForPackage(searchHint);
         } else {
+            searchAppOnGooglePlay(searchHint);
             selectGooglePlayAppFromAppName();
         }
-        installOrOpenAppFromGooglePlay();
+
+        installAppFromMarketPage();
     }
 
 }

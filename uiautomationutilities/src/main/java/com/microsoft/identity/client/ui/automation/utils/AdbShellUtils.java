@@ -45,4 +45,16 @@ public class AdbShellUtils {
     public static void forceStopPackage(@NonNull final String packageName) {
         executeShellCommand("am force-stop " + packageName);
     }
+
+    private static void putGlobalSettings(final String settingName, final String value) {
+        executeShellCommand("settings put global " + settingName + " " + value);
+    }
+
+    public static void enableAutomaticTimeZone() {
+        putGlobalSettings("auto_time", "1");
+    }
+
+    public static void disableAutomaticTimeZone() {
+        putGlobalSettings("auto_time", "0");
+    }
 }

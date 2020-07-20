@@ -26,6 +26,7 @@ import android.Manifest;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -112,12 +113,53 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Assert.assertTrue(sharedDeviceConfirmation.exists());
     }
 
-    private void performDeviceRegistrationHelper(@NonNull final String username,
-                                                 @NonNull final String password,
-                                                 @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId) {
+    @Nullable
+    @Override
+    public String obtainDeviceId() {
+        openDeviceRegistrationPage();
+
+        try {
+            final UiObject deviceIdElement = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/device_id_text"
+            );
+
+            final String deviceIdText = deviceIdElement.getText();
+            final int colonIndex = deviceIdText.indexOf(":");
+            return deviceIdText.substring(colonIndex + 1);
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public void enableBrowserAccess() {
+        openDeviceRegistrationPage();
+
+        // Click enable browser access
+        UiAutomatorUtils.handleButtonClick(
+                "com.azure.authenticator:id/manage_device_registration_enable_browser_access_button"
+        );
+
+        // click continue in Dialog
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        Assert.assertTrue(certInstaller.exists());
+
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+    }
+
+    public void openDeviceRegistrationPage() {
         launch(); // launch Authenticator app
-        handleFirstRun(); // handle first run experience
+
+        if (shouldHandleFirstRun) {
+            handleFirstRun(); // handle first run experience
+        }
 
         // click the 3 dot menu icon in top right
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
@@ -145,6 +187,13 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
+    }
+
+    private void performDeviceRegistrationHelper(@NonNull final String username,
+                                                 @NonNull final String password,
+                                                 @NonNull final String emailInputResourceId,
+                                                 @NonNull final String registerBtnResourceId) {
+        openDeviceRegistrationPage();
 
         // enter email
         UiAutomatorUtils.handleInput(
@@ -159,10 +208,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 .prompt(PromptParameter.LOGIN)
                 .broker(this)
                 .consentPageExpected(false)
-                .expectingNonZeroAccountsInBroker(false)
-                .expectingNonZeroAccountsInCookie(false)
+                .expectingBrokerAccountChooserActivity(false)
+                .expectingLoginPageAccountPicker(false)
                 .sessionExpected(false)
-                .loginHintProvided(true)
+                .loginHint(username)
                 .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
@@ -181,5 +230,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
+        shouldHandleFirstRun = false;
     }
 }

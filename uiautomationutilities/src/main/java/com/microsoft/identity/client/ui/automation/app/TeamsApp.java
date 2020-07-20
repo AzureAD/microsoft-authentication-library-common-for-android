@@ -6,13 +6,13 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
-import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
-import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
-public class TeamsApp extends App {
+public class TeamsApp extends App implements IFirstPartyApp {
 
     private static final String TEAMS_PACKAGE_NAME = "com.microsoft.teams";
     private static final String TEAMS_APP_NAME = "Microsoft Teams";
@@ -27,10 +27,11 @@ public class TeamsApp extends App {
         // nothing needed here
     }
 
-    public void signIn(@NonNull final String username,
-                       @NonNull final String password,
-                       @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/welcome_sign_in_button");
+    public void addFirstAccount(@NonNull final String username,
+                                @NonNull final String password,
+                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // looks like this is no longer needed
+        //UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/welcome_sign_in_button");
 
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
@@ -42,8 +43,8 @@ public class TeamsApp extends App {
 
                 email.click();
 
-                final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-                aadPromptHandler.handlePrompt(username, password);
+                final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+                microsoftStsPromptHandler.handlePrompt(username, password);
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
                 UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_another_account_button");
                 signInWithEmail(username, password, promptHandlerParameters);
@@ -55,22 +56,32 @@ public class TeamsApp extends App {
         }
     }
 
+    @Override
+    public void addAnotherAccount(String username, String password, FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
     private void signInWithEmail(@NonNull final String username,
                                  @NonNull final String password,
-                                 @NonNull final PromptHandlerParameters promptHandlerParameters) {
+                                 @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
         UiAutomatorUtils.handleInput(
                 "com.microsoft.teams:id/edit_email",
                 username
         );
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button");
 
-        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
-        aadPromptHandler.handlePrompt(username, password);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
     public void onAccountAdded() {
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_next_button");
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_next_button");
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_last_button");
+    }
+
+    @Override
+    public void confirmAccount(@NonNull String username) {
+        throw new UnsupportedOperationException("Not implemented");
     }
 }

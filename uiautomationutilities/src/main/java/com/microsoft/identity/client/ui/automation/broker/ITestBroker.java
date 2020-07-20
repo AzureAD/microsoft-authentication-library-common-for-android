@@ -56,4 +56,9 @@ public interface ITestBroker extends IApp {
      * @param password password of the account to use for registration
      */
     void performSharedDeviceRegistration(String username, String password);
+
+    @Nullable
+    String obtainDeviceId();
+
+    void enableBrowserAccess();
 }

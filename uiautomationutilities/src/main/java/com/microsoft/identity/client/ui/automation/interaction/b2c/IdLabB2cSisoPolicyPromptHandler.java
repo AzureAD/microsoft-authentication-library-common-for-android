@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction.b2c;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
@@ -53,7 +55,9 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
             UiAutomatorUtils.handleButtonClick(b2CProvider.getIdpSelectionBtnResourceId());
         }
 
-        if ((!isExternalIdP && !parameters.isLoginHintProvided()) ||
+        final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
+
+        if ((!isExternalIdP && !loginHintProvided) ||
                 (isExternalIdP && !parameters.isSessionExpected())) {
             loginComponentHandler.handleEmailField(username);
         }

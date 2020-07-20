@@ -26,7 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 
-public class AdfsPromptHandler extends AbstractMicrosoftStsPromptHandler {
+public class AdfsPromptHandler extends MicrosoftStsPromptHandler {
 
     public AdfsPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AdfsLoginComponentHandler(), parameters);

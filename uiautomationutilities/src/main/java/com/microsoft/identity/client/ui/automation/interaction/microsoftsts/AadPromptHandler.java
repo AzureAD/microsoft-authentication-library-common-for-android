@@ -26,7 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 
-public class AadPromptHandler extends AbstractMicrosoftStsPromptHandler {
+public class AadPromptHandler extends MicrosoftStsPromptHandler {
 
     public AadPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AadLoginComponentHandler(), parameters);

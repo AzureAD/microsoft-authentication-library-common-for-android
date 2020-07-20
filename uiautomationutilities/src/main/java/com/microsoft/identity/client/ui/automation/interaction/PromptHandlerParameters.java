@@ -44,11 +44,22 @@ public class PromptHandlerParameters {
     @NonNull
     private final PromptParameter prompt;
 
+    // the login hint that was provided
+    private final String loginHint;
+
     // whether session is expected or not (via presence of a cookie)
     private final boolean sessionExpected;
 
-    // whether login hint was supplied or not to the interactive request
-    private final boolean loginHintProvided;
+    // The broker that should be being used for this request
+    private final ITestBroker broker;
+
+    private final boolean expectingBrokerAccountChooserActivity;
+
+    private final boolean expectingProvidedAccountInBroker;
+
+    private final boolean expectingLoginPageAccountPicker;
+
+    private final boolean expectingProvidedAccountInCookie;
 
     // whether we expect to receive consent page or not
     private final boolean consentPageExpected;
@@ -56,22 +67,7 @@ public class PromptHandlerParameters {
     // whether we expect to receive speed bump or not
     private final boolean speedBumpExpected;
 
-    // whether we are expecting at least one account in broker
-    private final boolean expectingNonZeroAccountsInBroker;
-
-    // whether we are expecting at least one account in the browser/webview cookie
-    private final boolean expectingNonZeroAccountsInCookie;
-
-    // The way in which we want to respond to consent page for this request
-    @Builder.Default
-    private final UiResponse consentPageResponse = UiResponse.ACCEPT;
-
-    // The way in which we want to respond to speed bump page for this request
-    @Builder.Default
-    private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
-
-    // The broker that should be being used for this request
-    private final ITestBroker broker;
+    private final boolean registerPageExpected;
 
     // whether we expect to receive enroll page or not
     private final boolean enrollPageExpected;
@@ -80,5 +76,11 @@ public class PromptHandlerParameters {
     @Builder.Default
     private final UiResponse enrollPageResponse = UiResponse.ACCEPT;
 
-    private final boolean registerPageExpected;
+    // The way in which we want to respond to consent page for this request
+    @Builder.Default
+    private final UiResponse consentPageResponse = UiResponse.ACCEPT;
+
+    // The way in which we want to respond to speed bump page for this request
+    @Builder.Default
+    private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
 }

@@ -50,7 +50,7 @@ public class LocalApkInstaller implements IAppInstaller {
         final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
         final UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
         try {
-            mDevice.executeShellCommand("pm install " + fullPath);
+            mDevice.executeShellCommand("pm install -t " + fullPath);
         } catch (IOException e) {
             Assert.fail(e.getMessage());
         }
