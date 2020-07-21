@@ -1,3 +1,8 @@
+Version 2.0.14
+-----------
+- Functionally identical to 2.0.13 release
+- Updates Device.java PRODUCT_VERSION property for MSAL 1.5.5 release
+
 Version 2.0.13
 -----------
 - Create abstract b2c login component handler
