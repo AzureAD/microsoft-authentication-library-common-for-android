@@ -42,16 +42,11 @@ public class DeviceCodeFlowCommand extends TokenCommand {
      * Relevant error codes and messages go here
      */
 
-    public static DeviceCodeFlowCommandCallback sDeviceCodeFlowCallback;
-
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
-                                 @NonNull CommandCallback callback,
+                                 @NonNull DeviceCodeFlowCommandCallback callback,
                                  @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
-
-        // Fetch callback object
-        sDeviceCodeFlowCallback = (DeviceCodeFlowCommandCallback) callback;
     }
 
     @Override
