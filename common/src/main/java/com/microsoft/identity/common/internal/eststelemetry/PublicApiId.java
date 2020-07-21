@@ -30,7 +30,6 @@ public final class PublicApiId {
     //==============================================================================================
     public static final String PCA_ACQUIRE_TOKEN_SILENT_WITH_PARAMETERS = "21";
     public static final String PCA_ACQUIRE_TOKEN_SILENT_ASYNC_WITH_PARAMETERS = "22";
-    public static final String DEVICE_CODE_FLOW_CALLBACK = "30";
 
     // SingleAccountPublicClientApplication
     //==============================================================================================
@@ -104,6 +103,14 @@ public final class PublicApiId {
     //==============================================================================================
     public static final String MULTIPLE_ACCOUNT_PCA_REMOVE_ACCOUNT_WITH_ACCOUNT = "929";
     public static final String MULTIPLE_ACCOUNT_PCA_REMOVE_ACCOUNT_WITH_ACCOUNT_CALLBACK = "930";
+
+    //endregion
+
+    // region Device Code Flow
+
+    // PublicClientApplication
+    //==============================================================================================
+    public static final String DEVICE_CODE_FLOW_CALLBACK = "650";
 
     //endregion
 }

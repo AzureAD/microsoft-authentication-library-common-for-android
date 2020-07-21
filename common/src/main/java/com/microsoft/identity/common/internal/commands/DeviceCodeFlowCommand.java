@@ -30,12 +30,19 @@ import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlow
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
+/**
+ * This command is used to execute the device code flow protocol.
+ * Takes in a parameters object containing the  desired access scopes along and returns
+ * a token result.
+ * Class also includes some pre-defined error codes and messages to be used in
+ * exception handling.
+ */
 public class DeviceCodeFlowCommand extends TokenCommand {
     /**
      * Relevant error codes and messages go here
      */
 
-    public static DCFCommandCallback dcfCallback;
+    public static DeviceCodeFlowCommandCallback sDeviceCodeFlowCallback;
 
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
@@ -43,7 +50,8 @@ public class DeviceCodeFlowCommand extends TokenCommand {
                                  @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
 
-        dcfCallback = (DCFCommandCallback) callback;
+        // Fetch callback object
+        sDeviceCodeFlowCallback = (DeviceCodeFlowCommandCallback) callback;
     }
 
     @Override

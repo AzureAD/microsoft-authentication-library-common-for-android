@@ -26,6 +26,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * Supplies needed parameters for executing DeviceCodeFlowCommand.
+ * Created a new class instead of simply using TokenCommandParameters in case future implementations
+ * want to extend the protocol and add new features.
+ */
 @Getter
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder(toBuilder = true)
