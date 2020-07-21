@@ -110,7 +110,7 @@ public final class PublicApiId {
 
     // PublicClientApplication
     //==============================================================================================
-    public static final String DEVICE_CODE_FLOW_CALLBACK = "650";
+    public static final String DEVICE_CODE_FLOW_WITH_CALLBACK = "650";
 
     //endregion
 }

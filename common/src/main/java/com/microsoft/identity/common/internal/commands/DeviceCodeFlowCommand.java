@@ -38,10 +38,6 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
  * exception handling.
  */
 public class DeviceCodeFlowCommand extends TokenCommand {
-    /**
-     * Relevant error codes and messages go here
-     */
-
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
                                  @NonNull DeviceCodeFlowCommandCallback callback,
@@ -51,7 +47,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     public AcquireTokenResult execute() throws Exception {
-        // TODO
+        // TODO: Implement execute body in next PR, when DCF methods have been declared/defined in LocalMsalController
         return null;
     }
 
@@ -62,6 +58,6 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     void notify(int requestCode, int resultCode, Intent data) {
-        // TODO
+        // TODO: Same as above
     }
 }
