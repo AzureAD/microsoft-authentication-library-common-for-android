@@ -330,6 +330,11 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             protected String getPackageName() {
                 return AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
             }
+
+            @Override
+            protected boolean isBrokerProcess() {
+                return true;
+            }
         }
 
         final Context context = getInstrumentation().getTargetContext();
@@ -362,6 +367,11 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
             @Override
             protected String getPackageName() {
                 return AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+            }
+
+            @Override
+            protected boolean isBrokerProcess() {
+                return true;
             }
         }
 
