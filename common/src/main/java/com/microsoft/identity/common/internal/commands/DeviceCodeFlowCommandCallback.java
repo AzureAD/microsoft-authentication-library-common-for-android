@@ -30,5 +30,5 @@ import androidx.annotation.NonNull;
  * getUserCode() method shown below
  */
 public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void getUserCode(@NonNull String vUri, @NonNull String userCode, @NonNull String message);
+    void onUserCodeReceived(@NonNull String vUri, @NonNull String userCode, @NonNull String message);
 }
