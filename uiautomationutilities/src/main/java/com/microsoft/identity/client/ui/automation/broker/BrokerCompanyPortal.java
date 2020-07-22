@@ -28,6 +28,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
@@ -39,9 +40,11 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
 @Getter
@@ -50,6 +53,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
+
+    private boolean enrollmentPerformedSuccessfully;
 
     public BrokerCompanyPortal() {
         super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, new PlayStore());
@@ -143,12 +148,25 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                     "com.microsoft.windowsintune.companyportal:id/setup_title"
             );
 
-            Assert.assertTrue(setupCompletePage.exists());
+            if (!setupCompletePage.exists()) {
+                final UiObject deviceLimitReachedDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                        "com.microsoft.windowsintune.companyportal:id/alertTitle"
+                );
+
+                if (deviceLimitReachedDialog.exists()) {
+                    throw new DeviceLimitReachedException(
+                            "Unable to complete enrollment as device limit reached for this account.",
+                            this
+                    );
+                }
+            }
 
             // click on DONE to complete setup
             UiAutomatorUtils.handleButtonClick(
                     "com.microsoft.windowsintune.companyportal:id/setup_center_button"
             );
+
+            enrollmentPerformedSuccessfully = true;
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
@@ -194,5 +212,66 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         }
 
         device.pressEnter();
+    }
+
+    private void openDevicesTab() {
+        launch();
+
+        try {
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+            final UiObject devicesTab = device.findObject(new UiSelector().description(
+                    "Devices, Tab, 2 of 3"
+            ).clickable(true));
+
+            devicesTab.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            devicesTab.click();
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    public void removeDevice() {
+        if (enrollmentPerformedSuccessfully) {
+            openDevicesTab();
+        }
+
+        try {
+            final UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+            final UiObject deviceToRemove = uiDevice.findObject(new UiSelector()
+                    .resourceId("com.microsoft.windowsintune.companyportal:id/device_list_item")
+                    .index(enrollmentPerformedSuccessfully ? 0 : 1)
+            );
+
+            deviceToRemove.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            // click on the device - this should be the first one in the list
+            // which should be the most recently added device
+            deviceToRemove.click();
+
+            final UiObject threeDots = uiDevice.findObject(new UiSelector().descriptionContains(
+                    "More options"
+            ));
+
+            threeDots.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            threeDots.click();
+
+            final UiObject removeBtn = UiAutomatorUtils.obtainUiObjectWithText("Remove");
+
+            removeBtn.click();
+
+            final UiObject removeDeviceDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.microsoft.windowsintune.companyportal:id/alertTitle"
+            );
+
+            Assert.assertTrue(removeDeviceDialog.exists());
+
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
+        } catch (UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 }
