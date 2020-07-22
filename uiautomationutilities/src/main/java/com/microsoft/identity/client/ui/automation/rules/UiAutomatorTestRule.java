@@ -1,4 +1,4 @@
-package com.microsoft.identity.client.ui.automation.testrules;
+package com.microsoft.identity.client.ui.automation.rules;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
