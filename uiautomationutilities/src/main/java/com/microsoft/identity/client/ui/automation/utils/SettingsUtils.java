@@ -123,7 +123,10 @@ public class SettingsUtils {
     public static void removeAccount(@NonNull final String username) {
         launchAccountListPage();
         try {
-            final UiObject account = UiAutomatorUtils.obtainUiObjectWithText(username);
+            final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
+                    "com.android.settings:id/list",
+                    username
+            );
             account.click();
 
             final UiObject removeAccountBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
