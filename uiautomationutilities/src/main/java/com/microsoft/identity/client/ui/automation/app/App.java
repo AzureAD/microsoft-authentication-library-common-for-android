@@ -86,6 +86,8 @@ public abstract class App implements IApp {
         } else {
             appInstaller.installApp(packageName);
         }
+
+        shouldHandleFirstRun = true;
     }
 
     @Override
@@ -101,6 +103,7 @@ public abstract class App implements IApp {
     @Override
     public void uninstall() {
         AdbShellUtils.removePackage(packageName);
+        shouldHandleFirstRun = true;
     }
 
     @Override
