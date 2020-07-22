@@ -1,3 +1,7 @@
+Version 2.0.12-hf1
+-----------
+- Catch JsonSyntaxException when attempting to migrate ADAL cache and malformed records are found.
+
 Version 2.0.12
 -----------
 - Hotfix for NPE when sub_error is null.
