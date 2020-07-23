@@ -28,6 +28,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
 /**
@@ -38,6 +40,16 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
  * exception handling.
  */
 public class DeviceCodeFlowCommand extends TokenCommand {
+
+    public final static String AUTH_DECLINED_CODE = "authorization_declined";
+    public final static String AUTH_DECLINED_MSG = "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
+    public final static String EXPIRED_TOKEN_CODE = "expired_token";
+    public final static String EXPIRED_TOKEN_MSG = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
+    // Add more errors
+
+    // Use this message for when DCF fails with an error code that doesn't match any of the codes above
+    public final static String DEFAULT_ERROR_MSG = "Device Code Flow has failed with an unexpected error. The error code shown was received from the authorization result.";
+
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
                                  @NonNull DeviceCodeFlowCommandCallback callback,
@@ -47,8 +59,30 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     public AcquireTokenResult execute() throws Exception {
-        // TODO: Implement execute body in next PR, when DCF methods have been declared/defined in LocalMsalController
-        return null;
+
+        // Get the controller used to execute the command
+        final BaseController controller = getDefaultController();
+
+        // Fetch the parameters
+        final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
+
+        // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
+        final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);
+
+        // Fetch the authorization response
+        final MicrosoftStsAuthorizationResponse authorizationResponse =
+                (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
+
+        // Communicate with user app and provide authentication information
+        final DeviceCodeFlowCommandCallback deviceCodeFlowCommandCallback = (DeviceCodeFlowCommandCallback) getCallback();
+        deviceCodeFlowCommandCallback.onUserCodeReceived(
+                authorizationResponse.getVerificationUri(),
+                authorizationResponse.getUserCode(),
+                authorizationResponse.getMessage()
+        );
+
+        // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
+        return controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
     }
 
     @Override
@@ -58,6 +92,6 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     void notify(int requestCode, int resultCode, Intent data) {
-        // TODO: Same as above
+        getDefaultController().completeAcquireToken(requestCode, resultCode, data);
     }
 }

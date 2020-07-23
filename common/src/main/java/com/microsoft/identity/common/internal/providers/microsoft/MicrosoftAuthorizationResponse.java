@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
+import java.net.URL;
+
 /**
  * Sub class of {@link AuthorizationResponse} which encapsulates additional parameters
  * specific to Microsoft in addition to the default OAuth2 AuthorizationResponse.
@@ -35,7 +37,12 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public final static String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
     public final static String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
     public final static String SESSION_STATE = "session_state";
-
+    public final static String DEVICE_CODE = "device_code";
+    public final static String USER_CODE = "user_code";
+    public final static String VERIFICATION_URI = "verification_uri";
+    public final static String EXPIRES_IN = "expires_in";
+    public final static String INTERVAL = "interval";
+    public final static String MESSAGE = "message";
 
     @Expose()
     protected String mCorrelationId;
@@ -48,6 +55,19 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     @Expose()
     protected String mSessionState;
 
+    // Device Code Flow Fields
+    @Expose()
+    protected String mDeviceCode;
+    @Expose()
+    protected String mUserCode;
+    @Expose()
+    protected String mVerificationUri;
+    @Expose()
+    protected int mExpiresIn;
+    @Expose()
+    protected int mInterval;
+    @Expose()
+    protected String mMessage;
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResponse}.
@@ -85,6 +105,15 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
     public String getSessionState() { return mSessionState;}
 
+    public String getDeviceCode() { return mDeviceCode;}
 
+    public String getUserCode() { return mUserCode;}
 
+    public String getVerificationUri() { return mVerificationUri;}
+
+    public int getExpiresIn() { return mExpiresIn;}
+
+    public int getInterval() { return mInterval;}
+
+    public String getMessage() { return mMessage;}
 }
