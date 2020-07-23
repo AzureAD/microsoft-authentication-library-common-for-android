@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
@@ -235,11 +236,11 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
         // Add the array values to these sets, lowercasing them
         for (final String target : targetToMatchArray) {
-            soughtTargetSet.add(target.toLowerCase());
+            soughtTargetSet.add(target.toLowerCase(Locale.ROOT));
         }
 
         for (final String target : credentialTargetArray) {
-            credentialTargetSet.add(target.toLowerCase());
+            credentialTargetSet.add(target.toLowerCase(Locale.ROOT));
         }
 
         if (omitDefaultScopes) {
