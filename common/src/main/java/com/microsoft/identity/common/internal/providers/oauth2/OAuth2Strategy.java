@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
@@ -222,7 +223,7 @@ public abstract class OAuth2Strategy
     }
 
     public String getAuthorityFromTokenEndpoint() {
-        return mTokenEndpoint.toLowerCase().replace("oauth2/v2.0/token", "");
+        return mTokenEndpoint.toLowerCase(Locale.ROOT).replace("oauth2/v2.0/token", "");
     }
 
     protected final void setAuthorizationEndpoint(final String authorizationEndpoint) {
