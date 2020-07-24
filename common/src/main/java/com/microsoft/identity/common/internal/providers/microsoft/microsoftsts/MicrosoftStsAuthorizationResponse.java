@@ -51,8 +51,8 @@ public class MicrosoftStsAuthorizationResponse extends MicrosoftAuthorizationRes
         mDeviceCode = otherParameters.get(MicrosoftAuthorizationResponse.DEVICE_CODE);
         mUserCode = otherParameters.get(MicrosoftAuthorizationResponse.USER_CODE);
         mVerificationUri = otherParameters.get(MicrosoftAuthorizationResponse.VERIFICATION_URI);
-        mExpiresIn = Integer.parseInt(otherParameters.get(MicrosoftAuthorizationResponse.EXPIRES_IN));
-        mInterval = Integer.parseInt(otherParameters.get(MicrosoftAuthorizationResponse.INTERVAL));
+        mExpiresIn = otherParameters.get(MicrosoftAuthorizationResponse.EXPIRES_IN);
+        mInterval = otherParameters.get(MicrosoftAuthorizationResponse.INTERVAL);
         mMessage = otherParameters.get(MicrosoftAuthorizationResponse.MESSAGE);
 
     }

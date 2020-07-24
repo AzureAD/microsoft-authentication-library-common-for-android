@@ -37,6 +37,7 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public final static String CLOUD_INSTANCE_HOST_NAME = "cloud_instance_host_name";
     public final static String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
     public final static String SESSION_STATE = "session_state";
+
     public final static String DEVICE_CODE = "device_code";
     public final static String USER_CODE = "user_code";
     public final static String VERIFICATION_URI = "verification_uri";
@@ -63,9 +64,9 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     @Expose()
     protected String mVerificationUri;
     @Expose()
-    protected int mExpiresIn;
+    protected String mExpiresIn;
     @Expose()
-    protected int mInterval;
+    protected String mInterval;
     @Expose()
     protected String mMessage;
 
@@ -105,15 +106,45 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
     public String getSessionState() { return mSessionState;}
 
+    /**
+     * Getter method for the device code used in Device Code Flow.
+     *
+     * @return device code of the request (null in non-DCF cases).
+     */
     public String getDeviceCode() { return mDeviceCode;}
 
+    /**
+     * Getter method for the user code used in Device Code Flow.
+     *
+     * @return user code of the request (null in non-DCF cases).
+     */
     public String getUserCode() { return mUserCode;}
 
+    /**
+     * Getter method for the verification uri used in Device Code Flow.
+     *
+     * @return verification uri of the request (null in non-DCF cases).
+     */
     public String getVerificationUri() { return mVerificationUri;}
 
-    public int getExpiresIn() { return mExpiresIn;}
+    /**
+     * Getter method for the expiration interval used in Device Code Flow.
+     *
+     * @return expiration interval of the request (null in non-DCF cases).
+     */
+    public String getExpiresIn() { return mExpiresIn;}
 
-    public int getInterval() { return mInterval;}
+    /**
+     * Getter method for the polling waiting interval used in Device Code Flow.
+     *
+     * @return waiting interval of the request (null in non-DCF cases).
+     */
+    public String getInterval() { return mInterval;}
 
+    /**
+     * Getter method for the authentication message used in Device Code Flow.
+     *
+     * @return message of the request (null in non-DCF cases).
+     */
     public String getMessage() { return mMessage;}
 }

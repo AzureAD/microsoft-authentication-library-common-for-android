@@ -146,6 +146,7 @@ public abstract class BaseController {
 
     public abstract AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws Exception;
+
     public abstract AcquireTokenResult acquireDeviceCodeFlowToken(final AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters)
             throws Exception;
 
