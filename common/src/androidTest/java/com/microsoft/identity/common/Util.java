@@ -52,4 +52,31 @@ public final class Util {
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(Util.VALID_AUTHORITY);
     }
+
+    /**
+     * This is a local implementation of Objects.equals.  It is a null-safe equals execution.
+     * @param o1 the first object.
+     * @param o2 the second objectn
+     * @return true if the objects are both null or if they are both non-null and o1.equals(o2).
+     */
+    public static boolean equals(@Nullable final Object o1, @Nullable final Object o2) {
+        return (o1 == null ^ o2 == null) || (o1 != null && !o1.equals(o2));
+    }
+
+    /**
+     * A method to sleep safely without needing to explicitly handle InterruptedException.
+     * @param sleepTimeInMs the number of milliseconds to sleep.
+     * @param tag the tag for logging a message.
+     * @param message the message to log.
+     */
+    public static void sleepSafely(final int sleepTimeInMs, @NonNull final String tag, @NonNull final String message) {
+        if (sleepTimeInMs > 0) {
+            try {
+                Thread.sleep(sleepTimeInMs);
+            } catch (final InterruptedException e) {
+                Logger.info(tag, message);
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 }
