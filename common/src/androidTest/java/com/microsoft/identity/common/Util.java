@@ -23,6 +23,11 @@
 
 package com.microsoft.identity.common;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.microsoft.identity.common.internal.logging.Logger;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -47,5 +52,4 @@ public final class Util {
     static URL getValidRequestUrl() throws MalformedURLException {
         return new URL(Util.VALID_AUTHORITY);
     }
-
 }
