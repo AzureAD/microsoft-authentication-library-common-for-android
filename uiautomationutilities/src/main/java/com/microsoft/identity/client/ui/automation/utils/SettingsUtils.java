@@ -47,6 +47,7 @@ import java.util.Calendar;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 /**
  * This class contains utilities to interact with device Settings during a UI TEST
@@ -248,22 +249,5 @@ public class SettingsUtils {
             Assert.fail(e.getMessage());
         }
 
-    }
-
-    /**
-     * Obtain an instance of the UiObject for the given text
-     *
-     * @param text the text of the element to obtain
-     * @return the UiObject associated to the supplied text
-     */
-    public static UiObject obtainUiObjectWithExactText(@NonNull final String text) {
-        final UiDevice mDevice =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
-                .text(text));
-
-        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        return uiObject;
     }
 }

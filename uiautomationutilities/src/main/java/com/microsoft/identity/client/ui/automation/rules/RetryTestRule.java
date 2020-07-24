@@ -18,7 +18,6 @@ public class RetryTestRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 Throwable caughtThrowable = null;
-
                 int numAttempts = 1;
 
                 RetryOnFailure retryOnFailure = description.getAnnotation(RetryOnFailure.class);
@@ -31,9 +30,7 @@ public class RetryTestRule implements TestRule {
 
                 if (retryOnFailure != null) {
                     final int retryCount = retryOnFailure.retryCount();
-
                     Log.i(TAG, "Received retry count annotation with value: " + retryCount);
-
                     numAttempts += retryCount;
                 }
 

@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.IApp;
@@ -56,6 +57,10 @@ public interface ITestBroker extends IApp {
      * @param password password of the account to use for registration
      */
     void performSharedDeviceRegistration(String username, String password);
+
+    void performJoinViaJoinActivity(String username, String password);
+
+    void confirmJoinInJoinActivity(@NonNull final String username);
 
     @Nullable
     String obtainDeviceId();

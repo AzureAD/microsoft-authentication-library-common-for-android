@@ -30,6 +30,9 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
+import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
@@ -40,7 +43,6 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 import lombok.Getter;
 
@@ -113,63 +115,55 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         aadPromptHandler.handlePrompt(username, password);
 
         // click the activate device admin btn
-        try {
-            final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
-            Assert.assertTrue(accessSetupScreen.exists());
+        final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
+        Assert.assertTrue(accessSetupScreen.exists());
 
-            // click on BEGIN button to start enroll
-            UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
+        // click on BEGIN button to start enroll
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
 
-            // click CONTINUE to ack privacy page
-            UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/ContinueButton");
+        // click CONTINUE to ack privacy page
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/ContinueButton");
 
-            // click NEXT to ack Android system permissions requirements
-            UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/bullet_list_page_forward_button");
+        // click NEXT to ack Android system permissions requirements
+        UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/bullet_list_page_forward_button");
 
-            // grant permission
-            CommonUtils.grantPackagePermission();
+        // grant permission
+        CommonUtils.grantPackagePermission();
 
-            // Confirm on page to activate CP as device admin
-            final UiObject activeDeviceAdminPage = UiAutomatorUtils.obtainUiObjectWithText("Activate device admin");
-            Assert.assertTrue(activeDeviceAdminPage.exists());
+        TestContext.getTestContext().getDevice().getSettings().activateAdmin();
 
-            // scroll down the recycler view to find activate device admin btn
-            final UiObject activeDeviceAdminBtn = UiAutomatorUtils.obtainChildInScrollable(
-                    "Activate this device admin app"
-            );
+        final ISettings deviceSettings = TestContext.getTestContext().getDevice().getSettings();
 
-            assert activeDeviceAdminBtn != null;
-
-            // click on activate device admin btn
-            activeDeviceAdminBtn.click();
-
-            // make sure we are on the page to complete setup
-            final UiObject setupCompletePage = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.microsoft.windowsintune.companyportal:id/setup_title"
-            );
-
-            if (!setupCompletePage.exists()) {
-                final UiObject deviceLimitReachedDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                        "com.microsoft.windowsintune.companyportal:id/alertTitle"
-                );
-
-                if (deviceLimitReachedDialog.exists()) {
-                    throw new DeviceLimitReachedException(
-                            "Unable to complete enrollment as device limit reached for this account.",
-                            this
-                    );
-                }
-            }
-
-            // click on DONE to complete setup
-            UiAutomatorUtils.handleButtonClick(
-                    "com.microsoft.windowsintune.companyportal:id/setup_center_button"
-            );
-
-            enrollmentPerformedSuccessfully = true;
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+        if (deviceSettings instanceof SamsungSettings) {
+            ((SamsungSettings) deviceSettings).enrollInKnox();
         }
+
+        // make sure we are on the page to complete setup
+        final UiObject setupCompletePage = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.microsoft.windowsintune.companyportal:id/setup_title"
+        );
+
+        if (!setupCompletePage.exists()) {
+            final UiObject deviceLimitReachedDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.microsoft.windowsintune.companyportal:id/alertTitle"
+            );
+
+            if (deviceLimitReachedDialog.exists()) {
+                throw new DeviceLimitReachedException(
+                        "Unable to complete enrollment as device limit reached for this account.",
+                        this
+                );
+            } else {
+                Assert.fail("Unable to complete enrollment due to unknown reason");
+            }
+        }
+
+        // click on DONE to complete setup
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.windowsintune.companyportal:id/setup_center_button"
+        );
+
+        enrollmentPerformedSuccessfully = true;
     }
 
     @Override

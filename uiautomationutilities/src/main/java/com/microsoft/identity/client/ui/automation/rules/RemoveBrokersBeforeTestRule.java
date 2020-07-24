@@ -1,8 +1,8 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
+import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
-import com.microsoft.identity.client.ui.automation.utils.SettingsUtils;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -18,12 +18,18 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
                 final BrokerMicrosoftAuthenticator authenticator = new BrokerMicrosoftAuthenticator();
                 authenticator.uninstall();
 
+                // Auth App may still be installed if device admin (Samsung devices for instance)
+                if (authenticator.isInstalled()) {
+                    TestContext.getTestContext().getDevice().getSettings().disableAdmin("Authenticator");
+                    authenticator.uninstall();
+                }
+
                 final BrokerCompanyPortal companyPortal = new BrokerCompanyPortal();
                 companyPortal.uninstall();
 
                 // CP may still be installed if device admin
                 if (companyPortal.isInstalled()) {
-                    SettingsUtils.disableAdmin("Company Portal");
+                    TestContext.getTestContext().getDevice().getSettings().disableAdmin("Company Portal");
                     companyPortal.uninstall();
                 }
 

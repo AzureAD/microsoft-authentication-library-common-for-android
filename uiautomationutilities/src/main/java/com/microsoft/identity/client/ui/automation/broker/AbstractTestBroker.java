@@ -33,6 +33,11 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
+import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
@@ -70,5 +75,44 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         }
     }
 
+    @Override
+    public void performJoinViaJoinActivity(@NonNull final String username, @NonNull final String password) {
+        UiAutomatorUtils.handleInput(
+                CommonUtils.getResourceId(
+                        getPackageName(), "UsernameET"
+                ),
+                username
+        );
+
+        UiAutomatorUtils.handleButtonClick(
+                CommonUtils.getResourceId(
+                        getPackageName(), "JoinButton"
+                )
+        );
+
+        final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
+                .broker(this)
+                .prompt(PromptParameter.SELECT_ACCOUNT)
+                .loginHint(username)
+                .sessionExpected(false)
+                .build();
+
+        final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
+
+        aadPromptHandler.handlePrompt(username, password);
+    }
+
+    public void confirmJoinInJoinActivity(@NonNull final String username) {
+        final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
+                "Workplace Joined to " + username
+        );
+
+        Assert.assertTrue(joinConfirmation.exists());
+
+        UiAutomatorUtils.handleButtonClick(getResourceId(
+                getPackageName(),
+                "JoinButton"
+        ));
+    }
 
 }
