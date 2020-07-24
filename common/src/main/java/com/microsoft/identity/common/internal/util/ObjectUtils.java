@@ -45,7 +45,7 @@ public final class ObjectUtils {
      * @return true if the objects are both null or if they are both non-null and o1.equals(o2).
      */
     public static boolean equals(@Nullable final Object o1, @Nullable final Object o2) {
-        return (o1 == null ^ o2 == null) || (o1 != null && o1.equals(o2));
+        return (o1 == o2) || (o1 != null && o1.equals(o2));
     }
 
 }
