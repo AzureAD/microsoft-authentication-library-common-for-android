@@ -41,15 +41,6 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
  */
 public class DeviceCodeFlowCommand extends TokenCommand {
 
-    public final static String AUTH_DECLINED_CODE = "authorization_declined";
-    public final static String AUTH_DECLINED_MSG = "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
-    public final static String EXPIRED_TOKEN_CODE = "expired_token";
-    public final static String EXPIRED_TOKEN_MSG = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
-    // Add more errors
-
-    // Use this message for when DCF fails with an error code that doesn't match any of the codes above
-    public final static String DEFAULT_ERROR_MSG = "Device Code Flow has failed with an unexpected error. The error code shown was received from the authorization result.";
-
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
                                  @NonNull DeviceCodeFlowCommandCallback callback,
