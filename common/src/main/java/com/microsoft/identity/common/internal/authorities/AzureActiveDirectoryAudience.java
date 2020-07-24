@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderCon
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.List;
+import java.util.Locale;
 
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
@@ -160,7 +161,7 @@ public abstract class AzureActiveDirectoryAudience {
         final String methodName = ":getAzureActiveDirectoryAudience";
         AzureActiveDirectoryAudience audience = null;
 
-        switch (tenantId.toLowerCase()) {
+        switch (tenantId.toLowerCase(Locale.ROOT)) {
             case ORGANIZATIONS:
                 Logger.verbose(
                         TAG + methodName,
