@@ -26,8 +26,18 @@ import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DeleteDeviceApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 
+/**
+ * Utilities to interact with Lab {@link DeleteDeviceApi}
+ */
 public class LabDeviceHelper {
 
+    /**
+     * Deletes the provided device from the directory
+     *
+     * @param upn      the upn to whom this device is associated
+     * @param deviceId the device id of the device to delete
+     * @return
+     */
     public static boolean deleteDevice(final String upn, final String deviceId) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
