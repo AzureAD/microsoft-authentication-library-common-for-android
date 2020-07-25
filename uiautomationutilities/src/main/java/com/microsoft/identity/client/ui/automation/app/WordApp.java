@@ -55,20 +55,22 @@ public class WordApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void addFirstAccount(@NonNull String username, @NonNull String password, @NonNull FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addFirstAccount(@NonNull final String username,
+                                @NonNull final String password,
+                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         // Enter email
         UiAutomatorUtils.handleInput("com.microsoft.office.word:id/OfcEditText", username);
         // Click continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/OfcActionButton2");
         // handle prompt
-        MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
     @Override
-    public void addAnotherAccount(final String username,
-                                  final String password,
-                                  final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addAnotherAccount(@NonNull final String username,
+                                  @NonNull final String password,
+                                  @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         // Click account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
         // Click add account
@@ -82,9 +84,9 @@ public class WordApp extends App implements IFirstPartyApp {
         throw new UnsupportedOperationException("Not implemented");
     }
 
-    private void signIn(final String username,
-                        final String password,
-                        final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    private void signIn(@NonNull final String username,
+                        @NonNull final String password,
+                        @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         try {
             // Word has very interesting sing in UI. They show a custom WebView to accept email
             // No resource id available on anything :(
@@ -104,7 +106,7 @@ public class WordApp extends App implements IFirstPartyApp {
         }
 
         // handle prompt
-        MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 

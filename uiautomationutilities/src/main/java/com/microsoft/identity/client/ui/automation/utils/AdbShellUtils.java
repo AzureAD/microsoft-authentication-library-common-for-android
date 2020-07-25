@@ -38,9 +38,9 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 public class AdbShellUtils {
 
     private static void executeShellCommand(@NonNull final String command) {
-        final UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
-            mDevice.executeShellCommand(command);
+            device.executeShellCommand(command);
         } catch (IOException e) {
             Assert.fail(e.getMessage());
         }

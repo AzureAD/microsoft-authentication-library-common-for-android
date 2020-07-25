@@ -47,7 +47,8 @@ public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
                         // Click REMOVE DEVICE btn in the dialog
                         UiAutomatorUtils.handleButtonClick("android:id/button1");
 
-                        for (int i = 0; i < 7; i++) {
+                        // we delete 10 devices as it is much more efficient
+                        for (int i = 0; i < 10; i++) {
                             ((DeviceLimitReachedException) throwable).getCompanyPortal().removeDevice();
                         }
                     }

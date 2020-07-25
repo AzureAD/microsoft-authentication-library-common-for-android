@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -44,7 +46,7 @@ public class BrowserChrome extends App implements IBrowser {
     }
 
     @Override
-    public void browse(String url) {
+    public void browse(@NonNull final String url) {
         //TODO: implement browsing for Chrome
     }
 }

@@ -80,7 +80,7 @@ public class AzureSampleApp extends App {
         }
 
         // handle prompt in AAD login page
-        MicrosoftStsPromptHandler microsoftStsPromptHandler =
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler =
                 new MicrosoftStsPromptHandler(promptHandlerParameters);
 
         microsoftStsPromptHandler.handlePrompt(username, password);

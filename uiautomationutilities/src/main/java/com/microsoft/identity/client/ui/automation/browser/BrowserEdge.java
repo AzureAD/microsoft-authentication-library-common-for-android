@@ -65,7 +65,7 @@ public class BrowserEdge extends App implements IBrowser {
         sleep();// need to use sleep due to Edge animations
     }
 
-    public void browse(final String url) {
+    public void browse(@NonNull final String url) {
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 

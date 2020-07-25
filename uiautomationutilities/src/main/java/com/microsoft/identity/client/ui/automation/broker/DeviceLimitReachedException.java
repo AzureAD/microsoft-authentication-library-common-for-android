@@ -22,15 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import androidx.annotation.NonNull;
+
 /**
  * This exception indicates device enrollment failure in Company Portal due to the device limit
  * for enrollment being reached.
  */
 public class DeviceLimitReachedException extends RuntimeException {
 
-    private BrokerCompanyPortal companyPortal;
+    private final BrokerCompanyPortal companyPortal;
 
-    public DeviceLimitReachedException(String message, BrokerCompanyPortal companyPortal) {
+    public DeviceLimitReachedException(@NonNull final String message,
+                                       @NonNull final BrokerCompanyPortal companyPortal) {
         super(message);
         this.companyPortal = companyPortal;
     }

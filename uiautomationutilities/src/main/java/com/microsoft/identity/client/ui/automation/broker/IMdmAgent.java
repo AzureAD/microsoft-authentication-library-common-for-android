@@ -31,7 +31,7 @@ public interface IMdmAgent {
      * @param username the username of the account to use for enrollment
      * @param password the password of the account to use for enrollment
      */
-    void enrollDevice(final String username, final String password);
+    void enrollDevice(String username, String password);
 
     /**
      * Handle protection policy UI flow using this MDM agent

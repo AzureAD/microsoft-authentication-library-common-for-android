@@ -89,11 +89,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void handleFirstRun() {
-        return; // nothing need here
+        // nothing needed here
     }
 
     @Override
-    public void enrollDevice(String username, String password) {
+    public void enrollDevice(@NonNull final String username,
+                             @NonNull final String password) {
         launch(); // launch CP app
 
         handleFirstRun(); // handle CP first run

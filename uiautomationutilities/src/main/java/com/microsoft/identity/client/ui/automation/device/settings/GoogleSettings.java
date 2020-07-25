@@ -43,7 +43,7 @@ import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils
 public class GoogleSettings extends BaseSettings {
 
     @Override
-    public void disableAdmin(@NonNull String adminName) {
+    public void disableAdmin(@NonNull final String adminName) {
         launchDeviceAdminSettingsPage();
 
         try {
@@ -74,7 +74,7 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void removeAccount(@NonNull String username) {
+    public void removeAccount(@NonNull final String username) {
         launchAccountListPage();
 
         try {
@@ -107,7 +107,9 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void addWorkAccount(ITestBroker broker, String username, String password) {
+    public void addWorkAccount(@NonNull final ITestBroker broker,
+                               @NonNull final String username,
+                               @NonNull final String password) {
         launchAddAccountPage();
 
         try {

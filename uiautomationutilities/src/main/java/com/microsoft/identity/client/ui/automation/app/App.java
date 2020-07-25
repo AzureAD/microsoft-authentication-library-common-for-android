@@ -45,7 +45,7 @@ public abstract class App implements IApp {
     @Setter
     private IAppInstaller appInstaller;
 
-    private String packageName;
+    private final String packageName;
 
     @Setter
     private String appName;

@@ -49,10 +49,10 @@ public class LocalApkInstaller implements IAppInstaller {
     @Override
     public void installApp(@NonNull final String apkFileName) {
         final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
-        final UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             // using -t flag to also allow installation of test only packages
-            mDevice.executeShellCommand("pm install -t " + fullPath);
+            device.executeShellCommand("pm install -t " + fullPath);
         } catch (IOException e) {
             Assert.fail(e.getMessage());
         }

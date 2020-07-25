@@ -110,7 +110,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_continue");
 
         // handle login prompt
-        MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
+        final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 }

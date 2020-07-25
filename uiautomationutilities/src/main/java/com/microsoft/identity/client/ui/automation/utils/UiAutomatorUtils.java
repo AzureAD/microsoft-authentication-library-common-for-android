@@ -48,10 +48,10 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied resource id
      */
     public static UiObject obtainUiObjectWithResourceId(@NonNull final String resourceId) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .resourceId(resourceId));
 
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -65,10 +65,10 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithText(@NonNull final String text) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .textContains(text));
 
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -83,10 +83,10 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithResourceIdAndText(@NonNull final String resourceId,
                                                                @NonNull final String text) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .resourceId(resourceId)
                 .textContains(text));
 
@@ -103,10 +103,10 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithTextAndClassType(@NonNull final String text,
                                                               @NonNull Class className) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .className(className)
                 .textContains(text));
 
@@ -228,10 +228,10 @@ public class UiAutomatorUtils {
      * Presses the device back button on the Android device
      */
     public static void pressBack() {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mDevice.pressBack();
+        device.pressBack();
     }
 
     private static boolean isKeyboardOpen() {
@@ -258,10 +258,10 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithExactText(@NonNull final String text) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .text(text));
 
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -276,10 +276,10 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithClassAndIndex(@NonNull final Class clazz, final int index) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .className(clazz)
                 .index(index)
         );

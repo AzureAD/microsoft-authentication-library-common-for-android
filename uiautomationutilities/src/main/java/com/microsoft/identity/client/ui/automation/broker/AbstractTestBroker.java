@@ -47,9 +47,9 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getR
 
 public abstract class AbstractTestBroker extends App implements ITestBroker {
 
-    public AbstractTestBroker(@NonNull String packageName,
-                              @NonNull String appName,
-                              @NonNull IAppInstaller appInstaller) {
+    public AbstractTestBroker(@NonNull final String packageName,
+                              @NonNull final String appName,
+                              @NonNull final IAppInstaller appInstaller) {
         super(packageName, appName, appInstaller);
     }
 
@@ -76,7 +76,8 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     }
 
     @Override
-    public void performJoinViaJoinActivity(@NonNull final String username, @NonNull final String password) {
+    public void performJoinViaJoinActivity(@NonNull final String username,
+                                           @NonNull final String password) {
         // Enter username
         UiAutomatorUtils.handleInput(
                 CommonUtils.getResourceId(

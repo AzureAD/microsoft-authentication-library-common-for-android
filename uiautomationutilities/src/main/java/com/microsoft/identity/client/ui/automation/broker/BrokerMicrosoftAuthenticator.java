@@ -100,7 +100,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 "com.azure.authenticator:id/shared_device_registration_button"
         );
 
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
@@ -108,7 +108,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 .className("android.widget.ImageView");
 
         //confirm that we are in Shared Device Mode inside Authenticator
-        final UiObject sharedDeviceConfirmation = mDevice.findObject(sharedDeviceConfirmationSelector);
+        final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
         sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         Assert.assertTrue(sharedDeviceConfirmation.exists());
     }
@@ -149,7 +149,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // Install cert
-        UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
         certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         Assert.assertTrue(certInstaller.exists());
 

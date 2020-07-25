@@ -32,6 +32,6 @@ public interface IBrowser {
      *
      * @param url the url to open
      */
-    void browse(final String url);
+    void browse(String url);
 
 }

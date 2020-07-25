@@ -84,7 +84,9 @@ public class TeamsApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void addAnotherAccount(String username, String password, FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    public void addAnotherAccount(@NonNull final String username,
+                                  @NonNull final String password,
+                                  @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -113,7 +115,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
     }
 
     @Override
-    public void confirmAccount(@NonNull String username) {
+    public void confirmAccount(@NonNull final String username) {
         throw new UnsupportedOperationException("Not implemented");
     }
 }

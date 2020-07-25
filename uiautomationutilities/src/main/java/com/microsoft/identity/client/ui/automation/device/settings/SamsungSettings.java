@@ -39,7 +39,7 @@ import java.util.Calendar;
 public class SamsungSettings extends BaseSettings {
 
     @Override
-    public void disableAdmin(@NonNull String adminName) {
+    public void disableAdmin(@NonNull final String adminName) {
         launchDeviceAdminSettingsPage();
 
         try {
@@ -66,7 +66,7 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void removeAccount(@NonNull String username) {
+    public void removeAccount(@NonNull final String username) {
         launchAccountListPage();
         try {
             // scroll down the recycler view to find the list item for this account
@@ -100,7 +100,9 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void addWorkAccount(ITestBroker broker, String username, String password) {
+    public void addWorkAccount(@NonNull final ITestBroker broker,
+                               @NonNull final String username,
+                               @NonNull final String password) {
         launchAddAccountPage();
 
         try {
