@@ -1,5 +1,7 @@
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import android.view.View;
+
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -11,8 +13,6 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.Calendar;
-
-import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 public class SamsungSettings extends BaseSettings {
 
@@ -103,7 +103,7 @@ public class SamsungSettings extends BaseSettings {
             final UiObject setTimeBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
             setTimeBtn.click();
 
-            final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/date_picker_header_date");
+            final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/sem_datepicker_calendar_header");
             Assert.assertTrue(datePicker.exists());
 
             final Calendar cal = Calendar.getInstance();
@@ -116,16 +116,16 @@ public class SamsungSettings extends BaseSettings {
 
             if (dateToSet == 1) {
                 // looks we are into the next month, so let's update month here too
-                UiAutomatorUtils.handleButtonClick("android:id/next");
+                UiAutomatorUtils.handleButtonClick("android:id/sem_datepicker_calendar_header_next_button");
             }
 
-            UiObject specifiedDateIcon = obtainUiObjectWithExactText(
-                    String.valueOf(dateToSet)
+            UiObject specifiedDateIcon = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
+                    View.class,
+                    dateToSet - 1
             );
             specifiedDateIcon.click();
 
-            final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
-            okBtn.click();
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }

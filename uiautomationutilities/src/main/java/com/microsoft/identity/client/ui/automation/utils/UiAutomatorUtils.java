@@ -267,4 +267,17 @@ public class UiAutomatorUtils {
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         return uiObject;
     }
+
+    public static UiObject obtainUiObjectWithClassAndIndex(@NonNull final Class clazz, final int index) {
+        final UiDevice mDevice =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = mDevice.findObject(new UiSelector()
+                .className(clazz)
+                .index(index)
+        );
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
 }
