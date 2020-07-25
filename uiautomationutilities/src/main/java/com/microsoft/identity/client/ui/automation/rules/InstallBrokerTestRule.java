@@ -8,6 +8,9 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Test Rule to install the provided broker on the device prior to executing the test case
+ */
 public class InstallBrokerTestRule implements TestRule {
 
     private final ITestBroker broker;

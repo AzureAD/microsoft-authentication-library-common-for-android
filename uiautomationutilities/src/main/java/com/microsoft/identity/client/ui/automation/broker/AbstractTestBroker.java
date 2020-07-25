@@ -77,6 +77,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     @Override
     public void performJoinViaJoinActivity(@NonNull final String username, @NonNull final String password) {
+        // Enter username
         UiAutomatorUtils.handleInput(
                 CommonUtils.getResourceId(
                         getPackageName(), "UsernameET"
@@ -84,6 +85,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
                 username
         );
 
+        // Click Join
         UiAutomatorUtils.handleButtonClick(
                 CommonUtils.getResourceId(
                         getPackageName(), "JoinButton"
@@ -99,9 +101,11 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
+        // Handle prompt in AAD login page
         aadPromptHandler.handlePrompt(username, password);
     }
 
+    @Override
     public void confirmJoinInJoinActivity(@NonNull final String username) {
         final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
                 "Workplace Joined to " + username

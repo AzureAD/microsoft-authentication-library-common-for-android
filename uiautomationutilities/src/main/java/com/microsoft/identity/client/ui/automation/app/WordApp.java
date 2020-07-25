@@ -15,6 +15,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+/**
+ * This class represents the Word Android app during UI Automated Test
+ */
 public class WordApp extends App implements IFirstPartyApp {
 
     public static final String WORD_PACKAGE_NAME = "com.microsoft.office.word";
@@ -31,12 +34,16 @@ public class WordApp extends App implements IFirstPartyApp {
 
     @Override
     public void addFirstAccount(@NonNull String username, @NonNull String password, @NonNull FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // Enter email
         UiAutomatorUtils.handleInput("com.microsoft.office.word:id/OfcEditText", username);
+        // Click continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/OfcActionButton2");
+        // handle prompt
         MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
+    @Override
     public void addAnotherAccount(final String username,
                                   final String password,
                                   final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
@@ -44,20 +51,21 @@ public class WordApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
         // Click add account
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_account_list_add_account");
-
+        // sing in with supplied username/password
         signIn(username, password, promptHandlerParameters);
     }
 
     @Override
     public void onAccountAdded() {
-
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     private void signIn(final String username,
                         final String password,
                         final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-
         try {
+            // Word has very interesting sing in UI. They show a custom WebView to accept email
+            // No resource id available on anything :(
             final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
                     "", EditText.class
             );
@@ -73,12 +81,13 @@ public class WordApp extends App implements IFirstPartyApp {
             Assert.fail(e.getMessage());
         }
 
-
+        // handle prompt
         MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
-    public void confirmAccount(final String username) {
+    @Override
+    public void confirmAccount(@NonNull final String username) {
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);

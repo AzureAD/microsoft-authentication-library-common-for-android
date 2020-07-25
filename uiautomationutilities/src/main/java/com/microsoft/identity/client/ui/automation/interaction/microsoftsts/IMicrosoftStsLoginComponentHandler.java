@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
 
+/**
+ * A Login Component Handler for Microsoft Sts
+ */
 public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponentHandler {
 
     /**

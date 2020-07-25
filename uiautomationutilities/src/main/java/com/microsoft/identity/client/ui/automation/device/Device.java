@@ -8,6 +8,9 @@ import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettin
 
 import lombok.Getter;
 
+/**
+ * This class represents a device under test during UI Automation
+ */
 @Getter
 public class Device {
 
@@ -37,6 +40,8 @@ public class Device {
 
     private static ISettings getSupportedDeviceSettings(@NonNull final String manufacturer,
                                                         @NonNull final String model) {
+        // each device could have its own version of settings depending on make, model & apiLevel
+        // For simplicity right now, we just have two configurations depending on manufacturer
         if ("SAMSUNG".equalsIgnoreCase(manufacturer)) {
             return new SamsungSettings();
         }

@@ -8,6 +8,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Test Rule to retry the test n number of times where n could be any number as denoted by the
+ * {@link RetryOnFailure} annotation
+ */
 public class RetryTestRule implements TestRule {
 
     private final static String TAG = RetryTestRule.class.getSimpleName();

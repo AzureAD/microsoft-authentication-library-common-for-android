@@ -87,6 +87,8 @@ public abstract class App implements IApp {
             appInstaller.installApp(packageName);
         }
 
+        // the app is just installed, first run should be handled
+        // this value can (should) be changed to false by child classes as appropriate
         shouldHandleFirstRun = true;
     }
 
@@ -123,6 +125,7 @@ public abstract class App implements IApp {
         AdbShellUtils.forceStopPackage(packageName);
     }
 
+    @Override
     public boolean isInstalled() {
         return CommonUtils.isPackageInstalled(getPackageName());
     }

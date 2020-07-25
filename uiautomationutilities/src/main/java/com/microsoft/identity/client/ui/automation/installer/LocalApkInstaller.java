@@ -33,6 +33,7 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 
 public class LocalApkInstaller implements IAppInstaller {
 
+    // Files would be picked up from here (by Default) so they should be pushed to this folder on the device
     private static final String LOCAL_APK_PATH_PREFIX = "/data/local/tmp/";
 
     private String mApkFolderPath;
@@ -50,6 +51,7 @@ public class LocalApkInstaller implements IAppInstaller {
         final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
         final UiDevice mDevice = UiDevice.getInstance(getInstrumentation());
         try {
+            // using -t flag to also allow installation of test only packages
             mDevice.executeShellCommand("pm install -t " + fullPath);
         } catch (IOException e) {
             Assert.fail(e.getMessage());

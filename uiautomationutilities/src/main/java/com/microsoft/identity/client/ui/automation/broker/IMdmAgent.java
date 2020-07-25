@@ -33,6 +33,9 @@ public interface IMdmAgent {
      */
     void enrollDevice(final String username, final String password);
 
+    /**
+     * Handle protection policy UI flow using this MDM agent
+     */
     void handleAppProtectionPolicy();
 
 }

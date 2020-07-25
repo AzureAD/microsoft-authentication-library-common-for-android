@@ -67,7 +67,15 @@ public interface IApp {
      */
     void grantPermission(String permission);
 
+    /**
+     * Force stops (closes, shuts down) this application
+     */
     void forceStop();
 
+    /**
+     * Determines if this application (package) is installed on the device
+     *
+     * @return a boolean indicating if the package is installed on the device
+     */
     boolean isInstalled();
 }

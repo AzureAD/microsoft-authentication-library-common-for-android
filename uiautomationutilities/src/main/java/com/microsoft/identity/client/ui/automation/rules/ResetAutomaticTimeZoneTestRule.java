@@ -6,6 +6,9 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case
+ */
 public class ResetAutomaticTimeZoneTestRule implements TestRule {
 
     @Override

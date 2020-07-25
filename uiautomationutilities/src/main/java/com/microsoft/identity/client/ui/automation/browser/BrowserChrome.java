@@ -25,6 +25,9 @@ package com.microsoft.identity.client.ui.automation.browser;
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
+/**
+ * This class represents the Chrome Android app during UI Automated Test
+ */
 public class BrowserChrome extends App implements IBrowser {
 
     private static final String CHROME_PACKAGE_NAME = "com.android.chrome";

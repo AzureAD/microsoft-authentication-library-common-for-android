@@ -268,6 +268,13 @@ public class UiAutomatorUtils {
         return uiObject;
     }
 
+    /**
+     * Obtain an instance of the UiObject for the given class and index
+     *
+     * @param clazz the class of the element to obtain
+     * @param index the index of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
     public static UiObject obtainUiObjectWithClassAndIndex(@NonNull final Class clazz, final int index) {
         final UiDevice mDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());

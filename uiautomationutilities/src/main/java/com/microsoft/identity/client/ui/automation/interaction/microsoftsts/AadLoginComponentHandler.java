@@ -36,6 +36,9 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
+/**
+ * A login component handler for AAD
+ */
 public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 
     @Override

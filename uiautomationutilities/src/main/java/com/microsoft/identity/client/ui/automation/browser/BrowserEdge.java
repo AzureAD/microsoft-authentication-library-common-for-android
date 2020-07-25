@@ -15,6 +15,9 @@ import org.junit.Assert;
 
 import static org.junit.Assert.fail;
 
+/**
+ * This class represents the Edge Android app during UI Automated Test
+ */
 public class BrowserEdge extends App implements IBrowser {
 
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
@@ -28,22 +31,20 @@ public class BrowserEdge extends App implements IBrowser {
     public void handleFirstRun() {
         // cancel sync in Edge
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
-        sleep();
+        sleep(); // need to use sleep due to Edge animations
         // cancel sharing data
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
-        sleep();
+        sleep(); // need to use sleep due to Edge animations
         // cancel personalization
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/fre_share_not_now");
-        sleep();
+        sleep();// need to use sleep due to Edge animations
         // avoid setting default
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/no");
-        sleep();
+        sleep();// need to use sleep due to Edge animations
     }
 
     public void browse(final String url) {
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-
+        //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 
         final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
@@ -51,11 +52,16 @@ public class BrowserEdge extends App implements IBrowser {
         );
 
         try {
+            // enter the URL
             inputField.setText(url);
         } catch (UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // press enter on the Keyboard
         device.pressEnter();
     }
 
@@ -70,23 +76,33 @@ public class BrowserEdge extends App implements IBrowser {
     public void signIn(@NonNull final String username,
                        @NonNull final String password,
                        @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // The Sign In UI in Edge is different depending on account(s) are in TSL
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
+                // This case handles the UI if our account is expected to be in TSL
                 final String expectedText = "Sign in as " + username;
 
+                // Click the sign in btn pre-populated with our UPN
                 final UiObject signInAsBtn = UiAutomatorUtils.obtainUiObjectWithText(expectedText);
                 signInAsBtn.click();
 
+                // handle prompt
                 final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
                 aadPromptHandler.handlePrompt(username, password);
 
                 handleFirstRun();
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
+                // This case handles UI when our account is not in TSL, however, there are other
+                // accounts in TSL
+
+                // Click sign in with another account
                 final UiObject signInWithAnotherAccount = UiAutomatorUtils.obtainUiObjectWithText(
                         "Sign in with another account"
                 );
 
                 signInWithAnotherAccount.click();
+
+                // now select sign in with work or school account
                 signInWithWorkOrSchoolAccount(username, password, promptHandlerParameters);
             } else {
                 signInWithWorkOrSchoolAccount(username, password, promptHandlerParameters);
@@ -105,8 +121,10 @@ public class BrowserEdge extends App implements IBrowser {
                 "Sign in with a work or school account"
         );
 
+        // click Sign In with work or school account btn
         signInWithWorkAccountBtn.click();
 
+        // handle prompt
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
         aadPromptHandler.handlePrompt(username, password);
 

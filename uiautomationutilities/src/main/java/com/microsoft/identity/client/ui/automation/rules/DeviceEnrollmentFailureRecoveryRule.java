@@ -7,6 +7,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Test Rule that allows recovery from device enrollment failures by catching the {@link DeviceLimitReachedException}
+ * and removing devices from Company Portal to allow successful enrollments in the future
+ */
 public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
 
     @Override

@@ -12,6 +12,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+/**
+ * This class represents the Teams Android app during UI Automated Test
+ */
 public class TeamsApp extends App implements IFirstPartyApp {
 
     private static final String TEAMS_PACKAGE_NAME = "com.microsoft.teams";
@@ -27,15 +30,14 @@ public class TeamsApp extends App implements IFirstPartyApp {
         // nothing needed here
     }
 
+    @Override
     public void addFirstAccount(@NonNull final String username,
                                 @NonNull final String password,
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        // looks like this is no longer needed
-        //UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/welcome_sign_in_button");
-
+        // The Sign In UI in Teams changes depending on if the account(s) are in TSL
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
-
+                // This case handles UI if our account (supplied username) is expected to be in TSL
                 final UiObject email = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
                         "com.microsoft.teams:id/email",
                         username
@@ -46,9 +48,12 @@ public class TeamsApp extends App implements IFirstPartyApp {
                 final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
                 microsoftStsPromptHandler.handlePrompt(username, password);
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
+                // This case handles UI if our account isn't in TSL, however, there are some other
+                // accounts expected to be in TSL
                 UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_another_account_button");
                 signInWithEmail(username, password, promptHandlerParameters);
             } else {
+                // This case handles UI when there are no accounts in TSL
                 signInWithEmail(username, password, promptHandlerParameters);
             }
         } catch (UiObjectNotFoundException e) {
@@ -64,16 +69,21 @@ public class TeamsApp extends App implements IFirstPartyApp {
     private void signInWithEmail(@NonNull final String username,
                                  @NonNull final String password,
                                  @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+        // Enter email in email field
         UiAutomatorUtils.handleInput(
                 "com.microsoft.teams:id/edit_email",
                 username
         );
+
+        // Click Sign in btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button");
 
+        // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
+    @Override
     public void onAccountAdded() {
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_next_button");
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_next_button");

@@ -26,6 +26,9 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
+/**
+ * A login component handler for ADFS
+ */
 public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
 
     @Override

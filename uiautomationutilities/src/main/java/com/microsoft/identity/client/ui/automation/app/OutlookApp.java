@@ -10,6 +10,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+/**
+ * This class represents the Outlook Android app during UI Automated Test
+ */
 public class OutlookApp extends App implements IFirstPartyApp {
 
     private static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
@@ -24,15 +27,20 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // nothing required
     }
 
+    @Override
     public void addFirstAccount(@NonNull final String username,
                                 @NonNull final String password,
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // Click start btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_splash_start");
 
+        // sign in with supplied username/password
         signIn(username, password, promptHandlerParameters);
     }
 
+    @Override
     public void onAccountAdded() {
+        // Make sure we on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(addAnotherAccountScreen.exists());
 
@@ -43,6 +51,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/product_tour_skip_btn");
     }
 
+    @Override
     public void addAnotherAccount(final String username,
                                   final String password,
                                   final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
@@ -55,9 +64,11 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // Click add normal account
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/add_normal_account");
 
+        // sign in with this account
         signIn(username, password, promptHandlerParameters);
     }
 
+    @Override
     public void confirmAccount(@NonNull final String username) {
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
@@ -67,13 +78,16 @@ public class OutlookApp extends App implements IFirstPartyApp {
         Assert.assertTrue(testAccountLabel.exists());
     }
 
-    public void signIn(@NonNull final String username,
-                       @NonNull final String password,
-                       @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+    private void signIn(@NonNull final String username,
+                        @NonNull final String password,
+                        @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        // enter email in edit text email field
         UiAutomatorUtils.handleInput("com.microsoft.office.outlook:id/edit_text_email", username);
 
+        // click continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_continue");
 
+        // handle login prompt
         MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
     }

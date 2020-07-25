@@ -134,6 +134,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void enableBrowserAccess() {
+        // open device registration page
         openDeviceRegistrationPage();
 
         // Click enable browser access
@@ -147,6 +148,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
+        // Install cert
         UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
         certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         Assert.assertTrue(certInstaller.exists());
@@ -154,6 +156,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
 
+    /**
+     * Open the device registration page in the Authenticator App
+     */
     public void openDeviceRegistrationPage() {
         launch(); // launch Authenticator app
 
@@ -193,6 +198,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                                  @NonNull final String password,
                                                  @NonNull final String emailInputResourceId,
                                                  @NonNull final String registerBtnResourceId) {
+        // open device registration page
         openDeviceRegistrationPage();
 
         // enter email

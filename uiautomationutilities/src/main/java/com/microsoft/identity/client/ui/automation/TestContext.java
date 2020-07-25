@@ -10,6 +10,10 @@ import com.microsoft.identity.client.ui.automation.device.Device;
 import lombok.Getter;
 import lombok.NonNull;
 
+/**
+ * A class describing the context under which the test is being executed. This includes things like
+ * details about the device on which the test is being run.
+ */
 @Getter
 public class TestContext {
 

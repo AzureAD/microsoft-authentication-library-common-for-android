@@ -8,6 +8,9 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Test Rule to remove all brokers from the device prior to executing the test case
+ */
 public class RemoveBrokersBeforeTestRule implements TestRule {
 
     @Override

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiObject;
 
@@ -16,16 +17,16 @@ public abstract class BaseSettings implements ISettings {
 
     final static String SETTINGS_PKG = "com.android.settings";
 
-    private static void launchIntent(final String action) {
+    private static void launchIntent(@NonNull final String action) {
         final Context context = ApplicationProvider.getApplicationContext();
-        Intent intent = new Intent(action);
+        final Intent intent = new Intent(action);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         context.startActivity(intent);
     }
 
     @Override
     public void launchDeviceAdminSettingsPage() {
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setComponent(new ComponentName(
                 SETTINGS_PKG,
                 SETTINGS_PKG + ".DeviceAdminSettings")

@@ -73,13 +73,13 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
         //TODO implement shared device registration for CP
-        throw new UnsupportedOperationException("Unimplemented!");
+        throw new UnsupportedOperationException("Not supported!");
     }
 
     @Nullable
     @Override
     public String obtainDeviceId() {
-        throw new UnsupportedOperationException("Not implemented!");
+        throw new UnsupportedOperationException("Not supported!");
     }
 
     @Override
@@ -130,10 +130,12 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // grant permission
         CommonUtils.grantPackagePermission();
 
+        // Activate CP as admin
         TestContext.getTestContext().getDevice().getSettings().activateAdmin();
 
         final ISettings deviceSettings = TestContext.getTestContext().getDevice().getSettings();
 
+        // if on a Samsung device, also need to handle enrollment in Knox
         if (deviceSettings instanceof SamsungSettings) {
             ((SamsungSettings) deviceSettings).enrollInKnox();
         }
@@ -144,6 +146,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         );
 
         if (!setupCompletePage.exists()) {
+            // Something went wrong with enrollment. If we see a device limit reached dialog, then
+            // we throw a DeviceLimitReachedException so that we the DeviceEnrollmentRecoveryRule
+            // can perform cleanup and recovery for future enrollments.
             final UiObject deviceLimitReachedDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                     "com.microsoft.windowsintune.companyportal:id/alertTitle"
             );
@@ -154,6 +159,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                         this
                 );
             } else {
+                // We don't see device limit issue, but the enrollment still failed due to reasons
+                // that aren't immediately known
                 Assert.fail("Unable to complete enrollment due to unknown reason");
             }
         }
@@ -163,6 +170,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                 "com.microsoft.windowsintune.companyportal:id/setup_center_button"
         );
 
+        // Enrollment has been performed successfully
         enrollmentPerformedSuccessfully = true;
     }
 
@@ -209,11 +217,13 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     private void openDevicesTab() {
+        // launch CP
         launch();
 
         try {
             final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
+            // Click Devices Tab
             final UiObject devicesTab = device.findObject(new UiSelector().description(
                     "Devices, Tab, 2 of 3"
             ).clickable(true));
@@ -226,7 +236,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         }
     }
 
+    /**
+     * Removes a device from Company Portal (from the devices listed in CP Devices Tab)
+     */
     public void removeDevice() {
+        // if enrollment failed, then Devices Tab is automatically opened for us
         if (enrollmentPerformedSuccessfully) {
             openDevicesTab();
         }
@@ -234,6 +248,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         try {
             final UiDevice uiDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
+            // If Enrollment failed, then the first device on the list is in corrupted state and
+            // cannot even be removed, we need to remove the second one in the list
             final UiObject deviceToRemove = uiDevice.findObject(new UiSelector()
                     .resourceId("com.microsoft.windowsintune.companyportal:id/device_list_item")
                     .index(enrollmentPerformedSuccessfully ? 0 : 1)
@@ -241,10 +257,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             deviceToRemove.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
-            // click on the device - this should be the first one in the list
-            // which should be the most recently added device
+            // click on the device to be removed
             deviceToRemove.click();
 
+            // Click more options in the top right
             final UiObject threeDots = uiDevice.findObject(new UiSelector().descriptionContains(
                     "More options"
             ));
@@ -253,6 +269,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             threeDots.click();
 
+            // Select Remove from menu
             final UiObject removeBtn = UiAutomatorUtils.obtainUiObjectWithText("Remove");
 
             removeBtn.click();
@@ -263,6 +280,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             Assert.assertTrue(removeDeviceDialog.exists());
 
+            // Confirm removal
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());

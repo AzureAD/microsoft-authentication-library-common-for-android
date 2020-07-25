@@ -31,6 +31,9 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 
+/**
+ * A Prompt Handler for Microsoft STS login flows
+ */
 public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
 
     public MicrosoftStsPromptHandler(

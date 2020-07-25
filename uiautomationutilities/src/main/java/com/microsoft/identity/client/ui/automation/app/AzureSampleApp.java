@@ -1,6 +1,7 @@
 package com.microsoft.identity.client.ui.automation.app;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
@@ -12,6 +13,11 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+/**
+ * This class models the Azure Sample App for MSAL Android.
+ * This refers to app stored in Azure-Samples/ms-identity-android-java repository.
+ * See this: https://github.com/Azure-Samples/ms-identity-android-java
+ */
 public class AzureSampleApp extends App {
 
     private static final String AZURE_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalandroidapp";
@@ -25,30 +31,52 @@ public class AzureSampleApp extends App {
 
     @Override
     public void handleFirstRun() {
-
+        // nothing required
     }
 
-    public void signIn(final String username,
-                       final String password,
-                       final IBrowser browser,
-                       final boolean shouldHandleFirstRun,
-                       final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+    /**
+     * Sign in into the Azure Sample App. Please note that this method performs sign in into the
+     * Single Account Mode Fragment in the Sample App.
+     *
+     * @param username                    the username of the account to sign in
+     * @param password                    the password of the account to sign in
+     * @param browser                     the browser that is expected to be used during sign in flow
+     * @param shouldHandleBrowserFirstRun whether this is the first time the browser being run
+     * @param promptHandlerParameters     the prompt handler parameters indicating how to handle prompt
+     */
+    public void signIn(@NonNull final String username,
+                       @NonNull final String password,
+                       @Nullable final IBrowser browser,
+                       final boolean shouldHandleBrowserFirstRun,
+                       @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+        // Click Sign In in Single Account Fragment
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
 
-        if (promptHandlerParameters.getBroker() == null && browser != null && shouldHandleFirstRun) {
+        if (promptHandlerParameters.getBroker() == null && browser != null && shouldHandleBrowserFirstRun) {
+            // handle browser first run as applicable
             ((IApp) browser).handleFirstRun();
         }
 
+        // handle prompt in AAD login page
         MicrosoftStsPromptHandler microsoftStsPromptHandler =
                 new MicrosoftStsPromptHandler(promptHandlerParameters);
 
         microsoftStsPromptHandler.handlePrompt(username, password);
     }
 
+    /**
+     * Sing out of the Azure Sample App. Please note that this method performs sign out of the
+     * Single Account mode fragment in the Azure Sample App.
+     */
     public void signOut() {
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_removeAccount");
     }
 
+    /**
+     * Makes sure that the provided username is already signed into the Azure Sample App
+     *
+     * @param username the username of the account for which to confirm sign in
+     */
     public void confirmSignedIn(@NonNull final String username) {
         final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
         try {

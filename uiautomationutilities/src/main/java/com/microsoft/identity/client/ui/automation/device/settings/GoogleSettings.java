@@ -31,6 +31,7 @@ public class GoogleSettings extends BaseSettings {
                     adminName
             );
 
+            // select this admin by clicking it
             assert adminAppListItem != null;
             adminAppListItem.click();
 
@@ -40,8 +41,10 @@ public class GoogleSettings extends BaseSettings {
                     "Deactivate this device admin app"
             );
 
+            // click the deactivate admin btn
             deactivateBtn.click();
 
+            // Click confirmation
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
@@ -51,11 +54,14 @@ public class GoogleSettings extends BaseSettings {
     @Override
     public void removeAccount(@NonNull String username) {
         launchAccountListPage();
+
         try {
+            // find the list item associated to this account
             final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
                     "com.android.settings:id/list",
                     username
             );
+            // Click this account
             account.click();
 
             final UiObject removeAccountBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
@@ -63,6 +69,7 @@ public class GoogleSettings extends BaseSettings {
                     "Remove account"
             );
 
+            // Click the removeAccountBtn
             removeAccountBtn.click();
 
             final UiObject removeAccountConfirmationDialogBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
@@ -70,6 +77,7 @@ public class GoogleSettings extends BaseSettings {
                     "Remove account"
             );
 
+            // Click confirm in confirmation dialog
             removeAccountConfirmationDialogBtn.click();
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
@@ -87,19 +95,24 @@ public class GoogleSettings extends BaseSettings {
                     "Work account"
             );
 
+            // Click into this account type
             workAccount.click();
 
+            // perform Join using the supplied broker
             broker.performJoinViaJoinActivity(username, password);
 
             final UiDevice device =
                     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
+            // Find the cert installer and make sure it exists
             UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
             certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             Assert.assertTrue(certInstaller.exists());
 
+            // Confirm install cert
             UiAutomatorUtils.handleButtonClick("android:id/button1");
 
+            // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
@@ -108,13 +121,17 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void changeDeviceTime() {
+        // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
+        // Launch the date time settings page
         launchDateTimeSettingsPage();
 
         try {
-            final UiObject setTimeBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
-            setTimeBtn.click();
+            // Click the set date button
+            final UiObject setDateBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
+            setDateBtn.click();
 
+            // Make sure we see the calendar
             final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/date_picker_header_date");
             Assert.assertTrue(datePicker.exists());
 
@@ -131,11 +148,13 @@ public class GoogleSettings extends BaseSettings {
                 UiAutomatorUtils.handleButtonClick("android:id/next");
             }
 
+            // Click on this new date in this calendar
             UiObject specifiedDateIcon = obtainUiObjectWithExactText(
                     String.valueOf(dateToSet)
             );
             specifiedDateIcon.click();
 
+            // Confirm setting date
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
         } catch (UiObjectNotFoundException e) {

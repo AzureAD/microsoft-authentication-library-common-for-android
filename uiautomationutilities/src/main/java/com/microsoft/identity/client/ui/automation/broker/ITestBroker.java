@@ -58,12 +58,32 @@ public interface ITestBroker extends IApp {
      */
     void performSharedDeviceRegistration(String username, String password);
 
+    /**
+     * Perform device registration from the Join Activity using the supplied user account.
+     *
+     * @param username username of the account to use for registration
+     * @param password password of the account to use for registration
+     */
     void performJoinViaJoinActivity(String username, String password);
 
+    /**
+     * Confirm that device registered with the supplied UPN by comparing it with the UPN
+     * displayed in Join Activity
+     *
+     * @param username the username of the account for which to confirm registration
+     */
     void confirmJoinInJoinActivity(@NonNull final String username);
 
+    /**
+     * Obtain the deviceid of the registered device from the broker
+     *
+     * @return a String representing the device id of the registered device
+     */
     @Nullable
     String obtainDeviceId();
 
+    /**
+     * Enable browser access from this broker
+     */
     void enableBrowserAccess();
 }

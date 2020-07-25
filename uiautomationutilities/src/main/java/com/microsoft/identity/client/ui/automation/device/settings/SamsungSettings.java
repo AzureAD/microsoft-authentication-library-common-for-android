@@ -27,6 +27,7 @@ public class SamsungSettings extends BaseSettings {
                     adminName
             );
 
+            // Click into this admin
             assert adminAppListItem != null;
             adminAppListItem.click();
 
@@ -46,19 +47,25 @@ public class SamsungSettings extends BaseSettings {
     public void removeAccount(@NonNull String username) {
         launchAccountListPage();
         try {
+            // scroll down the recycler view to find the list item for this account
             final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
                     "android:id/list",
                     username
             );
+
+            // Click into this account
             account.click();
 
+            // Find the remover Account btn
             final UiObject removeAccountBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
                     "com.android.settings:id/button",
                     "Remove account"
             );
 
+            // Click the remove account btn
             removeAccountBtn.click();
 
+            // Click confirm in the dialog to complete removal
             final UiObject removeAccountConfirmationDialogBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
                     "android:id/button1",
                     "Remove account"
@@ -81,13 +88,19 @@ public class SamsungSettings extends BaseSettings {
                     "Work account"
             );
 
+            // Click into the work account
             workAccount.click();
 
+            // add work account by performing join via the broker
             broker.performJoinViaJoinActivity(username, password);
 
+            // activate broker app as admin
             activateAdmin();
+
+            // enroll in Knox
             enrollInKnox();
 
+            // make sure account appears in Join activity and join successful
             broker.confirmJoinInJoinActivity(username);
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
@@ -96,13 +109,17 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void changeDeviceTime() {
+        // Disable automatic time zone
         AdbShellUtils.disableAutomaticTimeZone();
+        // Open the date & time settings page
         launchDateTimeSettingsPage();
 
         try {
-            final UiObject setTimeBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
-            setTimeBtn.click();
+            // Click set date btn
+            final UiObject setDateBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
+            setDateBtn.click();
 
+            // Make sure we are seeing the calendar
             final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/sem_datepicker_calendar_header");
             Assert.assertTrue(datePicker.exists());
 
@@ -119,12 +136,14 @@ public class SamsungSettings extends BaseSettings {
                 UiAutomatorUtils.handleButtonClick("android:id/sem_datepicker_calendar_header_next_button");
             }
 
+            // Click the calendar item for this date (index = date - 1)
             UiObject specifiedDateIcon = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
                     View.class,
                     dateToSet - 1
             );
             specifiedDateIcon.click();
 
+            // Click ok to set date
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());

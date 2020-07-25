@@ -42,6 +42,11 @@ public class AdbShellUtils {
         executeShellCommand("pm clear " + packageName);
     }
 
+    /**
+     * Force stop (shut down) the supplied the package
+     *
+     * @param packageName the package to force stop
+     */
     public static void forceStopPackage(@NonNull final String packageName) {
         executeShellCommand("am force-stop " + packageName);
     }
@@ -50,10 +55,16 @@ public class AdbShellUtils {
         executeShellCommand("settings put global " + settingName + " " + value);
     }
 
+    /**
+     * Enable automatic time zone on the device
+     */
     public static void enableAutomaticTimeZone() {
         putGlobalSettings("auto_time", "1");
     }
 
+    /**
+     * Disable automatic time zone on the device
+     */
     public static void disableAutomaticTimeZone() {
         putGlobalSettings("auto_time", "0");
     }
