@@ -31,8 +31,10 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.app.App;
-import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
+import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
@@ -48,9 +50,10 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getR
 public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     public AbstractTestBroker(@NonNull final String packageName,
-                              @NonNull final String appName,
-                              @NonNull final IAppInstaller appInstaller) {
-        super(packageName, appName, appInstaller);
+                              @NonNull final String appName) {
+        super(packageName, appName, BuildConfig.INSTALL_SOURCE_LOCAL_APK
+                .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
+                ? new LocalApkInstaller() : new PlayStore());
     }
 
     @Override

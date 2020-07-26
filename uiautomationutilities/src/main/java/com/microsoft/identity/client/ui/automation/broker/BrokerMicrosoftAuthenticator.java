@@ -54,7 +54,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
 
     public BrokerMicrosoftAuthenticator() {
-        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, new PlayStore());
+        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = AUTHENTICATOR_APK;
     }
 

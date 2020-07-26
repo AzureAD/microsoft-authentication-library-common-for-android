@@ -4,6 +4,25 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    def final installSourcePlayStore = "PlayStore"
+    def final installSourceLocalApk = "LocalApk"
+
+    // defaults to LocalApkFile - the file must be pushed to the device before tests
+    def brokerInstallationSource = installSourceLocalApk
+
+    if (project.hasProperty("brokerSource")) {
+        if (brokerSource.equalsIgnoreCase(installSourcePlayStore)) {
+            brokerInstallationSource = installSourcePlayStore
+        } else if (brokerSource.equalsIgnoreCase(installSourceLocalApk)) {
+            brokerInstallationSource = installSourceLocalApk
+        } else {
+            throw new InvalidUserDataException("Unspported broker source provided: "
+                    + brokerSource
+                    + " Only the following broker sources are supported: PlayStore , LocalApk");
+        }
+    }
+
+
     defaultConfig {
         minSdkVersion rootProject.ext.automationAppMinSDKVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -11,6 +30,9 @@ android {
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "BROKER_INSTALL_SOURCE", "\"$brokerInstallationSource\"")
+        buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
+        buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
     }
 
     buildTypes {

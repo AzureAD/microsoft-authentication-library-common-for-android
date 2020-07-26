@@ -33,7 +33,6 @@ import androidx.test.uiautomator.UiSelector;
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
-import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
@@ -59,7 +58,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     private boolean enrollmentPerformedSuccessfully;
 
     public BrokerCompanyPortal() {
-        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME, new PlayStore());
+        super(COMPANY_PORTAL_APP_PACKAGE_NAME, COMPANY_PORTAL_APP_NAME);
         localApkFileName = COMPANY_PORTAL_APK;
     }
 
