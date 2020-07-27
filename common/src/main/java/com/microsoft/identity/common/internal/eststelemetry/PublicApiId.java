@@ -105,4 +105,12 @@ public final class PublicApiId {
     public static final String MULTIPLE_ACCOUNT_PCA_REMOVE_ACCOUNT_WITH_ACCOUNT_CALLBACK = "930";
 
     //endregion
+
+    // region Device Code Flow
+
+    // PublicClientApplication
+    //==============================================================================================
+    public static final String DEVICE_CODE_FLOW_WITH_CALLBACK = "650";
+
+    //endregion
 }

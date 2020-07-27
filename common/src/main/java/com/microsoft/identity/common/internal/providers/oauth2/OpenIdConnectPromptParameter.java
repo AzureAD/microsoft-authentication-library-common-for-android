@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import androidx.annotation.Nullable;
 
+import java.util.Locale;
+
 /**
  * The UI options that developer can pass during interactive token acquisition requests.
  */
@@ -59,7 +61,7 @@ public enum OpenIdConnectPromptParameter {
             return null;
         }
 
-        return this.name().toLowerCase();
+        return this.name().toLowerCase(Locale.ROOT);
     }
 
 

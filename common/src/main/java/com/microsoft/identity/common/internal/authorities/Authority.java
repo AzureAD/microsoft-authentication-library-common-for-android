@@ -42,6 +42,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public abstract class Authority {
 
@@ -138,7 +139,7 @@ public abstract class Authority {
         } else {
             String authorityType = pathSegments.get(0);
 
-            switch (authorityType.toLowerCase()) {
+            switch (authorityType.toLowerCase(Locale.ROOT)) {
                 case ADFS_PATH_SEGMENT:
                     //Return new Azure Active Directory Federation Services Authority
                     Logger.verbose(
@@ -320,11 +321,11 @@ public abstract class Authority {
                 if (currentAuthority.mAuthorityUrl != null &&
                         authority.getAuthorityURL() != null &&
                         authority.getAuthorityURL().getAuthority() != null &&
-                        currentAuthority.mAuthorityUrl.toLowerCase().contains(
+                        currentAuthority.mAuthorityUrl.toLowerCase(Locale.ROOT).contains(
                                 authority
                                         .getAuthorityURL()
                                         .getAuthority()
-                                        .toLowerCase())) {
+                                        .toLowerCase(Locale.ROOT))) {
                     knownToDeveloper = true;
                     break;
                 }
