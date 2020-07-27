@@ -53,12 +53,17 @@ public class PromptHandlerParameters {
     // The broker that should be being used for this request
     private final ITestBroker broker;
 
+    // whether we expected the broker account chooser activity to appear
     private final boolean expectingBrokerAccountChooserActivity;
 
+    // whether we expect our account (the one being used to login) to exist in the broker
     private final boolean expectingProvidedAccountInBroker;
 
+    // whether we expect the login page account picker (AAD login page) to appear
     private final boolean expectingLoginPageAccountPicker;
 
+    // whether we expect our account (the one being used to login) to exist in cookies.
+    // This determines if that account would appear in AAD account picker
     private final boolean expectingProvidedAccountInCookie;
 
     // whether we expect to receive consent page or not
@@ -67,6 +72,7 @@ public class PromptHandlerParameters {
     // whether we expect to receive speed bump or not
     private final boolean speedBumpExpected;
 
+    // whether we expect to receive the registration page from AAD
     private final boolean registerPageExpected;
 
     // whether we expect to receive enroll page or not

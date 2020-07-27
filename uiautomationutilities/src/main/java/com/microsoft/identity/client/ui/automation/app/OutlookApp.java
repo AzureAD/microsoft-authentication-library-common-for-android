@@ -62,7 +62,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
     @Override
     public void onAccountAdded() {
-        // Make sure we on add another account (shows up after an account is added)
+        // Make sure we are on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(addAnotherAccountScreen.exists());
 

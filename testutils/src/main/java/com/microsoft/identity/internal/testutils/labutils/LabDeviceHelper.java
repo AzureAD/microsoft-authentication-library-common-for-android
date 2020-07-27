@@ -36,11 +36,11 @@ public class LabDeviceHelper {
      *
      * @param upn      the upn to whom this device is associated
      * @param deviceId the device id of the device to delete
-     * @return
+     * @return a boolean indicating if the device has been deleted successfully
      */
     public static boolean deleteDevice(final String upn, final String deviceId) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
+        final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
         final CustomSuccessResponse customSuccessResponse;
         try {

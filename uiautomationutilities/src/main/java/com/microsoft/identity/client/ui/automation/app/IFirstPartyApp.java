@@ -55,8 +55,8 @@ public interface IFirstPartyApp {
                            final FirstPartyAppPromptHandlerParameters promptHandlerParameters);
 
     /**
-     * This method can be called handle welcome screens in the first party app that appear on the
-     * successful addition of an account to that first party app
+     * This method can be called to handle the welcome screens in the first party app that appear on
+     * the successful addition of an account to that first party app
      */
     void onAccountAdded();
 

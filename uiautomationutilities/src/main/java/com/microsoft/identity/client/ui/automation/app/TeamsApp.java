@@ -46,7 +46,6 @@ public class TeamsApp extends App implements IFirstPartyApp {
         super(TEAMS_PACKAGE_NAME, TEAMS_APP_NAME, new PlayStore());
     }
 
-
     @Override
     public void handleFirstRun() {
         // nothing needed here

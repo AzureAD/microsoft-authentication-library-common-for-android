@@ -41,7 +41,7 @@ public class LabResetHelper {
      */
     public static boolean resetPassword(@NonNull final String upn) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        ResetApi resetApi = new ResetApi();
+        final ResetApi resetApi = new ResetApi();
 
         final CustomSuccessResponse customSuccessResponse;
 
@@ -63,7 +63,7 @@ public class LabResetHelper {
      */
     public static boolean resetMfa(@NonNull final String upn) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        ResetApi resetApi = new ResetApi();
+        final ResetApi resetApi = new ResetApi();
 
         final CustomSuccessResponse customSuccessResponse;
 

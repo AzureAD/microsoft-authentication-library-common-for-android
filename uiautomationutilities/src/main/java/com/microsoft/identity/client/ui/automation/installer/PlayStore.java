@@ -114,7 +114,7 @@ public class PlayStore implements IAppInstaller {
             try {
                 selectGooglePlayAppFromAppList();
             } catch (UiObjectNotFoundException ex) {
-                ex.printStackTrace();
+                Assert.fail(ex.getMessage());
             }
         }
     }

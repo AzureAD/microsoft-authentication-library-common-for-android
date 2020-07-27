@@ -98,7 +98,7 @@ public class BrowserEdge extends App implements IBrowser {
     public void signIn(@NonNull final String username,
                        @NonNull final String password,
                        @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
-        // The Sign In UI in Edge is different depending on account(s) are in TSL
+        // The Sign In UI in Edge is different depending on if account(s) are in TSL
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
                 // This case handles the UI if our account is expected to be in TSL
