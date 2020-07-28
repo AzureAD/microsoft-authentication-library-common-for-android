@@ -29,7 +29,7 @@ import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppProm
 /**
  * An interface describing a first party application and the actions that can be performed on them.
  */
-public interface IFirstPartyApp {
+public interface IFirstPartyApp extends IApp {
 
     /**
      * Add the first user account to this first party app.
