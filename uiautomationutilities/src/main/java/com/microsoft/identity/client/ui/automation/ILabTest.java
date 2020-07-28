@@ -25,7 +25,9 @@ package com.microsoft.identity.client.ui.automation;
 import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
 
 /**
- * An interface describing a test that can leverage the Lab Api to fetch accounts.
+ * An interface describing a test that can leverage the Lab Api to fetch accounts. Implementing this
+ * interface on a test facilitates specifying the type of user that should be pulled by Lab Api for
+ * that test.
  */
 public interface ILabTest {
 
