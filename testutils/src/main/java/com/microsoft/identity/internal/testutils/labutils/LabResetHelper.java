@@ -43,9 +43,8 @@ public class LabResetHelper {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         final ResetApi resetApi = new ResetApi();
 
-        final CustomSuccessResponse customSuccessResponse;
-
         try {
+            final CustomSuccessResponse customSuccessResponse;
             customSuccessResponse = resetApi.putResetInfo(upn, LabConstants.ResetOperation.PASSWORD);
             final String expectedResult = ("Password reset successful for user : " + upn)
                     .toLowerCase();
@@ -65,9 +64,8 @@ public class LabResetHelper {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         final ResetApi resetApi = new ResetApi();
 
-        final CustomSuccessResponse customSuccessResponse;
-
         try {
+            final CustomSuccessResponse customSuccessResponse;
             customSuccessResponse = resetApi.putResetInfo(upn, LabConstants.ResetOperation.MFA);
             return customSuccessResponse.getResult().contains(
                     "MFA reset successful for user : " + upn

@@ -42,8 +42,8 @@ public class LabDeviceHelper {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
-        final CustomSuccessResponse customSuccessResponse;
         try {
+            final CustomSuccessResponse customSuccessResponse;
             customSuccessResponse = deleteDeviceApi.delete(upn, deviceId);
 
             return customSuccessResponse.getResult().contains(
