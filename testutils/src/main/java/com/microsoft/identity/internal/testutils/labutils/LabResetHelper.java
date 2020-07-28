@@ -29,12 +29,12 @@ import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 
 /**
- * Utilities to interact with Lab {@link ResetApi}
+ * Utilities to interact with Lab {@link ResetApi}.
  */
 public class LabResetHelper {
 
     /**
-     * Reset the password for the supplied account
+     * Reset the password for the supplied account.
      *
      * @param upn the upn of the user for which to reset password
      * @return a boolean indicating if password reset was successful
@@ -56,7 +56,7 @@ public class LabResetHelper {
     }
 
     /**
-     * Resets the MFA for the supplied user account
+     * Resets the MFA for the supplied user account.
      *
      * @param upn the upn of the user for which to reset MFA
      * @return a boolean indicating if MFA reset was successful

@@ -38,7 +38,7 @@ import org.junit.Assert;
 import static org.junit.Assert.fail;
 
 /**
- * This class represents the Edge Android app during UI Automated Test
+ * This class represents the Edge Android app during UI Automated Test.
  */
 public class BrowserEdge extends App implements IBrowser {
 

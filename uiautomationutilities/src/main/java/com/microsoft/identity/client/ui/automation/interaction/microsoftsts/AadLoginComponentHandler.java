@@ -37,7 +37,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import static org.junit.Assert.fail;
 
 /**
- * A login component handler for AAD
+ * A login component handler for AAD.
  */
 public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 

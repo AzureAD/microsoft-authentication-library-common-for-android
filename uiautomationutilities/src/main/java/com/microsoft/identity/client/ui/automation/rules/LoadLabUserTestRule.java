@@ -33,7 +33,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * A Test Rule to load lab user for the provided query prior to executing the test case
+ * A Test Rule to load lab user for the provided query prior to executing the test case.
  */
 public class LoadLabUserTestRule implements TestRule {
 

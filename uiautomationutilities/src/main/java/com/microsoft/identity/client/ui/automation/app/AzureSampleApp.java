@@ -38,7 +38,7 @@ import org.junit.Assert;
 /**
  * This class models the Azure Sample App for MSAL Android.
  * This refers to app stored in Azure-Samples/ms-identity-android-java repository.
- * See this: https://github.com/Azure-Samples/ms-identity-android-java
+ * See this: https://github.com/Azure-Samples/ms-identity-android-java.
  */
 public class AzureSampleApp extends App {
 
@@ -95,7 +95,7 @@ public class AzureSampleApp extends App {
     }
 
     /**
-     * Makes sure that the provided username is already signed into the Azure Sample App
+     * Makes sure that the provided username is already signed into the Azure Sample App.
      *
      * @param username the username of the account for which to confirm sign in
      */

@@ -32,7 +32,7 @@ import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppProm
 public interface IFirstPartyApp {
 
     /**
-     * Add the first user account to this first party app
+     * Add the first user account to this first party app.
      *
      * @param username                the username of the account to add
      * @param password                the password of the account to add
@@ -56,12 +56,12 @@ public interface IFirstPartyApp {
 
     /**
      * This method can be called to handle the welcome screens in the first party app that appear on
-     * the successful addition of an account to that first party app
+     * the successful addition of an account to that first party app.
      */
     void onAccountAdded();
 
     /**
-     * Confirms whether the supplied user exists (signed in) in this first party app
+     * Confirms whether the supplied user exists (signed in) in this first party app.
      *
      * @param username the username of the account to confirm
      */

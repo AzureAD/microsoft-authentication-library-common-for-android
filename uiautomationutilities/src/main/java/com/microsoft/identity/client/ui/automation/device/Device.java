@@ -31,7 +31,7 @@ import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettin
 import lombok.Getter;
 
 /**
- * This class represents a device under test during UI Automation
+ * This class represents a device under test during UI Automation.
  */
 @Getter
 public class Device {

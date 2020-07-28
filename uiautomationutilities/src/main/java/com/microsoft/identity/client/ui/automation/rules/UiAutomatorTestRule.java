@@ -30,7 +30,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * A Test Rule to warm up (initialize) UI Automator before executing the test
+ * A Test Rule to warm up (initialize) UI Automator before executing the test.
  */
 public class UiAutomatorTestRule implements TestRule {
 

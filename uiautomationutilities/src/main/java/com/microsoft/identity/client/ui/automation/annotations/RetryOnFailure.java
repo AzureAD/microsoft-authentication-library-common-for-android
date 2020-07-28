@@ -32,7 +32,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * then the test would not be retried. The default value of this annotation is 1, however, a different
  * value can be specified via retryCount parameter to retry the test that many times.
  * <p>
- * For retry logic, see {@link com.microsoft.identity.client.ui.automation.rules.RetryTestRule}
+ * For retry logic, see {@link com.microsoft.identity.client.ui.automation.rules.RetryTestRule}.
  */
 @Retention(value = RUNTIME)
 public @interface RetryOnFailure {

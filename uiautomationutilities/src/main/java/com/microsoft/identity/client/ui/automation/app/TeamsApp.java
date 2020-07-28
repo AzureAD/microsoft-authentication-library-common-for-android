@@ -35,7 +35,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 /**
- * This class represents the Teams Android app during UI Automated Test
+ * This class represents the Teams Android app during UI Automated Test.
  */
 public class TeamsApp extends App implements IFirstPartyApp {
 

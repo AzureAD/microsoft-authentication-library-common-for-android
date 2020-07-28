@@ -25,29 +25,32 @@ package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
 
 /**
- * A Login Component Handler for Microsoft Sts
+ * A Login Component Handler for Microsoft STS.
  */
 public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponentHandler {
 
     /**
-     * Respond to the speed bump encountered during an authorization request
+     * Respond to the speed bump encountered during an authorization request.
      */
     void handleSpeedBump();
 
     /**
-     * Confirm that we have received the enroll page during authorize request
+     * Confirm that we have received the enroll page during authorize request.
      */
     void confirmEnrollPageReceived();
 
     /**
-     * Respond to the enroll page by accepting enrollment
+     * Respond to the enroll page by accepting enrollment.
      */
     void acceptEnroll();
 
     /**
-     * Respond to the enroll page declining enrollment
+     * Respond to the enroll page declining enrollment.
      */
     void declineEnroll();
 
+    /**
+     * Respond to the register page during an authorization request.
+     */
     void handleRegistration();
 }

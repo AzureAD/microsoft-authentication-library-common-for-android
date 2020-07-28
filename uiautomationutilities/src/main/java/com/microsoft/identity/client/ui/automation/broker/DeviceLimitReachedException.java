@@ -39,7 +39,7 @@ public class DeviceLimitReachedException extends RuntimeException {
     }
 
     /**
-     * Obtain the instance of {@link BrokerCompanyPortal} that was being used for enrollment
+     * Obtain the instance of {@link BrokerCompanyPortal} that was being used for enrollment.
      *
      * @return instance of {@link BrokerCompanyPortal}
      */

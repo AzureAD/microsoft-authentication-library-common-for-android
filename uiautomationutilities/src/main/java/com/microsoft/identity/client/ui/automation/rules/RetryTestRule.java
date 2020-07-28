@@ -32,7 +32,7 @@ import org.junit.runners.model.Statement;
 
 /**
  * A Test Rule to retry the test n number of times where n could be any number as denoted by the
- * {@link RetryOnFailure} annotation
+ * {@link RetryOnFailure} annotation.
  */
 public class RetryTestRule implements TestRule {
 

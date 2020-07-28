@@ -22,11 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
-// An interface describing an MDM agent that can perform MDM specific operations
+/**
+ * An interface describing an MDM agent that can perform MDM specific operations.
+ */
 public interface IMdmAgent {
 
     /**
-     * Perform device enrollment using this MDM Agent
+     * Perform device enrollment using this MDM Agent.
      *
      * @param username the username of the account to use for enrollment
      * @param password the password of the account to use for enrollment
@@ -34,7 +36,7 @@ public interface IMdmAgent {
     void enrollDevice(String username, String password);
 
     /**
-     * Handle protection policy UI flow using this MDM agent
+     * Handle protection policy UI flow using this MDM agent.
      */
     void handleAppProtectionPolicy();
 

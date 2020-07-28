@@ -37,12 +37,12 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import static org.junit.Assert.fail;
 
 /**
- * This class contains utility methods for leveraging UI Automator to interact with UI elements
+ * This class contains utility methods for leveraging UI Automator to interact with UI elements.
  */
 public class UiAutomatorUtils {
 
     /**
-     * Obtain an instance of the UiObject for a given resource id
+     * Obtain an instance of the UiObject for a given resource id.
      *
      * @param resourceId the resource id of the element to obtain
      * @return the UiObject associated to the supplied resource id
@@ -59,7 +59,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text
+     * Obtain an instance of the UiObject for the given text.
      *
      * @param text the text of the element to obtain
      * @return the UiObject associated to the supplied text
@@ -76,7 +76,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for a given resource id
+     * Obtain an instance of the UiObject for a given resource id.
      *
      * @param resourceId the resource id of the element to obtain
      * @return the UiObject associated to the supplied resource id
@@ -95,7 +95,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text and class name
+     * Obtain an instance of the UiObject for the given text and class name.
      *
      * @param text      the text of the element to obtain
      * @param className the class name of the element to obtain
@@ -115,7 +115,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain a child element inside a scrollable view by specifying resource id and text
+     * Obtain a child element inside a scrollable view by specifying resource id and text.
      *
      * @param scrollableResourceId the resource id of the parent scroll view
      * @param childText            the text on the child view
@@ -128,7 +128,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain a child element inside a scrollable view by specifying class and text
+     * Obtain a child element inside a scrollable view by specifying class and text.
      *
      * @param clazz     the class of the parent scroll view
      * @param childText the text on the child view
@@ -163,7 +163,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain a child element inside a scrollable view by specifying text
+     * Obtain a child element inside a scrollable view by specifying text.
      *
      * @param childText the text on the child view
      * @return the UiObject associated to the desired child element
@@ -192,7 +192,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Fills the supplied text into the input element associated to the supplied resource id
+     * Fills the supplied text into the input element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the input element
      * @param inputText  the text to enter
@@ -210,7 +210,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Clicks the button element associated to the supplied resource id
+     * Clicks the button element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the button to click
      */
@@ -225,7 +225,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Presses the device back button on the Android device
+     * Presses the device back button on the Android device.
      */
     public static void pressBack() {
         final UiDevice device =
@@ -252,7 +252,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text
+     * Obtain an instance of the UiObject for the given text.
      *
      * @param text the text of the element to obtain
      * @return the UiObject associated to the supplied text
@@ -269,7 +269,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given class and index
+     * Obtain an instance of the UiObject for the given class and index.
      *
      * @param clazz the class of the element to obtain
      * @param index the index of the element to obtain

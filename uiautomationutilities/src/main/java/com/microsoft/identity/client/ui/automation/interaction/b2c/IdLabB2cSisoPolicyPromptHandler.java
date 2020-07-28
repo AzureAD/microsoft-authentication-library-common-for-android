@@ -33,7 +33,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
 /**
- * A Prompt handler for MSIDLAB B2C SISO Policy
+ * A Prompt handler for MSIDLAB B2C SISO Policy.
  */
 public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
