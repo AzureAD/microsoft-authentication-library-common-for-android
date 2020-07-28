@@ -52,6 +52,12 @@ public abstract class App implements IApp {
 
     protected String localApkFileName = null;
 
+    /**
+     * Indicates whether the first run experience should be handled in the UI. This value can
+     * (should) be changed to false by child classes as appropriate. Usually if the app is launched
+     * for the first time, then it makes sense for this value to be true and first run experience
+     * to be handled, and this value to be set to false for subsequent launches of the app.
+     */
     protected boolean shouldHandleFirstRun = true;
 
     public App(@NonNull final String packageName) {
