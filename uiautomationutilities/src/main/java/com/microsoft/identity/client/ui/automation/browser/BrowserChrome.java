@@ -46,7 +46,7 @@ public class BrowserChrome extends App implements IBrowser {
     }
 
     @Override
-    public void browse(@NonNull final String url) {
+    public void navigateTo(@NonNull final String url) {
         //TODO: implement browsing for Chrome
     }
 }

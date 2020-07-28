@@ -34,6 +34,6 @@ public interface IBrowser extends IApp {
      *
      * @param url the url to open
      */
-    void browse(String url);
+    void navigateTo(String url);
 
 }
