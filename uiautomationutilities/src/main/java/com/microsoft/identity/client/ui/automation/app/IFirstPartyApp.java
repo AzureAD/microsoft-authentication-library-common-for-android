@@ -43,7 +43,7 @@ public interface IFirstPartyApp {
                          @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters);
 
     /**
-     * Add another account to this first party app. This must only be called if the an account was
+     * Add another account to this first party app. This must only be called if an account was
      * previously added to this first party app.
      *
      * @param username                the username of the account to add
