@@ -53,7 +53,7 @@ public class LocalApkInstaller implements IAppInstaller {
         try {
             // using -t flag to also allow installation of test only packages
             device.executeShellCommand("pm install -t " + fullPath);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Assert.fail(e.getMessage());
         }
     }

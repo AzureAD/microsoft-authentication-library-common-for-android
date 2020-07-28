@@ -76,7 +76,7 @@ public class BrowserEdge extends App implements IBrowser {
         try {
             // enter the URL
             inputField.setText(url);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
@@ -129,7 +129,7 @@ public class BrowserEdge extends App implements IBrowser {
             } else {
                 signInWithWorkOrSchoolAccount(username, password, promptHandlerParameters);
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 

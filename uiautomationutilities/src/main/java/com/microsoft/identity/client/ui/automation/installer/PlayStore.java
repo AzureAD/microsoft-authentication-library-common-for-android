@@ -69,7 +69,7 @@ public class PlayStore implements IAppInstaller {
         try {
             searchButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchButton.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 
@@ -79,7 +79,7 @@ public class PlayStore implements IAppInstaller {
         try {
             searchTextField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchTextField.setText(hint);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 
@@ -110,10 +110,10 @@ public class PlayStore implements IAppInstaller {
     private void selectGooglePlayAppFromAppName() {
         try {
             selectGooglePlayAppFromInstallBar();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             try {
                 selectGooglePlayAppFromAppList();
-            } catch (UiObjectNotFoundException ex) {
+            } catch (final UiObjectNotFoundException ex) {
                 Assert.fail(ex.getMessage());
             }
         }
@@ -137,7 +137,7 @@ public class PlayStore implements IAppInstaller {
 
             // if we see open button, then we know that the installation is complete
             openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

@@ -65,7 +65,7 @@ public class LoadLabUserTestRule implements TestRule {
                         // temp user takes some time to actually being created even though it may be
                         // returned by the LAB API. Adding a wait here before we proceed with the test.
                         Thread.sleep(TEMP_USER_WAIT_TIME);
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         Assert.fail(e.getMessage());
                     }
                 } else {

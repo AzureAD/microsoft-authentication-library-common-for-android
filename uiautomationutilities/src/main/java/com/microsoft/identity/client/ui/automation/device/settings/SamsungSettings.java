@@ -60,7 +60,7 @@ public class SamsungSettings extends BaseSettings {
                 // Confirm deactivation - CP requires confirmation
                 UiAutomatorUtils.handleButtonClick("android:id/button1");
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -94,7 +94,7 @@ public class SamsungSettings extends BaseSettings {
             );
 
             removeAccountConfirmationDialogBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -126,7 +126,7 @@ public class SamsungSettings extends BaseSettings {
 
             // make sure account appears in Join activity and join successful
             broker.confirmJoinInJoinActivity(username);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -169,7 +169,7 @@ public class SamsungSettings extends BaseSettings {
 
             // Click ok to set date
             UiAutomatorUtils.handleButtonClick("android:id/button1");
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

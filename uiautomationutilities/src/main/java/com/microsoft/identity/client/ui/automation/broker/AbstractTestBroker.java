@@ -76,7 +76,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         try {
             accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             accountSelected.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

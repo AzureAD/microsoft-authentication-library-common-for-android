@@ -41,7 +41,7 @@ public class AdbShellUtils {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             device.executeShellCommand(command);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Assert.fail(e.getMessage());
         }
     }

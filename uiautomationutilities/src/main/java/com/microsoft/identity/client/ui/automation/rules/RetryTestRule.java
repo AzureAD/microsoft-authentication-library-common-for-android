@@ -66,7 +66,7 @@ public class RetryTestRule implements TestRule {
                         base.evaluate();
                         Log.i(TAG, "Attempt #" + (i + 1) + " has succeeded!!");
                         return;
-                    } catch (Throwable throwable) {
+                    } catch (final Throwable throwable) {
                         caughtThrowable = throwable;
                         Log.e(TAG, description.getMethodName() + ": Attempt " + (i + 1) +
                                 " failed with " + throwable.getClass().getSimpleName(), throwable);

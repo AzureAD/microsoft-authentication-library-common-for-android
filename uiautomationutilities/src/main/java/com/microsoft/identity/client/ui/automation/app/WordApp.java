@@ -101,7 +101,7 @@ public class WordApp extends App implements IFirstPartyApp {
             );
 
             nextBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 

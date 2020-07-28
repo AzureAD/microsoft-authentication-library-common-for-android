@@ -60,7 +60,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
             );
 
             passwordInput.setText(password);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 
@@ -77,7 +77,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
         final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithText("Next");
         try {
             nextBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

@@ -36,13 +36,13 @@ import org.junit.runners.model.Statement;
 public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
 
     @Override
-    public Statement apply(final Statement base, Description description) {
+    public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 try {
                     base.evaluate();
-                } catch (Throwable throwable) {
+                } catch (final Throwable throwable) {
                     if (throwable instanceof DeviceLimitReachedException) {
                         // Click REMOVE DEVICE btn in the dialog
                         UiAutomatorUtils.handleButtonClick("android:id/button1");

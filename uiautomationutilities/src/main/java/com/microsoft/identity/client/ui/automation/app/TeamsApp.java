@@ -77,7 +77,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
                 // This case handles UI when there are no accounts in TSL
                 signInWithEmail(username, password, promptHandlerParameters);
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

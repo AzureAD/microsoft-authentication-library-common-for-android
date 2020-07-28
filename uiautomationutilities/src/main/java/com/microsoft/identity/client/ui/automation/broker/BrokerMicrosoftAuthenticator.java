@@ -87,7 +87,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             );
             Assert.assertTrue(currentRegistration.exists());
             Assert.assertTrue(currentRegistration.getText().equalsIgnoreCase(username));
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -128,7 +128,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             final String deviceIdText = deviceIdElement.getText();
             final int colonIndex = deviceIdText.indexOf(":");
             return deviceIdText.substring(colonIndex + 1);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
             return null;
         }
@@ -191,7 +191,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 // grant the GET ACCOUNTS permission if needed
                 grantPermission(Manifest.permission.GET_ACCOUNTS);
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

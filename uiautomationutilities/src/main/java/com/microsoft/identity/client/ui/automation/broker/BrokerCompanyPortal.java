@@ -198,7 +198,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         try {
             pinField.setText(String.valueOf(randomPin));
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
@@ -212,7 +212,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         try {
             pinConfirmField.setText(String.valueOf(randomPin));
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
@@ -234,7 +234,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             devicesTab.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
 
             devicesTab.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }
@@ -285,7 +285,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             // Confirm removal
             UiAutomatorUtils.handleButtonClick("android:id/button1");
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

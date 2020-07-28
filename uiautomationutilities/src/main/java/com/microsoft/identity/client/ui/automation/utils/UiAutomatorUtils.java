@@ -155,7 +155,7 @@ public class UiAutomatorUtils {
 
             child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             return child;
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
@@ -184,7 +184,7 @@ public class UiAutomatorUtils {
 
             child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             return child;
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
@@ -204,7 +204,7 @@ public class UiAutomatorUtils {
         try {
             inputField.setText(inputText);
             closeKeyboardIfNeeded();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
     }
@@ -219,7 +219,7 @@ public class UiAutomatorUtils {
 
         try {
             button.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
     }
