@@ -40,53 +40,91 @@ import lombok.experimental.SuperBuilder;
 @Getter
 public class PromptHandlerParameters {
 
-    // the prompt behaviour we expect
+    /**
+     * The prompt behaviour expected to be observed during an interactive token request.
+     */
     @NonNull
     private final PromptParameter prompt;
 
-    // the login hint that was provided
+    /**
+     * The login hint that was provided to the interactive token request.
+     */
     private final String loginHint;
 
-    // whether session is expected or not (via presence of a cookie)
+    /**
+     * Denotes whether session is expected during an interactive token request.
+     */
     private final boolean sessionExpected;
 
-    // The broker that should be being used for this request
+    /**
+     * Denotes the broker that is expected to be used during an interactive token request.
+     */
     private final ITestBroker broker;
 
-    // whether we expected the broker account chooser activity to appear
+    /**
+     * Denotes whether the broker account chooser activity is expected to appear during an
+     * interactive token request.
+     */
     private final boolean expectingBrokerAccountChooserActivity;
 
-    // whether we expect our account (the one being used to login) to exist in the broker
+    /**
+     * Denotes whether the account being used during an interactive token request is expected to
+     * exist in the broker.
+     */
     private final boolean expectingProvidedAccountInBroker;
 
-    // whether we expect the login page account picker (AAD login page) to appear
+    /**
+     * Denotes whether the AAD login page account picker is expected to appear during an
+     * interactive token request.
+     */
     private final boolean expectingLoginPageAccountPicker;
 
-    // whether we expect our account (the one being used to login) to exist in cookies.
-    // This determines if that account would appear in AAD account picker
+    /**
+     * Denotes whether the account being used during an interactive token request is expected to
+     * exist in the AAD login web page cookies. This determines if that account would appear in
+     * AAD account picker.
+     */
     private final boolean expectingProvidedAccountInCookie;
 
-    // whether we expect to receive consent page or not
+    /**
+     * Denotes whether or not the consent page is expected to appear during an interactive token
+     * request.
+     */
     private final boolean consentPageExpected;
 
-    // whether we expect to receive speed bump or not
+    /**
+     * Denotes whether or not the speed bump page is expected to appear during an interactive token
+     * request.
+     */
     private final boolean speedBumpExpected;
 
-    // whether we expect to receive the registration page from AAD
+    /**
+     * Denotes whether or not the register page is expected to appear during an interactive token
+     * request.
+     */
     private final boolean registerPageExpected;
 
-    // whether we expect to receive enroll page or not
+    /**
+     * Denotes whether or not the enroll page is expected to appear during an interactive token
+     * request.
+     */
     private final boolean enrollPageExpected;
 
-    // The way in which we want to respond to the enroll page for this request
+    /**
+     * Denotes the way in which we want to respond to the enroll page for this request.
+     */
     @Builder.Default
     private final UiResponse enrollPageResponse = UiResponse.ACCEPT;
 
-    // The way in which we want to respond to consent page for this request
+    /**
+     * Denotes the way in which we want to respond to the consent page for this request.
+     */
     @Builder.Default
     private final UiResponse consentPageResponse = UiResponse.ACCEPT;
 
-    // The way in which we want to respond to speed bump page for this request
+    /**
+     * Denotes the way in which we want to respond to the register page for this request.
+     */
     @Builder.Default
     private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
 }

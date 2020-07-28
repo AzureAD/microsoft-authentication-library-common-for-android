@@ -31,5 +31,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 public class MicrosoftStsPromptHandlerParameters extends PromptHandlerParameters {
 
+    /**
+     * Denotes whether the account being used for this request is a federated account.
+     */
     private boolean isFederated;
 }

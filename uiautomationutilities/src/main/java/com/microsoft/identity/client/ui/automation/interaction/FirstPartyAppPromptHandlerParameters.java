@@ -31,9 +31,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class FirstPartyAppPromptHandlerParameters extends MicrosoftStsPromptHandlerParameters {
 
-    // whether we are expecting at least one account in TSL
+    /**
+     * Denotes whether we are expecting at least one account in TSL.
+     */
     private final boolean expectingNonZeroAccountsInTSL;
 
-    // whether we are expecting the account / token to be in TSL
+    /**
+     * Denotes whether the account being used for this request is expected to be in TSL.
+     */
     private final boolean expectingProvidedAccountInTSL;
 }
