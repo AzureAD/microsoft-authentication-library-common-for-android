@@ -23,7 +23,7 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 /**
- * An interface describing an MDM agent that can perform MDM specific operations.
+ * An interface describing an MDM agent that can perform MDM specific operations during a UI Test.
  */
 public interface IMdmAgent {
 

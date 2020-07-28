@@ -38,7 +38,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 /**
- * This class represents the Word Android app during UI Automated Test.
+ * A model for interacting with the Word Android App during UI Test.
  */
 public class WordApp extends App implements IFirstPartyApp {
 

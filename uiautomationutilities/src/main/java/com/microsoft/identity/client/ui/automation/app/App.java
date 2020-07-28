@@ -36,8 +36,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * This class represents an app during a UI Test. We can interact with this app during the test by
- * performing specific operation on/with it.
+ * A model for interacting with an app during a UI Test. We can interact with this app during the
+ * test by performing specific operation on/with it.
  */
 @Getter
 public abstract class App implements IApp {

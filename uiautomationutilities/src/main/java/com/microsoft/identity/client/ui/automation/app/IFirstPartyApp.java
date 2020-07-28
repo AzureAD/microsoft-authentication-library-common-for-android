@@ -27,7 +27,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 
 /**
- * An interface describing a first party application and the actions that can be performed on them.
+ * An interface describing a first party application and the actions that can be performed on them
+ * during a UI Test.
  */
 public interface IFirstPartyApp extends IApp {
 

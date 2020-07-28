@@ -33,7 +33,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 /**
- * This class represents the Outlook Android app during UI Automated Test.
+ * A model for interacting with the Outlook Android App during UI Test.
  */
 public class OutlookApp extends App implements IFirstPartyApp {
 

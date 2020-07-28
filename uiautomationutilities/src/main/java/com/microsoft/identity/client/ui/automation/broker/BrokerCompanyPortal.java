@@ -48,6 +48,9 @@ import lombok.Getter;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
+/**
+ * A model for interacting with the Company Portal Broker App during UI Test.
+ */
 @Getter
 public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent {
 

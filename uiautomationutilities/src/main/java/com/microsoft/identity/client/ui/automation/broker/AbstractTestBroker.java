@@ -47,6 +47,9 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
+/**
+ * A model for interacting with a Broker App during UI Test.
+ */
 public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     public AbstractTestBroker(@NonNull final String packageName,

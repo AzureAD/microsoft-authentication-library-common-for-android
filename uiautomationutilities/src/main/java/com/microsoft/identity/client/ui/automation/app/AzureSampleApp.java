@@ -36,7 +36,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 /**
- * This class models the Azure Sample App for MSAL Android.
+ * A model for interacting with the Azure Sample App for MSAL Android during UI Test.
  * This refers to app stored in Azure-Samples/ms-identity-android-java repository.
  * See this: https://github.com/Azure-Samples/ms-identity-android-java.
  */
