@@ -88,7 +88,7 @@ public class WordApp extends App implements IFirstPartyApp {
                         @NonNull final String password,
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         try {
-            // Word has very interesting sing in UI. They show a custom WebView to accept email
+            // Word has very interesting sign in UI. They show a custom WebView to accept email
             // No resource id available on anything :(
             final UiObject emailField = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
                     "", EditText.class
