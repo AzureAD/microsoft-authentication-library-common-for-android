@@ -27,6 +27,14 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
 
+/**
+ * A set of values that can be used to denote the behaviour we expect to observe during an oauth
+ * authorization request made against the Microsoft STS.
+ * These values can then be supplied to a {@link MicrosoftStsPromptHandler} and
+ * used to handle prompt in the manner as expected during the execution of a given test.
+ * The test should fail if the actual behaviour observed deviates from what is denoted as expected
+ * via these parameters.
+ */
 @SuperBuilder
 @Getter
 public class MicrosoftStsPromptHandlerParameters extends PromptHandlerParameters {
