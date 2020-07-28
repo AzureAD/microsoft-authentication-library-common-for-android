@@ -87,7 +87,7 @@ public class AzureSampleApp extends App {
     }
 
     /**
-     * Sing out of the Azure Sample App. Please note that this method performs sign out of the
+     * Sign out of the Azure Sample App. Please note that this method performs sign out of the
      * Single Account mode fragment in the Azure Sample App.
      */
     public void signOut() {
