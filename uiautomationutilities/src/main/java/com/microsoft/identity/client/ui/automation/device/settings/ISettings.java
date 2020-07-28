@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.device.settings;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 
 /**
  * An interface describing the Settings app on an Android device during UI Automation.
@@ -39,9 +40,9 @@ public interface ISettings {
     /**
      * Disable the supplied admin app on the device.
      *
-     * @param adminName the admin app to be disabled
+     * @param deviceAdmin the admin app to be disabled
      */
-    void disableAdmin(@NonNull final String adminName);
+    void disableAdmin(@NonNull final DeviceAdmin deviceAdmin);
 
     /**
      * Launch the add account page in Settings app.

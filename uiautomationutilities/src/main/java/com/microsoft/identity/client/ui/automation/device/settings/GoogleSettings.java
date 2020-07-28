@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -43,14 +44,14 @@ import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils
 public class GoogleSettings extends BaseSettings {
 
     @Override
-    public void disableAdmin(@NonNull final String adminName) {
+    public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
         launchDeviceAdminSettingsPage();
 
         try {
             // scroll down the recycler view to find the list item for this admin
             final UiObject adminAppListItem = UiAutomatorUtils.obtainChildInScrollable(
                     "android:id/list",
-                    adminName
+                    deviceAdmin.getAdminName()
             );
 
             // select this admin by clicking it

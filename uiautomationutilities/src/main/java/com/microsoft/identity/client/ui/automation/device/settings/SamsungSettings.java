@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -39,14 +40,14 @@ import java.util.Calendar;
 public class SamsungSettings extends BaseSettings {
 
     @Override
-    public void disableAdmin(@NonNull final String adminName) {
+    public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
         launchDeviceAdminSettingsPage();
 
         try {
             // scroll down the recycler view to find the list item for this admin
             final UiObject adminAppListItem = UiAutomatorUtils.obtainChildInScrollable(
                     "android:id/list",
-                    adminName
+                    deviceAdmin.getAdminName()
             );
 
             // Click into this admin
@@ -56,7 +57,7 @@ public class SamsungSettings extends BaseSettings {
             // Click Deactivate button
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/action_button");
 
-            if ("Company Portal".equalsIgnoreCase(adminName)) {
+            if (deviceAdmin == DeviceAdmin.COMPANY_PORTAL) {
                 // Confirm deactivation - CP requires confirmation
                 UiAutomatorUtils.handleButtonClick("android:id/button1");
             }
