@@ -66,11 +66,11 @@ public class AzureSampleApp extends App {
      * @param shouldHandleBrowserFirstRun whether this is the first time the browser being run
      * @param promptHandlerParameters     the prompt handler parameters indicating how to handle prompt
      */
-    public void signIn(@NonNull final String username,
-                       @NonNull final String password,
-                       @Nullable final IBrowser browser,
-                       final boolean shouldHandleBrowserFirstRun,
-                       @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+    public void signInWithSingleAccountFragment(@NonNull final String username,
+                                                @NonNull final String password,
+                                                @Nullable final IBrowser browser,
+                                                final boolean shouldHandleBrowserFirstRun,
+                                                @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
         // Click Sign In in Single Account Fragment
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
 
@@ -90,7 +90,7 @@ public class AzureSampleApp extends App {
      * Sign out of the Azure Sample App. Please note that this method performs sign out of the
      * Single Account mode fragment in the Azure Sample App.
      */
-    public void signOut() {
+    public void signOutFromSingleAccountFragment() {
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_removeAccount");
     }
 
