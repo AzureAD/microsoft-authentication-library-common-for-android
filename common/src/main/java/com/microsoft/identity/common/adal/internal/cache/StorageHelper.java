@@ -29,6 +29,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.preference.PreferenceManager;
 import android.util.Base64;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -188,6 +189,7 @@ public class StorageHelper implements IStorageHelper {
     private SecretKey mEncryptionKey = null;
     private SecretKey mEncryptionHMACKey = null;
     private SecretKey mCachedKeyStoreEncryptedKey = null;
+    private KeyType mCurrentEncryptionKeyType = null;
 
     /**
      * Constructor for {@link StorageHelper}.
@@ -233,6 +235,8 @@ public class StorageHelper implements IStorageHelper {
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
+
+        Logger.verbose(TAG + methodName, "Starting encryption with key: " + mCurrentEncryptionKeyType.name());
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
