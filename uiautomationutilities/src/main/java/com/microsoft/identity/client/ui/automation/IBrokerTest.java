@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 /**
@@ -29,6 +31,7 @@ import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
  */
 public interface IBrokerTest {
 
+    @NonNull
     ITestBroker getBroker();
 
 }

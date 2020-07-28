@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
@@ -37,7 +37,7 @@ public class InstallBrokerTestRule implements TestRule {
 
     private final ITestBroker broker;
 
-    public InstallBrokerTestRule(@Nullable ITestBroker broker) {
+    public InstallBrokerTestRule(@NonNull final ITestBroker broker) {
         this.broker = broker;
     }
 
