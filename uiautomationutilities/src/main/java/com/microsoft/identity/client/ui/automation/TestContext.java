@@ -27,7 +27,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.client.ui.automation.device.Device;
+import com.microsoft.identity.client.ui.automation.device.TestDevice;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -39,13 +39,13 @@ import lombok.NonNull;
 @Getter
 public class TestContext {
 
-    private final Device device;
+    private final TestDevice testDevice;
     private final Context applicationContext;
 
     private static TestContext sTestContext;
 
-    private TestContext(@NonNull final Device device, @NonNull final Context context) {
-        this.device = device;
+    private TestContext(@NonNull final TestDevice testDevice, @NonNull final Context context) {
+        this.testDevice = testDevice;
         this.applicationContext = context;
     }
 
@@ -58,17 +58,17 @@ public class TestContext {
     }
 
     private static TestContext createTestContext() {
-        final Device testDevice = createDeviceUnderTest();
+        final TestDevice testDevice = createDeviceUnderTest();
         final Context context = ApplicationProvider.getApplicationContext();
         return new TestContext(testDevice, context);
     }
 
-    private static Device createDeviceUnderTest() {
+    private static TestDevice createDeviceUnderTest() {
         final String manufacturer = Build.MANUFACTURER;
         final String model = Build.MODEL;
         final int apiLevel = Build.VERSION.SDK_INT;
 
-        return new Device(manufacturer, model, apiLevel);
+        return new TestDevice(manufacturer, model, apiLevel);
     }
 
 }

@@ -34,26 +34,26 @@ import lombok.Getter;
  * This class represents a device under test during UI Automation.
  */
 @Getter
-public class Device {
+public class TestDevice {
 
     private final String manufacturer;
     private final String model;
     private final int apiLevel;
     private final ISettings settings;
 
-    public Device(@NonNull final String manufacturer,
-                  @NonNull final String model,
-                  final int apiLevel) {
+    public TestDevice(@NonNull final String manufacturer,
+                      @NonNull final String model,
+                      final int apiLevel) {
         this.manufacturer = manufacturer;
         this.model = model;
         this.apiLevel = apiLevel;
         this.settings = getSupportedDeviceSettings(manufacturer, model);
     }
 
-    public Device(@NonNull final String manufacturer,
-                  @NonNull final String model,
-                  final int apiLevel,
-                  @NonNull final ISettings settings) {
+    public TestDevice(@NonNull final String manufacturer,
+                      @NonNull final String model,
+                      final int apiLevel,
+                      @NonNull final ISettings settings) {
         this.manufacturer = manufacturer;
         this.model = model;
         this.apiLevel = apiLevel;

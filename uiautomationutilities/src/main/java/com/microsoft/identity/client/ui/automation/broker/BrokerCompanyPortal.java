@@ -134,9 +134,9 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         CommonUtils.grantPackagePermission();
 
         // Activate CP as admin
-        TestContext.getTestContext().getDevice().getSettings().activateAdmin();
+        TestContext.getTestContext().getTestDevice().getSettings().activateAdmin();
 
-        final ISettings deviceSettings = TestContext.getTestContext().getDevice().getSettings();
+        final ISettings deviceSettings = TestContext.getTestContext().getTestDevice().getSettings();
 
         // if on a Samsung device, also need to handle enrollment in Knox
         if (deviceSettings instanceof SamsungSettings) {

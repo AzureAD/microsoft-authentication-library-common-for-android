@@ -45,7 +45,7 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
 
                 // Auth App may still be installed if device admin (Samsung devices for instance)
                 if (authenticator.isInstalled()) {
-                    TestContext.getTestContext().getDevice().getSettings().disableAdmin("Authenticator");
+                    TestContext.getTestContext().getTestDevice().getSettings().disableAdmin("Authenticator");
                     authenticator.uninstall();
                 }
 
@@ -54,7 +54,7 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
 
                 // CP may still be installed if device admin
                 if (companyPortal.isInstalled()) {
-                    TestContext.getTestContext().getDevice().getSettings().disableAdmin("Company Portal");
+                    TestContext.getTestContext().getTestDevice().getSettings().disableAdmin("Company Portal");
                     companyPortal.uninstall();
                 }
 
