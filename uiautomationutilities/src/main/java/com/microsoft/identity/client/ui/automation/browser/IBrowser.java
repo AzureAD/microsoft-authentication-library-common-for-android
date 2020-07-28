@@ -22,10 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
+import com.microsoft.identity.client.ui.automation.app.IApp;
+
 /**
  * An interface describing a browser app on an Android device during UI Automated test.
  */
-public interface IBrowser {
+public interface IBrowser extends IApp {
 
     /**
      * Browse to the supplied url using this browser.
