@@ -232,8 +232,6 @@ public class StorageHelper implements IStorageHelper {
             throw new IllegalArgumentException("Input is empty or null");
         }
 
-        Logger.verbose(TAG + methodName, "Starting encryption with key: " + mCurrentEncryptionKeyType.name());
-
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
@@ -424,7 +422,7 @@ public class StorageHelper implements IStorageHelper {
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
-            if (isBrokerProcess()){
+            if (isBrokerProcess()) {
                 Logger.info(TAG + methodName, "Use broker key to decrypt");
                 if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                     keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
