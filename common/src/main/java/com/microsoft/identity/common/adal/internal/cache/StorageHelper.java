@@ -188,7 +188,6 @@ public class StorageHelper implements IStorageHelper {
     private SecretKey mEncryptionKey = null;
     private SecretKey mEncryptionHMACKey = null;
     private SecretKey mCachedKeyStoreEncryptedKey = null;
-    private KeyType mCurrentEncryptionKeyType = null;
 
     /**
      * Constructor for {@link StorageHelper}.
