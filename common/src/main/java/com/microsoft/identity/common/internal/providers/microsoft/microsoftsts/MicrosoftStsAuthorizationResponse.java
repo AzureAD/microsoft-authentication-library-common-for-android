@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 
+import java.net.URL;
 import java.util.HashMap;
 
 /**
@@ -47,6 +48,12 @@ public class MicrosoftStsAuthorizationResponse extends MicrosoftAuthorizationRes
         mCloudInstanceHostName = otherParameters.get(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_HOST_NAME);
         mCloudInstanceName = otherParameters.get(MicrosoftAuthorizationResponse.CLOUD_INSTANCE_NAME);
         mSessionState = otherParameters.get(MicrosoftAuthorizationResponse.SESSION_STATE);
+        mDeviceCode = otherParameters.get(MicrosoftAuthorizationResponse.DEVICE_CODE);
+        mUserCode = otherParameters.get(MicrosoftAuthorizationResponse.USER_CODE);
+        mVerificationUri = otherParameters.get(MicrosoftAuthorizationResponse.VERIFICATION_URI);
+        mExpiresIn = otherParameters.get(MicrosoftAuthorizationResponse.EXPIRES_IN);
+        mInterval = otherParameters.get(MicrosoftAuthorizationResponse.INTERVAL);
+        mMessage = otherParameters.get(MicrosoftAuthorizationResponse.MESSAGE);
 
     }
 
