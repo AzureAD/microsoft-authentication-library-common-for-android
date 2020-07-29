@@ -407,4 +407,24 @@ public final class ErrorStrings {
             "Requested account is from a different organization. " +
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
+
+    /**
+     * Device Code Flow only.
+     * Authorization was declined by the user during Device Code Flow.
+     */
+    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_CODE = "authorization_declined";
+    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_MESSAGE = "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
+
+    /**
+     * Device Code Flow only.
+     * The token expired before the user authenticated with the user code.
+     */
+    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_CODE = "expired_token";
+    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_MESSAGE = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
+
+    /**
+     * Device Code Flow only.
+     * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
+     */
+    public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the authorization result.";
 }

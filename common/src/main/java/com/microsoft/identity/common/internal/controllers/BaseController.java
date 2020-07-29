@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -141,6 +142,12 @@ public abstract class BaseController {
             throws Exception;
 
     public abstract boolean removeCurrentAccount(final RemoveAccountCommandParameters parameters)
+            throws Exception;
+
+    public abstract AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
+            throws Exception;
+
+    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(final AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters)
             throws Exception;
 
     /**
