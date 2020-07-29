@@ -410,6 +410,12 @@ public final class ErrorStrings {
 
     /**
      * Device Code Flow only.
+     * Authorization has not been completed yet.
+     */
+    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_CODE = "authorization_pending";
+
+    /**
+     * Device Code Flow only.
      * Authorization was declined by the user during Device Code Flow.
      */
     public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_CODE = "authorization_declined";

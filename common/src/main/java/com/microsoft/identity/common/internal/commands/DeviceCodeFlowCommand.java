@@ -80,7 +80,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
         );
 
         // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
-        AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
+        final AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
 
         Logger.verbose(
                 TAG + methodName,
