@@ -139,7 +139,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             editor.putString(key, encryptedValue);
         }
 
-        editor.commit();
+        editor.apply();
     }
 
     @Override
@@ -223,7 +223,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public final void clear() {
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.clear();
-        editor.commit();
+        editor.apply();
     }
 
     @SuppressLint("ApplySharedPref")
@@ -236,7 +236,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
         editor.remove(key);
-        editor.commit();
+        editor.apply();
 
         Logger.infoPII(
                 TAG,
