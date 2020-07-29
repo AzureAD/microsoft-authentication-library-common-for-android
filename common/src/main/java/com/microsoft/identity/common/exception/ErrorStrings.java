@@ -425,8 +425,8 @@ public final class ErrorStrings {
     /**
      * Device Code Flow only.
      * The token was polled again after it was already received.
+     * Use error code in AuthenticationConstants.OAuth2ErrorCode
      */
-    public final static String DEVICE_CODE_FLOW_INVALID_GRANT_CODE = "invalid_grant";
     public final static String DEVICE_CODE_FLOW_INVALID_GRANT_MESSAGE = "The token for this device code has already been redeemed. To receive another access token, please re-run the Device Code Flow protocol.";
 
     /**

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -186,11 +188,12 @@ public class MicrosoftTokenRequest extends TokenRequest {
         this.mMicrosoftEnrollmentId = microsoftEnrollmentId;
     }
 
+    @Nullable
     public String getDeviceCode() {
         return mDeviceCode;
     }
 
-    public void setDeviceCode(String deviceCode) {
+    public void setDeviceCode(final String deviceCode) {
         this.mDeviceCode = deviceCode;
     }
 }
