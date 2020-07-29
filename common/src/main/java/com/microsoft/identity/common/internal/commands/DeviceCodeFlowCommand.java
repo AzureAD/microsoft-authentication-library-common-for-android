@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -40,6 +41,7 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
  * exception handling.
  */
 public class DeviceCodeFlowCommand extends TokenCommand {
+    private static final String TAG = DeviceCodeFlowCommand.class.getSimpleName();
 
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
@@ -50,6 +52,11 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     public AcquireTokenResult execute() throws Exception {
+        final String methodName = ":execute";
+        Logger.verbose(
+                TAG + methodName,
+                "Device Code Flow command initiating..."
+        );
 
         // Get the controller used to execute the command
         final BaseController controller = getDefaultController();
@@ -73,7 +80,14 @@ public class DeviceCodeFlowCommand extends TokenCommand {
         );
 
         // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)
-        return controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
+        AcquireTokenResult tokenResult = controller.acquireDeviceCodeFlowToken(authorizationResult, commandParameters);
+
+        Logger.verbose(
+                TAG + methodName,
+                "Device Code Flow command exiting with token..."
+        );
+
+        return tokenResult;
     }
 
     @Override

@@ -424,7 +424,14 @@ public final class ErrorStrings {
 
     /**
      * Device Code Flow only.
+     * The token was polled again after it was already received.
+     */
+    public final static String DEVICE_CODE_FLOW_INVALID_GRANT_CODE = "invalid_grant";
+    public final static String DEVICE_CODE_FLOW_INVALID_GRANT_MESSAGE = "The token for this device code has already been redeemed. To receive another access token, please re-run the Device Code Flow protocol.";
+
+    /**
+     * Device Code Flow only.
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
-    public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the authorization result.";
+    public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
 }
