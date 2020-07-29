@@ -245,7 +245,7 @@ public abstract class OAuth2Strategy
         mAuthorizationEndpoint = authorizationEndpoint;
     }
 
-    public AuthorizationResult getDeviceCode(MicrosoftStsAuthorizationRequest authorizationRequest, @Nullable String authorityUrl) throws IOException {
+    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest, @Nullable final String authorityUrl) throws IOException {
         final String methodName = ":getDeviceCode";
 
         // Set up connection
