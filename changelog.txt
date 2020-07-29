@@ -1,3 +1,9 @@
+Version 2.0.15
+-----------
+- Introduces additional tests for cache resiliency
+- Fixes an encoding issue faced by devices configured for Turkish locale
+- Bugfix for #963: Detect Broker Process during encryption/decryption
+
 Version 2.0.14
 -----------
 - Functionally identical to 2.0.13 release
@@ -10,6 +16,10 @@ Version 2.0.13
 - Catch JsonSyntaxException while performing ADAL -> MSAL migration
 - Close 959 - Adds authentication_scheme property to ApiEvent
 - Fix MSAL issue 1096 - Documentation updates
+
+Version 2.0.12-hf1
+-----------
+- Catch JsonSyntaxException when attempting to migrate ADAL cache and malformed records are found.
 
 Version 2.0.12
 -----------
