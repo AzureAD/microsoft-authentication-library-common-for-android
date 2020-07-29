@@ -190,10 +190,8 @@ public abstract class OAuth2Strategy
         headers.putAll(Device.getPlatformIdParameters());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
-        URL url = new URL(mTokenEndpoint);
-
         final HttpResponse response = HttpRequest.sendPost(
-                url,
+                new URL(mTokenEndpoint),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 TOKEN_REQUEST_CONTENT_TYPE
