@@ -32,6 +32,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -241,21 +242,21 @@ public abstract class OAuth2Strategy
         mAuthorizationEndpoint = authorizationEndpoint;
     }
 
-    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest, @Nullable final String authorityUrl) throws IOException {
+    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest, @Nullable final String authorityUri) throws IOException {
         final String methodName = ":getDeviceCode";
 
         // Set up connection
         String urlBody;
 
-        if (authorityUrl == null) {
+        if (authorityUri != null) {
+            urlBody = authorityUri + "/oauth2/v2.0/devicecode";
+        }
+        else {
             // Fetch the tenant from the authority
             String tenant = authorizationRequest.getAuthority().getPath().split("/")[1];
 
             // Set up Device Code Flow authorization url
             urlBody = "https://login.microsoftonline.com/" + tenant + "/oauth2/v2.0/devicecode";
-        }
-        else {
-            urlBody = authorityUrl;
         }
 
         // Set up headers and request body
