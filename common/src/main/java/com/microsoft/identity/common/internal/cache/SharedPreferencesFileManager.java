@@ -124,8 +124,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         mStorageHelper = storageHelper;
     }
 
-    // Suppressing because cache integrity is a greater concern than perf
-    @SuppressLint("ApplySharedPref")
     @Override
     public final void putString(
             final String key,
@@ -218,7 +216,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         return !TextUtils.isEmpty(getString(key));
     }
 
-    @SuppressLint("ApplySharedPref")
     @Override
     public final void clear() {
         final SharedPreferences.Editor editor = mSharedPreferences.edit();
@@ -226,7 +223,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         editor.apply();
     }
 
-    @SuppressLint("ApplySharedPref")
     @Override
     public void remove(final String key) {
         Logger.info(
