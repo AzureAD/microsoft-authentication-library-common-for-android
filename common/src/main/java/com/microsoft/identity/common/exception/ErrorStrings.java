@@ -437,6 +437,12 @@ public final class ErrorStrings {
 
     /**
      * Device Code Flow only.
+     * The scope attached to the request was not valid, either formatted wrong or some scopes did not exist.
+     */
+    public final static String DEVICE_CODE_FLOW_INVALID_SCOPE_MESSAGE = "The scope attached to the device code flow request is invalid. Please re-try with a valid scope.";
+
+    /**
+     * Device Code Flow only.
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
     public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";

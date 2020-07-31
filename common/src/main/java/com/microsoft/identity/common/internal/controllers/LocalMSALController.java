@@ -49,7 +49,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.IErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.IResult;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
@@ -670,6 +669,9 @@ public class LocalMSALController extends BaseController {
                     break;
                 case AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_MESSAGE;
+                    break;
+                case ErrorStrings.INVALID_SCOPE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_SCOPE_MESSAGE;
                     break;
                 default:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE;
