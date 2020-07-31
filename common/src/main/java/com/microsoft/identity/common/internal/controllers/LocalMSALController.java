@@ -26,11 +26,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -40,10 +42,15 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.IErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.IResult;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -56,6 +63,7 @@ import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
+import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -459,14 +467,221 @@ public class LocalMSALController extends BaseController {
     }
 
     @Override
-    public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters) throws Exception {
-        // TODO: Placeholder to avoid inheritance error. Will be implemented after Command/Controller level PR in Common
-        return null;
+    public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters) throws ServiceException, ClientException, IOException {
+        // Logging start of method
+        final String methodName = ":deviceCodeFlowAuthRequest";
+        Logger.verbose(
+                TAG + methodName,
+                "Device Code Flow: Authorizing user code..."
+        );
+
+        // Default scopes here
+        final Set<String> mergedScopes = addDefaultScopes(parameters);
+
+        final DeviceCodeFlowCommandParameters parametersWithScopes = parameters
+                .toBuilder()
+                .scopes(mergedScopes)
+                .build();
+
+        logParameters(TAG, parametersWithScopes);
+
+        // Start telemetry with LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE
+        Telemetry.emit(
+                new ApiStartEvent()
+                        .putProperties(parametersWithScopes)
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
+        );
+
+        // Create OAuth2Strategy using commandParameters and strategyParameters
+        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
+
+        final OAuth2Strategy oAuth2Strategy = parametersWithScopes
+                .getAuthority()
+                .createOAuth2Strategy(strategyParameters);
+
+        // DCF protocol step 1: Get user code
+        // Populate global authorization request
+        mAuthorizationRequest = getAuthorizationRequest(oAuth2Strategy, parametersWithScopes);
+
+        final String authorityUri = ((AzureActiveDirectoryAuthority) parametersWithScopes.getAuthority()).getAudience().getCloudUrl();
+
+        // Call method defined in oAuth2Strategy to request authorization
+        final AuthorizationResult authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest, authorityUri);
+
+        validateServiceResult(authorizationResult);
+
+        Logger.verbose(
+                TAG + methodName,
+                "Device Code Flow authorization step finished..."
+        );
+        logResult(TAG, authorizationResult);
+
+        // End telemetry with LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE
+        Telemetry.emit(
+                new ApiEndEvent()
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
+        );
+
+        return authorizationResult;
     }
 
     @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(final AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws Exception {
-        // TODO: Placeholder to avoid inheritance error. Will be implemented after Command/Controller level PR in Common
-        return null;
+    public AcquireTokenResult acquireDeviceCodeFlowToken(
+            final AuthorizationResult authorizationResult,
+            final DeviceCodeFlowCommandParameters parameters)
+            throws ServiceException, ClientException, IOException {
+
+        // Logging start of method
+        final String methodName = ":acquireDeviceCodeFlowToken";
+        Logger.verbose(
+                TAG + methodName,
+                "Device Code Flow: Polling for token..."
+        );
+
+        // Start telemetry with LOCAL_DEVICE_CODE_FLOW_POLLING
+        Telemetry.emit(
+                new ApiStartEvent()
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING)
+        );
+
+        // Create empty AcquireTokenResult object
+        final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+
+        // Assign authorization result
+        acquireTokenResult.setAuthorizationResult(authorizationResult);
+
+        // Fetch the Authorization Response
+        final MicrosoftStsAuthorizationResponse authorizationResponse = (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
+
+        // Create OAuth2Strategy using commandParameters and strategyParameters
+        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        strategyParameters.setContext(parameters.getAndroidApplicationContext());
+
+        final OAuth2Strategy oAuth2Strategy = parameters
+                .getAuthority()
+                .createOAuth2Strategy(strategyParameters);
+
+        // DCF protocol step 2: Poll for token
+        TokenResult tokenResult = null;
+
+        // Create token request outside of loop so it isn't re-created after every loop
+        final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
+                mAuthorizationRequest,
+                authorizationResponse,
+                parameters.getAuthenticationScheme()
+        );
+
+        // Fetch wait interval
+        final int interval = Integer.parseInt(authorizationResponse.getInterval()) * 1000;
+
+        String errorCode = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_CODE;
+
+        // Loop to send multiple requests checking for token
+        while (authorizationPending(errorCode)) {
+            errorCode = ""; // Reset error code
+
+            // Execute Token Request
+            tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+
+            // Fetch error if the request failed
+            if (tokenResult.getErrorResponse() != null) {
+                errorCode = tokenResult.getErrorResponse().getError();
+            }
+
+            // Check if authorization is pending
+            if (authorizationPending(errorCode)) {
+                // Wait between polls
+                ThreadUtils.sleepSafely(interval, TAG,
+                        "Attempting to sleep thread during Device Code Flow token polling...");
+            }
+        }
+
+        // Assign token result
+        acquireTokenResult.setTokenResult(tokenResult);
+
+        // Validate request success, may throw MsalServiceException
+        validateServiceResult(tokenResult);
+
+        // If the token is valid, save it into token cache
+        final List<ICacheRecord> records = saveTokens(
+                oAuth2Strategy,
+                mAuthorizationRequest,
+                acquireTokenResult.getTokenResult().getTokenResponse(),
+                parameters.getOAuth2TokenCache()
+        );
+
+        // Once the token is stored, fetch and assign the authentication result
+        final ICacheRecord newestRecord = records.get(0);
+        acquireTokenResult.setLocalAuthenticationResult(
+                new LocalAuthenticationResult(
+                        finalizeCacheRecordForResult(
+                                newestRecord,
+                                parameters.getAuthenticationScheme()
+                        ),
+                        records,
+                        SdkType.MSAL,
+                        false
+                )
+        );
+
+        logResult(TAG, tokenResult);
+
+        // End telemetry with LOCAL_DEVICE_CODE_FLOW_POLLING
+        Telemetry.emit(
+                new ApiEndEvent()
+                        .putResult(acquireTokenResult)
+                        .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING)
+        );
+
+        return acquireTokenResult;
+    }
+
+    /**
+     * Returns true if the given error shows authorization is pending.
+     * @param errorCode error from response
+     * @return true or false if error is pending
+     */
+    private boolean authorizationPending(@NonNull final String errorCode) {
+        return errorCode.equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_CODE);
+    }
+
+    /**
+     * Helper method to check if a result object is valid (was a success). If not, an exception will be generated and thrown.
+     * This method is called in both parts of the DCF protocol.
+     * @param result result object to be checked
+     * @throws ServiceException MsalServiceException object reflecting error code returned by the result
+     */
+    private void validateServiceResult(@NonNull final IResult result) throws ServiceException {
+        // If result was unsuccessful, create an exception
+        if (!result.getSuccess()) {
+            // Create ServiceException object
+            // Based on error code, fetch the error message
+            final String errorCode = result.getErrorResponse().getError();
+            final String errorMessage;
+
+            // Check response code against pre-defined error codes
+            switch (errorCode) {
+                case ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_CODE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_MESSAGE;
+                    break;
+                case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_CODE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_MESSAGE;
+                    break;
+                case AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_MESSAGE;
+                    break;
+                default:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE;
+            }
+
+            // Create a ServiceException object and throw it
+            throw new ServiceException(
+                    errorCode,
+                    errorMessage,
+                    ServiceException.DEFAULT_STATUS_CODE,
+                    null
+            );
+        }
     }
 }
