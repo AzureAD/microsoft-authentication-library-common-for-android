@@ -429,6 +429,13 @@ public final class ErrorStrings {
     public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_MESSAGE = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
 
     /**
+     * Device Vode Flow only.
+     * The token request sent a device code that was not recognized.
+     */
+    public final static String DEVICE_CODE_FLOW_BAD_VERIFICATION_CODE = "bad_verification_code";
+    public final static String DEVICE_CODE_FLOW_BAD_VERIFICATION_MESSAGE = "The token request contains a device code that was not recognized. Verify that the client is sending the right device code.";
+
+    /**
      * Device Code Flow only.
      * The token was polled again after it was already received.
      * Use error code in AuthenticationConstants.OAuth2ErrorCode

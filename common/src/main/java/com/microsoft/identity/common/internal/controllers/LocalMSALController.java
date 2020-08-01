@@ -667,6 +667,9 @@ public class LocalMSALController extends BaseController {
                 case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_CODE:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_MESSAGE;
                     break;
+                case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_CODE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_MESSAGE;
+                    break;
                 case AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_MESSAGE;
                     break;
