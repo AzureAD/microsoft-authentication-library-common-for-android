@@ -11,15 +11,14 @@ android checkstyle
 -->
 <module name="Checker">
   <module name="SuppressWarningsFilter"/>
-  <module name="SuppressionCommentFilter" />
   <module name="SuppressionFilter">
     <property name="file" value="${checkstyleConfigDir}/suppressions.xml"/>
   </module>
   <property name="severity" value="warning"/>
   <module name="TreeWalker">
-    <module name="FileContentsHolder"/>
     <module name="SuppressWarningsHolder" />
     <property name="tabWidth" value="4"/>
+    <module name="SuppressionCommentFilter" />
 <!--
     <module name="JavadocMethod">
       <property name="scope" value="public"/>

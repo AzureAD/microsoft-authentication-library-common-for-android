@@ -1,19 +1,26 @@
 plugins {
     id "org.sonarqube" version "2.6.2"
+    id "com.github.spotbugs" version "4.4.5"
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
-apply plugin: 'maven'
+//apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
+sourceSets {
+    main {
+        java.srcDirs = ['src/main/java']
+    }
+}
+
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     def sliceParameter = "" // will be blank unless specified by developer
     def dcParameter = "" // will be blank unless specified by developer
@@ -122,10 +129,34 @@ dependencies {
     })
 }
 
+// Configure spotbugs plugin.
+spotbugs {
+    toolVersion = "4.1.1"
+    ignoreFailures = false
+    showStackTraces = true
+    showProgress = true
+    effort = 'MAX'
+    reportLevel = 'default'
+    visitors = [ 'FindSqlInjection', 'SwitchFallthrough' ]
+    // omitVisitors = [ 'FindNonShortCircuit' ]
+    reportsDir = file("$buildDir/output/spotbugs")
+    //includeFilter = file("include.xml")
+    //excludeFilter = file("exclude.xml")
+    onlyAnalyze = [ 'com.microsoft.*' ]
+    maxHeapSize = '1g'
+    extraArgs = [ '-nested:false' ]
+    // jvmArgs = [ '-Duser.language=en' ]
+    //classes = files("$project.buildDir/intermediates/javac")
+}
+
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        source = variant.javaCompiler.source
+        if (variant.hasProperty('javaCompileProvider')) {
+            source = variant.getJavaCompileProvider().get().source
+        } else {
+            source = variant.javaCompiler.source
+        }
 
         title = "Microsoft Identity Android Common"
 
@@ -153,7 +184,7 @@ android.libraryVariants.all { variant ->
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+    destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
 def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
@@ -291,8 +322,20 @@ repositories {
     }
 }
 
+preBuild.dependsOn('checkstyle')
+
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
 }
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+    dependsOn 'assemble'
+    reports {
+        // Enable HTML report only
+        html.enabled = true
+        xml.enabled = false
+    }
+}
+

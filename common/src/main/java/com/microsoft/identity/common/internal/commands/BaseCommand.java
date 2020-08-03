@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.WarningType;
@@ -73,6 +75,15 @@ public abstract class BaseCommand<T> implements Command<T> {
     }
 
     public abstract T execute() throws Exception;
+
+    public T run() throws Exception {
+        try {
+            return execute();
+        } catch (final Exception e) {
+            Log.wtf("BaseCommand:run", "Unhandled exception in command " + this.getClass().getCanonicalName() + "#execute()", e);
+            throw e;
+        }
+    }
 
     public BaseController getDefaultController() {
         return controllers.get(0);

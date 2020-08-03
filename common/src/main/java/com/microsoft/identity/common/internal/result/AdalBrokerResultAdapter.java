@@ -199,7 +199,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         } else {
 
-            Logger.info(TAG , "Setting Bundle result for Unknown Exception/Bad result.");
+            Logger.error(TAG , "Setting Bundle result for Unknown Exception/Bad result.", exception);
 
             setErrorToResultBundle(
                     resultBundle,
