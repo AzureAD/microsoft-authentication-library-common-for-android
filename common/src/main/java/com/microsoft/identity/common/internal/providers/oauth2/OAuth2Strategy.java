@@ -86,7 +86,7 @@ public abstract class OAuth2Strategy
     private static final String TAG = OAuth2Strategy.class.getSimpleName();
 
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
-    protected static final String DEVICE_CODE_CONTENT_TYPE = "application/x-www-form-urlencoded";
+    protected static final String DEVICE_CODE_CONTENT_TYPE = TOKEN_REQUEST_CONTENT_TYPE;
 
     protected final GenericOAuth2Configuration mConfig;
     protected final GenericOAuth2StrategyParameters mStrategyParameters;
