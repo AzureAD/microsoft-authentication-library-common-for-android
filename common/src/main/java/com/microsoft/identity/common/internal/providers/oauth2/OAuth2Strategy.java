@@ -240,8 +240,10 @@ public abstract class OAuth2Strategy
         mAuthorizationEndpoint = authorizationEndpoint;
     }
 
-    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest, @NonNull final String authorityUri) throws IOException {
+    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) throws IOException {
         final String methodName = ":getDeviceCode";
+
+        final String urlBody = ((MicrosoftStsOAuth2Configuration) mConfig).getAuthorityUrl().toString() + "/oauth2/v2.0/devicecode";
 
         // Set up headers and request body
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
@@ -251,7 +253,7 @@ public abstract class OAuth2Strategy
 
         // Send request
         final HttpResponse response = HttpRequest.sendPost(
-                new URL(authorityUri + "/oauth2/v2.0/devicecode"),
+                new URL(urlBody),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 DEVICE_CODE_CONTENT_TYPE

@@ -32,7 +32,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -491,6 +490,19 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
         );
 
+        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+
+        //0.1 If not known throw resulting exception
+        if (!authorityResult.getKnown()) {
+            Telemetry.emit(
+                    new ApiEndEvent()
+                            .putException(authorityResult.getClientException())
+                            .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
+            );
+
+            throw authorityResult.getClientException();
+        }
+
         // Create OAuth2Strategy using commandParameters and strategyParameters
         final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
@@ -503,10 +515,8 @@ public class LocalMSALController extends BaseController {
         // Populate global authorization request
         mAuthorizationRequest = getAuthorizationRequest(oAuth2Strategy, parametersWithScopes);
 
-        final String authorityUri = ((AzureActiveDirectoryAuthority) parametersWithScopes.getAuthority()).getAudience().getCloudUrl();
-
         // Call method defined in oAuth2Strategy to request authorization
-        final AuthorizationResult authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest, authorityUri);
+        final AuthorizationResult authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
 
         validateServiceResult(authorizationResult);
 

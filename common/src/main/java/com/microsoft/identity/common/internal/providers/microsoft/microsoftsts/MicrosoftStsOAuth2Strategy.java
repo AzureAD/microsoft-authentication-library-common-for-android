@@ -33,10 +33,8 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -349,12 +347,6 @@ public class MicrosoftStsOAuth2Strategy
         if (response.getDeviceCode() != null) {
             tokenRequest.setGrantType(TokenRequest.GrantTypes.DEVICE_CODE);
             tokenRequest.setDeviceCode(response.getDeviceCode());
-
-            // mTenantId from mAudience (being "common") is being added to the path in AzureActiveDirectoryAuthority
-            // Needed to omit "\common" from the endpoint so as to not break DCF
-            // mTokenEndPoint be automatically reset in future commands
-            String newTokenEndpoint = this.mTokenEndpoint.replace("/common/", "/");
-            setTokenEndpoint(newTokenEndpoint);
         }
         else { // If device code doesn't exist, continue with auth_code configuration
             tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
