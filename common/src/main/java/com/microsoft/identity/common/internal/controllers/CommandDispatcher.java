@@ -357,7 +357,7 @@ public class CommandDispatcher {
      * Cancel any current interactive requests.
      * @param broadcastManager the broadcast manager to use to cancel requests.
      */
-    public static void cancelInteractiveRequest(LocalBroadcastManager broadcastManager) {
+    public static void cancelInteractiveRequest(@NonNull final LocalBroadcastManager broadcastManager) {
         synchronized (sLock) {
             // Send a broadcast to cancel if any active auth request is present.
             broadcastManager.sendBroadcast(new Intent(CANCEL_INTERACTIVE_REQUEST));
