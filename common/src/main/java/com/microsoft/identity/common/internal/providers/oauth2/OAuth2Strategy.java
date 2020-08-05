@@ -26,7 +26,6 @@ import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -241,22 +240,8 @@ public abstract class OAuth2Strategy
         mAuthorizationEndpoint = authorizationEndpoint;
     }
 
-    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest, @Nullable final String authorityUri) throws IOException {
+    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest, @NonNull final String authorityUri) throws IOException {
         final String methodName = ":getDeviceCode";
-
-        // Set up connection
-        String urlBody;
-
-        if (authorityUri != null) {
-            urlBody = authorityUri + "/oauth2/v2.0/devicecode";
-        }
-        else {
-            // Fetch the tenant from the authority
-            String tenant = authorizationRequest.getAuthority().getPath().split("/")[1];
-
-            // Set up Device Code Flow authorization url
-            urlBody = "https://login.microsoftonline.com/" + tenant + "/oauth2/v2.0/devicecode";
-        }
 
         // Set up headers and request body
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
@@ -266,7 +251,7 @@ public abstract class OAuth2Strategy
 
         // Send request
         final HttpResponse response = HttpRequest.sendPost(
-                new URL(urlBody),
+                new URL(authorityUri + "/oauth2/v2.0/devicecode"),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 DEVICE_CODE_CONTENT_TYPE
@@ -293,7 +278,9 @@ public abstract class OAuth2Strategy
                     "Device Code Flow authorization successful..."
             );
         }
-        else { // Request failed
+
+        // Request failed
+        else {
             // Get and parse response body
             final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, Object>>() {
             }.getType());

@@ -574,10 +574,15 @@ public class LocalMSALController extends BaseController {
         // Fetch wait interval
         final int interval = Integer.parseInt(authorizationResponse.getInterval()) * 1000;
 
-        String errorCode = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_CODE;
+        String errorCode = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE;
 
         // Loop to send multiple requests checking for token
         while (authorizationPending(errorCode)) {
+
+            // Wait between polls
+            ThreadUtils.sleepSafely(interval, TAG,
+                    "Attempting to sleep thread during Device Code Flow token polling...");
+
             errorCode = ""; // Reset error code
 
             // Execute Token Request
@@ -587,20 +592,13 @@ public class LocalMSALController extends BaseController {
             if (tokenResult.getErrorResponse() != null) {
                 errorCode = tokenResult.getErrorResponse().getError();
             }
-
-            // Check if authorization is pending
-            if (authorizationPending(errorCode)) {
-                // Wait between polls
-                ThreadUtils.sleepSafely(interval, TAG,
-                        "Attempting to sleep thread during Device Code Flow token polling...");
-            }
         }
-
-        // Assign token result
-        acquireTokenResult.setTokenResult(tokenResult);
 
         // Validate request success, may throw MsalServiceException
         validateServiceResult(tokenResult);
+
+        // Assign token result
+        acquireTokenResult.setTokenResult(tokenResult);
 
         // If the token is valid, save it into token cache
         final List<ICacheRecord> records = saveTokens(
@@ -642,7 +640,7 @@ public class LocalMSALController extends BaseController {
      * @return true or false if error is pending
      */
     private boolean authorizationPending(@NonNull final String errorCode) {
-        return errorCode.equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_CODE);
+        return errorCode.equals(ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE);
     }
 
     /**
@@ -661,20 +659,20 @@ public class LocalMSALController extends BaseController {
 
             // Check response code against pre-defined error codes
             switch (errorCode) {
-                case ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_MESSAGE;
+                case ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE;
                     break;
-                case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_MESSAGE;
+                case ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE;
                     break;
-                case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_CODE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_MESSAGE;
+                case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE:
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE;
                     break;
                 case AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_MESSAGE;
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE;
                     break;
                 case ErrorStrings.INVALID_SCOPE:
-                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_SCOPE_MESSAGE;
+                    errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_SCOPE_ERROR_MESSAGE;
                     break;
                 default:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE;
