@@ -81,7 +81,7 @@ public class WordApp extends App implements IFirstPartyApp {
 
     @Override
     public void onAccountAdded() {
-        throw new UnsupportedOperationException("Not implemented");
+        return;
     }
 
     private void signIn(@NonNull final String username,
