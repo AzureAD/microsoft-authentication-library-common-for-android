@@ -37,6 +37,10 @@ import org.junit.Assert;
 
 import java.util.Calendar;
 
+/**
+ * A model representing the Settings app on a Samsung device. Please note that this class is
+ * currently optimized for a Samsung Galaxy S6 device.
+ */
 public class SamsungSettings extends BaseSettings {
 
     @Override

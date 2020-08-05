@@ -41,6 +41,10 @@ import java.util.Calendar;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
+/**
+ * A model representing the Settings app on a Google device. Please note that this class is
+ * currently optimized for a Google Pixel 2 device.
+ */
 public class GoogleSettings extends BaseSettings {
 
     @Override
