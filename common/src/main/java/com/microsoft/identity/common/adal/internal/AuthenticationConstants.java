@@ -1447,6 +1447,47 @@ public final class AuthenticationConstants {
          * Broker should make a request to DRS to get the current device status and act accordingly.
          */
         public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
+
+        /**
+         * SubError code for cases when client not in the Microsoft first party family group
+         * redeems auth code or refresh token given to a client in the family
+         */
+        public static final String CLIENT_MISMATCH = "client_mismatch";
+
+        /**
+         * Conditional access suberror code when a policy enforces token lifetime.
+         */
+        public static final String TOKEN_EXPIRED = "token_expired";
+
+        /**
+         *  Conditional access suberror code.
+         *  This indicates a simple action is required by the end user, like MFA.
+         */
+        public static final String BASIC_ACTION = "basic_action";
+
+        /**
+         * Conditional access suberror code.
+         * This indicates additional action is required that is in the user control, but is outside of the sign in session.
+         * For example, enroll in MDM or register install an app that uses Intune app protection.
+         */
+        public static final String ADDITIONAL_ACTION = "additional_action";
+
+        /**
+         * Conditional access suberror code.
+         * User will be shown an informational message with no immediate remediation steps.
+         * For example access was blocked due to location or the device is not domain joined.
+         */
+        public static final String MESSAGE_ONLY = "message_only";
+
+        /**
+         * OpenId connect suberror code, when user consent is required.
+         */
+        public static final String CONSENT_REQUIRED = "consent_required";
+
+        /**
+         * Custom sub error that notifies the user that their password has expired.
+         */
+        public static final String USER_PASSWORD_EXPIRED = "user_password_expired";
     }
 
     /**
