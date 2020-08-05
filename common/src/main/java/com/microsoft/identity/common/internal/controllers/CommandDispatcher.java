@@ -300,10 +300,7 @@ public class CommandDispatcher {
 
             // only send broadcast to cancel if within broker
             if (command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
-                // Send a broadcast to cancel if any active auth request is present.
-                localBroadcastManager.sendBroadcast(
-                        new Intent(CANCEL_INTERACTIVE_REQUEST)
-                );
+                cancelInteractiveRequest(localBroadcastManager);
             }
 
             sInteractiveExecutor.execute(new Runnable() {
@@ -353,6 +350,17 @@ public class CommandDispatcher {
                     returnCommandResult(command, commandResult, handler);
                 }
             });
+        }
+    }
+
+    /**
+     * Cancel any current interactive requests.
+     * @param broadcastManager the broadcast manager to use to cancel requests.
+     */
+    public static void cancelInteractiveRequest(LocalBroadcastManager broadcastManager) {
+        synchronized (sLock) {
+            // Send a broadcast to cancel if any active auth request is present.
+            broadcastManager.sendBroadcast(new Intent(CANCEL_INTERACTIVE_REQUEST));
         }
     }
 
