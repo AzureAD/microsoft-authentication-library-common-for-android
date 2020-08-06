@@ -34,6 +34,10 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.lang.reflect.Type;
 
+import static com.microsoft.identity.common.internal.authorities.AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount;
+import static com.microsoft.identity.common.internal.authorities.AadAuthorityAudience.AzureAdMultipleOrgs;
+import static com.microsoft.identity.common.internal.authorities.AadAuthorityAudience.PersonalMicrosoftAccount;
+
 public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
     private static final String TAG = AuthorityDeserializer.class.getSimpleName();
@@ -52,12 +56,32 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                             "Type: AAD"
                     );
                     final AzureActiveDirectoryAuthority aadAuthority = context.deserialize(authorityObject, AzureActiveDirectoryAuthority.class);
-                    if (aadAuthority != null && aadAuthority.mAudience != null && aadAuthority.mAuthorityUrl != null) {
+
+                    // The developer might supply authority_url instead of audience.
+                    // In that case, we'll try our best to map the audience here.
+                    if (aadAuthority != null && aadAuthority.mAuthorityUrl != null) {
                         final Uri uri = Uri.parse(aadAuthority.mAuthorityUrl);
-                        aadAuthority.mAudience.setCloudUrl(uri.getScheme() + "://" + uri.getHost());
-                        // Try to extract tenant ID from the authority link.
-                        if (!TextUtils.isEmpty(uri.getLastPathSegment())) {
-                            aadAuthority.mAudience.setTenantId(uri.getLastPathSegment());
+                        final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
+                        final String tenant = uri.getLastPathSegment();
+
+                        if (!TextUtils.isEmpty(tenant)) {
+                            switch (tenant) {
+                                case AadAuthorityAudience.common:
+                                    // Do nothing. This is the default value.
+                                    break;
+
+                                case AadAuthorityAudience.organizations:
+                                    aadAuthority.mAudience = new AnyOrganizationalAccount(cloudUrl);
+                                    break;
+
+                                case AadAuthorityAudience.consumers:
+                                    aadAuthority.mAudience = new AnyPersonalAccount(cloudUrl);
+                                    break;
+
+                                default:
+                                    aadAuthority.mAudience = new AccountsInOneOrganization(cloudUrl, uri.getLastPathSegment());
+                                    break;
+                            }
                         }
                     }
                     return aadAuthority;
