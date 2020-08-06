@@ -75,7 +75,7 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
-    PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
+    public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
                                     @Nullable final String httpMethod,
                                     @NonNull final URL url,
                                     @Nullable final String nonce) {
