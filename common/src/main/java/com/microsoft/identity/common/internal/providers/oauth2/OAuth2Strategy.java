@@ -243,8 +243,6 @@ public abstract class OAuth2Strategy
     public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) throws IOException {
         final String methodName = ":getDeviceCode";
 
-        final String urlBody = ((MicrosoftStsOAuth2Configuration) mConfig).getAuthorityUrl().toString() + "/oauth2/v2.0/devicecode";
-
         // Set up headers and request body
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
         final Map<String, String> headers = new TreeMap<>();
@@ -253,15 +251,13 @@ public abstract class OAuth2Strategy
 
         // Send request
         final HttpResponse response = HttpRequest.sendPost(
-                new URL(urlBody),
+                ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceCodeEndpoint(),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 DEVICE_CODE_CONTENT_TYPE
         );
 
         // Create the authorization result
-        // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
-        AuthorizationResult authorizationResult;
 
         // Check if the request was successful
         // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
@@ -270,15 +266,19 @@ public abstract class OAuth2Strategy
             final HashMap<String, String> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, String>>() {}.getType());
 
             // Create response and result objects
-            // Not sure where "code" is stored. Not found in the input stream...
+            // "code" can be left null since it's DCF
             final MicrosoftStsAuthorizationResponse authorizationResponse =
                     new MicrosoftStsAuthorizationResponse(null, authorizationRequest.getState(), parsedResponseBody);
-            authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authorizationResponse);
+
+            // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
+            final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authorizationResponse);
 
             Logger.verbose(
                     TAG + methodName,
                     "Device Code Flow authorization successful..."
             );
+
+            return authorizationResult;
         }
 
         // Request failed
@@ -293,15 +293,16 @@ public abstract class OAuth2Strategy
                             (String) parsedResponseBody.get(AuthorizationResultFactory.ERROR),
                             (String) parsedResponseBody.get(AuthorizationResultFactory.ERROR_DESCRIPTION));
 
-            authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.FAIL, authorizationErrorResponse);
+            // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
+            final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.FAIL, authorizationErrorResponse);
 
             Logger.verbose(
                     TAG + methodName,
                     "Device Code Flow authorization failure..."
             );
-        }
 
-        return authorizationResult;
+            return authorizationResult;
+        }
     }
 
     protected GenericOAuth2Configuration getOAuth2Configuration() {

@@ -465,7 +465,8 @@ public class LocalMSALController extends BaseController {
     }
 
     @Override
-    public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters) throws ServiceException, ClientException, IOException {
+    public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
+            throws ServiceException, ClientException, IOException {
         // Logging start of method
         final String methodName = ":deviceCodeFlowAuthRequest";
         Logger.verbose(
@@ -490,35 +491,48 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
         );
 
-        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+        final Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
 
-        //0.1 If not known throw resulting exception
+        // If not known throw resulting exception
         if (!authorityResult.getKnown()) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(authorityResult.getClientException())
-                            .putApiId(TelemetryEventStrings.Api.LOCAL_ACQUIRE_TOKEN_INTERACTIVE)
+                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
             );
 
             throw authorityResult.getClientException();
         }
 
-        // Create OAuth2Strategy using commandParameters and strategyParameters
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
+        final AuthorizationResult authorizationResult;
 
-        final OAuth2Strategy oAuth2Strategy = parametersWithScopes
-                .getAuthority()
-                .createOAuth2Strategy(strategyParameters);
+        try {
+            // Create OAuth2Strategy using commandParameters and strategyParameters
+            final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+            strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
-        // DCF protocol step 1: Get user code
-        // Populate global authorization request
-        mAuthorizationRequest = getAuthorizationRequest(oAuth2Strategy, parametersWithScopes);
+            final OAuth2Strategy oAuth2Strategy = parametersWithScopes
+                    .getAuthority()
+                    .createOAuth2Strategy(strategyParameters);
 
-        // Call method defined in oAuth2Strategy to request authorization
-        final AuthorizationResult authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
+            // DCF protocol step 1: Get user code
+            // Populate global authorization request
+            mAuthorizationRequest = getAuthorizationRequest(oAuth2Strategy, parametersWithScopes);
 
-        validateServiceResult(authorizationResult);
+            // Call method defined in oAuth2Strategy to request authorization
+            authorizationResult = oAuth2Strategy.getDeviceCode((MicrosoftStsAuthorizationRequest) mAuthorizationRequest);
+
+            validateServiceResult(authorizationResult);
+
+        }
+        catch (Exception error){
+            Telemetry.emit(
+                    new ApiEndEvent()
+                            .putException(error)
+                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE)
+            );
+            throw error;
+        }
 
         Logger.verbose(
                 TAG + methodName,
@@ -563,74 +577,84 @@ public class LocalMSALController extends BaseController {
         // Fetch the Authorization Response
         final MicrosoftStsAuthorizationResponse authorizationResponse = (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
 
-        // Create OAuth2Strategy using commandParameters and strategyParameters
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        strategyParameters.setContext(parameters.getAndroidApplicationContext());
-
-        final OAuth2Strategy oAuth2Strategy = parameters
-                .getAuthority()
-                .createOAuth2Strategy(strategyParameters);
-
         // DCF protocol step 2: Poll for token
         TokenResult tokenResult = null;
 
-        // Create token request outside of loop so it isn't re-created after every loop
-        final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
-                mAuthorizationRequest,
-                authorizationResponse,
-                parameters.getAuthenticationScheme()
-        );
+        try {
+            // Create OAuth2Strategy using commandParameters and strategyParameters
+            final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+            strategyParameters.setContext(parameters.getAndroidApplicationContext());
 
-        // Fetch wait interval
-        final int interval = Integer.parseInt(authorizationResponse.getInterval()) * 1000;
+            final OAuth2Strategy oAuth2Strategy = parameters
+                    .getAuthority()
+                    .createOAuth2Strategy(strategyParameters);
 
-        String errorCode = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE;
+            // Create token request outside of loop so it isn't re-created after every loop
+            final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
+                    mAuthorizationRequest,
+                    authorizationResponse,
+                    parameters.getAuthenticationScheme()
+            );
 
-        // Loop to send multiple requests checking for token
-        while (authorizationPending(errorCode)) {
+            // Fetch wait interval
+            final int intervalInMilliseconds = Integer.parseInt(authorizationResponse.getInterval()) * 1000;
 
-            // Wait between polls
-            ThreadUtils.sleepSafely(interval, TAG,
-                    "Attempting to sleep thread during Device Code Flow token polling...");
+            String errorCode = ErrorStrings.DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE;
 
-            errorCode = ""; // Reset error code
+            // Loop to send multiple requests checking for token
+            while (authorizationPending(errorCode)) {
 
-            // Execute Token Request
-            tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+                // Wait between polls
+                ThreadUtils.sleepSafely(intervalInMilliseconds, TAG,
+                        "Attempting to sleep thread during Device Code Flow token polling...");
 
-            // Fetch error if the request failed
-            if (tokenResult.getErrorResponse() != null) {
-                errorCode = tokenResult.getErrorResponse().getError();
+                errorCode = ""; // Reset error code
+
+                // Execute Token Request
+                tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+
+                // Fetch error if the request failed
+                if (tokenResult.getErrorResponse() != null) {
+                    errorCode = tokenResult.getErrorResponse().getError();
+                }
             }
+
+            // Validate request success, may throw MsalServiceException
+            validateServiceResult(tokenResult);
+
+            // Assign token result
+            acquireTokenResult.setTokenResult(tokenResult);
+
+            // If the token is valid, save it into token cache
+            final List<ICacheRecord> records = saveTokens(
+                    oAuth2Strategy,
+                    mAuthorizationRequest,
+                    acquireTokenResult.getTokenResult().getTokenResponse(),
+                    parameters.getOAuth2TokenCache()
+            );
+
+            // Once the token is stored, fetch and assign the authentication result
+            final ICacheRecord newestRecord = records.get(0);
+            acquireTokenResult.setLocalAuthenticationResult(
+                    new LocalAuthenticationResult(
+                            finalizeCacheRecordForResult(
+                                    newestRecord,
+                                    parameters.getAuthenticationScheme()
+                            ),
+                            records,
+                            SdkType.MSAL,
+                            false
+                    )
+            );
         }
-
-        // Validate request success, may throw MsalServiceException
-        validateServiceResult(tokenResult);
-
-        // Assign token result
-        acquireTokenResult.setTokenResult(tokenResult);
-
-        // If the token is valid, save it into token cache
-        final List<ICacheRecord> records = saveTokens(
-                oAuth2Strategy,
-                mAuthorizationRequest,
-                acquireTokenResult.getTokenResult().getTokenResponse(),
-                parameters.getOAuth2TokenCache()
-        );
-
-        // Once the token is stored, fetch and assign the authentication result
-        final ICacheRecord newestRecord = records.get(0);
-        acquireTokenResult.setLocalAuthenticationResult(
-                new LocalAuthenticationResult(
-                        finalizeCacheRecordForResult(
-                                newestRecord,
-                                parameters.getAuthenticationScheme()
-                        ),
-                        records,
-                        SdkType.MSAL,
-                        false
-                )
-        );
+        catch (Exception error){
+            Telemetry.emit(
+                    new ApiEndEvent()
+                            .putException(error)
+                            .putApiId(TelemetryEventStrings.Api.LOCAL_DEVICE_CODE_FLOW_POLLING)
+            );
+            throw error;
+        }
 
         logResult(TAG, tokenResult);
 
