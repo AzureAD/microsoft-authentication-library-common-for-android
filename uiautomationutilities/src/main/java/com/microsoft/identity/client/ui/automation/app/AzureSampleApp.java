@@ -102,7 +102,7 @@ public class AzureSampleApp extends App {
     public void confirmSignedIn(@NonNull final String username) {
         final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
         try {
-            Assert.assertEquals(signedInUser.getText(), username);
+            Assert.assertEquals("User is signed into Azure Sample App", signedInUser.getText(), username);
         } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }

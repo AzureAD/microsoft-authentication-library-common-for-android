@@ -150,7 +150,7 @@ public class SamsungSettings extends BaseSettings {
 
             // Make sure we are seeing the calendar
             final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/sem_datepicker_calendar_header");
-            Assert.assertTrue(datePicker.exists());
+            Assert.assertTrue("Date Picker appears.", datePicker.exists());
 
             final Calendar cal = Calendar.getInstance();
 

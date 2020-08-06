@@ -64,7 +64,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void onAccountAdded() {
         // Make sure we are on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
-        Assert.assertTrue(addAnotherAccountScreen.exists());
+        Assert.assertTrue(
+                "Add another account screen appears in Outlook account.",
+                addAnotherAccountScreen.exists()
+        );
 
         // click may be later
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
@@ -97,7 +100,10 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
         // Make sure our account is listed in the account drawer
         final UiObject testAccountLabel = UiAutomatorUtils.obtainUiObjectWithText(username);
-        Assert.assertTrue(testAccountLabel.exists());
+        Assert.assertTrue(
+                "Provided user account exists in Outlook App.",
+                testAccountLabel.exists()
+        );
     }
 
     private void signIn(@NonNull final String username,

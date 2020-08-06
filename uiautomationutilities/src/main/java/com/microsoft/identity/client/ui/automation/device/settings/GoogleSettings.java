@@ -136,7 +136,10 @@ public class GoogleSettings extends BaseSettings {
             // Find the cert installer and make sure it exists
             UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
             certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            Assert.assertTrue(certInstaller.exists());
+            Assert.assertTrue(
+                    "Cert Installer appears while adding work account",
+                    certInstaller.exists()
+            );
 
             // Confirm install cert
             UiAutomatorUtils.handleButtonClick("android:id/button1");
@@ -162,7 +165,7 @@ public class GoogleSettings extends BaseSettings {
 
             // Make sure we see the calendar
             final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/date_picker_header_date");
-            Assert.assertTrue(datePicker.exists());
+            Assert.assertTrue("Date Picker appears", datePicker.exists());
 
             final Calendar cal = Calendar.getInstance();
 

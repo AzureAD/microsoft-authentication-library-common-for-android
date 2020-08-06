@@ -95,7 +95,10 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void confirmConsentPageReceived() {
         final UiObject consentScreen = getConsentScreen();
-        Assert.assertTrue(consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT));
+        Assert.assertTrue(
+                "Consent screen appears",
+                consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
+        );
     }
 
     @Override
@@ -124,7 +127,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void confirmEnrollPageReceived() {
         final UiObject enrollBtn = UiAutomatorUtils.obtainUiObjectWithText("Enroll now");
-        Assert.assertTrue(enrollBtn.exists());
+        Assert.assertTrue("Enroll Page appears.", enrollBtn.exists());
     }
 
     @Override
@@ -142,7 +145,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     @Override
     public void handleRegistration() {
         final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register");
-        Assert.assertTrue(registerBtn.exists());
+        Assert.assertTrue("Register page appears.", registerBtn.exists());
 
         handleNextButton();
     }

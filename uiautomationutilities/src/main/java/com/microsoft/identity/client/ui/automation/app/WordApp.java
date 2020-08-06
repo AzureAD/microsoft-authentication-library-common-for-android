@@ -115,6 +115,9 @@ public class WordApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);
-        Assert.assertTrue(testAccountLabelWord.exists());
+        Assert.assertTrue(
+                "Provided user account exists in Word App.",
+                testAccountLabelWord.exists()
+        );
     }
 }

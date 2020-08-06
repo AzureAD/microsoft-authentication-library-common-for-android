@@ -77,16 +77,31 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
                     "com.azure.authenticator:id/manage_device_registration_unregister_button"
             );
-            Assert.assertTrue(unRegisterBtn.exists());
-            Assert.assertTrue(unRegisterBtn.isClickable());
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Unregister Button appears.",
+                    unRegisterBtn.exists()
+            );
+
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Unregister Button is clickable.",
+                    unRegisterBtn.isClickable()
+            );
 
             // after device registration, make sure that the current registration upn matches with
             // with what was passed in
             final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
                     "com.azure.authenticator:id/manage_device_registration_current_registered_email"
             );
-            Assert.assertTrue(currentRegistration.exists());
-            Assert.assertTrue(currentRegistration.getText().equalsIgnoreCase(username));
+
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Registered account info appears.",
+                    currentRegistration.exists()
+            );
+
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Registered account upn matches provided upn.",
+                    currentRegistration.getText().equalsIgnoreCase(username)
+            );
         } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
@@ -112,7 +127,9 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         //confirm that we are in Shared Device Mode inside Authenticator
         final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
         sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(sharedDeviceConfirmation.exists());
+        Assert.assertTrue(
+                "Microsoft Authenticator - Shared Device Confirmation page appears.",
+                sharedDeviceConfirmation.exists());
     }
 
     @Nullable
@@ -153,7 +170,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         // Install cert
         final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
         certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(certInstaller.exists());
+        Assert.assertTrue(
+                "Microsoft Authenticator - cert installer dialog appears.",
+                certInstaller.exists()
+        );
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }

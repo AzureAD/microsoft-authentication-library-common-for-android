@@ -58,7 +58,7 @@ public abstract class BaseSettings implements ISettings {
         context.startActivity(intent);
 
         final UiObject deviceAdminPage = UiAutomatorUtils.obtainUiObjectWithText("device admin");
-        Assert.assertTrue(deviceAdminPage.exists());
+        Assert.assertTrue("Device Admin Settings Page appears", deviceAdminPage.exists());
     }
 
     @Override

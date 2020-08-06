@@ -119,7 +119,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // click the activate device admin btn
         final UiObject accessSetupScreen = UiAutomatorUtils.obtainUiObjectWithText("Access Setup");
-        Assert.assertTrue(accessSetupScreen.exists());
+        Assert.assertTrue(
+                "CP Enrollment - Access Setup screen appears",
+                accessSetupScreen.exists()
+        );
 
         // click on BEGIN button to start enroll
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/setup_positive_button");
@@ -183,7 +186,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         // get access screen
         final UiObject getAccessScreen = UiAutomatorUtils.obtainUiObjectWithText("Get Access");
-        Assert.assertTrue(getAccessScreen.exists());
+        Assert.assertTrue(
+                "CP - Get Access screen appears",
+                getAccessScreen.exists()
+        );
 
         // get access screen - continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
@@ -281,7 +287,10 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                     "com.microsoft.windowsintune.companyportal:id/alertTitle"
             );
 
-            Assert.assertTrue(removeDeviceDialog.exists());
+            Assert.assertTrue(
+                    "CP Remove device dialog appears.",
+                    removeDeviceDialog.exists()
+            );
 
             // Confirm removal
             UiAutomatorUtils.handleButtonClick("android:id/button1");
