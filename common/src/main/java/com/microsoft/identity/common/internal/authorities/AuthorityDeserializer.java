@@ -34,10 +34,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.lang.reflect.Type;
 
-import static com.microsoft.identity.common.internal.authorities.AadAuthorityAudience.AzureAdAndPersonalMicrosoftAccount;
-import static com.microsoft.identity.common.internal.authorities.AadAuthorityAudience.AzureAdMultipleOrgs;
-import static com.microsoft.identity.common.internal.authorities.AadAuthorityAudience.PersonalMicrosoftAccount;
-
 public class AuthorityDeserializer implements JsonDeserializer<Authority> {
 
     private static final String TAG = AuthorityDeserializer.class.getSimpleName();
@@ -63,25 +59,8 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                         final Uri uri = Uri.parse(aadAuthority.mAuthorityUrl);
                         final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
                         final String tenant = uri.getLastPathSegment();
-
                         if (!TextUtils.isEmpty(tenant)) {
-                            switch (tenant) {
-                                case AadAuthorityAudience.common:
-                                    // Do nothing. This is the default value.
-                                    break;
-
-                                case AadAuthorityAudience.organizations:
-                                    aadAuthority.mAudience = new AnyOrganizationalAccount(cloudUrl);
-                                    break;
-
-                                case AadAuthorityAudience.consumers:
-                                    aadAuthority.mAudience = new AnyPersonalAccount(cloudUrl);
-                                    break;
-
-                                default:
-                                    aadAuthority.mAudience = new AccountsInOneOrganization(cloudUrl, uri.getLastPathSegment());
-                                    break;
-                            }
+                            aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
                         }
                     }
                     return aadAuthority;
