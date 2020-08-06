@@ -50,7 +50,6 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     @Override
     public AcquireTokenResult execute() throws Exception {
-
         // Get the controller used to execute the command
         final BaseController controller = getDefaultController();
 
