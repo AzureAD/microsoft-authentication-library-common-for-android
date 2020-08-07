@@ -410,21 +410,47 @@ public final class ErrorStrings {
 
     /**
      * Device Code Flow only.
+     * Authorization has not been completed yet.
+     */
+    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_PENDING_ERROR_CODE = "authorization_pending";
+
+    /**
+     * Device Code Flow only.
      * Authorization was declined by the user during Device Code Flow.
      */
-    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_CODE = "authorization_declined";
-    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_MESSAGE = "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
+    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_CODE = "authorization_declined";
+    public final static String DEVICE_CODE_FLOW_AUTHORIZATION_DECLINED_ERROR_MESSAGE = "The end user has denied the authorization request. Re-run the Device Code Flow Protocol with another user.";
 
     /**
      * Device Code Flow only.
      * The token expired before the user authenticated with the user code.
      */
-    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_CODE = "expired_token";
-    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_MESSAGE = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
+    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_CODE = "expired_token";
+    public final static String DEVICE_CODE_FLOW_EXPIRED_TOKEN_ERROR_MESSAGE = "The token has expired, therefore authentication is no longer possible with this flow attempt. Re-run the Device Code Flow Protocol to try again.";
+
+    /**
+     * Device Vode Flow only.
+     * The token request sent a device code that was not recognized.
+     */
+    public final static String DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE = "bad_verification_code";
+    public final static String DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE = "The token request contains a device code that was not recognized. Verify that the client is sending the right device code.";
+
+    /**
+     * Device Code Flow only.
+     * The token was polled again after it was already received.
+     * Use error code in AuthenticationConstants.OAuth2ErrorCode
+     */
+    public final static String DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE = "The token for this device code has already been redeemed. To receive another access token, please re-run the Device Code Flow protocol.";
+
+    /**
+     * Device Code Flow only.
+     * The scope attached to the request was not valid, either formatted wrong or some scopes did not exist.
+     */
+    public final static String DEVICE_CODE_FLOW_INVALID_SCOPE_ERROR_MESSAGE = "The scope attached to the device code flow request is invalid. Please re-try with a valid scope.";
 
     /**
      * Device Code Flow only.
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
-    public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the authorization result.";
+    public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
 }
