@@ -28,6 +28,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -468,6 +469,9 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
+
+        headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
+        headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());
 
         final String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
         Logger.info(TAG + methodName, "Device certificate challenge request. ");

@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -184,6 +185,17 @@ public abstract class OAuth2Strategy
         }
         headers.putAll(Device.getPlatformIdParameters());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+
+        if (request instanceof MicrosoftTokenRequest) {
+            headers.put(
+                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
+                    ((MicrosoftTokenRequest) request).getClientAppName()
+            );
+            headers.put(
+                    AuthenticationConstants.AAD.APP_VERSION,
+                    ((MicrosoftTokenRequest) request).getClientAppVersion()
+            );
+        }
 
         final HttpResponse response = HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
