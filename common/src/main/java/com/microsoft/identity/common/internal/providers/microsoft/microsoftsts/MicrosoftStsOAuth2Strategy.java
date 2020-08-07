@@ -470,11 +470,8 @@ public class MicrosoftStsOAuth2Strategy
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
 
-        final String appName = request.getClientAppName();
-        final String appVer = request.getClientAppVersion();
-
-        headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, appName);
-        headers.put(AuthenticationConstants.AAD.APP_VERSION, appVer);
+        headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
+        headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());
 
         final String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
         Logger.info(TAG + methodName, "Device certificate challenge request. ");

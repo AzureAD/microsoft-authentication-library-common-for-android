@@ -187,11 +187,14 @@ public abstract class OAuth2Strategy
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         if (request instanceof MicrosoftTokenRequest) {
-            final String appName = ((MicrosoftTokenRequest) request).getClientAppName();
-            final String appVer = ((MicrosoftTokenRequest) request).getClientAppVersion();
-
-            headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, appName);
-            headers.put(AuthenticationConstants.AAD.APP_VERSION, appVer);
+            headers.put(
+                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
+                    ((MicrosoftTokenRequest) request).getClientAppName()
+            );
+            headers.put(
+                    AuthenticationConstants.AAD.APP_VERSION,
+                    ((MicrosoftTokenRequest) request).getClientAppVersion()
+            );
         }
 
         final HttpResponse response = HttpRequest.sendPost(
