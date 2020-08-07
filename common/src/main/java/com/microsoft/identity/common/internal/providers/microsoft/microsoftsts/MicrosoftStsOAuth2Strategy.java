@@ -342,8 +342,16 @@ public class MicrosoftStsOAuth2Strategy
         tokenRequest.setClientId(request.getClientId());
         tokenRequest.setScope(request.getTokenScope());
         tokenRequest.setClaims(request.getClaims());
-        tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         setTokenRequestCorrelationId(tokenRequest);
+
+        // Existence of a device code inside of the response object implies Device Code Flow is being used
+        if (response.getDeviceCode() != null) {
+            tokenRequest.setGrantType(TokenRequest.GrantTypes.DEVICE_CODE);
+            tokenRequest.setDeviceCode(response.getDeviceCode());
+        }
+        else { // If device code doesn't exist, continue with auth_code configuration
+            tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
+        }
 
         if (SCHEME_POP.equals(authScheme.getName())) {
             if (null == mStrategyParameters.getContext()) {

@@ -192,6 +192,8 @@ public final class TelemetryEventStrings {
         public static final String LOCAL_ACQUIRE_TOKEN_SILENT= "103";
         public static final String LOCAL_GET_ACCOUNTS= "106";
         public static final String LOCAL_REMOVE_ACCOUNT= "107";
+        public static final String LOCAL_DEVICE_CODE_FLOW_ACQUIRE_URL_AND_CODE = "108";
+        public static final String LOCAL_DEVICE_CODE_FLOW_POLLING = "109";
     }
 }
 

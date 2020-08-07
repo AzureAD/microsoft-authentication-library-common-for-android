@@ -27,6 +27,8 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
@@ -42,6 +44,10 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
@@ -49,10 +55,13 @@ import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 
@@ -78,6 +87,7 @@ public abstract class OAuth2Strategy
     private static final String TAG = OAuth2Strategy.class.getSimpleName();
 
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
+    protected static final String DEVICE_CODE_CONTENT_TYPE = TOKEN_REQUEST_CONTENT_TYPE;
 
     protected final GenericOAuth2Configuration mConfig;
     protected final GenericOAuth2StrategyParameters mStrategyParameters;
@@ -237,6 +247,71 @@ public abstract class OAuth2Strategy
 
     protected final void setAuthorizationEndpoint(final String authorizationEndpoint) {
         mAuthorizationEndpoint = authorizationEndpoint;
+    }
+
+    public AuthorizationResult getDeviceCode(@NonNull final MicrosoftStsAuthorizationRequest authorizationRequest) throws IOException {
+        final String methodName = ":getDeviceCode";
+
+        // Set up headers and request body
+        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(authorizationRequest);
+        final Map<String, String> headers = new TreeMap<>();
+        headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+
+        // Send request
+        final HttpResponse response = HttpRequest.sendPost(
+                ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceCodeEndpoint(),
+                headers,
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                DEVICE_CODE_CONTENT_TYPE
+        );
+
+        // Create the authorization result
+
+        // Check if the request was successful
+        // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
+        if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE){
+            // Get and parse response body
+            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, String>>() {}.getType());
+
+            // Create response and result objects
+            // "code" can be left null since it's DCF
+            final MicrosoftStsAuthorizationResponse authorizationResponse =
+                    new MicrosoftStsAuthorizationResponse(null, authorizationRequest.getState(), parsedResponseBody);
+
+            // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
+            final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.SUCCESS, authorizationResponse);
+
+            Logger.verbose(
+                    TAG + methodName,
+                    "Device Code Flow authorization successful..."
+            );
+
+            return authorizationResult;
+        }
+
+        // Request failed
+        else {
+            // Get and parse response body
+            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, Object>>() {
+            }.getType());
+
+            // Create response and result objects
+            final MicrosoftStsAuthorizationErrorResponse authorizationErrorResponse =
+                    new MicrosoftStsAuthorizationErrorResponse(
+                            (String) parsedResponseBody.get(AuthorizationResultFactory.ERROR),
+                            (String) parsedResponseBody.get(AuthorizationResultFactory.ERROR_DESCRIPTION));
+
+            // MicrosoftSTAuthorizationResultFactory not used since no Intent is being created
+            final AuthorizationResult authorizationResult = new MicrosoftStsAuthorizationResult(AuthorizationStatus.FAIL, authorizationErrorResponse);
+
+            Logger.verbose(
+                    TAG + methodName,
+                    "Device Code Flow authorization failure..."
+            );
+
+            return authorizationResult;
+        }
     }
 
     protected GenericOAuth2Configuration getOAuth2Configuration() {
