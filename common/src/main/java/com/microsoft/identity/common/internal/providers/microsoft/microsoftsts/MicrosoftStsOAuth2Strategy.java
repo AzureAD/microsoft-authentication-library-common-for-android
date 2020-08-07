@@ -28,15 +28,14 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -462,6 +461,12 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
+
+        final String appName = request.getClientAppName();
+        final String appVer = request.getClientAppVersion();
+
+        headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, appName);
+        headers.put(AuthenticationConstants.AAD.APP_VERSION, appVer);
 
         final String challengeHeader = response.getHeaders().get(CHALLENGE_REQUEST_HEADER).get(0);
         Logger.info(TAG + methodName, "Device certificate challenge request. ");

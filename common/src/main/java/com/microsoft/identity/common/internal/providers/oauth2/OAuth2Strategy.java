@@ -28,6 +28,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -174,6 +175,14 @@ public abstract class OAuth2Strategy
         }
         headers.putAll(Device.getPlatformIdParameters());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+
+        if (request instanceof MicrosoftTokenRequest) {
+            final String appName = ((MicrosoftTokenRequest) request).getClientAppName();
+            final String appVer = ((MicrosoftTokenRequest) request).getClientAppVersion();
+
+            headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, appName);
+            headers.put(AuthenticationConstants.AAD.APP_VERSION, appVer);
+        }
 
         final HttpResponse response = HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
