@@ -6,6 +6,7 @@ Version 2.1.0
 - Added support for additional sub_errors returned by ESTS service for MSAL CPP support.
 - Added BrokerActivity to common AndroidManifest.
 - Caching in SharedPreferences now using apply() instead of synchronous commit() call.
+- Bugfix for parsing Authority URLs.
 
 Version 2.0.15
 -----------
