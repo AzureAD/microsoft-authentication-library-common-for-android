@@ -195,11 +195,13 @@ public abstract class BaseController {
                 completeRequestHeaders.putAll(interactiveTokenCommandParameters.getRequestHeaders());
             }
 
-            final String appName = parameters.getApplicationName();
-            final String appVer = parameters.getApplicationVersion();
-
-            completeRequestHeaders.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, appName);
-            completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION, appVer);
+            completeRequestHeaders.put(
+                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
+                    parameters.getApplicationName()
+            );
+            completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION,
+                    parameters.getApplicationVersion()
+            );
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             builder.setLoginHint(
