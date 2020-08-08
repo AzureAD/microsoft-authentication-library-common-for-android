@@ -137,7 +137,7 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void changeDeviceTime() {
+    public void forwardDeviceTimeForOneDay() {
         // Disable automatic time zone
         AdbShellUtils.disableAutomaticTimeZone();
         // Open the date & time settings page

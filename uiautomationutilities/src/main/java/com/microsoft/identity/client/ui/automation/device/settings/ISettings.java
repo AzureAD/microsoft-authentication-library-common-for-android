@@ -80,7 +80,7 @@ public interface ISettings {
     /**
      * Change the time on the device by advancing the clock by 24 hours.
      */
-    void changeDeviceTime();
+    void forwardDeviceTimeForOneDay();
 
     /**
      * Activate this admin app. This method is supposed to be called when the Activate Device Admin

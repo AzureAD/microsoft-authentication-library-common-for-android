@@ -152,7 +152,7 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void changeDeviceTime() {
+    public void forwardDeviceTimeForOneDay() {
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
         // Launch the date time settings page
