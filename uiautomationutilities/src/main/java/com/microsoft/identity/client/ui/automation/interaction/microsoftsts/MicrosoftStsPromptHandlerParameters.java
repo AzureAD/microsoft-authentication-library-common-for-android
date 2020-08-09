@@ -20,41 +20,27 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+/**
+ * A set of values that can be used to denote the behaviour we expect to observe during an oauth
+ * authorization request made against the Microsoft STS.
+ * These values can then be supplied to a {@link MicrosoftStsPromptHandler} and
+ * used to handle prompt in the manner as expected during the execution of a given test.
+ * The test should fail if the actual behaviour observed deviates from what is denoted as expected
+ * via these parameters.
+ */
+@SuperBuilder
+@Getter
+public class MicrosoftStsPromptHandlerParameters extends PromptHandlerParameters {
 
-    protected abstract String getHandlerName();
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    /**
+     * Denotes whether the account being used for this request is a federated account.
+     */
+    private boolean isFederated;
 }

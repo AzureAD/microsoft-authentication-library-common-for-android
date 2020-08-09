@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,7 +36,10 @@ import org.junit.Assert;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
-public class AadLoginComponentHandler implements ILoginComponentHandler {
+/**
+ * A login component handler for AAD.
+ */
+public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -80,7 +83,7 @@ public class AadLoginComponentHandler implements ILoginComponentHandler {
 
         try {
             account.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
     }
@@ -92,7 +95,10 @@ public class AadLoginComponentHandler implements ILoginComponentHandler {
     @Override
     public void confirmConsentPageReceived() {
         final UiObject consentScreen = getConsentScreen();
-        Assert.assertTrue(consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT));
+        Assert.assertTrue(
+                "Consent screen appears",
+                consentScreen.waitForExists(FIND_UI_ELEMENT_TIMEOUT)
+        );
     }
 
     @Override
@@ -114,6 +120,32 @@ public class AadLoginComponentHandler implements ILoginComponentHandler {
         if (!speedBump.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
             fail("Speed Bump screen did not show up");
         }
+
+        handleNextButton();
+    }
+
+    @Override
+    public void confirmEnrollPageReceived() {
+        final UiObject enrollBtn = UiAutomatorUtils.obtainUiObjectWithText("Enroll now");
+        Assert.assertTrue("Enroll Page appears.", enrollBtn.exists());
+    }
+
+    @Override
+    public void acceptEnroll() {
+        confirmEnrollPageReceived();
+        handleNextButton();
+    }
+
+    @Override
+    public void declineEnroll() {
+        confirmEnrollPageReceived();
+        handleBackButton();
+    }
+
+    @Override
+    public void handleRegistration() {
+        final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register");
+        Assert.assertTrue("Register page appears.", registerBtn.exists());
 
         handleNextButton();
     }

@@ -36,8 +36,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * This class represents an app during a UI Test. We can interact with this app during the test by
- * performing specific operation on/with it.
+ * A model for interacting with an app during a UI Test. We can interact with this app during the
+ * test by performing specific operation on/with it.
  */
 @Getter
 public abstract class App implements IApp {
@@ -45,12 +45,20 @@ public abstract class App implements IApp {
     @Setter
     private IAppInstaller appInstaller;
 
-    private String packageName;
+    private final String packageName;
 
     @Setter
     private String appName;
 
     protected String localApkFileName = null;
+
+    /**
+     * Indicates whether the first run experience should be handled in the UI. This value can
+     * (should) be changed to false by child classes as appropriate. Usually if the app is launched
+     * for the first time, then it makes sense for this value to be true and first run experience
+     * to be handled, and this value to be set to false for subsequent launches of the app.
+     */
+    protected boolean shouldHandleFirstRun = true;
 
     public App(@NonNull final String packageName) {
         this.packageName = packageName;
@@ -82,8 +90,12 @@ public abstract class App implements IApp {
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
             appInstaller.installApp(localApkFileName);
         } else {
-            appInstaller.installApp(appName != null ? appName : packageName);
+            appInstaller.installApp(packageName);
         }
+
+        // the app is just installed, first run should be handled
+        // this value can (should) be changed to false by child classes as appropriate
+        shouldHandleFirstRun = true;
     }
 
     @Override
@@ -99,6 +111,7 @@ public abstract class App implements IApp {
     @Override
     public void uninstall() {
         AdbShellUtils.removePackage(packageName);
+        shouldHandleFirstRun = true;
     }
 
     @Override
@@ -111,5 +124,15 @@ public abstract class App implements IApp {
         if (!hasPermission(permission)) {
             CommonUtils.grantPackagePermission();
         }
+    }
+
+    @Override
+    public void forceStop() {
+        AdbShellUtils.forceStopPackage(packageName);
+    }
+
+    @Override
+    public boolean isInstalled() {
+        return CommonUtils.isPackageInstalled(getPackageName());
     }
 }

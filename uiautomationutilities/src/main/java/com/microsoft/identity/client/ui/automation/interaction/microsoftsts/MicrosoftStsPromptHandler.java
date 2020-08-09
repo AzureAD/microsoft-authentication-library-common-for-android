@@ -20,27 +20,55 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
+
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-public class AadPromptHandler extends AbstractPromptHandler {
+import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
+import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 
-    public AadPromptHandler(@NonNull final PromptHandlerParameters parameters) {
-        super(new AadLoginComponentHandler(), parameters);
+/**
+ * A Prompt Handler for Microsoft STS login flows.
+ */
+public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
+
+    public MicrosoftStsPromptHandler(
+            @NonNull MicrosoftStsPromptHandlerParameters parameters) {
+        super(
+                parameters.isFederated() ? new AdfsLoginComponentHandler() : new AadLoginComponentHandler(),
+                parameters
+        );
     }
 
+    public MicrosoftStsPromptHandler(
+            @NonNull final IMicrosoftStsLoginComponentHandler loginComponentHandler,
+            @NonNull final PromptHandlerParameters parameters) {
+        super(
+                loginComponentHandler,
+                parameters
+        );
+    }
+
+    @Override
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
+        final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
+
         // if login hint was not provided, then we need to handle either account picker or email
         // field. If it was provided, then we expect to go straight to password field.
-        if (!parameters.isLoginHintProvided()) {
-            if (parameters.getBroker() != null && parameters.isExpectingNonZeroAccountsInBroker()) {
+        if (!loginHintProvided) {
+            if (parameters.getBroker() != null && parameters.isExpectingBrokerAccountChooserActivity()) {
                 parameters.getBroker().handleAccountPicker(username);
-            } else if (parameters.isExpectingNonZeroAccountsInCookie()) {
+            } else if (parameters.isExpectingLoginPageAccountPicker()) {
                 loginComponentHandler.handleAccountPicker(username);
             } else {
                 loginComponentHandler.handleEmailField(username);
             }
+        } else if (!parameters.getLoginHint().equalsIgnoreCase(username)) {
+            loginComponentHandler.handleEmailField(username);
         }
 
         if (parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
@@ -56,8 +84,24 @@ public class AadPromptHandler extends AbstractPromptHandler {
             }
         }
 
+        final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
+                (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
+
         if (parameters.isSpeedBumpExpected()) {
-            loginComponentHandler.handleSpeedBump();
+            aadLoginComponentHandler.handleSpeedBump();
+        }
+
+        if (parameters.isRegisterPageExpected()) {
+            aadLoginComponentHandler.handleRegistration();
+        }
+
+        if (parameters.isEnrollPageExpected()) {
+            final UiResponse enrollPageResponse = parameters.getEnrollPageResponse();
+            if (enrollPageResponse == UiResponse.ACCEPT) {
+                aadLoginComponentHandler.acceptEnroll();
+            } else {
+                aadLoginComponentHandler.declineEnroll();
+            }
         }
     }
 }

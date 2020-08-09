@@ -20,41 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation.browser;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.client.ui.automation.app.IApp;
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+/**
+ * An interface describing a browser app on an Android device during UI Automated test.
+ */
+public interface IBrowser extends IApp {
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+    /**
+     * Browse to the supplied url using this browser.
+     *
+     * @param url the url to open
+     */
+    void navigateTo(String url);
 
-    protected abstract String getHandlerName();
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
 }

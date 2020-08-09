@@ -20,41 +20,30 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+/**
+ * This exception indicates device enrollment failure in Company Portal due to the device limit
+ * for enrollment being reached.
+ */
+public class DeviceLimitReachedException extends RuntimeException {
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+    private final BrokerCompanyPortal companyPortal;
 
-    protected abstract String getHandlerName();
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+    public DeviceLimitReachedException(@NonNull final String message,
+                                       @NonNull final BrokerCompanyPortal companyPortal) {
+        super(message);
+        this.companyPortal = companyPortal;
     }
 
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+    /**
+     * Obtain the instance of {@link BrokerCompanyPortal} that was being used for enrollment.
+     *
+     * @return instance of {@link BrokerCompanyPortal}
+     */
+    public BrokerCompanyPortal getCompanyPortal() {
+        return companyPortal;
     }
 }

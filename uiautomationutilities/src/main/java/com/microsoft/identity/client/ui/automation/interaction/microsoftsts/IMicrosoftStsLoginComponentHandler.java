@@ -20,41 +20,37 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
-
-import androidx.annotation.NonNull;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+/**
+ * A Login Component Handler for Microsoft STS.
+ */
+public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponentHandler {
 
-    protected abstract String getHandlerName();
+    /**
+     * Respond to the speed bump encountered during an authorization request.
+     */
+    void handleSpeedBump();
 
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    /**
+     * Confirm that we have received the enroll page during authorize request.
+     */
+    void confirmEnrollPageReceived();
 
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    /**
+     * Respond to the enroll page by accepting enrollment.
+     */
+    void acceptEnroll();
 
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    /**
+     * Respond to the enroll page declining enrollment.
+     */
+    void declineEnroll();
 
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    /**
+     * Respond to the register page during an authorization request.
+     */
+    void handleRegistration();
 }

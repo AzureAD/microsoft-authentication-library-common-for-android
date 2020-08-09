@@ -20,41 +20,34 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation.rules;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.client.ui.automation.app.OutlookApp;
+import com.microsoft.identity.client.ui.automation.app.TeamsApp;
+import com.microsoft.identity.client.ui.automation.app.WordApp;
+import com.microsoft.identity.client.ui.automation.browser.BrowserEdge;
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
-
-    protected abstract String getHandlerName();
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+/**
+ * A Test Rule to remove all first party apps from the device prior to executing the test case.
+ */
+public class RemoveFirstPartyAppsTestRule implements TestRule {
 
     @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    public Statement apply(final Statement base, final Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                new OutlookApp().uninstall();
+                new TeamsApp().uninstall();
+                new WordApp().uninstall();
+                new BrowserEdge().uninstall();
 
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
+                base.evaluate();
+            }
+        };
     }
 }

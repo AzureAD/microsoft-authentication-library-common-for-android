@@ -20,41 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation.broker;
 
-import androidx.annotation.NonNull;
+/**
+ * An interface describing an MDM agent that can perform MDM specific operations during a UI Test.
+ */
+public interface IMdmAgent {
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+    /**
+     * Perform device enrollment using this MDM Agent.
+     *
+     * @param username the username of the account to use for enrollment
+     * @param password the password of the account to use for enrollment
+     */
+    void enrollDevice(String username, String password);
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+    /**
+     * Handle protection policy UI flow using this MDM agent.
+     */
+    void handleAppProtectionPolicy();
 
-    protected abstract String getHandlerName();
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
 }

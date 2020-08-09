@@ -20,54 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
-
-import android.widget.Button;
+package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import androidx.annotation.NonNull;
-import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
-import org.junit.Assert;
-
 /**
- * A login component handler for Facebook IdP.
+ * A login component handler for ADFS.
  */
-public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHandler {
-
-    @Override
-    protected String getHandlerName() {
-        return B2CProvider.Facebook.getProviderName();
-    }
+public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
 
     @Override
     public void handleEmailField(@NonNull final String username) {
-        UiAutomatorUtils.handleInput("m_login_email", username);
+        UiAutomatorUtils.handleInput("userNameInput", username);
     }
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
-        UiAutomatorUtils.handleInput("m_login_password", password);
-        handleNextButton();
-    }
-
-    @Override
-    public void handleBackButton() {
-        UiAutomatorUtils.pressBack();
-    }
-
-    @Override
-    public void handleNextButton() {
-        final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
-                "Log In", Button.class
-        );
-
-        try {
-            nextBtn.click();
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
-        }
+        UiAutomatorUtils.handleInput("passwordInput", password);
+        UiAutomatorUtils.handleButtonClick("submitButton");
     }
 }

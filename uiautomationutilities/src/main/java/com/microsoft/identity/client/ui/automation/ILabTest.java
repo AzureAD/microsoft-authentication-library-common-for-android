@@ -20,41 +20,29 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+/**
+ * An interface describing a test that can leverage the Lab Api to fetch accounts. Implementing this
+ * interface on a test facilitates specifying the type of user that should be pulled by Lab Api for
+ * that test.
+ */
+public interface ILabTest {
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+    /**
+     * Get the query that can be used to pull a user from the LAB API.
+     *
+     * @return A {@link LabUserQuery} object that can be used to pull user via LAB API
+     */
+    LabUserQuery getLabUserQuery();
 
-    protected abstract String getHandlerName();
+    /**
+     * Get the type of temp user that can be used to create a new temp user via LAB API.
+     *
+     * @return The type of temp user as denoted in {@link com.microsoft.identity.internal.testutils.labutils.LabConstants.TempUserType}
+     */
+    String getTempUserType();
 
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
 }

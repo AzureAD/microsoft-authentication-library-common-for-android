@@ -20,41 +20,22 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.interaction.b2c;
+package com.microsoft.identity.client.ui.automation.annotations;
 
-import androidx.annotation.NonNull;
+import java.lang.annotation.Retention;
 
-import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
+/**
+ * An annotation indicating how many times a test should be retried. This annotation must be placed
+ * on a test/test class if those tests are meant to be retried. If such an annotation is not present,
+ * then the test would not be retried. The default value of this annotation is 1, however, a different
+ * value can be specified via retryCount parameter to retry the test that many times.
+ * <p>
+ * For retry logic, see {@link com.microsoft.identity.client.ui.automation.rules.RetryTestRule}.
+ */
+@Retention(value = RUNTIME)
+public @interface RetryOnFailure {
 
-    protected abstract String getHandlerName();
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void confirmConsentPageReceived() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void acceptConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
-    @Override
-    public void declineConsent() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
+    int retryCount() default 1;
 }
