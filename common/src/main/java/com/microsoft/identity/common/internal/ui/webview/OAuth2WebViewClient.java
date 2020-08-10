@@ -52,6 +52,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
+    private static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
     private final OnPageLoadedCallback mPageLoadedCallback;
@@ -135,11 +136,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         super.onReceivedSslError(view, handler, error);
         handler.cancel();
 
-        final String sslHelpUrl = "https://go.microsoft.com/fwlink/?linkid=2138180";
-        final String errMsg = String.format(
-                "Received SSL Error during request. Please see %s for more info.",
-                sslHelpUrl
-        );
+        final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
 
         Logger.error(TAG + ":onReceivedSslError", errMsg, null);
 
