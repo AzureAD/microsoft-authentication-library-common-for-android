@@ -33,11 +33,9 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 
-import java.util.List;
-
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
-public class BrokerRtAccessor {
+public final class BrokerRtAccessor {
 
     private final MsalOAuth2TokenCache mTokenCache;
     private final Context mContext;
