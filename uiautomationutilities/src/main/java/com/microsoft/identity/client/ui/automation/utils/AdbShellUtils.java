@@ -37,12 +37,13 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  */
 public class AdbShellUtils {
 
-    private static void executeShellCommand(@NonNull final String command) {
+    private static String executeShellCommand(@NonNull final String command) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
-            device.executeShellCommand(command);
+            return device.executeShellCommand(command);
         } catch (final IOException e) {
             Assert.fail(e.getMessage());
+            return null;
         }
     }
 
@@ -89,5 +90,20 @@ public class AdbShellUtils {
      */
     public static void disableAutomaticTimeZone() {
         putGlobalSettings("auto_time", "0");
+    }
+
+    private static String getApkPath(@NonNull final String packageName) {
+        return executeShellCommand("pm path " + packageName);
+    }
+
+    public static void copyApkForPackage(@NonNull final String packageName,
+                                         @NonNull final String destApkFileName) {
+        final String apkPath = getApkPath(packageName);
+        final String sanitizedPath = apkPath.trim().replace("package:", "");
+        copyFile(sanitizedPath, destApkFileName);
+    }
+
+    public static void copyFile(@NonNull final String srcFile, @NonNull final String destFile) {
+        executeShellCommand("cp " + srcFile + " " + destFile);
     }
 }

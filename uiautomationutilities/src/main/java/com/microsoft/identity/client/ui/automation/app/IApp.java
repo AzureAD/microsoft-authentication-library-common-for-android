@@ -78,4 +78,6 @@ public interface IApp {
      * @return a boolean indicating if the package is installed on the device
      */
     boolean isInstalled();
+
+    void copyApk();
 }
