@@ -45,6 +45,11 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmC
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_CODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR;
+
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
@@ -73,7 +78,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /**
      * Constructor for the OAuth2 basic web view client.
      *
-     * @param activity app Context
+     * @param activity           app Context
      * @param completionCallback Challenge completion callback
      * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
      */
@@ -116,16 +121,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         // Create result intent when webView received an error.
         final Intent resultIntent = new Intent();
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
-                "Error Code:" + errorCode);
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE,
-                description);
+        resultIntent.putExtra(RESPONSE_ERROR_CODE, "Error Code:" + errorCode);
+        resultIntent.putExtra(RESPONSE_ERROR_MESSAGE, description);
 
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR,
-                resultIntent
-        );
+        mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
     }
 
     @Override
@@ -136,18 +136,17 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         super.onReceivedSslError(view, handler, error);
         handler.cancel();
 
+        final String errMsg = "Received SSL Error during request. For more info see: " + SSL_HELP_URL;
+
+        Logger.error(TAG + ":onReceivedSslError", errMsg, null);
+
         // WebView received the ssl error and create the result intent.
         final Intent resultIntent = new Intent();
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE,
-                "Code:" + ERROR_FAILED_SSL_HANDSHAKE);
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE,
-                error.toString());
+        resultIntent.putExtra(RESPONSE_ERROR_CODE, "Code:" + ERROR_FAILED_SSL_HANDSHAKE);
+        resultIntent.putExtra(RESPONSE_ERROR_MESSAGE, error.toString());
 
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR,
-                resultIntent
-        );
+        mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
     }
 
     @Override
@@ -157,7 +156,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         mPageLoadedCallback.onPageLoaded();
 
         //Supports UI Automation... informing that the webview resource is now idle
-        if(mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
+        if (mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
             mExpectedPage.mCallback.onPageLoaded();
         }
 
