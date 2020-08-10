@@ -28,7 +28,7 @@ public class ClientException extends BaseException {
     private static final long serialVersionUID = -2318746536590284648L;
 
     /**
-     * Indicates that a token was not found in the internal/adal/tokensharing ssostateserializer.
+     * Indicates that a token was not found in the internal/adal/tokensharing/ssostateserializer/BrokerRtAccessor.
      */
     public static final String TOKEN_CACHE_ITEM_NOT_FOUND = "token_cache_item_not_found";
 
