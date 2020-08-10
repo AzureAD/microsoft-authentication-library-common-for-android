@@ -135,7 +135,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         super.onReceivedSslError(view, handler, error);
         handler.cancel();
 
-        final String sslHelpUrl = "https://docs.microsoft.com/en-us/troubleshoot/azure/active-directory/adal-authenticate-android-devices-fail";
+        final String sslHelpUrl = "https://go.microsoft.com/fwlink/?linkid=2138180";
         final String errMsg = String.format(
                 "Received SSL Error during request. Please see %s for more info.",
                 sslHelpUrl
