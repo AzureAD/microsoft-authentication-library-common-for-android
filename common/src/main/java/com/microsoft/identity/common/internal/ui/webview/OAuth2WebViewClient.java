@@ -47,12 +47,12 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR;
 
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
-    private static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
     private final OnPageLoadedCallback mPageLoadedCallback;
