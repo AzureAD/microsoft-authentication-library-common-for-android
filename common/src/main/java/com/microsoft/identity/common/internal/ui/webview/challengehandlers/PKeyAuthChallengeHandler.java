@@ -34,6 +34,7 @@ import com.microsoft.identity.common.adal.internal.JWSBuilder;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -102,8 +103,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
         if (certClazz != null) {
             IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
             if (deviceCertProxy.isValidIssuer(pKeyAuthChallenge.getCertAuthorities())
-                    || deviceCertProxy.getThumbPrint() != null && deviceCertProxy.getThumbPrint()
-                    .equalsIgnoreCase(pKeyAuthChallenge.getThumbprint())) {
+                    || StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), pKeyAuthChallenge.getThumbprint())) {
                 RSAPrivateKey privateKey = deviceCertProxy.getRSAPrivateKey();
                 if (privateKey == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
