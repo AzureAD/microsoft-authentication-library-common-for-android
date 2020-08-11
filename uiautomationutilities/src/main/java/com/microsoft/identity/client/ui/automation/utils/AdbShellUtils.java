@@ -48,6 +48,32 @@ public class AdbShellUtils {
     }
 
     /**
+     * Installs the supplied package name from the device
+     *
+     * @param packageName the package name to remove
+     */
+    public static void installPackage(@NonNull final String packageName) {
+        final String result = executeShellCommand("pm install " + packageName);
+        Assert.assertNotNull(result);
+        Assert.assertEquals("Success", result.trim());
+    }
+
+    public static void installPackage(@NonNull final String packageName, @NonNull String... flags) {
+        final StringBuilder installCmdBuilder = new StringBuilder();
+        installCmdBuilder.append("pm install ");
+
+        for (final String flag : flags) {
+            installCmdBuilder.append(flag);
+            installCmdBuilder.append(" ");
+        }
+
+        installCmdBuilder.append(packageName);
+        final String result = executeShellCommand(installCmdBuilder.toString());
+        Assert.assertNotNull(result);
+        Assert.assertEquals("Success", result.trim());
+    }
+
+    /**
      * Remove the supplied package name from the device
      *
      * @param packageName the package name to remove

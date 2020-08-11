@@ -25,6 +25,8 @@ package com.microsoft.identity.client.ui.automation.installer;
 import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiDevice;
 
+import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
+
 import org.junit.Assert;
 
 import java.io.IOException;
@@ -50,11 +52,7 @@ public class LocalApkInstaller implements IAppInstaller {
     public void installApp(@NonNull final String apkFileName) {
         final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
-        try {
-            // using -t flag to also allow installation of test only packages
-            device.executeShellCommand("pm install -t " + fullPath);
-        } catch (final IOException e) {
-            Assert.fail(e.getMessage());
-        }
+        // using -t flag to also allow installation of test only packages
+        AdbShellUtils.installPackage(fullPath, "-t");
     }
 }
