@@ -74,7 +74,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                 BrowserSelector.select(context, parameters.getBrowserSafeList());
             } catch (final ClientException exception) {
                 Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
-                if (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND)) {
+                if (ErrorStrings.NO_AVAILABLE_BROWSER_FOUND.equalsIgnoreCase(exception.getErrorCode())) {
                     return (GenericAuthorizationStrategy) (
                             new EmbeddedWebViewAuthorizationStrategy(
                                     context,
