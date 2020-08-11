@@ -1,5 +1,6 @@
 Version v.Next
 ----------
+- Expose RT to Broker apps.
 - Moved broker controller and strategy classes to common for MSALCPP brokered auth.
 
 Version 2.0.15
