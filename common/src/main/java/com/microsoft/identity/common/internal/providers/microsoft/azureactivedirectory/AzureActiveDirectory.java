@@ -67,9 +67,8 @@ public class AzureActiveDirectory
     private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
-
-    static boolean sIsInitialized = false;
-    static Environment sEnvironment = Environment.Production;
+    private static boolean sIsInitialized = false;
+    private static Environment sEnvironment = Environment.Production;
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
