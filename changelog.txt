@@ -1,3 +1,4 @@
+Hello!
 Version v.Next
 ----------
 - Moved broker controller and strategy classes to common for MSALCPP brokered auth.
