@@ -204,9 +204,9 @@ public class AzureActiveDirectory
                     sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
                 }
             }
-        }
 
-        sIsInitialized = true;
+            sIsInitialized = true;
+        }
     }
 
     public static Set<String> getHosts() {

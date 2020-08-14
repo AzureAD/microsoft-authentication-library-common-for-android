@@ -232,7 +232,6 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
      */
     public static boolean loadCloudDiscoveryMetadata() {
         final String methodName = ":loadCloudDiscoveryMetadata";
-        boolean succeeded = true;
 
         if (!AzureActiveDirectory.isInitialized()) {
             try {
@@ -243,10 +242,9 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
                         "Failed to load instance discovery metadata",
                         e
                 );
-                succeeded = false;
             }
         }
 
-        return succeeded;
+        return AzureActiveDirectory.isInitialized();
     }
 }
