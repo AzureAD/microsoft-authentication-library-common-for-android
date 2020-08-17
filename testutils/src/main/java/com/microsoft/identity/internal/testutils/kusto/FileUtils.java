@@ -13,12 +13,8 @@ public class FileUtils {
     public final static String TEST_RESULT_FILE_NAME = "test-results.csv";
 
     public static File getTestResultFile() {
-        final File parent = Environment.getDataDirectory();
+        final File parent = new File(System.getProperty("user.home"));
         return new File(parent, TEST_RESULT_FILE_NAME);
-    }
-
-    public static String getAbsoluteTestResultFilePath() {
-        return getTestResultFile().getAbsolutePath();
     }
 
     public static void writeTestResultsToCsv(@NonNull final EstsKustoClientTestTableData data) {
