@@ -66,6 +66,11 @@ task internalizeJar(type: ShadowJar) {
     exclude 'META-INF/*.MF'
     exclude 'META-INF/*.RSA'
     exclude 'META-INF/*.SF'
+
+    dependencies {
+        exclude(dependency('com.google.guava:guava:.*'))
+    }
+
     configurations = [project.configurations.internalize] // our configuration from above
 }
 
@@ -94,4 +99,5 @@ dependencies {
     // this lib is a dependency of our separate configuration
     implementation tasks.internalizeJar.outputs.files
     // our real project uses the relocated jar as dependency
+    implementation "com.google.guava:guava:27.0.1-jre"
 }
