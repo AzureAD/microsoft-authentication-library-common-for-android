@@ -69,6 +69,7 @@ task internalizeJar(type: ShadowJar) {
 
     dependencies {
         exclude(dependency('com.google.guava:guava:.*'))
+        exclude(dependency("org.ow2.asm:asm:.*"))
     }
 
     configurations = [project.configurations.internalize] // our configuration from above
