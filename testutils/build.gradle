@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.johnrengelman.shadow'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -10,6 +11,12 @@ android {
         labClientSecret = labSecret
     }
 
+    def uploadTestResultsToKusto = false
+
+    if (project.hasProperty("uploadTestResultsToKusto")) {
+        uploadTestResultsToKusto = true;
+    }
+
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -17,6 +24,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
+        buildConfigField("boolean", "UPLOAD_TEST_RESULTS_TO_KUSTO", "$uploadTestResultsToKusto")
     }
 
     lintOptions {
@@ -44,6 +52,27 @@ android {
 
 }
 
+configurations {
+    internalize // just define a separate configuration
+}
+
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+/* a task to create the relocated libs, must be defined before used below in dependencies */
+task internalizeJar(type: ShadowJar) {
+    def pkg = 'org.apache.http' // lib to relocate
+    def shadowPrefix = 'cz.msebera.android.httpclient'
+    relocate pkg, shadowPrefix // we want to relocate the above package
+    exclude 'META-INF/*.MF'
+    exclude 'META-INF/*.RSA'
+    exclude 'META-INF/*.SF'
+    configurations = [project.configurations.internalize] // our configuration from above
+}
+
+tasks.whenTaskAdded { task ->
+    task.dependsOn "internalizeJar"
+}
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':common')
@@ -54,8 +83,15 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'
-    testImplementation 'junit:junit:4.12'
+    implementation "junit:junit:4.13"
+    implementation "com.opencsv:opencsv:4.1"
+    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    internalize 'com.microsoft.azure.kusto:kusto-ingest:2.1.0'
+    // this lib is a dependency of our separate configuration
+    implementation tasks.internalizeJar.outputs.files
+    // our real project uses the relocated jar as dependency
 }

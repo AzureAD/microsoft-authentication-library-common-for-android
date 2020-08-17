@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.LabApi;
 import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
@@ -46,14 +48,18 @@ public class LabHelper {
     }
 
     public static String getPasswordForLab(final String labName) {
+        return getSecret(labName);
+    }
+
+    public static String getSecret(@NonNull final String secretName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         LabSecretApi labUserSecretApi = new LabSecretApi();
         SecretResponse secretResponse;
 
         try {
-            secretResponse = labUserSecretApi.getLabUserSecret(labName);
+            secretResponse = labUserSecretApi.getLabUserSecret(secretName);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Error retrieving lab password", ex);
+            throw new RuntimeException("Error retrieving secret from lab.", ex);
         }
 
         return secretResponse.getValue();
