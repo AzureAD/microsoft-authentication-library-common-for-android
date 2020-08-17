@@ -53,25 +53,17 @@ public class CacheUtils {
         boolean test(T t);
     }
 
-    private static boolean isAccessToken(@NonNull final String cacheKey) {
-        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
-    }
-
-    private static boolean isRefreshToken(@NonNull final String cacheKey) {
-        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
-    }
-
     /**
      * This method will edit all the token specified by the predicate using the  editor
      * in the shared preference.
      *
-     * @param SharedPrefName Name of the shared preference where token has been stored.
+     * @param sharedPrefName Name of the shared preference where token has been stored.
      * @param predicate      Generic functional interface representing function that returns true
      *                       or false depending on taken type.
      * @param editor         Functional interface to have any number of token editing method.
      */
-    public void editAllTokenInCache(@NonNull final String SharedPrefName, Predicate<String> predicate, Function<String, String> editor) {
-        SharedPreferences sharedPref = getSharedPreferences(SharedPrefName);
+    public void editAllTokenInCache(@NonNull final String sharedPrefName, Predicate<String> predicate, Function<String, String> editor) {
+        SharedPreferences sharedPref = TestUtils.getSharedPreferences(sharedPrefName);
         SharedPreferences.Editor prefEditor = sharedPref.edit();
         Map<String, ?> cacheEntries = sharedPref.getAll();
 
@@ -93,40 +85,35 @@ public class CacheUtils {
     /**
      * utility function to edit Access Token.
      *
-     * @param SharedPrefName Name of the shared preference.
+     * @param sharedPrefName Name of the shared preference.
      * @param editor         Functional interface for token editing method.
      */
-    public void editAllAccessTokenInCache(@NonNull final String SharedPrefName, Function<String, String> editor) {
+    public void editAllAccessTokenInCache(@NonNull final String sharedPrefName, Function<String, String> editor) {
         Predicate<String> predicate = new Predicate<String>() {
             @Override
             public boolean test(String cacheKey) {
-                return isAccessToken(cacheKey);
+                return TestUtils.isAccessToken(cacheKey);
             }
         };
 
-        editAllTokenInCache(SharedPrefName, predicate, editor);
+        editAllTokenInCache(sharedPrefName, predicate, editor);
     }
 
     /**
      * utility function to edit Refresh Token.
      *
-     * @param SharedPrefName Name of the shared preference.
+     * @param sharedPrefName Name of the shared preference.
      * @param editor         Functional interface for token editing method.
      */
-    public void editAllRefreshTokenInCache(@NonNull final String SharedPrefName, Function<String, String> editor) {
+    public void editAllRefreshTokenInCache(@NonNull final String sharedPrefName, Function<String, String> editor) {
         Predicate<String> predicate = new Predicate<String>() {
             @Override
             public boolean test(String cacheKey) {
-                return isRefreshToken(cacheKey);
+                return TestUtils.isRefreshToken(cacheKey);
             }
         };
 
-        editAllTokenInCache(SharedPrefName, predicate, editor);
-    }
-
-    private static SharedPreferences getSharedPreferences(final String sharedPrefName) {
-        final Context context = ApplicationProvider.getApplicationContext();
-        return context.getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE);
+        editAllTokenInCache(sharedPrefName, predicate, editor);
     }
 
     /**
@@ -138,18 +125,19 @@ public class CacheUtils {
      */
     private static String editTokenSignature(String string) {
         String[] segments = string.split(".");
-        String signature = segments[segments.length - 1];
+        if (segments.length != 2) {
+            throw new AssertionError("not JWT");
+        }
 
+        String signature = segments[segments.length - 1];
         StringBuilder sb = new StringBuilder(signature);
         Random rnd = new Random();
         int rndIndex = rnd.nextInt(sb.length());
         char charAtRndPosition = sb.charAt(rndIndex);
         char rndChar = (char) ('a' + rnd.nextInt(26));
 
-        while (charAtRndPosition == rndChar) {
-            rndIndex = rnd.nextInt(sb.length());
-            charAtRndPosition = sb.charAt(rndIndex);
-            rndChar = (char) ('a' + rnd.nextInt(26));
+        if (charAtRndPosition == rndChar) {
+            rndChar = (char) (charAtRndPosition + rnd.nextInt(26));
         }
 
         sb.setCharAt(rndIndex, rndChar);
