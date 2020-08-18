@@ -22,34 +22,45 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
 
 import java.util.Map;
 import java.util.Random;
 
+
+/**
+ * This class provide utility to modify the tokens stored in the cache by providing predicate and Function
+ * generic interface. This provide caller flexibility to write its own editing functions to modify the tokens
+ * stored in the cache.
+ */
 public class CacheUtils {
 
     private static final CacheKeyValueDelegate CACHE_KEY_VALUE_DELEGATE = new CacheKeyValueDelegate();
 
+    /**
+     * Functional interface for editing signature of the token.
+     */
     public static final Function<String, String> TOKEN_SIGNATURE_EDITOR = new Function<String, String>() {
         @Override
         public String apply(String s) {
-            return editTokenSignature(s);
+            return randomizeCharacterInTokenSignature(s);
         }
     };
 
-    private interface Predicate<T> {
+    /**
+     * Generic functional interface to give caller flexibility of code to evaluate on the given
+     * arguments.
+     *
+     * @param <T> input arguments to evaluate.
+     */
+    public interface Predicate<T> {
         boolean test(T t);
     }
 
@@ -59,7 +70,7 @@ public class CacheUtils {
      *
      * @param sharedPrefName Name of the shared preference where token has been stored.
      * @param predicate      Generic functional interface representing function that returns true
-     *                       or false depending on taken type.
+     *                       or false depending on token type.
      * @param editor         Functional interface to have any number of token editing method.
      */
     public void editAllTokenInCache(@NonNull final String sharedPrefName, Predicate<String> predicate, Function<String, String> editor) {
@@ -123,25 +134,27 @@ public class CacheUtils {
      * @param string string to be edited.
      * @return edited string.
      */
-    private static String editTokenSignature(String string) {
+    private static String randomizeCharacterInTokenSignature(String string) {
         String[] segments = string.split(".");
-        if (segments.length != 2) {
+        if (segments.length != 3) {
             throw new AssertionError("not JWT");
         }
 
-        String signature = segments[segments.length - 1];
-        StringBuilder sb = new StringBuilder(signature);
-        Random rnd = new Random();
-        int rndIndex = rnd.nextInt(sb.length());
-        char charAtRndPosition = sb.charAt(rndIndex);
-        char rndChar = (char) ('a' + rnd.nextInt(26));
+        // segment[2] = signature of token which is the 3rd part of the string.
+        String signature = segments[2];
+        StringBuilder signatureBuilder = new StringBuilder(signature);
+        Random random = new Random();
+        int index = random.nextInt(signatureBuilder.length());
 
-        if (charAtRndPosition == rndChar) {
-            rndChar = (char) (charAtRndPosition + rnd.nextInt(26));
+        // get random character from the base64 string.
+        String base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        int position = random.nextInt(base64Chars.length());
+        if (signatureBuilder.charAt(index) == base64Chars.charAt(position)) {
+            position += random.nextInt(base64Chars.length() - position) + 1;
         }
 
-        sb.setCharAt(rndIndex, rndChar);
-        segments[segments.length - 1] = sb.toString();
+        signatureBuilder.setCharAt(signatureBuilder.charAt(index), base64Chars.charAt(position));
+        segments[2] = signatureBuilder.toString();
         return TextUtils.join(".", segments);
     }
 }
