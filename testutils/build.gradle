@@ -53,31 +53,34 @@ android {
 }
 
 configurations {
-    internalize // just define a separate configuration
+    repackage // configuration to repackage a jar
 }
 
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
-/* a task to create the relocated libs, must be defined before used below in dependencies */
-task internalizeJar(type: ShadowJar) {
-    def pkg = 'org.apache.http' // lib to relocate
-    def shadowPrefix = 'cz.msebera.android.httpclient'
-    relocate pkg, shadowPrefix // we want to relocate the above package
+/* a task to create the relocated libs */
+task repackageJar(type: ShadowJar) {
+    def originalPkg = 'org.apache.http' // lib to relocate
+    def shadowPkg = 'cz.msebera.android.httpclient' // the lib that will be substituted
+    relocate originalPkg, shadowPkg
+
+    // excluding these from package to allow repackaging
     exclude 'META-INF/*.MF'
     exclude 'META-INF/*.RSA'
     exclude 'META-INF/*.SF'
 
     dependencies {
+        // we are already pulling these from other dependencies
         exclude(dependency("com.google.guava:guava:.*"))
         exclude(dependency("org.ow2.asm:asm:.*"))
         exclude(dependency("com.google.code.gson:gson:.*"))
     }
 
-    configurations = [project.configurations.internalize] // our configuration from above
+    configurations = [project.configurations.repackage] // our configuration from above
 }
 
 tasks.whenTaskAdded { task ->
-    task.dependsOn "internalizeJar"
+    task.dependsOn "repackageJar"
 }
 
 dependencies {
@@ -97,8 +100,6 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    internalize 'com.microsoft.azure.kusto:kusto-ingest:2.1.0'
-    // this lib is a dependency of our separate configuration
-    implementation tasks.internalizeJar.outputs.files
-    // our real project uses the relocated jar as dependency
+    repackage 'com.microsoft.azure.kusto:kusto-ingest:2.1.0'
+    implementation tasks.repackageJar.outputs.files
 }
