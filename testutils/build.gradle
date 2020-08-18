@@ -13,8 +13,8 @@ android {
 
     def uploadTestResultsToKusto = false
 
-    if (project.hasProperty("uploadTestResultsToKusto")) {
-        uploadTestResultsToKusto = true;
+    if (project.hasProperty("sendTestResultsToKusto")) {
+        uploadTestResultsToKusto = getBoolean(sendTestResultsToKusto);
     }
 
     defaultConfig {
@@ -102,4 +102,14 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     repackage 'com.microsoft.azure.kusto:kusto-ingest:2.1.0'
     implementation tasks.repackageJar.outputs.files
+}
+
+static boolean getBoolean(final String s) {
+    if (s == null || s == "") {
+        return false;
+    } else if (s.equalsIgnoreCase("true")) {
+        return true;
+    } else {
+        return false;
+    }
 }
