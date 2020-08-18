@@ -73,22 +73,21 @@ public class CacheUtils {
      *                       or false depending on token type.
      * @param editor         Functional interface to have any number of token editing method.
      */
-    public void editAllTokenInCache(@NonNull final String sharedPrefName, Predicate<String> predicate, Function<String, String> editor) {
-        SharedPreferences sharedPref = TestUtils.getSharedPreferences(sharedPrefName);
-        SharedPreferences.Editor prefEditor = sharedPref.edit();
-        Map<String, ?> cacheEntries = sharedPref.getAll();
+    public void editAllTokenInCache(@NonNull final String sharedPrefName, @NonNull final Predicate<String> predicate,
+                                    @NonNull final Function<String, String> editor) {
+        final SharedPreferences sharedPref = TestUtils.getSharedPreferences(sharedPrefName);
+        final SharedPreferences.Editor prefEditor = sharedPref.edit();
+        final Map<String, ?> cacheEntries = sharedPref.getAll();
 
         //get all the key from the cache entry, verify and edit it.
-        for (Map.Entry<String, ?> cacheEntry : cacheEntries.entrySet()) {
-            String keyToEdit = cacheEntry.getKey();
+        for (final Map.Entry<String, ?> cacheEntry : cacheEntries.entrySet()) {
+            final String keyToEdit = cacheEntry.getKey();
             if (predicate.test(keyToEdit)) {
-                Object cacheValue = cacheEntries.get(keyToEdit);
-                if (cacheValue instanceof String) {
-                    Credential credential = CACHE_KEY_VALUE_DELEGATE.fromCacheValue((String) cacheValue, Credential.class);
-                    credential.setSecret(editor.apply(credential.getSecret()));
-                    prefEditor.putString(keyToEdit, CACHE_KEY_VALUE_DELEGATE.generateCacheValue(credential));
-                    prefEditor.apply();
-                }
+                final String cacheValue = (String) cacheEntries.get(keyToEdit);
+                final Credential credential = CACHE_KEY_VALUE_DELEGATE.fromCacheValue(cacheValue, Credential.class);
+                credential.setSecret(editor.apply(credential.getSecret()));
+                prefEditor.putString(keyToEdit, CACHE_KEY_VALUE_DELEGATE.generateCacheValue(credential));
+                prefEditor.apply();
             }
         }
     }
@@ -99,8 +98,8 @@ public class CacheUtils {
      * @param sharedPrefName Name of the shared preference.
      * @param editor         Functional interface for token editing method.
      */
-    public void editAllAccessTokenInCache(@NonNull final String sharedPrefName, Function<String, String> editor) {
-        Predicate<String> predicate = new Predicate<String>() {
+    public void editAllAccessTokenInCache(@NonNull final String sharedPrefName, @NonNull final Function<String, String> editor) {
+        final Predicate<String> predicate = new Predicate<String>() {
             @Override
             public boolean test(String cacheKey) {
                 return TestUtils.isAccessToken(cacheKey);
@@ -116,8 +115,8 @@ public class CacheUtils {
      * @param sharedPrefName Name of the shared preference.
      * @param editor         Functional interface for token editing method.
      */
-    public void editAllRefreshTokenInCache(@NonNull final String sharedPrefName, Function<String, String> editor) {
-        Predicate<String> predicate = new Predicate<String>() {
+    public void editAllRefreshTokenInCache(@NonNull final String sharedPrefName, @NonNull final Function<String, String> editor) {
+        final Predicate<String> predicate = new Predicate<String>() {
             @Override
             public boolean test(String cacheKey) {
                 return TestUtils.isRefreshToken(cacheKey);
@@ -135,19 +134,19 @@ public class CacheUtils {
      * @return edited string.
      */
     private static String randomizeCharacterInTokenSignature(String string) {
-        String[] segments = string.split(".");
+        final String[] segments = string.split(".");
         if (segments.length != 3) {
             throw new AssertionError("not JWT");
         }
 
         // segment[2] = signature of token which is the 3rd part of the string.
-        String signature = segments[2];
-        StringBuilder signatureBuilder = new StringBuilder(signature);
-        Random random = new Random();
-        int index = random.nextInt(signatureBuilder.length());
+        final String signature = segments[2];
+        final StringBuilder signatureBuilder = new StringBuilder(signature);
+        final Random random = new Random();
+        final int index = random.nextInt(signatureBuilder.length());
 
         // get random character from the base64 string.
-        String base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        final String base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         int position = random.nextInt(base64Chars.length());
         if (signatureBuilder.charAt(index) == base64Chars.charAt(position)) {
             position += random.nextInt(base64Chars.length() - position) + 1;
