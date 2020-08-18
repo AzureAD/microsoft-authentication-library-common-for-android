@@ -36,10 +36,10 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.internal.commands.CommandSubscriptionMgr;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
@@ -91,9 +91,12 @@ public class CommandDispatcher {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    command.getCallback().onError(new ClientException(ClientException.DUPLICATE_COMMAND, "The same command was already received and is being processed."));
+                    CommandSubscriptionMgr.getInstance().addSubscriber(command);
                 }
             });
+
+            // Exit early.... Another thread will notify us when the work is done.
+            return;
         } else if (command.isEligibleForCaching()) {
             sExecutingCommands.add(command);
         }
@@ -142,7 +145,9 @@ public class CommandDispatcher {
                 sExecutingCommands.remove(command);
 
                 //Return the result via the callback
-                returnCommandResult(command, commandResult, handler);
+                CommandSubscriptionMgr
+                        .getInstance()
+                        .onCommandCompleted(command, commandResult, handler);
             }
         });
     }
@@ -502,7 +507,7 @@ public class CommandDispatcher {
         return sCommandResultCache.getSize();
     }
 
-    private static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
+    public static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
                                                  @NonNull final String correlationId) {
         // set correlation id on Local Authentication Result
         if (commandResult.getResult() != null &&
