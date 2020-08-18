@@ -5,9 +5,14 @@ import java.sql.Timestamp;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * A model representing the ClientTestTable in ESTS Kusto Cluster.
+ */
 @Getter
 @Builder
 public class EstsKustoClientTestTableData implements IKustoTableData {
+
+    public static final String ESTS_KUSTO_CLIENT_RESULT_TABLE_NAME = "ClientTestTable";
 
     private Timestamp timestamp;
     private String runnerInstance;

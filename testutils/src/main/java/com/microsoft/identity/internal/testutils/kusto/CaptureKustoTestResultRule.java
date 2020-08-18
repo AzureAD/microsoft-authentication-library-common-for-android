@@ -10,6 +10,9 @@ import org.junit.runners.model.Statement;
 
 import java.sql.Timestamp;
 
+/**
+ * A JUnit rule to capture test results and save to a CSV File.
+ */
 public class CaptureKustoTestResultRule implements TestRule {
 
     private final String TAG = CaptureKustoTestResultRule.class.getSimpleName();
@@ -19,7 +22,7 @@ public class CaptureKustoTestResultRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Evaluating file rule");
+                Log.i(TAG, "Starting to write test results to file.");
                 final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
                 final String runnerInstance = "MSAL RobolectricTest";
                 final String runnerVersion = "";
@@ -45,7 +48,7 @@ public class CaptureKustoTestResultRule implements TestRule {
                                     .errorMessage(errorMessage)
                                     .build();
 
-                    FileUtils.writeTestResultsToCsv(
+                    TestResultFileUtils.writeTestResultsToCsv(
                             clientTestTableData
                     );
                 }
