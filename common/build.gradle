@@ -1,12 +1,11 @@
 plugins {
     id "org.sonarqube" version "2.6.2"
-    id "com.github.spotbugs" version "4.4.5"
+//    id "com.github.spotbugs" version "4.5.0"
 }
 
 apply plugin: 'com.android.library'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
-//apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
 
@@ -130,8 +129,9 @@ dependencies {
 }
 
 // Configure spotbugs plugin.
+/* TODO: figure out spotbugs
 spotbugs {
-    toolVersion = "4.1.1"
+    toolVersion = "4.1.2"
     ignoreFailures = false
     showStackTraces = true
     showProgress = true
@@ -148,6 +148,7 @@ spotbugs {
     // jvmArgs = [ '-Duser.language=en' ]
     //classes = files("$project.buildDir/intermediates/javac")
 }
+*/
 
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->
@@ -329,13 +330,16 @@ tasks.whenTaskAdded { task ->
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
 }
-
+/* TODO: figure out why spotbugs doesn't see any files when run.
 tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
     dependsOn 'assemble'
+    classDirs = fileTree("$project.buildDir/intermediates/javac/debug/classes")
+    sourceDirs = fileTree('src/main/java')
     reports {
         // Enable HTML report only
         html.enabled = true
         xml.enabled = false
     }
 }
+*/
 
