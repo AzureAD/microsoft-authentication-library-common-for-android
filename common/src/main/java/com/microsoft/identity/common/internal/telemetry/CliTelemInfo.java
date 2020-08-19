@@ -35,6 +35,7 @@ public class CliTelemInfo implements Serializable {
 
     private static final String TAG = CliTelemInfo.class.getSimpleName();
     private static final long serialVersionUID = -7200606162774338466L;
+    private static final Pattern HEADER_FORMAT_REGULAR_EXPRESSION = Pattern.compile("^[1-9]+\\.?[0-9|\\.]*,[0-9|\\.]*,[0-9|\\.]*,[^,]*[0-9\\.]*,[^,]*$");
 
     private String mVersion;
     private String mServerErrorCode;
@@ -128,9 +129,7 @@ public class CliTelemInfo implements Serializable {
             final int delimCount = 4;
 
             // Verify the expected format "<version>, <error_code>, <sub_error_code>, <token_age>, <ring>"
-            Pattern headerFmt = Pattern.compile("^[1-9]+\\.?[0-9|\\.]*,[0-9|\\.]*,[0-9|\\.]*,[^,]*[0-9\\.]*,[^,]*$");
-            Matcher matcher = headerFmt.matcher(headerValue);
-            if (!matcher.matches()) {
+            if (!HEADER_FORMAT_REGULAR_EXPRESSION.matcher(headerValue).matches()) {
                 Logger.warn(
                         TAG,
                         "Malformed x-ms-clitelem header"
