@@ -49,8 +49,12 @@ public class TestUtils {
         return null;
     }
 
-    private static boolean isAccessToken(@NonNull final String cacheKey) {
+    public static boolean isAccessToken(@NonNull final String cacheKey) {
         return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.AccessToken;
+    }
+
+    public static boolean isRefreshToken(@NonNull final String cacheKey) {
+        return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
     }
 
     public static SharedPreferences getSharedPreferences(final String sharedPrefName) {
@@ -62,7 +66,7 @@ public class TestUtils {
         SharedPreferences sharedPreferences = getSharedPreferences(sharedPrefName);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.clear();
-        editor.commit();
+        editor.apply();
     }
 
     public static void removeAccessTokenFromCache(final String sharedPrefName) {
@@ -72,7 +76,7 @@ public class TestUtils {
         if (keyToRemove != null) {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.remove(keyToRemove);
-            editor.commit();
+            editor.apply();
         }
     }
 
