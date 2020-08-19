@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -40,6 +42,7 @@ public class MicrosoftTokenRequest extends TokenRequest {
     public static final String CLIENT_APP_NAME = "x-app-name";
     public static final String CLIENT_APP_VERSION = "x-app-ver";
     public static final String MICROSOFT_ENROLLMENT_ID = "microsoft_enrollment_id";
+    public static final String DEVICE_CODE = "device_code";
 
     public MicrosoftTokenRequest() {
         mClientInfoEnabled = "1";
@@ -83,6 +86,10 @@ public class MicrosoftTokenRequest extends TokenRequest {
     @Expose()
     @SerializedName(MICROSOFT_ENROLLMENT_ID)
     private String mMicrosoftEnrollmentId;
+
+    @Expose()
+    @SerializedName(DEVICE_CODE)
+    private String mDeviceCode;
 
     private String mTokenScope;
 
@@ -179,5 +186,14 @@ public class MicrosoftTokenRequest extends TokenRequest {
 
     public void setMicrosoftEnrollmentId(String microsoftEnrollmentId) {
         this.mMicrosoftEnrollmentId = microsoftEnrollmentId;
+    }
+
+    @Nullable
+    public String getDeviceCode() {
+        return mDeviceCode;
+    }
+
+    public void setDeviceCode(final String deviceCode) {
+        this.mDeviceCode = deviceCode;
     }
 }

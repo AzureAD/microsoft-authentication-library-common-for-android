@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -79,6 +80,7 @@ import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -143,6 +145,12 @@ public abstract class BaseController {
     public abstract boolean removeCurrentAccount(final RemoveAccountCommandParameters parameters)
             throws Exception;
 
+    public abstract AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
+            throws Exception;
+
+    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(final AuthorizationResult authorizationResult, final DeviceCodeFlowCommandParameters parameters)
+            throws Exception;
+
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
      */
@@ -181,6 +189,20 @@ public abstract class BaseController {
                 scopes.addAll(interactiveTokenCommandParameters.getExtraScopesToConsent());
             }
 
+            final HashMap<String, String> completeRequestHeaders = new HashMap<>();
+
+            if (interactiveTokenCommandParameters.getRequestHeaders() != null) {
+                completeRequestHeaders.putAll(interactiveTokenCommandParameters.getRequestHeaders());
+            }
+
+            completeRequestHeaders.put(
+                    AuthenticationConstants.AAD.APP_PACKAGE_NAME,
+                    parameters.getApplicationName()
+            );
+            completeRequestHeaders.put(AuthenticationConstants.AAD.APP_VERSION,
+                    parameters.getApplicationVersion()
+            );
+
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
             builder.setLoginHint(
                     interactiveTokenCommandParameters.getLoginHint()
@@ -191,7 +213,7 @@ public abstract class BaseController {
             ).setClaims(
                     parameters.getClaimsRequestJson()
             ).setRequestHeaders(
-                    interactiveTokenCommandParameters.getRequestHeaders()
+                    completeRequestHeaders
             ).setWebViewZoomEnabled(
                     interactiveTokenCommandParameters.isWebViewZoomEnabled()
             ).setWebViewZoomControlsEnabled(
@@ -233,6 +255,12 @@ public abstract class BaseController {
                 response,
                 parameters.getAuthenticationScheme()
         );
+
+        if (tokenRequest instanceof MicrosoftTokenRequest) {
+            ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
+            ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+        }
+
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
@@ -431,6 +459,8 @@ public abstract class BaseController {
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) refreshTokenRequest).setClaims(parameters.getClaimsRequestJson());
+            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppName(parameters.getApplicationName());
+            ((MicrosoftTokenRequest) refreshTokenRequest).setClientAppVersion(parameters.getApplicationVersion());
         }
 
         //NOTE: this should be moved to the strategy; however requires a larger refactor

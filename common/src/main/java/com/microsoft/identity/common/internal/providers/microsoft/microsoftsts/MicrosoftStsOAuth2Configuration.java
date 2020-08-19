@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2Configuration {
@@ -161,6 +162,14 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
         }
 
         return openIdConfig;
+    }
+
+    /**
+     * Return device code endpoint to bo used in the authorization step of Device Code Flow.
+     * @return a URL object for the /devicecode endpoint
+     */
+    public URL getDeviceCodeEndpoint() throws MalformedURLException {
+        return new URL(this.getAuthorityUrl().toString() + "/oauth2/v2.0/devicecode");
     }
 
 }

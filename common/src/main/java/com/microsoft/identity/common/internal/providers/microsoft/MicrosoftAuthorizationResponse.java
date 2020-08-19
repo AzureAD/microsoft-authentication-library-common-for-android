@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
+import java.net.URL;
+
 /**
  * Sub class of {@link AuthorizationResponse} which encapsulates additional parameters
  * specific to Microsoft in addition to the default OAuth2 AuthorizationResponse.
@@ -36,6 +38,12 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     public final static String CLOUD_GRAPH_HOST_NAME = "cloud_graph_host_name";
     public final static String SESSION_STATE = "session_state";
 
+    public final static String DEVICE_CODE = "device_code";
+    public final static String USER_CODE = "user_code";
+    public final static String VERIFICATION_URI = "verification_uri";
+    public final static String EXPIRES_IN = "expires_in";
+    public final static String INTERVAL = "interval";
+    public final static String MESSAGE = "message";
 
     @Expose()
     protected String mCorrelationId;
@@ -48,6 +56,19 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
     @Expose()
     protected String mSessionState;
 
+    // Device Code Flow Fields
+    @Expose()
+    protected String mDeviceCode;
+    @Expose()
+    protected String mUserCode;
+    @Expose()
+    protected String mVerificationUri;
+    @Expose()
+    protected String mExpiresIn;
+    @Expose()
+    protected String mInterval;
+    @Expose()
+    protected String mMessage;
 
     /**
      * Constructor of {@link MicrosoftAuthorizationResponse}.
@@ -85,6 +106,45 @@ public class MicrosoftAuthorizationResponse extends AuthorizationResponse {
 
     public String getSessionState() { return mSessionState;}
 
+    /**
+     * Getter method for the device code used in Device Code Flow.
+     *
+     * @return device code of the request (null in non-DCF cases).
+     */
+    public String getDeviceCode() { return mDeviceCode;}
 
+    /**
+     * Getter method for the user code used in Device Code Flow.
+     *
+     * @return user code of the request (null in non-DCF cases).
+     */
+    public String getUserCode() { return mUserCode;}
 
+    /**
+     * Getter method for the verification uri used in Device Code Flow.
+     *
+     * @return verification uri of the request (null in non-DCF cases).
+     */
+    public String getVerificationUri() { return mVerificationUri;}
+
+    /**
+     * Getter method for the expiration interval used in Device Code Flow.
+     *
+     * @return expiration interval of the request (null in non-DCF cases).
+     */
+    public String getExpiresIn() { return mExpiresIn;}
+
+    /**
+     * Getter method for the polling waiting interval used in Device Code Flow.
+     *
+     * @return waiting interval of the request (null in non-DCF cases).
+     */
+    public String getInterval() { return mInterval;}
+
+    /**
+     * Getter method for the authentication message used in Device Code Flow.
+     *
+     * @return message of the request (null in non-DCF cases).
+     */
+    public String getMessage() { return mMessage;}
 }

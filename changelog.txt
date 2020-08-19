@@ -1,3 +1,13 @@
+Version 2.1.0
+----------
+- Moved broker controller and strategy classes to common for MSAL CPP brokered auth.
+- Added support in common for Device Code Flow.
+- Added app-name, app-version headers to /auth & /token requests.
+- Added support for additional sub_errors returned by ESTS service for MSAL CPP support.
+- Added BrokerActivity to common AndroidManifest.
+- Caching in SharedPreferences now using apply() instead of synchronous commit() call.
+- Bugfix for parsing Authority URLs.
+
 Version 2.0.15
 -----------
 - Introduces additional tests for cache resiliency
