@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -32,21 +33,29 @@ import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
-public final class BrokerRtAccessor {
+/**
+ * For Broker apps to obtain Broker RT (for WPJ scenario).
+ * */
+public final class BrokerRefreshTokenAccessor {
+
+    private static final String TAG = BrokerRefreshTokenAccessor.class.getSimpleName();
 
     private final MsalOAuth2TokenCache mTokenCache;
     private final Context mContext;
 
-    public BrokerRtAccessor(@NonNull final MsalOAuth2TokenCache cache,
-                            @NonNull final Context context) {
+    public BrokerRefreshTokenAccessor(@NonNull final MsalOAuth2TokenCache cache,
+                                      @NonNull final Context context) {
         mTokenCache = cache;
         mContext = context;
     }
 
-    public String getBrokerRt(String accountObjectId) throws ClientException {
+    public @Nullable String getBrokerRefreshToken(@NonNull final String accountObjectId) throws ClientException {
+        final String methodName = "getBrokerRefreshToken";
+
         if (!AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(mContext.getPackageName()) &&
                 !AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(mContext.getPackageName())) {
             throw new ClientException("This can only be invoked by Broker apps.");
@@ -57,6 +66,17 @@ public final class BrokerRtAccessor {
         }
 
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(accountObjectId);
+
+        if (cacheRecord == null) {
+            Logger.verbose(TAG + methodName, "No cache record found.");
+            return null;
+        }
+
+        // Clear saved token since to minimize lifetime of Broker AT/RT on the client side.
+        // These tokens are supposed to be one-time use.
+        mTokenCache.removeCredential(cacheRecord.getRefreshToken());
+        mTokenCache.removeCredential(cacheRecord.getAccessToken());
+
         return cacheRecord.getRefreshToken().getSecret();
     }
 
