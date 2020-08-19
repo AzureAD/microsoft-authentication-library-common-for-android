@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import android.net.Uri;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -67,28 +69,27 @@ public class AzureActiveDirectory
     private static final String AUTHORIZATION_ENDPOINT_VALUE = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize";
 
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
-
-    static boolean sIsInitialized = false;
-    static Environment sEnvironment = Environment.Production;
+    private static boolean sIsInitialized = false;
+    private static Environment sEnvironment = Environment.Production;
 
     @Override
-    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(AzureActiveDirectoryOAuth2Configuration config) {
+    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config) {
         return new AzureActiveDirectoryOAuth2Strategy(config, new OAuth2StrategyParameters());
     }
 
-    public static boolean hasCloudHost(final URL authorityUrl) {
+    public static synchronized boolean hasCloudHost(@NonNull final URL authorityUrl) {
         return sAadClouds.containsKey(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
-    static boolean isValidCloudHost(final URL authorityUrl) {
+    static synchronized boolean isValidCloudHost(@NonNull final URL authorityUrl) {
         return hasCloudHost(authorityUrl) && getAzureActiveDirectoryCloud(authorityUrl).isValidated();
     }
 
-    public static boolean isInitialized() {
+    public static synchronized boolean isInitialized() {
         return sIsInitialized;
     }
 
-    public static void setEnvironment(Environment environment) {
+    public static synchronized void setEnvironment(@NonNull final Environment environment) {
         if (environment != sEnvironment) {
             // Environment changed, so mark sIsInitialized to false
             // to make a instance discovery network request for this environment.
@@ -98,7 +99,7 @@ public class AzureActiveDirectory
 
     }
 
-    public static Environment getEnvironment() {
+    public static synchronized Environment getEnvironment() {
         return sEnvironment;
     }
 
@@ -106,7 +107,7 @@ public class AzureActiveDirectory
      * @param authorityUrl URL
      * @return AzureActiveDirectoryCloud
      */
-    public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(final URL authorityUrl) {
+    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloud(@NonNull final URL authorityUrl) {
         return sAadClouds.get(authorityUrl.getHost().toLowerCase(Locale.US));
     }
 
@@ -114,7 +115,7 @@ public class AzureActiveDirectory
      * @param preferredCacheHostName String
      * @return AzureActiveDirectoryCloud
      */
-    public static AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(final String preferredCacheHostName) {
+    public static synchronized AzureActiveDirectoryCloud getAzureActiveDirectoryCloudFromHostName(@NonNull final String preferredCacheHostName) {
         return sAadClouds.get(preferredCacheHostName.toLowerCase(Locale.US));
     }
 
@@ -122,7 +123,7 @@ public class AzureActiveDirectory
      * @param host  String
      * @param cloud AzureActiveDirectoryCloud
      */
-    public static void putCloud(final String host, final AzureActiveDirectoryCloud cloud) {
+    public static synchronized void putCloud(@NonNull final String host, final AzureActiveDirectoryCloud cloud) {
         sAadClouds.put(host.toLowerCase(Locale.US), cloud);
     }
 
@@ -133,7 +134,8 @@ public class AzureActiveDirectory
      * @param discoveryResponse The response JSON serialized into a Map.
      * @throws JSONException If a parsing error is encountered.
      */
-    public static void initializeCloudMetadata(final String authorityHost, final Map<String, String> discoveryResponse) throws JSONException {
+    public static synchronized void initializeCloudMetadata(@NonNull final String authorityHost,
+                                                            @NonNull final Map<String, String> discoveryResponse) throws JSONException {
         final boolean tenantDiscoveryEndpointReturned = discoveryResponse.containsKey(TENANT_DISCOVERY_ENDPOINT);
         final String metadata = discoveryResponse.get(METADATA);
 
@@ -159,7 +161,7 @@ public class AzureActiveDirectory
         sIsInitialized = true;
     }
 
-    public static String getDefaultCloudUrl() {
+    public static synchronized String getDefaultCloudUrl() {
         if (sEnvironment == Environment.PreProduction) {
             return AzureActiveDirectoryEnvironment.PREPRODUCTION_CLOUD_URL;
         } else {
@@ -167,8 +169,7 @@ public class AzureActiveDirectory
         }
     }
 
-    public static void performCloudDiscovery() throws IOException {
-
+    public static synchronized void performCloudDiscovery() throws IOException {
         Uri instanceDiscoveryRequestUri = Uri.parse(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT);
 
         instanceDiscoveryRequestUri = instanceDiscoveryRequestUri
@@ -204,19 +205,20 @@ public class AzureActiveDirectory
                     sAadClouds.put(alias.toLowerCase(Locale.US), cloud);
                 }
             }
-        }
 
-        sIsInitialized = true;
+            sIsInitialized = true;
+        }
     }
 
-    public static Set<String> getHosts() {
+    public static synchronized Set<String> getHosts() {
         if (null != sAadClouds) {
             return sAadClouds.keySet();
         }
+
         return null;
     }
 
-    public static List<AzureActiveDirectoryCloud> getClouds() {
+    public static synchronized List<AzureActiveDirectoryCloud> getClouds() {
         if (null != sAadClouds) {
             return new ArrayList<>(sAadClouds.values());
         }
