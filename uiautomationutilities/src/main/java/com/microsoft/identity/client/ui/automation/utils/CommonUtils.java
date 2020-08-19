@@ -24,11 +24,13 @@ package com.microsoft.identity.client.ui.automation.utils;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
@@ -36,7 +38,7 @@ public class CommonUtils {
     public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     /**
-     * Launch (open) the supplied package on the device
+     * Launch (open) the supplied package on the device.
      *
      * @param packageName the package name to launch
      */
@@ -76,7 +78,7 @@ public class CommonUtils {
     }
 
     /**
-     * Get the complete resource id by combining the package name and the actual resource id
+     * Get the complete resource id by combining the package name and the actual resource id.
      *
      * @param appPackageName     the package name for the app
      * @param internalResourceId the resource id for the element
@@ -87,12 +89,31 @@ public class CommonUtils {
     }
 
     /**
-     * Checks if the supplied String could be a valid Android package name
+     * Checks if the supplied String could be a valid Android package name.
      *
      * @param hint the String for which to check if it is a package name
      * @return a boolean indicating whether the supplied String is a valid Android package name
      */
     public static boolean isStringPackageName(@NonNull final String hint) {
         return hint.contains("."); // best guess
+    }
+
+    /**
+     * Checks if the specified package is installed on the device.
+     *
+     * @param packageName the package name to check
+     * @return a boolean indicating if the package is installed
+     */
+    public static boolean isPackageInstalled(@NonNull final String packageName) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final PackageManager packageManager = context.getPackageManager();
+        final List<ApplicationInfo> packages = packageManager.getInstalledApplications(0);
+
+        for (final ApplicationInfo applicationInfo : packages) {
+            if (applicationInfo.packageName.equals(packageName))
+                return true;
+        }
+
+        return false;
     }
 }

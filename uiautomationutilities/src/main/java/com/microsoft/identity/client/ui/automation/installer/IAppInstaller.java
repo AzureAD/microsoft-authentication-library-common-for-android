@@ -23,12 +23,12 @@
 package com.microsoft.identity.client.ui.automation.installer;
 
 /**
- * An interface that can be used to install apps on the device during a UI Test
+ * An interface that can be used to install apps on the device during a UI Test.
  */
 public interface IAppInstaller {
 
     /**
-     * Install the supplied app on the device
+     * Install the supplied app on the device.
      *
      * @param appHint The app name or the package name of the app to install
      */

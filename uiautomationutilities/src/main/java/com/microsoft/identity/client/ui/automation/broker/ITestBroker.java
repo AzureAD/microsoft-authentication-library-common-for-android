@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.client.ui.automation.app.IApp;
 
 /**
@@ -31,14 +33,15 @@ import com.microsoft.identity.client.ui.automation.app.IApp;
 public interface ITestBroker extends IApp {
 
     /**
-     * Handle the broker account picker. Clicks on the list item associated to the supplied upn
+     * Handle the broker account picker. Clicks on the list item associated to the supplied upn, or
+     * if the upn is not provided, then clicks on "Use another account" button.
      *
      * @param username upn for the account to select in account picker
      */
     void handleAccountPicker(String username);
 
     /**
-     * Perform device registration with supplied username
+     * Perform device registration with supplied username.
      *
      * @param username username of the account to use for registration
      * @param password password of the account to use for registration
@@ -53,4 +56,33 @@ public interface ITestBroker extends IApp {
      * @param password password of the account to use for registration
      */
     void performSharedDeviceRegistration(String username, String password);
+
+    /**
+     * Perform device registration from the Join Activity using the supplied user account.
+     *
+     * @param username username of the account to use for registration
+     * @param password password of the account to use for registration
+     */
+    void performJoinViaJoinActivity(String username, String password);
+
+    /**
+     * Confirm that device registered with the supplied UPN by comparing it with the UPN
+     * displayed in Join Activity.
+     *
+     * @param username the username of the account for which to confirm registration
+     */
+    void confirmJoinInJoinActivity(String username);
+
+    /**
+     * Obtain the device id of the registered device from the broker.
+     *
+     * @return a String representing the device id of the registered device
+     */
+    @Nullable
+    String obtainDeviceId();
+
+    /**
+     * Enable browser access from this broker.
+     */
+    void enableBrowserAccess();
 }
