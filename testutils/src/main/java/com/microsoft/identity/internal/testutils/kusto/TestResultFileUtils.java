@@ -54,18 +54,17 @@ public class TestResultFileUtils {
         final File testResultFile = getTestResultFile();
         try {
             // create FileWriter object with file as parameter
-            FileWriter outputFile = new FileWriter(testResultFile, true);
+            final FileWriter outputFile = new FileWriter(testResultFile, true);
 
-            // create CSVWriter object filewriter object as parameter
-            KustoTableDataCsvWriter writer = new KustoTableDataCsvWriter(outputFile);
+            // create CSVWriter object with FileWriter object as parameter
+            final KustoTableDataCsvWriter writer = new KustoTableDataCsvWriter(outputFile);
 
             writer.writeNext(data);
 
             // closing writer connection
             writer.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (final IOException e) {
+            throw new AssertionError(e);
         }
     }
 }

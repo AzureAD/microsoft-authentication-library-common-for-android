@@ -26,6 +26,14 @@ package com.microsoft.identity.internal.testutils.kusto;
  * Denotes a Kusto Operation that can be performed.
  */
 public enum KustoOperation {
+
+    /**
+     * Represents a Kusto Query operation.
+     */
     Query,
+
+    /**
+     * Represents a Kusto Ingestion operation.
+     */
     Ingest
 }

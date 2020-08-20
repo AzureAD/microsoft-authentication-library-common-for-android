@@ -36,14 +36,15 @@ public class EstsKustoClientTestTableData implements IKustoTableData {
 
     public static final String ESTS_KUSTO_CLIENT_RESULT_TABLE_NAME = "ClientTestTable";
 
-    private Timestamp timestamp;
-    private String runnerInstance;
-    private String runnerVersion;
-    private String scaleUnit;
-    private String result;
-    private String testName;
-    private String errorMessage;
+    private final Timestamp timestamp;
+    private final String runnerInstance;
+    private final String runnerVersion;
+    private final String scaleUnit;
+    private final String result;
+    private final String testName;
+    private final String errorMessage;
 
+    @Override
     public final String[] getTableDataAsCsv() {
         return new String[]{
                 timestamp.toString(),

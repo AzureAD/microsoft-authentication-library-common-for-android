@@ -50,7 +50,8 @@ public class CaptureKustoTestResultRule implements TestRule {
                 final String runnerVersion = "";
                 final String scaleUnit = BuildConfig.DC;
                 final String testName = description.getDisplayName();
-                String result = "", errorMessage = "";
+                String result = "";
+                String errorMessage = "";
                 try {
                     base.evaluate();
                     result = "PASS";

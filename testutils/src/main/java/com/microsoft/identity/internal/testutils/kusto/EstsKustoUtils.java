@@ -86,10 +86,10 @@ public class EstsKustoUtils {
      * Perform the supplied query on ESTS Kusto Cluster.
      *
      * @param query the query that needs to be performed
-     * @return
-     * @throws URISyntaxException
-     * @throws DataClientException
-     * @throws DataServiceException
+     * @return a {@link KustoResultSetTable} containing the results of the query
+     * @throws URISyntaxException   if unable to create a Kusto client
+     * @throws DataClientException  if the query fails
+     * @throws DataServiceException if the query fails
      */
     public static KustoResultSetTable query(@NonNull final String query) throws URISyntaxException,
             DataClientException, DataServiceException {
@@ -136,17 +136,17 @@ public class EstsKustoUtils {
                 KustoOperation.Ingest
         );
 
-        IngestClient client;
+        final IngestClient client;
 
         // Creating the client:
         try {
             client = IngestClientFactory.createClient(connectionStringBuilder);
-        } catch (URISyntaxException e) {
+        } catch (final URISyntaxException e) {
             throw new RuntimeException(e);
         }
 
         // Creating the ingestion properties:
-        IngestionProperties ingestionProperties = new IngestionProperties(
+        final IngestionProperties ingestionProperties = new IngestionProperties(
                 ESTS_DATABASE_NAME,
                 tableName
         );
@@ -159,8 +159,8 @@ public class EstsKustoUtils {
         ingestionProperties.setIngestionMapping(ingestionMapping);
 
         try {
-            FileSourceInfo fileSourceInfo = new FileSourceInfo(fileToIngest, 0);
-            IngestionResult ingestionResult = client.ingestFromFile(fileSourceInfo, ingestionProperties);
+            final FileSourceInfo fileSourceInfo = new FileSourceInfo(fileToIngest, 0);
+            final IngestionResult ingestionResult = client.ingestFromFile(fileSourceInfo, ingestionProperties);
 
             List<IngestionStatus> statuses = ingestionResult.getIngestionStatusCollection();
 
@@ -173,11 +173,17 @@ public class EstsKustoUtils {
                 Log.i(TAG, "Ingestion status: " + statuses.get(0).status.toString());
             }
 
-            for (IngestionStatus status : statuses) {
-                Log.i(TAG, "Final ingestion status: " + status.status.toString());
+            for (final IngestionStatus status : statuses) {
+                if (status.status != OperationStatus.Succeeded) {
+                    throw new RuntimeException(
+                            "Kusto Ingestion failed with status: " + status.status.toString()
+                    );
+                } else {
+                    Log.i(TAG, "Kusto Ingestion Succeeded!");
+                }
             }
 
-        } catch (IngestionClientException | IngestionServiceException | InterruptedException |
+        } catch (final IngestionClientException | IngestionServiceException | InterruptedException |
                 StorageException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
