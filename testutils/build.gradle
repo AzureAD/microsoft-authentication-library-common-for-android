@@ -61,6 +61,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 /* a task to create the relocated libs */
 task repackageJar(type: ShadowJar) {
+    baseName = 'kusto-repackaged'
     def originalPkg = 'org.apache.http' // lib to relocate
     def shadowPkg = 'cz.msebera.android.httpclient' // the lib that will be substituted
     relocate originalPkg, shadowPkg
