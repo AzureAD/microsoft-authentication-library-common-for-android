@@ -64,6 +64,7 @@ public class UiAutomatorUtils {
      * @param text the text of the element to obtain
      * @return the UiObject associated to the supplied resource id
      */
+    @NonNull
     public static UiObject obtainEnabledUiObjectWithExactText(@NonNull final String text) {
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
