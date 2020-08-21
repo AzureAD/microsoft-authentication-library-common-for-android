@@ -52,7 +52,7 @@ public class MockServerResponse {
                 "\t\"trace_id\": \"8497799a-e9f9-402f-a951-7060b5014600\",\n" +
                 "\t\"correlation_id\": \"390d7507-c607-4f05-bb8a-51a2a7a6282b\",\n" +
                 "\t\"error_uri\": \"https://login.microsoftonline.com/error?code=70000\",\n" +
-                "\t\"suberror\": \"bad_token\"\n" +
+                "\t\"suberror\": \"\"\n" +
                 "}";
         final HttpResponse response = new HttpResponse(
                 400,
