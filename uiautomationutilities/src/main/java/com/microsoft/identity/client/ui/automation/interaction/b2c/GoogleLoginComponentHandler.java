@@ -34,7 +34,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 /**
- * A login component handler for Google IdP
+ * A login component handler for Google IdP.
  */
 public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
@@ -60,7 +60,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
             );
 
             passwordInput.setText(password);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 
@@ -77,7 +77,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
         final UiObject nextBtn = UiAutomatorUtils.obtainUiObjectWithText("Next");
         try {
             nextBtn.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

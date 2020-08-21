@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import android.net.Uri;
+import android.text.TextUtils;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -48,9 +51,17 @@ public class AuthorityDeserializer implements JsonDeserializer<Authority> {
                             TAG + methodName,
                             "Type: AAD"
                     );
-                    AzureActiveDirectoryAuthority aadAuthority = context.deserialize(authorityObject, AzureActiveDirectoryAuthority.class);
-                    if (aadAuthority != null && aadAuthority.mAudience != null) {
-                        aadAuthority.mAudience.setCloudUrl(aadAuthority.mAuthorityUrl);
+                    final AzureActiveDirectoryAuthority aadAuthority = context.deserialize(authorityObject, AzureActiveDirectoryAuthority.class);
+
+                    // The developer might supply authority_url instead of audience.
+                    // In that case, we'll try our best to map the audience here.
+                    if (aadAuthority != null && aadAuthority.mAuthorityUrl != null) {
+                        final Uri uri = Uri.parse(aadAuthority.mAuthorityUrl);
+                        final String cloudUrl = uri.getScheme() + "://" + uri.getHost();
+                        final String tenant = uri.getLastPathSegment();
+                        if (!TextUtils.isEmpty(tenant)) {
+                            aadAuthority.mAudience = AzureActiveDirectoryAudience.getAzureActiveDirectoryAudience(cloudUrl, tenant);
+                        }
                     }
                     return aadAuthority;
                 case "B2C":

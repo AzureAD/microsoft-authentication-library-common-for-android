@@ -26,12 +26,20 @@ import androidx.annotation.NonNull;
 
 public abstract class AbstractPromptHandler implements IPromptHandler {
 
-    protected ILoginComponentHandler loginComponentHandler;
+    protected IOAuth2LoginComponentHandler loginComponentHandler;
     protected PromptHandlerParameters parameters;
 
-    public AbstractPromptHandler(@NonNull final ILoginComponentHandler loginComponentHandler,
+    public AbstractPromptHandler(@NonNull final IOAuth2LoginComponentHandler loginComponentHandler,
                                  @NonNull final PromptHandlerParameters parameters) {
         this.loginComponentHandler = loginComponentHandler;
         this.parameters = parameters;
+    }
+
+    public IOAuth2LoginComponentHandler getLoginComponentHandler() {
+        return loginComponentHandler;
+    }
+
+    public PromptHandlerParameters getParameters() {
+        return parameters;
     }
 }

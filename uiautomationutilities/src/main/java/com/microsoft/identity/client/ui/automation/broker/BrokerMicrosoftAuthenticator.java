@@ -26,17 +26,16 @@ import android.Manifest;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.app.App;
-import com.microsoft.identity.client.ui.automation.installer.PlayStore;
-import com.microsoft.identity.client.ui.automation.interaction.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -44,19 +43,20 @@ import org.junit.Assert;
 
 import lombok.Getter;
 
-import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getResourceId;
 
+/**
+ * A model for interacting with the Microsoft Authenticator Broker App during UI Test.
+ */
 @Getter
-public class BrokerAuthenticator extends App implements ITestBroker {
+public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker {
 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
 
-    public BrokerAuthenticator() {
-        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME, new PlayStore());
+    public BrokerMicrosoftAuthenticator() {
+        super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
         localApkFileName = AUTHENTICATOR_APK;
     }
 
@@ -70,8 +70,41 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 "com.azure.authenticator:id/manage_device_registration_register_button"
         );
 
-        //TODO Assert for successful completion of device registration (similar to what we do below
-        // for shared device registration)
+
+        try {
+            // after device registration, make sure that we see the unregister btn to confirm successful
+            // registration
+            final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/manage_device_registration_unregister_button"
+            );
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Unregister Button appears.",
+                    unRegisterBtn.exists()
+            );
+
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Unregister Button is clickable.",
+                    unRegisterBtn.isClickable()
+            );
+
+            // after device registration, make sure that the current registration upn matches with
+            // with what was passed in
+            final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/manage_device_registration_current_registered_email"
+            );
+
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Registered account info appears.",
+                    currentRegistration.exists()
+            );
+
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Registered account upn matches provided upn.",
+                    currentRegistration.getText().equalsIgnoreCase(username)
+            );
+        } catch (final UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+        }
     }
 
     @Override
@@ -84,7 +117,7 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 "com.azure.authenticator:id/shared_device_registration_button"
         );
 
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
@@ -92,17 +125,68 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 .className("android.widget.ImageView");
 
         //confirm that we are in Shared Device Mode inside Authenticator
-        final UiObject sharedDeviceConfirmation = mDevice.findObject(sharedDeviceConfirmationSelector);
+        final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
         sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(sharedDeviceConfirmation.exists());
+        Assert.assertTrue(
+                "Microsoft Authenticator - Shared Device Confirmation page appears.",
+                sharedDeviceConfirmation.exists());
     }
 
-    private void performDeviceRegistrationHelper(@NonNull final String username,
-                                                 @NonNull final String password,
-                                                 @NonNull final String emailInputResourceId,
-                                                 @NonNull final String registerBtnResourceId) {
+    @Nullable
+    @Override
+    public String obtainDeviceId() {
+        openDeviceRegistrationPage();
+
+        try {
+            final UiObject deviceIdElement = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/device_id_text"
+            );
+
+            final String deviceIdText = deviceIdElement.getText();
+            final int colonIndex = deviceIdText.indexOf(":");
+            return deviceIdText.substring(colonIndex + 1);
+        } catch (final UiObjectNotFoundException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
+
+    @Override
+    public void enableBrowserAccess() {
+        // open device registration page
+        openDeviceRegistrationPage();
+
+        // Click enable browser access
+        UiAutomatorUtils.handleButtonClick(
+                "com.azure.authenticator:id/manage_device_registration_enable_browser_access_button"
+        );
+
+        // click continue in Dialog
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // Install cert
+        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        Assert.assertTrue(
+                "Microsoft Authenticator - cert installer dialog appears.",
+                certInstaller.exists()
+        );
+
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+    }
+
+    /**
+     * Open the device registration page in the Authenticator App
+     */
+    public void openDeviceRegistrationPage() {
         launch(); // launch Authenticator app
-        handleFirstRun(); // handle first run experience
+
+        if (shouldHandleFirstRun) {
+            handleFirstRun(); // handle first run experience
+        }
 
         // click the 3 dot menu icon in top right
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
@@ -127,9 +211,17 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 // grant the GET ACCOUNTS permission if needed
                 grantPermission(Manifest.permission.GET_ACCOUNTS);
             }
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
+    }
+
+    private void performDeviceRegistrationHelper(@NonNull final String username,
+                                                 @NonNull final String password,
+                                                 @NonNull final String emailInputResourceId,
+                                                 @NonNull final String registerBtnResourceId) {
+        // open device registration page
+        openDeviceRegistrationPage();
 
         // enter email
         UiAutomatorUtils.handleInput(
@@ -144,10 +236,10 @@ public class BrokerAuthenticator extends App implements ITestBroker {
                 .prompt(PromptParameter.LOGIN)
                 .broker(this)
                 .consentPageExpected(false)
-                .expectingNonZeroAccountsInBroker(false)
-                .expectingNonZeroAccountsInCookie(false)
+                .expectingBrokerAccountChooserActivity(false)
+                .expectingLoginPageAccountPicker(false)
                 .sessionExpected(false)
-                .loginHintProvided(true)
+                .loginHint(username)
                 .build();
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
@@ -166,24 +258,6 @@ public class BrokerAuthenticator extends App implements ITestBroker {
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
         UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-    }
-
-    @Override
-    public void handleAccountPicker(@NonNull final String username) {
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-
-        // find the object associated to this username in account picker
-        final UiObject accountSelected = device.findObject(new UiSelector().resourceId(
-                getResourceId(AUTHENTICATOR_APP_PACKAGE_NAME, "account_chooser_listView")
-        ).childSelector(new UiSelector().textContains(
-                username
-        )));
-
-        try {
-            accountSelected.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            accountSelected.click();
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
-        }
+        shouldHandleFirstRun = false;
     }
 }

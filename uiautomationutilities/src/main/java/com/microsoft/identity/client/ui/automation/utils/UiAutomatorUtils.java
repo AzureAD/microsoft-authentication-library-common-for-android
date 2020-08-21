@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.utils;
 
 import android.view.accessibility.AccessibilityWindowInfo;
+import android.widget.ScrollView;
 
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -36,21 +37,21 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 import static org.junit.Assert.fail;
 
 /**
- * This class contains utility methods for leveraging UI Automator to interact with UI elements
+ * This class contains utility methods for leveraging UI Automator to interact with UI elements.
  */
 public class UiAutomatorUtils {
 
     /**
-     * Obtain an instance of the UiObject for a given resource id
+     * Obtain an instance of the UiObject for a given resource id.
      *
      * @param resourceId the resource id of the element to obtain
      * @return the UiObject associated to the supplied resource id
      */
     public static UiObject obtainUiObjectWithResourceId(@NonNull final String resourceId) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .resourceId(resourceId));
 
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -58,16 +59,16 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text
+     * Obtain an instance of the UiObject for the given text.
      *
      * @param text the text of the element to obtain
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithText(@NonNull final String text) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .textContains(text));
 
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
@@ -75,7 +76,26 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain an instance of the UiObject for the given text and class name
+     * Obtain an instance of the UiObject for a given resource id.
+     *
+     * @param resourceId the resource id of the element to obtain
+     * @return the UiObject associated to the supplied resource id
+     */
+    public static UiObject obtainUiObjectWithResourceIdAndText(@NonNull final String resourceId,
+                                                               @NonNull final String text) {
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(new UiSelector()
+                .resourceId(resourceId)
+                .textContains(text));
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given text and class name.
      *
      * @param text      the text of the element to obtain
      * @param className the class name of the element to obtain
@@ -83,10 +103,10 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithTextAndClassType(@NonNull final String text,
                                                               @NonNull Class className) {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiObject uiObject = mDevice.findObject(new UiSelector()
+        final UiObject uiObject = device.findObject(new UiSelector()
                 .className(className)
                 .textContains(text));
 
@@ -95,7 +115,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Obtain a child element inside a scrollable view by specifying resource id and text
+     * Obtain a child element inside a scrollable view by specifying resource id and text.
      *
      * @param scrollableResourceId the resource id of the parent scroll view
      * @param childText            the text on the child view
@@ -104,6 +124,52 @@ public class UiAutomatorUtils {
     public static UiObject obtainChildInScrollable(@NonNull final String scrollableResourceId,
                                                    @NonNull final String childText) {
         final UiSelector scrollSelector = new UiSelector().resourceId(scrollableResourceId);
+        return obtainChildInScrollable(childText, scrollSelector);
+    }
+
+    /**
+     * Obtain a child element inside a scrollable view by specifying class and text.
+     *
+     * @param clazz     the class of the parent scroll view
+     * @param childText the text on the child view
+     * @return the UiObject associated to the desired child element
+     */
+    public static UiObject obtainChildInScrollable(@NonNull final Class clazz,
+                                                   @NonNull final String childText) {
+        final UiSelector scrollSelector = new UiSelector().className(clazz);
+        return obtainChildInScrollable(childText, scrollSelector);
+    }
+
+    private static UiObject obtainChildInScrollable(@NonNull final String childText,
+                                                    @NonNull final UiSelector scrollSelector) {
+        final UiScrollable recyclerView = new UiScrollable(scrollSelector);
+
+        final UiSelector childSelector = new UiSelector()
+                .textContains(childText);
+
+        try {
+            final UiObject child = recyclerView.getChildByText(
+                    childSelector,
+                    childText
+            );
+
+            child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+            return child;
+        } catch (final UiObjectNotFoundException e) {
+            fail(e.getMessage());
+        }
+
+        return null;
+    }
+
+    /**
+     * Obtain a child element inside a scrollable view by specifying text.
+     *
+     * @param childText the text on the child view
+     * @return the UiObject associated to the desired child element
+     */
+    public static UiObject obtainChildInScrollable(@NonNull final String childText) {
+        final UiSelector scrollSelector = new UiSelector().className(ScrollView.class);
 
         final UiScrollable recyclerView = new UiScrollable(scrollSelector);
 
@@ -118,7 +184,7 @@ public class UiAutomatorUtils {
 
             child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             return child;
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
 
@@ -126,7 +192,7 @@ public class UiAutomatorUtils {
     }
 
     /**
-     * Fills the supplied text into the input element associated to the supplied resource id
+     * Fills the supplied text into the input element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the input element
      * @param inputText  the text to enter
@@ -138,13 +204,13 @@ public class UiAutomatorUtils {
         try {
             inputField.setText(inputText);
             closeKeyboardIfNeeded();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
     }
 
     /**
-     * Clicks the button element associated to the supplied resource id
+     * Clicks the button element associated to the supplied resource id.
      *
      * @param resourceId the resource id of the button to click
      */
@@ -153,19 +219,19 @@ public class UiAutomatorUtils {
 
         try {
             button.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             fail(e.getMessage());
         }
     }
 
     /**
-     * Presses the device back button on the Android device
+     * Presses the device back button on the Android device.
      */
     public static void pressBack() {
-        final UiDevice mDevice =
+        final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mDevice.pressBack();
+        device.pressBack();
     }
 
     private static boolean isKeyboardOpen() {
@@ -183,5 +249,42 @@ public class UiAutomatorUtils {
                     UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
             uiDevice.pressBack();
         }
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given text.
+     *
+     * @param text the text of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithExactText(@NonNull final String text) {
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(new UiSelector()
+                .text(text));
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given class and index.
+     *
+     * @param clazz the class of the element to obtain
+     * @param index the index of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithClassAndIndex(@NonNull final Class clazz, final int index) {
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(new UiSelector()
+                .className(clazz)
+                .index(index)
+        );
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
     }
 }

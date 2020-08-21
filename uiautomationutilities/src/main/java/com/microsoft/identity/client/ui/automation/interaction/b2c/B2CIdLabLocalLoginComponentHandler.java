@@ -27,7 +27,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
- * A login component handler for B2C Local IdP
+ * A login component handler for B2C Local IdP.
  */
 public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
