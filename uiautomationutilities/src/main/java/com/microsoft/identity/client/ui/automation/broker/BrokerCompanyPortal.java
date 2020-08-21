@@ -94,7 +94,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
-    public void createPowerliftIncident() {
+    public void createPowerLiftIncident() {
         launch();
         if (shouldHandleFirstRun) {
             handleFirstRun();

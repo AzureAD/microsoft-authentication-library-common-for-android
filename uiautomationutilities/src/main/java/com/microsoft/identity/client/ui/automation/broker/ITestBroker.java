@@ -87,7 +87,7 @@ public interface ITestBroker extends IApp {
     void enableBrowserAccess();
 
     /**
-     * Create a Powerlift Incident using this broker.
+     * Create a PowerLift Incident using this broker.
      */
-    void createPowerliftIncident();
+    void createPowerLiftIncident();
 }

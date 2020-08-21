@@ -7,13 +7,13 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * A Test Rule to create a powerlift incident via a broker if a test fails.
+ * A Test Rule to create a PowerLift Incident via a broker if a test fails.
  */
-public class PowerliftIncidentRule implements TestRule {
+public class PowerLiftIncidentRule implements TestRule {
 
     private ITestBroker broker;
 
-    public PowerliftIncidentRule(final ITestBroker broker) {
+    public PowerLiftIncidentRule(final ITestBroker broker) {
         this.broker = broker;
     }
 
@@ -25,7 +25,7 @@ public class PowerliftIncidentRule implements TestRule {
                 try {
                     base.evaluate();
                 } catch (final Throwable throwable) {
-                    broker.createPowerliftIncident();
+                    broker.createPowerLiftIncident();
                     throw throwable;
                 }
             }

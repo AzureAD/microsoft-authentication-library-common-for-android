@@ -184,7 +184,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void createPowerliftIncident() {
+    public void createPowerLiftIncident() {
         launch();
         if (shouldHandleFirstRun) {
             handleFirstRun();
