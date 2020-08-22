@@ -100,13 +100,13 @@ public class CommandObserverMgr {
     public synchronized void onCommandCompleted(@NonNull final BaseCommand<?> command,
                                                 @NonNull final CommandResult result,
                                                 @NonNull final Handler handler) {
+        // Get the list of observers for this Command
         final List<Pair<CommandCallback<?, ?>, String>> subs = commandObservers.get(command);
 
-        if (null == subs || subs.isEmpty()) {
-            // Just 1 observer, simply send the result to them
+        if (null == subs || subs.isEmpty()) { // Just 1 observer, simply send the result to them
             returnCommandResult(command, result, handler);
-        } else {
-            for (Pair<CommandCallback<?, ?>, String> subPair : subs) {
+        } else { // Multiple observers to notify
+            for (final Pair<CommandCallback<?, ?>, String> subPair : subs) {
                 // Get the callback to notify
                 final CommandCallback callback = subPair.first;
 
@@ -136,6 +136,7 @@ public class CommandObserverMgr {
                     //setCorrelationIdOnResult(result, callbackSpecificCorrelationId);
                 }
 
+                // Send the result to the callback
                 returnCommandResult(command, result, handler);
             }
         }
