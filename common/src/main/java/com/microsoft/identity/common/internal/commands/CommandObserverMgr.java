@@ -101,12 +101,12 @@ public class CommandObserverMgr {
                                                 @NonNull final CommandResult result,
                                                 @NonNull final Handler handler) {
         // Get the list of observers for this Command
-        final List<Pair<CommandCallback<?, ?>, String>> subs = commandObservers.get(command);
+        final List<Pair<CommandCallback<?, ?>, String>> observers = commandObservers.get(command);
 
-        if (null == subs || subs.isEmpty()) { // Just 1 observer, simply send the result to them
+        if (null == observers || observers.isEmpty()) { // Just 1 observer, simply send the result to them
             returnCommandResult(command, result, handler);
         } else { // Multiple observers to notify
-            for (final Pair<CommandCallback<?, ?>, String> subPair : subs) {
+            for (final Pair<CommandCallback<?, ?>, String> subPair : observers) {
                 // Get the callback to notify
                 final CommandCallback callback = subPair.first;
 
