@@ -55,6 +55,8 @@ public class CommandObserverMgr {
 
     /**
      * A list of Observers to notify when this job finishes.
+     * <p>
+     * Basically, a Map<Command, Tuple<Callback, Correlation_ID>>
      */
     private final Map<BaseCommand<?>, List<Pair<CommandCallback<?, ?>, String>>> commandObservers = new HashMap<>();
 
