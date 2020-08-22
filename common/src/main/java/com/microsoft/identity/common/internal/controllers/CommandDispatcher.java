@@ -39,7 +39,7 @@ import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
-import com.microsoft.identity.common.internal.commands.CommandSubscriptionMgr;
+import com.microsoft.identity.common.internal.commands.CommandObserverMgr;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
@@ -88,13 +88,7 @@ public class CommandDispatcher {
         );
 
         if (sExecutingCommands.contains(command)) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    CommandSubscriptionMgr.getInstance().addSubscriber(command);
-                }
-            });
-
+            CommandObserverMgr.getInstance().addObserver(command);
             // Exit early.... Another thread will notify us when the work is done.
             return;
         } else if (command.isEligibleForCaching()) {
@@ -145,7 +139,7 @@ public class CommandDispatcher {
                 sExecutingCommands.remove(command);
 
                 //Return the result via the callback
-                CommandSubscriptionMgr
+                CommandObserverMgr
                         .getInstance()
                         .onCommandCompleted(command, commandResult, handler);
             }
@@ -209,7 +203,9 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
+    public static void returnCommandResult(@NonNull final BaseCommand command,
+                                           @NonNull final CommandResult result,
+                                           @NonNull final Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -508,7 +504,7 @@ public class CommandDispatcher {
     }
 
     public static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
-                                                 @NonNull final String correlationId) {
+                                                @NonNull final String correlationId) {
         // set correlation id on Local Authentication Result
         if (commandResult.getResult() != null &&
                 commandResult.getResult() instanceof LocalAuthenticationResult) {
