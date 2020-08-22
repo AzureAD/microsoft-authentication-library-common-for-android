@@ -107,7 +107,11 @@ public class CommandObserverMgr {
             returnCommandResult(command, result, handler);
         } else {
             for (Pair<CommandCallback<?, ?>, String> subPair : subs) {
+                // Get the callback to notify
                 final CommandCallback callback = subPair.first;
+
+                // Set it on the Command so they receive the result
+                command.setCallback(callback);
 
                 // This request began with the commandParam correlation_id
                 final String originalCorrelationId = command.getParameters().getCorrelationId();

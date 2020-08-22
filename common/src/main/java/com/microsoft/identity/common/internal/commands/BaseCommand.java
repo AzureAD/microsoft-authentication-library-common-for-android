@@ -79,4 +79,8 @@ public abstract class BaseCommand<T> implements Command<T> {
     public boolean isEligibleForCaching() {
         return false;
     }
+
+    void setCallback(CommandCallback callback) {
+        this.callback = callback;
+    }
 }
