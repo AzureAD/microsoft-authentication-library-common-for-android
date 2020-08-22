@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import android.Manifest;
 import android.os.Build;
+import android.util.Log;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -54,6 +57,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
+
+    public static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
@@ -176,6 +181,58 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         );
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
+    }
+
+    @Override
+    public void createPowerLiftIncident() {
+        launch();
+        if (shouldHandleFirstRun) {
+            handleFirstRun();
+        }
+
+        // click the 3 dot menu icon in top right
+        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
+
+        try {
+            // select Help from drop down
+            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Help");
+            settings.click();
+
+            // scroll down the recycler view to find Send logs btn
+            final UiObject sendLogs = UiAutomatorUtils.obtainChildInScrollable(
+                    android.widget.ScrollView.class,
+                    "Send logs"
+            );
+
+            assert sendLogs != null;
+
+            // click the send logs button
+            sendLogs.click();
+
+            final UiObject sendLogMsgField = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
+                    EditText.class,
+                    1
+            );
+
+            sendLogMsgField.setText("Broker Automation Incident");
+
+            final UiObject sendBtn = UiAutomatorUtils.obtainEnabledUiObjectWithExactText(
+                    "SEND"
+            );
+            sendBtn.click();
+
+            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
+                    TextView.class,
+                    3
+            );
+
+            Assert.assertTrue(postLogSubmissionMsg.exists());
+
+            // This will post the incident id in text logs
+            Log.i(TAG, postLogSubmissionMsg.getText());
+        } catch (UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 
     /**
