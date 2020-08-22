@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import androidx.annotation.NonNull;
-
 public class CommandResult {
 
     public enum ResultStatus { CANCEL, COMPLETED, ERROR };
@@ -34,10 +32,6 @@ public class CommandResult {
     public CommandResult(ResultStatus status, Object result){
         mStatus = status;
         mResult = result;
-    }
-
-    public CommandResult(@NonNull final CommandResult copy) {
-        this(copy.getStatus(), copy.getResult());
     }
 
     public ResultStatus getStatus(){
