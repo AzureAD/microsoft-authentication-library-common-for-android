@@ -37,6 +37,10 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.internal.controllers.CommandDispatcher.returnCommandResult;
 
+/**
+ * Singleton object used to track observers of a request. If multiple silent requests are received
+ * in parallel, keep track of the callbacks and then invoke them once the operation is finished.
+ */
 public class CommandObserverMgr {
 
     /**
@@ -54,6 +58,11 @@ public class CommandObserverMgr {
      */
     private final Map<BaseCommand<?>, List<Pair<CommandCallback<?, ?>, String>>> commandObservers = new HashMap<>();
 
+    /**
+     * Gets an instance of this Singleton.
+     *
+     * @return A reference to the CommandObserverMgr
+     */
     public static synchronized CommandObserverMgr getInstance() {
         if (null == INSTANCE) {
             INSTANCE = new CommandObserverMgr();
@@ -62,6 +71,11 @@ public class CommandObserverMgr {
         return INSTANCE;
     }
 
+    /**
+     * Adds an observer to a request.
+     *
+     * @param command The Command we wish to observe.
+     */
     public synchronized void addObserver(@NonNull final BaseCommand<?> command) {
         if (null == commandObservers.get(command)) {
             commandObservers.put(command, new ArrayList<Pair<CommandCallback<?, ?>, String>>());
@@ -76,6 +90,13 @@ public class CommandObserverMgr {
         commandObservers.get(command).add(cmdPair);
     }
 
+    /**
+     * Invoked when a Command finishes to trigger callbacks.
+     *
+     * @param command The Command which has completed.
+     * @param result  The result of the completed Command.
+     * @param handler The handler to which we'll delegate posting the result.
+     */
     public synchronized void onCommandCompleted(@NonNull final BaseCommand<?> command,
                                                 @NonNull final CommandResult result,
                                                 @NonNull final Handler handler) {
