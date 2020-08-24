@@ -64,6 +64,12 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
         if (!parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
+
+            if (loginComponentHandler instanceof AadLoginComponentHandler &&
+                    b2CProvider == B2CProvider.MSA) {
+                // stay signed in screen appears, just deny that
+                loginComponentHandler.handleBackButton();
+            }
         }
     }
 

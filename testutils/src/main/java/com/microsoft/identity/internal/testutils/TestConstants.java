@@ -41,7 +41,8 @@ public class TestConstants {
         public static final String[] MS_GRAPH_USER_READ_SCOPE = {"https://graph.microsoft.com/user.read"};
         public static final String[] AD_GRAPH_USER_READ_SCOPE = {"https://graph.windows.net/user.read"};
         public static final String[] OFFICE_USER_READ_SCOPE = {"https://outlook.office.com/user.read"};
-        public static final String[] B2C_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/read"};
+        public static final String[] B2C_READ_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/read"};
+        public static final String[] B2C_USER_IMPERSONATION_SCOPE = {"https://msidlabb2c.onmicrosoft.com/msidlabb2capi/user_impersonation"};
     }
 
     public static class Authorities {
