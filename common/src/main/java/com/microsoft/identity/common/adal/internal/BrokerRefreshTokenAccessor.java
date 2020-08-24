@@ -35,6 +35,8 @@ import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
 /**
@@ -44,20 +46,27 @@ public final class BrokerRefreshTokenAccessor {
 
     private static final String TAG = BrokerRefreshTokenAccessor.class.getSimpleName();
 
-    private final MsalOAuth2TokenCache mTokenCache;
     private final Context mContext;
+    private final MsalOAuth2TokenCache mTokenCache;
 
-    public BrokerRefreshTokenAccessor(@NonNull final MsalOAuth2TokenCache cache,
-                                      @NonNull final Context context) {
-        mTokenCache = cache;
+    public BrokerRefreshTokenAccessor(@NonNull final Context context,
+                                      @NonNull final MsalOAuth2TokenCache cache) {
         mContext = context;
+        mTokenCache = cache;
     }
 
+    /**
+     * Retrieves Broker Refresh Token ONLY IF the caller is the broker apps and has previously made a request with Broker Client ID.
+     * This will also wipe the RT from MSAL local cache.
+     *
+     * @param accountObjectId object id of the account.
+     * @throws ClientException if the calling app is not a broker app.
+     * */
     public @Nullable String getBrokerRefreshToken(@NonNull final String accountObjectId) throws ClientException {
         final String methodName = "getBrokerRefreshToken";
 
-        if (!AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(mContext.getPackageName()) &&
-                !AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME.equals(mContext.getPackageName())) {
+        if (!AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(mContext.getPackageName()) &&
+                !COMPANY_PORTAL_APP_PACKAGE_NAME.equals(mContext.getPackageName())) {
             throw new ClientException("This can only be invoked by Broker apps.");
         }
 
