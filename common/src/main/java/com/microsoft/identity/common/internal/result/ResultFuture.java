@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import androidx.annotation.NonNull;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +56,7 @@ public class ResultFuture<T> implements Future<T> {
     }
 
     @Override
-    public T get(long l, TimeUnit timeUnit) throws InterruptedException, TimeoutException {
+    public T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException {
         if (mCountDownLatch.await(l, timeUnit)) {
             return mResult;
         } else {
@@ -63,7 +65,7 @@ public class ResultFuture<T> implements Future<T> {
 
     }
 
-    public void setResult(T result) {
+    public void setResult(final T result) {
         mResult = result;
         mCountDownLatch.countDown();
     }
