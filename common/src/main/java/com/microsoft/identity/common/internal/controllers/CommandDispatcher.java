@@ -77,7 +77,6 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
-    //private static final Set<BaseCommand> sExecutingCommands = Collections.synchronizedSet(new HashSet<BaseCommand>());
     private static final ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
