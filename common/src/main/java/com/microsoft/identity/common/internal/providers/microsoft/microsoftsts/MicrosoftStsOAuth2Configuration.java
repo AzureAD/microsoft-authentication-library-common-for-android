@@ -65,7 +65,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      */
     public URL getDeviceAuthorizationEndpoint() {
         final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
-        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
+        if (openIdConfig != null && openIdConfig.getDeviceAuthorizationEndpoint() != null) {
             return getEndpointUrlFromAuthority(openIdConfig.getDeviceAuthorizationEndpoint());
         }
         return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_DEVICE_AUTHORIZE_ENDPOINT_SUFFIX);
