@@ -85,6 +85,8 @@ tasks.whenTaskAdded { task ->
     task.dependsOn "repackageJar"
 }
 
+project.gradle.startParameter.excludedTaskNames.add(':testutils:connectedCheck')
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':common')
