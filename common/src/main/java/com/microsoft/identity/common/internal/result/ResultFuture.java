@@ -110,6 +110,8 @@ public class ResultFuture<T> implements Future<T> {
         for (final BiConsumer<T, Throwable> consumer : mConsumers) {
             consumer.accept(result, mException);
         }
+
+        mConsumers.clear();
     }
 
     /**
