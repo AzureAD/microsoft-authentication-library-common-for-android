@@ -36,7 +36,6 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
@@ -53,9 +52,6 @@ import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -162,8 +158,17 @@ public class CommandDispatcher {
             @NonNull final Handler handler) {
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
-            public void accept(CommandResult result, Throwable throwable) {
-                // We can ignore the second (exception) param, not used.
+            public void accept(CommandResult result, final Throwable throwable) {
+                if (null != throwable) {
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            command.getCallback().onError(throwable);
+                        }
+                    });
+                }
+
+                // Return command result will post() result for us.
                 returnCommandResult(command, result, handler);
             }
         };
