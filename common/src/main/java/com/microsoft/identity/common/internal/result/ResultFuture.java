@@ -30,6 +30,7 @@ import com.microsoft.identity.common.internal.util.BiConsumer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -57,21 +58,21 @@ public class ResultFuture<T> implements Future<T> {
     }
 
     @Override
-    public T get() throws InterruptedException {
+    public T get() throws InterruptedException, ExecutionException {
         mCountDownLatch.await();
 
         if (null != mException) {
-            throw new RuntimeException(mException);
+            throw new ExecutionException(mException);
         }
 
         return mResult;
     }
 
     @Override
-    public T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException {
+    public T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException, ExecutionException {
         if (mCountDownLatch.await(l, timeUnit)) {
             if (null != mException) {
-                throw new RuntimeException(mException);
+                throw new ExecutionException(mException);
             }
 
             return mResult;
