@@ -102,7 +102,7 @@ public class ResultFuture<T> implements Future<T> {
         }
     }
 
-    public synchronized void addListener(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
+    public synchronized void whenComplete(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
         if (isDone()) {
             consumerToAdd.accept(mResult, mException);
         }
