@@ -105,7 +105,7 @@ public class CommandDispatcher {
                 // our value was inserted.
                 resultFuture.whenComplete(getCommandResultConsumer(command, handler));
             } else {
-                // Our value was not inserted, grab the one that was and hand a new listener off it
+                // Our value was not inserted, grab the one that was and hang a new listener off it
                 putValue.whenComplete(getCommandResultConsumer(command, handler));
                 return;
             }
