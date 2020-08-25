@@ -94,21 +94,21 @@ public class CommandDispatcher {
         final Handler handler = new Handler(Looper.getMainLooper());
         ResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
 
-        if (null != future) {
-            future.whenComplete(getCommandResultConsumer(command, handler));
-            return;
-        } else {
-            final ResultFuture<CommandResult> resultFuture = new ResultFuture<>();
-            final ResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, resultFuture);
+        if (null == future) {
+            future = new ResultFuture<>();
+            final ResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
 
             if (null == putValue) {
                 // our value was inserted.
-                resultFuture.whenComplete(getCommandResultConsumer(command, handler));
+                future.whenComplete(getCommandResultConsumer(command, handler));
             } else {
                 // Our value was not inserted, grab the one that was and hang a new listener off it
                 putValue.whenComplete(getCommandResultConsumer(command, handler));
                 return;
             }
+        } else {
+            future.whenComplete(getCommandResultConsumer(command, handler));
+            return;
         }
 
         sSilentExecutor.execute(new Runnable() {
