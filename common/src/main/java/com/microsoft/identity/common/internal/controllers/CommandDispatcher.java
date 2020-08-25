@@ -109,8 +109,6 @@ public class CommandDispatcher {
                 putValue.whenComplete(getCommandResultConsumer(command, handler));
                 return;
             }
-
-            sExecutingCommandMap.put(command, resultFuture);
         }
 
         sSilentExecutor.execute(new Runnable() {
