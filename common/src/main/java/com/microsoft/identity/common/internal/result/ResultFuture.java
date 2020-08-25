@@ -84,6 +84,11 @@ public class ResultFuture<T> implements Future<T> {
         }
     }
 
+    /**
+     * Sets the Exception on this ResultFuture.
+     *
+     * @param exception The Exception to set.
+     */
     public synchronized void setException(@NonNull final Exception exception) {
         mException = exception;
         mCountDownLatch.countDown();
@@ -93,6 +98,11 @@ public class ResultFuture<T> implements Future<T> {
         }
     }
 
+    /**
+     * Sets the Result on this ResultFuture.
+     *
+     * @param result The Result to set.
+     */
     public synchronized void setResult(@Nullable final T result) {
         mResult = result;
         mCountDownLatch.countDown();
@@ -102,6 +112,12 @@ public class ResultFuture<T> implements Future<T> {
         }
     }
 
+    /**
+     * Sets the whenComplete {@link BiConsumer} callback. Invoked upon completion
+     * (either success/error).
+     *
+     * @param consumerToAdd The BiConsumer to invoke.
+     */
     public synchronized void whenComplete(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
         if (isDone()) {
             consumerToAdd.accept(mResult, mException);
