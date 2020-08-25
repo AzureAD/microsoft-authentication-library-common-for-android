@@ -105,9 +105,9 @@ public class ResultFuture<T> implements Future<T> {
     public synchronized void whenComplete(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
         if (isDone()) {
             consumerToAdd.accept(mResult, mException);
+            return;
         }
 
-        // TODO Should we still add the consumer even if the ResultFuture isDone() == true?
         mConsumers.add(consumerToAdd);
     }
 }
