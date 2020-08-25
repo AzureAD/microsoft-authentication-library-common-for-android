@@ -59,6 +59,26 @@ public class UiAutomatorUtils {
     }
 
     /**
+     * Obtain an instance of an enabled UiObject for the given text.
+     *
+     * @param text the text of the element to obtain
+     * @return the UiObject associated to the supplied resource id
+     */
+    @NonNull
+    public static UiObject obtainEnabledUiObjectWithExactText(@NonNull final String text) {
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(new UiSelector()
+                .text(text)
+                .enabled(true)
+        );
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
+
+    /**
      * Obtain an instance of the UiObject for the given text.
      *
      * @param text the text of the element to obtain

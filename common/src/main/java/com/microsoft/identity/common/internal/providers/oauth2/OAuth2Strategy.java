@@ -273,9 +273,10 @@ public abstract class OAuth2Strategy
 
         // Check if the request was successful
         // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
-        if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE){
+        if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE) {
             // Get and parse response body
-            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, String>>() {}.getType());
+            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, String>>() {
+            }.getType());
 
             // Create response and result objects
             // "code" can be left null since it's DCF
