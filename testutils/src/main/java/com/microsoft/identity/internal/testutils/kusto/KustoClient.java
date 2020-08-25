@@ -1,25 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// All rights reserved.
-//
-// This code is licensed under the MIT License.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files(the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions :
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-// THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.kusto;
 
 import android.util.Log;
@@ -43,43 +21,36 @@ import com.microsoft.azure.kusto.ingest.result.IngestionStatus;
 import com.microsoft.azure.kusto.ingest.result.OperationStatus;
 import com.microsoft.azure.kusto.ingest.source.FileSourceInfo;
 import com.microsoft.azure.storage.StorageException;
-import com.microsoft.identity.internal.testutils.labutils.LabHelper;
 
 import java.net.URISyntaxException;
 import java.util.List;
 
 /**
- * Utilities to interact with the Kusto Data SDK to perform operations on the ESTS Kusto Cluster.
+ * A client to interact with the Kusto SDK.
  */
-public class EstsKustoUtils {
+public class KustoClient {
 
-    private static final String TAG = EstsKustoUtils.class.getSimpleName();
+    private static final String TAG = KustoClient.class.getSimpleName();
 
-    private final static String ESTS_DATABASE_NAME = "ESTS";
-    private final static String ESTS_KUSTO_CLUSTER = "estswus2";
-    private final static String ESTS_KUSTO_APP_TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
+    private KustoClientConfiguration kustoClientConfiguration;
 
-    private final static String SECRET_NAME_IDLABS_KUSTO_CONNECTOR_APP_ID =
-            "IDLABS-KUSTO-Connector-AppID";
-    private final static String SECRET_NAME_IDLABS_KUSTO_CONNECTOR_APP_SECRET =
-            "IDLABS-KUSTO-Connector-AppSecret";
+    public KustoClient(@NonNull final KustoClientConfiguration kustoClientConfiguration) {
+        this.kustoClientConfiguration = kustoClientConfiguration;
+    }
 
-    private final static String ESTS_KUSTO_CLIENT_TEST_TABLE_INGESTION_MAPPING_ANDROID =
-            "AndroidMapping";
-
-    private static ConnectionStringBuilder createKustoConnectionString(@NonNull final KustoOperation kustoOperation) {
-        final String kustoAppId = getEstsKustoConnectorAppIdFromLab();
-        final String kustoAppKey = getEstsKustoConnectorAppKeyFromLab();
+    private ConnectionStringBuilder createKustoConnectionString(@NonNull final KustoOperation kustoOperation) {
+        final String kustoAppId = kustoClientConfiguration.getConnectorApp().getAppId();
+        final String kustoAppKey = kustoClientConfiguration.getConnectorApp().getAppKey();
 
         final String resourceUri = kustoOperation == KustoOperation.Ingest
-                ? "https://ingest-" + ESTS_KUSTO_CLUSTER + ".kusto.windows.net"
-                : "https://" + ESTS_KUSTO_CLUSTER + ".kusto.windows.net";
+                ? "https://ingest-" + kustoClientConfiguration.getCluster() + ".kusto.windows.net"
+                : "https://" + kustoClientConfiguration.getCluster() + ".kusto.windows.net";
 
         return ConnectionStringBuilder.createWithAadApplicationCredentials(
                 resourceUri,
                 kustoAppId,
                 kustoAppKey,
-                ESTS_KUSTO_APP_TENANT_ID);
+                kustoClientConfiguration.getConnectorApp().getAppTenantId());
     }
 
     /**
@@ -91,7 +62,7 @@ public class EstsKustoUtils {
      * @throws DataClientException  if the query fails
      * @throws DataServiceException if the query fails
      */
-    public static KustoResultSetTable query(@NonNull final String query) throws URISyntaxException,
+    public KustoResultSetTable query(@NonNull final String query) throws URISyntaxException,
             DataClientException, DataServiceException {
         final ConnectionStringBuilder connectionStringBuilder = createKustoConnectionString(
                 KustoOperation.Query
@@ -99,26 +70,10 @@ public class EstsKustoUtils {
 
         final ClientImpl client = new ClientImpl(connectionStringBuilder);
 
-        final KustoOperationResult result = client.execute(ESTS_DATABASE_NAME, query);
+        final KustoOperationResult result = client.execute(
+                kustoClientConfiguration.getDatabase(), query
+        );
         return result.getPrimaryResults();
-    }
-
-    /**
-     * Ingest the android test results into the Ests Kusto Client Test Table.
-     *
-     * @param testResultFileName the file containing android test results
-     */
-    public static void ingestAndroidClientTestResults(@NonNull final String testResultFileName) {
-        final IngestionMapping ingestionMapping = new IngestionMapping(
-                ESTS_KUSTO_CLIENT_TEST_TABLE_INGESTION_MAPPING_ANDROID,
-                IngestionMapping.IngestionMappingKind.Csv
-        );
-
-        ingest(
-                EstsKustoClientTestTableData.ESTS_KUSTO_CLIENT_RESULT_TABLE_NAME,
-                ingestionMapping,
-                testResultFileName
-        );
     }
 
     /**
@@ -129,9 +84,9 @@ public class EstsKustoUtils {
      * @param ingestionMapping the mapping to use while ingestion
      * @param fileToIngest     the file that contains the data to ingest
      */
-    public static void ingest(@NonNull final String tableName,
-                              @NonNull final IngestionMapping ingestionMapping,
-                              @NonNull final String fileToIngest) {
+    public void ingest(@NonNull final String tableName,
+                       @NonNull final IngestionMapping ingestionMapping,
+                       @NonNull final String fileToIngest) {
         final ConnectionStringBuilder connectionStringBuilder = createKustoConnectionString(
                 KustoOperation.Ingest
         );
@@ -147,7 +102,7 @@ public class EstsKustoUtils {
 
         // Creating the ingestion properties:
         final IngestionProperties ingestionProperties = new IngestionProperties(
-                ESTS_DATABASE_NAME,
+                kustoClientConfiguration.getDatabase(),
                 tableName
         );
 
@@ -189,11 +144,4 @@ public class EstsKustoUtils {
         }
     }
 
-    private static String getEstsKustoConnectorAppIdFromLab() {
-        return LabHelper.getSecret(SECRET_NAME_IDLABS_KUSTO_CONNECTOR_APP_ID);
-    }
-
-    private static String getEstsKustoConnectorAppKeyFromLab() {
-        return LabHelper.getSecret(SECRET_NAME_IDLABS_KUSTO_CONNECTOR_APP_SECRET);
-    }
 }
