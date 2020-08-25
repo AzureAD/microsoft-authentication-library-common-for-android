@@ -99,7 +99,17 @@ public class CommandDispatcher {
             return;
         } else {
             final ResultFuture<CommandResult> resultFuture = new ResultFuture<>();
-            resultFuture.whenComplete(getCommandResultConsumer(command, handler));
+            final ResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, resultFuture);
+
+            if (null == putValue) {
+                // our value was inserted.
+                resultFuture.whenComplete(getCommandResultConsumer(command, handler));
+            } else {
+                // Our value was not inserted, grab the one that was and hand a new listener off it
+                putValue.whenComplete(getCommandResultConsumer(command, handler));
+                return;
+            }
+
             sExecutingCommandMap.put(command, resultFuture);
         }
 
