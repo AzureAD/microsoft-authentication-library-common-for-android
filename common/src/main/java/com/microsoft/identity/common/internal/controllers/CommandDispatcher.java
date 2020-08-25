@@ -49,12 +49,16 @@ import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.util.BiConsumer;
 
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -73,7 +77,8 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
-    private static final Set<BaseCommand> sExecutingCommands = Collections.synchronizedSet(new HashSet<BaseCommand>());
+    //private static final Set<BaseCommand> sExecutingCommands = Collections.synchronizedSet(new HashSet<BaseCommand>());
+    private static final ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
      * submitSilent - Run a command using the silent thread pool
@@ -87,15 +92,16 @@ public class CommandDispatcher {
                 "Beginning execution of silent command."
         );
 
-        if (sExecutingCommands.contains(command)) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    command.getCallback().onError(new ClientException(ClientException.DUPLICATE_COMMAND, "The same command was already received and is being processed."));
-                }
-            });
-        } else if (command.isEligibleForCaching()) {
-            sExecutingCommands.add(command);
+        final Handler handler = new Handler(Looper.getMainLooper());
+        ResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
+
+        if (null != future) {
+            future.whenComplete(getCommandResultConsumer(command, handler));
+            return;
+        } else {
+            final ResultFuture<CommandResult> resultFuture = new ResultFuture<>();
+            resultFuture.whenComplete(getCommandResultConsumer(command, handler));
+            sExecutingCommandMap.put(command, resultFuture);
         }
 
         sSilentExecutor.execute(new Runnable() {
@@ -111,7 +117,6 @@ public class CommandDispatcher {
                 EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                 CommandResult commandResult = null;
-                Handler handler = new Handler(Looper.getMainLooper());
 
                 //Log operation parameters
                 if (command.getParameters() instanceof SilentTokenCommandParameters) {
@@ -139,12 +144,22 @@ public class CommandDispatcher {
                 Telemetry.getInstance().flush(correlationId);
                 EstsTelemetry.getInstance().flush(command, commandResult);
 
-                sExecutingCommands.remove(command);
-
                 //Return the result via the callback
-                returnCommandResult(command, commandResult, handler);
+                sExecutingCommandMap.remove(command).setResult(commandResult);
             }
         });
+    }
+
+    private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
+            @NonNull final BaseCommand command,
+            @NonNull final Handler handler) {
+        return new BiConsumer<CommandResult, Throwable>() {
+            @Override
+            public void accept(CommandResult result, Throwable throwable) {
+                // We can ignore the second (exception) param, not used.
+                returnCommandResult(command, result, handler);
+            }
+        };
     }
 
     static void clearCommandCache() {
