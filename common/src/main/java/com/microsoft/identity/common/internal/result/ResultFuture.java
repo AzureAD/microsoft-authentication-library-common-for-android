@@ -23,7 +23,12 @@
 package com.microsoft.identity.common.internal.result;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.util.BiConsumer;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +37,9 @@ import java.util.concurrent.TimeoutException;
 public class ResultFuture<T> implements Future<T> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
-    private T mResult;
+    private T mResult = null;
+    private Exception mException = null;
+    private final List<BiConsumer<T, Throwable>> mConsumers = new ArrayList<>();
 
     @Override
     public boolean cancel(boolean b) {
@@ -52,21 +59,55 @@ public class ResultFuture<T> implements Future<T> {
     @Override
     public T get() throws InterruptedException {
         mCountDownLatch.await();
+
+        if (null != mException) {
+            throw new RuntimeException(mException);
+        }
+
         return mResult;
     }
 
     @Override
     public T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException {
         if (mCountDownLatch.await(l, timeUnit)) {
+            if (null != mException) {
+                throw new RuntimeException(mException);
+            }
+
             return mResult;
         } else {
-            throw new TimeoutException();
+            throw new TimeoutException(
+                    "Timed out waiting for: "
+                            + l // duration
+                            + timeUnit.name() // units
+            );
         }
-
     }
 
-    public void setResult(final T result) {
+    public synchronized void setException(@NonNull final Exception exception) {
+        mException = exception;
+        mCountDownLatch.countDown();
+
+        for (final BiConsumer<T, Throwable> consumer : mConsumers) {
+            consumer.accept(mResult, exception);
+        }
+    }
+
+    public synchronized void setResult(@Nullable final T result) {
         mResult = result;
         mCountDownLatch.countDown();
+
+        for (final BiConsumer<T, Throwable> consumer : mConsumers) {
+            consumer.accept(result, mException);
+        }
+    }
+
+    public synchronized void addListener(@NonNull final BiConsumer<T, Throwable> consumerToAdd) {
+        if (isDone()) {
+            consumerToAdd.accept(mResult, mException);
+        }
+
+        // TODO Should we still add the consumer even if the ResultFuture isDone() == true?
+        mConsumers.add(consumerToAdd);
     }
 }
