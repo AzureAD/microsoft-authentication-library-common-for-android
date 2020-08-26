@@ -415,19 +415,19 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
                 Logger.verbose(TAG, "Cache key is a Credential type...");
 
-                if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken.name())) {
+                if (CredentialType.AccessToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.AccessToken;
                     break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.AccessToken_With_AuthScheme.name())) {
+                } else if (CredentialType.AccessToken_With_AuthScheme.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.AccessToken_With_AuthScheme;
                     break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.RefreshToken.name())) {
+                } else if (CredentialType.RefreshToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.RefreshToken;
                     break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.IdToken.name())) {
+                } else if (CredentialType.IdToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.IdToken;
                     break;
-                } else if (credentialTypeStr.equalsIgnoreCase(CredentialType.V1IdToken.name())) {
+                } else if (CredentialType.V1IdToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.V1IdToken;
                     break;
                 } else {

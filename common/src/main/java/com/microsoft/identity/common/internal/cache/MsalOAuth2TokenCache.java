@@ -52,6 +52,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -897,7 +898,7 @@ public class MsalOAuth2TokenCache
         final List<AccountRecord> accounts = getAccounts(environment, clientId);
 
         for (final AccountRecord account : accounts) {
-            if (account.getUsername().equalsIgnoreCase(username)) {
+            if (StringUtil.equalsIgnoreCase(account.getUsername(), username)) {
                 result.add(account);
             }
         }
