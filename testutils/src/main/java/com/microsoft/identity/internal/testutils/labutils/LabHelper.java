@@ -45,17 +45,23 @@ public class LabHelper {
         return labInfo.getTenantId();
     }
 
-    public static String getPasswordForLab(final String labName) {
+    public static String getPasswordForLab(final String credentialVaultKeyName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         LabSecretApi labUserSecretApi = new LabSecretApi();
         SecretResponse secretResponse;
 
         try {
-            secretResponse = labUserSecretApi.getLabUserSecret(labName);
+            final String secretName = getLabSecretName(credentialVaultKeyName);
+            secretResponse = labUserSecretApi.getLabUserSecret(secretName);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab password", ex);
         }
 
         return secretResponse.getValue();
+    }
+
+    private static String getLabSecretName(final String credentialVaultKeyName) {
+        final String[] parts = credentialVaultKeyName.split("/");
+        return parts[parts.length - 1];
     }
 }

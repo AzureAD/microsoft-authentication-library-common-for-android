@@ -164,8 +164,7 @@ public final class SchemaUtil {
                         AuthenticationConstants.OAuth2.AAD_VERSION
                 );
 
-                if (!TextUtils.isEmpty(aadVersion)
-                        && aadVersion.equalsIgnoreCase(AuthenticationConstants.OAuth2.AAD_VERSION_V1)) {
+                if (AuthenticationConstants.OAuth2.AAD_VERSION_V1.equalsIgnoreCase(aadVersion)) {
                     idTokenVersion = CredentialType.V1IdToken.name();
                 }
             } catch (ServiceException e) {
