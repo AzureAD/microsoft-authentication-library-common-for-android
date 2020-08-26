@@ -263,7 +263,7 @@ public abstract class OAuth2Strategy
 
         // Send request
         final HttpResponse response = HttpRequest.sendPost(
-                ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceCodeEndpoint(),
+                ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 DEVICE_CODE_CONTENT_TYPE
