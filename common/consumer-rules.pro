@@ -16,8 +16,9 @@
 #   public *;
 #}
 
-##---------------Begin: proguard configuration for MSAL  --------
--keep class com.microsoft.** { *; }
+##---------------Begin: proguard configuration for Common  --------
+-keep class com.microsoft.identity.common.** { *; }
+-keep class com.microsoft.device.display.** { *; }
 
 ##---------------Begin: proguard configuration for Nimbus  ----------
 -keep class com.nimbusds.** { *; }
