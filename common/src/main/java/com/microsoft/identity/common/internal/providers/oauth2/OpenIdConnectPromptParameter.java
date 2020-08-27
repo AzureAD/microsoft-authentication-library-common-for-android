@@ -35,7 +35,7 @@ public enum OpenIdConnectPromptParameter {
     /**
      * No prompt parameter will be injected into the request.
      */
-    NOT_SENT,
+    UNSET,
 
     /**
      * this value is not used currently, kept as a placeholder if required for usage in the future.
@@ -62,7 +62,7 @@ public enum OpenIdConnectPromptParameter {
 
     @Override
     public String toString() {
-        if (this == NOT_SENT) {
+        if (this == UNSET) {
             return null;
         }
 
@@ -80,6 +80,6 @@ public enum OpenIdConnectPromptParameter {
 
         return promptBehavior != null && promptBehavior.equals("FORCE_PROMPT") ?
                 OpenIdConnectPromptParameter.LOGIN :
-                OpenIdConnectPromptParameter.NOT_SENT;
+                OpenIdConnectPromptParameter.UNSET;
     }
 }
