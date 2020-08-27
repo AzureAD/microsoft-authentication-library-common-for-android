@@ -52,10 +52,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      * @return URL the authorization endpoint
      */
     public URL getAuthorizationEndpoint() {
-        final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
-        if (openIdConfig != null) {
-            return getEndpointUrlFromAuthority(openIdConfig.getAuthorizationEndpoint());
-        }
         return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
@@ -64,10 +60,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      * @return a URL object for the /devicecode endpoint
      */
     public URL getDeviceAuthorizationEndpoint() {
-        final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
-        if (openIdConfig != null && openIdConfig.getDeviceAuthorizationEndpoint() != null) {
-            return getEndpointUrlFromAuthority(openIdConfig.getDeviceAuthorizationEndpoint());
-        }
         return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_DEVICE_AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
@@ -78,10 +70,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      * @return URL the token endpoint
      */
     public URL getTokenEndpoint() {
-        final OpenIdProviderConfiguration openIdConfig = getOpenIdWellKnownConfigForAuthority();
-        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
-            return getEndpointUrlFromAuthority(openIdConfig.getTokenEndpoint());
-        }
         return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
     }
 
