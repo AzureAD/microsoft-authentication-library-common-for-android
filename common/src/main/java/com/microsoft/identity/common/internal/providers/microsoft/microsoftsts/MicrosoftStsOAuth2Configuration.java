@@ -40,10 +40,10 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     private static final String TAG = MicrosoftStsOAuth2Configuration.class.getSimpleName();
 
     private static final String ENDPOINT_VERSION = "v2.0";
-    private static final String FALLBACK_ENDPOINT_SUFFIX = "/oAuth2/v2.0";
-    private static final String FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/authorize";
-    private static final String FALLBACK_TOKEN_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/token";
-    private static final String FALLBACK_DEVICE_AUTHORIZE_ENDPOINT_SUFFIX = FALLBACK_ENDPOINT_SUFFIX + "/devicecode";
+    private static final String ENDPOINT_SUFFIX = "/oAuth2/v2.0";
+    private static final String AUTHORIZE_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/authorize";
+    private static final String TOKEN_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/token";
+    private static final String DEVICE_AUTHORIZE_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/devicecode";
 
     /**
      * Get the authorization endpoint to be used for making a authorization request.
@@ -52,7 +52,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      * @return URL the authorization endpoint
      */
     public URL getAuthorizationEndpoint() {
-        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_AUTHORIZE_ENDPOINT_SUFFIX);
+        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
     /**
@@ -61,7 +61,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      * @return a URL object for the /devicecode endpoint
      */
     public URL getDeviceAuthorizationEndpoint() {
-        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_DEVICE_AUTHORIZE_ENDPOINT_SUFFIX);
+        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), DEVICE_AUTHORIZE_ENDPOINT_SUFFIX);
     }
 
     /**
@@ -71,7 +71,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      * @return URL the token endpoint
      */
     public URL getTokenEndpoint() {
-        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
+        return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), TOKEN_ENDPOINT_SUFFIX);
     }
 
     private URL getEndpointUrlFromRootAndSuffix(@NonNull URL root, @NonNull String endpointSuffix) {
