@@ -69,6 +69,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
+// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+@SuppressWarnings("rawtypes")
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends BaseAccount,

@@ -88,12 +88,13 @@ public class TokenShareUtility implements ITokenShareInternal {
     private final String mClientId;
     private final String mRedirectUri;
     private final String mDefaultAuthority;
+    @SuppressWarnings("rawtypes")
     private final MsalOAuth2TokenCache mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
                              @NonNull final String defaultAuthority,
-                             @NonNull final MsalOAuth2TokenCache cache) {
+                             @SuppressWarnings("rawtypes") @NonNull final MsalOAuth2TokenCache cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
         mDefaultAuthority = defaultAuthority;

@@ -42,6 +42,8 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
+// Suppressing rawtype warnings due to the generic types AuthorizationResult, OAuth2Strategy and AuthorizationRequest
+@SuppressWarnings("rawtypes")
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
     private WeakReference<Context> mReferencedApplicationContext;

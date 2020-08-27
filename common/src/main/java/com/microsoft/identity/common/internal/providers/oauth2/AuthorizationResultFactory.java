@@ -28,6 +28,8 @@ import android.content.Intent;
  * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.
  */
 
+// Suppressing rawtype warnings due to the generic types AuthorizationResult and AuthorizationRequest
+@SuppressWarnings("rawtypes")
 public abstract class AuthorizationResultFactory<
         GenericAuthorizationResult extends AuthorizationResult,
         GenericAuthorizationRequest extends AuthorizationRequest

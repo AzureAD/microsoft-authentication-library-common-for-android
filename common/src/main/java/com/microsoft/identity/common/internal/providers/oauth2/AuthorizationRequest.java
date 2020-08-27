@@ -116,7 +116,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * Constructor of AuthorizationRequest.
      */
-    protected AuthorizationRequest(final Builder builder) {
+    protected AuthorizationRequest(@SuppressWarnings("rawtypes") final Builder builder) {
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
@@ -228,6 +228,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public abstract B self();
 
+        @SuppressWarnings("rawtypes")
         public abstract AuthorizationRequest build();
 
     }

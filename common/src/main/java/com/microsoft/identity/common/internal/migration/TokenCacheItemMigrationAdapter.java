@@ -136,7 +136,7 @@ public class TokenCacheItemMigrationAdapter {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings("rawtypes") @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
@@ -159,7 +159,7 @@ public class TokenCacheItemMigrationAdapter {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings("rawtypes") @NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final RefreshTokenRecord refreshTokenRecord,

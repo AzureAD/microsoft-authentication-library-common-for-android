@@ -60,6 +60,8 @@ import java.net.HttpURLConnection;
  * TokenResult,
  * AuthorizationResult>
  */
+// Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+@SuppressWarnings("rawtypes")
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
         AzureActiveDirectoryAccessToken,

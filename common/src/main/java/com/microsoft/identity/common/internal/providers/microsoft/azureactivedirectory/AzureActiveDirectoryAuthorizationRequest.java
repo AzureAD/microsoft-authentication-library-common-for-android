@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 
+// Suppressing rawtype warnings due to the generic type MicrosoftAuthorizationRequest
+@SuppressWarnings("rawtypes")
 public class AzureActiveDirectoryAuthorizationRequest extends MicrosoftAuthorizationRequest {
     private static final long serialVersionUID = 6813760067123426470L;
     /**

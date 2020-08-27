@@ -216,6 +216,8 @@ public abstract class Authority {
         return new AzureActiveDirectoryAuthority(audience);
     }
 
+    // Suppressing rawtype warnings due to the generic type OAuth2Strategy
+    @SuppressWarnings("rawtypes")
     public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
     /**
