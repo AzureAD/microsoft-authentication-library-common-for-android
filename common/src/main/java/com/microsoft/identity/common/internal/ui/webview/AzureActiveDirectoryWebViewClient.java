@@ -207,7 +207,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             //If user clicked the "Back" button in the webview
-            if (!StringUtil.isEmpty(parameters.get(ERROR_SUBCODE)) && parameters.get(ERROR_SUBCODE).equalsIgnoreCase(SUB_ERROR_UI_CANCEL)) {
+            if (!StringUtil.equalsIgnoreCase(parameters.get(ERROR_SUBCODE), SUB_ERROR_UI_CANCEL)) {
                 getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
             } else {
                 getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);

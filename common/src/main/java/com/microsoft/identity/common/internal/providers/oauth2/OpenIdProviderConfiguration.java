@@ -35,6 +35,7 @@ import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProv
 import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.CLAIM_TYPES_SUPPORTED;
 import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.CLOUD_GRAPH_HOST_NAME;
 import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.CLOUD_INSTANCE_NAME;
+import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.DEVICE_AUTHORIZATION_ENDPOINT;
 import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.DISPLAY_VALUES_SUPPORTED;
 import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.END_SESSION_ENDPOINT;
 import static com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration.SerializedNames.FRONTCHANNEL_LOGOUT_SUPPORTED;
@@ -84,6 +85,7 @@ public class OpenIdProviderConfiguration {
     public static final class SerializedNames {
         public static final String
                 AUTHORIZATION_ENDPOINT = "authorization_endpoint",
+                DEVICE_AUTHORIZATION_ENDPOINT = "device_authorization_endpoint",
                 TOKEN_ENDPOINT = "token_endpoint",
                 TOKEN_ENDPOINT_AUTH_METHODS_SUPPORTED = "token_endpoint_auth_methods_supported",
                 JWKS_URI = "jwks_uri",
@@ -131,6 +133,9 @@ public class OpenIdProviderConfiguration {
 
     @SerializedName(AUTHORIZATION_ENDPOINT)
     private String mAuthorizationEndpoint;
+
+    @SerializedName(DEVICE_AUTHORIZATION_ENDPOINT)
+    private String mDeviceAuthorizationEndpoint;
 
     @SerializedName(TOKEN_ENDPOINT)
     private String mTokenEndpoint;
@@ -267,6 +272,10 @@ public class OpenIdProviderConfiguration {
 
     public void setAuthorizationEndpoint(final String authorizationEndpoint) {
         mAuthorizationEndpoint = authorizationEndpoint;
+    }
+
+    public String getDeviceAuthorizationEndpoint() {
+        return mDeviceAuthorizationEndpoint;
     }
 
     public String getTokenEndpoint() {
