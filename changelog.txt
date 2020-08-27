@@ -1,7 +1,9 @@
 Version 2.1.1
 ----------
-- Introduces result sharing to minimize duplicate_command errors
+- Introduces result sharing to minimize duplicate_command errors.
 - No longer query well known config to obtain token endpoint - build it manually instead
+- Improved null-safety in String comparisons.
+- Improved thread safety when querying cloud metadata.
 
 Version 2.1.0
 ----------

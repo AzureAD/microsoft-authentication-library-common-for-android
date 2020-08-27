@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2Configuration {
