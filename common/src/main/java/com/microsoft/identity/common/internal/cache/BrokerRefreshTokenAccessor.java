@@ -20,23 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.adal.internal;
+package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
 /**
@@ -56,22 +53,18 @@ public final class BrokerRefreshTokenAccessor {
     }
 
     /**
-     * Retrieves Broker Refresh Token ONLY IF the caller is the broker apps and has previously made a request with Broker Client ID.
-     * This will also wipe the RT from MSAL local cache.
+     * Returns a refresh token associated to Broker's client ID.
+     * Will throw an exception if The caller is not a valid Broker app.
+     * NOTE: This will also wipe the AT/RT associated to Broker's client ID from MSAL local cache.
      *
-     * @param accountObjectId object id of the account.
+     * @param accountObjectId local_account_id of the account.
      * @throws ClientException if the calling app is not a broker app.
      * */
     public @Nullable String getBrokerRefreshToken(@NonNull final String accountObjectId) throws ClientException {
         final String methodName = "getBrokerRefreshToken";
 
-        if (!AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(mContext.getPackageName()) &&
-                !COMPANY_PORTAL_APP_PACKAGE_NAME.equals(mContext.getPackageName())) {
-            throw new ClientException("This can only be invoked by Broker apps.");
-        }
-
         if (!new BrokerValidator(mContext).verifySignature(mContext.getPackageName())) {
-            throw new ClientException("This can only be invoked by apps with a valid signature hash.");
+            throw new ClientException("This can only be invoked by Broker apps.");
         }
 
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(accountObjectId);
