@@ -1,3 +1,8 @@
+Version 2.1.1
+----------
+- Introduces result sharing to minimize duplicate_command errors
+- Device Code authorization endpoint is now sourced from .Well-Known config
+
 Version 2.1.0
 ----------
 - Moved broker controller and strategy classes to common for MSAL CPP brokered auth.
