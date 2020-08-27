@@ -34,20 +34,22 @@ import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
 /**
- * For Broker apps to obtain Broker RT (for WPJ scenario).
- * */
-public final class BrokerRefreshTokenAccessor {
+ * For Broker apps to obtain an RT associated to Broker's client ID (for WPJ scenario).
+ */
+public final class BrokerClientIdRefreshTokenAccessor {
 
-    private static final String TAG = BrokerRefreshTokenAccessor.class.getSimpleName();
+    private static final String TAG = BrokerClientIdRefreshTokenAccessor.class.getSimpleName();
 
     private final Context mContext;
     private final MsalOAuth2TokenCache mTokenCache;
 
-    public BrokerRefreshTokenAccessor(@NonNull final Context context,
-                                      @NonNull final MsalOAuth2TokenCache cache) {
+    public BrokerClientIdRefreshTokenAccessor(@NonNull final Context context,
+                                              @NonNull final MsalOAuth2TokenCache cache) {
         mContext = context;
         mTokenCache = cache;
     }
@@ -58,13 +60,19 @@ public final class BrokerRefreshTokenAccessor {
      * NOTE: This will also wipe the AT/RT associated to Broker's client ID from MSAL local cache.
      *
      * @param accountObjectId local_account_id of the account.
+     * @return an RT, if there's any.
      * @throws ClientException if the calling app is not a broker app.
-     * */
-    public @Nullable String getBrokerRefreshToken(@NonNull final String accountObjectId) throws ClientException {
+     */
+    public @Nullable String get(@NonNull final String accountObjectId) throws ClientException {
         final String methodName = "getBrokerRefreshToken";
 
-        if (!new BrokerValidator(mContext).verifySignature(mContext.getPackageName())) {
+        if (!AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equals(mContext.getPackageName()) &&
+                !COMPANY_PORTAL_APP_PACKAGE_NAME.equals(mContext.getPackageName())) {
             throw new ClientException("This can only be invoked by Broker apps.");
+        }
+
+        if (!new BrokerValidator(mContext).verifySignature(mContext.getPackageName())) {
+            throw new ClientException("This can only be invoked by Broker apps with a valid signature hash.");
         }
 
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(accountObjectId);
@@ -78,6 +86,11 @@ public final class BrokerRefreshTokenAccessor {
         // These tokens are supposed to be one-time use.
         mTokenCache.removeCredential(cacheRecord.getRefreshToken());
         mTokenCache.removeCredential(cacheRecord.getAccessToken());
+
+        if (cacheRecord.getRefreshToken() == null) {
+            Logger.verbose(TAG + methodName, "Refresh token record is empty.");
+            return null;
+        }
 
         return cacheRecord.getRefreshToken().getSecret();
     }
