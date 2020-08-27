@@ -57,6 +57,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
 
     /**
      * Return device authorization endpoint to bo used in the authorization step of Device Code Flow.
+     *
      * @return a URL object for the /devicecode endpoint
      */
     public URL getDeviceAuthorizationEndpoint() {
@@ -71,27 +72,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
      */
     public URL getTokenEndpoint() {
         return getEndpointUrlFromRootAndSuffix(getAuthorityUrl(), FALLBACK_TOKEN_ENDPOINT_SUFFIX);
-    }
-
-    @Nullable
-    private URL getEndpointUrlFromAuthority(@NonNull final String authorityUrl) {
-        final String methodName = ":getEndpointUrlFromAuthority";
-        try {
-            return new URL(authorityUrl);
-        } catch (Exception e) {
-            Logger.error(
-                    TAG + methodName,
-                    "Unable to create URL from provided authority.",
-                    null);
-            Logger.errorPII(
-                    TAG + methodName,
-                    e.getMessage() +
-                            " Unable to create URL from provided authority." +
-                            " authority = " + authorityUrl,
-                    e);
-        }
-
-        return null;
     }
 
     private URL getEndpointUrlFromRootAndSuffix(@NonNull URL root, @NonNull String endpointSuffix) {
@@ -117,20 +97,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
 
         return null;
 
-    }
-
-    /**
-     * Get the Open Id Provider Configuration from the authority.
-     * This operation must NOT be called from the main thread.
-     * This method can return null if errors are encountered and the caller should check the result
-     * before using it.
-     *
-     * @return OpenIdProviderConfiguration if available or null
-     */
-    @Nullable
-    private OpenIdProviderConfiguration getOpenIdWellKnownConfigForAuthority() {
-        final URL authority = getAuthorityUrl();
-        return getOpenIdWellKnownConfig(authority.getHost(), authority.getPath());
     }
 
     /**
