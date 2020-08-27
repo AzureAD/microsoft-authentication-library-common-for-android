@@ -35,6 +35,11 @@ public enum OpenIdConnectPromptParameter {
     /**
      * No prompt parameter will be injected into the request.
      */
+    NOT_SENT,
+
+    /**
+     * this value is not used currently, kept as a placeholder if required for usage in the future.
+     */
     NONE,
 
     /**
@@ -57,7 +62,7 @@ public enum OpenIdConnectPromptParameter {
 
     @Override
     public String toString() {
-        if (this == NONE) {
+        if (this == NOT_SENT) {
             return null;
         }
 
@@ -65,9 +70,9 @@ public enum OpenIdConnectPromptParameter {
     }
 
 
-
     /**
      * Utility method to map Adal PromptBehavior with OpenIdConnectPromptParameter
+     *
      * @param promptBehavior
      * @return
      */
@@ -75,6 +80,6 @@ public enum OpenIdConnectPromptParameter {
 
         return promptBehavior != null && promptBehavior.equals("FORCE_PROMPT") ?
                 OpenIdConnectPromptParameter.LOGIN :
-                OpenIdConnectPromptParameter.NONE;
+                OpenIdConnectPromptParameter.NOT_SENT;
     }
 }
