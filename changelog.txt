@@ -5,6 +5,7 @@ Version 2.1.1
 - Improved null-safety in String comparisons.
 - Improved thread safety when querying cloud metadata.
 - Less broad Proguard configuration now restricted to common lib packages + displayMask.
+- Improved logging for SSL errors to assist in troubleshooting.
 
 Version 2.1.0
 ----------
