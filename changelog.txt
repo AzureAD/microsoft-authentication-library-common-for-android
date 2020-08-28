@@ -4,6 +4,7 @@ Version 2.1.1
 - No longer query well known config to obtain token endpoint - build it manually instead
 - Improved null-safety in String comparisons.
 - Improved thread safety when querying cloud metadata.
+- Less broad Proguard configuration now restricted to common lib packages + displayMask.
 
 Version 2.1.0
 ----------
