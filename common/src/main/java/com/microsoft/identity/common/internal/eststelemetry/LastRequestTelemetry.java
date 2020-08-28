@@ -30,9 +30,12 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class LastRequestTelemetry extends RequestTelemetry {
+
+    final static int FAILED_REQUEST_CAP = 100;
 
     @SerializedName("silent_successful_count")
     private int silentSuccessfulCount;
@@ -47,7 +50,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
     }
 
     List<FailedRequest> getFailedRequests() {
-        return failedRequests;
+        return Collections.unmodifiableList(failedRequests);
     }
 
     @Override
@@ -76,10 +79,22 @@ public class LastRequestTelemetry extends RequestTelemetry {
 
 
     void appendFailedRequest(final String apiId, final String correlationId, final String error) {
-        failedRequests.add(new FailedRequest(apiId, correlationId, error));
+        appendFailedRequest(new FailedRequest(apiId, correlationId, error));
     }
 
     void appendFailedRequest(final FailedRequest failedRequest) {
+        // this should usually not be greater than - at most should be equal to the cap
+        // because the only we to add to this list is via this append method.
+        // The only time this could be greater than the cap is for some existing devices that may
+        // have caught themselves in a bad state after accumulating too much telemetry in
+        // Shared Preferences. (of course prior to the cap being put in place).
+        // So will just take the last (most recent) 100 items here to get those out of the bad state,
+        // and also to avoid having too much telemetry in the cache going forward.
+        if (failedRequests.size() >= FAILED_REQUEST_CAP) {
+            final int beginIndex = failedRequests.size() - FAILED_REQUEST_CAP + 1;
+            final int endIndex = failedRequests.size();
+            failedRequests = failedRequests.subList(beginIndex, endIndex);
+        }
         failedRequests.add(failedRequest);
     }
 
