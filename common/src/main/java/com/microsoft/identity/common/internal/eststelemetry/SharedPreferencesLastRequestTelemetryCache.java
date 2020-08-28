@@ -66,17 +66,17 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
     public synchronized RequestTelemetry getRequestTelemetryFromCache() {
         final String methodName = ":getRequestTelemetryFromCache";
 
-        final String cacheValue = mSharedPreferencesFileManager.getString(LAST_TELEMETRY_OBJECT_CACHE_KEY);
-
-        if (cacheValue == null) {
-            Logger.info(TAG + methodName, "There is no last request telemetry saved in " +
-                    "the cache. Returning NULL");
-
-            return null;
-        }
-
         try {
-            LastRequestTelemetry lastRequestTelemetry = mGson.fromJson(cacheValue, LastRequestTelemetry.class);
+            final String cacheValue = mSharedPreferencesFileManager.getString(LAST_TELEMETRY_OBJECT_CACHE_KEY);
+
+            if (cacheValue == null) {
+                Logger.info(TAG + methodName, "There is no last request telemetry saved in " +
+                        "the cache. Returning NULL");
+
+                return null;
+            }
+
+            final LastRequestTelemetry lastRequestTelemetry = mGson.fromJson(cacheValue, LastRequestTelemetry.class);
 
             if (lastRequestTelemetry == null) {
                 Logger.warn(TAG + methodName,
@@ -84,9 +84,16 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
             }
 
             return lastRequestTelemetry;
-        } catch (JsonSyntaxException e) {
+        } catch (final JsonSyntaxException e) {
             Logger.error(TAG + methodName,
                     "Last Request Telemetry deserialization failed", e);
+            return null;
+        } catch (final OutOfMemoryError e) {
+            Logger.error(TAG + methodName,
+                    "Encountered OOM while restoring last request telemetry from " +
+                            "Shared Preferences. Clearing telemetry cache to recover and returning " +
+                            "null.", e);
+            mSharedPreferencesFileManager.clear();
             return null;
         }
     }
