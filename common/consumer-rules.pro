@@ -17,11 +17,10 @@
 #}
 
 ##---------------Begin: proguard configuration for Common  --------
--keep class com.microsoft.identity.common.** { *; }
--keep class com.microsoft.device.display.** { *; }
+# Intentionally blank, left to consumers of common to implement.
 
 ##---------------Begin: proguard configuration for Nimbus  ----------
--keep class com.nimbusds.** { *; }
+# Intentionally blank, left to consumers of common to implement.
 
 ##---------------Begin: proguard configuration for Lombok  ----------
 -dontwarn lombok.**
