@@ -50,7 +50,8 @@ public class LastRequestTelemetry extends RequestTelemetry {
     }
 
     /**
-     * Get a list of Failed Request objects.
+     * Get a list of Failed Request objects. The list returned here is unmodifiable. To add new
+     * elements to this list use the {@link LastRequestTelemetry#appendFailedRequest} method.
      *
      * @return an unmodifiable list of {@link FailedRequest} objects
      */
