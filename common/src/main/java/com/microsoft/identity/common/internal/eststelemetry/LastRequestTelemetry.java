@@ -49,7 +49,12 @@ public class LastRequestTelemetry extends RequestTelemetry {
         failedRequests = new ArrayList<>();
     }
 
-    List<FailedRequest> getFailedRequests() {
+    /**
+     * Get a list of Failed Request objects.
+     *
+     * @return an unmodifiable list of {@link FailedRequest} objects
+     */
+    /* package */ List<FailedRequest> getFailedRequests() {
         return Collections.unmodifiableList(failedRequests);
     }
 
