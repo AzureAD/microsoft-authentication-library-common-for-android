@@ -43,7 +43,6 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -55,7 +54,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -332,7 +330,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
             Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
-            setTokenEndpoint(getCloudSpecificTokenEndpoint(request, response));
+            setTokenEndpoint(getCloudSpecificTokenEndpoint(response));
         }
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
@@ -348,8 +346,7 @@ public class MicrosoftStsOAuth2Strategy
         if (response.getDeviceCode() != null) {
             tokenRequest.setGrantType(TokenRequest.GrantTypes.DEVICE_CODE);
             tokenRequest.setDeviceCode(response.getDeviceCode());
-        }
-        else { // If device code doesn't exist, continue with auth_code configuration
+        } else { // If device code doesn't exist, continue with auth_code configuration
             tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         }
 
@@ -613,30 +610,11 @@ public class MicrosoftStsOAuth2Strategy
         return mTokenEndpoint;
     }
 
-    private String getCloudSpecificTokenEndpoint(MicrosoftAuthorizationRequest request,
-                                                 MicrosoftAuthorizationResponse response) {
-        final String methodName = ":getCloudSpecificTokenEndpoint";
-        String tokenEndpoint;
-
+    private String getCloudSpecificTokenEndpoint(final MicrosoftAuthorizationResponse response) {
         if (StringUtil.isEmpty(response.getCloudInstanceHostName())) {
             return mTokenEndpoint;
         }
-
-        final OpenIdProviderConfiguration openIdConfig = mConfig.getOpenIdWellKnownConfig(
-                response.getCloudInstanceHostName(),
-                request.getAuthority().getPath()
-        );
-
-        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
-            tokenEndpoint = openIdConfig.getTokenEndpoint();
-        } else {
-            Logger.verbose(TAG + methodName,
-                    "Token Endpoint not obtained from well known config. Building token endpoint manually.");
-            // otherwise build it manually
-            tokenEndpoint = buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
-        }
-
-        return tokenEndpoint;
+        return buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
     }
 
     /**
