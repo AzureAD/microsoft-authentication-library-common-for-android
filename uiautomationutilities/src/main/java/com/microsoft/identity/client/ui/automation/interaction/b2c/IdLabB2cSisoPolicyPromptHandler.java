@@ -22,16 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.interaction.b2c;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.interaction.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
-import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadLoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
 /**
- * A Prompt handler for MSIDLAB B2C SISO Policy
+ * A Prompt handler for MSIDLAB B2C SISO Policy.
  */
 public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
@@ -53,17 +55,25 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
             UiAutomatorUtils.handleButtonClick(b2CProvider.getIdpSelectionBtnResourceId());
         }
 
-        if ((!isExternalIdP && !parameters.isLoginHintProvided()) ||
+        final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
+
+        if ((!isExternalIdP && !loginHintProvided) ||
                 (isExternalIdP && !parameters.isSessionExpected())) {
             loginComponentHandler.handleEmailField(username);
         }
 
         if (!parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
+
+            if (loginComponentHandler instanceof AadLoginComponentHandler &&
+                    b2CProvider == B2CProvider.MSA) {
+                // stay signed in screen appears, just deny that
+                loginComponentHandler.handleBackButton();
+            }
         }
     }
 
-    protected static ILoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
+    protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         switch (parameters.getB2cProvider().getProviderName()) {
             case LabConstants.B2CProvider.LOCAL:
                 return new B2CIdLabLocalLoginComponentHandler();

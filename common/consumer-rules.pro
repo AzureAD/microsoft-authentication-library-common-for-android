@@ -16,11 +16,11 @@
 #   public *;
 #}
 
-##---------------Begin: proguard configuration for MSAL  --------
--keep class com.microsoft.** { *; }
+##---------------Begin: proguard configuration for Common  --------
+# Intentionally blank, left to consumers of common to implement.
 
 ##---------------Begin: proguard configuration for Nimbus  ----------
--keep class com.nimbusds.** { *; }
+# Intentionally blank, left to consumers of common to implement.
 
 ##---------------Begin: proguard configuration for Lombok  ----------
 -dontwarn lombok.**

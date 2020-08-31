@@ -239,8 +239,8 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     private boolean isDeviceRegisterRedirect(@NonNull final String redirectUrl) {
         try {
             URI uri = new URI(redirectUrl);
-            return uri.getScheme().equalsIgnoreCase(REDIRECT_PREFIX) &&
-                    uri.getHost().equalsIgnoreCase(DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME);
+            return REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme()) &&
+                    DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME.equalsIgnoreCase(uri.getHost());
         } catch (URISyntaxException e) {
             Logger.error(TAG, "Uri construction failed", e);
             return false;

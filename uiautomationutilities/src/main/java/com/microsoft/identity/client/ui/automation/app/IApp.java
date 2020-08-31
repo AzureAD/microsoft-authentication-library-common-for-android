@@ -28,32 +28,32 @@ package com.microsoft.identity.client.ui.automation.app;
 public interface IApp {
 
     /**
-     * Install this app on the device
+     * Install this app on the device.
      */
     void install();
 
     /**
-     * Launch this app on the device
+     * Launch this app on the device.
      */
     void launch();
 
     /**
-     * Clear (storage) associated to this app on the device
+     * Clear (storage) associated to this app on the device.
      */
     void clear();
 
     /**
-     * Remove this app from the device
+     * Remove this app from the device.
      */
     void uninstall();
 
     /**
-     * Handle the first run experience for this app on first time launch
+     * Handle the first run experience for this app on first time launch.
      */
     void handleFirstRun();
 
     /**
-     * Checks if this app has already been granted the supplied Android system permission
+     * Checks if this app has already been granted the supplied Android system permission.
      *
      * @param permission the permission for which to check if it has been granted
      * @return a boolean indicating whether the permission has been granted or not
@@ -61,9 +61,21 @@ public interface IApp {
     boolean hasPermission(String permission);
 
     /**
-     * Grant (allow) the requested Android system permission for this app
+     * Grant (allow) the requested Android system permission for this app.
      *
      * @param permission the permission that should be granted
      */
     void grantPermission(String permission);
+
+    /**
+     * Force stops (closes, shuts down) this application.
+     */
+    void forceStop();
+
+    /**
+     * Determines if this application (package) is installed on the device.
+     *
+     * @return a boolean indicating if the package is installed on the device
+     */
+    boolean isInstalled();
 }

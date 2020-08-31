@@ -22,7 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.installer;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.widget.Button;
+
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -45,6 +51,13 @@ public class PlayStore implements IAppInstaller {
     // wait at least 5 mins for app installation from Play Store
     private static final long PLAY_STORE_INSTALL_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
 
+    private void launchMarketPageForPackage(final String appPackageName) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)); //sets the intent to start your app
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
+        context.startActivity(intent);
+    }
+
     private void searchAppOnGooglePlay(@NonNull final String hint) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
@@ -56,7 +69,7 @@ public class PlayStore implements IAppInstaller {
         try {
             searchButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchButton.click();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 
@@ -66,18 +79,20 @@ public class PlayStore implements IAppInstaller {
         try {
             searchTextField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchTextField.setText(hint);
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
 
         device.pressEnter();
     }
 
-    private void selectGooglePlayAppFromAppList(@NonNull final String appName) throws UiObjectNotFoundException {
+    private void selectGooglePlayAppFromAppList() throws UiObjectNotFoundException {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
+
+        // we will just take the first app in the list
         final UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "play_card")
-        ).descriptionContains(appName));
+                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
+        ));
 
         appIconInSearchResult.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         appIconInSearchResult.click();
@@ -92,61 +107,51 @@ public class PlayStore implements IAppInstaller {
         appInstallBar.click();
     }
 
-    private void selectGooglePlayAppFromAppName(@NonNull final String appName) {
+    private void selectGooglePlayAppFromAppName() {
         try {
             selectGooglePlayAppFromInstallBar();
-        } catch (UiObjectNotFoundException e) {
+        } catch (final UiObjectNotFoundException e) {
             try {
-                selectGooglePlayAppFromAppList(appName);
-            } catch (UiObjectNotFoundException ex) {
+                selectGooglePlayAppFromAppList();
+            } catch (final UiObjectNotFoundException ex) {
                 Assert.fail(ex.getMessage());
             }
         }
     }
 
-    private void selectGooglePlayAppFromPackageName(@NonNull final String appName) {
+    private void installAppFromMarketPage() {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
-        // we will just take the first app in the list
-        final UiObject appIconInSearchResult = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "bucket_items")
-        ).childSelector(new UiSelector().textContains(appName)));
         try {
-            appIconInSearchResult.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            appIconInSearchResult.click();
-        } catch (UiObjectNotFoundException e) {
+            final UiObject installBtn = device.findObject(
+                    new UiSelector().className(Button.class).text("Install").enabled(true)
+            );
+
+            installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            installBtn.click();
+
+            final UiObject openButton = device.findObject(
+                    new UiSelector().className(Button.class).text("Open").enabled(true)
+            );
+
+            // if we see open button, then we know that the installation is complete
+            openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
+        } catch (final UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
-    }
-
-    private void installOrOpenAppFromGooglePlay() {
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
-        final UiObject installButton = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "right_button")
-        ));
-        try {
-            installButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-            installButton.click();
-        } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
-        }
-
-        final UiObject openButton = device.findObject(new UiSelector().resourceId(
-                getResourceId(GOOGLE_PLAY_PACKAGE_NAME, "right_button")
-        ).textContains("Open").enabled(true));
-        // if we see uninstall button, then we know that the installation is complete
-        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
     }
 
     @Override
     public void installApp(@NonNull final String searchHint) {
-        searchAppOnGooglePlay(searchHint);
         if (isStringPackageName(searchHint)) {
-            selectGooglePlayAppFromPackageName(searchHint);
+            launchMarketPageForPackage(searchHint);
         } else {
-            selectGooglePlayAppFromAppName(searchHint);
+            searchAppOnGooglePlay(searchHint);
+            selectGooglePlayAppFromAppName();
         }
-        installOrOpenAppFromGooglePlay();
+
+        installAppFromMarketPage();
     }
 
 }

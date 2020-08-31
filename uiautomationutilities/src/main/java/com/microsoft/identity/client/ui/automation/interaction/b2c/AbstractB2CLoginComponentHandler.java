@@ -24,9 +24,9 @@ package com.microsoft.identity.client.ui.automation.interaction.b2c;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.interaction.ILoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
 
-public abstract class AbstractB2CLoginComponentHandler implements ILoginComponentHandler {
+public abstract class AbstractB2CLoginComponentHandler implements IOAuth2LoginComponentHandler {
 
     protected abstract String getHandlerName();
 
@@ -57,12 +57,4 @@ public abstract class AbstractB2CLoginComponentHandler implements ILoginComponen
                 "Not supported for B2C " + getHandlerName() + " Provider"
         );
     }
-
-    @Override
-    public void handleSpeedBump() {
-        throw new UnsupportedOperationException(
-                "Not supported for B2C " + getHandlerName() + " Provider"
-        );
-    }
-
 }

@@ -56,6 +56,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -135,7 +136,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         // V1 endpoint always add an organizational account if the tenant id is common.
         // We need to explicitly add tenant id as organizations if we want similar behavior from V2 endpoint
-        if (authority.getAudience().getTenantId().equalsIgnoreCase(AzureActiveDirectoryAudience.ALL)) {
+        if (AzureActiveDirectoryAudience.ALL.equalsIgnoreCase(authority.getAudience().getTenantId())) {
             authority.getAudience().setTenantId(AzureActiveDirectoryAudience.ORGANIZATIONS);
         }
 
@@ -311,15 +312,14 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (extraQP != null) {
             AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
-            List<Pair<String, String>> extraQPListCopy = new ArrayList<>(extraQP);
 
-            for (Pair<String, String> parameter : extraQPListCopy) {
-
+            Iterator<Pair<String, String>> itr = extraQP.iterator();
+            Pair<String, String> parameter;
+            while (itr.hasNext() && (parameter = itr.next()) != null) {
                 if (StringUtil.isEmpty(parameter.first)) {
                     Logger.warn(TAG, "The extra query parameter.first is empty.");
-                } else if (parameter.first.equalsIgnoreCase(MicrosoftAuthorizationRequest.INSTANCE_AWARE)) {
+                } else if (MicrosoftAuthorizationRequest.INSTANCE_AWARE.equalsIgnoreCase(parameter.first)) {
                     Logger.info(TAG,
-
                             "Set the extra query parameter mMultipleCloudAware" +
                                     " for MicrosoftStsAuthorizationRequest."
                     );
@@ -332,16 +332,14 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
                     requestAuthority.mMultipleCloudsSupported =
                             null != parameter.second &&
-                                    parameter.second.equalsIgnoreCase(Boolean.TRUE.toString());
-
-                    extraQP.remove(parameter);
-
-                } else if (parameter.first.equalsIgnoreCase(AzureActiveDirectorySlice.SLICE_PARAMETER)) {
+                                    Boolean.TRUE.toString().equalsIgnoreCase(parameter.second);
+                    itr.remove();
+                } else if (AzureActiveDirectorySlice.SLICE_PARAMETER.equalsIgnoreCase(parameter.first)) {
                     slice.setSlice(parameter.second);
-                    extraQP.remove(parameter);
-                } else if (parameter.first.equalsIgnoreCase(AzureActiveDirectorySlice.DC_PARAMETER)) {
+                    itr.remove();
+                } else if (AzureActiveDirectorySlice.DC_PARAMETER.equalsIgnoreCase(parameter.first)) {
                     slice.setDataCenter(parameter.second);
-                    extraQP.remove(parameter);
+                    itr.remove();
                 }
             }
 

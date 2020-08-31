@@ -31,7 +31,9 @@ import lombok.experimental.SuperBuilder;
 @Getter
 public class B2CPromptHandlerParameters extends PromptHandlerParameters {
 
-    // the B2C Provider expected to be being used during the test
+    /**
+     * Denotes the B2C Provider that is expected to be used during an interactive token request.
+     */
     private B2CProvider b2cProvider;
 
 }
