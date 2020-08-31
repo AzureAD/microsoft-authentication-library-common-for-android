@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 Version 2.1.1
 ----------
 - Introduces result sharing to minimize duplicate_command errors.
@@ -8,8 +7,6 @@ Version 2.1.1
 - Proguard configuration no longer keeps classes in common or nimbus, per request from Office.
 - Improved logging for SSL errors to assist in troubleshooting.
 
-=======
->>>>>>> dev
 Version 2.1.0
 ----------
 - Moved broker controller and strategy classes to common for MSAL CPP brokered auth.
