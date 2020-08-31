@@ -14,25 +14,25 @@ public class OpenIdConnectPromptParameterTest  {
     @Test
     public void testPromptBehaviorNull(){
        final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior(null);
-        assertEquals(promptParameter, OpenIdConnectPromptParameter.NONE);
+        assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
     public void testPromptBehaviorAuto(){
         final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("Auto");
-        assertEquals(promptParameter, OpenIdConnectPromptParameter.NONE);
+        assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
     public void testPromptBehaviorAlways(){
         final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("Always");
-        assertEquals(promptParameter, OpenIdConnectPromptParameter.NONE);
+        assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test
     public void testPromptBehaviorRefreshSession(){
         final OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter._fromPromptBehavior("REFRESH_SESSION");
-        assertEquals(promptParameter, OpenIdConnectPromptParameter.NONE);
+        assertEquals(promptParameter, OpenIdConnectPromptParameter.UNSET);
     }
 
     @Test

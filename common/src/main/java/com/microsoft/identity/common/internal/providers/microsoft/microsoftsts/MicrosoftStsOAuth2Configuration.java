@@ -57,7 +57,7 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
     }
 
     /**
-     * Return device authorization endpoint to bo used in the authorization step of Device Code Flow.
+     * Return device authorization endpoint to be used in the authorization step of Device Code Flow.
      *
      * @return a URL object for the /devicecode endpoint
      */
@@ -97,7 +97,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
         }
 
         return null;
-
     }
 
     /**
