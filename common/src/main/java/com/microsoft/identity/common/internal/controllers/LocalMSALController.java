@@ -72,8 +72,11 @@ import java.util.concurrent.Future;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import lombok.EqualsAndHashCode;
+
 import static com.microsoft.identity.common.adal.internal.net.HttpWebRequest.throwIfNetworkNotAvailable;
 
+@EqualsAndHashCode(callSuper = true)
 public class LocalMSALController extends BaseController {
 
     private static final String TAG = LocalMSALController.class.getSimpleName();
