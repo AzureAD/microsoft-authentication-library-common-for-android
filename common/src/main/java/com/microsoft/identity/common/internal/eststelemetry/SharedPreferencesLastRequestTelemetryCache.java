@@ -89,12 +89,8 @@ public class SharedPreferencesLastRequestTelemetryCache implements IRequestTelem
                     "Last Request Telemetry deserialization failed", e);
             return null;
         } catch (final OutOfMemoryError e) {
-            Logger.error(TAG + methodName,
-                    "Encountered OOM while restoring last request telemetry from " +
-                            "Shared Preferences. Clearing telemetry cache to recover and returning " +
-                            "null.", e);
             mSharedPreferencesFileManager.clear();
-            return null;
+            throw e;
         }
     }
 
