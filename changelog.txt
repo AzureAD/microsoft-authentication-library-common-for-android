@@ -1,3 +1,7 @@
+vNext 3.0.0
+----------
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
+
 Version 2.1.1
 ----------
 - Introduces result sharing to minimize duplicate_command errors.
