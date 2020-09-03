@@ -76,7 +76,7 @@ import lombok.EqualsAndHashCode;
 
 import static com.microsoft.identity.common.adal.internal.net.HttpWebRequest.throwIfNetworkNotAvailable;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class LocalMSALController extends BaseController {
 
     private static final String TAG = LocalMSALController.class.getSimpleName();

@@ -93,7 +93,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
 import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
