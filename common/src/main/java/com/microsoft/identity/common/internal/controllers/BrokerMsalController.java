@@ -76,9 +76,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * The implementation of MSAL Controller for Broker
  */
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
