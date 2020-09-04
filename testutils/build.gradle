@@ -10,10 +10,10 @@ android {
         labClientSecret = labSecret
     }
 
-    def uploadTestResultsToKusto = false
+    def saveTestResultsToCsv = false
 
-    if (project.hasProperty("sendTestResultsToKusto")) {
-        uploadTestResultsToKusto = getBoolean(sendTestResultsToKusto);
+    if (project.hasProperty("writeTestResultsToCsv")) {
+        saveTestResultsToCsv = getBoolean(sendTestResultsToKusto);
     }
 
     defaultConfig {
@@ -23,7 +23,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
-        buildConfigField("boolean", "UPLOAD_TEST_RESULTS_TO_KUSTO", "$uploadTestResultsToKusto")
+        buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
     }
 
     lintOptions {
