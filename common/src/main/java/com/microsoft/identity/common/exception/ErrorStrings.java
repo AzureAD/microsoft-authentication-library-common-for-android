@@ -401,7 +401,7 @@ public final class ErrorStrings {
                     "Please return the device to your administrator to restart the registration of this device.";
 
     /**
-     * The device is in the shared mode, and its registration was deleted by the admin.
+     * The device is registered with precreate/userless WPJ, and its registration was deleted by the admin.
      * This is an irrecoverable error, and the admin has to re-prep the device.
      * */
     public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
