@@ -401,6 +401,16 @@ public final class ErrorStrings {
                     "Please return the device to your administrator to restart the registration of this device.";
 
     /**
+     * The device is in the shared mode, and its registration was deleted by the admin.
+     * This is an irrecoverable error, and the admin has to re-prep the device.
+     * */
+    public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
+            "userless_device_deleted_on_server";
+    public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
+            "This device configuration was changed on the server. " +
+                    "Please return the device to your administrator to restart the registration of this device.";
+
+    /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
      */
     public static final String BRT_TENANT_MISMATCH_ERROR_MESSAGE =
