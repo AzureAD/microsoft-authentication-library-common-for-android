@@ -398,7 +398,7 @@ public final class ErrorStrings {
             "registered_shared_device_deleted_on_server";
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
             "This device was deleted from the tenant. " +
-                    "Please return the device to your administrator to restart the registration of this device.";
+                    "Please return the device to your administrator to re-register this device.";
 
     /**
      * The device is registered with precreate/userless WPJ, and its registration was deleted by the admin.
