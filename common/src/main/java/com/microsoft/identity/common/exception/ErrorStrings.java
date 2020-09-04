@@ -408,7 +408,7 @@ public final class ErrorStrings {
             "userless_device_deleted_on_server";
     public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
             "This device configuration was changed on the server. " +
-                    "Please return the device to your administrator to restart the registration of this device.";
+                    "Please return the device to your administrator to re-register this device.";
 
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
