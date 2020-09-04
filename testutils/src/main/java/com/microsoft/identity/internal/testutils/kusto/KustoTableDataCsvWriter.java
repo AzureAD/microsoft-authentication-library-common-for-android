@@ -24,8 +24,7 @@ package com.microsoft.identity.internal.testutils.kusto;
 
 import androidx.annotation.NonNull;
 
-import com.opencsv.CSVWriter;
-
+import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 
@@ -43,8 +42,8 @@ public class KustoTableDataCsvWriter extends CSVWriter {
      *
      * @param clientTestTableData the table data that needs to be written
      */
-    public void writeNext(@NonNull final IKustoTableData clientTestTableData) {
-        writeNext(clientTestTableData.getTableDataAsCsv(), false);
+    public void writeNext(@NonNull final IKustoTableData clientTestTableData) throws IOException {
+        writeNext(clientTestTableData.getTableDataAsCsv());
     }
 
     /**
@@ -52,7 +51,7 @@ public class KustoTableDataCsvWriter extends CSVWriter {
      *
      * @param clientTestTableDataList the table data that needs to be written
      */
-    public void writeAll(@NonNull final ArrayList<IKustoTableData> clientTestTableDataList) {
+    public void writeAll(@NonNull final ArrayList<IKustoTableData> clientTestTableDataList) throws IOException {
         for (final IKustoTableData data : clientTestTableDataList) {
             writeNext(data);
         }
