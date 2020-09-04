@@ -396,9 +396,6 @@ public final class ErrorStrings {
      * */
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
             "registered_shared_device_deleted_on_server";
-    public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
-            "This device was deleted from the tenant. " +
-                    "Please return the device to your administrator to re-register this device.";
 
     /**
      * The device is registered with precreate/userless WPJ, and its registration was deleted by the admin.
@@ -406,9 +403,10 @@ public final class ErrorStrings {
      * */
     public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
             "userless_device_deleted_on_server";
-    public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
+
+    public static final String DEVICE_DELETED_ON_SERVER_IRRECOVERABLE_ERROR_MESSAGE =
             "This device was deleted from the tenant. " +
-                    "Please return the device to your administrator to re-register this device.";
+                    "This is an irrecoverable error. Only tenant administrator can re-register this device.";
 
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
