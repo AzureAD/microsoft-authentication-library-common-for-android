@@ -13,7 +13,7 @@ android {
     def saveTestResultsToCsv = false
 
     if (project.hasProperty("writeTestResultsToCsv")) {
-        saveTestResultsToCsv = getBoolean(sendTestResultsToKusto);
+        saveTestResultsToCsv = getBoolean(writeTestResultsToCsv);
     }
 
     defaultConfig {
@@ -67,11 +67,5 @@ dependencies {
 }
 
 static boolean getBoolean(final String s) {
-    if (s == null || s == "") {
-        return false;
-    } else if (s.equalsIgnoreCase("true")) {
-        return true;
-    } else {
-        return false;
-    }
+    return s == null ? false : s.toBoolean();
 }
