@@ -1,3 +1,16 @@
+vNext 3.0.0
+----------
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
+
+Version 2.1.1
+----------
+- Introduces result sharing to minimize duplicate_command errors.
+- No longer query well known config to obtain token endpoint - build it manually instead.
+- Improved null-safety in String comparisons.
+- Improved thread safety when querying cloud metadata.
+- Proguard configuration no longer keeps classes in common or nimbus, per request from Office.
+- Improved logging for SSL errors to assist in troubleshooting.
+
 Version 2.1.0
 ----------
 - Moved broker controller and strategy classes to common for MSAL CPP brokered auth.

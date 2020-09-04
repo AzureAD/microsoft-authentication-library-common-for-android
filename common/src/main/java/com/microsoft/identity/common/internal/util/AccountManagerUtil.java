@@ -59,7 +59,7 @@ public final class AccountManagerUtil {
             final DevicePolicyManager devicePolicyManager =
                     (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
             for (final String accountType : devicePolicyManager.getAccountTypesWithManagementDisabled()){
-                if (accountType.equalsIgnoreCase(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)){
+                if (AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)){
                     Logger.verbose(TAG + methodName, "Broker account type is disabled by MDM.");
                     return false;
                 }

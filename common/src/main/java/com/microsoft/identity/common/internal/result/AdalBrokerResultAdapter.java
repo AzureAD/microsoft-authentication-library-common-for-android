@@ -230,7 +230,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                                                       @NonNull final ClientException clientException) {
         Logger.info(TAG , "Setting properties from ClientException.");
 
-        if (clientException.getErrorCode().equalsIgnoreCase(ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE)) {
+        if (ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equalsIgnoreCase(clientException.getErrorCode())) {
 
             setErrorToResultBundle(
                     resultBundle,
@@ -238,8 +238,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                     ADALError.DEVICE_CONNECTION_IS_NOT_AVAILABLE.getDescription()
             );
 
-        } else if (clientException.getErrorCode().equalsIgnoreCase(
-                ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION)) {
+        } else if (ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION.equalsIgnoreCase(clientException.getErrorCode())) {
 
             setErrorToResultBundle(
                     resultBundle,
@@ -247,7 +246,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
                     ADALError.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION.getDescription()
             );
 
-        } else if (clientException.getErrorCode().equalsIgnoreCase(ErrorStrings.IO_ERROR)){
+        } else if (ErrorStrings.IO_ERROR.equalsIgnoreCase(clientException.getErrorCode())){
             setErrorToResultBundle(
                     resultBundle,
                     AccountManager.ERROR_CODE_NETWORK_ERROR,
@@ -298,10 +297,9 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         //INTERACTION_REQUIRED is marked as deprecated
-        if (serviceException.getErrorCode().equalsIgnoreCase(
-                AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
-                serviceException.getErrorCode().equalsIgnoreCase(
-                        AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED)) {
+        if (AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(serviceException.getErrorCode())
+                || AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())
+                ) {
 
             resultBundle.putString(
                     AuthenticationConstants.OAuth2.ERROR,

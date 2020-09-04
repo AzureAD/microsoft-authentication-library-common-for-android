@@ -41,6 +41,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -253,8 +254,7 @@ public class BrokerValidator {
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
                                                 @NonNull final String packageName) {
-        return !TextUtils.isEmpty(redirectUri) &&
-                redirectUri.equalsIgnoreCase(getBrokerRedirectUri(context, packageName));
+        return StringUtil.equalsIgnoreCase(redirectUri, getBrokerRedirectUri(context, packageName));
     }
 
 

@@ -153,8 +153,8 @@ public class ExceptionAdapter {
         // We simplify our logic because this layer is also used by MSAL.
 
         //Interaction required has been deprecated... hence suppressing warning.
-        return oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
-                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED);
+        return AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(oAuthError) ||
+                AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(oAuthError);
 
     }
 

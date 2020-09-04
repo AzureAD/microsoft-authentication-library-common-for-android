@@ -58,11 +58,12 @@ public class LabHelper {
     /**
      * Get the password of the supplied lab.
      *
-     * @param labName the lab for which to get the password
+     * @param credentialVaultKeyName the vault key name for the lab
      * @return a String represent the password of the lab
      */
-    public static String getPasswordForLab(final String labName) {
-        return getSecret(labName);
+    public static String getPasswordForLab(final String credentialVaultKeyName) {
+        final String secretName = getLabSecretName(credentialVaultKeyName);
+        return getSecret(secretName);
     }
 
     /**
@@ -73,15 +74,20 @@ public class LabHelper {
      */
     public static String getSecret(@NonNull final String secretName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        LabSecretApi labUserSecretApi = new LabSecretApi();
+        LabSecretApi labSecretApi = new LabSecretApi();
         SecretResponse secretResponse;
 
         try {
-            secretResponse = labUserSecretApi.getLabUserSecret(secretName);
+            secretResponse = labSecretApi.getLabUserSecret(secretName);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving secret from lab.", ex);
         }
 
         return secretResponse.getValue();
+    }
+
+    private static String getLabSecretName(final String credentialVaultKeyName) {
+        final String[] parts = credentialVaultKeyName.split("/");
+        return parts[parts.length - 1];
     }
 }
