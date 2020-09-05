@@ -34,7 +34,7 @@ import java.net.URL;
  */
 public interface IDevicePopManager {
 
-    enum PublicKeyFormat{
+    enum PublicKeyFormat {
         X_509_ASN_1;
     }
 
@@ -103,8 +103,10 @@ public interface IDevicePopManager {
     String sign(String input) throws ClientException;
 
     /**
-     * Gets the public key associated with this DevicePoPManager formatted as an X.509 ASN1 Dump.
+     * Gets the public key associated with this DevicePoPManager formatted per the supplied
+     * export param.
      *
+     * @param format The export format of the public key.
      * @return A String of the public key.
      */
     String getPublicKey(PublicKeyFormat format) throws ClientException;
