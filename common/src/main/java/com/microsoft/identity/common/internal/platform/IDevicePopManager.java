@@ -35,7 +35,8 @@ import java.net.URL;
 public interface IDevicePopManager {
 
     enum PublicKeyFormat {
-        X_509_ASN_1;
+        X_509_SubjectPublicKeyInfo_ASN_1,
+        PKCS1_RSAPublicKey
     }
 
     /**

@@ -91,6 +91,8 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_AL
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.PKCS1_RSAPublicKey;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -444,20 +446,28 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public String sign(@NonNull final String input) throws ClientException {
-        // TODO
+        // TODO Sign how???
+        // RS256? SHA256withECDSA?
         return null;
     }
 
     @Override
     public String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
-        if (PublicKeyFormat.X_509_ASN_1 == format) {
-            return getPublicKeyX509();
+        if (X_509_SubjectPublicKeyInfo_ASN_1 == format) {
+            return getX509SubjectPublicKeyInfo();
+        } else if (PKCS1_RSAPublicKey == format) {
+            return getPkcs1RsaPublicKey();
         } else {
             throw new ClientException(UNKNOWN_EXPORT_FORMAT);
         }
     }
 
-    private String getPublicKeyX509() throws ClientException {
+    private String getPkcs1RsaPublicKey() {
+        // TODO
+        return null;
+    }
+
+    private String getX509SubjectPublicKeyInfo() throws ClientException {
         final Exception exception;
         final String errCode;
 
