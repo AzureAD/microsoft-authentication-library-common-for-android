@@ -89,6 +89,7 @@ import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNIN
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
 /**
@@ -439,6 +440,58 @@ class DevicePopManager implements IDevicePopManager {
                 callback.onError(clientException);
             }
         });
+    }
+
+    @Override
+    public String sign(@NonNull final String input) throws ClientException {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
+        if (PublicKeyFormat.X_509_ASN_1 == format) {
+            return getPublicKeyX509();
+        } else {
+            throw new ClientException(UNKNOWN_EXPORT_FORMAT);
+        }
+    }
+
+    private String getPublicKeyX509() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+            final PublicKey publicKey = rsaKeyPair.getPublic();
+            final byte[] publicKeybytes = publicKey.getEncoded();
+            final byte[] bytesBase64Encoded = Base64.encode(publicKeybytes, Base64.DEFAULT);
+            return new String(bytesBase64Encoded);
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
     }
 
     @Override

@@ -182,6 +182,11 @@ public class ClientException extends BaseException {
     public static final String THUMBPRINT_COMPUTATION_FAILURE = "failed_to_compute_thumbprint_with_sha256";
 
     /**
+     * Emitted when the requested export format of our public key is unknown or unsupported.
+     */
+    public static final String UNKNOWN_EXPORT_FORMAT = "unknown_public_key_export_format";
+
+    /**
      * Emitted when the Android subsystem emits errors thrown while constructing new JSON objects.
      */
     public static final String JSON_CONSTRUCTION_FAILED = "json_construction_failed";

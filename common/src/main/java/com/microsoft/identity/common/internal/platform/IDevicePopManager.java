@@ -34,6 +34,10 @@ import java.net.URL;
  */
 public interface IDevicePopManager {
 
+    enum PublicKeyFormat{
+        X_509_ASN_1;
+    }
+
     /**
      * Tests if keys exist.
      *
@@ -89,6 +93,21 @@ public interface IDevicePopManager {
      * @return The req_cnf value.
      */
     void getRequestConfirmation(TaskCompletedCallbackWithError<String, ClientException> callback);
+
+    /**
+     * Signs an arbitrary piece of String data.
+     *
+     * @param input The input to sign.
+     * @return The input data, signed by our private key.
+     */
+    String sign(String input) throws ClientException;
+
+    /**
+     * Gets the public key associated with this DevicePoPManager formatted as an X.509 ASN1 Dump.
+     *
+     * @return A String of the public key.
+     */
+    String getPublicKey(PublicKeyFormat format) throws ClientException;
 
     /**
      * Api to create the signed PoP access token.
