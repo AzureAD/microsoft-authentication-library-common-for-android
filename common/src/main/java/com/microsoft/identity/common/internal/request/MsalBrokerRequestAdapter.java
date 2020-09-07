@@ -247,7 +247,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .claimsRequestJson(brokerRequest.getClaims())
                 .prompt(brokerRequest.getPrompt() != null ?
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
-                        OpenIdConnectPromptParameter.NONE)
+                        OpenIdConnectPromptParameter.UNSET)
                 .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
                 .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled());
 

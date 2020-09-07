@@ -22,15 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.LabApi;
 import com.microsoft.identity.internal.test.labapi.api.LabSecretApi;
 import com.microsoft.identity.internal.test.labapi.model.LabInfo;
 import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 
+/**
+ * Query the Lab Api to get lab specific info such as lab tenant, secret etc.
+ */
 public class LabHelper {
 
-    // this can be used to get tenant id for a guest tenant
+    /**
+     * Get the tenant id of a lab from the LAB API.
+     *
+     * @param labName the lab for which to get the tenant id
+     * @return a String representing the tenant id associated to this LAB
+     */
     public static String getLabTenantId(final String labName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         LabApi labApi = new LabApi();
@@ -45,16 +55,32 @@ public class LabHelper {
         return labInfo.getTenantId();
     }
 
+    /**
+     * Get the password of the supplied lab.
+     *
+     * @param credentialVaultKeyName the vault key name for the lab
+     * @return a String represent the password of the lab
+     */
     public static String getPasswordForLab(final String credentialVaultKeyName) {
+        final String secretName = getLabSecretName(credentialVaultKeyName);
+        return getSecret(secretName);
+    }
+
+    /**
+     * Get the value of the supplied secret from the LAB.
+     *
+     * @param secretName the secret to pull
+     * @return a String representing secret value
+     */
+    public static String getSecret(@NonNull final String secretName) {
         LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
-        LabSecretApi labUserSecretApi = new LabSecretApi();
+        LabSecretApi labSecretApi = new LabSecretApi();
         SecretResponse secretResponse;
 
         try {
-            final String secretName = getLabSecretName(credentialVaultKeyName);
-            secretResponse = labUserSecretApi.getLabUserSecret(secretName);
+            secretResponse = labSecretApi.getLabUserSecret(secretName);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
-            throw new RuntimeException("Error retrieving lab password", ex);
+            throw new RuntimeException("Error retrieving secret from lab.", ex);
         }
 
         return secretResponse.getValue();

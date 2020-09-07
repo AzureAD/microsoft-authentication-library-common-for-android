@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -67,7 +66,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
-    private static final String AUDIENCE_PATH_CONSUMERS = "/consumers";
+    private static final String CONSUMERS_ENDPOINT = "https://login.microsoftonline.com/consumers";
 
     /**
      * To support caching lookups in ADAL, the following authority is used to signal
@@ -88,17 +87,14 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private final String mClientId;
     private final String mRedirectUri;
-    private final String mDefaultAuthority;
     @SuppressWarnings(WarningType.rawtype_warning)
     private final MsalOAuth2TokenCache mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
-                             @NonNull final String defaultAuthority,
                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
-        mDefaultAuthority = defaultAuthority;
         mTokenCache = cache;
     }
 
@@ -252,24 +248,9 @@ public class TokenShareUtility implements ITokenShareInternal {
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        // Use the /consumers endpoint relative to the current cloud
-                        final Uri defaultAuthorityUri = Uri.parse(mDefaultAuthority);
-
-                        final String tenantPath = defaultAuthorityUri.getPath();
-                        final String requestAuthority;
-
-                        if (null != tenantPath) {
-                            requestAuthority = mDefaultAuthority.replace(
-                                    tenantPath,
-                                    AUDIENCE_PATH_CONSUMERS
-                            );
-                        } else {
-                            requestAuthority = mDefaultAuthority;
-                        }
-
                         final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
                                 refreshToken,
-                                requestAuthority
+                                CONSUMERS_ENDPOINT
                         );
 
                         // Check that instance discovery metadata is loaded before making the request...

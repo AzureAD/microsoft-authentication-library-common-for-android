@@ -88,10 +88,13 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import lombok.EqualsAndHashCode;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
 import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
