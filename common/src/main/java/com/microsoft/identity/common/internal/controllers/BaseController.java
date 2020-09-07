@@ -28,6 +28,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -93,8 +94,6 @@ import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
 public abstract class BaseController {
 
-    // Declaring rawtypes warning name to avoid using the literal many times in this class
-    private static final String rawtype_warning = "rawtypes";
     private static final String TAG = BaseController.class.getSimpleName();
 
     public static final Set<String> DEFAULT_SCOPES = new HashSet<>();
@@ -148,18 +147,18 @@ public abstract class BaseController {
             throws Exception;
 
     // Suppressing rawtype warnings due to the generic type AuthorizationResult
-    @SuppressWarnings(rawtype_warning)
+    @SuppressWarnings(WarningType.rawtype_warning)
     public abstract AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws Exception;
 
-    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(rawtype_warning) final AuthorizationResult authorizationResult, final DeviceCodeFlowCommandParameters parameters)
+    public abstract AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult, final DeviceCodeFlowCommandParameters parameters)
             throws Exception;
 
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
      */
     //Suppressing rawtype warnings due to the generic type Builder
-    @SuppressWarnings(rawtype_warning)
+    @SuppressWarnings(WarningType.rawtype_warning)
     protected final AuthorizationRequest.Builder initializeAuthorizationRequestBuilder(@NonNull final AuthorizationRequest.Builder builder,
                                                                                        @NonNull final TokenCommandParameters parameters) {
         UUID correlationId = null;
@@ -239,7 +238,7 @@ public abstract class BaseController {
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
-    @SuppressWarnings(rawtype_warning)
+    @SuppressWarnings(WarningType.rawtype_warning)
     protected AuthorizationRequest getAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                            @NonNull final TokenCommandParameters parameters) {
         final AuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(parameters.getAccount());
@@ -247,8 +246,8 @@ public abstract class BaseController {
         return builder.build();
     }
 
-    protected TokenResult performTokenRequest(@SuppressWarnings(rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                              @SuppressWarnings(rawtype_warning) @NonNull final AuthorizationRequest request,
+    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
                                               @NonNull final InteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
@@ -280,8 +279,8 @@ public abstract class BaseController {
 
     protected void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
                                     @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                                    @SuppressWarnings(rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
-                                    @SuppressWarnings(rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                     @NonNull final ICacheRecord cacheRecord)
             throws IOException, ClientException {
         final String methodName = ":renewAccessToken";
@@ -402,7 +401,7 @@ public abstract class BaseController {
         }
 
         if (result instanceof AuthorizationResult) {
-            @SuppressWarnings(rawtype_warning)
+            @SuppressWarnings(WarningType.rawtype_warning)
             AuthorizationResult authResult = (AuthorizationResult) result;
 
             if (authResult.getAuthorizationStatus() != null) {
@@ -437,7 +436,7 @@ public abstract class BaseController {
     }
 
     protected TokenResult performSilentTokenRequest(
-            @SuppressWarnings(rawtype_warning) @NonNull final OAuth2Strategy strategy,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
             @NonNull final RefreshTokenRecord refreshToken,
             @NonNull final SilentTokenCommandParameters parameters)
             throws ClientException, IOException {
@@ -494,10 +493,10 @@ public abstract class BaseController {
         return strategy.requestToken(refreshTokenRequest);
     }
 
-    protected List<ICacheRecord> saveTokens(@SuppressWarnings(rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                                            @SuppressWarnings(rawtype_warning) @NonNull final AuthorizationRequest request,
+    protected List<ICacheRecord> saveTokens(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                             @NonNull final TokenResponse tokenResponse,
-                                            @SuppressWarnings(rawtype_warning) @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
+                                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache) throws ClientException {
         final String methodName = ":saveTokens";
 
         Logger.info(
@@ -623,7 +622,7 @@ public abstract class BaseController {
 
     @Nullable
     private AccountRecord getAccountWithFRTIfAvailable(@NonNull final SilentTokenCommandParameters parameters,
-                                                       @SuppressWarnings(rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
+                                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) {
 
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String clientId = parameters.getClientId();

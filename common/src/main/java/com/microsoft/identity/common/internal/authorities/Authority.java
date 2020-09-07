@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.BuildConfig;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -217,7 +218,7 @@ public abstract class Authority {
     }
 
     // Suppressing rawtype warnings due to the generic type OAuth2Strategy
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings(WarningType.rawtype_warning)
     public abstract OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters) throws ClientException;
 
     /**

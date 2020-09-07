@@ -27,6 +27,7 @@ import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
@@ -116,7 +117,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * Constructor of AuthorizationRequest.
      */
-    protected AuthorizationRequest(@SuppressWarnings("rawtypes") final Builder builder) {
+    protected AuthorizationRequest(@SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
@@ -228,7 +229,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public abstract B self();
 
-        @SuppressWarnings("rawtypes")
+        @SuppressWarnings(WarningType.rawtype_warning)
         public abstract AuthorizationRequest build();
 
     }

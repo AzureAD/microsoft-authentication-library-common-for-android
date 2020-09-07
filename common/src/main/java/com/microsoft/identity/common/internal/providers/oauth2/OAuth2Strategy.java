@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
@@ -70,7 +71,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
 // Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
-@SuppressWarnings("rawtypes")
+@SuppressWarnings(WarningType.rawtype_warning)
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends BaseAccount,
