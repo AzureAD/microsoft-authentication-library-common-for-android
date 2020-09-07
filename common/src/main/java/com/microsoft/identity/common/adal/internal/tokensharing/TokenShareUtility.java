@@ -27,6 +27,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -86,11 +87,12 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private final String mClientId;
     private final String mRedirectUri;
+    @SuppressWarnings(WarningType.rawtype_warning)
     private final MsalOAuth2TokenCache mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
-                             @NonNull final MsalOAuth2TokenCache cache) {
+                             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
         mTokenCache = cache;

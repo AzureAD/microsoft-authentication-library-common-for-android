@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -136,7 +137,7 @@ public class TokenCacheItemMigrationAdapter {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
@@ -159,7 +160,7 @@ public class TokenCacheItemMigrationAdapter {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final RefreshTokenRecord refreshTokenRecord,
