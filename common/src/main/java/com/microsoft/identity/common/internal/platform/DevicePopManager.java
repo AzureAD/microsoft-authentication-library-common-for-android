@@ -91,7 +91,6 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_AL
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -479,10 +478,16 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
-        if (X_509_SubjectPublicKeyInfo_ASN_1 == format) {
-            return getX509SubjectPublicKeyInfo();
-        } else {
-            throw new ClientException(UNKNOWN_EXPORT_FORMAT);
+        switch (format) {
+            case X_509_SubjectPublicKeyInfo_ASN_1:
+                return getX509SubjectPublicKeyInfo();
+            default:
+                Logger.error(
+                        TAG + ":getPublicKey",
+                        "Unrecognized or unsupported key format: " + format,
+                        null
+                );
+                throw new ClientException(UNKNOWN_EXPORT_FORMAT);
         }
     }
 
