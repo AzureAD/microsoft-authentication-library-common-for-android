@@ -28,6 +28,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
+import java.util.Date;
 
 /**
  * Internal convenience class interface for PoP related functions.
@@ -75,6 +76,14 @@ public interface IDevicePopManager {
      * @return The generated RSA KeyPair's thumbprint.
      */
     String generateAsymmetricKey(Context context) throws ClientException;
+
+    /**
+     * Returns the creation date of the asymmetric key entry backing this instance.
+     *
+     * @return The asymmetric key creation date.
+     * @throws ClientException If no asymmetric key exists.
+     */
+    Date getAsymmetricKeyCreationDate() throws ClientException;
 
     /**
      * Clears keys, if present.

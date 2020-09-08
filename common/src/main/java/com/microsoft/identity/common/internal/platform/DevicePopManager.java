@@ -326,6 +326,33 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
+    public Date getAsymmetricKeyCreationDate() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            return mKeyStore.getCreationDate(KEYSTORE_ENTRY_ALIAS);
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
+    }
+
+    @Override
     public boolean clearAsymmetricKey() {
         boolean deleted = false;
 
