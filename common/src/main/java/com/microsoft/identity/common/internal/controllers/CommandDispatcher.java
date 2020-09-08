@@ -35,6 +35,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -73,6 +74,8 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
     private static final ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
@@ -80,7 +83,7 @@ public class CommandDispatcher {
      *
      * @param command
      */
-    public static void submitSilent(@NonNull final BaseCommand command) {
+    public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -154,7 +157,7 @@ public class CommandDispatcher {
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
-            @NonNull final BaseCommand command,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
             @NonNull final Handler handler) {
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
@@ -186,7 +189,7 @@ public class CommandDispatcher {
      * @param command
      * @return
      */
-    private static CommandResult executeCommand(BaseCommand command) {
+    private static CommandResult executeCommand(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command) {
 
         Object result = null;
         BaseException baseException = null;
@@ -231,7 +234,7 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
+    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command, final CommandResult result, Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -258,7 +261,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
-    private static void cacheCommandResult(BaseCommand command, CommandResult commandResult) {
+    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command, CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
             sCommandResultCache.put(command, commandResult);
         }

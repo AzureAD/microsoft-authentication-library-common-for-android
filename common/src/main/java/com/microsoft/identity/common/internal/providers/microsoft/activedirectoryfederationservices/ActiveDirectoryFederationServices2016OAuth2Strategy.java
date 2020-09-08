@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -47,6 +48,8 @@ import java.util.concurrent.Future;
  * For information on ADFS 2016 oAuth and OIDC support
  * see <a href='https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers'>https://docs.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-scenarios-for-developers</a>
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and Builder
+@SuppressWarnings(WarningType.rawtype_warning)
 public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2Strategy {
     /**
      * Constructor of ActiveDirectoryFederationServices2016OAuth2Strategy.
