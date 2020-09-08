@@ -482,12 +482,19 @@ class DevicePopManager implements IDevicePopManager {
             case X_509_SubjectPublicKeyInfo_ASN_1:
                 return getX509SubjectPublicKeyInfo();
             default:
+                final String errMsg = "Unrecognized or unsupported key format: " + format;
+                final ClientException clientException = new ClientException(
+                        UNKNOWN_EXPORT_FORMAT,
+                        errMsg
+                );
+
                 Logger.error(
                         TAG + ":getPublicKey",
-                        "Unrecognized or unsupported key format: " + format,
-                        null
+                        errMsg,
+                        clientException
                 );
-                throw new ClientException(UNKNOWN_EXPORT_FORMAT);
+
+                throw clientException;
         }
     }
 
