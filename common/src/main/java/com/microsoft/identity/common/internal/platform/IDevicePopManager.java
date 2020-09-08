@@ -36,8 +36,7 @@ import java.util.Date;
 public interface IDevicePopManager {
 
     enum PublicKeyFormat {
-        X_509_SubjectPublicKeyInfo_ASN_1,
-        PKCS1_RSAPublicKey
+        X_509_SubjectPublicKeyInfo_ASN_1
     }
 
     /**

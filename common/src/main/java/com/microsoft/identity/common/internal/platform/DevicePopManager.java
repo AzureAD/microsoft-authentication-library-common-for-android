@@ -91,7 +91,6 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_AL
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.PKCS1_RSAPublicKey;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
 
 /**
@@ -482,16 +481,9 @@ class DevicePopManager implements IDevicePopManager {
     public String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
         if (X_509_SubjectPublicKeyInfo_ASN_1 == format) {
             return getX509SubjectPublicKeyInfo();
-        } else if (PKCS1_RSAPublicKey == format) {
-            return getPkcs1RsaPublicKey();
         } else {
             throw new ClientException(UNKNOWN_EXPORT_FORMAT);
         }
-    }
-
-    private String getPkcs1RsaPublicKey() {
-        // TODO
-        return null;
     }
 
     private String getX509SubjectPublicKeyInfo() throws ClientException {
