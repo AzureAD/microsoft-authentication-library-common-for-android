@@ -324,6 +324,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
+    @Nullable
     public Date getAsymmetricKeyCreationDate() throws ClientException {
         final Exception exception;
         final String errCode;

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
+import android.util.Base64;
 
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -41,10 +42,17 @@ import org.junit.runner.RunWith;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.KeyFactory;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
+import java.util.Date;
+
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
 
 @RunWith(AndroidJUnit4.class)
 public class DevicePoPManagerTests {
@@ -288,5 +296,38 @@ public class DevicePoPManagerTests {
         Assert.assertEquals(accessToken, jwtClaimsSet.getClaim("at"));
         Assert.assertEquals(nonce, jwtClaimsSet.getClaim("nonce"));
         Assert.assertNotNull(jwtClaimsSet.getClaim("cnf"));
+    }
+
+    @Test
+    public void testAsymmetricKeyNullWhenUninitialized() throws ClientException {
+        final Date createdDate = mDevicePopManager.getAsymmetricKeyCreationDate();
+        Assert.assertNull(createdDate);
+    }
+
+    @Test
+    public void testAsymmetricKeyHasCreationDate() throws ClientException {
+        final Date createdDate = mDevicePopManager.getAsymmetricKeyCreationDate();
+        Assert.assertNull(createdDate);
+
+        // Generate it
+        mDevicePopManager.generateAsymmetricKey(mContext);
+
+        // Assert the Date exists
+        Assert.assertNotNull(mDevicePopManager.getAsymmetricKeyCreationDate());
+    }
+
+    @Test
+    public void testAsymmetricKeyHasPublicKey() throws ClientException, NoSuchAlgorithmException, InvalidKeySpecException {
+        // Generate keys
+        mDevicePopManager.generateAsymmetricKey(mContext);
+
+        // Get the public key
+        final String publicKey = mDevicePopManager.getPublicKey(X_509_SubjectPublicKeyInfo_ASN_1);
+
+        // Rehydrate the certificate
+        final byte[] bytes = Base64.decode(publicKey, 2);
+        final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        final PublicKey pubKeyRestored = keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
+        Assert.assertEquals("X.509", pubKeyRestored.getFormat());
     }
 }
