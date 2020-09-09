@@ -117,9 +117,8 @@ public interface IDevicePopManager {
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
      * @return True if the input was signed by our private key. False otherwise.
-     * @throws ClientException If an error was encountered during verification.
      */
-    boolean verify(String plainText, String signatureStr) throws ClientException;
+    boolean verify(String plainText, String signatureStr);
 
     /**
      * Gets the public key associated with this DevicePoPManager formatted per the supplied

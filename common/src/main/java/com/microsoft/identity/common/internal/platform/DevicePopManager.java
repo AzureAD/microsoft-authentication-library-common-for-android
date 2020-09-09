@@ -31,7 +31,6 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -117,6 +116,16 @@ class DevicePopManager implements IDevicePopManager {
      * The NIST advised min keySize for RSA pairs.
      */
     private static final int RSA_KEY_SIZE = 2048;
+
+    /**
+     * Our designated signing algorithm; used for JWTs and generalized signing actions.
+     */
+    private static final String SHA_256_WITH_RSA = "SHA256withRSA";
+
+    /**
+     * Log message when private key material cannot be found.
+     */
+    public static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
 
     /**
      * The keystore backing this implementation.
@@ -489,11 +498,14 @@ class DevicePopManager implements IDevicePopManager {
             final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
-                Log.w(TAG, "Not an instance of a PrivateKeyEntry");
+                Logger.warn(
+                        TAG + ":sign",
+                        PRIVATE_KEY_NOT_FOUND
+                );
                 throw new ClientException(INVALID_KEY_MISSING);
             }
 
-            final Signature signature = Signature.getInstance("SHA256withRSA");
+            final Signature signature = Signature.getInstance(SHA_256_WITH_RSA);
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
             final byte[] signedBytes = signature.sign();
@@ -543,11 +555,14 @@ class DevicePopManager implements IDevicePopManager {
             final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
-                Log.w(TAG, "Not an instance of a PrivateKeyEntry");
+                Logger.warn(
+                        TAG + ":verify",
+                        PRIVATE_KEY_NOT_FOUND
+                );
                 return false;
             }
 
-            final Signature signature = Signature.getInstance("SHA256withRSA");
+            final Signature signature = Signature.getInstance(SHA_256_WITH_RSA);
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
             final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
