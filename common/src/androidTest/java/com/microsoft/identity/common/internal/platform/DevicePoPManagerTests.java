@@ -330,4 +330,16 @@ public class DevicePoPManagerTests {
         final PublicKey pubKeyRestored = keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
         Assert.assertEquals("X.509", pubKeyRestored.getFormat());
     }
+
+    @Test
+    public void testVerifySigning() throws ClientException {
+        // Generate a key
+        mDevicePopManager.generateAsymmetricKey(mContext);
+
+        // Sign a string
+        final String sampleStr = "Contoso";
+        final String sampleSignature = mDevicePopManager.sign(sampleStr);
+
+        Assert.assertTrue(mDevicePopManager.verify(sampleStr, sampleSignature));
+    }
 }

@@ -176,6 +176,16 @@ public class ClientException extends BaseException {
     public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
 
     /**
+     * Invalid key: cannot be used due to invalid encoding, wrong length, uninitialized, etc.
+     */
+    public static final String INVALID_KEY = "invalid_key";
+
+    /**
+     * Private key material cannot be loaded for use.
+     */
+    public static final String INVALID_KEY_MISSING = INVALID_KEY + "_private_key_missing";
+
+    /**
      * Emitted when the target certificate's thumbprint cannot be computed due to lack of support for
      * SHA-256.
      */
@@ -197,9 +207,14 @@ public class ClientException extends BaseException {
     public static final String INTERRUPTED_OPERATION = "operation_interrupted";
 
     /**
+     * Generic signing failure.
+     */
+    public static final String SIGNING_FAILURE = "failed_to_sign";
+
+    /**
      * Emitted when an error is encountered during signing.
      */
-    public static final String JWT_SIGNING_FAILURE = "failed_to_sign_jwt";
+    public static final String JWT_SIGNING_FAILURE = SIGNING_FAILURE + "_jwt";
 
     /**
      * Emitted if the STS returns an unexpected/incorrect token_type.
