@@ -105,7 +105,7 @@ public interface IDevicePopManager {
     void getRequestConfirmation(TaskCompletedCallbackWithError<String, ClientException> callback);
 
     /**
-     * Signs an arbitrary piece of String data.
+     * Signs an arbitrary piece of String data. Signing alg is SHA256WithRSA.
      *
      * @param input The input to sign.
      * @return The input data, signed by our private key.
@@ -113,7 +113,7 @@ public interface IDevicePopManager {
     String sign(String input) throws ClientException;
 
     /**
-     * Verify a signature previously made by our Private Key.
+     * Verify a signature previously made by our Private Key. Verifies SHA256WithRSA sigs.
      *
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
