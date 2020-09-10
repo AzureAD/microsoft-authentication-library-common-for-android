@@ -137,6 +137,7 @@ public interface IDevicePopManager {
      * @param alg   The RSA signing algorithm to use.
      * @param input The input to sign.
      * @return The input data, signed by our private key.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms
      */
     String sign(String alg, String input) throws ClientException;
 
@@ -147,6 +148,7 @@ public interface IDevicePopManager {
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
      * @return True if the input was signed by our private key. False otherwise.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms
      */
     boolean verify(String alg, String plainText, String signatureStr);
 
