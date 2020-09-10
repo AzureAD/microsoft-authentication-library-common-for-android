@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -83,7 +84,8 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
  * @param <GenericAccount>              The Account type to use.
  * @param <GenericRefreshToken>         The RefreshToken type to use.
  */
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, MicrosoftFamilyOAuth2TokenCache, MsalOAuth2TokenCache and OAuth2TokenCache
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
 public class BrokerOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,

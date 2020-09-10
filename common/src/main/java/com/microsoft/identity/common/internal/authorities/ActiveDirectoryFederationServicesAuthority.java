@@ -26,6 +26,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 
@@ -52,6 +53,8 @@ public class ActiveDirectoryFederationServicesAuthority extends Authority {
         }
     }
 
+    // Suppressing rawtype warnings due to the generic type OAuth2Strategy
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public OAuth2Strategy createOAuth2Strategy(@NonNull OAuth2StrategyParameters parameters) {
         throw new UnsupportedOperationException();

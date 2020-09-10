@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -50,6 +51,8 @@ import java.util.concurrent.Future;
  * see <a href='https://msdn.microsoft.com/en-us/library/dn633593.aspx'>https://msdn.microsoft.com/en-us/library/dn633593.aspx</a>
  * see <a href='https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/'>https://blogs.technet.microsoft.com/maheshu/2015/04/28/oauth-2-0-support-in-adfs-on-windows-server-2012-r2/</a>
  */
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest, AuthorizationStrategy, AuthorizationResultFactory, Builder and AuthorizationResult
+@SuppressWarnings(WarningType.rawtype_warning)
 public class ActiveDirectoryFederationServices2012R2OAuth2Strategy extends OAuth2Strategy {
     /**
      * Constructor of ActiveDirectoryFederationServices2012R2OAuth2Strategy.

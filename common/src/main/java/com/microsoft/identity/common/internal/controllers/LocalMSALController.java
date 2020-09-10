@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -81,7 +82,10 @@ public class LocalMSALController extends BaseController {
 
     private static final String TAG = LocalMSALController.class.getSimpleName();
 
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationStrategy mAuthorizationStrategy = null;
+
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
 
     @Override
@@ -140,12 +144,14 @@ public class LocalMSALController extends BaseController {
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
         //1) Get oAuth2Strategy for Authority Type
+        @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2Strategy oAuth2Strategy = parametersWithScopes
                 .getAuthority()
                 .createOAuth2Strategy(strategyParameters);
 
 
         //2) Request authorization interactively
+        @SuppressWarnings(WarningType.rawtype_warning)
         final AuthorizationResult result = performAuthorizationRequest(
                 oAuth2Strategy,
                 parametersWithScopes.getAndroidApplicationContext(),
@@ -202,6 +208,8 @@ public class LocalMSALController extends BaseController {
         return acquireTokenResult;
     }
 
+    // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationResult performAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                             @NonNull final Context context,
                                                             @NonNull final InteractiveTokenCommandParameters parameters)
@@ -279,6 +287,7 @@ public class LocalMSALController extends BaseController {
                 .scopes(mergedScopes)
                 .build();
 
+        @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2TokenCache tokenCache = parametersWithScopes.getOAuth2TokenCache();
 
         final AccountRecord targetAccount = getCachedAccountRecord(parametersWithScopes);
@@ -288,6 +297,7 @@ public class LocalMSALController extends BaseController {
         final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
+        @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
         final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
@@ -467,6 +477,8 @@ public class LocalMSALController extends BaseController {
         return removeAccount(parameters);
     }
 
+    // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
@@ -554,7 +566,7 @@ public class LocalMSALController extends BaseController {
 
     @Override
     public AcquireTokenResult acquireDeviceCodeFlowToken(
-            final AuthorizationResult authorizationResult,
+            @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,
             final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
 
@@ -588,6 +600,7 @@ public class LocalMSALController extends BaseController {
             final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
             strategyParameters.setContext(parameters.getAndroidApplicationContext());
 
+            @SuppressWarnings(WarningType.rawtype_warning)
             final OAuth2Strategy oAuth2Strategy = parameters
                     .getAuthority()
                     .createOAuth2Strategy(strategyParameters);
