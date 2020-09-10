@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
+import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 
@@ -58,6 +59,9 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
                     TestContext.getTestContext().getTestDevice().getSettings().disableAdmin(DeviceAdmin.COMPANY_PORTAL);
                     companyPortal.uninstall();
                 }
+
+                final BrokerHost brokerHost = new BrokerHost();
+                brokerHost.uninstall();
 
                 base.evaluate();
             }
