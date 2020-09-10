@@ -35,8 +35,35 @@ import java.util.Date;
  */
 public interface IDevicePopManager {
 
+    /**
+     * The desired export format of our PoP public key.
+     */
     enum PublicKeyFormat {
+        /**
+         * Base64 encoded SubjectPublicKeyInfo of the X.509 Certificate.
+         * <p>
+         * Conforms to the following ASN.1
+         * <pre>
+         * SubjectPublicKeyInfo  ::=  SEQUENCE  {
+         *     algorithm            AlgorithmIdentifier,
+         *     subjectPublicKey     BIT STRING
+         * }
+         * </pre>
+         */
         X_509_SubjectPublicKeyInfo_ASN_1,
+
+        /**
+         * An RFC-7517 compliant public key as a minified JWK.
+         * <p>
+         * Sample value:
+         * <pre>
+         * {
+         * 	"kty": "RSA",
+         * 	"e": "AQAB",
+         * 	"n": "tMqJ7Oxh3PdLaiEc28w....HwES9Q"
+         * }
+         * </pre>
+         */
         JWK
     }
 
