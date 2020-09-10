@@ -108,6 +108,36 @@ class DevicePopManager implements IDevicePopManager {
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
     /**
+     * Commonly used signing algorithms for PoP. Represents a subset of supported algorithms.
+     */
+    public static class SigningAlgorithms {
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        public static final String MD5_WITH_RSA = "MD5withRSA";
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        public static final String NONE_WITH_RSA = "NONEwithRSA";
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        public static final String SHA_256_WITH_RSA = "SHA256withRSA";
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        public static final String SHA_256_WITH_RSA_PSS = "SHA256withRSA/PSS";
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        public static final String SHA_384_WITH_RSA = "SHA384withRSA";
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        public static final String SHA_384_WITH_RSA_PSS = "SHA384withRSA/PSS";
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        public static final String SHA_512_WITH_RSA = "SHA512withRSA";
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        public static final String SHA_512_WITH_RSA_PSS = "SHA512withRSA/PSS";
+    }
+
+    /**
      * The PoP alias in the designated KeyStore.
      */
     private static final String KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
@@ -116,11 +146,6 @@ class DevicePopManager implements IDevicePopManager {
      * The NIST advised min keySize for RSA pairs.
      */
     private static final int RSA_KEY_SIZE = 2048;
-
-    /**
-     * Our designated signing algorithm; used for JWTs and generalized signing actions.
-     */
-    private static final String SHA_256_WITH_RSA = "SHA256withRSA";
 
     /**
      * Log message when private key material cannot be found.
@@ -494,7 +519,9 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public @NonNull String sign(@NonNull final String input) throws ClientException {
+    public @NonNull
+    String sign(@NonNull final String alg,
+                @NonNull final String input) throws ClientException {
         final Exception exception;
         final String errCode;
 
@@ -510,7 +537,7 @@ class DevicePopManager implements IDevicePopManager {
                 throw new ClientException(INVALID_KEY_MISSING);
             }
 
-            final Signature signature = Signature.getInstance(SHA_256_WITH_RSA);
+            final Signature signature = Signature.getInstance(alg);
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
             final byte[] signedBytes = signature.sign();
@@ -551,7 +578,9 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public boolean verify(@NonNull final String plainText, @NonNull final String signatureStr) {
+    public boolean verify(@NonNull final String alg,
+                          @NonNull final String plainText,
+                          @NonNull final String signatureStr) {
         final String errCode;
         final Exception exception;
 
@@ -567,7 +596,7 @@ class DevicePopManager implements IDevicePopManager {
                 return false;
             }
 
-            final Signature signature = Signature.getInstance(SHA_256_WITH_RSA);
+            final Signature signature = Signature.getInstance(alg);
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
             final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
@@ -602,7 +631,8 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public @NonNull String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
+    public @NonNull
+    String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
                 return getX509SubjectPublicKeyInfo();
@@ -625,7 +655,8 @@ class DevicePopManager implements IDevicePopManager {
         }
     }
 
-    private @NonNull String getJwkPublicKey() throws ClientException {
+    private @NonNull
+    String getJwkPublicKey() throws ClientException {
         final Exception exception;
         final String errCode;
 
@@ -945,8 +976,17 @@ class DevicePopManager implements IDevicePopManager {
                         | KeyProperties.PURPOSE_DECRYPT
         )
                 .setKeySize(keySize)
-                .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
-                .setDigests(KeyProperties.DIGEST_SHA256);
+                .setSignaturePaddings(
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
+                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                )
+                .setDigests(
+                        KeyProperties.DIGEST_MD5,
+                        KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_SHA256,
+                        KeyProperties.DIGEST_SHA384,
+                        KeyProperties.DIGEST_SHA512
+                );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
             Logger.verbose(

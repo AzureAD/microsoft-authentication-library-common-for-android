@@ -132,21 +132,23 @@ public interface IDevicePopManager {
     void getRequestConfirmation(TaskCompletedCallbackWithError<String, ClientException> callback);
 
     /**
-     * Signs an arbitrary piece of String data. Signing alg is SHA256WithRSA.
+     * Signs an arbitrary piece of String data.
      *
+     * @param alg   The RSA signing algorithm to use.
      * @param input The input to sign.
      * @return The input data, signed by our private key.
      */
-    String sign(String input) throws ClientException;
+    String sign(String alg, String input) throws ClientException;
 
     /**
-     * Verify a signature previously made by our Private Key. Verifies SHA256WithRSA sigs.
+     * Verify a signature previously made by our Private Key.
      *
+     * @param alg          The RSA signing algorithm to use.
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
      * @return True if the input was signed by our private key. False otherwise.
      */
-    boolean verify(String plainText, String signatureStr);
+    boolean verify(String alg, String plainText, String signatureStr);
 
     /**
      * Gets the public key associated with this DevicePoPManager formatted per the supplied
