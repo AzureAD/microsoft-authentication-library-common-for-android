@@ -125,7 +125,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * Log message when private key material cannot be found.
      */
-    public static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
+    private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
 
     /**
      * The keystore backing this implementation.
