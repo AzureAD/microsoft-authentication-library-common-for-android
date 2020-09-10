@@ -205,7 +205,7 @@ class DevicePopManager implements IDevicePopManager {
         private static final String NONCE = "nonce";
 
         /**
-         * JWK key for inner object.
+         * JWK for inner object.
          */
         public static final String JWK = "jwk";
     }
