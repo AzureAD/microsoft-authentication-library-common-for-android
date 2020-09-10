@@ -571,7 +571,6 @@ class DevicePopManager implements IDevicePopManager {
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
             final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
-
             return signature.verify(signatureBytes);
         } catch (final UnsupportedEncodingException e) {
             errCode = UNSUPPORTED_ENCODING;
