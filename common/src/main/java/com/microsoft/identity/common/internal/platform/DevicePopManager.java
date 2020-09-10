@@ -108,7 +108,8 @@ class DevicePopManager implements IDevicePopManager {
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
     /**
-     * Commonly used signing algorithms for PoP. Represents a subset of supported algorithms.
+     * Signing algorithms supported by our underlying keystore. Not all algs available at all device
+     * levels.
      */
     public static class SigningAlgorithms {
 
