@@ -494,7 +494,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String sign(@NonNull final String input) throws ClientException {
+    public @NonNull String sign(@NonNull final String input) throws ClientException {
         final Exception exception;
         final String errCode;
 
@@ -602,7 +602,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
+    public @NonNull String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
                 return getX509SubjectPublicKeyInfo();
@@ -625,7 +625,7 @@ class DevicePopManager implements IDevicePopManager {
         }
     }
 
-    private String getJwkPublicKey() throws ClientException {
+    private @NonNull String getJwkPublicKey() throws ClientException {
         final Exception exception;
         final String errCode;
 
