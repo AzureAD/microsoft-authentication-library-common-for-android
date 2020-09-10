@@ -28,6 +28,10 @@ import android.util.Base64;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.microsoft.identity.common.exception.ClientException;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -52,6 +56,7 @@ import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Date;
 
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.JWK;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
 
 @RunWith(AndroidJUnit4.class)
@@ -317,7 +322,7 @@ public class DevicePoPManagerTests {
     }
 
     @Test
-    public void testAsymmetricKeyHasPublicKey() throws ClientException, NoSuchAlgorithmException, InvalidKeySpecException {
+    public void testAsymmetricKeyHasPublicKeyX509() throws ClientException, NoSuchAlgorithmException, InvalidKeySpecException {
         // Generate keys
         mDevicePopManager.generateAsymmetricKey(mContext);
 
@@ -329,6 +334,29 @@ public class DevicePoPManagerTests {
         final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         final PublicKey pubKeyRestored = keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
         Assert.assertEquals("X.509", pubKeyRestored.getFormat());
+    }
+
+    @Test
+    public void testAsymmetricKeyHasPublicKeyJwk() throws ClientException {
+        // Generate keys
+        mDevicePopManager.generateAsymmetricKey(mContext);
+
+        // Get the public key
+        final String publicKey = mDevicePopManager.getPublicKey(JWK);
+
+        // Convert it to JSON, parse to verify fields
+        final JsonElement jwkElement = new JsonParser().parse(publicKey);
+
+        // Convert to JsonObject to extract claims
+        final JsonObject jwkObj = jwkElement.getAsJsonObject();
+
+        // We should expect the following claims...
+        // 'kty' - Key Type - Identifies the cryptographic alg used with this key (ex: RSA, EC)
+        // 'e' - Public Exponent - The exponent used on signed/encoded data to decode the orig value
+        // 'n' - Modulus - The product of two prime numbers used to generate the key pair
+        Assert.assertNotNull(jwkObj.get("kty"));
+        Assert.assertNotNull(jwkObj.get("e"));
+        Assert.assertNotNull(jwkObj.get("n"));
     }
 
     @Test

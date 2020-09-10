@@ -203,6 +203,11 @@ class DevicePopManager implements IDevicePopManager {
          * A random value used for replay protection.
          */
         private static final String NONCE = "nonce";
+
+        /**
+         * JWK key for inner object.
+         */
+        public static final String JWK = "jwk";
     }
 
     /**
@@ -602,6 +607,8 @@ class DevicePopManager implements IDevicePopManager {
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
                 return getX509SubjectPublicKeyInfo();
+            case JWK:
+                return getJwkPublicKey();
             default:
                 final String errMsg = "Unrecognized or unsupported key format: " + format;
                 final ClientException clientException = new ClientException(
@@ -617,6 +624,39 @@ class DevicePopManager implements IDevicePopManager {
 
                 throw clientException;
         }
+    }
+
+    private String getJwkPublicKey() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final net.minidev.json.JSONObject jwkJson = getDevicePopJwkMinifiedJson();
+            return jwkJson.getAsString(SignedHttpRequestJwtClaims.JWK); // TODO create a constant
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
     }
 
     private String getX509SubjectPublicKeyInfo() throws ClientException {
@@ -1057,7 +1097,7 @@ class DevicePopManager implements IDevicePopManager {
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();
         final net.minidev.json.JSONObject jwkContents = publicRsaKey.toJSONObject();
         final net.minidev.json.JSONObject wrappedJwk = new net.minidev.json.JSONObject();
-        wrappedJwk.appendField("jwk", jwkContents);
+        wrappedJwk.appendField(SignedHttpRequestJwtClaims.JWK, jwkContents);
 
         return wrappedJwk;
     }
