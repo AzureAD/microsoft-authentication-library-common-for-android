@@ -325,7 +325,7 @@ public class DevicePoPManagerTests {
         final String publicKey = mDevicePopManager.getPublicKey(X_509_SubjectPublicKeyInfo_ASN_1);
 
         // Rehydrate the certificate
-        final byte[] bytes = Base64.decode(publicKey, 2);
+        final byte[] bytes = Base64.decode(publicKey, Base64.DEFAULT);
         final KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         final PublicKey pubKeyRestored = keyFactory.generatePublic(new X509EncodedKeySpec(bytes));
         Assert.assertEquals("X.509", pubKeyRestored.getFormat());
