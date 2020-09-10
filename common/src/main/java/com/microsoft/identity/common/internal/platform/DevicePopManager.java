@@ -631,7 +631,7 @@ class DevicePopManager implements IDevicePopManager {
 
         try {
             final net.minidev.json.JSONObject jwkJson = getDevicePopJwkMinifiedJson();
-            return jwkJson.getAsString(SignedHttpRequestJwtClaims.JWK); // TODO create a constant
+            return jwkJson.getAsString(SignedHttpRequestJwtClaims.JWK);
         } catch (final UnrecoverableEntryException e) {
             exception = e;
             errCode = INVALID_PROTECTION_PARAMS;
