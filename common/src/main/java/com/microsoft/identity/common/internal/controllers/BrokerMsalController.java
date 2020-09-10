@@ -30,6 +30,7 @@ import android.content.pm.ProviderInfo;
 import android.os.Bundle;
 import android.os.RemoteException;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
@@ -567,13 +568,15 @@ public class BrokerMsalController extends BaseController {
                 });
     }
 
+    // Suppressing rawtype warnings due to the generic type AuthorizationResult
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws ClientException {
         throw new ClientException("deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
     }
 
     @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
+    public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
         throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
     }
 
@@ -584,7 +587,7 @@ public class BrokerMsalController extends BaseController {
      * @param msalOAuth2TokenCache
      */
     private void saveMsaAccountToCache(@NonNull final Bundle resultBundle,
-                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
+                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
         final String methodName = ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
