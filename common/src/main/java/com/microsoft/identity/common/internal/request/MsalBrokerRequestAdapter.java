@@ -226,6 +226,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
+        @SuppressWarnings("rawtypes")
         final BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder
                 commandParametersBuilder = BrokerInteractiveTokenCommandParameters.builder()
                 .authenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest))
@@ -624,7 +625,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      */
     public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet();
+        final HashSet<String> signatureHashes = new HashSet<String>();
         signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
         final BrowserDescriptor chrome = new BrowserDescriptor(
                 "com.android.chrome",

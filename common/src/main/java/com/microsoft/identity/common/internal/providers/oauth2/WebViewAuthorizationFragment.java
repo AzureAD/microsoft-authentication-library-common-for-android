@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.R;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -228,7 +229,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
      */
     private HashMap<String, String> getRequestHeaders(final Bundle state) {
         try {
-            return (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
+            // Suppressing unchecked warnings due to casting of serializable String to HashMap<String, String>
+            @SuppressWarnings(WarningType.unchecked_warning)
+            HashMap<String, String> requestHeaders = (HashMap<String, String>) state.getSerializable(REQUEST_HEADERS);
+
+            return requestHeaders;
         } catch (Exception e) {
             return null;
         }

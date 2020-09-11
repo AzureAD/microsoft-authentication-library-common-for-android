@@ -74,6 +74,8 @@ public class MsalCppOAuth2TokenCache
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
+    // Suppressing unchecked warnings due to casting of IAccountCredentialAdapter with the generics in the call to the constructor of parent class
+    @SuppressWarnings(WarningType.unchecked_warning)
     private MsalCppOAuth2TokenCache(final Context context,
                                     final IAccountCredentialCache accountCredentialCache,
                                     final IAccountCredentialAdapter accountCredentialAdapter) {
@@ -90,11 +92,16 @@ public class MsalCppOAuth2TokenCache
      */
     public static MsalCppOAuth2TokenCache create(@NonNull final Context context) {
         final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(context);
-        return new MsalCppOAuth2TokenCache(
+
+        // Suppressing unchecked warnings due to the generic types not provided while creating object of MsalCppOAuth2TokenCache
+        @SuppressWarnings(WarningType.unchecked_warning)
+        MsalCppOAuth2TokenCache msalCppOAuth2TokenCache = new MsalCppOAuth2TokenCache(
                 context,
                 msalOAuth2TokenCache.getAccountCredentialCache(),
                 msalOAuth2TokenCache.getAccountCredentialAdapter()
         );
+
+        return msalCppOAuth2TokenCache;
     }
 
     /**

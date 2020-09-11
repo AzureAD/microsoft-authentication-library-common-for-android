@@ -260,6 +260,8 @@ public abstract class BaseController {
                 parameters.isPowerOptCheckEnabled()
         );
 
+        // Suppressing unchecked warnings due to casting of type AuthorizationRequest to GenericAuthorizationRequest and AuthorizationResponse to GenericAuthorizationResponse in arguments of method call to createTokenRequest
+        @SuppressWarnings(WarningType.unchecked_warning)
         final TokenRequest tokenRequest = strategy.createTokenRequest(
                 request,
                 response,
@@ -273,6 +275,8 @@ public abstract class BaseController {
 
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
+        // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
+        @SuppressWarnings(WarningType.unchecked_warning)
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
         logResult(TAG, tokenResult);
@@ -312,11 +316,14 @@ public abstract class BaseController {
                     "Token request was successful"
             );
 
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+            @SuppressWarnings(WarningType.unchecked_warning)
             final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
                     tokenResult.getTokenResponse()
             );
+
             final ICacheRecord savedRecord = savedRecords.get(0);
 
             // Create a new AuthenticationResult to hold the saved record
@@ -493,6 +500,12 @@ public abstract class BaseController {
             );
         }
 
+        return strategyRequestToken(strategy, refreshTokenRequest);
+    }
+
+    // Suppressing unchecked warnings due to casting of TokenRequest to GenericTokenRequest in the call to requestToken method
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private TokenResult strategyRequestToken(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2Strategy strategy, TokenRequest refreshTokenRequest) throws IOException, ClientException {
         return strategy.requestToken(refreshTokenRequest);
     }
 
@@ -507,11 +520,15 @@ public abstract class BaseController {
                 "Saving tokens..."
         );
 
-        return tokenCache.saveAndLoadAggregatedAccountData(
+        // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+        @SuppressWarnings(WarningType.unchecked_warning)
+        List<ICacheRecord> cacheRecords = tokenCache.saveAndLoadAggregatedAccountData(
                 strategy,
                 request,
                 tokenResponse
         );
+
+        return cacheRecords;
     }
 
     protected boolean refreshTokenIsNull(@NonNull final ICacheRecord cacheRecord) {

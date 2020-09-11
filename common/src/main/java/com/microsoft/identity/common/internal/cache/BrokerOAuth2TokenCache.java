@@ -321,6 +321,8 @@ public class BrokerOAuth2TokenCache
             }
         }
 
+        // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method save
+        @SuppressWarnings(WarningType.unchecked_warning)
         final ICacheRecord result = targetCache.save(
                 oAuth2Strategy,
                 request,
@@ -759,11 +761,15 @@ public class BrokerOAuth2TokenCache
                 targetCache = mFociCache;
             }
 
-            result = targetCache.getAccountsWithAggregatedAccountData(
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method getAccountsWithAggregatedAccountData
+            @SuppressWarnings(WarningType.unchecked_warning)
+            List<ICacheRecord> resultByAggregatedAccountData = targetCache.getAccountsWithAggregatedAccountData(
                     environment,
                     clientId,
                     homeAccountId
             );
+
+            result = resultByAggregatedAccountData;
         } else {
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
