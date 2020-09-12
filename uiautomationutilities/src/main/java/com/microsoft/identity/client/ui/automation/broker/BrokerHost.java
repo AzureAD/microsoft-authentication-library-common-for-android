@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
@@ -197,6 +198,11 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public void createPowerLiftIncident() {
         throw new UnsupportedOperationException("Not supported on Broker Host App :(");
+    }
+
+    @Override
+    public DeviceAdmin getAdminName() {
+        return DeviceAdmin.BROKER_HOST;
     }
 
     @Override
