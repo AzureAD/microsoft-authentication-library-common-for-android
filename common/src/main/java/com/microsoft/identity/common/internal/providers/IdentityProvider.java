@@ -22,9 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy
+@SuppressWarnings(WarningType.rawtype_warning)
 public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth2Configuration> {
     /**
      * Create OAuth2 strategy.

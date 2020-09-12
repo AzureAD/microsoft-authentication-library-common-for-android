@@ -26,6 +26,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
@@ -36,6 +37,8 @@ import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStr
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
 
+// Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationStrategyFactory, EmbeddedWebViewAuthorizationStrategy and BrowserAuthorizationStrategy
+@SuppressWarnings(WarningType.rawtype_warning)
 public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends AuthorizationStrategy> {
     private static final String TAG = AuthorizationStrategyFactory.class.getSimpleName();
 

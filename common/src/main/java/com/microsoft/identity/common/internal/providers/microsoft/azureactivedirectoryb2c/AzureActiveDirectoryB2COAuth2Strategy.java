@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -48,6 +49,8 @@ import java.util.concurrent.Future;
  * see <a href='https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code'>
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code</a>
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and Builder
+@SuppressWarnings(WarningType.rawtype_warning)
 public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     /**
      * Constructor of AzureActiveDirectoryB2COAuth2Strategy.

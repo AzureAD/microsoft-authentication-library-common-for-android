@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -49,6 +50,8 @@ import static com.microsoft.identity.common.internal.authscheme.BearerAuthentica
 /**
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, IAccountCredentialAdapter, MsalCppOAuth2TokenCache and MsalOAuth2TokenCache
+@SuppressWarnings(WarningType.rawtype_warning)
 public class MsalCppOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,

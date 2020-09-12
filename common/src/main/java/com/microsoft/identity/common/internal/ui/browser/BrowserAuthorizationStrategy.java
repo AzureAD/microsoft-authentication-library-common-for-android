@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -46,6 +47,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.Future;
 
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
+@SuppressWarnings(WarningType.rawtype_warning)
 public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();

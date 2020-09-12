@@ -28,6 +28,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -79,6 +80,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
+// Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
         <MicrosoftStsAccessToken,
