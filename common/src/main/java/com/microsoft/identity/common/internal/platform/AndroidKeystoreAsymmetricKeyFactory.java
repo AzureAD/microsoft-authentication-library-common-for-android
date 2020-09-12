@@ -22,22 +22,67 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.content.Context;
+
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
+
+import java.io.IOException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.cert.CertificateException;
 
 public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory {
 
+    private final Context mContext;
+
+    public AndroidKeystoreAsymmetricKeyFactory(@NonNull final Context context) {
+        mContext = context;
+    }
+
     @Override
-    public AsymmetricKey generateAsymmetricKey(String alias) throws ClientException {
+    public AsymmetricKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
+        try {
+            return new AndroidKeystoreAsymmetricKey(
+                    mContext,
+                    new DevicePopManager(alias)
+            );
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // TODO catch, wrap, and rethrow Exception
         return null;
     }
 
     @Override
     public AsymmetricKey loadAsymmetricKey(String alias) throws ClientException {
-        return null;
+        // We can just call generate.... same thing... it will be created if it doesn't exist.
+        return generateAsymmetricKey(alias);
     }
 
     @Override
     public boolean clearAsymmetricKey(String alias) {
+        try {
+            return new DevicePopManager(alias).clearAsymmetricKey();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (CertificateException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        // TODO catch, wrap, and rethrow Exception
         return false;
     }
 }

@@ -139,9 +139,9 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     /**
-     * The PoP alias in the designated KeyStore.
+     * The PoP alias in the designated KeyStore -- default val used by non-OneAuth Android platform.
      */
-    private static final String KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
+    private static final String DEFAULT_KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
 
     /**
      * The NIST advised min keySize for RSA pairs.
@@ -157,6 +157,11 @@ class DevicePopManager implements IDevicePopManager {
      * The keystore backing this implementation.
      */
     private final KeyStore mKeyStore;
+
+    /**
+     * The alias of this DevicePopManager's keys.
+     */
+    private final String mKeyAlias;
 
     /**
      * The name of the KeyStore to use.
@@ -247,6 +252,14 @@ class DevicePopManager implements IDevicePopManager {
             NoSuchAlgorithmException, IOException {
         mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
         mKeyStore.load(null);
+        mKeyAlias = DEFAULT_KEYSTORE_ENTRY_ALIAS;
+    }
+
+    DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
+            NoSuchAlgorithmException, IOException {
+        mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
+        mKeyStore.load(null);
+        mKeyAlias = alias;
     }
 
     @Override
@@ -254,7 +267,7 @@ class DevicePopManager implements IDevicePopManager {
         boolean exists = false;
 
         try {
-            exists = mKeyStore.containsAlias(KEYSTORE_ENTRY_ALIAS);
+            exists = mKeyStore.containsAlias(mKeyAlias);
         } catch (final KeyStoreException e) {
             Logger.error(
                     TAG,
@@ -289,7 +302,7 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
             final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
             final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
             return getThumbprintForRsaKey(rsaKey);
@@ -379,7 +392,7 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            return mKeyStore.getCreationDate(KEYSTORE_ENTRY_ALIAS);
+            return mKeyStore.getCreationDate(mKeyAlias);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -405,7 +418,7 @@ class DevicePopManager implements IDevicePopManager {
         boolean deleted = false;
 
         try {
-            mKeyStore.deleteEntry(KEYSTORE_ENTRY_ALIAS);
+            mKeyStore.deleteEntry(mKeyAlias);
             deleted = true;
         } catch (final KeyStoreException e) {
             Logger.error(
@@ -476,7 +489,7 @@ class DevicePopManager implements IDevicePopManager {
                 final String errCode;
 
                 try {
-                    final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+                    final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
                     final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
                     final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
                     final String base64UrlEncodedJwkJsonStr = getReqCnfForRsaKey(rsaKey);
@@ -528,7 +541,7 @@ class DevicePopManager implements IDevicePopManager {
 
         try {
             final byte[] inputBytesToSign = input.getBytes(ENCODING_UTF8);
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
@@ -587,7 +600,7 @@ class DevicePopManager implements IDevicePopManager {
 
         try {
             final byte[] inputBytesToVerify = plainText.getBytes(ENCODING_UTF8);
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
@@ -695,7 +708,7 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
             final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
             final PublicKey publicKey = rsaKeyPair.getPublic();
             final byte[] publicKeybytes = publicKey.getEncoded();
@@ -779,7 +792,7 @@ class DevicePopManager implements IDevicePopManager {
 
             final JWTClaimsSet claimsSet = claimsBuilder.build();
 
-            final KeyStore.Entry entry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyStore.Entry entry = mKeyStore.getEntry(mKeyAlias, null);
             final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
             final RSASSASigner signer = new RSASSASigner(privateKey);
 
@@ -953,10 +966,10 @@ class DevicePopManager implements IDevicePopManager {
      * @throws InvalidAlgorithmParameterException
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static void initialize(@NonNull final Context context,
-                                   @NonNull final KeyPairGenerator keyPairGenerator,
-                                   final int keySize,
-                                   final boolean useStrongbox) throws InvalidAlgorithmParameterException {
+    private void initialize(@NonNull final Context context,
+                            @NonNull final KeyPairGenerator keyPairGenerator,
+                            final int keySize,
+                            final boolean useStrongbox) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
         } else {
@@ -966,11 +979,11 @@ class DevicePopManager implements IDevicePopManager {
 
     @SuppressLint("InlinedApi")
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private static void initialize23(@NonNull final KeyPairGenerator keyPairGenerator,
-                                     final int keySize,
-                                     final boolean useStrongbox) throws InvalidAlgorithmParameterException {
+    private void initialize23(@NonNull final KeyPairGenerator keyPairGenerator,
+                              final int keySize,
+                              final boolean useStrongbox) throws InvalidAlgorithmParameterException {
         KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
-                KEYSTORE_ENTRY_ALIAS,
+                mKeyAlias,
                 KeyProperties.PURPOSE_SIGN
                         | KeyProperties.PURPOSE_VERIFY
                         | KeyProperties.PURPOSE_ENCRYPT
@@ -1018,16 +1031,16 @@ class DevicePopManager implements IDevicePopManager {
     @SuppressLint("NewApi")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressWarnings("deprecation")
-    private static void initializePre23(@NonNull final Context context,
-                                        @NonNull final KeyPairGenerator keyPairGenerator,
-                                        final int keySize) throws InvalidAlgorithmParameterException {
+    private void initializePre23(@NonNull final Context context,
+                                 @NonNull final KeyPairGenerator keyPairGenerator,
+                                 final int keySize) throws InvalidAlgorithmParameterException {
         final Calendar calendar = Calendar.getInstance();
         final Date start = getNow(calendar);
         calendar.add(Calendar.YEAR, CertificateProperties.CERTIFICATE_VALIDITY_YEARS);
         final Date end = calendar.getTime();
 
         final android.security.KeyPairGeneratorSpec.Builder specBuilder = new android.security.KeyPairGeneratorSpec.Builder(context)
-                .setAlias(KEYSTORE_ENTRY_ALIAS)
+                .setAlias(mKeyAlias)
                 .setStartDate(start)
                 .setEndDate(end)
                 .setSerialNumber(CertificateProperties.SERIAL_NUMBER)
@@ -1131,7 +1144,7 @@ class DevicePopManager implements IDevicePopManager {
      */
     private net.minidev.json.JSONObject getDevicePopJwkMinifiedJson()
             throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
-        final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+        final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
         final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();

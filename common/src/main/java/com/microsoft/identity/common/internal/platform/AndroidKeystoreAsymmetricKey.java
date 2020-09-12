@@ -22,29 +22,51 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.util.Date;
 
 public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
 
+    private final IDevicePopManager mDevicePopManager;
+
+    AndroidKeystoreAsymmetricKey(@NonNull final Context context,
+                                 @NonNull final IDevicePopManager popManager)
+            throws ClientException {
+        mDevicePopManager = popManager;
+
+        if (!mDevicePopManager.asymmetricKeyExists()) {
+            mDevicePopManager.generateAsymmetricKey(context);
+        }
+    }
+
     @Override
     public Date getCreatedOn() throws ClientException {
-        return null;
+        return mDevicePopManager.getAsymmetricKeyCreationDate();
     }
 
     @Override
     public String getThumbprint() throws ClientException {
-        return null;
+        return mDevicePopManager.getAsymmetricKeyThumbprint();
     }
 
     @Override
     public String getPublicKey() throws ClientException {
-        return null;
+        return mDevicePopManager.getPublicKey(IDevicePopManager.PublicKeyFormat.JWK);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
-    public String sign(String data) throws ClientException {
-        return null;
+    public String sign(@NonNull final String data) throws ClientException {
+        return mDevicePopManager.sign(
+                DevicePopManager.SigningAlgorithms.SHA_256_WITH_RSA,
+                data
+        );
     }
 }
