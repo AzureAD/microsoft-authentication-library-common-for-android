@@ -1,5 +1,6 @@
 Version 3.0.1
 ----------
+- Perform browser sign out on MSAL side (#1032)
 - Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers. (#1022)
 - Consider controllers while throttling (#1021)
 - Allow changing of the progressBar color (#1020)
