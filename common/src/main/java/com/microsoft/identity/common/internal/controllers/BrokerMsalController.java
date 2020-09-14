@@ -576,6 +576,9 @@ public class BrokerMsalController extends BaseController {
      * Invoke the logout endpoint on the specified browser.
      * If there are more than 1 session in the browser, an account picker will be displayed.
      * (Alternatively, we could pass the optional sessionID as one of the query string parameter, but we're not storing that at the moment).
+     *
+     * @param context    {@link Context} application context.
+     * @param parameters {@link RemoveAccountCommandParameters} parameters of the remove command call.
      */
     private void logOutFromBrowser(@NonNull final Context context,
                                    @NonNull final RemoveAccountCommandParameters parameters) {
@@ -600,8 +603,8 @@ public class BrokerMsalController extends BaseController {
             context.startActivity(intent);
 
         } catch (final ActivityNotFoundException e) {
-            Logger.info(TAG + methodName,
-                    "Browser package [" + browserPackageName + "] not found. Skipping browser sign out.");
+            Logger.error(TAG + methodName,
+                    "Failed to launch browser sign out with browser=[" + browserPackageName + "]. Skipping.", e);
         }
     }
 
