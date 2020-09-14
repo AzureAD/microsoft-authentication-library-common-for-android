@@ -10,6 +10,12 @@ android {
         labClientSecret = labSecret
     }
 
+    def saveTestResultsToCsv = false
+
+    if (project.hasProperty("writeTestResultsToCsv")) {
+        saveTestResultsToCsv = getBoolean(writeTestResultsToCsv);
+    }
+
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -17,6 +23,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
+        buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
     }
 
     lintOptions {
@@ -54,8 +61,11 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'
-    testImplementation 'junit:junit:4.12'
-    testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
-    androidTestImplementation 'androidx.test:runner:1.2.0'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation "junit:junit:$rootProject.ext.junitVersion"
+    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+}
+
+static boolean getBoolean(final String s) {
+    return s == null ? false : s.toBoolean();
 }

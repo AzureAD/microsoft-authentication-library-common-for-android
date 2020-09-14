@@ -42,7 +42,6 @@ public abstract class BaseCommand<T> implements Command<T> {
     @EqualsAndHashCode.Exclude
     private CommandCallback callback;
 
-    @EqualsAndHashCode.Exclude
     private List<BaseController> controllers;
 
     @EqualsAndHashCode.Exclude
