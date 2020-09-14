@@ -99,9 +99,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    @NonNull
-    @SuppressWarnings("unchecked")
-    public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
+    public ITokenShareResult getOrgIdFamilyRefreshTokenWithMetadata(@NonNull final String identifier) throws BaseException {
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
         throwIfCacheRecordIncomplete(identifier, cacheRecord);
@@ -112,7 +110,18 @@ public class TokenShareUtility implements ITokenShareInternal {
         );
 
         // Ship it
-        return SSOStateSerializer.serialize(cacheItemToExport);
+        return new TokenShareResult(
+                cacheRecord,
+                SSOStateSerializer.serialize(cacheItemToExport),
+                ITokenShareResult.TokenShareExportFormat.SSO_STATE_SERIALIZER_BLOB
+        );
+    }
+
+    @Override
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
+        return getOrgIdFamilyRefreshTokenWithMetadata(identifier).getRefreshToken();
     }
 
     private void throwIfCacheRecordIncomplete(@NonNull final String identifier,
@@ -218,6 +227,21 @@ public class TokenShareUtility implements ITokenShareInternal {
         saveResult(resultPair);
     }
 
+    @Override
+    public ITokenShareResult getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception {
+        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
+
+        throwIfCacheRecordIncomplete(identifier, cacheRecord);
+
+        final ITokenShareResult result = new TokenShareResult(
+                cacheRecord,
+                cacheRecord.getRefreshToken().getSecret(),
+                ITokenShareResult.TokenShareExportFormat.RAW
+        );
+
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     private void saveResult(@Nullable final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair)
             throws ClientException {
@@ -233,11 +257,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public String getMsaFamilyRefreshToken(@NonNull final String identifier) throws Exception {
-        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
-
-        throwIfCacheRecordIncomplete(identifier, cacheRecord);
-
-        return cacheRecord.getRefreshToken().getSecret();
+        return getMsaFamilyRefreshTokenWithMetadata(identifier).getRefreshToken();
     }
 
     @Override
