@@ -99,7 +99,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public ITokenShareResult getOrgIdFamilyRefreshTokenWithMetadata(@NonNull final String identifier) throws BaseException {
+    public ITokenShareResultInternal getOrgIdFamilyRefreshTokenWithMetadata(@NonNull final String identifier) throws BaseException {
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
         throwIfCacheRecordIncomplete(identifier, cacheRecord);
@@ -110,10 +110,10 @@ public class TokenShareUtility implements ITokenShareInternal {
         );
 
         // Ship it
-        return new TokenShareResult(
+        return new TokenShareResultInternal(
                 cacheRecord,
                 SSOStateSerializer.serialize(cacheItemToExport),
-                ITokenShareResult.TokenShareExportFormat.SSO_STATE_SERIALIZER_BLOB
+                ITokenShareResultInternal.TokenShareExportFormat.SSO_STATE_SERIALIZER_BLOB
         );
     }
 
@@ -228,15 +228,15 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public ITokenShareResult getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception {
+    public ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception {
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
         throwIfCacheRecordIncomplete(identifier, cacheRecord);
 
-        final ITokenShareResult result = new TokenShareResult(
+        final ITokenShareResultInternal result = new TokenShareResultInternal(
                 cacheRecord,
                 cacheRecord.getRefreshToken().getSecret(),
-                ITokenShareResult.TokenShareExportFormat.RAW
+                ITokenShareResultInternal.TokenShareExportFormat.RAW
         );
 
         return result;

@@ -30,10 +30,10 @@ public interface ITokenShareInternal {
      * member of FoCI (family of clientIds).
      *
      * @param identifier The identifier of the sought user's FRT.
-     * @return The {@link ITokenShareResult}.
+     * @return The {@link ITokenShareResultInternal}.
      * @throws Exception If the requested token cannot be found.
      */
-    ITokenShareResult getOrgIdFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
+    ITokenShareResultInternal getOrgIdFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
 
     /**
      * For the supplied user unique identifier (OID/upn/preferred_username), return the
@@ -62,10 +62,10 @@ public interface ITokenShareInternal {
      * member of FoCI (family of clientIds).
      *
      * @param identifier The identifier of the sought user's FRT.
-     * @return The {@link ITokenShareResult}.
+     * @return The {@link ITokenShareResultInternal}.
      * @throws Exception If the requested token cannot be found.
      */
-    ITokenShareResult getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
+    ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
 
     /**
      * For the provided MSA user id, retrieve the FRT belonging to this user (if exists).

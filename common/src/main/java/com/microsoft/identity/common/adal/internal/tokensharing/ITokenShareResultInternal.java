@@ -22,43 +22,40 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import androidx.annotation.NonNull;
-
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
-public class TokenShareResult implements ITokenShareResult {
+public interface ITokenShareResultInternal {
 
-    private final ICacheRecord mCacheRecord;
-    private final String mRefreshToken;
-    private final TokenShareExportFormat mFormat;
+    enum TokenShareExportFormat {
+        /**
+         * Used for ORG_ID accounts. Legacy format used by ADAL.
+         */
+        SSO_STATE_SERIALIZER_BLOB,
+
+        /**
+         * Raw RT String. Used by MSA format.
+         */
+        RAW
+    }
 
     /**
-     * Constructs a new {@link TokenShareResult}.
+     * Returns the underlying cache records used to create this result.
      *
-     * @param cacheRecord  The {@link ICacheRecord} used to build this result.
-     * @param refreshToken The rt string, in the designated format.
-     * @param format       The format of the rt string.
+     * @return The ICacheRecord.
      */
-    TokenShareResult(@NonNull final ICacheRecord cacheRecord,
-                     @NonNull final String refreshToken,
-                     @NonNull final TokenShareExportFormat format) {
-        mCacheRecord = cacheRecord;
-        mRefreshToken = refreshToken;
-        mFormat = format;
-    }
+    ICacheRecord getCacheRecord();
 
-    @Override
-    public ICacheRecord getCacheRecord() {
-        return mCacheRecord;
-    }
+    /**
+     * Enum capturing the format of the payload returned by {@link #getRefreshToken()}.
+     *
+     * @return The export format.
+     */
+    TokenShareExportFormat getFormat();
 
-    @Override
-    public TokenShareExportFormat getFormat() {
-        return mFormat;
-    }
-
-    @Override
-    public String getRefreshToken() {
-        return mRefreshToken;
-    }
+    /**
+     * Gets the refresh token string, in the format returned by {@link #getFormat()}.
+     *
+     * @return The formatted refresh token value.
+     */
+    String getRefreshToken();
 }
