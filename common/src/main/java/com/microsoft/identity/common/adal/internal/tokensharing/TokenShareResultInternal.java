@@ -30,7 +30,7 @@ public class TokenShareResultInternal implements ITokenShareResultInternal {
 
     private final ICacheRecord mCacheRecord;
     private final String mRefreshToken;
-    private final TokenShareExportFormat mFormat;
+    private final String mFormat;
 
     /**
      * Constructs a new {@link TokenShareResultInternal}.
@@ -39,9 +39,9 @@ public class TokenShareResultInternal implements ITokenShareResultInternal {
      * @param refreshToken The rt string, in the designated format.
      * @param format       The format of the rt string.
      */
-    TokenShareResultInternal(@NonNull final ICacheRecord cacheRecord,
-                             @NonNull final String refreshToken,
-                             @NonNull final TokenShareExportFormat format) {
+    protected TokenShareResultInternal(@NonNull final ICacheRecord cacheRecord,
+                                       @NonNull final String refreshToken,
+                                       @NonNull final String format) {
         mCacheRecord = cacheRecord;
         mRefreshToken = refreshToken;
         mFormat = format;
@@ -53,7 +53,7 @@ public class TokenShareResultInternal implements ITokenShareResultInternal {
     }
 
     @Override
-    public TokenShareExportFormat getFormat() {
+    public String getFormat() {
         return mFormat;
     }
 

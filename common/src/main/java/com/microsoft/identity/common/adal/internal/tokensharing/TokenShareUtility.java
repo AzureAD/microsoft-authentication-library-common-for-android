@@ -57,6 +57,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID;
+import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.RAW;
+import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.SSO_STATE_SERIALIZER_BLOB;
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
@@ -113,7 +115,7 @@ public class TokenShareUtility implements ITokenShareInternal {
         return new TokenShareResultInternal(
                 cacheRecord,
                 SSOStateSerializer.serialize(cacheItemToExport),
-                ITokenShareResultInternal.TokenShareExportFormat.SSO_STATE_SERIALIZER_BLOB
+                SSO_STATE_SERIALIZER_BLOB
         );
     }
 
@@ -228,7 +230,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @Override
-    public ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception {
+    public ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(@NonNull final String identifier) throws Exception {
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
         throwIfCacheRecordIncomplete(identifier, cacheRecord);
@@ -236,7 +238,7 @@ public class TokenShareUtility implements ITokenShareInternal {
         final ITokenShareResultInternal result = new TokenShareResultInternal(
                 cacheRecord,
                 cacheRecord.getRefreshToken().getSecret(),
-                ITokenShareResultInternal.TokenShareExportFormat.RAW
+                RAW
         );
 
         return result;

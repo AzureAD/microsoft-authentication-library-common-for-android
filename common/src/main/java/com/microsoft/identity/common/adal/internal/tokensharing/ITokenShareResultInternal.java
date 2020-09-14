@@ -26,16 +26,24 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 
 public interface ITokenShareResultInternal {
 
-    enum TokenShareExportFormat {
+    /**
+     * Export formats for RTs consumed by TSL.
+     */
+    class TokenShareExportFormatInternal {
+
+        private TokenShareExportFormatInternal() {
+            // Container for constants. Don't instantiate.
+        }
+
         /**
          * Used for ORG_ID accounts. Legacy format used by ADAL.
          */
-        SSO_STATE_SERIALIZER_BLOB,
+        public static final String SSO_STATE_SERIALIZER_BLOB = "SSO_STATE_SERIALIZER_BLOB";
 
         /**
          * Raw RT String. Used by MSA format.
          */
-        RAW
+        public static final String RAW = "RAW";
     }
 
     /**
@@ -50,7 +58,7 @@ public interface ITokenShareResultInternal {
      *
      * @return The export format.
      */
-    TokenShareExportFormat getFormat();
+    String getFormat();
 
     /**
      * Gets the refresh token string, in the format returned by {@link #getFormat()}.
