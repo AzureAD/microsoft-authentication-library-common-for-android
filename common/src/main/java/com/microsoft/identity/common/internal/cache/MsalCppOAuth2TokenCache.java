@@ -90,6 +90,8 @@ public class MsalCppOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalCppOAuth2TokenCache.
      */
+    // Suppressing unchecked warning as the return type requiring generic parameter which is not provided
+    @SuppressWarnings(WarningType.unchecked_warning)
     public static MsalCppOAuth2TokenCache create(@NonNull final Context context) {
         final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(context);
 

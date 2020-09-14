@@ -302,6 +302,8 @@ public class LocalMSALController extends BaseController {
         @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
+        // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
+        @SuppressWarnings(WarningType.unchecked_warning)
         final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
                 parametersWithScopes.getClientId(),
                 TextUtils.join(" ", parametersWithScopes.getScopes()),
@@ -407,6 +409,7 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
 
+        @SuppressWarnings(WarningType.unchecked_warning)
         final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()

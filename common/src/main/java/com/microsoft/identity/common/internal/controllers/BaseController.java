@@ -212,21 +212,8 @@ public abstract class BaseController {
             );
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
-            builder.setLoginHint(
-                    interactiveTokenCommandParameters.getLoginHint()
-            ).setExtraQueryParams(
-                    interactiveTokenCommandParameters.getExtraQueryStringParameters()
-            ).setPrompt(
-                    interactiveTokenCommandParameters.getPrompt().toString()
-            ).setClaims(
-                    parameters.getClaimsRequestJson()
-            ).setRequestHeaders(
-                    completeRequestHeaders
-            ).setWebViewZoomEnabled(
-                    interactiveTokenCommandParameters.isWebViewZoomEnabled()
-            ).setWebViewZoomControlsEnabled(
-                    interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
-            );
+
+            setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
             if (!StringExtensions.isNullOrBlank(interactiveTokenCommandParameters.getLoginHint()) &&
@@ -238,6 +225,26 @@ public abstract class BaseController {
         builder.setScope(TextUtils.join(" ", scopes));
 
         return builder;
+    }
+
+    // Suppressing unchecked warning as the generic type was not provided during constructing builder object.
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull TokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
+        builder.setLoginHint(
+                interactiveTokenCommandParameters.getLoginHint()
+        ).setExtraQueryParams(
+                interactiveTokenCommandParameters.getExtraQueryStringParameters()
+        ).setPrompt(
+                interactiveTokenCommandParameters.getPrompt().toString()
+        ).setClaims(
+                parameters.getClaimsRequestJson()
+        ).setRequestHeaders(
+                completeRequestHeaders
+        ).setWebViewZoomEnabled(
+                interactiveTokenCommandParameters.isWebViewZoomEnabled()
+        ).setWebViewZoomControlsEnabled(
+                interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
+        );
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder

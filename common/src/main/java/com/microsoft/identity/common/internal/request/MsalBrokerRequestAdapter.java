@@ -35,6 +35,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -255,10 +256,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (AuthorizationAgent.BROWSER.name().equalsIgnoreCase(brokerRequest.getAuthorizationAgent())
                 && isCallingPackageIntune(brokerRequest.getApplicationName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
-            commandParametersBuilder
-                    .authorizationAgent(AuthorizationAgent.BROWSER)
-                    .brokerBrowserSupportEnabled(true)
-                    .browserSafeList(getBrowserSafeListForBroker());
+            buildCommandParameterBuilder(commandParametersBuilder);
         } else {
             commandParametersBuilder.authorizationAgent(AuthorizationAgent.WEBVIEW);
         }
@@ -271,6 +269,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return commandParametersBuilder.build();
+    }
+
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void buildCommandParameterBuilder(@SuppressWarnings(WarningType.rawtype_warning) BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder commandParametersBuilder) {
+        commandParametersBuilder
+                .authorizationAgent(AuthorizationAgent.BROWSER)
+                .brokerBrowserSupportEnabled(true)
+                .browserSafeList(getBrowserSafeListForBroker());
     }
 
     @Override

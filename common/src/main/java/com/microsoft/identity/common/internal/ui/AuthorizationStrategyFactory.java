@@ -34,8 +34,11 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
+
+import java.util.List;
 
 // Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationStrategyFactory, EmbeddedWebViewAuthorizationStrategy and BrowserAuthorizationStrategy
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -84,7 +87,12 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     parameters.getFragment(),
                     isBrokerRequest
             );
-            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
+
+            // Suppressing unchecked warnings due to generic type not provided for parameters
+            @SuppressWarnings(WarningType.unchecked_warning)
+            List<BrowserDescriptor > browserSafeList = parameters.getBrowserSafeList();
+
+            browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
 
             // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
             GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
