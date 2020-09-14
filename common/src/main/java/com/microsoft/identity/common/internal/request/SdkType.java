@@ -27,5 +27,19 @@ package com.microsoft.identity.common.internal.request;
  */
 public enum SdkType {
     ADAL,
-    MSAL
+    MSAL,
+    MSALCPP;
+
+    private final String PRODUCT_NAME_MSAL = "MSAL.Android";
+
+    private final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+
+    public String getProductName() {
+        if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
+            return PRODUCT_NAME_MSAL;
+        } else {
+            return PRODUCT_NAME_MSAL_CPP;
+        }
+
+    }
 }
