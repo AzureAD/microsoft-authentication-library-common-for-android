@@ -311,6 +311,11 @@ public final class ErrorStrings {
     public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
 
     /**
+     * Device registration data is missing in a flow that expects it.
+     */
+    public static final String DEVICE_REGISTRATION_MISSING_FROM_CLIENT = "Device registration data not found.";
+
+    /**
      * Failed to retreive device state.
      */
     public static final String ERROR_RETRIEVING_DEVICE_STATE = "Error retrieving device state";
@@ -415,6 +420,12 @@ public final class ErrorStrings {
             "Requested account is from a different organization. " +
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
+
+    /**
+     * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
+     */
+    public static final String BRT_USER_MISMATCH_ERROR_MESSAGE =
+            "The signed in user doesn't match with the user this device is registered to.";
 
     /**
      * Device Code Flow only.

@@ -1,6 +1,11 @@
-vNext 3.0.0
+Version 3.0.1
 ----------
-- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
+- Perform browser sign out on MSAL side (#1032)
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers. (#1022)
+- Consider controllers while throttling (#1021)
+- Allow changing of the progressBar color (#1020)
+- Place cap on the number failed request data in Last Request Telemetry at any given time (#1018)
+- Adding the OpenIdConnectPromptParameter field UNSET (#1013)
 
 Version 2.1.1
 ----------
