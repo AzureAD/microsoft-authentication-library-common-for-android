@@ -57,10 +57,14 @@ public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
      *
      * @param config OAuth2Configuration
      */
+    // Suppressing unchecked warnings due to casting of OAuth2Configuration to GenericOAuth2Configuration and OAuth2StrategyParameters to GenericOAuth2StrategyParameters in the arguments of call to super class' constructor
+    @SuppressWarnings(WarningType.unchecked_warning)
     public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config, OAuth2StrategyParameters options) {
         super(config, options);
     }
 
+    // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to super class' method requestAuthorization
+    @SuppressWarnings(WarningType.unchecked_warning)
     @Override
     public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
         return super.requestAuthorization(request, authorizationStrategy);
