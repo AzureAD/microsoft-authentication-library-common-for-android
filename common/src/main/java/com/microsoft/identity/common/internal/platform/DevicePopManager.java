@@ -523,6 +523,7 @@ class DevicePopManager implements IDevicePopManager {
     public @NonNull
     String sign(@NonNull final String alg,
                 @NonNull final String input) throws ClientException {
+        final String methodName = ":sign";
         final Exception exception;
         final String errCode;
 
@@ -532,7 +533,7 @@ class DevicePopManager implements IDevicePopManager {
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + ":sign",
+                        TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 throw new ClientException(INVALID_KEY_MISSING);
@@ -582,6 +583,7 @@ class DevicePopManager implements IDevicePopManager {
     public boolean verify(@NonNull final String alg,
                           @NonNull final String plainText,
                           @NonNull final String signatureStr) {
+        final String methodName = ":verify";
         final String errCode;
         final Exception exception;
 
@@ -591,7 +593,7 @@ class DevicePopManager implements IDevicePopManager {
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + ":verify",
+                        TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 return false;
@@ -634,6 +636,8 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
+        final String methodName = ":getPublicKey";
+
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
                 return getX509SubjectPublicKeyInfo();
@@ -647,7 +651,7 @@ class DevicePopManager implements IDevicePopManager {
                 );
 
                 Logger.error(
-                        TAG + ":getPublicKey",
+                        TAG + methodName,
                         errMsg,
                         clientException
                 );
