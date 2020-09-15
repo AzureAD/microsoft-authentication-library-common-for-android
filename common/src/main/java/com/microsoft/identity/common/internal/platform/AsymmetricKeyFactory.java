@@ -24,12 +24,36 @@ package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+/**
+ * Interface defining a factory for asymmetric keys.
+ */
 public interface AsymmetricKeyFactory {
 
+    /**
+     * Generates a new {@link AsymmetricKey}, retrievable by the provided alias.
+     *
+     * @param alias The name of the key to create.
+     * @return The newly-created asymmetric key.
+     * @throws ClientException If the key cannot be created.
+     */
     AsymmetricKey generateAsymmetricKey(String alias) throws ClientException;
 
+    /**
+     * Retrieves an asymmetric key by name. If no key can be found for the provided alias, it will
+     * be created.
+     *
+     * @param alias The alias for the sought asymmetric key.
+     * @return The asymmetric key.
+     * @throws ClientException If the key cannot be retrieved/created.
+     */
     AsymmetricKey loadAsymmetricKey(String alias) throws ClientException;
 
+    /**
+     * Removes the asymmetric key associated with the provided alias from the underlying keystore.
+     *
+     * @param alias The alias of the key to remove.
+     * @return True, if the key was successfully removed. False otherwise.
+     */
     boolean clearAsymmetricKey(String alias);
 
 }
