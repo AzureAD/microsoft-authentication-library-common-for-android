@@ -1568,7 +1568,7 @@ public final class AuthenticationConstants {
         public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE = "user_signed_out_from_shared_device";
     }
 
-    public static final class SdkPlatformFields{
+    public static final class SdkPlatformFields {
         /**
          * The String representing the sdk platform.
          */
@@ -1578,5 +1578,9 @@ public final class AuthenticationConstants {
          * The String representing the sdk version.
          */
         public static final String VERSION = "x-client-Ver";
+
+        public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
+
+        public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
     }
 }
