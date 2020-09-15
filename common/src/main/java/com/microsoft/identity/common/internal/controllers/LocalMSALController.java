@@ -223,6 +223,8 @@ public class LocalMSALController extends BaseController {
                 );
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
+        // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
+        @SuppressWarnings(WarningType.unchecked_warning)
         final Future<AuthorizationResult> future = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
@@ -300,6 +302,8 @@ public class LocalMSALController extends BaseController {
         @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
+        // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
+        @SuppressWarnings(WarningType.unchecked_warning)
         final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
                 parametersWithScopes.getClientId(),
                 TextUtils.join(" ", parametersWithScopes.getScopes()),
@@ -405,6 +409,7 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
 
+        @SuppressWarnings(WarningType.unchecked_warning)
         final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()
@@ -606,6 +611,8 @@ public class LocalMSALController extends BaseController {
                     .createOAuth2Strategy(strategyParameters);
 
             // Create token request outside of loop so it isn't re-created after every loop
+            // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and MicrosoftStsAuthorizationResponse to GenericAuthorizationResponse in the arguments of call to createTokenRequest method
+            @SuppressWarnings(WarningType.unchecked_warning)
             final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
                     mAuthorizationRequest,
                     authorizationResponse,
@@ -627,7 +634,11 @@ public class LocalMSALController extends BaseController {
                 errorCode = ""; // Reset error code
 
                 // Execute Token Request
-                tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+                // Suppressing unchecked warnings due to casting of MicrosoftStsTokenRequest to GenericTokenRequest in the arguments of call to requestToken method
+                @SuppressWarnings(WarningType.unchecked_warning)
+                TokenResult tokenResultFromRequestToken = oAuth2Strategy.requestToken(tokenRequest);
+
+                tokenResult = tokenResultFromRequestToken;
 
                 // Fetch error if the request failed
                 if (tokenResult.getErrorResponse() != null) {

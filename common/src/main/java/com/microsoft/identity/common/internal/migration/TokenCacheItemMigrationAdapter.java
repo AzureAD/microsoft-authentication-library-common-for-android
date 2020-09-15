@@ -229,13 +229,19 @@ public class TokenCacheItemMigrationAdapter {
             Logger.verbose(TAG + methodName,
                     "Saving records to cache with client id" + clientId
             );
-            brokerOAuth2TokenCache.save(
-                    strategy,
-                    authorizationRequest,
-                    (MicrosoftTokenResponse) tokenResult.getTokenResponse()
-            );
+            brokerOAuth2TokenCacheSave(brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
         }
         return tokenResult.getSuccess();
+    }
+
+    // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance brokerOAuth2TokenCache while calling method save
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void brokerOAuth2TokenCacheSave(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2TokenCache brokerOAuth2TokenCache, MicrosoftStsOAuth2Strategy strategy, TokenResult tokenResult, MicrosoftStsAuthorizationRequest authorizationRequest) throws ClientException {
+        brokerOAuth2TokenCache.save(
+                strategy,
+                authorizationRequest,
+                (MicrosoftTokenResponse) tokenResult.getTokenResponse()
+        );
     }
 
     private static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(

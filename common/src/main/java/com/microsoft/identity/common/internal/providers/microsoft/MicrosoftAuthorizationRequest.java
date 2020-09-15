@@ -130,7 +130,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         if (builder.mSlice != null) {
             mSlice = builder.mSlice;
         }
-        mFlightParameters = builder.mFlightParameters;
+
+        // Suppressing unchecked warning of casting Map to Map<String,String>. This warning is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        Map<String, String> flightParameters = builder.mFlightParameters;
+
+        mFlightParameters = flightParameters;
 
         mMultipleCloudAware = builder.mMultipleCloudAware;
 

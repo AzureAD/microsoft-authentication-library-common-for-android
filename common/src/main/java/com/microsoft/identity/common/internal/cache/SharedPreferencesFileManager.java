@@ -30,6 +30,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -189,6 +190,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final Map<String, String> getAll() {
+
+        // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
+        @SuppressWarnings(WarningType.unchecked_warning)
         final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
