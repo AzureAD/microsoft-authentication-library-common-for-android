@@ -108,37 +108,6 @@ class DevicePopManager implements IDevicePopManager {
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
     /**
-     * Signing algorithms supported by our underlying keystore. Not all algs available at all device
-     * levels.
-     */
-    public static class SigningAlgorithms {
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String MD5_WITH_RSA = "MD5withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String NONE_WITH_RSA = "NONEwithRSA";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String SHA_256_WITH_RSA = "SHA256withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        public static final String SHA_256_WITH_RSA_PSS = "SHA256withRSA/PSS";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String SHA_384_WITH_RSA = "SHA384withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        public static final String SHA_384_WITH_RSA_PSS = "SHA384withRSA/PSS";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String SHA_512_WITH_RSA = "SHA512withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        public static final String SHA_512_WITH_RSA_PSS = "SHA512withRSA/PSS";
-    }
-
-    /**
      * The PoP alias in the designated KeyStore.
      */
     private static final String KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";
@@ -521,7 +490,7 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public @NonNull
-    String sign(@NonNull final String alg,
+    String sign(@NonNull final SigningAlgorithm alg,
                 @NonNull final String input) throws ClientException {
         final String methodName = ":sign";
         final Exception exception;
@@ -539,7 +508,7 @@ class DevicePopManager implements IDevicePopManager {
                 throw new ClientException(INVALID_KEY_MISSING);
             }
 
-            final Signature signature = Signature.getInstance(alg);
+            final Signature signature = Signature.getInstance(alg.toString());
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
             final byte[] signedBytes = signature.sign();
@@ -580,7 +549,7 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public boolean verify(@NonNull final String alg,
+    public boolean verify(@NonNull final SigningAlgorithm alg,
                           @NonNull final String plainText,
                           @NonNull final String signatureStr) {
         final String methodName = ":verify";
@@ -599,7 +568,7 @@ class DevicePopManager implements IDevicePopManager {
                 return false;
             }
 
-            final Signature signature = Signature.getInstance(alg);
+            final Signature signature = Signature.getInstance(alg.toString());
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
             final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);

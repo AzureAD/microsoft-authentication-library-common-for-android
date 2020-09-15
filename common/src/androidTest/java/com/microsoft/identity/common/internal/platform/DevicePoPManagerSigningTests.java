@@ -42,14 +42,14 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.MD5_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.NONE_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.SHA_256_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.SHA_256_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.SHA_384_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.SHA_384_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.SHA_512_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms.SHA_512_WITH_RSA_PSS;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.MD5_WITH_RSA;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.NONE_WITH_RSA;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA_PSS;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA_PSS;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA_PSS;
 
 @RunWith(Parameterized.class)
 public class DevicePoPManagerSigningTests {
@@ -57,17 +57,18 @@ public class DevicePoPManagerSigningTests {
     private static final String DATA_TO_SIGN = "The quick brown fox jumped over the lazy dog.";
 
     private final IDevicePopManager devicePopManager;
-    private final String signingAlg;
+    private final IDevicePopManager.SigningAlgorithm signingAlg;
 
     @Parameterized.Parameters
-    public static Iterable<String> testParams() {
-        final List<String> signingAlgs = new ArrayList<String>() {{
-            add(MD5_WITH_RSA);
-            add(NONE_WITH_RSA);
-            add(SHA_256_WITH_RSA);
-            add(SHA_384_WITH_RSA);
-            add(SHA_512_WITH_RSA);
-        }};
+    public static Iterable<IDevicePopManager.SigningAlgorithm> testParams() {
+        final List<IDevicePopManager.SigningAlgorithm> signingAlgs =
+                new ArrayList<IDevicePopManager.SigningAlgorithm>() {{
+                    add(MD5_WITH_RSA);
+                    add(NONE_WITH_RSA);
+                    add(SHA_256_WITH_RSA);
+                    add(SHA_384_WITH_RSA);
+                    add(SHA_512_WITH_RSA);
+                }};
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // Only execute these tests at appropriate API levels...
@@ -80,7 +81,7 @@ public class DevicePoPManagerSigningTests {
     }
 
     @SuppressWarnings("unused")
-    public DevicePoPManagerSigningTests(final String signingAlg)
+    public DevicePoPManagerSigningTests(final IDevicePopManager.SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         devicePopManager = new DevicePopManager();
         this.signingAlg = signingAlg;
