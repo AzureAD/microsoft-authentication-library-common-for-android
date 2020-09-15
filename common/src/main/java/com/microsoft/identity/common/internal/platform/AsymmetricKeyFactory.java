@@ -54,6 +54,6 @@ public interface AsymmetricKeyFactory {
      * @param alias The alias of the key to remove.
      * @return True, if the key was successfully removed. False otherwise.
      */
-    boolean clearAsymmetricKey(String alias);
+    boolean clearAsymmetricKey(String alias) throws ClientException;
 
 }

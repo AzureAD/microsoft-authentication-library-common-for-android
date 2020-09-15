@@ -33,6 +33,11 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
+import static com.microsoft.identity.common.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
+import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
+import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+
 /**
  * Factory class for constructing asymmetric keys.
  */
@@ -51,46 +56,66 @@ public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory
 
     @Override
     public AsymmetricKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
+        final Exception exception;
+        final String errCode;
+
         try {
             return new AndroidKeystoreAsymmetricKey(
                     mContext,
                     new DevicePopManager(alias)
             );
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final CertificateException e) {
+            exception = e;
+            errCode = CERTIFICATE_LOAD_FAILURE;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final IOException e) {
+            exception = e;
+            errCode = IO_ERROR;
         }
 
-        // TODO catch, wrap, and rethrow Exception
-        return null;
+        throw new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
     }
 
     @Override
-    public AsymmetricKey loadAsymmetricKey(String alias) throws ClientException {
+    public AsymmetricKey loadAsymmetricKey(@NonNull final String alias) throws ClientException {
         // We can just call generate.... same thing... it will be created if it doesn't exist.
         return generateAsymmetricKey(alias);
     }
 
     @Override
-    public boolean clearAsymmetricKey(String alias) {
+    public boolean clearAsymmetricKey(@NonNull final String alias) throws ClientException {
+        final Exception exception;
+        final String errCode;
+
         try {
             return new DevicePopManager(alias).clearAsymmetricKey();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (CertificateException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final CertificateException e) {
+            exception = e;
+            errCode = CERTIFICATE_LOAD_FAILURE;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final IOException e) {
+            exception = e;
+            errCode = IO_ERROR;
         }
 
-        // TODO catch, wrap, and rethrow Exception
-        return false;
+        throw new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
     }
 }
