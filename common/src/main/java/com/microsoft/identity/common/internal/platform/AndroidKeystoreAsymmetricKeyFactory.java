@@ -33,10 +33,18 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
+/**
+ * Factory class for constructing asymmetric keys.
+ */
 public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory {
 
     private final Context mContext;
 
+    /**
+     * Constructs a new key factory.
+     *
+     * @param context The current application Context.
+     */
     public AndroidKeystoreAsymmetricKeyFactory(@NonNull final Context context) {
         mContext = context;
     }
