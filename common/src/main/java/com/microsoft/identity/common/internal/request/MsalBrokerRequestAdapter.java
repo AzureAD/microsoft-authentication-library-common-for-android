@@ -35,6 +35,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
@@ -221,6 +222,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
+        @SuppressWarnings("rawtypes")
         final BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder
                 commandParametersBuilder = BrokerInteractiveTokenCommandParameters.builder()
                 .authenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest))
@@ -249,10 +251,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (AuthorizationAgent.BROWSER.name().equalsIgnoreCase(brokerRequest.getAuthorizationAgent())
                 && isCallingPackageIntune(brokerRequest.getApplicationName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
-            commandParametersBuilder
-                    .authorizationAgent(AuthorizationAgent.BROWSER)
-                    .brokerBrowserSupportEnabled(true)
-                    .browserSafeList(getBrowserSafeListForBroker());
+            buildCommandParameterBuilder(commandParametersBuilder);
         } else {
             commandParametersBuilder.authorizationAgent(AuthorizationAgent.WEBVIEW);
         }
@@ -265,6 +264,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return commandParametersBuilder.build();
+    }
+
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void buildCommandParameterBuilder(@SuppressWarnings(WarningType.rawtype_warning) BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder commandParametersBuilder) {
+        commandParametersBuilder
+                .authorizationAgent(AuthorizationAgent.BROWSER)
+                .brokerBrowserSupportEnabled(true)
+                .browserSafeList(getBrowserSafeListForBroker());
     }
 
     @Override
@@ -611,7 +618,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      */
     public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet();
+        final HashSet<String> signatureHashes = new HashSet<String>();
         signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
         final BrowserDescriptor chrome = new BrowserDescriptor(
                 "com.android.chrome",
