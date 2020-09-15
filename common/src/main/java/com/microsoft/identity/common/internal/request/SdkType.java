@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+
 /**
  * Enum to indicate if the request came from an app hosting Adal or Msal Sdk
  */
@@ -30,15 +32,13 @@ public enum SdkType {
     MSAL,
     MSALCPP;
 
-    private final String PRODUCT_NAME_MSAL = "MSAL.Android";
 
-    private final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
 
     public String getProductName() {
         if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
-            return PRODUCT_NAME_MSAL;
+            return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL;
         } else {
-            return PRODUCT_NAME_MSAL_CPP;
+            return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_CPP;
         }
 
     }
