@@ -27,6 +27,8 @@ package com.microsoft.identity.common.exception;
  * An exception that represents an error where MSAL cannot reach Broker (i.e. through Bind Service or AccountManager).
  */
 public class BrokerCommunicationException extends BaseException {
+    private static final long serialVersionUID = 4959278068787428329L;
+
     /**
      * Initiates the {@link BrokerCommunicationException} with error message and throwable.
      *
