@@ -304,7 +304,7 @@ public class DevicePoPManagerTests {
     }
 
     @Test
-    public void testAsymmetricKeyNullWhenUninitialized() throws ClientException {
+    public void testAsymmetricKeyCreationDateNullWhenUninitialized() throws ClientException {
         final Date createdDate = mDevicePopManager.getAsymmetricKeyCreationDate();
         Assert.assertNull(createdDate);
     }
