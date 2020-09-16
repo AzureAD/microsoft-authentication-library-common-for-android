@@ -304,7 +304,7 @@ public class DevicePoPManagerTests {
     }
 
     @Test
-    public void testAsymmetricKeyNullWhenUninitialized() throws ClientException {
+    public void testAsymmetricKeyCreationDateNullWhenUninitialized() throws ClientException {
         final Date createdDate = mDevicePopManager.getAsymmetricKeyCreationDate();
         Assert.assertNull(createdDate);
     }
@@ -354,8 +354,16 @@ public class DevicePoPManagerTests {
         // 'kty' - Key Type - Identifies the cryptographic alg used with this key (ex: RSA, EC)
         // 'e' - Public Exponent - The exponent used on signed/encoded data to decode the orig value
         // 'n' - Modulus - The product of two prime numbers used to generate the key pair
-        Assert.assertNotNull(jwkObj.get("kty"));
-        Assert.assertNotNull(jwkObj.get("e"));
-        Assert.assertNotNull(jwkObj.get("n"));
+        final JsonElement kty = jwkObj.get("kty");
+        Assert.assertNotNull(kty);
+        Assert.assertFalse(kty.getAsString().isEmpty());
+
+        final JsonElement e = jwkObj.get("e");
+        Assert.assertNotNull(e);
+        Assert.assertFalse(e.getAsString().isEmpty());
+
+        final JsonElement n = jwkObj.get("n");
+        Assert.assertNotNull(n);
+        Assert.assertFalse(n.getAsString().isEmpty());
     }
 }

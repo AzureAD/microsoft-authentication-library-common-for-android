@@ -23,6 +23,10 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
@@ -65,6 +69,48 @@ public interface IDevicePopManager {
          * </pre>
          */
         JWK
+    }
+
+    /**
+     * Signing algorithms supported by our underlying keystore. Not all algs available at all device
+     * levels.
+     */
+    enum SigningAlgorithm {
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        MD5_WITH_RSA("MD5withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        NONE_WITH_RSA("NONEwithRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        SHA_256_WITH_RSA("SHA256withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        SHA_256_WITH_RSA_PSS("SHA256withRSA/PSS"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        SHA_384_WITH_RSA("SHA384withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        SHA_384_WITH_RSA_PSS("SHA384withRSA/PSS"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        SHA_512_WITH_RSA("SHA512withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        SHA_512_WITH_RSA_PSS("SHA512withRSA/PSS");
+
+        private final String mValue;
+
+        SigningAlgorithm(@NonNull final String value) {
+            mValue = value;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return mValue;
+        }
     }
 
     /**
@@ -137,9 +183,9 @@ public interface IDevicePopManager {
      * @param alg   The RSA signing algorithm to use.
      * @param input The input to sign.
      * @return The input data, signed by our private key.
-     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
      */
-    String sign(String alg, String input) throws ClientException;
+    String sign(SigningAlgorithm alg, String input) throws ClientException;
 
     /**
      * Verify a signature previously made by our Private Key.
@@ -148,9 +194,9 @@ public interface IDevicePopManager {
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
      * @return True if the input was signed by our private key. False otherwise.
-     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithms
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
      */
-    boolean verify(String alg, String plainText, String signatureStr);
+    boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
 
     /**
      * Gets the public key associated with this DevicePoPManager formatted per the supplied

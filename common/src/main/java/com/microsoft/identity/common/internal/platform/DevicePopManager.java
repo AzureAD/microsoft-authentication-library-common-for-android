@@ -534,8 +534,9 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public @NonNull
-    String sign(@NonNull final String alg,
+    String sign(@NonNull final SigningAlgorithm alg,
                 @NonNull final String input) throws ClientException {
+        final String methodName = ":sign";
         final Exception exception;
         final String errCode;
 
@@ -545,13 +546,13 @@ class DevicePopManager implements IDevicePopManager {
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + ":sign",
+                        TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 throw new ClientException(INVALID_KEY_MISSING);
             }
 
-            final Signature signature = Signature.getInstance(alg);
+            final Signature signature = Signature.getInstance(alg.toString());
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
             final byte[] signedBytes = signature.sign();
@@ -592,9 +593,10 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public boolean verify(@NonNull final String alg,
+    public boolean verify(@NonNull final SigningAlgorithm alg,
                           @NonNull final String plainText,
                           @NonNull final String signatureStr) {
+        final String methodName = ":verify";
         final String errCode;
         final Exception exception;
 
@@ -604,13 +606,13 @@ class DevicePopManager implements IDevicePopManager {
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + ":verify",
+                        TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 return false;
             }
 
-            final Signature signature = Signature.getInstance(alg);
+            final Signature signature = Signature.getInstance(alg.toString());
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
             final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
@@ -647,6 +649,8 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
+        final String methodName = ":getPublicKey";
+
         switch (format) {
             case X_509_SubjectPublicKeyInfo_ASN_1:
                 return getX509SubjectPublicKeyInfo();
@@ -660,7 +664,7 @@ class DevicePopManager implements IDevicePopManager {
                 );
 
                 Logger.error(
-                        TAG + ":getPublicKey",
+                        TAG + methodName,
                         errMsg,
                         clientException
                 );
