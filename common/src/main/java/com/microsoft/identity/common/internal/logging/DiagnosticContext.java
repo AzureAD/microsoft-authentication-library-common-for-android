@@ -22,6 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+import android.os.Build;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.platform.Device;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 public final class DiagnosticContext {
 
     public static final String CORRELATION_ID = "correlation_id";
@@ -84,5 +93,31 @@ public final class DiagnosticContext {
      */
     public static void clear() {
         REQUEST_CONTEXT_THREAD_LOCAL.remove();
+    }
+
+    /**
+     * Function previously resided in Device.java, contains Constants
+     * Attaching the constants to Diagnostic Context, for the purpose of having them in one place.
+     */
+    @SuppressWarnings("deprecation")
+    public static Map<String, String> getPlatformIdParameters() {
+        final Map<String, String> platformParameters = new HashMap<>();
+
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            //CPU_ABI has been deprecated
+            platformParameters.put(AuthenticationConstants.PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
+        } else {
+            final String[] supportedABIs = Build.SUPPORTED_ABIS;
+
+            if (supportedABIs != null && supportedABIs.length > 0) {
+                platformParameters.put(AuthenticationConstants.PlatformIdParameters.CPU_PLATFORM, supportedABIs[0]);
+            }
+        }
+
+        platformParameters.put(AuthenticationConstants.PlatformIdParameters.OS, String.valueOf(Build.VERSION.SDK_INT));
+        platformParameters.put(AuthenticationConstants.PlatformIdParameters.DEVICE_MODEL, Build.MODEL);
+
+        return Collections.unmodifiableMap(platformParameters);
     }
 }
