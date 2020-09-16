@@ -108,37 +108,6 @@ class DevicePopManager implements IDevicePopManager {
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
     /**
-     * Signing algorithms supported by our underlying keystore. Not all algs available at all device
-     * levels.
-     */
-    public static class SigningAlgorithms {
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String MD5_WITH_RSA = "MD5withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String NONE_WITH_RSA = "NONEwithRSA";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String SHA_256_WITH_RSA = "SHA256withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        public static final String SHA_256_WITH_RSA_PSS = "SHA256withRSA/PSS";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String SHA_384_WITH_RSA = "SHA384withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        public static final String SHA_384_WITH_RSA_PSS = "SHA384withRSA/PSS";
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        public static final String SHA_512_WITH_RSA = "SHA512withRSA";
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        public static final String SHA_512_WITH_RSA_PSS = "SHA512withRSA/PSS";
-    }
-
-    /**
      * The PoP alias in the designated KeyStore -- default val used by non-OneAuth Android platform.
      */
     private static final String DEFAULT_KEYSTORE_ENTRY_ALIAS = "microsoft-device-pop";

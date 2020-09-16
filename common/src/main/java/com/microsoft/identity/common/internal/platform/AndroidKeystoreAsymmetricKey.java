@@ -75,7 +75,7 @@ public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
     @Override
     public String sign(@NonNull final String data) throws ClientException {
         return mDevicePopManager.sign(
-                DevicePopManager.SigningAlgorithms.SHA_256_WITH_RSA,
+                DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA,
                 data
         );
     }
