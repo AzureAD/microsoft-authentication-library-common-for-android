@@ -36,6 +36,7 @@ import androidx.annotation.Nullable;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -113,7 +114,7 @@ public class CommandDispatcher {
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId(), command.getParameters().getSdkType().getProductName(), command.getParameters().getSdkVersion());
 
                 // set correlation id on parameters as it may not already be set
                 command.getParameters().setCorrelationId(correlationId);
@@ -340,7 +341,9 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId()
+                            command.getParameters().getCorrelationId(),
+                            command.getParameters().getSdkType().getProductName(),
+                            command.getParameters().getSdkVersion()
                     );
 
                     // set correlation id on parameters as it may not already be set
@@ -509,7 +512,7 @@ public class CommandDispatcher {
         }
     }
 
-    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId) {
+    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
         final String methodName = ":initializeDiagnosticContext";
 
         final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
@@ -519,6 +522,9 @@ public class CommandDispatcher {
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
+        rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
+
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
