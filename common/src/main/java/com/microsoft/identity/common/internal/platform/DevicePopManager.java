@@ -57,6 +57,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -66,6 +67,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
@@ -79,16 +82,22 @@ import java.util.concurrent.Executors;
 
 import javax.security.auth.x500.X500Principal;
 
+import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
 import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
 import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
+import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
 import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
 /**
@@ -107,6 +116,11 @@ class DevicePopManager implements IDevicePopManager {
      * The NIST advised min keySize for RSA pairs.
      */
     private static final int RSA_KEY_SIZE = 2048;
+
+    /**
+     * Log message when private key material cannot be found.
+     */
+    private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
 
     /**
      * The keystore backing this implementation.
@@ -184,6 +198,11 @@ class DevicePopManager implements IDevicePopManager {
          * A random value used for replay protection.
          */
         private static final String NONCE = "nonce";
+
+        /**
+         * JWK for inner object.
+         */
+        public static final String JWK = "jwk";
     }
 
     /**
@@ -323,6 +342,34 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
+    @Nullable
+    public Date getAsymmetricKeyCreationDate() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            return mKeyStore.getCreationDate(KEYSTORE_ENTRY_ALIAS);
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
+    }
+
+    @Override
     public boolean clearAsymmetricKey() {
         boolean deleted = false;
 
@@ -439,6 +486,218 @@ class DevicePopManager implements IDevicePopManager {
                 callback.onError(clientException);
             }
         });
+    }
+
+    @Override
+    public @NonNull
+    String sign(@NonNull final SigningAlgorithm alg,
+                @NonNull final String input) throws ClientException {
+        final String methodName = ":sign";
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final byte[] inputBytesToSign = input.getBytes(ENCODING_UTF8);
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+
+            if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
+                Logger.warn(
+                        TAG + methodName,
+                        PRIVATE_KEY_NOT_FOUND
+                );
+                throw new ClientException(INVALID_KEY_MISSING);
+            }
+
+            final Signature signature = Signature.getInstance(alg.toString());
+            signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
+            signature.update(inputBytesToSign);
+            final byte[] signedBytes = signature.sign();
+            return Base64.encodeToString(signedBytes, Base64.DEFAULT);
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        } catch (final InvalidKeyException e) {
+            exception = e;
+            errCode = INVALID_KEY;
+        } catch (final SignatureException e) {
+            exception = e;
+            errCode = SIGNING_FAILURE;
+        } catch (final UnsupportedEncodingException e) {
+            exception = e;
+            errCode = UNSUPPORTED_ENCODING;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
+    }
+
+    @Override
+    public boolean verify(@NonNull final SigningAlgorithm alg,
+                          @NonNull final String plainText,
+                          @NonNull final String signatureStr) {
+        final String methodName = ":verify";
+        final String errCode;
+        final Exception exception;
+
+        try {
+            final byte[] inputBytesToVerify = plainText.getBytes(ENCODING_UTF8);
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+
+            if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
+                Logger.warn(
+                        TAG + methodName,
+                        PRIVATE_KEY_NOT_FOUND
+                );
+                return false;
+            }
+
+            final Signature signature = Signature.getInstance(alg.toString());
+            signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
+            signature.update(inputBytesToVerify);
+            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
+            return signature.verify(signatureBytes);
+        } catch (final UnsupportedEncodingException e) {
+            errCode = UNSUPPORTED_ENCODING;
+            exception = e;
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final KeyStoreException e) {
+            errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final SignatureException e) {
+            errCode = SIGNING_FAILURE;
+            exception = e;
+        }
+
+        Logger.error(
+                TAG + ":verify",
+                errCode,
+                exception
+        );
+
+        return false;
+    }
+
+    @Override
+    public @NonNull
+    String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
+        final String methodName = ":getPublicKey";
+
+        switch (format) {
+            case X_509_SubjectPublicKeyInfo_ASN_1:
+                return getX509SubjectPublicKeyInfo();
+            case JWK:
+                return getJwkPublicKey();
+            default:
+                final String errMsg = "Unrecognized or unsupported key format: " + format;
+                final ClientException clientException = new ClientException(
+                        UNKNOWN_EXPORT_FORMAT,
+                        errMsg
+                );
+
+                Logger.error(
+                        TAG + methodName,
+                        errMsg,
+                        clientException
+                );
+
+                throw clientException;
+        }
+    }
+
+    private @NonNull
+    String getJwkPublicKey() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final net.minidev.json.JSONObject jwkJson = getDevicePopJwkMinifiedJson();
+            return jwkJson.getAsString(SignedHttpRequestJwtClaims.JWK);
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
+    }
+
+    private String getX509SubjectPublicKeyInfo() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            final KeyStore.Entry keyEntry = mKeyStore.getEntry(KEYSTORE_ENTRY_ALIAS, null);
+            final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+            final PublicKey publicKey = rsaKeyPair.getPublic();
+            final byte[] publicKeybytes = publicKey.getEncoded();
+            final byte[] bytesBase64Encoded = Base64.encode(publicKeybytes, Base64.DEFAULT);
+            return new String(bytesBase64Encoded);
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final NoSuchAlgorithmException e) {
+            exception = e;
+            errCode = NO_SUCH_ALGORITHM;
+        } catch (final UnrecoverableEntryException e) {
+            exception = e;
+            errCode = INVALID_PROTECTION_PARAMS;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
     }
 
     @Override
@@ -691,8 +950,17 @@ class DevicePopManager implements IDevicePopManager {
                         | KeyProperties.PURPOSE_DECRYPT
         )
                 .setKeySize(keySize)
-                .setSignaturePaddings(KeyProperties.SIGNATURE_PADDING_RSA_PKCS1)
-                .setDigests(KeyProperties.DIGEST_SHA256);
+                .setSignaturePaddings(
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
+                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                )
+                .setDigests(
+                        KeyProperties.DIGEST_MD5,
+                        KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_SHA256,
+                        KeyProperties.DIGEST_SHA384,
+                        KeyProperties.DIGEST_SHA512
+                );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
             Logger.verbose(
@@ -842,7 +1110,7 @@ class DevicePopManager implements IDevicePopManager {
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();
         final net.minidev.json.JSONObject jwkContents = publicRsaKey.toJSONObject();
         final net.minidev.json.JSONObject wrappedJwk = new net.minidev.json.JSONObject();
-        wrappedJwk.appendField("jwk", jwkContents);
+        wrappedJwk.appendField(SignedHttpRequestJwtClaims.JWK, jwkContents);
 
         return wrappedJwk;
     }

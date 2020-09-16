@@ -107,6 +107,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     parameters.getFragment(),
                     isBrokerRequest
             );
+
             browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, parameters.getBrowserSafeList());
 
             // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
