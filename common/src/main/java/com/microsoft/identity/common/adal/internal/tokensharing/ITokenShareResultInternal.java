@@ -20,20 +20,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.common.adal.internal.tokensharing;
 
-/**
- * An exception indicating that a retry policy has intercepted an exception that lies outside
- * the scope of exceptions that it can handle.
- */
-class RetryFailedException extends RuntimeException {
-    private static final long serialVersionUID = 3344864538063263545L;
+import com.microsoft.identity.common.internal.cache.ICacheRecord;
+
+public interface ITokenShareResultInternal {
 
     /**
-     * Constructor.
-     * @param e the causing exception.
+     * Export formats for RTs consumed by TSL.
      */
-    public RetryFailedException(Exception e) {
-        super(e);
+    class TokenShareExportFormatInternal {
+
+        private TokenShareExportFormatInternal() {
+            // Container for constants. Don't instantiate.
+        }
+
+        /**
+         * Used for ORG_ID accounts. Legacy format used by ADAL.
+         */
+        public static final String SSO_STATE_SERIALIZER_BLOB = "SSO_STATE_SERIALIZER_BLOB";
+
+        /**
+         * Raw RT String. Used by MSA format.
+         */
+        public static final String RAW = "RAW";
     }
+
+    /**
+     * Returns the underlying cache records used to create this result.
+     *
+     * @return The ICacheRecord.
+     */
+    ICacheRecord getCacheRecord();
+
+    /**
+     * Enum capturing the format of the payload returned by {@link #getRefreshToken()}.
+     *
+     * @return The export format.
+     */
+    String getFormat();
+
+    /**
+     * Gets the refresh token string, in the format returned by {@link #getFormat()}.
+     *
+     * @return The formatted refresh token value.
+     */
+    String getRefreshToken();
 }

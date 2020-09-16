@@ -130,7 +130,12 @@ public abstract class OAuth2Strategy
         validateAuthorizationRequest(request);
         Future<AuthorizationResult> future = null;
         try {
-            future = authorizationStrategy.requestAuthorization(request, this);
+
+            // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
+            @SuppressWarnings(WarningType.unchecked_warning)
+            Future<AuthorizationResult> authorizationFuture = authorizationStrategy.requestAuthorization(request, this);
+
+            future = authorizationFuture;
         } catch (final UnsupportedEncodingException | ClientException exc) {
             //TODO
         }
@@ -159,12 +164,18 @@ public abstract class OAuth2Strategy
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
 
         if (result.getSuccess()) {
-            validateTokenResponse(
-                    request,
-                    (GenericTokenResponse) result.getSuccessResponse()
-            );
+            validateTokenResponse(request, result);
         }
         return result;
+    }
+
+    // Suppressing unchecked warnings due to casting from TokenResponse to GenericTokenResponse in arguments in the call to method validateTokenResponse()
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void validateTokenResponse(GenericTokenRequest request, GenericTokenResult result) throws ClientException {
+        validateTokenResponse(
+                request,
+                (GenericTokenResponse) result.getSuccessResponse()
+        );
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException, ClientException {

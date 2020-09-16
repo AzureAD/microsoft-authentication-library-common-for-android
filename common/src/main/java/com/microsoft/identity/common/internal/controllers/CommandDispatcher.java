@@ -167,7 +167,7 @@ public class CommandDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            command.getCallback().onError(throwable);
+                            commandCallBackOnError(command, throwable);
                         }
                     });
                 }
@@ -176,6 +176,12 @@ public class CommandDispatcher {
                 returnCommandResult(command, result, handler);
             }
         };
+    }
+
+    // Suppressing unchecked warnings due to casting of Throwable to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallBackOnError(@SuppressWarnings(WarningType.rawtype_warning) @NonNull BaseCommand command, Throwable throwable) {
+        command.getCallback().onError(throwable);
     }
 
     static void clearCommandCache() {
@@ -241,18 +247,31 @@ public class CommandDispatcher {
             public void run() {
                 switch (result.getStatus()) {
                     case ERROR:
-                        command.getCallback().onError(result.getResult());
+                        commandCallbackOnError(command, result);
                         break;
                     case COMPLETED:
-                        command.getCallback().onTaskCompleted(result.getResult());
+                        commandCallbackOnTaskCompleted(command, result);
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
+                        break;
                     default:
 
                 }
             }
         });
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onError(result.getResult());
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onTaskCompleted(result.getResult());
     }
 
     /**

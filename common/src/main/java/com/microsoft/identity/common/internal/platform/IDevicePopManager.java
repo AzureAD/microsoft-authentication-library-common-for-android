@@ -23,16 +23,95 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
+import java.util.Date;
 
 /**
  * Internal convenience class interface for PoP related functions.
  */
 public interface IDevicePopManager {
+
+    /**
+     * The desired export format of our PoP public key.
+     */
+    enum PublicKeyFormat {
+        /**
+         * Base64 encoded SubjectPublicKeyInfo of the X.509 Certificate.
+         * <p>
+         * Conforms to the following ASN.1
+         * <pre>
+         * SubjectPublicKeyInfo  ::=  SEQUENCE  {
+         *     algorithm            AlgorithmIdentifier,
+         *     subjectPublicKey     BIT STRING
+         * }
+         * </pre>
+         */
+        X_509_SubjectPublicKeyInfo_ASN_1,
+
+        /**
+         * An RFC-7517 compliant public key as a minified JWK.
+         * <p>
+         * Sample value:
+         * <pre>
+         * {
+         * 	"kty": "RSA",
+         * 	"e": "AQAB",
+         * 	"n": "tMqJ7Oxh3PdLaiEc28w....HwES9Q"
+         * }
+         * </pre>
+         */
+        JWK
+    }
+
+    /**
+     * Signing algorithms supported by our underlying keystore. Not all algs available at all device
+     * levels.
+     */
+    enum SigningAlgorithm {
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        MD5_WITH_RSA("MD5withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        NONE_WITH_RSA("NONEwithRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        SHA_256_WITH_RSA("SHA256withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        SHA_256_WITH_RSA_PSS("SHA256withRSA/PSS"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        SHA_384_WITH_RSA("SHA384withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        SHA_384_WITH_RSA_PSS("SHA384withRSA/PSS"),
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        SHA_512_WITH_RSA("SHA512withRSA"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        SHA_512_WITH_RSA_PSS("SHA512withRSA/PSS");
+
+        private final String mValue;
+
+        SigningAlgorithm(@NonNull final String value) {
+            mValue = value;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return mValue;
+        }
+    }
 
     /**
      * Tests if keys exist.
@@ -72,6 +151,14 @@ public interface IDevicePopManager {
     String generateAsymmetricKey(Context context) throws ClientException;
 
     /**
+     * Returns the creation date of the asymmetric key entry backing this instance.
+     *
+     * @return The asymmetric key creation date.
+     * @throws ClientException If no asymmetric key exists.
+     */
+    Date getAsymmetricKeyCreationDate() throws ClientException;
+
+    /**
      * Clears keys, if present.
      */
     boolean clearAsymmetricKey();
@@ -89,6 +176,36 @@ public interface IDevicePopManager {
      * @return The req_cnf value.
      */
     void getRequestConfirmation(TaskCompletedCallbackWithError<String, ClientException> callback);
+
+    /**
+     * Signs an arbitrary piece of String data.
+     *
+     * @param alg   The RSA signing algorithm to use.
+     * @param input The input to sign.
+     * @return The input data, signed by our private key.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
+     */
+    String sign(SigningAlgorithm alg, String input) throws ClientException;
+
+    /**
+     * Verify a signature previously made by our Private Key.
+     *
+     * @param alg          The RSA signing algorithm to use.
+     * @param plainText    The input to verify.
+     * @param signatureStr The signature against which the plainText should be evaluated.
+     * @return True if the input was signed by our private key. False otherwise.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
+     */
+    boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
+
+    /**
+     * Gets the public key associated with this DevicePoPManager formatted per the supplied
+     * export param.
+     *
+     * @param format The export format of the public key.
+     * @return A String of the public key.
+     */
+    String getPublicKey(PublicKeyFormat format) throws ClientException;
 
     /**
      * Api to create the signed PoP access token.

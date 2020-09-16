@@ -1,6 +1,19 @@
-vNext 3.0.0
+vNext
 ----------
 - Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
+- Added support for exporting public keys in the following formats:
+    * X.509 SubjectPublicKeyInfo
+    * JWK (RFC-7517)
+- Added support for signing and verifying arbitrary String data with select RSA algorithms.
+
+Version 3.0.1
+----------
+- Perform browser sign out on MSAL side (#1032)
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers. (#1022)
+- Consider controllers while throttling (#1021)
+- Allow changing of the progressBar color (#1020)
+- Place cap on the number failed request data in Last Request Telemetry at any given time (#1018)
+- Adding the OpenIdConnectPromptParameter field UNSET (#1013)
 
 Version 2.1.1
 ----------
