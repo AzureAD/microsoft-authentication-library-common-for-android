@@ -92,9 +92,10 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             @SuppressWarnings(WarningType.unchecked_warning)
             List<BrowserDescriptor > browserSafeList = parameters.getBrowserSafeList();
 
-            browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+            browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, browserSafeList);
 
             // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
+            @SuppressWarnings(WarningType.unchecked_warning)
             GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
 
             return genericAuthorizationStrategy;
@@ -106,13 +107,20 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     parameters.getFragment(),
                     isBrokerRequest
             );
-            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
+            browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, parameters.getBrowserSafeList());
 
             // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
+            @SuppressWarnings(WarningType.unchecked_warning)
             GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
 
             return genericAuthorizationStrategy;
         }
+    }
+
+    // Suppressing unchecked warnings due to casting browserSafeList generic type List<BrowserDescriptor> as generic type was not provided for browserAuthorizationStrategy.
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void browserAuthorizationStrategySetBrowserSafeList(BrowserAuthorizationStrategy browserAuthorizationStrategy, List<BrowserDescriptor> browserSafeList) {
+        browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
     }
 
     // Suppressing unchecked warnings due to casting of EmbeddedWebViewAuthorizationStrategy to GenericAuthorizationStrategy
