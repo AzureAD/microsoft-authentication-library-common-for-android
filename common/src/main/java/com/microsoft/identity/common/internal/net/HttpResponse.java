@@ -50,7 +50,7 @@ public final class HttpResponse {
                         final Map<String, List<String>> responseHeaders) {
         mStatusCode = statusCode;
         mResponseBody = responseBody;
-        mResponseHeaders = responseHeaders;
+        mResponseHeaders = filterNullKeyHeaders(responseHeaders);
     }
 
     public HttpResponse(@Nullable final Date date,
@@ -60,7 +60,7 @@ public final class HttpResponse {
         mDate = date;
         mStatusCode = statusCode;
         mResponseBody = responseBody;
-        mResponseHeaders = headerFields;
+        mResponseHeaders = filterNullKeyHeaders(headerFields);
     }
 
     public Date getDate() {
@@ -102,4 +102,17 @@ public final class HttpResponse {
                 '}';
     }
     //CHECKSTYLE:ON
+}
+
+private Map<String, List<String>> filterNullKeyHeaders(@NonNull final Map<String, List<String>> headerFields)    
+{        
+    Map<String, List<String>> filteredHeaders = new HashMap<String, List<String>>();        
+    for(String key: headerFields.keySet())        
+    {           
+        if(key!= null)            
+        {                
+            filteredHeaders.put(key,headerFields.get(key));            
+        }
+    }
+    return filteredHeaders;
 }

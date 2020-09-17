@@ -391,7 +391,7 @@ public class UrlConnectionHttpClient implements HttpClient {
     private static void setRequestBody(@NonNull final HttpURLConnection connection,
                                        @Nullable final byte[] contentRequest,
                                        @Nullable final String requestContentType) throws IOException {
-        if (contentRequest == null) {
+        if (contentRequest == null || contentRequest.length == 0) {
             return;
         }
 
