@@ -303,7 +303,6 @@ public class BrokerOAuth2TokenCache
             targetCache = mFociCache;
         } else {
 
-
             // Suppressing unchecked warning as the generic type was not provided for oAuth2Strategy and request of type GenericAuthorizationRequest
             @SuppressWarnings(WarningType.unchecked_warning)
             final String environment = oAuth2Strategy.getIssuerCacheIdentifier(request);
