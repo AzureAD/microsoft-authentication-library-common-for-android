@@ -108,7 +108,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                         parameters.getExtraQueryStringParameters() != null ?
                                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
                                 : null
-                ).prompt(parameters.getPrompt().name())
+                ).prompt((parameters.getPrompt().name() == "UNSET") ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
                 .correlationId(parameters.getCorrelationId())
