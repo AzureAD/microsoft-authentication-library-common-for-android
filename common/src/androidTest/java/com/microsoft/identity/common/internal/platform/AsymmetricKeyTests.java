@@ -98,8 +98,11 @@ public class AsymmetricKeyTests {
     }
 
     @Test
-    public void testCanSignAndVerify() {
-        // TODO implement support for verification
+    public void testCanSignAndVerify() throws ClientException {
+        final String validationText = "The quick brown fox jumped over the lazy dog.";
+        final String signature = mAsymmetricKey.sign(validationText);
+        Assert.assertNotNull(signature);
+        Assert.assertTrue(mAsymmetricKey.verify(validationText, signature));
     }
 
 }

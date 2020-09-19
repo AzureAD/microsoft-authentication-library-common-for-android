@@ -62,7 +62,8 @@ public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory
         try {
             return new AndroidKeystoreAsymmetricKey(
                     mContext,
-                    new DevicePopManager(alias)
+                    new DevicePopManager(alias),
+                    alias
             );
         } catch (final KeyStoreException e) {
             exception = e;

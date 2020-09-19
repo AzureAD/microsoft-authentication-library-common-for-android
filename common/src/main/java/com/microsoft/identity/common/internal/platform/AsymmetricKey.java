@@ -32,6 +32,13 @@ import java.util.Date;
 public interface AsymmetricKey {
 
     /**
+     * Gets the alias which refers to this key at its originating keystore.
+     *
+     * @return The alias of this key.
+     */
+    String getAlias();
+
+    /**
      * Returns the creation date of the asymmetric key entry backing this instance.
      *
      * @return The asymmetric key creation date.
@@ -66,5 +73,14 @@ public interface AsymmetricKey {
      * @return The input data, signed by our private key.
      */
     String sign(String data) throws ClientException;
+
+    /**
+     * Verifies a signature previously made by this private key.
+     *
+     * @param plainText    The input to verify.
+     * @param signatureStr The signature against which the plainText should be evaluated.
+     * @return True if the input was signed by our private key. False otherwise.
+     */
+    boolean verify(String plainText, String signatureStr);
 
 }

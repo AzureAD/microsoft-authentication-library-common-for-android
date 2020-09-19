@@ -38,6 +38,7 @@ import java.util.Date;
 public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
 
     private final IDevicePopManager mDevicePopManager;
+    private final String mAlias;
 
     /**
      * Constructs a new {@link AndroidKeystoreAsymmetricKey} instance.
@@ -47,13 +48,20 @@ public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
      * @throws ClientException If asymmetric key generation fails.
      */
     AndroidKeystoreAsymmetricKey(@NonNull final Context context,
-                                 @NonNull final IDevicePopManager popManager)
+                                 @NonNull final IDevicePopManager popManager,
+                                 @NonNull final String alias)
             throws ClientException {
         mDevicePopManager = popManager;
+        mAlias = alias;
 
         if (!mDevicePopManager.asymmetricKeyExists()) {
             mDevicePopManager.generateAsymmetricKey(context);
         }
+    }
+
+    @Override
+    public String getAlias() {
+        return mAlias;
     }
 
     @Override
@@ -77,6 +85,16 @@ public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
         return mDevicePopManager.sign(
                 DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA,
                 data
+        );
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public boolean verify(@NonNull final String plainText, @NonNull final String signatureStr) {
+        return mDevicePopManager.verify(
+                DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA,
+                plainText,
+                signatureStr
         );
     }
 }
