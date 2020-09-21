@@ -25,12 +25,17 @@ package com.microsoft.identity.common.internal.platform;
 import com.microsoft.identity.common.exception.ClientException;
 
 /**
- * Interface defining a factory for asymmetric keys.
+ * Interface defining a factory for instances of {@link AsymmetricKey}.
  */
 public interface AsymmetricKeyFactory {
 
     /**
-     * Generates a new {@link AsymmetricKey}, retrievable by the provided alias.
+     * Generates a new {@link AsymmetricKey}, retrievable by the provided alias. API 18 is assumed.
+     * API 23+ affords best security due to improved AndroidKeystore APIs.
+     * <p>
+     * Keys will be:
+     * - 2048+ bit key length (per NIST 800-57 Pt 3 Rev 1).
+     * - Software or hardware backed, depending on compat with device OS, hardware, API level.
      *
      * @param alias The name of the key to create.
      * @return The newly-created asymmetric key.
