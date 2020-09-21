@@ -35,7 +35,7 @@ import java.util.Date;
 /**
  * Represents an asymmetric key, backed by the Android Keystore.
  */
-public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
+public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
 
     /**
      * The {@link IDevicePopManager} to which we will delegate most cryptographic actions.
@@ -48,15 +48,15 @@ public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
     private final String mAlias;
 
     /**
-     * Constructs a new {@link AndroidKeystoreAsymmetricKey} instance.
+     * Constructs a new {@link AndroidKeystoreAsymmetricRsaKey} instance.
      *
      * @param context    The application Context.
      * @param popManager The underlying {@link IDevicePopManager} to which we'll delegate.
      * @throws ClientException If asymmetric key generation fails.
      */
-    AndroidKeystoreAsymmetricKey(@NonNull final Context context,
-                                 @NonNull final IDevicePopManager popManager,
-                                 @NonNull final String alias)
+    AndroidKeystoreAsymmetricRsaKey(@NonNull final Context context,
+                                    @NonNull final IDevicePopManager popManager,
+                                    @NonNull final String alias)
             throws ClientException {
         mDevicePopManager = popManager;
         mAlias = alias;

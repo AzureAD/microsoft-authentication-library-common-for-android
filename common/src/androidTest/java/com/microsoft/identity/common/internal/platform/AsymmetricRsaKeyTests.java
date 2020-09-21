@@ -41,17 +41,17 @@ import org.junit.runner.RunWith;
 import java.util.Locale;
 
 @RunWith(AndroidJUnit4.class)
-public class AsymmetricKeyTests {
+public class AsymmetricRsaKeyTests {
 
     private static final String testKeyName = "testkey_alias";
 
-    private AsymmetricKeyFactory mKeyFactory;
-    private AsymmetricKey mAsymmetricKey;
+    private AsymmetricRsaKeyFactory mKeyFactory;
+    private AsymmetricRsaKey mAsymmetricKey;
 
     @Before
     public void setUp() throws ClientException {
         final Context context = InstrumentationRegistry.getTargetContext();
-        mKeyFactory = new AndroidKeystoreAsymmetricKeyFactory(context);
+        mKeyFactory = new AndroidKeystoreAsymmetricRsaKeyFactory(context);
         mAsymmetricKey = mKeyFactory.generateAsymmetricKey(testKeyName);
     }
 

@@ -31,7 +31,7 @@ import java.util.Date;
  * underlying keystore which may or may not be hardware backed depending on OS version, key size,
  * and TPM/HSM chipset.
  */
-public interface AsymmetricKey {
+public interface AsymmetricRsaKey {
 
     /**
      * Gets the alias which refers to this key at its originating keystore.

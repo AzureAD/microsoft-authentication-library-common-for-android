@@ -25,12 +25,12 @@ package com.microsoft.identity.common.internal.platform;
 import com.microsoft.identity.common.exception.ClientException;
 
 /**
- * Interface defining a factory for instances of {@link AsymmetricKey}.
+ * Interface defining a factory for instances of {@link AsymmetricRsaKey}.
  */
-public interface AsymmetricKeyFactory {
+public interface AsymmetricRsaKeyFactory {
 
     /**
-     * Generates a new {@link AsymmetricKey}, retrievable by the provided alias. API 18 is assumed.
+     * Generates a new {@link AsymmetricRsaKey}, retrievable by the provided alias. API 18 is assumed.
      * API 23+ affords best security due to improved AndroidKeystore APIs.
      * <p>
      * Keys will be:
@@ -41,7 +41,7 @@ public interface AsymmetricKeyFactory {
      * @return The newly-created asymmetric key.
      * @throws ClientException If the key cannot be created.
      */
-    AsymmetricKey generateAsymmetricKey(String alias) throws ClientException;
+    AsymmetricRsaKey generateAsymmetricKey(String alias) throws ClientException;
 
     /**
      * Retrieves an asymmetric key by name. If no key can be found for the provided alias, it will
@@ -51,7 +51,7 @@ public interface AsymmetricKeyFactory {
      * @return The asymmetric key.
      * @throws ClientException If the key cannot be retrieved/created.
      */
-    AsymmetricKey loadAsymmetricKey(String alias) throws ClientException;
+    AsymmetricRsaKey loadAsymmetricKey(String alias) throws ClientException;
 
     /**
      * Removes the asymmetric key associated with the provided alias from the underlying keystore.

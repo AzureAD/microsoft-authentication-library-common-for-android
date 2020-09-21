@@ -41,7 +41,7 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_AL
 /**
  * Factory class for constructing asymmetric keys.
  */
-public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory {
+public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyFactory {
 
     private final Context mContext;
 
@@ -50,17 +50,17 @@ public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory
      *
      * @param context The current application Context.
      */
-    public AndroidKeystoreAsymmetricKeyFactory(@NonNull final Context context) {
+    public AndroidKeystoreAsymmetricRsaKeyFactory(@NonNull final Context context) {
         mContext = context;
     }
 
     @Override
-    public AsymmetricKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
-            return new AndroidKeystoreAsymmetricKey(
+            return new AndroidKeystoreAsymmetricRsaKey(
                     mContext,
                     new DevicePopManager(alias),
                     alias
@@ -87,7 +87,7 @@ public class AndroidKeystoreAsymmetricKeyFactory implements AsymmetricKeyFactory
     }
 
     @Override
-    public AsymmetricKey loadAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public AsymmetricRsaKey loadAsymmetricKey(@NonNull final String alias) throws ClientException {
         // We can just call generate.... same thing... it will be created if it doesn't exist.
         return generateAsymmetricKey(alias);
     }
