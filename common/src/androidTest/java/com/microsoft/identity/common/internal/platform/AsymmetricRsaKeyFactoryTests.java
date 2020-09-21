@@ -126,4 +126,19 @@ public class AsymmetricRsaKeyFactoryTests {
         );
     }
 
+    @Test
+    public void testMultipleGenerateCallsResultInSameKey() throws ClientException {
+        // Generate a key
+        final AsymmetricRsaKey asymmetricKey1 = mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_1);
+
+        // 'Regenerate' the same key
+        final AsymmetricRsaKey duplicate = mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_1);
+
+        // Assert they are the same underlying entry
+        Assert.assertEquals(
+                asymmetricKey1.getPublicKey(),
+                duplicate.getPublicKey()
+        );
+    }
+
 }
