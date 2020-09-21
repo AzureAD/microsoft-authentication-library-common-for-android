@@ -27,7 +27,9 @@ import com.microsoft.identity.common.exception.ClientException;
 import java.util.Date;
 
 /**
- * Represents an RSA asymmetric key.
+ * Represents an RSA asymmetric key. This object represents a single keypair instance inside of an
+ * underlying keystore which may or may not be hardware backed depending on OS version, key size,
+ * and TPM/HSM chipset.
  */
 public interface AsymmetricKey {
 
