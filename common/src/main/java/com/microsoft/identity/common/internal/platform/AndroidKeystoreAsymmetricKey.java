@@ -37,7 +37,14 @@ import java.util.Date;
  */
 public class AndroidKeystoreAsymmetricKey implements AsymmetricKey {
 
+    /**
+     * The {@link IDevicePopManager} to which we will delegate most cryptographic actions.
+     */
     private final IDevicePopManager mDevicePopManager;
+
+    /**
+     * The alias is name of this keypair in the underlying keystore.
+     */
     private final String mAlias;
 
     /**
