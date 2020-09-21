@@ -49,7 +49,7 @@ public interface AsymmetricKey {
     Date getCreatedOn() throws ClientException;
 
     /**
-     * Gets the thumbprint of the current KeyPair.
+     * Gets the thumbprint of the current KeyPair. Format is SHA256.
      *
      * @return The thumbprint.
      */
@@ -70,14 +70,14 @@ public interface AsymmetricKey {
     String getPublicKey() throws ClientException;
 
     /**
-     * Signs an arbitrary piece of String data.
+     * Signs an arbitrary piece of String data. Algorithm is RSA256.
      *
      * @return The input data, signed by our private key.
      */
     String sign(String data) throws ClientException;
 
     /**
-     * Verifies a signature previously made by this private key.
+     * Verifies a signature previously made by this private key. Algorithm is RSA256.
      *
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
