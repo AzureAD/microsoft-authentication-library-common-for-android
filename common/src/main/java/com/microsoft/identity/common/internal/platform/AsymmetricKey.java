@@ -24,51 +24,53 @@ package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.util.Date;
+
 /**
- * Represents an RSA asymmetric key. This object represents a single keypair instance inside of an
- * underlying keystore which may or may not be hardware backed depending on OS version, key size,
- * and TPM/HSM chipset.
+ * Represents an asymmetric key. Underlying storage and  algorithm is unspecified at this interface
+ * but may be extended or implemented by subclasses/subinterfaces defining ECC, RSA, DSA, or other.
  */
-public interface AsymmetricRsaKey extends AsymmetricKey {
+public interface AsymmetricKey {
+    /**
+     * Gets the alias which refers to this key at its originating keystore.
+     *
+     * @return The alias of this key.
+     */
+    String getAlias();
 
     /**
-     * Gets the thumbprint of the current KeyPair. Format is SHA256.
+     * Returns the creation date of the asymmetric key entry backing this instance.
+     *
+     * @return The asymmetric key creation date.
+     * @throws ClientException If no asymmetric key exists.
+     */
+    Date getCreatedOn() throws ClientException;
+
+    /**
+     * Gets the thumbprint of the current KeyPair.
      *
      * @return The thumbprint.
      */
-    @Override
     String getThumbprint() throws ClientException;
 
     /**
-     * Gets an RFC-7517 compliant public key as a minified JWK.
-     * <p>
-     * Sample value:
-     * <pre>
-     * {
-     * 	"kty": "RSA",
-     * 	"e": "AQAB",
-     * 	"n": "tMqJ7Oxh3PdLaiEc28w....HwES9Q"
-     * }
-     * </pre>
+     * Gets the public key associated with this asymmetric key.
      */
-    @Override
     String getPublicKey() throws ClientException;
 
     /**
-     * Signs an arbitrary piece of String data. Algorithm is RSA256.
+     * Signs an arbitrary piece of String data.
      *
      * @return The input data, signed by our private key.
      */
-    @Override
     String sign(String data) throws ClientException;
 
     /**
-     * Verifies a signature previously made by this private key. Algorithm is RSA256.
+     * Verifies a signature previously made by this private key.
      *
      * @param plainText    The input to verify.
      * @param signatureStr The signature against which the plainText should be evaluated.
      * @return True if the input was signed by our private key. False otherwise.
      */
-    @Override
     boolean verify(String plainText, String signatureStr);
 }

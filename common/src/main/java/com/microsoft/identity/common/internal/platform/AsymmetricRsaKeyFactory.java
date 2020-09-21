@@ -27,7 +27,7 @@ import com.microsoft.identity.common.exception.ClientException;
 /**
  * Interface defining a factory for instances of {@link AsymmetricRsaKey}.
  */
-public interface AsymmetricRsaKeyFactory {
+public interface AsymmetricRsaKeyFactory extends AsymmetricKeyFactory {
 
     /**
      * Generates a new {@link AsymmetricRsaKey}, retrievable by the provided alias. API 18 is assumed.
@@ -41,6 +41,7 @@ public interface AsymmetricRsaKeyFactory {
      * @return The newly-created asymmetric key.
      * @throws ClientException If the key cannot be created.
      */
+    @Override
     AsymmetricRsaKey generateAsymmetricKey(String alias) throws ClientException;
 
     /**
@@ -52,13 +53,5 @@ public interface AsymmetricRsaKeyFactory {
      * @throws ClientException If the key cannot be retrieved/created.
      */
     AsymmetricRsaKey loadAsymmetricKey(String alias) throws ClientException;
-
-    /**
-     * Removes the asymmetric key associated with the provided alias from the underlying keystore.
-     *
-     * @param alias The alias of the key to remove.
-     * @return True, if the key was successfully removed. False otherwise.
-     */
-    boolean clearAsymmetricKey(String alias) throws ClientException;
 
 }

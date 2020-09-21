@@ -25,50 +25,34 @@ package com.microsoft.identity.common.internal.platform;
 import com.microsoft.identity.common.exception.ClientException;
 
 /**
- * Represents an RSA asymmetric key. This object represents a single keypair instance inside of an
- * underlying keystore which may or may not be hardware backed depending on OS version, key size,
- * and TPM/HSM chipset.
+ * Interface defining a factory for instances of {@link AsymmetricKey}.
  */
-public interface AsymmetricRsaKey extends AsymmetricKey {
+public interface AsymmetricKeyFactory {
 
     /**
-     * Gets the thumbprint of the current KeyPair. Format is SHA256.
+     * Generates a new {@link AsymmetricKey}, retrievable by the provided alias.
      *
-     * @return The thumbprint.
+     * @param alias The name of the key to create.
+     * @return The newly-created asymmetric key.
+     * @throws ClientException If the key cannot be created.
      */
-    @Override
-    String getThumbprint() throws ClientException;
+    AsymmetricKey generateAsymmetricKey(String alias) throws ClientException;
 
     /**
-     * Gets an RFC-7517 compliant public key as a minified JWK.
-     * <p>
-     * Sample value:
-     * <pre>
-     * {
-     * 	"kty": "RSA",
-     * 	"e": "AQAB",
-     * 	"n": "tMqJ7Oxh3PdLaiEc28w....HwES9Q"
-     * }
-     * </pre>
-     */
-    @Override
-    String getPublicKey() throws ClientException;
-
-    /**
-     * Signs an arbitrary piece of String data. Algorithm is RSA256.
+     * Retrieves an asymmetric key by name. If no key can be found for the provided alias, it will
+     * be created.
      *
-     * @return The input data, signed by our private key.
+     * @param alias The alias for the sought asymmetric key.
+     * @return The asymmetric key.
+     * @throws ClientException If the key cannot be retrieved/created.
      */
-    @Override
-    String sign(String data) throws ClientException;
+    AsymmetricKey loadAsymmetricKey(String alias) throws ClientException;
 
     /**
-     * Verifies a signature previously made by this private key. Algorithm is RSA256.
+     * Removes the asymmetric key associated with the provided alias from the underlying keystore.
      *
-     * @param plainText    The input to verify.
-     * @param signatureStr The signature against which the plainText should be evaluated.
-     * @return True if the input was signed by our private key. False otherwise.
+     * @param alias The alias of the key to remove.
+     * @return True, if the key was successfully removed. False otherwise.
      */
-    @Override
-    boolean verify(String plainText, String signatureStr);
+    boolean clearAsymmetricKey(String alias) throws ClientException;
 }
