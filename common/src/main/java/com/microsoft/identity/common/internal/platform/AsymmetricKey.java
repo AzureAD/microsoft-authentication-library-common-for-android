@@ -27,7 +27,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import java.util.Date;
 
 /**
- * Represents an asymmetric key. Underlying storage and  algorithm is unspecified at this interface
+ * Represents an asymmetric key. Underlying storage and algorithm is unspecified at this interface
  * but may be extended or implemented by subclasses/subinterfaces defining ECC, RSA, DSA, or other.
  */
 public interface AsymmetricKey {
