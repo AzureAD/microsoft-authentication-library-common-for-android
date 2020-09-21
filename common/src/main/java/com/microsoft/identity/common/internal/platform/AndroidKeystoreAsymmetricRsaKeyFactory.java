@@ -55,7 +55,7 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
     }
 
     @Override
-    public AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public synchronized AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
         final Exception exception;
         final String errCode;
 
@@ -87,13 +87,13 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
     }
 
     @Override
-    public AsymmetricRsaKey loadAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public synchronized AsymmetricRsaKey loadAsymmetricKey(@NonNull final String alias) throws ClientException {
         // We can just call generate.... same thing... it will be created if it doesn't exist.
         return generateAsymmetricKey(alias);
     }
 
     @Override
-    public boolean clearAsymmetricKey(@NonNull final String alias) throws ClientException {
+    public synchronized boolean clearAsymmetricKey(@NonNull final String alias) throws ClientException {
         final Exception exception;
         final String errCode;
 
