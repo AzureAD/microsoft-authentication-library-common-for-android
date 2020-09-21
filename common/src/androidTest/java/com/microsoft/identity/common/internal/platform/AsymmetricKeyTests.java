@@ -38,6 +38,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Locale;
+
 @RunWith(AndroidJUnit4.class)
 public class AsymmetricKeyTests {
 
@@ -103,6 +105,14 @@ public class AsymmetricKeyTests {
         final String signature = mAsymmetricKey.sign(validationText);
         Assert.assertNotNull(signature);
         Assert.assertTrue(mAsymmetricKey.verify(validationText, signature));
+    }
+
+    @Test
+    public void testVerificationFailsForModifiedString() throws ClientException {
+        final String validationText = "The quick brown fox jumped over the lazy dog.";
+        final String signature = mAsymmetricKey.sign(validationText);
+        Assert.assertNotNull(signature);
+        Assert.assertFalse(mAsymmetricKey.verify(validationText.toLowerCase(Locale.ROOT), signature));
     }
 
 }
