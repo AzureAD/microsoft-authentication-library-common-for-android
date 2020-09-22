@@ -99,6 +99,8 @@ import static com.microsoft.identity.common.exception.ClientException.JSON_CONST
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PROVIDER;
 import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
@@ -660,8 +662,7 @@ class DevicePopManager implements IDevicePopManager {
             errCode = KEYSTORE_NOT_INITIALIZED;
         } catch (final NoSuchPaddingException e) {
             exception = e;
-            // TODO find a constant for NO_SUCH_PADDING
-            errCode = "TODO";
+            errCode = NO_SUCH_PADDING;
         } catch (final UnsupportedEncodingException e) {
             exception = e;
             errCode = UNSUPPORTED_ENCODING;
@@ -670,8 +671,7 @@ class DevicePopManager implements IDevicePopManager {
             errCode = IO_ERROR;
         } catch (final NoSuchProviderException e) {
             exception = e;
-            errCode = "TODO";
-            // TODO find/make a constant for NO_SUCH_PROVIDER
+            errCode = NO_SUCH_PROVIDER;
         }
 
         final ClientException clientException = new ClientException(

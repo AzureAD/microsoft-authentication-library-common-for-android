@@ -67,6 +67,16 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * Emitted when a particular security provider is requested but is not available in the environment.
+     */
+    public static final String NO_SUCH_PROVIDER = "no_such_provider";
+
+    /**
+     * Emitted when a particular padding mechanism is requested but is not available in the environment.
+     */
+    public static final String NO_SUCH_PADDING = "no_such_padding";
+
+    /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
      */
     public static final String MALFORMED_URL = "malformed_url";
