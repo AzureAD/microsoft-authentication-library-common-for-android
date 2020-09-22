@@ -5,6 +5,7 @@ vNext
     * X.509 SubjectPublicKeyInfo
     * JWK (RFC-7517)
 - Added support for signing and verifying arbitrary String data with select RSA algorithms.
+- Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
 
 Version 3.0.1
 ----------

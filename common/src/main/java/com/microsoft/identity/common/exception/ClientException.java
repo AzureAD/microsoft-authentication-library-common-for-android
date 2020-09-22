@@ -171,6 +171,11 @@ public class ClientException extends BaseException {
     public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
 
     /**
+     * Emitted if any of the certificates in the keystore fail to load.
+     */
+    public static final String CERTIFICATE_LOAD_FAILURE = "certificate_load_failure";
+
+    /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
      */
     public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
