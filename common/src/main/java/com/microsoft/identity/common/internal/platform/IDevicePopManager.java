@@ -113,16 +113,13 @@ public interface IDevicePopManager {
         }
     }
 
+    /**
+     * Ciphers supported by our underlying keystore. Asymmetric ciphers shown only.
+     */
     enum Cipher {
 
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding"),
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_224AndMGF1Padding("RSA/ECB/OAEPWithSHA-224AndMGF1Padding"),
 
         @RequiresApi(Build.VERSION_CODES.M)
         RSA_ECB_OAEPWithSHA_256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding"),
