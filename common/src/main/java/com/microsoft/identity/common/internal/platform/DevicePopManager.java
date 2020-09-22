@@ -32,6 +32,7 @@ import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Base64InputStream;
+import android.util.Base64OutputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -645,18 +646,24 @@ class DevicePopManager implements IDevicePopManager {
             input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
 
             // Declare an OutputStream to hold our encrypted data
-            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            // Create a B64Stream to encode our incoming data, and write it to our ByteArrayStream
+            final Base64OutputStream base64OutputStream = new Base64OutputStream(
+                    byteArrayOutputStream,
+                    Base64.DEFAULT
+            );
 
             // Wrap it in our CipherOutputStream, write the contents...
-            final OutputStream cipherOutputStream = new CipherOutputStream(outputStream, input);
+            final OutputStream cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
             cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
             cipherOutputStream.close();
 
             // Flatten our OutputStream to an array
-            byte[] encryptedBase64Data = outputStream.toByteArray();
+            byte[] encryptedBase64Data = byteArrayOutputStream.toByteArray();
 
             // Base64 encode to stringify
-            return Base64.encodeToString(encryptedBase64Data, Base64.DEFAULT);
+            return new String(encryptedBase64Data, ENCODING_UTF8);
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
