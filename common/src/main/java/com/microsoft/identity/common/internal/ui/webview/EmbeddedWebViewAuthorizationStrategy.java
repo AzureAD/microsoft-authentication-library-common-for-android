@@ -81,24 +81,33 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
         mAuthorizationRequest = authorizationRequest;
         Logger.info(TAG, "Perform the authorization request with embedded webView.");
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
-        final Intent authIntent = AuthorizationActivity.createStartIntent(
-                getApplicationContext(),
-                null,
-                requestUrl.toString(),
-                mAuthorizationRequest.getRedirectUri(),
-                mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.WEBVIEW,
-                mAuthorizationRequest.isWebViewZoomEnabled(),
-                mAuthorizationRequest.isWebViewZoomControlsEnabled());
+        final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl);
 
         launchIntent(authIntent);
         return mAuthorizationResultFuture;
+    }
+
+    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private Intent buildAuthorizationActivityStartIntent(Uri requestUrl) {
+        return AuthorizationActivity.createStartIntent(
+                    getApplicationContext(),
+                    null,
+                    requestUrl.toString(),
+                    mAuthorizationRequest.getRedirectUri(),
+                    mAuthorizationRequest.getRequestHeaders(),
+                    AuthorizationAgent.WEBVIEW,
+                    mAuthorizationRequest.isWebViewZoomEnabled(),
+                    mAuthorizationRequest.isWebViewZoomControlsEnabled());
     }
 
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
+
+                //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
+                @SuppressWarnings(WarningType.unchecked_warning)
                 final AuthorizationResult result = mOAuth2Strategy
                         .getAuthorizationResultFactory()
                         .createAuthorizationResult(
