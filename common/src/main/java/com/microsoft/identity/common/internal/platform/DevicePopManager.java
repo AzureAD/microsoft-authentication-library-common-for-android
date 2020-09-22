@@ -973,6 +973,9 @@ class DevicePopManager implements IDevicePopManager {
                         KeyProperties.DIGEST_SHA256,
                         KeyProperties.DIGEST_SHA384,
                         KeyProperties.DIGEST_SHA512
+                ).setEncryptionPaddings(
+                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
+                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
