@@ -52,6 +52,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -76,12 +77,15 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
@@ -100,7 +104,6 @@ import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNIN
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PROVIDER;
 import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
@@ -630,23 +633,29 @@ class DevicePopManager implements IDevicePopManager {
         final Exception exception;
 
         try {
+            // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
                     mKeyStore.getEntry(mKeyAlias, null);
-            final RSAPublicKey publicKey = (RSAPublicKey) privateKeyEntry.getCertificate().getPublicKey();
-            final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(
-                    cipher.toString(),
-                    "AndroidOpenSSL"
-            );
+
+            // Get a ref to our public key
+            final PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
+
+            // Init our Cipher
+            final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(cipher.toString());
             input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
+
+            // Declare an OutputStream to hold our encrypted data
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            final OutputStream cipherOutputStream = new CipherOutputStream(
-                    outputStream,
-                    input
-            );
+
+            // Wrap it in our CipherOutputStream, write the contents...
+            final OutputStream cipherOutputStream = new CipherOutputStream(outputStream, input);
             cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
             cipherOutputStream.close();
 
+            // Flatten our OutputStream to an array
             byte[] encryptedBase64Data = outputStream.toByteArray();
+
+            // Base64 encode to stringify
             return Base64.encodeToString(encryptedBase64Data, Base64.DEFAULT);
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
@@ -658,20 +667,17 @@ class DevicePopManager implements IDevicePopManager {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
         } catch (final KeyStoreException e) {
-            exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
         } catch (final NoSuchPaddingException e) {
-            exception = e;
             errCode = NO_SUCH_PADDING;
+            exception = e;
         } catch (final UnsupportedEncodingException e) {
-            exception = e;
             errCode = UNSUPPORTED_ENCODING;
+            exception = e;
         } catch (final IOException e) {
-            exception = e;
             errCode = IO_ERROR;
-        } catch (final NoSuchProviderException e) {
             exception = e;
-            errCode = NO_SUCH_PROVIDER;
         }
 
         final ClientException clientException = new ClientException(
@@ -692,8 +698,87 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public String decrypt(@NonNull final Cipher cipher,
                           @NonNull final String ciphertext) throws ClientException {
-        // TODO implement
-        return null;
+        final String methodName = ":decrypt";
+        final String errCode;
+        final Exception exception;
+
+        try {
+            // Load our key material
+            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
+                    mKeyStore.getEntry(mKeyAlias, null);
+
+            // Get a reference to our private key (will not be loaded into app process)
+            final PrivateKey privateKey = privateKeyEntry.getPrivateKey();
+
+            // Init our cipher instance, don't use a named provider as there seems to be a mix of
+            // BoringSSL & AndroidOpenSSL
+            // https://issuetracker.google.com/issues/37091211
+            final javax.crypto.Cipher outputCipher = javax.crypto.Cipher.getInstance(cipher.toString());
+            outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
+
+            // Put our ciphertext into an InputStream
+            final CipherInputStream cipherInputStream = new CipherInputStream(
+                    new ByteArrayInputStream(
+                            Base64.decode(
+                                    ciphertext,
+                                    Base64.DEFAULT
+                            )
+                    ),
+                    outputCipher // Our decryption cipher
+            );
+
+            // Declare a List for dynamic sizing
+            final List<Byte> values = new ArrayList<>();
+
+            // Iterate over bytes, adding them to our List
+            int nextByte;
+            while ((nextByte = cipherInputStream.read()) != -1) {
+                values.add((byte) nextByte);
+            }
+
+            final byte[] bytes = new byte[values.size()];
+
+            for (int ii = 0; ii < bytes.length; ii++) {
+                bytes[ii] = values.get(ii);
+            }
+
+            return new String(bytes, 0, bytes.length, ENCODING_SCHEME);
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        } catch (final NoSuchPaddingException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final KeyStoreException e) {
+            errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
+        } catch (final UnsupportedEncodingException e) {
+            errCode = UNSUPPORTED_ENCODING;
+            exception = e;
+        } catch (final IOException e) {
+            errCode = IO_ERROR;
+            exception = e;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG + methodName,
+                errCode,
+                exception
+        );
+
+        throw clientException;
     }
 
     @Override

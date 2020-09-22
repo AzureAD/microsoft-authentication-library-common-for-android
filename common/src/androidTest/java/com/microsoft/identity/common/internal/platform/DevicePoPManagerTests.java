@@ -28,7 +28,6 @@ import android.util.Base64;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -372,12 +371,13 @@ public class DevicePoPManagerTests {
         // Generate keys
         mDevicePopManager.generateAsymmetricKey(mContext);
         final String plainText = "Some secret text. Shhhh!";
+        final IDevicePopManager.Cipher cipher = IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
         final String encryptedData = mDevicePopManager.encrypt(
-                IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
+                cipher,
                 plainText
         );
         Assert.assertNotNull(encryptedData);
-
-        // TODO turn this into parameterized tests...
+        final String decryptedText = mDevicePopManager.decrypt(cipher, encryptedData);
+        Assert.assertEquals(plainText, decryptedText);
     }
 }
