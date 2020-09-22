@@ -56,6 +56,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -655,9 +656,14 @@ class DevicePopManager implements IDevicePopManager {
             );
 
             // Wrap it in our CipherOutputStream, write the contents...
-            final OutputStream cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
-            cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
-            cipherOutputStream.close();
+            OutputStream cipherOutputStream = null;
+
+            try { // TODO convert to try-with-resources once API >19
+                cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
+                cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
+            } finally {
+                closeStream(cipherOutputStream);
+            }
 
             // Flatten our OutputStream to an array
             byte[] encryptedBase64Data = byteArrayOutputStream.toByteArray();
@@ -702,6 +708,20 @@ class DevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
+    private static void closeStream(@Nullable final Closeable stream) {
+        if (null != stream) {
+            try {
+                stream.close();
+            } catch (final IOException e) {
+                Logger.error(
+                        TAG + ":closeStream",
+                        "Exception thrown while closing stream.",
+                        e
+                );
+            }
+        }
+    }
+
     @Override
     public String decrypt(@NonNull final Cipher cipher,
                           @NonNull final String ciphertext) throws ClientException {
@@ -728,23 +748,28 @@ class DevicePopManager implements IDevicePopManager {
                     Base64.DEFAULT
             );
 
-            // Put our ciphertext into an InputStream
-            final CipherInputStream cipherInputStream = new CipherInputStream(
-                    b64InputStream,
-                    outputCipher // Our decryption cipher
-            );
+            CipherInputStream cipherInputStream = null;
+            try {
+                // Put our ciphertext into an InputStream
+                cipherInputStream = new CipherInputStream(
+                        b64InputStream,
+                        outputCipher // Our decryption cipher
+                );
 
-            final int bufferSize = 1024;
-            final char[] buffer = new char[bufferSize];
-            final StringBuilder outputBuilder = new StringBuilder();
-            final Reader in = new InputStreamReader(cipherInputStream, ENCODING_UTF8);
+                final int bufferSize = 1024;
+                final char[] buffer = new char[bufferSize];
+                final StringBuilder outputBuilder = new StringBuilder();
+                final Reader in = new InputStreamReader(cipherInputStream, ENCODING_UTF8);
 
-            int chars;
-            while ((chars = in.read(buffer, 0, buffer.length)) > 0) {
-                outputBuilder.append(buffer, 0, chars);
+                int chars;
+                while ((chars = in.read(buffer, 0, buffer.length)) > 0) {
+                    outputBuilder.append(buffer, 0, chars);
+                }
+
+                return outputBuilder.toString();
+            } finally {
+                closeStream(cipherInputStream);
             }
-
-            return outputBuilder.toString();
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
