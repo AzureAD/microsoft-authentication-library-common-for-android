@@ -104,4 +104,22 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
                 signatureStr
         );
     }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public String encrypt(@NonNull final String plaintext) throws ClientException {
+        return mDevicePopManager.encrypt(
+                IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
+                plaintext
+        );
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public String decrypt(@NonNull final String ciphertext) throws ClientException {
+        return mDevicePopManager.decrypt(
+                IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
+                ciphertext
+        );
+    }
 }
