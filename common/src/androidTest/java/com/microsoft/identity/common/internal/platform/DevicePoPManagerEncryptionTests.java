@@ -97,5 +97,6 @@ public class DevicePoPManagerEncryptionTests {
         final String decryptedValue = devicePopManager.decrypt(cipher, cipherText);
 
         Assert.assertEquals(DATA_TO_ENCRYPT, decryptedValue);
+        Assert.assertNotEquals(DATA_TO_ENCRYPT, cipherText);
     }
 }
