@@ -366,4 +366,18 @@ public class DevicePoPManagerTests {
         Assert.assertNotNull(n);
         Assert.assertFalse(n.getAsString().isEmpty());
     }
+
+    @Test
+    public void testCanEncryptDataPkcs1() throws ClientException {
+        // Generate keys
+        mDevicePopManager.generateAsymmetricKey(mContext);
+        final String plainText = "Some secret text. Shhhh!";
+        final String encryptedData = mDevicePopManager.encrypt(
+                IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
+                plainText
+        );
+        Assert.assertNotNull(encryptedData);
+
+        // TODO turn this into parameterized tests...
+    }
 }

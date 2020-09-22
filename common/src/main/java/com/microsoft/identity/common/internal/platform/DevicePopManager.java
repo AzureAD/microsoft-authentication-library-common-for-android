@@ -52,6 +52,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -80,6 +81,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.crypto.CipherOutputStream;
 import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
@@ -613,6 +615,42 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         return false;
+    }
+
+    @Override
+    public String encrypt(@NonNull final Cipher cipher,
+                          @NonNull final String plaintext) throws ClientException {
+        try {
+            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
+                    mKeyStore.getEntry(mKeyAlias, null);
+            final RSAPublicKey publicKey = (RSAPublicKey) privateKeyEntry.getCertificate().getPublicKey();
+            final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(
+                    cipher.toString(),
+                    "AndroidOpenSSL"
+            );
+            input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
+            final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            final CipherOutputStream cipherOutputStream = new CipherOutputStream(
+                    outputStream,
+                    input
+            );
+            cipherOutputStream.write(plaintext.getBytes("UTF-8"));
+            cipherOutputStream.close();
+
+            byte[] encryptedBase64Data = outputStream.toByteArray();
+            return Base64.encodeToString(encryptedBase64Data, Base64.DEFAULT);
+        } catch (Exception e) {
+            // TODO Cleanup
+        }
+
+        return null;
+    }
+
+    @Override
+    public String decrypt(@NonNull final Cipher cipher,
+                          @NonNull final String ciphertext) throws ClientException {
+        // TODO implement
+        return null;
     }
 
     @Override

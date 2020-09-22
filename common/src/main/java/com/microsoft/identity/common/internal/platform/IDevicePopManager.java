@@ -114,8 +114,6 @@ public interface IDevicePopManager {
     }
 
     enum Cipher {
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        RSA_ECB_NOPADDING("RSA/ECB/NoPadding"),
 
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
@@ -235,6 +233,26 @@ public interface IDevicePopManager {
      * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
      */
     boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
+
+    /**
+     * Encrypts the supplied String with the provided cipher.
+     *
+     * @param cipher    The cipher to use.
+     * @param plaintext The data to encrypt.
+     * @return The encrypted plaintext.
+     * @throws ClientException If encryption fails.
+     */
+    String encrypt(Cipher cipher, String plaintext) throws ClientException;
+
+    /**
+     * Decrypts the supplied String with the provided cipher.
+     *
+     * @param cipher     The cipher used to derive the provided ciphertext.
+     * @param ciphertext The text to decrypt.
+     * @return The decrypted text.
+     * @throws ClientException If decryption fails.
+     */
+    String decrypt(Cipher cipher, String ciphertext) throws ClientException;
 
     /**
      * Gets the public key associated with this DevicePoPManager formatted per the supplied
