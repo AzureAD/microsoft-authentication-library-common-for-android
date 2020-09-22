@@ -367,19 +367,4 @@ public class DevicePoPManagerTests {
         Assert.assertNotNull(n);
         Assert.assertFalse(n.getAsString().isEmpty());
     }
-
-    @Test
-    public void testCanEncryptDataPkcs1() throws ClientException {
-        // Generate keys
-        mDevicePopManager.generateAsymmetricKey(mContext);
-        final String plainText = "Some secret text. Shhhh!";
-        final IDevicePopManager.Cipher cipher = IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
-        final String encryptedData = mDevicePopManager.encrypt(
-                cipher,
-                plainText
-        );
-        Assert.assertNotNull(encryptedData);
-        final String decryptedText = mDevicePopManager.decrypt(cipher, encryptedData);
-        Assert.assertEquals(plainText, decryptedText);
-    }
 }
