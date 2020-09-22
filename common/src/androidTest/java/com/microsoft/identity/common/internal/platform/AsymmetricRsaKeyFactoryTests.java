@@ -76,7 +76,7 @@ public class AsymmetricRsaKeyFactoryTests {
     @Test
     public void testClearingOneKeyPreservesAnother() throws ClientException {
         final AsymmetricRsaKey asymmetricKey1 = mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_1);
-        final AsymmetricRsaKey asymmetricKey2 = mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_2);
+        mKeyFactory.generateAsymmetricKey(SAMPLE_KEY_2);
 
         final String key1Thumbprint = asymmetricKey1.getThumbprint();
 
