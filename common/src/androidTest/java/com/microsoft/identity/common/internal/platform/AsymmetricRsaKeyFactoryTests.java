@@ -63,8 +63,8 @@ public class AsymmetricRsaKeyFactoryTests {
         Assert.assertNotNull(asymmetricKey1);
         Assert.assertNotNull(asymmetricKey1.getThumbprint());
 
-        Assert.assertNotNull(asymmetricKey1);
-        Assert.assertNotNull(asymmetricKey1.getThumbprint());
+        Assert.assertNotNull(asymmetricKey2);
+        Assert.assertNotNull(asymmetricKey2.getThumbprint());
 
         // Assert they're not the same
         Assert.assertNotEquals(
