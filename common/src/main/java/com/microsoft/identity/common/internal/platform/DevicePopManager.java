@@ -54,6 +54,7 @@ import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -630,7 +631,7 @@ class DevicePopManager implements IDevicePopManager {
             );
             input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
             final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            final CipherOutputStream cipherOutputStream = new CipherOutputStream(
+            final OutputStream cipherOutputStream = new CipherOutputStream(
                     outputStream,
                     input
             );
