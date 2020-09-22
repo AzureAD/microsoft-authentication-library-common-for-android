@@ -374,7 +374,6 @@ public class StorageHelper implements IStorageHelper {
         try {
             bytes = getByteArrayFromEncryptedBlob(data);
         } catch (Exception e) {
-            Logger.error(TAG + methodName, "This data is not an encrypted blob. Treat as unencrypted data.", e);
             return EncryptionType.UNENCRYPTED;
         }
 
