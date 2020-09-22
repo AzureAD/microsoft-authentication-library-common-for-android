@@ -115,6 +115,9 @@ public interface IDevicePopManager {
 
     /**
      * Ciphers supported by our underlying keystore. Asymmetric ciphers shown only.
+     * <p>
+     * Note: Some ciphers are [in]conspicuously absent. Any cipher that requires use of a SHA-1
+     * digest or uses NO_PADDING will not be supported.
      */
     enum Cipher {
 
@@ -128,10 +131,7 @@ public interface IDevicePopManager {
         RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding"),
 
         @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding"),
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPPadding("RSA/ECB/OAEPPadding");
+        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding");
 
         private final String mValue;
 
