@@ -31,6 +31,7 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Base64InputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -55,7 +56,9 @@ import org.json.JSONObject;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -77,10 +80,8 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -108,7 +109,6 @@ import static com.microsoft.identity.common.exception.ClientException.SIGNING_FA
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
-import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -716,33 +716,28 @@ class DevicePopManager implements IDevicePopManager {
             final javax.crypto.Cipher outputCipher = javax.crypto.Cipher.getInstance(cipher.toString());
             outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
 
+            final Base64InputStream b64InputStream = new Base64InputStream(
+                    new ByteArrayInputStream(ciphertext.getBytes()),
+                    Base64.DEFAULT
+            );
+
             // Put our ciphertext into an InputStream
             final CipherInputStream cipherInputStream = new CipherInputStream(
-                    new ByteArrayInputStream(
-                            Base64.decode(
-                                    ciphertext,
-                                    Base64.DEFAULT
-                            )
-                    ),
+                    b64InputStream,
                     outputCipher // Our decryption cipher
             );
 
-            // Declare a List for dynamic sizing
-            final List<Byte> values = new ArrayList<>();
+            final int bufferSize = 1024;
+            final char[] buffer = new char[bufferSize];
+            final StringBuilder outputBuilder = new StringBuilder();
+            final Reader in = new InputStreamReader(cipherInputStream, ENCODING_UTF8);
 
-            // Iterate over bytes, adding them to our List
-            int nextByte;
-            while ((nextByte = cipherInputStream.read()) != -1) {
-                values.add((byte) nextByte);
+            int chars;
+            while ((chars = in.read(buffer, 0, buffer.length)) > 0) {
+                outputBuilder.append(buffer, 0, chars);
             }
 
-            final byte[] bytes = new byte[values.size()];
-
-            for (int ii = 0; ii < bytes.length; ii++) {
-                bytes[ii] = values.get(ii);
-            }
-
-            return new String(bytes, 0, bytes.length, ENCODING_SCHEME);
+            return outputBuilder.toString();
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -1264,7 +1259,7 @@ class DevicePopManager implements IDevicePopManager {
         String result = null;
 
         try {
-            byte[] encodeBytes = input.getBytes(ENCODING_SCHEME);
+            byte[] encodeBytes = input.getBytes(ENCODING_UTF8);
             result = Base64.encodeToString(
                     encodeBytes,
                     Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE
