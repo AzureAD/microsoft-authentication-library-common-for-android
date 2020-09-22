@@ -83,6 +83,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
@@ -93,6 +94,7 @@ import static com.microsoft.identity.common.exception.ClientException.INVALID_AL
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
@@ -621,6 +623,10 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public String encrypt(@NonNull final Cipher cipher,
                           @NonNull final String plaintext) throws ClientException {
+        final String methodName = ":encrypt";
+        final String errCode;
+        final Exception exception;
+
         try {
             final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
                     mKeyStore.getEntry(mKeyAlias, null);
@@ -635,16 +641,52 @@ class DevicePopManager implements IDevicePopManager {
                     outputStream,
                     input
             );
-            cipherOutputStream.write(plaintext.getBytes("UTF-8"));
+            cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
             cipherOutputStream.close();
 
             byte[] encryptedBase64Data = outputStream.toByteArray();
             return Base64.encodeToString(encryptedBase64Data, Base64.DEFAULT);
-        } catch (Exception e) {
-            // TODO Cleanup
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        } catch (final NoSuchPaddingException e) {
+            exception = e;
+            // TODO find a constant for NO_SUCH_PADDING
+            errCode = "TODO";
+        } catch (final UnsupportedEncodingException e) {
+            exception = e;
+            errCode = UNSUPPORTED_ENCODING;
+        } catch (final IOException e) {
+            exception = e;
+            errCode = IO_ERROR;
+        } catch (final NoSuchProviderException e) {
+            exception = e;
+            errCode = "TODO";
+            // TODO find/make a constant for NO_SUCH_PROVIDER
         }
 
-        return null;
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG + methodName,
+                errCode,
+                exception
+        );
+
+        throw clientException;
     }
 
     @Override
