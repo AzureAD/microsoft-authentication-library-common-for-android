@@ -42,51 +42,43 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.MD5_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.NONE_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA_PSS;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_384AndMGF1Padding;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_512AndMGF1Padding;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
 @RunWith(Parameterized.class)
-public class DevicePoPManagerSigningTests {
+public class DevicePoPManagerEncryptionTests {
 
-    private static final String DATA_TO_SIGN = "The quick brown fox jumped over the lazy dog.";
+    private static final String DATA_TO_ENCRYPT = "The quick brown fox jumped over the lazy dog.";
 
     private final IDevicePopManager devicePopManager;
-    private final IDevicePopManager.SigningAlgorithm signingAlg;
+    private final IDevicePopManager.Cipher cipher;
 
     @Parameterized.Parameters
-    public static Iterable<IDevicePopManager.SigningAlgorithm> testParams() {
-        final List<IDevicePopManager.SigningAlgorithm> signingAlgs =
-                new ArrayList<IDevicePopManager.SigningAlgorithm>() {{
-                    add(MD5_WITH_RSA);
-                    add(NONE_WITH_RSA);
-                    add(SHA_256_WITH_RSA);
-                    add(SHA_384_WITH_RSA);
-                    add(SHA_512_WITH_RSA);
-                }};
+    public static Iterable<IDevicePopManager.Cipher> testParams() {
+        final List<IDevicePopManager.Cipher> ciphers = new ArrayList<>();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Only execute these tests at appropriate API levels...
-            signingAlgs.add(SHA_256_WITH_RSA_PSS);
-            signingAlgs.add(SHA_384_WITH_RSA_PSS);
-            signingAlgs.add(SHA_512_WITH_RSA_PSS);
+        // Only execute these tests at appropriate API levels...
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            ciphers.add(RSA_ECB_PKCS1_PADDING);
         }
 
-        return signingAlgs;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ciphers.add(RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
+            ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
+            ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
+        }
+
+        return ciphers;
     }
 
-    @SuppressWarnings("unused")
-    public DevicePoPManagerSigningTests(final IDevicePopManager.SigningAlgorithm signingAlg)
+    public DevicePoPManagerEncryptionTests(final IDevicePopManager.Cipher cipher)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
         devicePopManager = new DevicePopManager();
-        this.signingAlg = signingAlg;
+        this.cipher = cipher;
     }
 
     @Before
@@ -100,12 +92,10 @@ public class DevicePoPManagerSigningTests {
     }
 
     @Test
-    public void testSigning() throws ClientException {
-        final String sampleSignature = devicePopManager.sign(signingAlg, DATA_TO_SIGN);
-        final boolean verified = devicePopManager.verify(signingAlg, DATA_TO_SIGN, sampleSignature);
+    public void testEncryption() throws ClientException {
+        final String cipherText = devicePopManager.encrypt(cipher, DATA_TO_ENCRYPT);
+        final String decryptedValue = devicePopManager.decrypt(cipher, cipherText);
 
-        if (!verified) {
-            Assert.fail("Failed signing/verification on: " + signingAlg);
-        }
+        Assert.assertEquals(DATA_TO_ENCRYPT, decryptedValue);
     }
 }
