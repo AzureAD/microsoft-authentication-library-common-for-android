@@ -18,6 +18,7 @@
 
 ##---------------Begin: proguard configuration for Common  --------
 # Intentionally blank, left to consumers of common to implement.
+-keep com.microsoft.device.display.** { *; }
 
 ##---------------Begin: proguard configuration for Nimbus  ----------
 # Intentionally blank, left to consumers of common to implement.
