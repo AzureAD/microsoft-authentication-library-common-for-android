@@ -1,3 +1,11 @@
+Version 3.0.3
+----------
+- Cut down logs (#1046)
+
+Version 3.0.2
+----------
+- Added a check for UNSET OpenIdConnectPromptParameter value (#1042)
+
 Version 3.0.1
 ----------
 - Perform browser sign out on MSAL side (#1032)
