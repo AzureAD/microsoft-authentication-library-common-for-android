@@ -31,6 +31,8 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Base64InputStream;
+import android.util.Base64OutputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -52,7 +54,13 @@ import com.nimbusds.jwt.SignedJWT;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -80,6 +88,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
@@ -90,15 +101,16 @@ import static com.microsoft.identity.common.exception.ClientException.INVALID_AL
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
-import static com.microsoft.identity.common.internal.net.ObjectMapper.ENCODING_SCHEME;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -616,6 +628,187 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
+    public String encrypt(@NonNull final Cipher cipher,
+                          @NonNull final String plaintext) throws ClientException {
+        final String methodName = ":encrypt";
+        final String errCode;
+        final Exception exception;
+
+        try {
+            // Load our key material
+            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
+                    mKeyStore.getEntry(mKeyAlias, null);
+
+            // Get a ref to our public key
+            final PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
+
+            // Init our Cipher
+            final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(cipher.toString());
+            input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
+
+            // Declare an OutputStream to hold our encrypted data
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+            // Create a B64Stream to encode our incoming data, and write it to our ByteArrayStream
+            final Base64OutputStream base64OutputStream = new Base64OutputStream(
+                    byteArrayOutputStream,
+                    Base64.DEFAULT
+            );
+
+            // Wrap it in our CipherOutputStream, write the contents...
+            OutputStream cipherOutputStream = null;
+
+            try { // TODO convert to try-with-resources once API >19
+                cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
+                cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
+            } finally {
+                closeStream(cipherOutputStream);
+            }
+
+            // Flatten our OutputStream to an array
+            byte[] encryptedBase64Data = byteArrayOutputStream.toByteArray();
+
+            // Base64 encode to stringify
+            return new String(encryptedBase64Data, ENCODING_UTF8);
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final KeyStoreException e) {
+            errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
+        } catch (final NoSuchPaddingException e) {
+            errCode = NO_SUCH_PADDING;
+            exception = e;
+        } catch (final UnsupportedEncodingException e) {
+            errCode = UNSUPPORTED_ENCODING;
+            exception = e;
+        } catch (final IOException e) {
+            errCode = IO_ERROR;
+            exception = e;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG + methodName,
+                errCode,
+                exception
+        );
+
+        throw clientException;
+    }
+
+    private static void closeStream(@Nullable final Closeable stream) {
+        if (null != stream) {
+            try {
+                stream.close();
+            } catch (final IOException e) {
+                Logger.error(
+                        TAG + ":closeStream",
+                        "Exception thrown while closing stream.",
+                        e
+                );
+            }
+        }
+    }
+
+    @Override
+    public String decrypt(@NonNull final Cipher cipher,
+                          @NonNull final String ciphertext) throws ClientException {
+        final String methodName = ":decrypt";
+        final String errCode;
+        final Exception exception;
+
+        try {
+            // Load our key material
+            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
+                    mKeyStore.getEntry(mKeyAlias, null);
+
+            // Get a reference to our private key (will not be loaded into app process)
+            final PrivateKey privateKey = privateKeyEntry.getPrivateKey();
+
+            // Init our cipher instance, don't use a named provider as there seems to be a mix of
+            // BoringSSL & AndroidOpenSSL
+            // https://issuetracker.google.com/issues/37091211
+            final javax.crypto.Cipher outputCipher = javax.crypto.Cipher.getInstance(cipher.toString());
+            outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
+
+            final Base64InputStream b64InputStream = new Base64InputStream(
+                    new ByteArrayInputStream(ciphertext.getBytes()),
+                    Base64.DEFAULT
+            );
+
+            CipherInputStream cipherInputStream = null;
+            try {
+                // Put our ciphertext into an InputStream
+                cipherInputStream = new CipherInputStream(
+                        b64InputStream,
+                        outputCipher // Our decryption cipher
+                );
+
+                final int bufferSize = 1024;
+                final char[] buffer = new char[bufferSize];
+                final StringBuilder outputBuilder = new StringBuilder();
+                final Reader in = new InputStreamReader(cipherInputStream, ENCODING_UTF8);
+
+                int chars;
+                while ((chars = in.read(buffer, 0, buffer.length)) > 0) {
+                    outputBuilder.append(buffer, 0, chars);
+                }
+
+                return outputBuilder.toString();
+            } finally {
+                closeStream(cipherInputStream);
+            }
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final InvalidKeyException e) {
+            errCode = INVALID_KEY;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        } catch (final NoSuchPaddingException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final KeyStoreException e) {
+            errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
+        } catch (final UnsupportedEncodingException e) {
+            errCode = UNSUPPORTED_ENCODING;
+            exception = e;
+        } catch (final IOException e) {
+            errCode = IO_ERROR;
+            exception = e;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG + methodName,
+                errCode,
+                exception
+        );
+
+        throw clientException;
+    }
+
+    @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
         final String methodName = ":getPublicKey";
@@ -973,6 +1166,9 @@ class DevicePopManager implements IDevicePopManager {
                         KeyProperties.DIGEST_SHA256,
                         KeyProperties.DIGEST_SHA384,
                         KeyProperties.DIGEST_SHA512
+                ).setEncryptionPaddings(
+                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
+                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
@@ -1095,7 +1291,7 @@ class DevicePopManager implements IDevicePopManager {
         String result = null;
 
         try {
-            byte[] encodeBytes = input.getBytes(ENCODING_SCHEME);
+            byte[] encodeBytes = input.getBytes(ENCODING_UTF8);
             result = Base64.encodeToString(
                     encodeBytes,
                     Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE

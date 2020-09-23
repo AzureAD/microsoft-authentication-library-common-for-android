@@ -114,6 +114,39 @@ public interface IDevicePopManager {
     }
 
     /**
+     * Ciphers supported by our underlying keystore. Asymmetric ciphers shown only.
+     * <p>
+     * Note: Some ciphers are [in]conspicuously absent. Any cipher that requires use of a SHA-1
+     * digest or uses NO_PADDING will not be supported.
+     */
+    enum Cipher {
+
+        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+        RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding");
+
+        private final String mValue;
+
+        Cipher(@NonNull final String value) {
+            mValue = value;
+        }
+
+        @Override
+        @NonNull
+        public String toString() {
+            return mValue;
+        }
+    }
+
+    /**
      * Tests if keys exist.
      *
      * @return True if keys exist, false otherwise.
@@ -197,6 +230,26 @@ public interface IDevicePopManager {
      * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
      */
     boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
+
+    /**
+     * Encrypts the supplied String with the provided cipher.
+     *
+     * @param cipher    The cipher to use.
+     * @param plaintext The data to encrypt.
+     * @return The encrypted plaintext.
+     * @throws ClientException If encryption fails.
+     */
+    String encrypt(Cipher cipher, String plaintext) throws ClientException;
+
+    /**
+     * Decrypts the supplied String with the provided cipher.
+     *
+     * @param cipher     The cipher used to derive the provided ciphertext.
+     * @param ciphertext The text to decrypt.
+     * @return The decrypted text.
+     * @throws ClientException If decryption fails.
+     */
+    String decrypt(Cipher cipher, String ciphertext) throws ClientException;
 
     /**
      * Gets the public key associated with this DevicePoPManager formatted per the supplied

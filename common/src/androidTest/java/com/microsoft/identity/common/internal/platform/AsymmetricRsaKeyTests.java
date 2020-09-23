@@ -43,7 +43,8 @@ import java.util.Locale;
 @RunWith(AndroidJUnit4.class)
 public class AsymmetricRsaKeyTests {
 
-    private static final String testKeyName = "testkey_alias";
+    private static final String TEST_KEY_NAME = "testkey_alias";
+    private static final String VALIDATION_TEXT = "The quick brown fox jumped over the lazy dog.";
 
     private AsymmetricRsaKeyFactory mKeyFactory;
     private AsymmetricRsaKey mAsymmetricKey;
@@ -52,12 +53,12 @@ public class AsymmetricRsaKeyTests {
     public void setUp() throws ClientException {
         final Context context = InstrumentationRegistry.getTargetContext();
         mKeyFactory = new AndroidKeystoreAsymmetricRsaKeyFactory(context);
-        mAsymmetricKey = mKeyFactory.generateAsymmetricKey(testKeyName);
+        mAsymmetricKey = mKeyFactory.generateAsymmetricKey(TEST_KEY_NAME);
     }
 
     @After
     public void tearDown() throws ClientException {
-        mKeyFactory.clearAsymmetricKey(testKeyName);
+        mKeyFactory.clearAsymmetricKey(TEST_KEY_NAME);
     }
 
     @Test
@@ -101,18 +102,27 @@ public class AsymmetricRsaKeyTests {
 
     @Test
     public void testCanSignAndVerify() throws ClientException {
-        final String validationText = "The quick brown fox jumped over the lazy dog.";
-        final String signature = mAsymmetricKey.sign(validationText);
+        final String signature = mAsymmetricKey.sign(VALIDATION_TEXT);
         Assert.assertNotNull(signature);
-        Assert.assertTrue(mAsymmetricKey.verify(validationText, signature));
+        Assert.assertTrue(mAsymmetricKey.verify(VALIDATION_TEXT, signature));
     }
 
     @Test
     public void testVerificationFailsForModifiedString() throws ClientException {
-        final String validationText = "The quick brown fox jumped over the lazy dog.";
-        final String signature = mAsymmetricKey.sign(validationText);
+        final String signature = mAsymmetricKey.sign(VALIDATION_TEXT);
         Assert.assertNotNull(signature);
-        Assert.assertFalse(mAsymmetricKey.verify(validationText.toLowerCase(Locale.ROOT), signature));
+        Assert.assertFalse(mAsymmetricKey.verify(VALIDATION_TEXT.toLowerCase(Locale.ROOT), signature));
+    }
+
+    @Test
+    public void testCanEncryptDecrypt() throws ClientException {
+        final String cipherText = mAsymmetricKey.encrypt(VALIDATION_TEXT);
+
+        Assert.assertNotNull(cipherText);
+        Assert.assertNotEquals(VALIDATION_TEXT, cipherText);
+
+        final String decryptedCiphertext = mAsymmetricKey.decrypt(cipherText);
+        Assert.assertEquals(VALIDATION_TEXT, decryptedCiphertext);
     }
 
 }
