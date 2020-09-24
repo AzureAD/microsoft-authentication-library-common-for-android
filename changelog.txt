@@ -7,6 +7,14 @@ vNext
 - Added support for signing and verifying arbitrary String data with select RSA algorithms.
 - Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
 
+Version 3.0.3
+----------
+- Cut down logs (#1046)
+
+Version 3.0.2
+----------
+- Added a check for UNSET OpenIdConnectPromptParameter value (#1042)
+
 Version 3.0.1
 ----------
 - Perform browser sign out on MSAL side (#1032)
