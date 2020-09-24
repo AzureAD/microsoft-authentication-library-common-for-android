@@ -123,9 +123,18 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mRedirectUri = builder.mRedirectUri;
         mState = builder.mState;
         mScope = builder.mScope;
-        mExtraQueryParams = builder.mExtraQueryParams;
+
+        // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        List<Pair<String, String>> extraQueryParams = builder.mExtraQueryParams;
+
+        // Suppressing unchecked warning of casting HashMap to HashMap<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        HashMap<String, String> requestHeaders = builder.mRequestHeaders;
+
+        mExtraQueryParams = extraQueryParams;
         mClaims = builder.mClaims;
-        mRequestHeaders = builder.mRequestHeaders;
+        mRequestHeaders = requestHeaders;
         webViewZoomEnabled = builder.webViewZoomEnabled;
         webViewZoomControlsEnabled = builder.webViewZoomControlsEnabled;
     }
