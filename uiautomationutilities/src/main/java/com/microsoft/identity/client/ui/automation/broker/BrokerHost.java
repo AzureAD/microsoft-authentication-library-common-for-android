@@ -24,8 +24,11 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
+import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
@@ -35,6 +38,8 @@ import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadP
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
+
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 
 public class BrokerHost extends AbstractTestBroker {
 
@@ -192,7 +197,29 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void enableBrowserAccess() {
-        throw new UnsupportedOperationException("Not supported on Broker Host App :(");
+        launch();
+
+        if (shouldHandleFirstRun) {
+            handleFirstRun();
+        }
+
+        // Click enable browser access
+        UiAutomatorUtils.handleButtonClick(
+                "com.microsoft.identity.testuserapp:id/buttonInstallCert"
+        );
+
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // Install cert
+        final UiObject certInstaller = device.findObject(new UiSelector().packageName("com.android.certinstaller"));
+        certInstaller.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        Assert.assertTrue(
+                "Microsoft Authenticator - cert installer dialog appears.",
+                certInstaller.exists()
+        );
+
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
 
     @Override
