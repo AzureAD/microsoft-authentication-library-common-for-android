@@ -108,8 +108,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .extraQueryStringParameter(
                         parameters.getExtraQueryStringParameters() != null ?
                                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
-                                : null
-                ).prompt(parameters.getPrompt().name())
+                                : null)
+                .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
                 .correlationId(parameters.getCorrelationId())
