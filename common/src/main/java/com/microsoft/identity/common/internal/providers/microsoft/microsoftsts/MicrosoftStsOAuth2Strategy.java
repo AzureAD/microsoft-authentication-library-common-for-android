@@ -484,6 +484,8 @@ public class MicrosoftStsOAuth2Strategy
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
 
+            // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+            @SuppressWarnings(WarningType.deprecation_warning)
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,
                     headers,

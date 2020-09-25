@@ -67,6 +67,11 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * Emitted when a particular padding mechanism is requested but is not available in the environment.
+     */
+    public static final String NO_SUCH_PADDING = "no_such_padding";
+
+    /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
      */
     public static final String MALFORMED_URL = "malformed_url";
@@ -169,6 +174,11 @@ public class ClientException extends BaseException {
      * Emitted when the target KeyStore has not been initialized (loaded).
      */
     public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
+
+    /**
+     * Emitted if any of the certificates in the keystore fail to load.
+     */
+    public static final String CERTIFICATE_LOAD_FAILURE = "certificate_load_failure";
 
     /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.

@@ -213,6 +213,8 @@ public abstract class OAuth2Strategy
             );
         }
 
+        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+        @SuppressWarnings(WarningType.deprecation_warning)
         final HttpResponse response = HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
                 headers,
@@ -278,6 +280,8 @@ public abstract class OAuth2Strategy
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         // Send request
+        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+        @SuppressWarnings(WarningType.deprecation_warning)
         final HttpResponse response = HttpRequest.sendPost(
                 ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,
