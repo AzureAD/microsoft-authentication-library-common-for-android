@@ -52,9 +52,14 @@ import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -76,7 +81,7 @@ public class CommandDispatcher {
     private static final ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
-     * submitSilent - Run a command using the silent thread pool
+     * submitSilent - Run a command using the silent thread pool.
      *
      * @param command
      */
@@ -107,48 +112,68 @@ public class CommandDispatcher {
             return;
         }
 
+        final ResultFuture<CommandResult> finalFuture = future;
+
         sSilentExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                try {
+                    final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
 
-                // set correlation id on parameters as it may not already be set
-                command.getParameters().setCorrelationId(correlationId);
+                    // set correlation id on parameters as it may not already be set
+                    command.getParameters().setCorrelationId(correlationId);
 
-                EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                    EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
-                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                CommandResult commandResult = null;
+                    CommandResult commandResult = null;
 
-                //Log operation parameters
-                if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                    logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
-                    EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
+                    //Log operation parameters
+                    if (command.getParameters() instanceof SilentTokenCommandParameters) {
+                        logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
+                        EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
+                    }
+
+                    //Check cache to see if the same command completed in the last 30 seconds
+                    commandResult = sCommandResultCache.get(command);
+
+                    //If nothing in cache, execute the command and cache the result
+                    if (commandResult == null) {
+                        commandResult = executeCommand(command);
+                        cacheCommandResult(command, commandResult);
+                    } else {
+                        Logger.info(
+                                TAG + methodName,
+                                "Silent command result returned from cache."
+                        );
+                    }
+
+                    // set correlation id on Local Authentication Result
+                    setCorrelationIdOnResult(commandResult, correlationId);
+
+                    Telemetry.getInstance().flush(correlationId);
+                    EstsTelemetry.getInstance().flush(command, commandResult);
+                    finalFuture.setResult(commandResult);
+                    //Return the result via the callback
+                } catch (Throwable t) {
+                    finalFuture.setException(new ExecutionException(t));
+                } finally {
+                    final ResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                    if (mapFuture == null) {
+                        // If this has happened, the command that we started with has mutated.  We will
+                        // examine every entry in the map, find the one with the same object identity
+                        // and remove it.
+                        Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
+                                + " the calling application was " + command.getParameters().getApplicationName(), null);
+                        for (final Iterator<Map.Entry<BaseCommand, ResultFuture<CommandResult>>> itr = sExecutingCommandMap.entrySet().iterator(); itr.hasNext(); ) {
+                            final Map.Entry<BaseCommand, ResultFuture<CommandResult>> e = itr.next();
+                            if (command == e.getKey()) {
+                                itr.remove();
+                            }
+                        }
+                    }
                 }
-
-                //Check cache to see if the same command completed in the last 30 seconds
-                commandResult = sCommandResultCache.get(command);
-
-                //If nothing in cache, execute the command and cache the result
-                if (commandResult == null) {
-                    commandResult = executeCommand(command);
-                    cacheCommandResult(command, commandResult);
-                } else {
-                    Logger.info(
-                            TAG + methodName,
-                            "Silent command result returned from cache."
-                    );
-                }
-
-                // set correlation id on Local Authentication Result
-                setCorrelationIdOnResult(commandResult, correlationId);
-
-                Telemetry.getInstance().flush(correlationId);
-                EstsTelemetry.getInstance().flush(command, commandResult);
-
-                //Return the result via the callback
-                sExecutingCommandMap.remove(command).setResult(commandResult);
             }
         });
     }
