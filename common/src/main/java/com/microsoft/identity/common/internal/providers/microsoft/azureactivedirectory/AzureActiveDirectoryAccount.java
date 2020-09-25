@@ -31,9 +31,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * Inherits from account and implements the getUniqueIdentifier method for returning a unique identifier for an AAD User UTID, UID combined as a single identifier per current MSAL implementation.
  */
+@EqualsAndHashCode(callSuper = true)
 public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     private static final String TAG = AzureActiveDirectoryAccount.class.getSimpleName();

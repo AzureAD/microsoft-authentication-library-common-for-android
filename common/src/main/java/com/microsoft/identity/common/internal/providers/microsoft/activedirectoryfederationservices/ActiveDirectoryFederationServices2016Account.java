@@ -26,10 +26,13 @@ import com.microsoft.identity.common.BaseAccount;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * The ADFS 2016 Account Object.
  */
 @SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
+@EqualsAndHashCode(callSuper = true)
 public class ActiveDirectoryFederationServices2016Account extends BaseAccount {
 
     @Override
