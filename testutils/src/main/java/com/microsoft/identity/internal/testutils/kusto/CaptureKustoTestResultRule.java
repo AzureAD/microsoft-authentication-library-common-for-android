@@ -46,7 +46,7 @@ public class CaptureKustoTestResultRule implements TestRule {
             public void evaluate() throws Throwable {
                 Log.i(TAG, "Starting to write test results to file.");
                 final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-                final String runnerInstance = "MSAL RobolectricTest";
+                final String runnerInstance = "MSAL SlicePipeline Run # " + com.microsoft.identity.internal.testutils.BuildConfig.RUN_ID;
                 final String runnerVersion = "";
                 final String scaleUnit = BuildConfig.DC;
                 final String testName = description.getDisplayName();
