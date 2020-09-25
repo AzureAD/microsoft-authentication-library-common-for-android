@@ -81,6 +81,35 @@ public class CommandDispatcherTest {
         testLatch.await();
     }
 
+    @Test
+    public void testSubmitSilentWithParamMutation() {
+        // TODO
+    }
+
+    @Test
+    public void testSubmitSilentWithException() {
+        // TODO Use the ExceptionCommand
+    }
+
+    static class ExceptionCommand extends BaseCommand<String> {
+
+        public ExceptionCommand(@NonNull final CommandParameters parameters,
+                                @NonNull final CommandCallback callback) {
+            super(parameters, getTestController(), callback, "test_id");
+        }
+
+        @Override
+        public String execute() {
+            throw new RuntimeException("An unexpected exception!");
+        }
+
+        @Override
+        public boolean isEligibleForEstsTelemetry() {
+            return false;
+        }
+    }
+
+
     static class TestCommand extends BaseCommand<String> {
 
         public TestCommand(@NonNull final CommandParameters parameters,
