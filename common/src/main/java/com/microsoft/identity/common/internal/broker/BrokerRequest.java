@@ -54,7 +54,7 @@ public class BrokerRequest implements Serializable {
         final static String CLIENT_APP_NAME = "client_app_name";
         final static String CLIENT_APP_VERSION = "client_app_version";
         final static String CLIENT_VERSION = "client_version";
-        final static String CLIENT_SDKTYPE = "client_sdktype";
+        final static String CLIENT_SDK_TYPE = "client_sdk_type";
         final static String ENVIRONMENT = "environment";
         final static String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
         final static String AUTHORIZATION_AGENT = "authorization_agent";
@@ -174,7 +174,7 @@ public class BrokerRequest implements Serializable {
      * Sdk Type
      */
     @NonNull
-    @SerializedName(SerializedNames.CLIENT_SDKTYPE)
+    @SerializedName(SerializedNames.CLIENT_SDK_TYPE)
     private SdkType mSdkType;
 
     /**
