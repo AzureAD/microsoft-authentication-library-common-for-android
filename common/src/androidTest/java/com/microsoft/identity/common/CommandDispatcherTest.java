@@ -48,6 +48,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
+import lombok.SneakyThrows;
+
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
 
@@ -162,6 +164,23 @@ public class CommandDispatcherTest {
         @Override
         public int hashCode() {
             return Objects.hash(super.hashCode(), value);
+        }
+    }
+
+    public static class LatchedTestCommand extends TestCommand {
+        final CountDownLatch latch;
+
+        public LatchedTestCommand(@NonNull CommandParameters parameters, @NonNull CommandCallback callback, int value,
+                                  CountDownLatch latch) {
+            super(parameters, callback, value);
+            this.latch = latch;
+        }
+
+        @SneakyThrows
+        @Override
+        public String execute() {
+            latch.await();
+            return super.execute();
         }
     }
 
