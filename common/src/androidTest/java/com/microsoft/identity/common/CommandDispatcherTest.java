@@ -29,6 +29,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.internal.commands.Command;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -44,11 +45,12 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
-import lombok.SneakyThrows;
 
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
@@ -79,7 +81,13 @@ public class CommandDispatcherTest {
     public void testCanSubmitSilently() throws InterruptedException {
         final CountDownLatch testLatch = new CountDownLatch(1);
 
-        final BaseCommand<String> testCommand = new TestCommand(
+        final BaseCommand<String> testCommand = getTestCommand(testLatch);
+        CommandDispatcher.submitSilent(testCommand);
+        testLatch.await();
+    }
+
+    private TestCommand getTestCommand(final CountDownLatch testLatch) {
+        return new TestCommand(
                 getEmptyTestParams(),
                 new CommandCallback<String, Exception>() {
                     @Override
@@ -100,18 +108,56 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                     }
                 }, 0);
-        CommandDispatcher.submitSilent(testCommand);
-        testLatch.await();
     }
 
     @Test
-    public void testSubmitSilentWithParamMutation() {
-        // TODO
+    public void testSubmitSilentWithParamMutation() throws Exception {
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch1 = new CountDownLatch(1);
+        CountDownLatch testLatch2 = new CountDownLatch(1);
+
+        final TestCommand testCommand = new LatchedTestCommand(
+                getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        Assert.fail();
+                        testLatch.countDown();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                        testLatch.countDown();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        Assert.assertEquals(TEST_RESULT_STR, s);
+                        testLatch.countDown();
+                    }
+                }, 0, submitLatch, submitLatch1);
+        CommandDispatcher.submitSilent(testCommand);
+        submitLatch1.await();
+        testCommand.value = 2;
+        submitLatch.countDown();
+        testLatch.await();
+
+        // This is required, because it gives us a guarantee of visibility on the
+        // changes made in the sExecutingCommandMap.
+        CommandDispatcher.submitSilent(getTestCommand(testLatch2));
+        testLatch2.await();
+
+        Field f = CommandDispatcher.class.getDeclaredField("sExecutingCommandMap");
+        f.setAccessible(true);
+        Map map = (Map) f.get(null);
+        Assert.assertEquals(0, map.size());
     }
 
     @Test
     public void testSubmitSilentWithException() {
-        // TODO Use the ExceptionCommand
+
     }
 
     static class ExceptionCommand extends BaseCommand<String> {
@@ -134,7 +180,7 @@ public class CommandDispatcherTest {
 
 
     static class TestCommand extends BaseCommand<String> {
-        int value;
+        public int value;
 
         public TestCommand(@NonNull final CommandParameters parameters,
                            @NonNull final CommandCallback callback, int value) {
@@ -169,19 +215,26 @@ public class CommandDispatcherTest {
 
     public static class LatchedTestCommand extends TestCommand {
         final CountDownLatch latch;
+        final CountDownLatch latch1;
 
         public LatchedTestCommand(@NonNull final CommandParameters parameters,
                                   @NonNull final CommandCallback callback,
                                   final int value,
-                                  @NonNull final CountDownLatch latch) {
+                                  @NonNull final CountDownLatch latch,
+                                  @NonNull final CountDownLatch latch1) {
             super(parameters, callback, value);
             this.latch = latch;
+            this.latch1 = latch1;
         }
 
-        @SneakyThrows
         @Override
         public String execute() {
-            latch.await();
+            latch1.countDown();
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             return super.execute();
         }
     }
