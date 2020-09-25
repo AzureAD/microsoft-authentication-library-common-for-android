@@ -52,6 +52,26 @@ public class CommandDispatcherTest {
 
     private static final String TEST_RESULT_STR = "test_result_str";
 
+    /*
+     * Tests:
+     * - sumbit command latched command.
+     * - submit duplicate latched commadn
+     * - Alter command 1 so that it will not longer be .equals command2
+     * - submit another duplicate.
+     * - release the latch
+     * - all the commands should reive results
+     * - nothing should be left in the map
+     *
+     * submit command
+     * command throws an Error during execution
+     * the callback should still occur, with an excecutionexception wrapping the error
+     *
+     * submit null
+     * NPE
+     *
+     *
+     */
+
     @Test
     public void testCanSubmitSilently() throws InterruptedException {
         final CountDownLatch testLatch = new CountDownLatch(1);

@@ -191,6 +191,7 @@ public class CommandDispatcher {
                             command.getCallback().onError(throwable);
                         }
                     });
+                    return;
                 }
 
                 // Return command result will post() result for us.
