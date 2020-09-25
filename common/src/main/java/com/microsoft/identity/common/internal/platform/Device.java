@@ -47,6 +47,49 @@ public final class Device {
     private Device() {
     }
 
+    @SuppressWarnings("deprecation")
+    public static Map<String, String> getPlatformIdParameters() {
+        final Map<String, String> platformParameters = new HashMap<>();
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            //CPU_ABI has been deprecated
+            platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
+        } else {
+            final String[] supportedABIs = Build.SUPPORTED_ABIS;
+
+            if (supportedABIs != null && supportedABIs.length > 0) {
+                platformParameters.put(PlatformIdParameters.CPU_PLATFORM, supportedABIs[0]);
+            }
+        }
+
+        platformParameters.put(PlatformIdParameters.OS, String.valueOf(Build.VERSION.SDK_INT));
+        platformParameters.put(PlatformIdParameters.DEVICE_MODEL, Build.MODEL);
+
+        return Collections.unmodifiableMap(platformParameters);
+    }
+
+    public static final class PlatformIdParameters {
+        /**
+         * The String representing the CPU for the device.
+         */
+        public static final String CPU_PLATFORM = "x-client-CPU";
+
+        /**
+         * The String representing the device OS.
+         */
+        public static final String OS = "x-client-OS";
+
+        /**
+         * The String representing the device model.
+         */
+        public static final String DEVICE_MODEL = "x-client-DM";
+
+        /**
+         * String for the broker version.
+         */
+        public static final String BROKER_VERSION = "x-client-brkrver";
+    }
+
     /**
      * Gets the API level of the current runtime.
      *

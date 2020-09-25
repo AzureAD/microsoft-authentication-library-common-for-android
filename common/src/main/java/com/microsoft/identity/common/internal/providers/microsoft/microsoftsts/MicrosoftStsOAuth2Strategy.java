@@ -464,7 +464,7 @@ public class MicrosoftStsOAuth2Strategy
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
-        headers.putAll(DiagnosticContext.getPlatformIdParameters());
+        headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION,DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
 

@@ -193,11 +193,11 @@ public abstract class OAuth2Strategy
         if (request instanceof MicrosoftTokenRequest &&
                 !TextUtils.isEmpty(((MicrosoftTokenRequest) request).getBrokerVersion())) {
             headers.put(
-                    AuthenticationConstants.PlatformIdParameters.BROKER_VERSION,
+                    Device.PlatformIdParameters.BROKER_VERSION,
                     ((MicrosoftTokenRequest) request).getBrokerVersion()
             );
         }
-        headers.putAll(DiagnosticContext.getPlatformIdParameters());
+        headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION,DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
