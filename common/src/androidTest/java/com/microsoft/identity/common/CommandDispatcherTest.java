@@ -56,33 +56,36 @@ public class CommandDispatcherTest {
     public void testCanSubmitSilently() throws InterruptedException {
         final CountDownLatch testLatch = new CountDownLatch(1);
 
-        final BaseCommand<String> testCommand = new TestCommand(new CommandCallback<String, Exception>() {
-            @Override
-            public void onCancel() {
-                Assert.fail();
-                testLatch.countDown();
-            }
+        final BaseCommand<String> testCommand = new TestCommand(
+                getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        Assert.fail();
+                        testLatch.countDown();
+                    }
 
-            @Override
-            public void onError(Exception error) {
-                Assert.fail();
-                testLatch.countDown();
-            }
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.fail();
+                        testLatch.countDown();
+                    }
 
-            @Override
-            public void onTaskCompleted(String s) {
-                Assert.assertEquals(TEST_RESULT_STR, s);
-                testLatch.countDown();
-            }
-        });
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        Assert.assertEquals(TEST_RESULT_STR, s);
+                        testLatch.countDown();
+                    }
+                });
         CommandDispatcher.submitSilent(testCommand);
         testLatch.await();
     }
 
     static class TestCommand extends BaseCommand<String> {
 
-        public TestCommand(@NonNull final CommandCallback callback) {
-            super(getTestParameters(), getTestController(), callback, "test_id");
+        public TestCommand(@NonNull final CommandParameters parameters,
+                           @NonNull final CommandCallback callback) {
+            super(parameters, getTestController(), callback, "test_id");
         }
 
         @Override
@@ -150,7 +153,7 @@ public class CommandDispatcherTest {
         };
     }
 
-    private static CommandParameters getTestParameters() {
+    private static CommandParameters getEmptyTestParams() {
         return CommandParameters.builder().build();
     }
 }
