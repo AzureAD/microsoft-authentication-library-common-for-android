@@ -194,6 +194,7 @@ public class CommandDispatcher {
                             commandCallBackOnError(command, throwable);
                         }
                     });
+                    return;
                 }
 
                 // Return command result will post() result for us.
