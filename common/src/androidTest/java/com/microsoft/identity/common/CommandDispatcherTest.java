@@ -170,8 +170,10 @@ public class CommandDispatcherTest {
     public static class LatchedTestCommand extends TestCommand {
         final CountDownLatch latch;
 
-        public LatchedTestCommand(@NonNull CommandParameters parameters, @NonNull CommandCallback callback, int value,
-                                  CountDownLatch latch) {
+        public LatchedTestCommand(@NonNull final CommandParameters parameters,
+                                  @NonNull final CommandCallback callback,
+                                  final int value,
+                                  @NonNull final CountDownLatch latch) {
             super(parameters, callback, value);
             this.latch = latch;
         }
