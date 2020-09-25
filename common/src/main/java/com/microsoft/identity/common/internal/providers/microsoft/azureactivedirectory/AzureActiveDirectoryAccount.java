@@ -29,11 +29,15 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import lombok.EqualsAndHashCode;
 
 /**
  * Inherits from account and implements the getUniqueIdentifier method for returning a unique identifier for an AAD User UTID, UID combined as a single identifier per current MSAL implementation.
  */
+@EqualsAndHashCode(callSuper = true)
 public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     private static final String TAG = AzureActiveDirectoryAccount.class.getSimpleName();
@@ -58,7 +62,7 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
     public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
                                        @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);
-        final Map<String, ?> claims = idToken.getTokenClaims();
+        final Map<String, ?> claims = new HashMap<>(idToken.getTokenClaims());
         mIdentityProvider = (String) claims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
         Logger.verbose(TAG, "Init: " + TAG);
     }
@@ -68,14 +72,14 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      *
      * @param idp The identity provider to set.
      */
-    public void setIdentityProvider(final String idp) {
+    public synchronized void setIdentityProvider(final String idp) {
         mIdentityProvider = idp;
     }
 
     /**
      * @return The identity provider of the user authenticated. Can be null if not returned from the service.
      */
-    public String getIdentityProvider() {
+    public synchronized String getIdentityProvider() {
         return mIdentityProvider;
     }
 
