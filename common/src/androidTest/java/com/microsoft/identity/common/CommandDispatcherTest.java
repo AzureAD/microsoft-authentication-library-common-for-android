@@ -45,6 +45,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 @RunWith(AndroidJUnit4.class)
@@ -96,7 +97,7 @@ public class CommandDispatcherTest {
                         Assert.assertEquals(TEST_RESULT_STR, s);
                         testLatch.countDown();
                     }
-                });
+                }, 0);
         CommandDispatcher.submitSilent(testCommand);
         testLatch.await();
     }
@@ -131,10 +132,12 @@ public class CommandDispatcherTest {
 
 
     static class TestCommand extends BaseCommand<String> {
+        int value;
 
         public TestCommand(@NonNull final CommandParameters parameters,
-                           @NonNull final CommandCallback callback) {
+                           @NonNull final CommandCallback callback, int value) {
             super(parameters, getTestController(), callback, "test_id");
+            this.value = value;
         }
 
         @Override
@@ -145,6 +148,20 @@ public class CommandDispatcherTest {
         @Override
         public boolean isEligibleForEstsTelemetry() {
             return false;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+            TestCommand that = (TestCommand) o;
+            return value == that.value;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(super.hashCode(), value);
         }
     }
 
