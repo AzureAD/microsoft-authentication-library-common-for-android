@@ -85,8 +85,10 @@ public class CommandDispatcher {
     private static ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
-     * MUST be executed under the mapAccessLock;
-     * @param command
+     * Remove all keys that are the command reference from the executing command map.  Since if they key has
+     * been changed, remove will not work, construct a new map and add all keys that are not identically
+     * that key into the new map.
+     * @param command the command whose identity to use to cleanse the map.
      */
     // Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
