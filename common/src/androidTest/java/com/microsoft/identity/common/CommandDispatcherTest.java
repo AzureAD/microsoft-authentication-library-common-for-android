@@ -40,6 +40,8 @@ import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
+import com.microsoft.identity.common.internal.result.ResultFuture;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -95,7 +97,6 @@ public class CommandDispatcherTest {
         final CountDownLatch testLatch = new CountDownLatch(1);
         CountDownLatch submitLatch = new CountDownLatch(1);
         CountDownLatch submitLatch1 = new CountDownLatch(1);
-        CountDownLatch testLatch2 = new CountDownLatch(1);
 
         final TestCommand testCommand = new LatchedTestCommand(
                 getEmptyTestParams(),
@@ -118,17 +119,12 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                     }
                 }, 0, submitLatch, submitLatch1);
-        CommandDispatcher.submitSilent(testCommand);
+        FinalizableResultFuture f = CommandDispatcher.submitSilentReturningFuture(testCommand);
         submitLatch1.await();
         testCommand.value = 2;
         submitLatch.countDown();
         testLatch.await();
-
-        // This is required, because it gives us a guarantee of visibility on the
-        // changes made in the sExecutingCommandMap.
-        CommandDispatcher.submitSilent(getTestCommand(testLatch2));
-        testLatch2.await();
-
+        f.isFinalized();
         Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
     }
 
