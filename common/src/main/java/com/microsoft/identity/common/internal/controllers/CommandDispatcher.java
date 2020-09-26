@@ -50,6 +50,7 @@ import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -84,7 +85,7 @@ public class CommandDispatcher {
     @GuardedBy("mapAccessLock")
     // Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
-    private static ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+    private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
      * Remove all keys that are the command reference from the executing command map.  Since if they key has
@@ -95,8 +96,8 @@ public class CommandDispatcher {
     // Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
     private static void cleanMap(BaseCommand command) {
-        ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
-        for (Map.Entry<BaseCommand, ResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
+        ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
+        for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
             if (command != e.getKey()) {
                 newMap.put(e.getKey(), e.getValue());
             }
@@ -118,6 +119,17 @@ public class CommandDispatcher {
      * @param command
      */
     public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+        submitSilentReturningFuture(command);
+    }
+
+    /**
+     * submitSilent - Run a command using the silent thread pool, and return the future governing it.
+     *
+     * @param command
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -126,11 +138,11 @@ public class CommandDispatcher {
 
         final Handler handler = new Handler(Looper.getMainLooper());
         synchronized (mapAccessLock) {
-            ResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
+            FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
 
             if (null == future) {
-                future = new ResultFuture<>();
-                final ResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
+                future = new FinalizableResultFuture<>();
+                final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
 
                 if (null == putValue) {
                     // our value was inserted.
@@ -138,14 +150,14 @@ public class CommandDispatcher {
                 } else {
                     // Our value was not inserted, grab the one that was and hang a new listener off it
                     putValue.whenComplete(getCommandResultConsumer(command, handler));
-                    return;
+                    return putValue;
                 }
             } else {
                 future.whenComplete(getCommandResultConsumer(command, handler));
-                return;
+                return future;
             }
 
-            final ResultFuture<CommandResult> finalFuture = future;
+            final FinalizableResultFuture<CommandResult> finalFuture = future;
 
             sSilentExecutor.execute(new Runnable() {
                 @Override
@@ -193,7 +205,7 @@ public class CommandDispatcher {
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
                         synchronized (mapAccessLock) {
-                            final ResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                            final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
                             if (mapFuture == null) {
                                 // If this has happened, the command that we started with has mutated.  We will
                                 // examine every entry in the map, find the one with the same object identity
@@ -202,11 +214,15 @@ public class CommandDispatcher {
                                 Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
                                         + " the calling application was " + command.getParameters().getApplicationName(), null);
                                 cleanMap(command);
+                                finalFuture.setFinalized();
+                            } else {
+                                mapFuture.setFinalized();
                             }
                         }
                     }
                 }
             });
+            return finalFuture;
         }
     }
 
