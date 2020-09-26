@@ -92,8 +92,7 @@ public class CommandDispatcher {
     @SuppressWarnings(WarningType.rawtype_warning)
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
-        for (final Iterator<Map.Entry<BaseCommand, ResultFuture<CommandResult>>> itr = sExecutingCommandMap.entrySet().iterator(); itr.hasNext(); ) {
-            final Map.Entry<BaseCommand, ResultFuture<CommandResult>> e = itr.next();
+        for (Map.Entry<BaseCommand, ResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
             if (command != e.getKey()) {
                 newMap.put(e.getKey(), e.getValue());
             }

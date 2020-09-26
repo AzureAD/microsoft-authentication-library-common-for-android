@@ -157,7 +157,26 @@ public class CommandDispatcherTest {
 
     @Test
     public void testSubmitSilentWithException() {
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CommandDispatcher.submitSilent(new ExceptionCommand(getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        Assert.fail();
+                        testLatch.countDown();
+                    }
 
+                    @Override
+                    public void onError(Exception error) {
+                        testLatch.countDown();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        Assert.fail();
+                        testLatch.countDown();
+                    }
+                }));
     }
 
     static class ExceptionCommand extends BaseCommand<String> {
