@@ -29,7 +29,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
-import com.microsoft.identity.common.internal.commands.Command;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -38,18 +37,16 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
+import com.microsoft.identity.common.internal.controllers.CommandResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
-import com.microsoft.identity.common.internal.result.ResultFuture;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.lang.reflect.Field;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -74,24 +71,32 @@ public class CommandDispatcherTest {
                 new CommandCallback<String, Exception>() {
                     @Override
                     public void onCancel() {
-                        Assert.fail();
                         testLatch.countDown();
+                        Assert.fail();
                     }
 
                     @Override
                     public void onError(Exception error) {
-                        Assert.fail();
                         testLatch.countDown();
+                        Assert.fail();
                     }
 
                     @Override
                     public void onTaskCompleted(String s) {
-                        Assert.assertEquals(TEST_RESULT_STR, s);
                         testLatch.countDown();
+                        Assert.assertEquals(TEST_RESULT_STR, s);
                     }
                 }, 0);
     }
 
+    /**
+     * This test represents the case where a command changes underneath our system
+     * while we're using it as a key.  They're not immutable, so they're not safe to
+     * use as keys in a map.  It won't hurt, though, unless we can't get rid of them.
+     * To test this, we submit a command, block before it executes, alter it, release it,
+     * and then make sure it gets cleaned up.
+     * @throws Exception
+     */
     @Test
     public void testSubmitSilentWithParamMutation() throws Exception {
         final CountDownLatch testLatch = new CountDownLatch(1);
@@ -103,28 +108,30 @@ public class CommandDispatcherTest {
                 new CommandCallback<String, Exception>() {
                     @Override
                     public void onCancel() {
-                        Assert.fail();
                         testLatch.countDown();
+                        Assert.fail();
                     }
 
                     @Override
                     public void onError(Exception error) {
-                        Assert.fail();
                         testLatch.countDown();
+                        Assert.fail();
                     }
 
                     @Override
                     public void onTaskCompleted(String s) {
-                        Assert.assertEquals(TEST_RESULT_STR, s);
                         testLatch.countDown();
+                        Assert.assertEquals(TEST_RESULT_STR, s);
                     }
                 }, 0, submitLatch, submitLatch1);
-        FinalizableResultFuture f = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
         submitLatch1.await();
         testCommand.value = 2;
         submitLatch.countDown();
         testLatch.await();
-        f.isFinalized();
+        Assert.assertTrue(f.isDone());
+        Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
+        f.isCleanedUp();
         Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
     }
 
@@ -135,8 +142,8 @@ public class CommandDispatcherTest {
                 new CommandCallback<String, Exception>() {
                     @Override
                     public void onCancel() {
-                        Assert.fail();
                         testLatch.countDown();
+                        Assert.fail();
                     }
 
                     @Override
@@ -146,8 +153,8 @@ public class CommandDispatcherTest {
 
                     @Override
                     public void onTaskCompleted(String s) {
-                        Assert.fail();
                         testLatch.countDown();
+                        Assert.fail();
                     }
                 }));
     }
