@@ -188,6 +188,7 @@ public class CommandDispatcher {
                                 // If this has happened, the command that we started with has mutated.  We will
                                 // examine every entry in the map, find the one with the same object identity
                                 // and remove it.
+                                // ADO:TODO:1153495 - Rekey this map with stable string keys.
                                 Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
                                         + " the calling application was " + command.getParameters().getApplicationName(), null);
                                 cleanMap(command);
