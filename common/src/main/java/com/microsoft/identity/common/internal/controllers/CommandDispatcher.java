@@ -34,6 +34,7 @@ import android.util.Pair;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.exception.BaseException;
@@ -101,6 +102,14 @@ public class CommandDispatcher {
         }
         sExecutingCommandMap = newMap;
     }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static int outstandingCommands() {
+      synchronized (mapAccessLock) {
+          return sExecutingCommandMap.size();
+      }
+    }
+
 
     /**
      * submitSilent - Run a command using the silent thread pool.
