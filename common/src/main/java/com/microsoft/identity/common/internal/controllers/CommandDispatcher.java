@@ -51,11 +51,9 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -213,10 +211,8 @@ public class CommandDispatcher {
                                 Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
                                         + " the calling application was " + command.getParameters().getApplicationName(), null);
                                 cleanMap(command);
-                                finalFuture.setFinalized();
-                            } else {
-                                mapFuture.setFinalized();
                             }
+                            finalFuture.setCleanedUp();
                         }
                     }
                 }
