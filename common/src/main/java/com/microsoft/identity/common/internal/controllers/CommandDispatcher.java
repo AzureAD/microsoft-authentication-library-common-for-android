@@ -80,18 +80,15 @@ public class CommandDispatcher {
 
     private static final Object mapAccessLock = new Object();
     @GuardedBy("mapAccessLock")
-    // Suppressing rawtype warnings due to the generic type BaseCommand
-    @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
      * Remove all keys that are the command reference from the executing command map.  Since if they key has
      * been changed, remove will not work, construct a new map and add all keys that are not identically
      * that key into the new map.
+     *
      * @param command the command whose identity to use to cleanse the map.
      */
-    // Suppressing rawtype warnings due to the generic type BaseCommand
-    @SuppressWarnings(WarningType.rawtype_warning)
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
@@ -104,9 +101,9 @@ public class CommandDispatcher {
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public static int outstandingCommands() {
-      synchronized (mapAccessLock) {
-          return sExecutingCommandMap.size();
-      }
+        synchronized (mapAccessLock) {
+            return sExecutingCommandMap.size();
+        }
     }
 
 
@@ -115,7 +112,7 @@ public class CommandDispatcher {
      *
      * @param command
      */
-    public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+    public static void submitSilent(@NonNull final BaseCommand command) {
         submitSilentReturningFuture(command);
     }
 
@@ -125,7 +122,7 @@ public class CommandDispatcher {
      * @param command
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@NonNull final BaseCommand command) {
 
         final String methodName = ":submitSilent";
         Logger.verbose(
