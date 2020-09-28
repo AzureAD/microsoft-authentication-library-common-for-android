@@ -1,3 +1,7 @@
+Version 3.0.4
+----------
+- Fix for duplicate_command caching bug due to Command permutation (#1055)
+
 Version 3.0.3
 ----------
 - Cut down logs (#1046)
