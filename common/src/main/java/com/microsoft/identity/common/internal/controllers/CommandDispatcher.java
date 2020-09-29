@@ -31,8 +31,10 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.WarningType;
@@ -48,14 +50,16 @@ import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -74,16 +78,57 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+
+    private static final Object mapAccessLock = new Object();
+    @GuardedBy("mapAccessLock")
     // Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
-    private static final ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+    private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
-     * submitSilent - Run a command using the silent thread pool
+     * Remove all keys that are the command reference from the executing command map.  Since if they key has
+     * been changed, remove will not work, construct a new map and add all keys that are not identically
+     * that key into the new map.  <strong>MUST</strong> only be used under the mapAccessLock.
+     *
+     * @param command the command whose identity to use to cleanse the map.
+     */
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
+    private static void cleanMap(BaseCommand command) {
+        ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
+        for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
+            if (command != e.getKey()) {
+                newMap.put(e.getKey(), e.getValue());
+            }
+        }
+        sExecutingCommandMap = newMap;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static int outstandingCommands() {
+        synchronized (mapAccessLock) {
+            return sExecutingCommandMap.size();
+        }
+    }
+
+
+    /**
+     * submitSilent - Run a command using the silent thread pool.
      *
      * @param command
      */
     public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+        submitSilentReturningFuture(command);
+    }
+
+    /**
+     * submitSilent - Run a command using the silent thread pool, and return the future governing it.
+     *
+     * @param command
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -91,69 +136,91 @@ public class CommandDispatcher {
         );
 
         final Handler handler = new Handler(Looper.getMainLooper());
-        ResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
+        synchronized (mapAccessLock) {
+            FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
 
-        if (null == future) {
-            future = new ResultFuture<>();
-            final ResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
+            if (null == future) {
+                future = new FinalizableResultFuture<>();
+                final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
 
-            if (null == putValue) {
-                // our value was inserted.
-                future.whenComplete(getCommandResultConsumer(command, handler));
-            } else {
-                // Our value was not inserted, grab the one that was and hang a new listener off it
-                putValue.whenComplete(getCommandResultConsumer(command, handler));
-                return;
-            }
-        } else {
-            future.whenComplete(getCommandResultConsumer(command, handler));
-            return;
-        }
-
-        sSilentExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
-
-                // set correlation id on parameters as it may not already be set
-                command.getParameters().setCorrelationId(correlationId);
-
-                EstsTelemetry.getInstance().initTelemetryForCommand(command);
-
-                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
-                CommandResult commandResult = null;
-
-                //Log operation parameters
-                if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                    logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
-                    EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
-                }
-
-                //Check cache to see if the same command completed in the last 30 seconds
-                commandResult = sCommandResultCache.get(command);
-
-                //If nothing in cache, execute the command and cache the result
-                if (commandResult == null) {
-                    commandResult = executeCommand(command);
-                    cacheCommandResult(command, commandResult);
+                if (null == putValue) {
+                    // our value was inserted.
+                    future.whenComplete(getCommandResultConsumer(command, handler));
                 } else {
-                    Logger.info(
-                            TAG + methodName,
-                            "Silent command result returned from cache."
-                    );
+                    // Our value was not inserted, grab the one that was and hang a new listener off it
+                    putValue.whenComplete(getCommandResultConsumer(command, handler));
+                    return putValue;
                 }
-
-                // set correlation id on Local Authentication Result
-                setCorrelationIdOnResult(commandResult, correlationId);
-
-                Telemetry.getInstance().flush(correlationId);
-                EstsTelemetry.getInstance().flush(command, commandResult);
-
-                //Return the result via the callback
-                sExecutingCommandMap.remove(command).setResult(commandResult);
+            } else {
+                future.whenComplete(getCommandResultConsumer(command, handler));
+                return future;
             }
-        });
+
+            final FinalizableResultFuture<CommandResult> finalFuture = future;
+
+            sSilentExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+
+                        // set correlation id on parameters as it may not already be set
+                        command.getParameters().setCorrelationId(correlationId);
+
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
+                        CommandResult commandResult = null;
+
+                        //Log operation parameters
+                        if (command.getParameters() instanceof SilentTokenCommandParameters) {
+                            logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
+                            EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
+                        }
+
+                        //Check cache to see if the same command completed in the last 30 seconds
+                        commandResult = sCommandResultCache.get(command);
+
+                        //If nothing in cache, execute the command and cache the result
+                        if (commandResult == null) {
+                            commandResult = executeCommand(command);
+                            cacheCommandResult(command, commandResult);
+                        } else {
+                            Logger.info(
+                                    TAG + methodName,
+                                    "Silent command result returned from cache."
+                            );
+                        }
+
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+
+                        Telemetry.getInstance().flush(correlationId);
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        finalFuture.setResult(commandResult);
+                        //Return the result via the callback
+                    } catch (final Throwable t) {
+                        finalFuture.setException(new ExecutionException(t));
+                    } finally {
+                        synchronized (mapAccessLock) {
+                            final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                            if (mapFuture == null) {
+                                // If this has happened, the command that we started with has mutated.  We will
+                                // examine every entry in the map, find the one with the same object identity
+                                // and remove it.
+                                // ADO:TODO:1153495 - Rekey this map with stable string keys.
+                                Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
+                                        + " the calling application was " + command.getParameters().getApplicationName(), null);
+                                cleanMap(command);
+                            }
+                            finalFuture.setCleanedUp();
+                        }
+                    }
+                }
+            });
+            return finalFuture;
+        }
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
@@ -169,6 +236,7 @@ public class CommandDispatcher {
                             commandCallBackOnError(command, throwable);
                         }
                     });
+                    return;
                 }
 
                 // Return command result will post() result for us.
