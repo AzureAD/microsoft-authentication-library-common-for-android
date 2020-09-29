@@ -36,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
@@ -607,14 +608,16 @@ public class BrokerMsalController extends BaseController {
                     "Failed to launch browser sign out with browser=[" + browserPackageName + "]. Skipping.", e);
         }
     }
-
+    
+    // Suppressing rawtype warnings due to the generic type AuthorizationResult
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws ClientException {
         throw new ClientException("deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
     }
 
     @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
+    public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
         throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
     }
 
@@ -625,7 +628,7 @@ public class BrokerMsalController extends BaseController {
      * @param msalOAuth2TokenCache
      */
     private void saveMsaAccountToCache(@NonNull final Bundle resultBundle,
-                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
+                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
         final String methodName = ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
@@ -652,7 +655,7 @@ public class BrokerMsalController extends BaseController {
                         brokerResult.getFamilyId()
                 );
 
-                msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
+                msalOAuth2TokenCacheSetSingleSignOnState(msalOAuth2TokenCache, microsoftStsAccount, microsoftRefreshToken);
             } catch (ServiceException e) {
                 Logger.errorPII(TAG + methodName, "Exception while creating Idtoken or ClientInfo," +
                         " cannot save MSA account tokens", e
@@ -661,6 +664,12 @@ public class BrokerMsalController extends BaseController {
             }
         }
 
+    }
+
+    // Suppressing unchecked warnings due to casting of MicrosoftStsAccount to GenericAccount and MicrosoftRefreshToken to GenericRefreshToken in the call to setSingleSignOnState method
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void msalOAuth2TokenCacheSetSingleSignOnState(@SuppressWarnings(WarningType.rawtype_warning) @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache, MicrosoftStsAccount microsoftStsAccount, MicrosoftRefreshToken microsoftRefreshToken) throws ClientException {
+        msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
     }
 
     private boolean isMicrosoftAuthServiceSupported() {

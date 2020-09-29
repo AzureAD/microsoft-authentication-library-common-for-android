@@ -31,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.UnsupportedEncodingException;
@@ -42,6 +43,8 @@ import java.util.concurrent.Future;
  * and/or authentication information (OIDC)
  * Possible implementations include: EmbeddedWebViewAuthorizationStrategy, SystemWebViewAuthorizationStrategy, Device Code, etc...
  */
+// Suppressing rawtype warnings due to the generic types AuthorizationResult, OAuth2Strategy and AuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
     private WeakReference<Context> mReferencedApplicationContext;

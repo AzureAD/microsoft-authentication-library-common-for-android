@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.util.LruCache;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 
 /**
@@ -35,6 +36,8 @@ public class CommandResultCache {
     private final static int DEFAULT_ITEM_COUNT = 250;
 
     //Cache items allowed is still TBD... for now using default value of 250
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
     private LruCache<BaseCommand, CommandResultCacheItem> mCache;
 
     public CommandResultCache() {
@@ -45,7 +48,7 @@ public class CommandResultCache {
         mCache = new LruCache<>(maxItemCount);
     }
 
-    public CommandResult get(BaseCommand key) {
+    public CommandResult get(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key) {
         synchronized (mCache) {
             CommandResultCacheItem item = mCache.get(key);
             if (item != null) {
@@ -61,7 +64,7 @@ public class CommandResultCache {
         }
     }
 
-    public void put(BaseCommand key, CommandResult value) {
+    public void put(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key, CommandResult value) {
 
         CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
         //NOTE: If an existing item using this key already in the cache it will be replaced

@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -46,6 +47,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.Future;
 
+// Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
+@SuppressWarnings(WarningType.rawtype_warning)
 public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
@@ -106,15 +109,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         authIntent.setData(requestUrl);
 
-        final Intent intent = AuthorizationActivity.createStartIntent(
-                getApplicationContext(),
-                authIntent,
-                requestUrl.toString(),
-                mAuthorizationRequest.getRedirectUri(),
-                mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER,
-                true,
-                true);
+        final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
         // singleTask launchMode is required for the authorization redirect is from an external browser
         // in the browser authorization flow
         // For broker request we need to clear all activities in the task and bring Authorization Activity to the
@@ -131,6 +126,20 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         return mAuthorizationResultFuture;
     }
 
+    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private Intent buildAuthorizationActivityStartIntent(Intent authIntent, Uri requestUrl) {
+        return AuthorizationActivity.createStartIntent(
+                    getApplicationContext(),
+                    authIntent,
+                    requestUrl.toString(),
+                    mAuthorizationRequest.getRedirectUri(),
+                    mAuthorizationRequest.getRequestHeaders(),
+                    AuthorizationAgent.BROWSER,
+                    true,
+                    true);
+    }
+
     private void checkNotDisposed() {
         if (mDisposed) {
             throw new IllegalStateException("Service has been disposed and rendered inoperable");
@@ -141,6 +150,9 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
             dispose();
+
+            //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
+            @SuppressWarnings(WarningType.unchecked_warning)
             final AuthorizationResult result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(
                             resultCode,

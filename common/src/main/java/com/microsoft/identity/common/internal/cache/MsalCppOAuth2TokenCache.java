@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -49,6 +50,8 @@ import static com.microsoft.identity.common.internal.authscheme.BearerAuthentica
 /**
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, IAccountCredentialAdapter, MsalCppOAuth2TokenCache and MsalOAuth2TokenCache
+@SuppressWarnings(WarningType.rawtype_warning)
 public class MsalCppOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -71,6 +74,8 @@ public class MsalCppOAuth2TokenCache
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
+    // Suppressing unchecked warnings due to casting of IAccountCredentialAdapter with the generics in the call to the constructor of parent class
+    @SuppressWarnings(WarningType.unchecked_warning)
     private MsalCppOAuth2TokenCache(final Context context,
                                     final IAccountCredentialCache accountCredentialCache,
                                     final IAccountCredentialAdapter accountCredentialAdapter) {
@@ -85,13 +90,20 @@ public class MsalCppOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalCppOAuth2TokenCache.
      */
+    // Suppressing unchecked warning as the return type requiring generic parameter which is not provided
+    @SuppressWarnings(WarningType.unchecked_warning)
     public static MsalCppOAuth2TokenCache create(@NonNull final Context context) {
         final MsalOAuth2TokenCache msalOAuth2TokenCache = MsalOAuth2TokenCache.create(context);
-        return new MsalCppOAuth2TokenCache(
+
+        // Suppressing unchecked warnings due to the generic types not provided while creating object of MsalCppOAuth2TokenCache
+        @SuppressWarnings(WarningType.unchecked_warning)
+        MsalCppOAuth2TokenCache msalCppOAuth2TokenCache = new MsalCppOAuth2TokenCache(
                 context,
                 msalOAuth2TokenCache.getAccountCredentialCache(),
                 msalOAuth2TokenCache.getAccountCredentialAdapter()
         );
+
+        return msalCppOAuth2TokenCache;
     }
 
     /**

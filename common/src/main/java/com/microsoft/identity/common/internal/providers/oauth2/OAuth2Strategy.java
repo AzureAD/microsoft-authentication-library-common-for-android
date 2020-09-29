@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
@@ -69,6 +70,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  * Serves as the abstract base class for an oAuth2 client implementation; The base class should be extended
  * by Identity Provider specific implementations; For example: Azure Active Directory, ADFS, Microsoft STS, Etc...
  */
+// Suppressing rawtype warnings due to generic types AuthorizationRequest, AuthorizationReuest.Builder, AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+@SuppressWarnings(WarningType.rawtype_warning)
 public abstract class OAuth2Strategy
         <GenericAccessToken extends AccessToken,
                 GenericAccount extends BaseAccount,
@@ -127,7 +130,12 @@ public abstract class OAuth2Strategy
         validateAuthorizationRequest(request);
         Future<AuthorizationResult> future = null;
         try {
-            future = authorizationStrategy.requestAuthorization(request, this);
+
+            // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
+            @SuppressWarnings(WarningType.unchecked_warning)
+            Future<AuthorizationResult> authorizationFuture = authorizationStrategy.requestAuthorization(request, this);
+
+            future = authorizationFuture;
         } catch (final UnsupportedEncodingException | ClientException exc) {
             //TODO
         }
@@ -156,12 +164,18 @@ public abstract class OAuth2Strategy
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
 
         if (result.getSuccess()) {
-            validateTokenResponse(
-                    request,
-                    (GenericTokenResponse) result.getSuccessResponse()
-            );
+            validateTokenResponse(request, result);
         }
         return result;
+    }
+
+    // Suppressing unchecked warnings due to casting from TokenResponse to GenericTokenResponse in arguments in the call to method validateTokenResponse()
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void validateTokenResponse(GenericTokenRequest request, GenericTokenResult result) throws ClientException {
+        validateTokenResponse(
+                request,
+                (GenericTokenResponse) result.getSuccessResponse()
+        );
     }
 
     protected HttpResponse performTokenRequest(final GenericTokenRequest request) throws IOException, ClientException {
@@ -197,6 +211,8 @@ public abstract class OAuth2Strategy
             );
         }
 
+        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+        @SuppressWarnings(WarningType.deprecation_warning)
         final HttpResponse response = HttpRequest.sendPost(
                 new URL(mTokenEndpoint),
                 headers,
@@ -262,6 +278,8 @@ public abstract class OAuth2Strategy
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         // Send request
+        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+        @SuppressWarnings(WarningType.deprecation_warning)
         final HttpResponse response = HttpRequest.sendPost(
                 ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,

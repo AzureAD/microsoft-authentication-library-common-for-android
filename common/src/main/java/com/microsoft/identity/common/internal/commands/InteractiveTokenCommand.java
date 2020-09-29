@@ -26,6 +26,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -41,14 +42,14 @@ public class InteractiveTokenCommand extends TokenCommand {
 
     public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
                                    @NonNull final BaseController controller,
-                                   @NonNull final CommandCallback callback,
+                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
                                    @NonNull final String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
     public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
                                    @NonNull List<BaseController> controllers,
-                                   @NonNull CommandCallback callback,
+                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                    @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 
@@ -33,6 +34,8 @@ import java.util.List;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+// Suppressing rawtype warnings due to the generic types CommandCallback, BaseController
+@SuppressWarnings(WarningType.rawtype_warning)
 @Getter
 @EqualsAndHashCode
 public abstract class BaseCommand<T> implements Command<T> {

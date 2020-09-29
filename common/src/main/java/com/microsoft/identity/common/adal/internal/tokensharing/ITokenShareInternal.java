@@ -26,6 +26,17 @@ public interface ITokenShareInternal {
 
     /**
      * For the supplied user unique identifier (OID/upn/preferred_username), return the
+     * corresponding refresh token & metadata for that account if the current application is a
+     * member of FoCI (family of clientIds).
+     *
+     * @param identifier The identifier of the sought user's FRT.
+     * @return The {@link ITokenShareResultInternal}.
+     * @throws Exception If the requested token cannot be found.
+     */
+    ITokenShareResultInternal getOrgIdFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
+
+    /**
+     * For the supplied user unique identifier (OID/upn/preferred_username), return the
      * corresponding refresh token for that account if the current application is a member of FoCI
      * (family of clientIds). The token will be wrapped inside an opaque self-serializing object
      * and cannot be used directly against an STS.
@@ -44,6 +55,17 @@ public interface ITokenShareInternal {
      * @throws Exception If an error is encountered while saving the supplied blob.
      */
     void saveOrgIdFamilyRefreshToken(String ssoStateSerializerBlob) throws Exception;
+
+    /**
+     * For the supplied user unique identifier (OID/upn/preferred_username), return the
+     * corresponding refresh token & metadata for that account if the current application is a
+     * member of FoCI (family of clientIds).
+     *
+     * @param identifier The identifier of the sought user's FRT.
+     * @return The {@link ITokenShareResultInternal}.
+     * @throws Exception If the requested token cannot be found.
+     */
+    ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(String identifier) throws Exception;
 
     /**
      * For the provided MSA user id, retrieve the FRT belonging to this user (if exists).

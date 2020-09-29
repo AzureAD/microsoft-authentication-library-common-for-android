@@ -37,6 +37,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -80,15 +81,19 @@ public class CommandDispatcher {
 
     private static final Object mapAccessLock = new Object();
     @GuardedBy("mapAccessLock")
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
      * Remove all keys that are the command reference from the executing command map.  Since if they key has
      * been changed, remove will not work, construct a new map and add all keys that are not identically
-     * that key into the new map.  <strong>MUST</strong> only be used under the mapAccessLock.
+     * that key into the new map.
      *
      * @param command the command whose identity to use to cleanse the map.
      */
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
@@ -112,7 +117,7 @@ public class CommandDispatcher {
      *
      * @param command
      */
-    public static void submitSilent(@NonNull final BaseCommand command) {
+    public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
         submitSilentReturningFuture(command);
     }
 
@@ -122,7 +127,7 @@ public class CommandDispatcher {
      * @param command
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@NonNull final BaseCommand command) {
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
 
         final String methodName = ":submitSilent";
         Logger.verbose(
@@ -219,7 +224,7 @@ public class CommandDispatcher {
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
-            @NonNull final BaseCommand command,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
             @NonNull final Handler handler) {
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
@@ -228,7 +233,7 @@ public class CommandDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            command.getCallback().onError(throwable);
+                            commandCallBackOnError(command, throwable);
                         }
                     });
                     return;
@@ -238,6 +243,12 @@ public class CommandDispatcher {
                 returnCommandResult(command, result, handler);
             }
         };
+    }
+
+    // Suppressing unchecked warnings due to casting of Throwable to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallBackOnError(@SuppressWarnings(WarningType.rawtype_warning) @NonNull BaseCommand command, Throwable throwable) {
+        command.getCallback().onError(throwable);
     }
 
     static void clearCommandCache() {
@@ -252,7 +263,7 @@ public class CommandDispatcher {
      * @param command
      * @return
      */
-    private static CommandResult executeCommand(BaseCommand command) {
+    private static CommandResult executeCommand(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command) {
 
         Object result = null;
         BaseException baseException = null;
@@ -297,24 +308,37 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
+    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command, final CommandResult result, Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 switch (result.getStatus()) {
                     case ERROR:
-                        command.getCallback().onError(result.getResult());
+                        commandCallbackOnError(command, result);
                         break;
                     case COMPLETED:
-                        command.getCallback().onTaskCompleted(result.getResult());
+                        commandCallbackOnTaskCompleted(command, result);
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
+                        break;
                     default:
 
                 }
             }
         });
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onError(result.getResult());
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onTaskCompleted(result.getResult());
     }
 
     /**
@@ -324,7 +348,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
-    private static void cacheCommandResult(BaseCommand command, CommandResult commandResult) {
+    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command, CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
             sCommandResultCache.put(command, commandResult);
         }
