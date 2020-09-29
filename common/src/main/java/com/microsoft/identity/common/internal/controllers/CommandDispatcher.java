@@ -156,15 +156,6 @@ public class CommandDispatcher {
                 future.whenComplete(getCommandResultConsumer(command, handler));
                 return future;
             }
-        } else {
-            future.whenComplete(getCommandResultConsumer(command, handler));
-            return;
-        }
-
-        sSilentExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId(), command.getParameters().getSdkType().getProductName(), command.getParameters().getSdkVersion());
 
             final FinalizableResultFuture<CommandResult> finalFuture = future;
 
@@ -172,7 +163,7 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     try {
-                        final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                        final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId(), command.getParameters().getSdkType().getProductName(), command.getParameters().getSdkVersion());
 
                         // set correlation id on parameters as it may not already be set
                         command.getParameters().setCorrelationId(correlationId);
@@ -620,7 +611,6 @@ public class CommandDispatcher {
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
         rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
         rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
-
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
