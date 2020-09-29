@@ -7,6 +7,10 @@ vNext
 - Added support for signing and verifying arbitrary String data with select RSA algorithms.
 - Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
 
+Version 3.0.4
+----------
+- Fix for duplicate_command caching bug due to Command permutation (#1055)
+
 Version 3.0.3
 ----------
 - Cut down logs (#1046)
