@@ -35,6 +35,7 @@ import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -59,7 +60,9 @@ public class BrokerHost extends AbstractTestBroker {
 
         // Click the join btn
         final UiObject joinBtn = UiAutomatorUtils.obtainUiObjectWithResourceIdAndEnabledFlag(
-                "com.microsoft.identity.testuserapp:id/buttonJoin", true
+                CommonUtils.getResourceId(
+                        getPackageName(), "buttonJoin"
+                ), true
         );
 
         try {
