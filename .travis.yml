@@ -30,7 +30,7 @@ android:
     - sys-img-armeabi-v7a-android-$EMULATOR_API_VERSION
 
 before_install:
-  - yes | sdkmanager "plaforms;android-29"
+  - yes | sdkmanager "platforms;android-29"
   - chmod +x gradlew
 
 before_cache:
