@@ -259,7 +259,7 @@ public class BrokerHost extends AbstractTestBroker {
             final String[] upnDialogTextParts = showUpnDialog.getText().split(":");
 
             // get the UPN if it is there, else return null (in case of error)
-            if (upnDialogTextParts[0].equalsIgnoreCase("UPN")) {
+            if ("UPN".equalsIgnoreCase(upnDialogTextParts[0])) {
                 return upnDialogTextParts[1];
             } else {
                 return null;
