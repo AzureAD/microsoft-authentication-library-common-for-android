@@ -76,21 +76,22 @@ public class TestUtils {
 
     /**
      * Return a SharedPreferences instance that works with stores containing encrypted values.
+     *
      * @param sharedPrefName the name of the shared preferences file.
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
     public static SharedPreferences getEncryptedSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
         final SharedPreferences barePreferences = context.getSharedPreferences(sharedPrefName, Context.MODE_PRIVATE);
-        final StorageHelper helper = new StorageHelper(context);
-        if (helper == null) {
+        final StorageHelper storageHelper = new StorageHelper(context);
+        if (storageHelper == null) {
             return barePreferences;
         }
         return new SharedPreferences() {
 
             private String decrypt(String s)  {
                 try {
-                    return s == null ? s : helper.decrypt(s);
+                    return s == null ? s : storageHelper.decrypt(s);
                 } catch (GeneralSecurityException | IOException e) {
                     Logger.error("TestUtils:decrypt", "Error decryping value", e);
                     return null;
@@ -99,7 +100,7 @@ public class TestUtils {
 
             private String encrypt(@Nullable String value)  {
                 try {
-                    return value == null ? value : helper.encrypt(value);
+                    return value == null ? value : storageHelper.encrypt(value);
                 } catch (GeneralSecurityException | IOException e) {
                     Logger.error("TestUtils:encrypt", "Error encryping value", e);
                     return null;
