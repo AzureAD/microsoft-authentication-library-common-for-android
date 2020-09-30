@@ -26,6 +26,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -60,6 +61,8 @@ import java.net.HttpURLConnection;
  * TokenResult,
  * AuthorizationResult>
  */
+// Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationResult and AuthorizationResultFactory
+@SuppressWarnings(WarningType.rawtype_warning)
 public class AzureActiveDirectoryOAuth2Strategy
         extends OAuth2Strategy<
         AzureActiveDirectoryAccessToken,
