@@ -83,11 +83,9 @@ public class LocalMSALController extends BaseController {
     private static final String TAG = LocalMSALController.class.getSimpleName();
 
     @SuppressWarnings(WarningType.rawtype_warning)
-    @EqualsAndHashCode.Exclude
     private AuthorizationStrategy mAuthorizationStrategy = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
-    @EqualsAndHashCode.Exclude
     private AuthorizationRequest mAuthorizationRequest = null;
 
     @Override
