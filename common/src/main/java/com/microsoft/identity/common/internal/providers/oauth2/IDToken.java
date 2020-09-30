@@ -37,6 +37,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
+
 import static com.microsoft.identity.common.internal.net.ObjectMapper.TAG;
 
 /**
@@ -44,6 +46,7 @@ import static com.microsoft.identity.common.internal.net.ObjectMapper.TAG;
  * Standard ID token Claims per spec
  * http://openid.net/specs/openid-connect-core-1_0.html#StandardClaims
  */
+@EqualsAndHashCode
 public class IDToken {
 
     /**
@@ -188,7 +191,7 @@ public class IDToken {
     public static final String UPDATED_AT = "updated_at";
 
 
-    private Map<String, ?> mTokenClaims = null;
+    private final Map<String, ?> mTokenClaims;
     private final String mRawIdToken;
 
     /**
