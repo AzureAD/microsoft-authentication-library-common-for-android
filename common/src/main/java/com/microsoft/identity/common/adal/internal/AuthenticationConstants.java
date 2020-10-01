@@ -1587,27 +1587,4 @@ public final class AuthenticationConstants {
         public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
     }
 
-    public static final class PlatformIdParameters {
-
-        /**
-         * The String representing the CPU for the device.
-         */
-        public static final String CPU_PLATFORM = "x-client-CPU";
-
-        /**
-         * The String representing the device OS.
-         */
-        public static final String OS = "x-client-OS";
-
-        /**
-         * The String representing the device model.
-         */
-        public static final String DEVICE_MODEL = "x-client-DM";
-
-        /**
-         * String for the broker version.
-         */
-        public static final String BROKER_VERSION = "x-client-brkrver";
-    }
-
 }
