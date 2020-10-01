@@ -31,6 +31,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import lombok.EqualsAndHashCode;
+
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.ACCESS_TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
@@ -40,6 +42,7 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
+@EqualsAndHashCode
 public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
