@@ -466,7 +466,7 @@ public class MicrosoftStsOAuth2Strategy
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION,DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
 
         headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());

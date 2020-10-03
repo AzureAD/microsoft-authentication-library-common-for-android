@@ -217,6 +217,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
+                        DiagnosticContext.clear();
                     }
                 }
             });
@@ -427,50 +428,54 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId(),
-                            command.getParameters().getSdkType().getProductName(),
-                            command.getParameters().getSdkVersion()
-                    );
+                    try {
+                        final String correlationId = initializeDiagnosticContext(
+                                command.getParameters().getCorrelationId(),
+                                command.getParameters().getSdkType().getProductName(),
+                                command.getParameters().getSdkVersion()
+                        );
 
-                    // set correlation id on parameters as it may not already be set
-                    command.getParameters().setCorrelationId(correlationId);
+                        // set correlation id on parameters as it may not already be set
+                        command.getParameters().setCorrelationId(correlationId);
 
-                    EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
-                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                    if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
-                        logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
-                    }
-
-                    final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            completeInteractive(intent);
+                        if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
+                            logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
                         }
-                    };
 
-                    CommandResult commandResult;
-                    Handler handler = new Handler(Looper.getMainLooper());
+                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                completeInteractive(intent);
+                            }
+                        };
 
-                    localBroadcastManager.registerReceiver(
-                            resultReceiver,
-                            new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                        CommandResult commandResult;
+                        Handler handler = new Handler(Looper.getMainLooper());
 
-                    sCommand = command;
+                        localBroadcastManager.registerReceiver(
+                                resultReceiver,
+                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
 
-                    //Try executing request
-                    commandResult = executeCommand(command);
-                    sCommand = null;
-                    localBroadcastManager.unregisterReceiver(resultReceiver);
+                        sCommand = command;
 
-                    // set correlation id on Local Authentication Result
-                    setCorrelationIdOnResult(commandResult, correlationId);
+                        //Try executing request
+                        commandResult = executeCommand(command);
+                        sCommand = null;
+                        localBroadcastManager.unregisterReceiver(resultReceiver);
 
-                    EstsTelemetry.getInstance().flush(command, commandResult);
-                    Telemetry.getInstance().flush(correlationId);
-                    returnCommandResult(command, commandResult, handler);
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        Telemetry.getInstance().flush(correlationId);
+                        returnCommandResult(command, commandResult, handler);
+                    } finally {
+                        DiagnosticContext.clear();
+                    }
                 }
             });
         }
