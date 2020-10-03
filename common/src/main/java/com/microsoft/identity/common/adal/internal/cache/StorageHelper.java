@@ -590,7 +590,13 @@ public class StorageHelper implements IStorageHelper {
                 return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
 
             case ADAL_USER_DEFINED_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
+                final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
+                if (secretKeyData == null) {
+                    Logger.error("StorageHelper:loadSecretKey", "Went looking for a key that wasn't there.", null);
+                    return null;
+                }
+                SecretKey key = getSecretKey(secretKeyData);
+                return key;
 
             case KEYSTORE_ENCRYPTED_KEY:
                 return loadKeyStoreEncryptedKey();

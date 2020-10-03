@@ -22,9 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import androidx.annotation.GuardedBy;
+import androidx.collection.ArrayMap;
+
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,9 +52,10 @@ public enum AuthenticationSettings {
     // This is used to accept two broker key. Today we have company portal and azure authenticator apps,
     // and each app is also going to send the other app's keys. They need to set package name and corresponding
     // keys in the map. used by broker.
-    private final Map<String, byte[]> mBrokerSecretKeys = new HashMap<String, byte[]>(2);
+    private final Map<String, byte[]> mBrokerSecretKeys = new ArrayMap<String, byte[]>(2);
 
-    private AtomicReference<byte[]> mSecretKeyData = new AtomicReference<>();
+    @GuardedBy("this")
+    private byte[] mSecretKeyData;
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
@@ -88,8 +93,8 @@ public enum AuthenticationSettings {
      *
      * @return byte[] secret data
      */
-    public byte[] getSecretKeyData() {
-        return mSecretKeyData.get();
+    public synchronized byte[] getSecretKeyData() {
+        return mSecretKeyData == null ? null : Arrays.copyOf(mSecretKeyData, mSecretKeyData.length);
     }
 
     /**
@@ -108,12 +113,12 @@ public enum AuthenticationSettings {
      *
      * @param rawKey App related key to use in encrypt/decrypt
      */
-    public void setSecretKey(byte[] rawKey) {
+    public synchronized void setSecretKey(byte[] rawKey) {
         if (rawKey == null || rawKey.length != SECRET_RAW_KEY_LENGTH) {
             throw new IllegalArgumentException("rawKey");
         }
 
-        mSecretKeyData.set(rawKey);
+        mSecretKeyData = Arrays.copyOf(rawKey, SECRET_RAW_KEY_LENGTH);
     }
 
     /**
@@ -151,9 +156,9 @@ public enum AuthenticationSettings {
     /**
      * For test cases only.
      * */
-    public void clearSecretKeysForTestCases(){
+    public synchronized void clearSecretKeysForTestCases(){
         mBrokerSecretKeys.clear();
-        mSecretKeyData.set(null);
+        mSecretKeyData = null;
     }
 
     /**
