@@ -595,8 +595,7 @@ public class StorageHelper implements IStorageHelper {
                     Logger.error("StorageHelper:loadSecretKey", "Went looking for a key that wasn't there.", null);
                     return null;
                 }
-                SecretKey key = getSecretKey(secretKeyData);
-                return key;
+                return getSecretKey(secretKeyData);
 
             case KEYSTORE_ENCRYPTED_KEY:
                 return loadKeyStoreEncryptedKey();
