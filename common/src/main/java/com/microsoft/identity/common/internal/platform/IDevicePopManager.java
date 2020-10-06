@@ -150,8 +150,18 @@ public interface IDevicePopManager {
      * Information about the backing of the underlying keystore.
      */
     enum SecureHardwareState {
+
         /**
-         * Return if the underlying private key resides inside secure hardware (e.g., Trusted
+         * Returned if the underlying private key resides inside secure hardware (e.g., Trusted
+         * Execution Environment (TEE) or Secure Element (SE)) and its hardware backing has been
+         * attested.
+         *
+         * @see <a href="https://developer.android.com/training/articles/security-key-attestation">Security Key Attestation</a>
+         */
+        TRUE_ATTESTED,
+
+        /**
+         * Returned if the underlying private key resides inside secure hardware (e.g., Trusted
          * Execution Environment (TEE) or Secure Element (SE)). No mechanism of attestation is
          * provided or specified.
          */
