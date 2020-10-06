@@ -24,7 +24,9 @@ package com.microsoft.identity.client.ui.automation.annotations;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
+import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -34,6 +36,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * if a test should be run/skipped.
  */
 @Retention(value = RUNTIME)
+@Target(value = {ElementType.TYPE, ElementType.METHOD})
 public @interface SupportedBrokers {
 
     Class<? extends ITestBroker>[] brokers();
