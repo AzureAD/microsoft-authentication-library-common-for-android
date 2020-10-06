@@ -1580,10 +1580,13 @@ public final class AuthenticationConstants {
         public static final String VERSION = "x-client-Ver";
 
         /**
-         * The Strings representing SdkType
+         * The String representing the MSAL SdkType.
          */
         public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
 
+        /**
+         * The String representing the MSAL.CPP SdkType.
+         */
         public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
     }
 

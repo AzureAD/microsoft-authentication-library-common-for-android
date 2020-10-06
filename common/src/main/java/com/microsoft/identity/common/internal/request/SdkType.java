@@ -42,10 +42,11 @@ public enum SdkType {
 
     }
 
+    /**
+     * The check for SdkType.MSALCPP is added to ensure
+     * the uniformity of logic with SdkType.MSAL
+     */
     public boolean isCapableOfMSA() {
-        if ((this == SdkType.MSAL) || (this == SdkType.MSALCPP)) {
-            return true;
-        }
-        return false;
+        return (this == SdkType.MSAL) || (this == SdkType.MSALCPP);
     }
 }

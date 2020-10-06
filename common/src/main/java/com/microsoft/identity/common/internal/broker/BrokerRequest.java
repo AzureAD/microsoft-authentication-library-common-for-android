@@ -171,21 +171,21 @@ public class BrokerRequest implements Serializable {
     private String mMsalVersion;
 
     /**
-     * Sdk Type
+     * Sdk Type.
      */
     @NonNull
     @SerializedName(SerializedNames.CLIENT_SDK_TYPE)
     private SdkType mSdkType;
 
     /**
-     * AAD Environment
+     * AAD Environment.
      */
     @NonNull
     @SerializedName(SerializedNames.ENVIRONMENT)
     private String mEnvironment;
 
     /**
-     * Boolean indicated whether app supports multiple clouds
+     * Boolean indicated whether app supports multiple clouds.
      */
     @NonNull
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
