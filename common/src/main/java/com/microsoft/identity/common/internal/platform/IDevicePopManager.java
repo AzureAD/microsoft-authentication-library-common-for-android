@@ -147,6 +147,29 @@ public interface IDevicePopManager {
     }
 
     /**
+     * Information about the backing of the underlying keystore.
+     */
+    enum SecureHardwareState {
+        /**
+         * Return if the underlying private key resides inside secure hardware (e.g., Trusted
+         * Execution Environment (TEE) or Secure Element (SE)). No mechanism of attestation is
+         * provided or specified.
+         */
+        TRUE_UNATTESTED,
+
+        /**
+         * The the underlying private key is not inside secure hardware.
+         */
+        FALSE,
+
+        /**
+         * It is unknown where the underlying key resides, due to lack of API support for
+         * determination.
+         */
+        UNKNOWN
+    }
+
+    /**
      * Tests if keys exist.
      *
      * @return True if keys exist, false otherwise.
@@ -250,6 +273,14 @@ public interface IDevicePopManager {
      * @throws ClientException If decryption fails.
      */
     String decrypt(Cipher cipher, String ciphertext) throws ClientException;
+
+    /**
+     * Gets the {@link SecureHardwareState} of this DevicePopManager.
+     *
+     * @return The SecureHardwareState.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    SecureHardwareState getSecureHardwareState() throws ClientException;
 
     /**
      * Gets the public key associated with this DevicePoPManager formatted per the supplied
