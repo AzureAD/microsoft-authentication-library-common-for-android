@@ -172,7 +172,7 @@ public interface IDevicePopManager {
          * It is unknown where the underlying key resides, due to an error during keystore
          * interrogation.
          */
-        UNKNOWN_QRY_ERR
+        UNKNOWN_QUERY_ERROR
     }
 
     /**
