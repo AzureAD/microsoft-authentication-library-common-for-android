@@ -1080,6 +1080,7 @@ class DevicePopManager implements IDevicePopManager {
 
             // If the key material is hidden (HSM or otherwise) the length is -1
             if (length >= minKeySize || length < 0) {
+                // Log out secure hardware state -- we don't need the result here
                 getSecureHardwareState(kp);
 
                 return kp;
