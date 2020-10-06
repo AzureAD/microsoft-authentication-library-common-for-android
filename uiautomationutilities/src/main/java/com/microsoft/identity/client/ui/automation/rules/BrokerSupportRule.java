@@ -37,6 +37,15 @@ import org.junit.runners.model.Statement;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * A rule to determine if a test case should be skipped or run depending on whether the test
+ * supports the supplied broker. This rule uses the {@link SupportedBrokers} annotation to see if
+ * the test case should be ignored or run. The test case is executed if the current broker is
+ * declared as supported for the test via the annotation and the test is ignored if the current
+ * broker is not declared in supported brokers specified via the annotation. It is important to
+ * note that if the {@link SupportedBrokers} annotation is not declared on the test, then the rule
+ * will assume that all brokers are supported and will run the test against the current broker.
+ */
 public class BrokerSupportRule implements TestRule {
 
     private final static String TAG = BrokerSupportRule.class.getSimpleName();

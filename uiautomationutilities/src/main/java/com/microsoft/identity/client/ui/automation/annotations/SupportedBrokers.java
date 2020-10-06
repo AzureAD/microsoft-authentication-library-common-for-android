@@ -28,6 +28,11 @@ import java.lang.annotation.Retention;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
+/**
+ * An annotation indicating which brokers are supported for a given test. This annotation is coupled
+ * with the {@link com.microsoft.identity.client.ui.automation.rules.BrokerSupportRule} to decide
+ * if a test should be run/skipped.
+ */
 @Retention(value = RUNTIME)
 public @interface SupportedBrokers {
 
