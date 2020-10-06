@@ -90,7 +90,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
             );
         }
 
-        // isCapableOfMSA() to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
+        // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
         if (getSdkType().isCapableOfMSA() &&
                 !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
             throw new ArgumentException(

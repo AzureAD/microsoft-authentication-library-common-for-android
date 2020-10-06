@@ -485,7 +485,7 @@ public class BrokerRequest implements Serializable {
         }
 
         /**
-         * Sdk Type
+         * Sdk Type.
          */
         @NonNull
         public BrokerRequest.Builder sdkType(@NonNull final SdkType sdkType){
