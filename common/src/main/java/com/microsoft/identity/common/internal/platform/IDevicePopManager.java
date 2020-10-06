@@ -166,7 +166,13 @@ public interface IDevicePopManager {
          * It is unknown where the underlying key resides, due to lack of API support for
          * determination.
          */
-        UNKNOWN
+        UNKNOWN_DOWNLEVEL,
+
+        /**
+         * It is unknown where the underlying key resides, due to an error during keystore
+         * interrogation.
+         */
+        UNKNOWN_QRY_ERR
     }
 
     /**

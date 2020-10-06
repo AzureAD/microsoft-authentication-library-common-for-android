@@ -1112,13 +1112,13 @@ class DevicePopManager implements IDevicePopManager {
                         : SecureHardwareState.FALSE;
             } catch (final Exception e) {
                 Logger.info(TAG, "Failed to query secure hardware state.");
-                return SecureHardwareState.UNKNOWN;
+                return SecureHardwareState.UNKNOWN_QRY_ERR;
             }
         } else {
             Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
         }
 
-        return SecureHardwareState.UNKNOWN;
+        return SecureHardwareState.UNKNOWN_DOWNLEVEL;
     }
 
     /**
