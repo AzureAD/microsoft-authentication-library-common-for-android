@@ -1096,8 +1096,6 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     private SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp) {
-        String msg;
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 final PrivateKey privateKey = kp.getPrivate();
@@ -1106,10 +1104,9 @@ class DevicePopManager implements IDevicePopManager {
                 );
                 final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                 final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                msg = "SecretKey is secure hardware backed? " + isInsideSecureHardware;
-                Logger.info(TAG, msg);
-                return isInsideSecureHardware ?
-                        SecureHardwareState.TRUE_UNATTESTED
+                Logger.info(TAG, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                return isInsideSecureHardware
+                        ? SecureHardwareState.TRUE_UNATTESTED
                         : SecureHardwareState.FALSE;
             } catch (final Exception e) {
                 Logger.info(TAG, "Failed to query secure hardware state.");
