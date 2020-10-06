@@ -81,6 +81,7 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
@@ -1108,8 +1109,8 @@ class DevicePopManager implements IDevicePopManager {
                 return isInsideSecureHardware
                         ? SecureHardwareState.TRUE_UNATTESTED
                         : SecureHardwareState.FALSE;
-            } catch (final Exception e) {
-                Logger.info(TAG, "Failed to query secure hardware state.");
+            } catch (final NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+                Logger.error(TAG, "Failed to query secure hardware state.", e);
                 return SecureHardwareState.UNKNOWN_QUERY_ERROR;
             }
         } else {
