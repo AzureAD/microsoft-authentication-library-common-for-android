@@ -33,7 +33,6 @@ public enum SdkType {
     MSALCPP;
 
 
-
     public String getProductName() {
         if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL;
@@ -41,5 +40,12 @@ public enum SdkType {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_CPP;
         }
 
+    }
+
+    public boolean isCapableOfMSA() {
+        if ((this == SdkType.MSAL) || (this == SdkType.MSALCPP)) {
+            return true;
+        }
+        return false;
     }
 }

@@ -93,7 +93,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
          * The check for SdkType.MSALCPP is added to ensure
          * the uniformity of logic with SdkType.MSAL
          */
-        if ((SdkType.MSAL == getSdkType() || SdkType.MSALCPP == getSdkType()) &&
+        if (getSdkType().isCapableOfMSA() &&
                 !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,

@@ -105,7 +105,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if ((SdkType.MSAL == getSdkType() || SdkType.MSALCPP == getSdkType()) &&
+            if (getSdkType().isCapableOfMSA() &&
                     !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
