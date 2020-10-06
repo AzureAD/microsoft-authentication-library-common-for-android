@@ -182,6 +182,8 @@ public class ClientException extends BaseException {
 
     /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
+     * This error will be emitted if the underlying key material has been cleared or removed from
+     * the keystore.
      */
     public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
 
