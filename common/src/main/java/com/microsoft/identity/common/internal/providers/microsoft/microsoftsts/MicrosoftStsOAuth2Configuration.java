@@ -35,7 +35,6 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
 
     private static final String TAG = MicrosoftStsOAuth2Configuration.class.getSimpleName();
 
-    private static final String ENDPOINT_VERSION = "v2.0";
     private static final String ENDPOINT_SUFFIX = "/oAuth2/v2.0";
     private static final String AUTHORIZE_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/authorize";
     private static final String TOKEN_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/token";
