@@ -81,6 +81,7 @@ import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
@@ -809,6 +810,42 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
+    public SecureHardwareState getSecureHardwareState() throws ClientException {
+        final String errCode;
+        final Exception exception;
+
+        final KeyStore.Entry keyEntry;
+        try {
+            keyEntry = mKeyStore.getEntry(mKeyAlias, null);
+            final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+            return getSecureHardwareState(rsaKeyPair);
+        } catch (final KeyStoreException e) {
+            errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG + ":getSecureHardwareState",
+                errCode,
+                exception
+        );
+
+        throw clientException;
+    }
+
+    @Override
     public @NonNull
     String getPublicKey(@NonNull final PublicKeyFormat format) throws ClientException {
         final String methodName = ":getPublicKey";
@@ -1044,7 +1081,8 @@ class DevicePopManager implements IDevicePopManager {
 
             // If the key material is hidden (HSM or otherwise) the length is -1
             if (length >= minKeySize || length < 0) {
-                logSecureHardwareState(kp);
+                // Log out secure hardware state -- we don't need the result here
+                getSecureHardwareState(kp);
 
                 return kp;
             }
@@ -1058,9 +1096,7 @@ class DevicePopManager implements IDevicePopManager {
         );
     }
 
-    private void logSecureHardwareState(@NonNull final KeyPair kp) {
-        String msg;
-
+    private SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
                 final PrivateKey privateKey = kp.getPrivate();
@@ -1069,15 +1105,19 @@ class DevicePopManager implements IDevicePopManager {
                 );
                 final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                 final boolean isInsideSecureHardware = info.isInsideSecureHardware();
-                msg = "SecretKey is secure hardware backed? " + isInsideSecureHardware;
-            } catch (final Exception e) {
-                msg = "Failed to query secure hardware state.";
+                Logger.info(TAG, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                return isInsideSecureHardware
+                        ? SecureHardwareState.TRUE_UNATTESTED
+                        : SecureHardwareState.FALSE;
+            } catch (final NoSuchAlgorithmException | NoSuchProviderException | InvalidKeySpecException e) {
+                Logger.error(TAG, "Failed to query secure hardware state.", e);
+                return SecureHardwareState.UNKNOWN_QUERY_ERROR;
             }
         } else {
-            msg = "Cannot query secure hardware state (API unavailable <23)";
+            Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
         }
 
-        Logger.info(TAG, msg);
+        return SecureHardwareState.UNKNOWN_DOWNLEVEL;
     }
 
     /**
