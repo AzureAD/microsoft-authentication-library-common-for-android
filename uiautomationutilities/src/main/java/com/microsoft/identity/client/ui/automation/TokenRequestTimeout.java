@@ -42,11 +42,11 @@ public enum TokenRequestTimeout {
         this.timeUnit = timeUnit;
     }
 
-    public long getTime() {
+    long getTime() {
         return time;
     }
 
-    public TimeUnit getTimeUnit() {
+    TimeUnit getTimeUnit() {
         return timeUnit;
     }
 }
