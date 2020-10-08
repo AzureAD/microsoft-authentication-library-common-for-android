@@ -542,7 +542,7 @@ class DevicePopManager implements IDevicePopManager {
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
             final byte[] signedBytes = signature.sign();
-            return Base64.encodeToString(signedBytes, Base64.DEFAULT);
+            return Base64.encodeToString(signedBytes, Base64.NO_WRAP);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -601,7 +601,7 @@ class DevicePopManager implements IDevicePopManager {
             final Signature signature = Signature.getInstance(alg.toString());
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
-            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
+            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.NO_WRAP);
             return signature.verify(signatureBytes);
         } catch (final UnsupportedEncodingException e) {
             errCode = UNSUPPORTED_ENCODING;
