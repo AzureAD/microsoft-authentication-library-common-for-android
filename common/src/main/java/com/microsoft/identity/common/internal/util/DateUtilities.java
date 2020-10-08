@@ -22,10 +22,49 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import androidx.annotation.NonNull;
+
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public final class DateUtilities {
+
+    private static final String LOCALE_PREFIX_ARABIC = "ar";
+    private static final String LOCALE_PREFIX_ASSAMESE = "as";
+    private static final String LOCALE_PREFIX_BENGALI = "bn";
+    private static final String LOCALE_PREFIX_ALGERIAN = "dz";
+    private static final String LOCALE_PREFIX_PERSIAN = "fa";
+    private static final String LOCALE_PREFIX_KASHMIRI = "ks";
+    private static final String LOCALE_PREFIX_MARATHI = "mr";
+    private static final String LOCALE_PREFIX_BURMESE = "my";
+    private static final String LOCALE_PREFIX_NEPALI = "ne";
+    private static final String LOCALE_PREFIX_PUNJABI = "pa";
+    private static final String LOCALE_PREFIX_PASHTO = "ps";
+    private static final String LOCALE_PREFIX_URDU = "ur";
+    private static final String LOCALE_PREFIX_UZBEK = "uz";
+
+    // This list may not be exhaustive, but is represents the set of non-Gregorian locales
+    // available as of AOSP API 24
+    private static final Set<String> NON_GREGORIAN_CALENDAR_LOCALES = new HashSet<>();
+
+    static {
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_ARABIC);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_ASSAMESE);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_BENGALI);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_ALGERIAN);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_PERSIAN);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_KASHMIRI);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_MARATHI);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_BURMESE);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_NEPALI);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_PUNJABI);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_PASHTO);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_URDU);
+        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_UZBEK);
+    }
 
     private DateUtilities() {
     }
@@ -48,6 +87,12 @@ public final class DateUtilities {
         final long currentTimeMillis = System.currentTimeMillis();
         final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
         return currentTimeSecs + expiresIn;
+    }
+
+    public static boolean isLocaleCalendarNonGregorian(@NonNull final Locale inputLocale) {
+        final String localeStr = inputLocale.toString();
+        final String localePrefix = localeStr.split("_")[0];
+        return NON_GREGORIAN_CALENDAR_LOCALES.contains(localePrefix);
     }
 }
 

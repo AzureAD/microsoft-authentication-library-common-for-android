@@ -38,6 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 
 import java.io.ByteArrayOutputStream;
@@ -419,7 +420,7 @@ public class StorageHelper implements IStorageHelper {
         EncryptionType encryptionType = getEncryptionType(encryptedBlob);
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
-            if (isBrokerProcess()){
+            if (isBrokerProcess()) {
                 if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                     keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                     keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
@@ -671,6 +672,13 @@ public class StorageHelper implements IStorageHelper {
             keyStore.load(null);
 
             Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
+
+            // Due to the following bug in lower API versions of keystore, locale workarounds may
+            // need to be applied
+            // https://issuetracker.google.com/issues/37095309
+            final Locale currentLocale = Locale.getDefault();
+            applyKeyStoreLocaleWorkarounds(currentLocale);
+
             final Calendar start = Calendar.getInstance();
             final Calendar end = Calendar.getInstance();
             final int certValidYears = 100;
@@ -683,6 +691,10 @@ public class StorageHelper implements IStorageHelper {
             generator.initialize(getKeyPairGeneratorSpec(mContext, start.getTime(), end.getTime()));
 
             final KeyPair keyPair = generator.generateKeyPair();
+
+            // Reset to our default locale after generating keys
+            Locale.setDefault(currentLocale);
+
             logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
             return keyPair;
         } catch (final GeneralSecurityException | IOException e) {
@@ -700,6 +712,14 @@ public class StorageHelper implements IStorageHelper {
             // To avoid app crashing, re-throw as checked exception
             logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
             throw new KeyStoreException(e);
+        }
+    }
+
+    private static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+        // See: https://issuetracker.google.com/issues/37095309
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
+                && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
+            Locale.setDefault(Locale.ENGLISH);
         }
     }
 
