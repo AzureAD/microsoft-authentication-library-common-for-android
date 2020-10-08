@@ -89,6 +89,12 @@ public final class DateUtilities {
         return currentTimeSecs + expiresIn;
     }
 
+    /**
+     * Checks if the provided locale has a default calendar format that is non-Gregorian.
+     *
+     * @param inputLocale A locale to inspect.
+     * @return True, if the provided locale's default calendar format is non-Gregorian. False otherwise.
+     */
     public static boolean isLocaleCalendarNonGregorian(@NonNull final Locale inputLocale) {
         final String localeStr = inputLocale.toString();
         final String localePrefix = localeStr.split("_")[0];
