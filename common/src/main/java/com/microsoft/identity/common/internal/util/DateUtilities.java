@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.util;
 
 import androidx.annotation.NonNull;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Locale;
@@ -53,23 +54,23 @@ public final class DateUtilities {
 
     // This list may not be exhaustive, but represents the set of non-Gregorian locales
     // available as of AOSP API 24
-    private static final Set<String> NON_GREGORIAN_CALENDAR_LOCALES = new HashSet<>();
-
-    static {
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_ARABIC);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_ASSAMESE);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_BENGALI);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_ALGERIAN);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_PERSIAN);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_KASHMIRI);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_MARATHI);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_BURMESE);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_NEPALI);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_PUNJABI);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_PASHTO);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_URDU);
-        NON_GREGORIAN_CALENDAR_LOCALES.add(LOCALE_PREFIX_UZBEK);
-    }
+    private static final Set<String> NON_GREGORIAN_CALENDAR_LOCALES = new HashSet<>(
+            Arrays.asList(
+                    LOCALE_PREFIX_ARABIC,
+                    LOCALE_PREFIX_ASSAMESE,
+                    LOCALE_PREFIX_BENGALI,
+                    LOCALE_PREFIX_ALGERIAN,
+                    LOCALE_PREFIX_PERSIAN,
+                    LOCALE_PREFIX_KASHMIRI,
+                    LOCALE_PREFIX_MARATHI,
+                    LOCALE_PREFIX_BURMESE,
+                    LOCALE_PREFIX_NEPALI,
+                    LOCALE_PREFIX_PUNJABI,
+                    LOCALE_PREFIX_PASHTO,
+                    LOCALE_PREFIX_URDU,
+                    LOCALE_PREFIX_UZBEK
+            )
+    );
 
     private DateUtilities() {
     }
