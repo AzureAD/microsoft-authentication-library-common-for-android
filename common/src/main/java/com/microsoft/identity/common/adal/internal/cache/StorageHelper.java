@@ -81,6 +81,7 @@ import javax.security.auth.x500.X500Principal;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
 public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
@@ -666,7 +667,7 @@ public class StorageHelper implements IStorageHelper {
             throws GeneralSecurityException, IOException {
         final String methodName = ":generateKeyPairFromAndroidKeyStore";
 
-        synchronized (LOCALE_CHANGE_LOCK) {
+        synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
             // Due to the following bug in lower API versions of keystore, locale workarounds may
             // need to be applied
             // https://issuetracker.google.com/issues/37095309

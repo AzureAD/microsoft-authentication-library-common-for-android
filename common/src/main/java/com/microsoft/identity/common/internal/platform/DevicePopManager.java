@@ -115,6 +115,7 @@ import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -1139,7 +1140,7 @@ class DevicePopManager implements IDevicePopManager {
     private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
-        synchronized (LOCALE_CHANGE_LOCK) {
+        synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
             // See: https://issuetracker.google.com/issues/37095309
             final Locale currentLocale = Locale.getDefault();
             applyKeyStoreLocaleWorkarounds(currentLocale);
