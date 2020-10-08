@@ -85,6 +85,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,6 +95,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
+import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
 import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
@@ -1136,12 +1138,20 @@ class DevicePopManager implements IDevicePopManager {
     private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
+        final Locale currentLocale = Locale.getDefault();
+        applyKeyStoreLocaleWorkarounds(currentLocale); // See: https://issuetracker.google.com/issues/37095309
+
         final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
                 context,
                 RSA_KEY_SIZE,
                 useStrongbox
         );
-        return kpg.generateKeyPair();
+        final KeyPair keyPair = kpg.generateKeyPair();
+
+        // Reset our locale to the default
+        Locale.setDefault(currentLocale);
+
+        return keyPair;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)

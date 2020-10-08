@@ -715,7 +715,7 @@ public class StorageHelper implements IStorageHelper {
         }
     }
 
-    private static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
+    public static synchronized void applyKeyStoreLocaleWorkarounds(@NonNull final Locale currentLocale) {
         // See: https://issuetracker.google.com/issues/37095309
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.M
                 && DateUtilities.isLocaleCalendarNonGregorian(currentLocale)) {
