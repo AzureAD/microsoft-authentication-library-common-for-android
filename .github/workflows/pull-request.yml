@@ -4,7 +4,7 @@ name: pr_validation
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the dev branch
 on:
-  pull-request:
+  pull_request:
     types: [opened, synchronize, reopened, ready_for_revice, labeled, unlabeled]
     branches: [ dev ]
 
