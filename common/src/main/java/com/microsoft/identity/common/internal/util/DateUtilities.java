@@ -32,6 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 public final class DateUtilities {
 
+    /**
+     * Static lock object to use when performing operations that modify locale state of JVM.
+     */
     public static final Object LOCALE_CHANGE_LOCK = new Object();
 
     private static final String LOCALE_PREFIX_ARABIC = "ar";
@@ -48,7 +51,7 @@ public final class DateUtilities {
     private static final String LOCALE_PREFIX_URDU = "ur";
     private static final String LOCALE_PREFIX_UZBEK = "uz";
 
-    // This list may not be exhaustive, but is represents the set of non-Gregorian locales
+    // This list may not be exhaustive, but represents the set of non-Gregorian locales
     // available as of AOSP API 24
     private static final Set<String> NON_GREGORIAN_CALENDAR_LOCALES = new HashSet<>();
 
