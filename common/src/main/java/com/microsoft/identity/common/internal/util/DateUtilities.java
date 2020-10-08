@@ -101,8 +101,7 @@ public final class DateUtilities {
      * @return True, if the provided locale's default calendar format is non-Gregorian. False otherwise.
      */
     public static boolean isLocaleCalendarNonGregorian(@NonNull final Locale inputLocale) {
-        final String localeStr = inputLocale.toString();
-        final String localePrefix = localeStr.split("_")[0];
+        final String localePrefix = inputLocale.getLanguage();
         return NON_GREGORIAN_CALENDAR_LOCALES.contains(localePrefix);
     }
 }
