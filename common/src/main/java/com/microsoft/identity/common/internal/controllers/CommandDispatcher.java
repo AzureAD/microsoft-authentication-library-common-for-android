@@ -45,6 +45,7 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
@@ -163,10 +164,11 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     try {
-                        final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId(), command.getParameters().getSdkType().getProductName(), command.getParameters().getSdkVersion());
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                         // set correlation id on parameters as it may not already be set
-                        command.getParameters().setCorrelationId(correlationId);
+                        commandParameters.setCorrelationId(correlationId);
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
@@ -429,14 +431,15 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     try {
+                        final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(
-                                command.getParameters().getCorrelationId(),
-                                command.getParameters().getSdkType().getProductName(),
-                                command.getParameters().getSdkVersion()
+                                commandParameters.getCorrelationId(),
+                                commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion()
                         );
 
                         // set correlation id on parameters as it may not already be set
-                        command.getParameters().setCorrelationId(correlationId);
+                        commandParameters.setCorrelationId(correlationId);
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
