@@ -32,6 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 public final class DateUtilities {
 
+    public static final Object LOCALE_CHANGE_LOCK = new Object();
+
     private static final String LOCALE_PREFIX_ARABIC = "ar";
     private static final String LOCALE_PREFIX_ASSAMESE = "as";
     private static final String LOCALE_PREFIX_BENGALI = "bn";

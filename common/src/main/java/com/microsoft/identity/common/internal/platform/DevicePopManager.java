@@ -114,6 +114,7 @@ import static com.microsoft.identity.common.exception.ClientException.SIGNING_FA
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
+import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -1138,20 +1139,25 @@ class DevicePopManager implements IDevicePopManager {
     private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
-        final Locale currentLocale = Locale.getDefault();
-        applyKeyStoreLocaleWorkarounds(currentLocale); // See: https://issuetracker.google.com/issues/37095309
+        synchronized (LOCALE_CHANGE_LOCK) {
+            // See: https://issuetracker.google.com/issues/37095309
+            final Locale currentLocale = Locale.getDefault();
+            applyKeyStoreLocaleWorkarounds(currentLocale);
 
-        final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
-                context,
-                RSA_KEY_SIZE,
-                useStrongbox
-        );
-        final KeyPair keyPair = kpg.generateKeyPair();
+            try {
+                final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
+                        context,
+                        RSA_KEY_SIZE,
+                        useStrongbox
+                );
+                final KeyPair keyPair = kpg.generateKeyPair();
 
-        // Reset our locale to the default
-        Locale.setDefault(currentLocale);
-
-        return keyPair;
+                return keyPair;
+            } finally {
+                // Reset our locale to the default
+                Locale.setDefault(currentLocale);
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)

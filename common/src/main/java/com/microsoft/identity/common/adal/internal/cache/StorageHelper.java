@@ -80,6 +80,7 @@ import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 
 public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
@@ -665,53 +666,55 @@ public class StorageHelper implements IStorageHelper {
             throws GeneralSecurityException, IOException {
         final String methodName = ":generateKeyPairFromAndroidKeyStore";
 
-        try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_START);
-
-            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
-            keyStore.load(null);
-
-            Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
-
+        synchronized (LOCALE_CHANGE_LOCK) {
             // Due to the following bug in lower API versions of keystore, locale workarounds may
             // need to be applied
             // https://issuetracker.google.com/issues/37095309
             final Locale currentLocale = Locale.getDefault();
             applyKeyStoreLocaleWorkarounds(currentLocale);
 
-            final Calendar start = Calendar.getInstance();
-            final Calendar end = Calendar.getInstance();
-            final int certValidYears = 100;
-            end.add(Calendar.YEAR, certValidYears);
+            try {
+                logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_START);
 
-            // self signed cert stored in AndroidKeyStore to asym. encrypt key
-            // to a file
-            final KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA",
-                    ANDROID_KEY_STORE);
-            generator.initialize(getKeyPairGeneratorSpec(mContext, start.getTime(), end.getTime()));
+                final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
+                keyStore.load(null);
 
-            final KeyPair keyPair = generator.generateKeyPair();
+                Logger.verbose(TAG + methodName, "Generate KeyPair from AndroidKeyStore");
 
-            // Reset to our default locale after generating keys
-            Locale.setDefault(currentLocale);
+                final Calendar start = Calendar.getInstance();
+                final Calendar end = Calendar.getInstance();
+                final int certValidYears = 100;
+                end.add(Calendar.YEAR, certValidYears);
 
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
-            return keyPair;
-        } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
-            throw e;
-        } catch (final IllegalStateException e) {
-            // There is an issue with AndroidKeyStore when attempting to generate keypair
-            // if user doesn't have pin/passphrase setup for their lock screen.
-            // Issue 177459 : AndroidKeyStore KeyPairGenerator fails to generate
-            // KeyPair after toggling lock type, even without setting the encryptionRequired
-            // flag on the KeyPairGeneratorSpec.
-            // https://code.google.com/p/android/issues/detail?id=177459
-            // The thrown exception in this case is:
-            // java.lang.IllegalStateException: could not generate key in keystore
-            // To avoid app crashing, re-throw as checked exception
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
-            throw new KeyStoreException(e);
+                // self signed cert stored in AndroidKeyStore to asym. encrypt key
+                // to a file
+                final KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA",
+                        ANDROID_KEY_STORE);
+                generator.initialize(getKeyPairGeneratorSpec(mContext, start.getTime(), end.getTime()));
+
+                final KeyPair keyPair = generator.generateKeyPair();
+
+                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
+                return keyPair;
+            } catch (final GeneralSecurityException | IOException e) {
+                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
+                throw e;
+            } catch (final IllegalStateException e) {
+                // There is an issue with AndroidKeyStore when attempting to generate keypair
+                // if user doesn't have pin/passphrase setup for their lock screen.
+                // Issue 177459 : AndroidKeyStore KeyPairGenerator fails to generate
+                // KeyPair after toggling lock type, even without setting the encryptionRequired
+                // flag on the KeyPairGeneratorSpec.
+                // https://code.google.com/p/android/issues/detail?id=177459
+                // The thrown exception in this case is:
+                // java.lang.IllegalStateException: could not generate key in keystore
+                // To avoid app crashing, re-throw as checked exception
+                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
+                throw new KeyStoreException(e);
+            } finally {
+                // Reset to our default locale after generating keys
+                Locale.setDefault(currentLocale);
+            }
         }
     }
 
