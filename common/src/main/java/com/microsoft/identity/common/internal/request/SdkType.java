@@ -32,7 +32,10 @@ public enum SdkType {
     MSAL,
     MSALCPP;
 
-
+    /**
+     * Function for mapping the SdkType to appropriate String
+     * for the purpose of sending it to the telemetry
+     */
     public String getProductName() {
         if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL;
@@ -43,7 +46,7 @@ public enum SdkType {
     }
 
     /**
-     * Determines if the Sdk supports Microsoft Personal Accounts
+     * Determines if the Sdk supports Microsoft Personal Accounts.
      */
     public boolean isCapableOfMSA() {
         return (this == SdkType.MSAL) || (this == SdkType.MSALCPP);

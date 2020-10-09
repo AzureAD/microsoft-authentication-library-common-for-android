@@ -1568,6 +1568,9 @@ public final class AuthenticationConstants {
         public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE = "user_signed_out_from_shared_device";
     }
 
+    /**
+     * Sdk platform and Sdk version fields
+     */
     public static final class SdkPlatformFields {
         /**
          * The String representing the sdk platform.
