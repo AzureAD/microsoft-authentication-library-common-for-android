@@ -3,9 +3,9 @@ ext {
     // SDK
     minSdkVersion = 16
     automationAppMinSDKVersion = 21
-    targetSdkVersion = 28
-    compileSdkVersion = 28
-    buildToolsVersion = "28.0.3"
+    targetSdkVersion = 29
+    compileSdkVersion = 29
+    buildToolsVersion = "29.0.3"
 
     // Plugins
     gradleVersion = '3.3.1'
