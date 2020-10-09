@@ -22,6 +22,6 @@ jobs:
           # Fullyqualified URL to the Azure DevOps organization along with project name(eg, https://dev.azure.com/organization/project-name or https://server.example.com:8080/tfs/DefaultCollection/project-name)
           azure-devops-project-url: 'https://dev.azure.com/IdentityDivision/IDDP'
           # Name of the Azure Pipline to be triggered
-          azure-pipeline-name: 'Nightly Common VSTS Release'
+          azure-pipeline-name: 'Latest Common VSTS Release'
           # Paste personal access token of the user as value of secret variable:AZURE_DEVOPS_TOKEN
           azure-devops-token: '${{ secrets.IDDP_PIPELINE }}'
