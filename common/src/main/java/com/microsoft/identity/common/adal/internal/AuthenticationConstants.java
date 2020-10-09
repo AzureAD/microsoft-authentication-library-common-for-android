@@ -1569,7 +1569,7 @@ public final class AuthenticationConstants {
     }
 
     /**
-     * Sdk platform and Sdk version fields
+     * Sdk platform and Sdk version fields.
      */
     public static final class SdkPlatformFields {
         /**

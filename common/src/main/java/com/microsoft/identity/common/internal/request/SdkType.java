@@ -34,7 +34,7 @@ public enum SdkType {
 
     /**
      * Function for mapping the SdkType to appropriate String
-     * for the purpose of sending it to the telemetry
+     * for the purpose of sending it to the telemetry.
      */
     public String getProductName() {
         if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
