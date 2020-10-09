@@ -8,6 +8,16 @@ apply plugin: 'checkstyle'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
+apply plugin: 'jacoco'
+
+jacoco {
+    reportsDir = file("$buildDir/reports/unitTests")
+}
+
+//To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+}
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
@@ -40,6 +50,7 @@ android {
 
     buildTypes {
         debug {
+            testCoverageEnabled true
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.identity.testuserapp\"")
@@ -50,7 +61,7 @@ android {
             buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
             minifyEnabled false
             debuggable false
-            testCoverageEnabled false
+            testCoverageEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
         }
@@ -154,6 +165,54 @@ task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
     destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+}
+
+task createCommonCoverageReportTask() {
+    group = "Common Reporting"
+    description = "Generate Coverage Report tasks for every build Flavour"
+
+    def buildTypes = android.buildTypes.collect { type ->
+        type.name
+    }
+    def productFlavors = android.productFlavors.collect { flavor ->
+        flavor.name
+    }
+    // When no product flavors defined, use empty string
+    if (!productFlavors) productFlavors.add('')
+    productFlavors.each { productFlavorName ->
+        buildTypes.each { buildTypeName ->
+            def sourceName
+            if (!productFlavorName) {
+                sourceName = "${buildTypeName}"
+            } else {
+                sourceName = "${productFlavorName}${buildTypeName.capitalize()}"
+            }
+            def testTaskName = "test${sourceName.capitalize()}UnitTest"
+
+            // Tasks for generating Coverage reports for every sourceName
+            task "${sourceName}CommonCoverageReport" (type:JacocoReport, dependsOn: ["$testTaskName", "create${sourceName.capitalize()}CoverageReport"]) {
+                group = "Common Reporting"
+                description = "Generate Common Coverage Reports(UnitTest & AndroidTests) on the ${sourceName.capitalize()}"
+
+                def coverageSourceDirs = "${projectDir}/src/main/java"
+                def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test.*']
+                def javaClasses = fileTree(
+                        dir: "${buildDir}/intermediates/javac/${buildTypeName}/classes",
+                        excludes: fileFilter
+                )
+                sourceDirectories.from = files([coverageSourceDirs])
+                additionalSourceDirs.from = files(coverageSourceDirs)
+                classDirectories.from = files([javaClasses])
+                executionData.from = fileTree(dir: "$buildDir", includes: [
+                        "jacoco/${testTaskName}.exec"
+                ])
+                reports {
+                    xml.enabled = true
+                    html.enabled = true
+                }
+            }
+        }
+    }
 }
 
 def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
