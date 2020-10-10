@@ -177,6 +177,7 @@ task checkstyle(type: Checkstyle) {
 }
 
 pmd {
+    toolVersion "6.28.0"
     ignoreFailures = false
     reportsDir = file("$project.buildDir/outputs/")
 }
@@ -185,7 +186,8 @@ task pmd(type: Pmd) {
     description 'Run pmd'
     group 'verification'
 
-    ruleSets = ["java-basic", "java-braces", "java-strings", "java-unusedcode"]
+    //ruleSets = ["java-basic", "java-braces", "java-strings", "java-unusedcode"]
+    ruleSets = ["category/java/bestpractices.xml", "category/java/errorprone.xml"]
     source = fileTree('src/main/java')
 
     reports {
