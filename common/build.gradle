@@ -176,6 +176,11 @@ task checkstyle(type: Checkstyle) {
     classpath = files()
 }
 
+spotbugs {
+    // Ignoring failures for now. TODO: create workitem
+    ignoreFailures = true
+}
+
 pmd {
     toolVersion "6.28.0"
     // Ignoring failures for now. TODO: create workitem
