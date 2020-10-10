@@ -165,7 +165,7 @@ public class CommandDispatcher {
                 public void run() {
                     try {
                         final CommandParameters commandParameters = command.getParameters();
-                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? "" : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                         // set correlation id on parameters as it may not already be set
                         commandParameters.setCorrelationId(correlationId);
@@ -219,7 +219,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
-                        DiagnosticContext.clear();
+                        //DiagnosticContext.clear();
                     }
                 }
             });
@@ -434,7 +434,7 @@ public class CommandDispatcher {
                         final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(
                                 commandParameters.getCorrelationId(),
-                                commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkType() == null ? "" : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion()
                         );
 

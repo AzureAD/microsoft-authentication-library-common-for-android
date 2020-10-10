@@ -47,6 +47,7 @@ public enum SdkType {
 
     /**
      * Determines if the Sdk supports Microsoft Personal Accounts.
+     * @return True if Sdk supports Microsoft Personal Accounts, false otherwise.
      */
     public boolean isCapableOfMSA() {
         return (this == SdkType.MSAL) || (this == SdkType.MSALCPP);
