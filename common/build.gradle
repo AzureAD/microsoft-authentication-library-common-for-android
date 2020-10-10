@@ -126,12 +126,12 @@ dependencies {
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        source = variant.javaCompiler.source
+        source = variant.getJavaCompileProvider().get().source
 
         title = "Microsoft Identity Android Common"
 
         // First add all of your dependencies to the classpath, then add the android jars
-        doFirst { classpath += files(variant.javaCompiler.classpath.files) }
+        doFirst { classpath += files(variant.javaCompileProvider.get().classpath) }
         classpath += files(android.getBootClasspath())
 
         options.memberLevel = JavadocMemberLevel.PUBLIC
