@@ -1,5 +1,12 @@
 def getVersionFile() {
-    return file('versioning/version.properties')
+    
+    File file = new File("$rootDir/common/common/versioning/version.properties")
+    if(file.exists()){
+        return file;
+    }else{
+        return new File("$rootDir/common/versioning/version.properties")
+    }
+
 }
 
 def getVersionProps() {
@@ -20,6 +27,10 @@ private Integer getVersionNameMajor() {
     return (getVersionProps()['versionName'] =~ /\d+/)[0].toInteger()
 }
 
+private Integer getLatestPatchVersion() {
+    return getVersionProps()['latestPatchVersion'].toInteger()
+}
+
 ext.getAppVersionCode = {
     getVersionProps()['versionCode'].toInteger()
 }
@@ -34,6 +45,18 @@ private void saveChanges(String versionName) {
     versionProps.store(getVersionFile().newWriter(), null)
 }
 
+private void incrementLatestVersion(){
+    def versionProps = getVersionProps()
+    versionProps["latestPatchVersion"] = (getLatestPatchVersion() + 1).toString()
+    versionProps.store(getVersionFile().newWriter(), null )
+}
+
+task incrementLatestVersionNumber(){
+    doLast{
+        incrementLatestVersion()
+    }
+}
+
 task versionSnapshot {
     doLast {
         def versionNameMajor = getVersionNameMajor()
@@ -46,10 +69,10 @@ task versionSnapshot {
 
 task versionLatest {
     doLast {
-        def versionNameMajor = getVersionNameMajor()
-        def versionNameMinor = getVersionNameMinor()
-        def versionNamePatch = getVersionNamePatch()
-        def versionName = "${versionNameMajor}.${versionNameMinor}.${versionNamePatch}-LATEST".toString()
+        def versionNameMajor = '0'
+        def versionNameMinor = '0'
+        def versionNamePatch = getLatestPatchVersion()
+        def versionName = "${versionNameMajor}.${versionNameMinor}.${versionNamePatch}".toString()
         saveChanges(versionName)
     }
 }
