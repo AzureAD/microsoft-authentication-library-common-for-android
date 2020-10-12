@@ -235,6 +235,10 @@ public class ClientException extends BaseException {
      */
     public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
 
+    /**
+     * Bound service is unavailable or not supported.
+     */
+    public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
 
     /**
      * Constructor of ClientException.

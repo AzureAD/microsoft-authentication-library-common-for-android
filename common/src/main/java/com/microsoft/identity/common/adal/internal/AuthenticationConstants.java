@@ -1245,6 +1245,21 @@ public final class AuthenticationConstants {
     }
 
     /**
+     * Keys of the content inside the broker interactive request.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class BrokerInteractiveRequestBundleContent {
+
+        public static final String BUNDLE = "BUNDLE";
+
+        public static final String PACKAGE = "PACKAGE";
+
+        public static final String CLASS_NAME = "CLASS_NAME";
+
+        public static final String PACKAGE_NAME = "PACKAGE_NAME";
+    }
+
+    /**
      * Represents Broker operations that should be invoked by Authenticator.java (MSAL-Broker AccountManager flow).
      * See MicrosoftAuthServiceOperation for more info.
      */
