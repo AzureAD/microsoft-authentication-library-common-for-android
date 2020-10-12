@@ -35,7 +35,7 @@ public class BrokerProtocolVersionUtil {
     public static final String BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
 
     public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
-        if (TextUtils.isEmpty(negotiatedBrokerProtocol)) {
+        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
             return false;
         }
 
