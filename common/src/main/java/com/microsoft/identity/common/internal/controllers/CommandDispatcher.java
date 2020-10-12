@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCom
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -165,7 +166,7 @@ public class CommandDispatcher {
                 public void run() {
                     try {
                         final CommandParameters commandParameters = command.getParameters();
-                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? "" : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                         // set correlation id on parameters as it may not already be set
                         commandParameters.setCorrelationId(correlationId);
@@ -219,7 +220,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
-                        //DiagnosticContext.clear();
+                        DiagnosticContext.clear();
                     }
                 }
             });
@@ -434,7 +435,7 @@ public class CommandDispatcher {
                         final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(
                                 commandParameters.getCorrelationId(),
-                                commandParameters.getSdkType() == null ? "" : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion()
                         );
 

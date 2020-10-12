@@ -30,26 +30,31 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 public enum SdkType {
     ADAL,
     MSAL,
-    MSALCPP;
+    MSAL_CPP,
+    UNKNOWN;
 
     /**
-     * Function for mapping the SdkType to appropriate String
+     * Method for mapping the SdkType to appropriate String
      * for the purpose of sending it to the telemetry.
      */
     public String getProductName() {
         if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL;
-        } else {
+        } else if ((SdkType.MSAL_CPP == this)) {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_CPP;
+        } else {
+            // value is intended for test-cases, eg. CommandDispatcherTest.java.
+            return "";
         }
 
     }
 
     /**
      * Determines if the Sdk supports Microsoft Personal Accounts.
+     *
      * @return True if Sdk supports Microsoft Personal Accounts, false otherwise.
      */
     public boolean isCapableOfMSA() {
-        return (this == SdkType.MSAL) || (this == SdkType.MSALCPP);
+        return (this == SdkType.MSAL) || (this == SdkType.MSAL_CPP);
     }
 }
