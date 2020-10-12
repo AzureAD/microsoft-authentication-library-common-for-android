@@ -42,6 +42,8 @@ ext {
     // TODO: adal automation test app.
     supportLibraryVersion = "27.1.+"
     adalLegacy = "1.15.0"
+    adalSnapshot = "3.1.1-SNAPSHOT"
+    adalLatest = "3.1.1"
 
 
     //#### The following are TSL version variables - BEGIN
@@ -51,7 +53,7 @@ ext {
     projectTargetSdkVersion = 29
 
     projectVersionCode = 1
-    //projectVersionName = "${versionName}"
+    projectVersionName = "1.5.9"
 
     junitLibraryVersion = "4.12"
     androidSupportLibraryVersion = "28.0.0"
