@@ -74,4 +74,22 @@ public interface AsymmetricKey {
      * @return True if the input was signed by our private key. False otherwise.
      */
     boolean verify(String plainText, String signatureStr);
+
+    /**
+     * Encrypts a String using the underlying key material.
+     *
+     * @param plaintext The text to encrypt.
+     * @return The ciphertext derived from the underlying material + cipher.
+     * @throws ClientException If an error is encountered during encryption.
+     */
+    String encrypt(String plaintext) throws ClientException;
+
+    /**
+     * Decrypts a String using the underlying key material.
+     *
+     * @param ciphertext The ciphertext to decrypt.
+     * @return The decrypted value.
+     * @throws ClientException If the supplied ciphertext cannot be decrypted.
+     */
+    String decrypt(String ciphertext) throws ClientException;
 }

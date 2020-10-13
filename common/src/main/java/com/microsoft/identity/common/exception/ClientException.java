@@ -67,6 +67,11 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * Emitted when a particular padding mechanism is requested but is not available in the environment.
+     */
+    public static final String NO_SUCH_PADDING = "no_such_padding";
+
+    /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
      */
     public static final String MALFORMED_URL = "malformed_url";
@@ -177,6 +182,8 @@ public class ClientException extends BaseException {
 
     /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
+     * This error will be emitted if the underlying key material has been cleared or removed from
+     * the keystore.
      */
     public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
 

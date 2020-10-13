@@ -92,6 +92,7 @@ public class BrokerMsalController extends BaseController {
     private static final String TAG = BrokerMsalController.class.getSimpleName();
 
     private BrokerResultFuture mBrokerResultFuture;
+
     private Context mApplicationContext;
 
     public BrokerMsalController(final Context applicationContext) {

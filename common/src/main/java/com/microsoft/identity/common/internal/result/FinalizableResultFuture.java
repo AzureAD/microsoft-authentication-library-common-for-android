@@ -20,20 +20,35 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.common.internal.result;
 
-import androidx.annotation.NonNull;
-
-import java.util.Date;
+import java.util.concurrent.CountDownLatch;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * A specialization of ResultFuture that can represent whether a task is not just complete,
+ * but all follow-up tasks are complete as well.
+ * @param <T> the type of object held by the future.
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+public class FinalizableResultFuture<T> extends ResultFuture<T> {
+    private final CountDownLatch mFinalized = new CountDownLatch(1);
+
+    /**
+     * Set this future to be fully complete, including any cleanup tasks.
+     */
+    public void setCleanedUp() {
+        mFinalized.countDown();
+    }
+
+    /**
+     * Tell whether setFinalized has been called, or block until it has.
+     * @return true if this future has been completed, including any cleanup tasks.
+     */
+    public boolean isCleanedUp() {
+        try {
+            mFinalized.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return true;
+    }
 }
