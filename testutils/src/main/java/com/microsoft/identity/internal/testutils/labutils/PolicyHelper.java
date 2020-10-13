@@ -51,7 +51,7 @@ public class PolicyHelper {
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
             return customSuccessResponse.getResult().toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
