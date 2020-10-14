@@ -57,10 +57,7 @@ public class PolicyHelper {
             Assert.assertNotNull(result);
             return result.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
-<<<<<<< HEAD
             Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
-=======
->>>>>>> 149dede6dadaf6b3a6b958f5c7247055cbda7ceb
             throw new AssertionError(e);
         }
     }
@@ -83,10 +80,7 @@ public class PolicyHelper {
             Assert.assertNotNull(result);
             return result.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
-<<<<<<< HEAD
             Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
-=======
->>>>>>> 149dede6dadaf6b3a6b958f5c7247055cbda7ceb
             throw new AssertionError(e);
         }
     }
