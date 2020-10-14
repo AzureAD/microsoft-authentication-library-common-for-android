@@ -23,10 +23,13 @@
 
 package com.microsoft.identity.internal.testutils.labutils;
 
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
 import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
+
+import org.junit.Assert;
 
 import lombok.NonNull;
 
@@ -35,6 +38,7 @@ import lombok.NonNull;
  */
 public class PolicyHelper {
 
+    private static final String TAG = PolicyHelper.class.getName();
     /**
      * lets you enable CA/Special Policies for any Locked User.
      * Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
@@ -49,9 +53,12 @@ public class PolicyHelper {
         try {
             final CustomSuccessResponse customSuccessResponse = enablePolicyApi.putPolicy(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
-            return customSuccessResponse.getResult().toLowerCase().contains(expectedResult);
+            final String result = customSuccessResponse.getResult();
+            Assert.assertNotNull(result);
+            return result.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
-            throw new RuntimeException(e.getMessage());
+            Logger.error(TAG,"Bad Request : Enable Policy can be used only for Locked users.",e);
+            throw new AssertionError(e);
         }
     }
 
@@ -69,9 +76,12 @@ public class PolicyHelper {
         try {
             final CustomSuccessResponse customSuccessResponse = disablePolicyApi.put(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
-            return customSuccessResponse.getResult().toLowerCase().contains(expectedResult);
+            final String result = customSuccessResponse.getResult();
+            Assert.assertNotNull(result);
+            return result.toLowerCase().contains(expectedResult);
         } catch (final ApiException e) {
-            throw new RuntimeException(e.getMessage());
+            Logger.error(TAG," Bad Request : Disable Policy can be used only for Locked users. ",e);
+            throw new AssertionError(e);
         }
     }
 }
