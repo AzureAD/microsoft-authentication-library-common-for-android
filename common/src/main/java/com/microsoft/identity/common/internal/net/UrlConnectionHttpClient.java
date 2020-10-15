@@ -53,6 +53,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
+import static com.microsoft.identity.common.internal.net.HttpClient.HttpMethod.GET;
+import static com.microsoft.identity.common.internal.net.HttpClient.HttpMethod.HEAD;
+import static com.microsoft.identity.common.internal.net.HttpClient.HttpMethod.OPTIONS;
+import static com.microsoft.identity.common.internal.net.HttpClient.HttpMethod.TRACE;
 import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.createHttpURLConnection;
 
 /**
@@ -242,7 +246,7 @@ public class UrlConnectionHttpClient implements HttpClient {
     @Override
     public HttpResponse options(@NonNull final URL requestUrl,
                                 @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.OPTIONS.name(), requestUrl, requestHeaders, null);
+        return method(OPTIONS.name(), requestUrl, requestHeaders, null);
     }
 
     @Override
@@ -262,19 +266,19 @@ public class UrlConnectionHttpClient implements HttpClient {
     @Override
     public HttpResponse get(@NonNull final URL requestUrl,
                             @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.GET.name(), requestUrl, requestHeaders, null);
+        return method(GET.name(), requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse head(@NonNull final URL requestUrl,
                              @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.HEAD.name(), requestUrl, requestHeaders, null);
+        return method(HEAD.name(), requestUrl, requestHeaders, null);
     }
 
     @Override
     public HttpResponse trace(@NonNull final URL requestUrl,
                               @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.TRACE.name(), requestUrl, requestHeaders, null);
+        return method(TRACE.name(), requestUrl, requestHeaders, null);
     }
 
     /**
@@ -319,10 +323,17 @@ public class UrlConnectionHttpClient implements HttpClient {
     }
 
     private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
+        final String requestMethod = request.getRequestMethod();
         final HttpURLConnection urlConnection = setupConnection(request);
-        urlConnection.setRequestMethod(request.getRequestMethod());
+        urlConnection.setRequestMethod(requestMethod);
         urlConnection.setUseCaches(true);
-        setRequestBody(urlConnection, request.getRequestContent(), request.getmRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
+
+        if (!requestMethod.equalsIgnoreCase(GET.name())
+                && !requestMethod.equalsIgnoreCase(TRACE.name())
+                && !requestMethod.equalsIgnoreCase(OPTIONS.name())
+                && !requestMethod.equalsIgnoreCase(HEAD.name())) {
+            setRequestBody(urlConnection, request.getRequestContent(), request.getmRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
+        }
 
         InputStream responseStream = null;
 
