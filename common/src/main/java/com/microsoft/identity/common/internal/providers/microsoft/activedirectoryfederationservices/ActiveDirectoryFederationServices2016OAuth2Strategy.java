@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -66,7 +67,7 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
     // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to super class' method requestAuthorization
     @SuppressWarnings(WarningType.unchecked_warning)
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
+    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) throws ClientException {
         return super.requestAuthorization(request, authorizationStrategy);
     }
 
