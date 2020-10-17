@@ -29,6 +29,7 @@ import com.microsoft.identity.common.BuildConfig;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.junit.runners.model.TestTimedOutException;
 
 import java.sql.Timestamp;
 
@@ -56,7 +57,7 @@ public class CaptureKustoTestResultRule implements TestRule {
                     base.evaluate();
                     result = "PASS";
                 } catch (final Throwable throwable) {
-                    result = "FAIL";
+                    result = (throwable instanceof TestTimedOutException) ? "TIMEOUT" : "FAIL";
                     errorMessage = throwable.getMessage();
                     throw throwable;
                 } finally {
