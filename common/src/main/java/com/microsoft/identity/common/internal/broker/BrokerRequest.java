@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.io.Serializable;
 
@@ -53,6 +54,7 @@ public class BrokerRequest implements Serializable {
         final static String CLIENT_APP_NAME = "client_app_name";
         final static String CLIENT_APP_VERSION = "client_app_version";
         final static String CLIENT_VERSION = "client_version";
+        final static String CLIENT_SDK_TYPE = "client_sdk_type";
         final static String ENVIRONMENT = "environment";
         final static String MULTIPLE_CLOUDS_SUPPORTED = "multiple_clouds_supported";
         final static String AUTHORIZATION_AGENT = "authorization_agent";
@@ -169,14 +171,21 @@ public class BrokerRequest implements Serializable {
     private String mMsalVersion;
 
     /**
-     * AAD Environment
+     * Sdk Type.
+     */
+    @NonNull
+    @SerializedName(SerializedNames.CLIENT_SDK_TYPE)
+    private SdkType mSdkType;
+
+    /**
+     * AAD Environment.
      */
     @NonNull
     @SerializedName(SerializedNames.ENVIRONMENT)
     private String mEnvironment;
 
     /**
-     * Boolean indicated whether app supports multiple clouds
+     * Boolean indicated whether app supports multiple clouds.
      */
     @NonNull
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
@@ -210,6 +219,7 @@ public class BrokerRequest implements Serializable {
         mApplicationName = builder.mApplicationName;
         mApplicationVersion = builder.mApplicationVersion;
         mMsalVersion = builder.mMsalVersion;
+        mSdkType = builder.mSdkType;
         mEnvironment = builder.mEnvironment;
         mMultipleCloudsSupported = builder.mMultipleCloudsSupported;
         mAuthorizationAgent = builder.mAuthorizationAgent;
@@ -277,6 +287,10 @@ public class BrokerRequest implements Serializable {
         return mMsalVersion;
     }
 
+    public SdkType getSdkType() {
+        return mSdkType;
+    }
+
     public String getEnvironment() {
         return mEnvironment;
     }
@@ -331,6 +345,8 @@ public class BrokerRequest implements Serializable {
         private String mApplicationVersion;
 
         private String mMsalVersion;
+
+        private SdkType mSdkType;
 
         private String mEnvironment;
 
@@ -467,6 +483,16 @@ public class BrokerRequest implements Serializable {
             this.mMsalVersion = version;
             return this;
         }
+
+        /**
+         * Sdk Type.
+         */
+        @NonNull
+        public BrokerRequest.Builder sdkType(@NonNull final SdkType sdkType){
+            this.mSdkType = sdkType;
+            return this;
+        }
+
 
         public BrokerRequest.Builder environment(@NonNull final String environment) {
             this.mEnvironment = environment;
