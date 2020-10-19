@@ -36,6 +36,10 @@ public enum SdkType {
     /**
      * Method for mapping the SdkType to appropriate String
      * for the purpose of sending it to the telemetry.
+     *
+     * @return MSAL.Android for case of ADAL and MSAL,
+     * MSAL.xplat.Android for case of MSAL_CPP,
+     * empty string otherwise(UNKNOWN).
      */
     public String getProductName() {
         if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
@@ -43,7 +47,7 @@ public enum SdkType {
         } else if ((SdkType.MSAL_CPP == this)) {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_CPP;
         } else {
-            // value is intended for test-cases, eg. CommandDispatcherTest.java.
+            // value(SdkType.UNKNOWN) is intended for test-cases, eg. CommandDispatcherTest.java.
             return "";
         }
 
