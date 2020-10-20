@@ -51,9 +51,6 @@ public final class Device {
     public static Map<String, String> getPlatformIdParameters() {
         final Map<String, String> platformParameters = new HashMap<>();
 
-        platformParameters.put(PlatformIdParameters.PRODUCT, PlatformIdParameters.PRODUCT_NAME);
-        platformParameters.put(PlatformIdParameters.VERSION, PlatformIdParameters.PRODUCT_VERSION);
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             //CPU_ABI has been deprecated
             platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
@@ -72,26 +69,6 @@ public final class Device {
     }
 
     public static final class PlatformIdParameters {
-        /**
-         * The String representing the sdk platform.
-         */
-        public static final String PRODUCT = "x-client-SKU";
-
-        /**
-         * The String representing the sdk platform name.
-         */
-        public static final String PRODUCT_NAME = "MSAL.Android";
-
-        /**
-         * The String representing the sdk platform version.
-         */
-        public static final String PRODUCT_VERSION = "2.0.2";
-
-        /**
-         * The String representing the sdk version.
-         */
-        public static final String VERSION = "x-client-Ver";
-
         /**
          * The String representing the CPU for the device.
          */

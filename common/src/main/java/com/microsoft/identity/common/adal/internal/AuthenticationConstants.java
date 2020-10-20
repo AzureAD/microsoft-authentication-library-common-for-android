@@ -1567,4 +1567,30 @@ public final class AuthenticationConstants {
 
         public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE = "user_signed_out_from_shared_device";
     }
+
+    /**
+     * Sdk platform and Sdk version fields.
+     */
+    public static final class SdkPlatformFields {
+        /**
+         * The String representing the sdk platform.
+         */
+        public static final String PRODUCT = "x-client-SKU";
+
+        /**
+         * The String representing the sdk version.
+         */
+        public static final String VERSION = "x-client-Ver";
+
+        /**
+         * The String representing the MSAL SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
+
+        /**
+         * The String representing the MSAL.CPP SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+    }
+
 }

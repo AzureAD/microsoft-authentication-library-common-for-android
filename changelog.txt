@@ -1,11 +1,13 @@
 vNext
 ----------
+- Expose expiresIn in MSAL Device Code flow callback (#1064)
 - Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
 - Added support for exporting public keys in the following formats:
     * X.509 SubjectPublicKeyInfo
     * JWK (RFC-7517)
 - Added support for signing and verifying arbitrary String data with select RSA algorithms.
 - Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
+- Bugfix: Added a workaround for keypair generation on API < 23 devices using locales with non-Gregorian calendars. (#1075)
 
 Version 3.0.4
 ----------
