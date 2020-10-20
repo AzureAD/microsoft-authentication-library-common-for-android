@@ -60,9 +60,8 @@ public class CommandParameters {
     @Expose()
     private String requiredBrokerProtocolVersion;
 
-    @Builder.Default
     @Expose()
-    private SdkType sdkType = SdkType.MSAL;
+    private SdkType sdkType;
 
     @Expose()
     private String sdkVersion;

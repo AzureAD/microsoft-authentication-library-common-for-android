@@ -36,6 +36,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -271,14 +272,9 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-        final Map<String, String> platformParameters = Device.getPlatformIdParameters();
-        builder.setLibraryName(platformParameters.get(
-                Device.PlatformIdParameters.PRODUCT)
-        );
-        builder.setLibraryVersion(platformParameters.get(
-                Device.PlatformIdParameters.VERSION)
-        );
 
+        builder.setLibraryName(DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        builder.setLibraryVersion(DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
 
@@ -469,6 +465,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
 
         headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());
