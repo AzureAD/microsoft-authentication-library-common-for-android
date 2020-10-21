@@ -34,6 +34,9 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 /**
  * This command is used to execute the device code flow protocol.
  * Takes in a parameters object containing the  desired access scopes along and returns
@@ -73,13 +76,23 @@ public class DeviceCodeFlowCommand extends TokenCommand {
         final MicrosoftStsAuthorizationResponse authorizationResponse =
                 (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
 
+        final Date expiredDate = new Date();
+        try {
+            long expiredInInMilliseconds = TimeUnit.SECONDS.toMillis(Long.parseLong(authorizationResponse.getExpiresIn()));
+            expiredDate.setTime(expiredDate.getTime() + expiredInInMilliseconds);
+        } catch (final NumberFormatException e){
+            // Shouldn't happen, but if it does, we don't want to fail the request because of this.
+            Logger.error(TAG + methodName, "Failed to parse authorizationResponse.getExpiresIn()", e);
+        }
+
         // Communicate with user app and provide authentication information
         @SuppressWarnings(WarningType.rawtype_warning)
         final DeviceCodeFlowCommandCallback deviceCodeFlowCommandCallback = (DeviceCodeFlowCommandCallback) getCallback();
         deviceCodeFlowCommandCallback.onUserCodeReceived(
                 authorizationResponse.getVerificationUri(),
                 authorizationResponse.getUserCode(),
-                authorizationResponse.getMessage()
+                authorizationResponse.getMessage(),
+                expiredDate
         );
 
         // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)

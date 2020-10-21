@@ -75,7 +75,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      */
     @Override
     public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                            GenericOAuth2Strategy oAuth2Strategy) throws UnsupportedEncodingException {
+                                                            GenericOAuth2Strategy oAuth2Strategy) {
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;

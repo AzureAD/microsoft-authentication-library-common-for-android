@@ -89,7 +89,9 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mCallerPackageName", "Caller package name is not set"
             );
         }
-        if (SdkType.MSAL == getSdkType() &&
+
+        // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
+        if (getSdkType().isCapableOfMSA() &&
                 !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
