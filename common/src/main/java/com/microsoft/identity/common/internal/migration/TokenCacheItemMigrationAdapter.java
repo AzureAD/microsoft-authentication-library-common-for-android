@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -136,7 +137,7 @@ public class TokenCacheItemMigrationAdapter {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
@@ -159,7 +160,7 @@ public class TokenCacheItemMigrationAdapter {
      * @throws ClientException
      * @throws IOException
      */
-    public static boolean tryFociTokenWithGivenClientId(@NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final RefreshTokenRecord refreshTokenRecord,
@@ -228,13 +229,19 @@ public class TokenCacheItemMigrationAdapter {
             Logger.verbose(TAG + methodName,
                     "Saving records to cache with client id" + clientId
             );
-            brokerOAuth2TokenCache.save(
-                    strategy,
-                    authorizationRequest,
-                    (MicrosoftTokenResponse) tokenResult.getTokenResponse()
-            );
+            brokerOAuth2TokenCacheSave(brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
         }
         return tokenResult.getSuccess();
+    }
+
+    // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance brokerOAuth2TokenCache while calling method save
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void brokerOAuth2TokenCacheSave(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2TokenCache brokerOAuth2TokenCache, MicrosoftStsOAuth2Strategy strategy, TokenResult tokenResult, MicrosoftStsAuthorizationRequest authorizationRequest) throws ClientException {
+        brokerOAuth2TokenCache.save(
+                strategy,
+                authorizationRequest,
+                (MicrosoftTokenResponse) tokenResult.getTokenResponse()
+        );
     }
 
     private static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(

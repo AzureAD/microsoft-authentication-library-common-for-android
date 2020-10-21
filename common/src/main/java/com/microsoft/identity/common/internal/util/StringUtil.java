@@ -31,6 +31,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -196,4 +197,13 @@ public final class StringUtil {
         }
     }
 
+    /**
+     * Utility to null-safe-compare string in a case-insensitive manner.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     */
+    public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
+        return one == two || (one != null && one.equalsIgnoreCase(two));
+    }
 }

@@ -35,8 +35,8 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
@@ -52,14 +52,11 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
-import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
@@ -79,7 +76,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEFAULT_BROWSER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
@@ -112,14 +108,15 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .extraQueryStringParameter(
                         parameters.getExtraQueryStringParameters() != null ?
                                 QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
-                                : null
-                ).prompt(parameters.getPrompt().name())
+                                : null)
+                .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
-                .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
+                .correlationId(parameters.getCorrelationId())
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .sdkType(parameters.getSdkType())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authorizationAgent(
@@ -148,10 +145,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .username(parameters.getAccount().getUsername())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
-                .correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID))
+                .correlationId(parameters.getCorrelationId())
                 .applicationName(parameters.getApplicationName())
                 .applicationVersion(parameters.getApplicationVersion())
                 .msalVersion(parameters.getSdkVersion())
+                .sdkType(parameters.getSdkType())
                 .environment(AzureActiveDirectory.getEnvironment().name())
                 .multipleCloudsSupported(getMultipleCloudsSupported(parameters))
                 .authenticationScheme(parameters.getAuthenticationScheme())
@@ -226,12 +224,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
+        @SuppressWarnings("rawtypes")
         final BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder
                 commandParametersBuilder = BrokerInteractiveTokenCommandParameters.builder()
                 .authenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest))
                 .activity(callingActivity)
                 .androidApplicationContext(callingActivity.getApplicationContext())
-                .sdkType(SdkType.MSAL)
+                .sdkType(brokerRequest.getSdkType() == null ? SdkType.MSAL : brokerRequest.getSdkType())
+                .sdkVersion(brokerRequest.getMsalVersion())
                 .callerUid(callingAppUid)
                 .applicationName(brokerRequest.getApplicationName())
                 .applicationVersion(brokerRequest.getApplicationVersion())
@@ -247,18 +247,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .claimsRequestJson(brokerRequest.getClaims())
                 .prompt(brokerRequest.getPrompt() != null ?
                         OpenIdConnectPromptParameter.valueOf(brokerRequest.getPrompt()) :
-                        OpenIdConnectPromptParameter.NONE)
+                        OpenIdConnectPromptParameter.UNSET)
                 .negotiatedBrokerProtocolVersion(negotiatedBrokerProtocolVersion)
                 .powerOptCheckEnabled(brokerRequest.isPowerOptCheckEnabled());
 
-        if (brokerRequest.getAuthorizationAgent() != null
-                && brokerRequest.getAuthorizationAgent().equalsIgnoreCase(AuthorizationAgent.BROWSER.name())
+        if (AuthorizationAgent.BROWSER.name().equalsIgnoreCase(brokerRequest.getAuthorizationAgent())
                 && isCallingPackageIntune(brokerRequest.getApplicationName())) { // TODO : Remove this whenever we enable System Browser support in Broker for apps.
             Logger.info(TAG, "Setting Authorization Agent to Browser for Intune app");
-            commandParametersBuilder
-                    .authorizationAgent(AuthorizationAgent.BROWSER)
-                    .brokerBrowserSupportEnabled(true)
-                    .browserSafeList(getBrowserSafeListForBroker());
+            buildCommandParameterBuilder(commandParametersBuilder);
         } else {
             commandParametersBuilder.authorizationAgent(AuthorizationAgent.WEBVIEW);
         }
@@ -271,6 +267,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         return commandParametersBuilder.build();
+    }
+
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void buildCommandParameterBuilder(@SuppressWarnings(WarningType.rawtype_warning) BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder commandParametersBuilder) {
+        commandParametersBuilder
+                .authorizationAgent(AuthorizationAgent.BROWSER)
+                .brokerBrowserSupportEnabled(true)
+                .browserSafeList(getBrowserSafeListForBroker());
     }
 
     @Override
@@ -320,7 +324,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
                 .androidApplicationContext(context)
                 .accountManagerAccount(account)
-                .sdkType(SdkType.MSAL)
+                .sdkType(brokerRequest.getSdkType())
+                .sdkVersion(brokerRequest.getMsalVersion())
                 .callerUid(callingAppUid)
                 .applicationName(brokerRequest.getApplicationName())
                 .applicationVersion(brokerRequest.getApplicationVersion())
@@ -592,14 +597,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters,
                                                                    @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
-
-        try {
-            Browser browser = BrowserSelector.select(parameters.getAndroidApplicationContext(), parameters.getBrowserSafeList());
-            requestBundle.putString(DEFAULT_BROWSER_PACKAGE_NAME, browser.getPackageName());
-        } catch (ClientException e) {
-            // Best effort. If none is passed to broker, then it will let the OS decide.
-            Logger.error(TAG, e.getErrorCode(), e);
-        }
         requestBundle.putString(
                 AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
                 negotiatedBrokerProtocolVersion
@@ -625,7 +622,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      */
     public static List<BrowserDescriptor> getBrowserSafeListForBroker() {
         List<BrowserDescriptor> browserDescriptors = new ArrayList<>();
-        final HashSet<String> signatureHashes = new HashSet();
+        final HashSet<String> signatureHashes = new HashSet<String>();
         signatureHashes.add("7fmduHKTdHHrlMvldlEqAIlSfii1tl35bxj1OXN5Ve8c4lU6URVu4xtSHc3BVZxS6WWJnxMDhIfQN0N0K2NDJg==");
         final BrowserDescriptor chrome = new BrowserDescriptor(
                 "com.android.chrome",

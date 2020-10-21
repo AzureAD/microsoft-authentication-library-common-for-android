@@ -24,12 +24,19 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ProviderInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
@@ -65,6 +72,8 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 
 import java.io.IOException;
@@ -72,18 +81,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
+import lombok.EqualsAndHashCode;
 
 /**
  * The implementation of MSAL Controller for Broker
  */
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
 
     private BrokerResultFuture mBrokerResultFuture;
+
     private Context mApplicationContext;
 
     public BrokerMsalController(final Context applicationContext) {
@@ -544,6 +553,7 @@ public class BrokerMsalController extends BaseController {
                                            @Nullable String negotiatedBrokerProtocolVersion)
                             throws InterruptedException, ExecutionException, BaseException, RemoteException {
                         strategy.signOutFromSharedDevice(parameters, negotiatedBrokerProtocolVersion);
+                        logOutFromBrowser(mApplicationContext, parameters);
                         return true;
                     }
 
@@ -564,13 +574,51 @@ public class BrokerMsalController extends BaseController {
                 });
     }
 
+    /**
+     * Invoke the logout endpoint on the specified browser.
+     * If there are more than 1 session in the browser, an account picker will be displayed.
+     * (Alternatively, we could pass the optional sessionID as one of the query string parameter, but we're not storing that at the moment).
+     *
+     * @param context    {@link Context} application context.
+     * @param parameters {@link RemoveAccountCommandParameters} parameters of the remove command call.
+     */
+    private void logOutFromBrowser(@NonNull final Context context,
+                                   @NonNull final RemoveAccountCommandParameters parameters) {
+        final String methodName = ":logOutFromBrowser";
+
+        String browserPackageName = null;
+        try {
+            final Browser browser = BrowserSelector.select(context, parameters.getBrowserSafeList());
+            browserPackageName = browser.getPackageName();
+        } catch (final ClientException e) {
+            // Best effort. If none is passed to broker, then it will let the OS decide.
+            Logger.error(TAG, e.getErrorCode(), e);
+        }
+
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent.setData(Uri.parse(AuthenticationConstants.Browser.LOGOUT_ENDPOINT_V2));
+            if (browserPackageName != null) {
+                intent.setPackage(browserPackageName);
+            }
+            context.startActivity(intent);
+
+        } catch (final ActivityNotFoundException e) {
+            Logger.error(TAG + methodName,
+                    "Failed to launch browser sign out with browser=[" + browserPackageName + "]. Skipping.", e);
+        }
+    }
+    
+    // Suppressing rawtype warnings due to the generic type AuthorizationResult
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws ClientException {
         throw new ClientException("deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
     }
 
     @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
+    public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
         throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
     }
 
@@ -581,7 +629,7 @@ public class BrokerMsalController extends BaseController {
      * @param msalOAuth2TokenCache
      */
     private void saveMsaAccountToCache(@NonNull final Bundle resultBundle,
-                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
+                                       @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
         final String methodName = ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
@@ -608,7 +656,7 @@ public class BrokerMsalController extends BaseController {
                         brokerResult.getFamilyId()
                 );
 
-                msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
+                msalOAuth2TokenCacheSetSingleSignOnState(msalOAuth2TokenCache, microsoftStsAccount, microsoftRefreshToken);
             } catch (ServiceException e) {
                 Logger.errorPII(TAG + methodName, "Exception while creating Idtoken or ClientInfo," +
                         " cannot save MSA account tokens", e
@@ -617,6 +665,12 @@ public class BrokerMsalController extends BaseController {
             }
         }
 
+    }
+
+    // Suppressing unchecked warnings due to casting of MicrosoftStsAccount to GenericAccount and MicrosoftRefreshToken to GenericRefreshToken in the call to setSingleSignOnState method
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void msalOAuth2TokenCacheSetSingleSignOnState(@SuppressWarnings(WarningType.rawtype_warning) @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache, MicrosoftStsAccount microsoftStsAccount, MicrosoftRefreshToken microsoftRefreshToken) throws ClientException {
+        msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
     }
 
     private boolean isMicrosoftAuthServiceSupported() {

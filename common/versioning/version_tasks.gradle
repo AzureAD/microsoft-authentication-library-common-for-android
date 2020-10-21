@@ -43,3 +43,13 @@ task versionSnapshot {
         saveChanges(versionName)
     }
 }
+
+task versionLatest {
+    doLast {
+        def versionNameMajor = getVersionNameMajor()
+        def versionNameMinor = getVersionNameMinor()
+        def versionNamePatch = getVersionNamePatch()
+        def versionName = "${versionNameMajor}.${versionNameMinor}.${versionNamePatch}-LATEST".toString()
+        saveChanges(versionName)
+    }
+}

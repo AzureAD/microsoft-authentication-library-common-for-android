@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import android.content.Context;
 
 import com.google.gson.annotations.Expose;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.SdkType;
 
@@ -34,6 +35,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
+// Suppressing rawtype warnings due to the generic type OAuth2TokenCache
+@SuppressWarnings(WarningType.rawtype_warning)
 @Getter
 @EqualsAndHashCode
 @SuperBuilder(toBuilder = true)
@@ -57,9 +60,8 @@ public class CommandParameters {
     @Expose()
     private String requiredBrokerProtocolVersion;
 
-    @Builder.Default
     @Expose()
-    private SdkType sdkType = SdkType.MSAL;
+    private SdkType sdkType;
 
     @Expose()
     private String sdkVersion;

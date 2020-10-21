@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -52,6 +53,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,7 +69,8 @@ import static com.microsoft.identity.common.internal.cache.SharedPreferencesAcco
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
 
-@SuppressWarnings("PMD.AvoidDuplicateLiterals")
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
+@SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
 public class MsalOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,
@@ -897,7 +900,7 @@ public class MsalOAuth2TokenCache
         final List<AccountRecord> accounts = getAccounts(environment, clientId);
 
         for (final AccountRecord account : accounts) {
-            if (account.getUsername().equalsIgnoreCase(username)) {
+            if (StringUtil.equalsIgnoreCase(account.getUsername(), username)) {
                 result.add(account);
             }
         }

@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.broker;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -31,6 +33,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
@@ -54,6 +57,8 @@ import static org.junit.Assert.fail;
 @Getter
 public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent {
 
+    public static final String TAG = BrokerCompanyPortal.class.getSimpleName();
+
     public final static String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
     public final static String COMPANY_PORTAL_APP_NAME = "Intune Company Portal";
     public final static String COMPANY_PORTAL_APK = "CompanyPortal.apk";
@@ -68,7 +73,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        enrollDevice(username, password); // enrolling device also performs device registration
+        TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
+                this,
+                username,
+                password
+        );
     }
 
     @Override
@@ -87,6 +96,58 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     public void enableBrowserAccess() {
         throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void createPowerLiftIncident() {
+        launch();
+        if (shouldHandleFirstRun) {
+            handleFirstRun();
+        }
+
+        try {
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+            // Click more options in the top right
+            final UiObject threeDots = device.findObject(new UiSelector().descriptionContains(
+                    "More options"
+            ));
+
+            threeDots.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+            threeDots.click();
+
+            // Select Help from menu
+            final UiObject helpBtn = UiAutomatorUtils.obtainUiObjectWithText("Help");
+
+            helpBtn.click();
+
+            // Click Email Support
+            UiAutomatorUtils.handleButtonClick(
+                    "com.microsoft.windowsintune.companyportal:id/email_support_subsection_title"
+            );
+
+            // Click Upload Logs Only
+            UiAutomatorUtils.handleButtonClick(
+                    "com.microsoft.windowsintune.companyportal:id/upload_button"
+            );
+
+            final UiObject incidentIdBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.microsoft.windowsintune.companyportal:id/incident_id_subsection_description"
+            );
+
+            Assert.assertTrue(incidentIdBox.exists());
+
+            Log.i(TAG, "Incident Created with ID: " + incidentIdBox.getText());
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+
+    }
+
+    @Override
+    public DeviceAdmin getAdminName() {
+        return DeviceAdmin.COMPANY_PORTAL;
     }
 
     @Override

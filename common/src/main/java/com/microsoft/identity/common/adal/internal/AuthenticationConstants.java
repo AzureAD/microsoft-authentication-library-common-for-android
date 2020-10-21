@@ -127,6 +127,11 @@ public final class AuthenticationConstants {
          * V2 endpoint for logging the user out in browser.
          */
         public static final String LOGOUT_ENDPOINT_V2 = "https://login.microsoftonline.com/common/oauth2/v2.0/logout";
+
+        /**
+         * Go-link URL for documentation on troubleshooting common SSL, ADFS issues.
+         */
+        public static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
     }
 
     /**
@@ -1265,15 +1270,15 @@ public final class AuthenticationConstants {
 
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class BrokerContentProvider{
+    public static final class BrokerContentProvider {
         /**
-         *  URI Scheme constant to invoke content provider.
+         * URI Scheme constant to invoke content provider.
          */
         public static final String CONTENT_SCHEME = "content://";
 
         /**
          * URI Authority constant for content provider.
-         *
+         * <p>
          * This is will be pre-fixed by com.azure.authenticator or com.microsoft.windowsintune.companyportal
          * depending on which ever is the active broker.
          */
@@ -1432,14 +1437,14 @@ public final class AuthenticationConstants {
 
         /**
          * Oauth2 suberror code for unauthorized_client.
-         *
+         * <p>
          * Suberror code when Intune App Protection Policy is required.
          */
         public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Suberror code when token is expired or invalid for all resources
          * and scopes and shouldn't be retried again as-is.
          */
@@ -1447,7 +1452,7 @@ public final class AuthenticationConstants {
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Suberror code when failed to do device authentication during a token request.
          * Broker should make a request to DRS to get the current device status and act accordingly.
          */
@@ -1455,7 +1460,7 @@ public final class AuthenticationConstants {
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * SubError code for cases when client not in the Microsoft first party family group
          * redeems auth code or refresh token given to a client in the family.
          */
@@ -1463,21 +1468,21 @@ public final class AuthenticationConstants {
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Conditional access suberror code when a policy enforces token lifetime.
          */
         public static final String TOKEN_EXPIRED = "token_expired";
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Conditional access suberror code which indicates a simple action is required by the end user, like MFA.
          */
         public static final String BASIC_ACTION = "basic_action";
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Conditional access suberror code which indicates additional action is
          * required that is in the user control, but is outside of the sign in session.
          * For example, enroll in MDM or register install an app that uses Intune app protection.
@@ -1486,7 +1491,7 @@ public final class AuthenticationConstants {
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Conditional access suberror code where user will be shown an informational
          * message with no immediate remediation steps.
          * For example access was blocked due to location or the device is not domain joined.
@@ -1495,14 +1500,14 @@ public final class AuthenticationConstants {
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * OpenId connect suberror code, where user consent is required.
          */
         public static final String CONSENT_REQUIRED = "consent_required";
 
         /**
          * Oauth2 suberror code for invalid_grant.
-         *
+         * <p>
          * Custom sub error that notifies the user that their password has expired.
          */
         public static final String USER_PASSWORD_EXPIRED = "user_password_expired";
@@ -1562,4 +1567,30 @@ public final class AuthenticationConstants {
 
         public static final String USER_SIGNED_OUT_FROM_SHARED_DEVICE = "user_signed_out_from_shared_device";
     }
+
+    /**
+     * Sdk platform and Sdk version fields.
+     */
+    public static final class SdkPlatformFields {
+        /**
+         * The String representing the sdk platform.
+         */
+        public static final String PRODUCT = "x-client-SKU";
+
+        /**
+         * The String representing the sdk version.
+         */
+        public static final String VERSION = "x-client-Ver";
+
+        /**
+         * The String representing the MSAL SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
+
+        /**
+         * The String representing the MSAL.CPP SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+    }
+
 }

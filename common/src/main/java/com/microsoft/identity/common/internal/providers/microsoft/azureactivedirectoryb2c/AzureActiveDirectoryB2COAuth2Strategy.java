@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -48,18 +50,24 @@ import java.util.concurrent.Future;
  * see <a href='https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code'>
  * https://docs.microsoft.com/en-us/azure/active-directory-b2c/active-directory-b2c-reference-oauth-code</a>
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and Builder
+@SuppressWarnings(WarningType.rawtype_warning)
 public class AzureActiveDirectoryB2COAuth2Strategy extends OAuth2Strategy {
     /**
      * Constructor of AzureActiveDirectoryB2COAuth2Strategy.
      *
      * @param config OAuth2Configuration
      */
+    // Suppressing unchecked warnings due to casting of OAuth2Configuration to GenericOAuth2Configuration and OAuth2StrategyParameters to GenericOAuth2StrategyParameters in the arguments of call to super class' constructor
+    @SuppressWarnings(WarningType.unchecked_warning)
     public AzureActiveDirectoryB2COAuth2Strategy(OAuth2Configuration config, OAuth2StrategyParameters options) {
         super(config, options);
     }
 
+    // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to super class' method requestAuthorization
+    @SuppressWarnings(WarningType.unchecked_warning)
     @Override
-    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) {
+    public Future<AuthorizationResult> requestAuthorization(AuthorizationRequest request, AuthorizationStrategy authorizationStrategy) throws ClientException {
         return super.requestAuthorization(request, authorizationStrategy);
     }
 

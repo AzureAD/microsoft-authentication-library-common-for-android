@@ -27,6 +27,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
@@ -97,7 +98,7 @@ public class EstsTelemetry {
      *
      * @param command The command for which to capture telemetry
      */
-    public void initTelemetryForCommand(@NonNull final BaseCommand command) {
+    public void initTelemetryForCommand(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
         setupLastRequestTelemetryCache(command.getParameters().getAndroidApplicationContext());
         final String correlationId = command.getParameters().getCorrelationId();
         if (command.isEligibleForEstsTelemetry()) {
@@ -226,7 +227,7 @@ public class EstsTelemetry {
      * Removes the telemetry associated to the correlation id from the telemetry map,
      * and saves it to the cache (SharedPreferences) as the last request telemetry.
      */
-    public synchronized void flush(@NonNull final BaseCommand command, @NonNull final CommandResult commandResult) {
+    public synchronized void flush(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command, @NonNull final CommandResult commandResult) {
         final String methodName = ":flush";
 
         final String correlationId = command.getParameters().getCorrelationId();
@@ -313,7 +314,7 @@ public class EstsTelemetry {
         }
     }
 
-    private boolean isTelemetryLoggedByServer(@NonNull final BaseCommand command, @NonNull final CommandResult commandResult) {
+    private boolean isTelemetryLoggedByServer(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command, @NonNull final CommandResult commandResult) {
         // This was a local operation - we didn't reach token endpoint and hence telemetry wasn't sent
         if (!(command instanceof TokenCommand)) {
             return false;

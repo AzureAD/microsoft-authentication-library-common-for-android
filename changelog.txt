@@ -1,6 +1,53 @@
-Version v.Next
+vNext
 ----------
-- Moved broker controller and strategy classes to common for MSALCPP brokered auth.
+- Expose expiresIn in MSAL Device Code flow callback (#1064)
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
+- Added support for exporting public keys in the following formats:
+    * X.509 SubjectPublicKeyInfo
+    * JWK (RFC-7517)
+- Added support for signing and verifying arbitrary String data with select RSA algorithms.
+- Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
+- Bugfix: Added a workaround for keypair generation on API < 23 devices using locales with non-Gregorian calendars. (#1075)
+
+Version 3.0.4
+----------
+- Fix for duplicate_command caching bug due to Command permutation (#1055)
+
+Version 3.0.3
+----------
+- Cut down logs (#1046)
+
+Version 3.0.2
+----------
+- Added a check for UNSET OpenIdConnectPromptParameter value (#1042)
+
+Version 3.0.1
+----------
+- Perform browser sign out on MSAL side (#1032)
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers. (#1022)
+- Consider controllers while throttling (#1021)
+- Allow changing of the progressBar color (#1020)
+- Place cap on the number failed request data in Last Request Telemetry at any given time (#1018)
+- Adding the OpenIdConnectPromptParameter field UNSET (#1013)
+
+Version 2.1.1
+----------
+- Introduces result sharing to minimize duplicate_command errors.
+- No longer query well known config to obtain token endpoint - build it manually instead.
+- Improved null-safety in String comparisons.
+- Improved thread safety when querying cloud metadata.
+- Proguard configuration no longer keeps classes in common or nimbus, per request from Office.
+- Improved logging for SSL errors to assist in troubleshooting.
+
+Version 2.1.0
+----------
+- Moved broker controller and strategy classes to common for MSAL CPP brokered auth.
+- Added support in common for Device Code Flow.
+- Added app-name, app-version headers to /auth & /token requests.
+- Added support for additional sub_errors returned by ESTS service for MSAL CPP support.
+- Added BrokerActivity to common AndroidManifest.
+- Caching in SharedPreferences now using apply() instead of synchronous commit() call.
+- Bugfix for parsing Authority URLs.
 
 Version 2.0.15
 -----------

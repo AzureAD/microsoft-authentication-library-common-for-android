@@ -39,17 +39,17 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParameters {
 
-    private String callerPackageName;
-    private int callerUid;
-    private String callerAppVersion;
-    private String brokerVersion;
+    private final String callerPackageName;
+    private final int callerUid;
+    private final String callerAppVersion;
+    private final String brokerVersion;
 
-    private Account accountManagerAccount;
-    private String homeAccountId;
-    private String localAccountId;
-    private int sleepTimeBeforePrtAcquisition;
-    private String loginHint;
-    private String negotiatedBrokerProtocolVersion;
+    private final Account accountManagerAccount;
+    private final String homeAccountId;
+    private final String localAccountId;
+    private final int sleepTimeBeforePrtAcquisition;
+    private final String loginHint;
+    private final String negotiatedBrokerProtocolVersion;
 
     @Override
     public void validate() throws ArgumentException {
@@ -89,7 +89,9 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mCallerPackageName", "Caller package name is not set"
             );
         }
-        if (SdkType.MSAL == getSdkType() &&
+
+        // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
+        if (getSdkType().isCapableOfMSA() &&
                 !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,

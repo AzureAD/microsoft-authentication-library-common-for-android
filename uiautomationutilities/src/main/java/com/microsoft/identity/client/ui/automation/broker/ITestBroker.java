@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.broker;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.IApp;
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 
 /**
  * An interface for an Android broker being used during a UI Test. We can perform operations such as
@@ -85,4 +86,18 @@ public interface ITestBroker extends IApp {
      * Enable browser access from this broker.
      */
     void enableBrowserAccess();
+
+    /**
+     * Create a PowerLift Incident using this broker.
+     */
+    void createPowerLiftIncident();
+
+    /**
+     * The admin name for this broker app. This name is used to represent the broker app as an
+     * admin on the Device Administrator page on the Android settings app when enabled as a
+     * device admin.
+     *
+     * @return the {@link DeviceAdmin} name for this broker app
+     */
+    DeviceAdmin getAdminName();
 }

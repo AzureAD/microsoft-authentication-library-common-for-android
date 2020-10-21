@@ -311,6 +311,11 @@ public final class ErrorStrings {
     public static final String INVALID_BROKER_REFRESH_TOKEN = "Broker refresh token is invalid";
 
     /**
+     * Device registration data is missing in a flow that expects it.
+     */
+    public static final String DEVICE_REGISTRATION_MISSING_FROM_CLIENT = "Device registration data not found.";
+
+    /**
      * Failed to retreive device state.
      */
     public static final String ERROR_RETRIEVING_DEVICE_STATE = "Error retrieving device state";
@@ -396,9 +401,17 @@ public final class ErrorStrings {
      * */
     public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
             "registered_shared_device_deleted_on_server";
-    public static final String REGISTERED_SHARED_DEVICE_DELETED_ON_SERVER_ERROR_MESSAGE =
-            "This device configuration was changed on the server. " +
-                    "Please return the device to your administrator to restart the registration of this device.";
+
+    /**
+     * The device is registered with precreate/userless WPJ, and its registration was deleted by the admin.
+     * This is an irrecoverable error, and the admin has to re-prep the device.
+     * */
+    public static final String USERLESS_DEVICE_DELETED_ON_SERVER_ERROR_CODE =
+            "userless_device_deleted_on_server";
+
+    public static final String DEVICE_DELETED_ON_SERVER_IRRECOVERABLE_ERROR_MESSAGE =
+            "This device was deleted from the tenant. " +
+                    "This is an irrecoverable error. Only tenant administrator can re-register this device.";
 
     /**
      * Home tenant of the BRT acccount doesn't match with WPJ account's tenant.
@@ -407,6 +420,12 @@ public final class ErrorStrings {
             "Requested account is from a different organization. " +
                     "Please make sure to use your organizational account. " +
                     "If that doesn’t help, please return the device to your administrator.";
+
+    /**
+     * Home tenant of the BRT acccount doesn't match with WPJ account's UPN.
+     */
+    public static final String BRT_USER_MISMATCH_ERROR_MESSAGE =
+            "The signed in user doesn't match with the user this device is registered to.";
 
     /**
      * Device Code Flow only.

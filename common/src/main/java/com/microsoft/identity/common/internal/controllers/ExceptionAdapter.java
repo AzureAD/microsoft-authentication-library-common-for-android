@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -56,6 +57,8 @@ public class ExceptionAdapter {
     @Nullable
     public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
         final String methodName = ":exceptionFromAcquireTokenResult";
+
+        @SuppressWarnings(WarningType.rawtype_warning)
         final AuthorizationResult authorizationResult = result.getAuthorizationResult();
 
         if (null != authorizationResult) {
@@ -153,8 +156,8 @@ public class ExceptionAdapter {
         // We simplify our logic because this layer is also used by MSAL.
 
         //Interaction required has been deprecated... hence suppressing warning.
-        return oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT) ||
-                oAuthError.equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED);
+        return AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(oAuthError) ||
+                AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(oAuthError);
 
     }
 

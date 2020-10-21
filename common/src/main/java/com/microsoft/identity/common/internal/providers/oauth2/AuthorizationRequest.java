@@ -27,6 +27,7 @@ import android.util.Pair;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 
 import java.io.Serializable;
@@ -116,15 +117,24 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * Constructor of AuthorizationRequest.
      */
-    protected AuthorizationRequest(final Builder builder) {
+    protected AuthorizationRequest(@SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
         mResponseType = builder.mResponseType;
         mClientId = builder.mClientId;
         mRedirectUri = builder.mRedirectUri;
         mState = builder.mState;
         mScope = builder.mScope;
-        mExtraQueryParams = builder.mExtraQueryParams;
+
+        // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        List<Pair<String, String>> extraQueryParams = builder.mExtraQueryParams;
+
+        // Suppressing unchecked warning of casting HashMap to HashMap<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        HashMap<String, String> requestHeaders = builder.mRequestHeaders;
+
+        mExtraQueryParams = extraQueryParams;
         mClaims = builder.mClaims;
-        mRequestHeaders = builder.mRequestHeaders;
+        mRequestHeaders = requestHeaders;
         webViewZoomEnabled = builder.webViewZoomEnabled;
         webViewZoomControlsEnabled = builder.webViewZoomControlsEnabled;
     }
@@ -228,6 +238,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public abstract B self();
 
+        @SuppressWarnings(WarningType.rawtype_warning)
         public abstract AuthorizationRequest build();
 
     }

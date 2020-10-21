@@ -22,12 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ServiceException;
@@ -57,6 +57,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID;
+import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.RAW;
+import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.SSO_STATE_SERIALIZER_BLOB;
 import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
@@ -66,7 +68,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
-    private static final String AUDIENCE_PATH_CONSUMERS = "/consumers";
+    private static final String CONSUMERS_ENDPOINT = "https://login.microsoftonline.com/consumers";
 
     /**
      * To support caching lookups in ADAL, the following authority is used to signal
@@ -87,23 +89,19 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     private final String mClientId;
     private final String mRedirectUri;
-    private final String mDefaultAuthority;
+    @SuppressWarnings(WarningType.rawtype_warning)
     private final MsalOAuth2TokenCache mTokenCache;
 
     public TokenShareUtility(@NonNull final String clientId,
                              @NonNull final String redirectUri,
-                             @NonNull final String defaultAuthority,
-                             @NonNull final MsalOAuth2TokenCache cache) {
+                             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final MsalOAuth2TokenCache cache) {
         mClientId = clientId;
         mRedirectUri = redirectUri;
-        mDefaultAuthority = defaultAuthority;
         mTokenCache = cache;
     }
 
     @Override
-    @NonNull
-    @SuppressWarnings("unchecked")
-    public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
+    public ITokenShareResultInternal getOrgIdFamilyRefreshTokenWithMetadata(@NonNull final String identifier) throws BaseException {
         final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
 
         throwIfCacheRecordIncomplete(identifier, cacheRecord);
@@ -114,7 +112,18 @@ public class TokenShareUtility implements ITokenShareInternal {
         );
 
         // Ship it
-        return SSOStateSerializer.serialize(cacheItemToExport);
+        return new TokenShareResultInternal(
+                cacheRecord,
+                SSOStateSerializer.serialize(cacheItemToExport),
+                SSO_STATE_SERIALIZER_BLOB
+        );
+    }
+
+    @Override
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public String getOrgIdFamilyRefreshToken(@NonNull final String identifier) throws BaseException {
+        return getOrgIdFamilyRefreshTokenWithMetadata(identifier).getRefreshToken();
     }
 
     private void throwIfCacheRecordIncomplete(@NonNull final String identifier,
@@ -220,6 +229,21 @@ public class TokenShareUtility implements ITokenShareInternal {
         saveResult(resultPair);
     }
 
+    @Override
+    public ITokenShareResultInternal getMsaFamilyRefreshTokenWithMetadata(@NonNull final String identifier) throws Exception {
+        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
+
+        throwIfCacheRecordIncomplete(identifier, cacheRecord);
+
+        final ITokenShareResultInternal result = new TokenShareResultInternal(
+                cacheRecord,
+                cacheRecord.getRefreshToken().getSecret(),
+                RAW
+        );
+
+        return result;
+    }
+
     @SuppressWarnings("unchecked")
     private void saveResult(@Nullable final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair)
             throws ClientException {
@@ -235,11 +259,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
     @Override
     public String getMsaFamilyRefreshToken(@NonNull final String identifier) throws Exception {
-        final ICacheRecord cacheRecord = getCacheRecordForIdentifier(identifier);
-
-        throwIfCacheRecordIncomplete(identifier, cacheRecord);
-
-        return cacheRecord.getRefreshToken().getSecret();
+        return getMsaFamilyRefreshTokenWithMetadata(identifier).getRefreshToken();
     }
 
     @Override
@@ -250,24 +270,9 @@ public class TokenShareUtility implements ITokenShareInternal {
                 sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
                     public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
-                        // Use the /consumers endpoint relative to the current cloud
-                        final Uri defaultAuthorityUri = Uri.parse(mDefaultAuthority);
-
-                        final String tenantPath = defaultAuthorityUri.getPath();
-                        final String requestAuthority;
-
-                        if (null != tenantPath) {
-                            requestAuthority = mDefaultAuthority.replace(
-                                    tenantPath,
-                                    AUDIENCE_PATH_CONSUMERS
-                            );
-                        } else {
-                            requestAuthority = mDefaultAuthority;
-                        }
-
                         final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
                                 refreshToken,
-                                requestAuthority
+                                CONSUMERS_ENDPOINT
                         );
 
                         // Check that instance discovery metadata is loaded before making the request...

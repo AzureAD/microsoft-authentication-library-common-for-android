@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
-import androidx.core.util.Consumer;
-
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.AppApi;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
@@ -77,12 +75,13 @@ public class LabUserHelper {
         FEDERATED(LabConstants.UserType.FEDERATED),
         GUEST(LabConstants.UserType.GUEST),
         MSA(LabConstants.UserType.MSA),
-        ON_PREM(LabConstants.UserType.ON_PREM)
-        ;
+        ON_PREM(LabConstants.UserType.ON_PREM);
         String constant;
+
         UserType(String constant) {
             this.constant = constant;
         }
+
         String getValue() {
             return constant;
         }
@@ -95,9 +94,11 @@ public class LabUserHelper {
         AZURE_AD_MY_ORG(LabConstants.SignInAudience.AZURE_AD_MY_ORG),
         ;
         String constant;
+
         SignInAudience(String constant) {
             this.constant = constant;
         }
+
         String getValue() {
             return constant;
         }
@@ -110,12 +111,13 @@ public class LabUserHelper {
         AZURE_CLOUD(LabConstants.AzureEnvironment.AZURE_CLOUD),
         AZURE_GERMANY_CLOUD(LabConstants.AzureEnvironment.AZURE_GERMANY_CLOUD),
         AZURE_PPE(LabConstants.AzureEnvironment.AZURE_PPE),
-        AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT)
-        ;
+        AZURE_US_GOVERNMENT(LabConstants.AzureEnvironment.AZURE_US_GOVERNMENT);
         String constant;
+
         AzureEnvironment(String constant) {
             this.constant = constant;
         }
+
         String getValue() {
             return constant;
         }
@@ -123,12 +125,13 @@ public class LabUserHelper {
 
     public enum IsAdminConsented {
         YES(LabConstants.IsAdminConsented.YES),
-        NO(LabConstants.IsAdminConsented.NO)
-        ;
+        NO(LabConstants.IsAdminConsented.NO);
         String constant;
+
         IsAdminConsented(String constant) {
             this.constant = constant;
         }
+
         String getValue() {
             return constant;
         }
@@ -136,12 +139,13 @@ public class LabUserHelper {
 
     public enum PublicClient {
         YES(LabConstants.PublicClient.YES),
-        NO(LabConstants.PublicClient.NO)
-        ;
+        NO(LabConstants.PublicClient.NO);
         String constant;
+
         PublicClient(String constant) {
             this.constant = constant;
         }
+
         String getValue() {
             return constant;
         }
@@ -187,7 +191,7 @@ public class LabUserHelper {
         List<LabConfig> labConfigs = new ArrayList<>();
         final List<ConfigInfo> configInfos = getConfigInfos(query);
         for (ConfigInfo configInfo : configInfos) {
-            final String password = LabHelper.getPasswordForLab(configInfo.getLabInfo().getLabName());
+            final String password = LabHelper.getPasswordForLab(configInfo.getLabInfo().getCredentialVaultKeyName());
             labConfigs.add(new LabConfig(configInfo, password));
         }
 
@@ -216,7 +220,7 @@ public class LabUserHelper {
 
         try {
             tempUser = createTempUserApi.post(userType);
-            final String password = LabHelper.getPasswordForLab(tempUser.getLabName());
+            final String password = LabHelper.getPasswordForLab(tempUser.getCredentialVaultKeyName());
             LabConfig labConfig = new LabConfig(tempUser, password);
             LabConfig.setCurrentLabConfig(labConfig);
         } catch (ApiException e) {
@@ -239,11 +243,11 @@ public class LabUserHelper {
 
     public static String getPasswordForUser(final String username) {
         final ConfigInfo configInfo = getConfigInfoFromUpn(username);
-        return LabHelper.getPasswordForLab(configInfo.getUserInfo().getLabName());
+        return LabHelper.getPasswordForLab(configInfo.getLabInfo().getCredentialVaultKeyName());
     }
 
     public static String getPasswordForUser(final LabInfo labInfo) {
-        return LabHelper.getPasswordForLab(labInfo.getLabName());
+        return LabHelper.getPasswordForLab(labInfo.getCredentialVaultKeyName());
     }
 
     public static Credential getCredentials(LabUserQuery query) {
@@ -267,9 +271,9 @@ public class LabUserHelper {
     }
 
     public static AppInfo getDefaultAppInfo() {
-            return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
-                    IsAdminConsented.YES, PublicClient.YES);
-   }
+        return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
+                IsAdminConsented.YES, PublicClient.YES);
+    }
 
     public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
                                      IsAdminConsented isAdminConsented, PublicClient publicClient) {

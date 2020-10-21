@@ -26,12 +26,16 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This command is used to execute the device code flow protocol.
@@ -45,7 +49,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
 
     public DeviceCodeFlowCommand(@NonNull DeviceCodeFlowCommandParameters parameters,
                                  @NonNull BaseController controller,
-                                 @NonNull DeviceCodeFlowCommandCallback callback,
+                                 @SuppressWarnings(WarningType.rawtype_warning) @NonNull DeviceCodeFlowCommandCallback callback,
                                  @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
@@ -65,18 +69,30 @@ public class DeviceCodeFlowCommand extends TokenCommand {
         final DeviceCodeFlowCommandParameters commandParameters = (DeviceCodeFlowCommandParameters) getParameters();
 
         // Call deviceCodeFlowAuthRequest to get authorization result (Part 1 of DCF)
+        @SuppressWarnings(WarningType.rawtype_warning)
         final AuthorizationResult authorizationResult = controller.deviceCodeFlowAuthRequest(commandParameters);
 
         // Fetch the authorization response
         final MicrosoftStsAuthorizationResponse authorizationResponse =
                 (MicrosoftStsAuthorizationResponse) authorizationResult.getAuthorizationResponse();
 
+        final Date expiredDate = new Date();
+        try {
+            long expiredInInMilliseconds = TimeUnit.SECONDS.toMillis(Long.parseLong(authorizationResponse.getExpiresIn()));
+            expiredDate.setTime(expiredDate.getTime() + expiredInInMilliseconds);
+        } catch (final NumberFormatException e){
+            // Shouldn't happen, but if it does, we don't want to fail the request because of this.
+            Logger.error(TAG + methodName, "Failed to parse authorizationResponse.getExpiresIn()", e);
+        }
+
         // Communicate with user app and provide authentication information
+        @SuppressWarnings(WarningType.rawtype_warning)
         final DeviceCodeFlowCommandCallback deviceCodeFlowCommandCallback = (DeviceCodeFlowCommandCallback) getCallback();
         deviceCodeFlowCommandCallback.onUserCodeReceived(
                 authorizationResponse.getVerificationUri(),
                 authorizationResponse.getUserCode(),
-                authorizationResponse.getMessage()
+                authorizationResponse.getMessage(),
+                expiredDate
         );
 
         // Call acquireDeviceCodeFlowToken to get token result (Part 2 of DCF)

@@ -27,6 +27,7 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.IDeviceCertificate;
@@ -34,6 +35,7 @@ import com.microsoft.identity.common.adal.internal.JWSBuilder;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -97,13 +99,15 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                 pKeyAuthChallenge.getVersion());
 
         // If not device cert exists, alias or private key will not exist on the device
+        // Suppressing unchecked warnings due to the generic type not provided in the object returned from method getDeviceCertificateProxy
+        @SuppressWarnings(WarningType.unchecked_warning)
         Class<IDeviceCertificate> certClazz = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE
                 .getDeviceCertificateProxy();
+
         if (certClazz != null) {
             IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
             if (deviceCertProxy.isValidIssuer(pKeyAuthChallenge.getCertAuthorities())
-                    || deviceCertProxy.getThumbPrint() != null && deviceCertProxy.getThumbPrint()
-                    .equalsIgnoreCase(pKeyAuthChallenge.getThumbprint())) {
+                    || StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), pKeyAuthChallenge.getThumbprint())) {
                 RSAPrivateKey privateKey = deviceCertProxy.getRSAPrivateKey();
                 if (privateKey == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);

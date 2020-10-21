@@ -28,6 +28,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -35,6 +36,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -43,7 +45,6 @@ import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -55,7 +56,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStra
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
@@ -81,6 +81,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
+// Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
         <MicrosoftStsAccessToken,
@@ -270,14 +272,9 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-        final Map<String, String> platformParameters = Device.getPlatformIdParameters();
-        builder.setLibraryName(platformParameters.get(
-                Device.PlatformIdParameters.PRODUCT)
-        );
-        builder.setLibraryVersion(platformParameters.get(
-                Device.PlatformIdParameters.VERSION)
-        );
 
+        builder.setLibraryName(DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        builder.setLibraryVersion(DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
 
@@ -332,7 +329,7 @@ public class MicrosoftStsOAuth2Strategy
 
         if (mConfig.getMultipleCloudsSupported() || request.getMultipleCloudAware()) {
             Logger.verbose(TAG, "get cloud specific authority based on authorization response.");
-            setTokenEndpoint(getCloudSpecificTokenEndpoint(request, response));
+            setTokenEndpoint(getCloudSpecificTokenEndpoint(response));
         }
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
@@ -348,8 +345,7 @@ public class MicrosoftStsOAuth2Strategy
         if (response.getDeviceCode() != null) {
             tokenRequest.setGrantType(TokenRequest.GrantTypes.DEVICE_CODE);
             tokenRequest.setDeviceCode(response.getDeviceCode());
-        }
-        else { // If device code doesn't exist, continue with auth_code configuration
+        } else { // If device code doesn't exist, continue with auth_code configuration
             tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         }
 
@@ -469,6 +465,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
 
         headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());
@@ -486,6 +484,8 @@ public class MicrosoftStsOAuth2Strategy
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
 
+            // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+            @SuppressWarnings(WarningType.deprecation_warning)
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,
                     headers,
@@ -613,30 +613,11 @@ public class MicrosoftStsOAuth2Strategy
         return mTokenEndpoint;
     }
 
-    private String getCloudSpecificTokenEndpoint(MicrosoftAuthorizationRequest request,
-                                                 MicrosoftAuthorizationResponse response) {
-        final String methodName = ":getCloudSpecificTokenEndpoint";
-        String tokenEndpoint;
-
+    private String getCloudSpecificTokenEndpoint(final MicrosoftAuthorizationResponse response) {
         if (StringUtil.isEmpty(response.getCloudInstanceHostName())) {
             return mTokenEndpoint;
         }
-
-        final OpenIdProviderConfiguration openIdConfig = mConfig.getOpenIdWellKnownConfig(
-                response.getCloudInstanceHostName(),
-                request.getAuthority().getPath()
-        );
-
-        if (openIdConfig != null && openIdConfig.getTokenEndpoint() != null) {
-            tokenEndpoint = openIdConfig.getTokenEndpoint();
-        } else {
-            Logger.verbose(TAG + methodName,
-                    "Token Endpoint not obtained from well known config. Building token endpoint manually.");
-            // otherwise build it manually
-            tokenEndpoint = buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
-        }
-
-        return tokenEndpoint;
+        return buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
     }
 
     /**
