@@ -16,7 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * A strategy for communicating with the active broker (:auth process) via Bound Service.
+ * A strategy for communicating with the targeted broker via Bound Service.
  */
 public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy {
     private static final String TAG = BoundServiceStrategy.class.getSimpleName();
