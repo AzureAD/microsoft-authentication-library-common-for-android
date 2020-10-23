@@ -37,6 +37,10 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
+
 /**
  * An object that acts as a bridge between business logic and communication layer.
  * - Business logic will provide a request bundle, and specify which operation it wants to perform.
@@ -118,7 +122,11 @@ public class BrokerOperationBundle {
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
                 Logger.warn(TAG + methodName, errorMessage);
-                throw new BrokerCommunicationException(errorMessage, null);
+                throw new BrokerCommunicationException(
+                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                        ACCOUNT_MANAGER_ADD_ACCOUNT,
+                        errorMessage,
+                        null);
         }
     }
 
@@ -153,7 +161,11 @@ public class BrokerOperationBundle {
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
                 Logger.warn(TAG + methodName, errorMessage);
-                throw new BrokerCommunicationException(errorMessage, null);
+                throw new BrokerCommunicationException(
+                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                        CONTENT_PROVIDER,
+                        errorMessage,
+                        null);
         }
     }
 }

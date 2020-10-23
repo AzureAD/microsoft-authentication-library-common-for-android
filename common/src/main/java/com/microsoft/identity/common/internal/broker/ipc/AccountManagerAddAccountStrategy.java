@@ -34,12 +34,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 
 import java.io.IOException;
+
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
 
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
@@ -60,7 +62,7 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
 
     @Override
     @Nullable public Bundle communicateToBroker(@NonNull final BrokerOperationBundle brokerOperationBundle)
-            throws BaseException {
+            throws BrokerCommunicationException {
         final String methodName = brokerOperationBundle.getOperation().name();
         try {
             final AccountManagerFuture<Bundle> resultBundle =
@@ -78,7 +80,12 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
             return resultBundle.getResult();
         } catch (final AuthenticatorException | IOException | OperationCanceledException e) {
             Logger.error(TAG + methodName, e.getMessage(), e);
-            throw new BrokerCommunicationException("Failed to connect to AccountManager", e);
+            throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), "Failed to connect to AccountManager", e);
         }
+    }
+
+    @Override
+    public Type getType() {
+        return ACCOUNT_MANAGER_ADD_ACCOUNT;
     }
 }

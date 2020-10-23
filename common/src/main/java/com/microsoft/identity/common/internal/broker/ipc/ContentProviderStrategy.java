@@ -32,7 +32,6 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.ParcelableUtil;
@@ -41,6 +40,8 @@ import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.AUTHORITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.CONTENT_SCHEME;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 
 /**
  * A strategy for communicating with the targeted broker via Content Provider.
@@ -56,7 +57,7 @@ public class ContentProviderStrategy implements IIpcStrategy {
 
     @Override
     @Nullable public Bundle communicateToBroker(@NonNull BrokerOperationBundle brokerOperationBundle)
-            throws BaseException {
+            throws BrokerCommunicationException {
 
         final String methodName = brokerOperationBundle.getOperation().name();
 
@@ -92,8 +93,13 @@ public class ContentProviderStrategy implements IIpcStrategy {
         } else {
             final String message = "Failed to get result from Broker Content Provider, cursor is null";
             Logger.error(TAG + methodName, message, null);
-            throw new BrokerCommunicationException(message, null);
+            throw new BrokerCommunicationException(CONNECTION_ERROR, getType(), message, null);
         }
+    }
+
+    @Override
+    public Type getType() {
+        return CONTENT_PROVIDER;
     }
 
     /**
