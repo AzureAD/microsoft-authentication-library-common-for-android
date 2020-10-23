@@ -28,13 +28,14 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import lombok.AllArgsConstructor;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerAccountManagerOperation;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider;
 
 /**
  * An object that acts as a bridge between business logic and communication layer.
@@ -69,10 +70,58 @@ public class BrokerOperationBundle {
     @Getter
     @Nullable final private Bundle bundle;
 
-    //    public String getAccountManagerOperationKey(){
-//        // TODO
-//    }
-//
+    /**
+     * Packs the response bundle with the account manager key.
+     */
+    public Bundle getAccountManagerBundle()
+            throws BrokerCommunicationException {
+        Bundle requestBundle = bundle;
+        if (requestBundle == null) {
+            requestBundle = new Bundle();
+        }
+
+        requestBundle.putString(
+                AuthenticationConstants.Broker.BROKER_ACCOUNT_MANAGER_OPERATION_KEY,
+                getAccountManagerAddAccountOperationKey());
+
+        return requestBundle;
+    }
+
+    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
+        final String methodName = ":getAccountManagerAddAccountOperationKey";
+
+        switch (operation) {
+            case MSAL_HELLO:
+                return BrokerAccountManagerOperation.HELLO;
+
+            case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
+                return BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST;
+
+            case MSAL_ACQUIRE_TOKEN_SILENT:
+                return BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT;
+
+            case MSAL_GET_ACCOUNTS:
+                return BrokerAccountManagerOperation.GET_ACCOUNTS;
+
+            case MSAL_REMOVE_ACCOUNT:
+                return BrokerAccountManagerOperation.REMOVE_ACCOUNT;
+
+            case MSAL_GET_DEVICE_MODE:
+                return BrokerAccountManagerOperation.GET_DEVICE_MODE;
+
+            case MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE:
+                return BrokerAccountManagerOperation.GET_CURRENT_ACCOUNT;
+
+            case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
+                return BrokerAccountManagerOperation.REMOVE_ACCOUNT_FROM_SHARED_DEVICE;
+
+            default:
+                final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
+                Logger.warn(TAG + methodName, errorMessage);
+                throw new BrokerCommunicationException(errorMessage, null);
+        }
+    }
+
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodName = ":getContentProviderUriPath";
 

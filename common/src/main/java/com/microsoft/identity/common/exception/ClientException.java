@@ -241,6 +241,11 @@ public class ClientException extends BaseException {
     public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
 
     /**
+     * The returned intent does not contain the expected data.
+     */
+    public static final String INVALID_BROKER_INTENT = "invalid_broker_intent";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String

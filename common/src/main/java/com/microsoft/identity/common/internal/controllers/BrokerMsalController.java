@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.controllers;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ProviderInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -45,6 +44,7 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.BrokerResultFuture;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
+import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
@@ -137,8 +137,8 @@ public class BrokerMsalController extends BaseController {
         }
 
         if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext)) {
-//            sb.append("AccountManagerStrategy.");
-//            strategies.add(new BrokerAccountManagerStrategy());
+            sb.append("AccountManagerStrategy.");
+            strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
         }
 
         Logger.info(TAG, sb.toString());
