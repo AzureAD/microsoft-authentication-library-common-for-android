@@ -81,7 +81,7 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
 
             case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
                 final Intent intent = microsoftAuthService.getIntentForInteractiveRequest();
-                return new MsalBrokerResultAdapter().getBundleFromInteractiveRequestIntent(intent);
+                return intent.getExtras();
 
             case MSAL_ACQUIRE_TOKEN_SILENT:
                 return microsoftAuthService.acquireTokenSilently(inputBundle);

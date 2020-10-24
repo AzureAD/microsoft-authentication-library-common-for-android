@@ -58,11 +58,10 @@ import java.util.List;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerInteractiveRequestBundleContent.BUNDLE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerInteractiveRequestBundleContent.CLASS_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerInteractiveRequestBundleContent.PACKAGE_NAME;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
@@ -496,30 +495,13 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
     }
 
-    public @NonNull Bundle getBundleFromInteractiveRequestIntent(@NonNull final Intent intent) throws ClientException {
-        final ComponentName componentName = intent.getComponent();
-        final Bundle bundle = intent.getExtras();
-
-        if (componentName == null || bundle == null) {
-            throw new ClientException("Unexpected error. Content of Authorization Intent should not be null.");
-        }
-
-        final Bundle resultBundle = new Bundle();
-        resultBundle.putBundle(BUNDLE, bundle);
-        resultBundle.putString(PACKAGE_NAME, componentName.getPackageName());
-        resultBundle.putString(CLASS_NAME, componentName.getClassName());
-        return resultBundle;
-    }
-
     public @NonNull Intent getIntentForInteractiveRequestFromResultBundle(@NonNull final Bundle resultBundle) throws ClientException {
-        final String packageName = resultBundle.getString(PACKAGE_NAME);
-        final String className = resultBundle.getString(CLASS_NAME);
-        final Bundle bundle = resultBundle.getBundle(BUNDLE);
+        final String packageName = resultBundle.getString(BROKER_PACKAGE_NAME);
+        final String className = resultBundle.getString(BROKER_ACTIVITY_NAME);
 
         if (StringUtil.isEmpty(packageName) ||
-                StringUtil.isEmpty(className) ||
-                bundle == null) {
-            throw new ClientException("Unexpected error. Content of Authorization Intent bundle should not be null.");
+                StringUtil.isEmpty(className)) {
+            throw new ClientException("Unexpected error. Content of Authorization Intent's package and class name should not be null.");
         }
 
         final Intent intent = new Intent();
@@ -528,7 +510,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 packageName,
                 className
         );
-        intent.putExtras(bundle);
+        intent.putExtras(resultBundle);
         return intent;
     }
 

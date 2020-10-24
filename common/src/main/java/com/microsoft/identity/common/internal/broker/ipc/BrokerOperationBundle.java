@@ -29,7 +29,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import lombok.AllArgsConstructor;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
+import com.microsoft.identity.common.internal.logging.Logger;
+
 import lombok.Getter;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider;
 
 /**
  * An object that acts as a bridge between business logic and communication layer.
@@ -41,6 +46,7 @@ import lombok.Getter;
  */
 @AllArgsConstructor
 public class BrokerOperationBundle {
+    private static final String TAG = BrokerOperationBundle.class.getName();
 
     public enum Operation {
         MSAL_HELLO,
@@ -63,11 +69,42 @@ public class BrokerOperationBundle {
     @Getter
     @Nullable final private Bundle bundle;
 
-//    public String getAccountManagerOperationKey(){
+    //    public String getAccountManagerOperationKey(){
 //        // TODO
 //    }
 //
-//    public String getContentProviderUriPath(){
-//        // TODO
-//    }
+    public String getContentProviderPath() throws BrokerCommunicationException {
+        final String methodName = ":getContentProviderUriPath";
+
+        switch (operation) {
+            case MSAL_HELLO:
+                return BrokerContentProvider.HELLO_PATH;
+
+            case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
+                return BrokerContentProvider.ACQUIRE_TOKEN_INTERACTIVE_PATH;
+
+            case MSAL_ACQUIRE_TOKEN_SILENT:
+                return BrokerContentProvider.ACQUIRE_TOKEN_SILENT_PATH;
+
+            case MSAL_GET_ACCOUNTS:
+                return BrokerContentProvider.GET_ACCOUNTS_PATH;
+
+            case MSAL_REMOVE_ACCOUNT:
+                return BrokerContentProvider.REMOVE_ACCOUNTS_PATH;
+
+            case MSAL_GET_DEVICE_MODE:
+                return BrokerContentProvider.GET_DEVICE_MODE_PATH;
+
+            case MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE:
+                return BrokerContentProvider.GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH;
+
+            case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
+                return BrokerContentProvider.SIGN_OUT_FROM_SHARED_DEVICE_PATH;
+
+            default:
+                final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
+                Logger.warn(TAG + methodName, errorMessage);
+                throw new BrokerCommunicationException(errorMessage, null);
+        }
+    }
 }

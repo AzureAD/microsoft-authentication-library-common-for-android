@@ -46,8 +46,9 @@ import com.microsoft.identity.common.internal.broker.BrokerResultFuture;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -123,9 +124,10 @@ public class BrokerMsalController extends BaseController {
         final StringBuilder sb = new StringBuilder(100);
         sb.append("Broker Strategies added : ");
 
-        if (isBrokerContentProviderAvailable(applicationContext)) {
-//            sb.append("ContentProviderStrategy, ");
-//            strategies.add(new BrokerContentProviderStrategy());
+        final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
+        if (contentProviderStrategy.isBrokerContentProviderAvailable(activeBrokerPackageName)) {
+            sb.append("ContentProviderStrategy, ");
+            strategies.add(contentProviderStrategy);
         }
 
         final MicrosoftAuthClient client = new MicrosoftAuthClient(applicationContext);
@@ -733,23 +735,5 @@ public class BrokerMsalController extends BaseController {
     @SuppressWarnings(WarningType.unchecked_warning)
     private void msalOAuth2TokenCacheSetSingleSignOnState(@SuppressWarnings(WarningType.rawtype_warning) @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache, MicrosoftStsAccount microsoftStsAccount, MicrosoftRefreshToken microsoftRefreshToken) throws ClientException {
         msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
-    }
-
-    private static boolean isBrokerContentProviderAvailable(@NonNull final Context applicationContext) {
-        final String activeBrokerPackageName = new BrokerValidator(applicationContext)
-                .getCurrentActiveBrokerPackageName();
-        final String brokerContentProviderAuthority = activeBrokerPackageName + "." +
-                AuthenticationConstants.BrokerContentProvider.AUTHORITY;
-
-        final List<ProviderInfo> providers = applicationContext.getPackageManager()
-                .queryContentProviders(null, 0, 0);
-
-        for (final ProviderInfo providerInfo : providers) {
-            if (providerInfo.authority != null && providerInfo.authority.equals(brokerContentProviderAuthority)) {
-                return true;
-            }
-        }
-        return false;
-
     }
 }
