@@ -63,7 +63,6 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                 parameters.getAuthorizationAgent(),
                 context
         );
-        boolean isBrokerRequest = (parameters instanceof BrokerInteractiveTokenCommandParameters);
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
@@ -84,8 +83,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
                     context,
                     parameters.getActivity(),
-                    parameters.getFragment(),
-                    isBrokerRequest
+                    parameters.getFragment()
             );
 
             // Suppressing unchecked warnings due to generic type not provided for parameters
@@ -104,8 +102,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
                     context,
                     parameters.getActivity(),
-                    parameters.getFragment(),
-                    isBrokerRequest
+                    parameters.getFragment()
             );
 
             browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, parameters.getBrowserSafeList());
