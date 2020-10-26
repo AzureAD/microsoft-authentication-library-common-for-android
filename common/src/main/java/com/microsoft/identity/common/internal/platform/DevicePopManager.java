@@ -85,6 +85,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -94,6 +95,7 @@ import javax.crypto.CipherOutputStream;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
+import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
 import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
 import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
@@ -112,6 +114,8 @@ import static com.microsoft.identity.common.exception.ClientException.SIGNING_FA
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
+import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -538,7 +542,7 @@ class DevicePopManager implements IDevicePopManager {
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
             final byte[] signedBytes = signature.sign();
-            return Base64.encodeToString(signedBytes, Base64.DEFAULT);
+            return Base64.encodeToString(signedBytes, Base64.NO_WRAP);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -597,7 +601,7 @@ class DevicePopManager implements IDevicePopManager {
             final Signature signature = Signature.getInstance(alg.toString());
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
-            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.DEFAULT);
+            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.NO_WRAP);
             return signature.verify(signatureBytes);
         } catch (final UnsupportedEncodingException e) {
             errCode = UNSUPPORTED_ENCODING;
@@ -1136,12 +1140,25 @@ class DevicePopManager implements IDevicePopManager {
     private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
-        final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
-                context,
-                RSA_KEY_SIZE,
-                useStrongbox
-        );
-        return kpg.generateKeyPair();
+        synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
+            // See: https://issuetracker.google.com/issues/37095309
+            final Locale currentLocale = Locale.getDefault();
+            applyKeyStoreLocaleWorkarounds(currentLocale);
+
+            try {
+                final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
+                        context,
+                        RSA_KEY_SIZE,
+                        useStrongbox
+                );
+                final KeyPair keyPair = kpg.generateKeyPair();
+
+                return keyPair;
+            } finally {
+                // Reset our locale to the default
+                Locale.setDefault(currentLocale);
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)

@@ -20,20 +20,43 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
-
-import androidx.annotation.NonNull;
-
-import java.util.Date;
+package com.microsoft.identity.common.internal.platform;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * Information about the backing of an underlying keystore.
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+public enum SecureHardwareState {
+
+    /**
+     * Returned if the underlying private key resides inside secure hardware (e.g., Trusted
+     * Execution Environment (TEE) or Secure Element (SE)) and its hardware backing has been
+     * attested.
+     *
+     * @see <a href="https://developer.android.com/training/articles/security-key-attestation">Security Key Attestation</a>
+     */
+    TRUE_ATTESTED,
+
+    /**
+     * Returned if the underlying private key resides inside secure hardware (e.g., Trusted
+     * Execution Environment (TEE) or Secure Element (SE)). No mechanism of attestation is
+     * provided or specified.
+     */
+    TRUE_UNATTESTED,
+
+    /**
+     * The the underlying private key is not inside secure hardware.
+     */
+    FALSE,
+
+    /**
+     * It is unknown where the underlying key resides, due to lack of API support for
+     * determination.
+     */
+    UNKNOWN_DOWNLEVEL,
+
+    /**
+     * It is unknown where the underlying key resides, due to an error during keystore
+     * interrogation.
+     */
+    UNKNOWN_QUERY_ERROR
 }

@@ -20,20 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.client.ui.automation.annotations;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
-import java.util.Date;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * An annotation indicating which brokers are supported for a given test. This annotation is coupled
+ * with the {@link com.microsoft.identity.client.ui.automation.rules.BrokerSupportRule} to decide
+ * if a test should be run/skipped.
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+@Retention(value = RUNTIME)
+@Target(value = {ElementType.TYPE, ElementType.METHOD})
+public @interface SupportedBrokers {
+
+    Class<? extends ITestBroker>[] brokers();
 }

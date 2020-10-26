@@ -20,20 +20,39 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.client.ui.automation;
 
 import androidx.annotation.NonNull;
 
-import java.util.Date;
+import org.junit.Assert;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * A custom {@link CountDownLatch} to be used during UI Automation Token Requests.
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+public class TokenRequestLatch extends CountDownLatch {
+
+    public TokenRequestLatch(int count) {
+        super(count);
+    }
+
+    /**
+     * Performs awaits similar to {@link CountDownLatch#await(long, TimeUnit)}. The test that
+     * called this method will fail if the waiting timeout out.
+     *
+     * @param tokenRequestTimeout the amount of time to wait
+     */
+    public void await(@NonNull final TokenRequestTimeout tokenRequestTimeout) {
+        try {
+            Assert.assertTrue(
+                    "Timed out while waiting for token request to complete",
+                    this.await(tokenRequestTimeout.getTime(), tokenRequestTimeout.getTimeUnit())
+            );
+        } catch (final InterruptedException e) {
+            throw new AssertionError(e);
+        }
+    }
+
 }

@@ -80,9 +80,10 @@ public final class DiagnosticContext {
     }
 
     /**
-     * Clear rhe local request context thread.
+     * Clear the local request context thread.
      */
     public static void clear() {
         REQUEST_CONTEXT_THREAD_LOCAL.remove();
     }
+
 }
