@@ -15,6 +15,10 @@ env:
     - TERM=dumb
 
 android:
+  licenses:
+    - 'android-sdk-preview-license-.+'
+    - 'android-sdk-license-.+'
+    - 'google-gdk-license-.+'
   components:
     - tools
     - platform-tools
@@ -30,7 +34,7 @@ android:
     - sys-img-armeabi-v7a-android-$EMULATOR_API_VERSION
 
 before_install:
-  - yes | sdkmanager "platforms;android-30"
+#  - yes | sdkmanager "platforms;android-30"
   - chmod +x gradlew
 
 before_cache:
@@ -43,6 +47,8 @@ cache:
     - $HOME/.android/build-cache
 
 before_script:
+  - mkdir -p "$ANDROID_HOME/licenses"
+  - cp ./ci-licenses/* "$ANDROID_HOME/licenses"
   - android list targets
   - echo no | android create avd --force -n test -t android-$EMULATOR_API_VERSION --abi armeabi-v7a
   - emulator -avd test -no-audio -no-window &
