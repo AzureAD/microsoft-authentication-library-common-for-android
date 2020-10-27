@@ -1811,6 +1811,9 @@ public class MsalOAuth2TokenCache
                 idToken
         );
 
+        saveAccounts(accountDto);
+        saveCredentialsInternal(idToken, rt);
+
         final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
                 refreshToken.getFamilyId()
         );
@@ -1820,12 +1823,12 @@ public class MsalOAuth2TokenCache
         );
 
         if (isFamilyRefreshToken || isMultiResourceCapable) {
-            // TODO Consider updating this method for Teams' fix
-            final int refreshTokensRemoved = removeRefreshTokensForAccount(
+            final int refreshTokensRemoved = removeRefreshTokensForAccountExcept(
                     accountDto,
                     isFamilyRefreshToken,
                     accountDto.getEnvironment(),
-                    rt.getClientId()
+                    rt.getClientId(),
+                    rt
             );
 
             Logger.info(
@@ -1840,9 +1843,6 @@ public class MsalOAuth2TokenCache
                 );
             }
         }
-
-        saveAccounts(accountDto);
-        saveCredentialsInternal(idToken, rt);
     }
 
     @Override
