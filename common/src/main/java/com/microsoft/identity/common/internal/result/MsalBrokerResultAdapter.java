@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
-import android.content.ComponentName;
+import android.accounts.AccountManager;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -62,6 +62,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_BROKER_INTENT;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
@@ -162,7 +163,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
         if (tenantProfileCacheRecords == null) {
             Logger.error(TAG, "getTenantProfileData is null", null);
-            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "getTenantProfileData is null.");
+            throw new ClientException(INVALID_BROKER_INTENT, "getTenantProfileData is null.");
         }
 
         return new LocalAuthenticationResult(
@@ -245,7 +246,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
                 // The caller should handle the null broker result
                 Logger.error(TAG, "Failed to decompress broker result :", e);
-                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Failed to decompress broker result", e);
+                throw new ClientException(INVALID_BROKER_INTENT, "Failed to decompress broker result", e);
             }
         } else {
             brokerResultString = resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2);
@@ -253,7 +254,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (StringUtil.isEmpty(brokerResultString)) {
             Logger.error(TAG, "Broker Result not returned from Broker", null);
-            throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker", null);
+            throw new ClientException(INVALID_BROKER_INTENT, "Broker Result not returned from Broker", null);
         }
 
         return JsonExtensions.getBrokerResultFromJsonString(brokerResultString);
@@ -495,13 +496,15 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 ErrorStrings.UNSUPPORTED_BROKER_VERSION_ERROR_MESSAGE);
     }
 
-    public @NonNull Intent getIntentForInteractiveRequestFromResultBundle(@NonNull final Bundle resultBundle) throws ClientException {
-        final String packageName = resultBundle.getString(BROKER_PACKAGE_NAME);
-        final String className = resultBundle.getString(BROKER_ACTIVITY_NAME);
 
+    public @NonNull Intent getIntentForInteractiveRequestFromResultBundle( @NonNull final Bundle resultBundle) throws ClientException {
+        final Bundle interactiveRequestBundle = extractInteractiveRequestBundleFromResultBundle(resultBundle);
+
+        final String packageName = interactiveRequestBundle.getString(BROKER_PACKAGE_NAME);
+        final String className = interactiveRequestBundle.getString(BROKER_ACTIVITY_NAME);
         if (StringUtil.isEmpty(packageName) ||
                 StringUtil.isEmpty(className)) {
-            throw new ClientException("Unexpected error. Content of Authorization Intent's package and class name should not be null.");
+            throw new ClientException(INVALID_BROKER_INTENT, "Content of Authorization Intent's package and class name should not be null.");
         }
 
         final Intent intent = new Intent();
@@ -510,8 +513,20 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 packageName,
                 className
         );
-        intent.putExtras(resultBundle);
+        intent.putExtras(interactiveRequestBundle);
         return intent;
+    }
+
+    /**
+     * AccountManager strategy is currently returning result in a different format compared with the other strategies.
+     * We should make sure this does NOT happen going forward.
+     */
+    public Bundle extractInteractiveRequestBundleFromResultBundle(@NonNull final Bundle resultBundle) {
+        final Intent interactiveRequestIntent = resultBundle.getParcelable(AccountManager.KEY_INTENT);
+        if (interactiveRequestIntent != null) {
+            return interactiveRequestIntent.getExtras();
+        }
+        return resultBundle;
     }
 
     public @NonNull AcquireTokenResult getAcquireTokenResultFromResultBundle(@NonNull final Bundle resultBundle) throws BaseException {
@@ -563,7 +578,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 accountJson = GzipUtil.decompressBytesToString(compressedData);
             } catch (IOException e) {
                 Logger.error(TAG, " Failed to decompress account list to bytes", e);
-                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, " Failed to decompress account list to bytes.");
+                throw new ClientException(INVALID_BROKER_INTENT, " Failed to decompress account list to bytes.");
             }
         } else {
             accountJson = bundle.getString(BROKER_ACCOUNTS);
@@ -611,6 +626,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public @NonNull ClientException getExceptionForEmptyResultBundle() {
-        return new ClientException(ErrorStrings.UNKNOWN_ERROR, "Broker Result not returned from Broker.");
+        return new ClientException(INVALID_BROKER_INTENT, "Broker Result not returned from Broker.");
     }
 }
