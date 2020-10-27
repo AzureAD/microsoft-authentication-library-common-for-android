@@ -326,11 +326,11 @@ public class MsalOAuth2TokenCache
     }
 
     private void removeAllRefreshTokensExcept(@NonNull final AccountRecord accountRecord,
-                                              @NonNull final RefreshTokenRecord refreshTokenRecord) {
+                                              @NonNull final RefreshTokenRecord deletionExemptRefreshToken) {
         // Delete all of the refresh tokens associated with this account, except for the provided one
         final String methodName = ":removeAllRefreshTokensExcept";
         final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
-                refreshTokenRecord.getFamilyId()
+                deletionExemptRefreshToken.getFamilyId()
         );
 
         Logger.info(
@@ -349,14 +349,14 @@ public class MsalOAuth2TokenCache
 
         if (isFamilyRefreshToken || isMultiResourceCapable) {
             final String environment = accountRecord.getEnvironment();
-            final String clientId = refreshTokenRecord.getClientId();
+            final String clientId = deletionExemptRefreshToken.getClientId();
 
             final int refreshTokensRemoved = removeRefreshTokensForAccountExcept(
                     accountRecord,
                     isFamilyRefreshToken,
                     environment,
                     clientId,
-                    refreshTokenRecord
+                    deletionExemptRefreshToken
             );
 
             Logger.info(
