@@ -29,6 +29,7 @@ import com.microsoft.identity.common.BuildConfig;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+import org.junit.runners.model.TestTimedOutException;
 
 import java.sql.Timestamp;
 
@@ -46,7 +47,7 @@ public class CaptureKustoTestResultRule implements TestRule {
             public void evaluate() throws Throwable {
                 Log.i(TAG, "Starting to write test results to file.");
                 final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-                final String runnerInstance = "MSAL RobolectricTest";
+                final String runnerInstance = "MSAL SlicePipeline Run # " + com.microsoft.identity.internal.testutils.BuildConfig.RUN_ID;
                 final String runnerVersion = "";
                 final String scaleUnit = BuildConfig.DC;
                 final String testName = description.getDisplayName();
@@ -56,7 +57,7 @@ public class CaptureKustoTestResultRule implements TestRule {
                     base.evaluate();
                     result = "PASS";
                 } catch (final Throwable throwable) {
-                    result = "FAIL";
+                    result = (throwable instanceof TestTimedOutException) ? "TIMEOUT" : "FAIL";
                     errorMessage = throwable.getMessage();
                     throw throwable;
                 } finally {

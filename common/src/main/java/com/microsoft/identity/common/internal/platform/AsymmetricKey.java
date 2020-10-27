@@ -92,4 +92,12 @@ public interface AsymmetricKey {
      * @throws ClientException If the supplied ciphertext cannot be decrypted.
      */
     String decrypt(String ciphertext) throws ClientException;
+
+    /**
+     * Gets the {@link SecureHardwareState} of this DevicePopManager.
+     *
+     * @return The SecureHardwareState.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    SecureHardwareState getSecureHardwareState() throws ClientException;
 }

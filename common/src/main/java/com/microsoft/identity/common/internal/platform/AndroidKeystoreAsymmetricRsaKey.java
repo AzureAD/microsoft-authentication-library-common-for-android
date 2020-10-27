@@ -122,4 +122,9 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
                 ciphertext
         );
     }
+
+    @Override
+    public SecureHardwareState getSecureHardwareState() throws ClientException {
+        return mDevicePopManager.getSecureHardwareState();
+    }
 }
