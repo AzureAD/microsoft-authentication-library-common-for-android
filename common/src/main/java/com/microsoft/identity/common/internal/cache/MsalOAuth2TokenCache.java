@@ -325,6 +325,13 @@ public class MsalOAuth2TokenCache
         return result;
     }
 
+    /**
+     * Removes the refresh tokens in the cache for the provided {@link AccountRecord}; will not
+     * remove the deletionExempt credential.
+     *
+     * @param accountRecord              The AccountRecord for which RTs should be removed.
+     * @param deletionExemptRefreshToken The RT record we wish to exempt from deletion.
+     */
     private void removeAllRefreshTokensExcept(@NonNull final AccountRecord accountRecord,
                                               @NonNull final RefreshTokenRecord deletionExemptRefreshToken) {
         // Delete all of the refresh tokens associated with this account, except for the provided one
