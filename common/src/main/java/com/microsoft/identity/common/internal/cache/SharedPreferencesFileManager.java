@@ -35,8 +35,10 @@ import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -227,6 +229,90 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         editor.apply();
     }
 
+    /**
+     * @return an editing view of this shared preferences file.  It must be closed.
+     */
+    public ISharedPreferencesFileManager editor() {
+        final SharedPreferencesFileManager mgr = this;
+        final SharedPreferences.Editor editor = mSharedPreferences.edit();
+        return new ISharedPreferencesFileManager() {
+            boolean blank = false;
+            final Map<String, Object> writtenValues = new HashMap<>();
+            @Override
+            public void putString(final String key, final String value) {
+                writtenValues.put(key, value);
+                editor.putString(key, value);
+            }
+
+            @Override
+            public String getString(final String key) {
+                boolean contained = writtenValues.containsKey(key);
+                String value = (String) writtenValues.get(key);
+                return (value != null && contained) || blank ? value : mgr.getString(key);
+            }
+
+            @Override
+            public void putLong(final String key, final long value) {
+                writtenValues.put(key, value);
+                editor.putLong(key, value);
+            }
+
+            @Override
+            public long getLong(final String key) {
+                boolean contained = writtenValues.containsKey(key);
+                Long value = (Long) writtenValues.get(key);
+                return (value != null && contained) || blank ? value : mgr.getLong(key);
+            }
+
+            @Override
+            public String getSharedPreferencesFileName() {
+                return mSharedPreferencesFileName;
+            }
+
+            @Override
+            public Map<String, String> getAll() {
+                Map<String, String> retMap = new HashMap<String, String>();
+                for (Map.Entry<String, String> e : mgr.getAll().entrySet()) {
+                    if (writtenValues.containsKey(e.getKey())) {
+                        if(writtenValues.get(e.getKey()) != null) {
+                            retMap.put(e.getKey(), (String) writtenValues.get(e.getKey()));
+                        }
+                    } else {
+                        if (!blank) {
+                            retMap.put(e.getKey(), e.getValue());
+                        }
+                    }
+                }
+                return retMap;
+            }
+
+            @Override
+            public boolean contains(final String key) {
+                return (writtenValues.containsKey(key) && writtenValues.get(key) != null) || (!blank && mgr.contains(key));
+            }
+
+            @Override
+            public void clear() {
+                blank = true;
+                writtenValues.clear();
+                editor.clear();
+            }
+
+            @Override
+            public void remove(final String key) {
+                writtenValues.put(key, null);
+                editor.remove(key);
+            }
+
+            /**
+             * Close this editor.
+             * @return true if the editor writes succeed.
+             */
+            public boolean close() {
+                return editor.commit();
+            }
+        };
+    }
     @Override
     public void remove(final String key) {
         Logger.info(
