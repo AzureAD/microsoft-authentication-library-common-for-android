@@ -409,7 +409,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.RefreshToken,
                 accountRecord,
                 true,
-                deletionExemptRefreshTokenRecord
+                deletionExemptRefreshTokenRecord // The RT we want to preserve
         );
     }
 
@@ -448,6 +448,7 @@ public class MsalOAuth2TokenCache
                 );
 
         for (final Credential credentialToRemove : credentialsToRemove) {
+            // Do not delete the record, if it is the supplied exempted Credential.
             if (!deletionExemptRecord.equals(credentialToRemove)
                     && mAccountCredentialCache.removeCredential(credentialToRemove)) {
                 credentialsRemoved++;
