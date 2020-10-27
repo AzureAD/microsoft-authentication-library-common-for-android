@@ -311,15 +311,11 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
 
-        // remove old refresh token if it's MRRT or FRT
-        // removeRefreshTokenIfNeeded(accountToSave, refreshTokenToSave);
-
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
 
-        // Add a new method, where we delete all of the refresh tokens in the cache
-        // except for the one that we just created....
+        // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
         removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
 
         final CacheRecord result = new CacheRecord();
