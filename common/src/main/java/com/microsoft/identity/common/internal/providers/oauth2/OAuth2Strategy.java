@@ -124,23 +124,16 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public Future<AuthorizationResult> requestAuthorization(
+    public @NonNull Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
-            final GenericAuthorizationStrategy authorizationStrategy) {
+            final GenericAuthorizationStrategy authorizationStrategy) throws ClientException {
         validateAuthorizationRequest(request);
-        Future<AuthorizationResult> future = null;
-        try {
 
-            // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
-            @SuppressWarnings(WarningType.unchecked_warning)
-            Future<AuthorizationResult> authorizationFuture = authorizationStrategy.requestAuthorization(request, this);
+        // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
+        @SuppressWarnings(WarningType.unchecked_warning)
+        final Future<AuthorizationResult> authorizationFuture = authorizationStrategy.requestAuthorization(request, this);
 
-            future = authorizationFuture;
-        } catch (final UnsupportedEncodingException | ClientException exc) {
-            //TODO
-        }
-
-        return future;
+        return authorizationFuture;
     }
 
     public abstract AuthorizationResultFactory getAuthorizationResultFactory();
@@ -198,6 +191,8 @@ public abstract class OAuth2Strategy
             );
         }
         headers.putAll(Device.getPlatformIdParameters());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION));
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
 
         if (request instanceof MicrosoftTokenRequest) {

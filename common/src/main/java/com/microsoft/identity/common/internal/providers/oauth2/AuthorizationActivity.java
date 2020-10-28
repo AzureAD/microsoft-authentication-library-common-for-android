@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.internal.util.ProcessUtil;
 
 import java.util.HashMap;
 
@@ -58,6 +59,16 @@ public final class AuthorizationActivity extends DualScreenActivity {
                                            final boolean webViewZoomEnabled,
                                            final boolean webViewZoomControlsEnabled) {
         final Intent intent = new Intent(context, AuthorizationActivity.class);
+
+        // For broker request we need to clear all activities in the task and bring Authorization Activity to the
+        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
+        // Authenticator's or Company Portal's active activity which would be confusing to the user.
+        if (ProcessUtil.isBrokerProcess(context)) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        } else {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+
         intent.putExtra(AUTH_INTENT, authIntent);
         intent.putExtra(REQUEST_URL, requestUrl);
         intent.putExtra(REDIRECT_URI, redirectUri);
@@ -69,9 +80,9 @@ public final class AuthorizationActivity extends DualScreenActivity {
         return intent;
     }
 
-    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent){
+    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
         AuthorizationFragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent)intent.getSerializableExtra(AUTHORIZATION_AGENT);
+        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
         Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
 
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
@@ -83,7 +94,7 @@ public final class AuthorizationActivity extends DualScreenActivity {
         fragment.setInstanceState(intent.getExtras());
         return fragment;
     }
-    
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +104,7 @@ public final class AuthorizationActivity extends DualScreenActivity {
 
     @Override
     public void onBackPressed() {
-        if (!mFragment.onBackPressed()){
+        if (!mFragment.onBackPressed()) {
             super.onBackPressed();
         }
     }
