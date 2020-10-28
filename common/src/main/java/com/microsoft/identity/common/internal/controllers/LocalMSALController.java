@@ -26,6 +26,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -69,9 +72,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
 
 import lombok.EqualsAndHashCode;
 
@@ -409,8 +409,7 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
 
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final List<ICacheRecord> accountsInCache =
+        @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()
                         .getAccountsWithAggregatedAccountData(
@@ -544,8 +543,7 @@ public class LocalMSALController extends BaseController {
 
             validateServiceResult(authorizationResult);
 
-        }
-        catch (Exception error){
+        } catch (Exception error) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(error)
@@ -673,8 +671,7 @@ public class LocalMSALController extends BaseController {
                             false
                     )
             );
-        }
-        catch (Exception error){
+        } catch (Exception error) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(error)
@@ -697,6 +694,7 @@ public class LocalMSALController extends BaseController {
 
     /**
      * Returns true if the given error shows authorization is pending.
+     *
      * @param errorCode error from response
      * @return true or false if error is pending
      */
@@ -707,6 +705,7 @@ public class LocalMSALController extends BaseController {
     /**
      * Helper method to check if a result object is valid (was a success). If not, an exception will be generated and thrown.
      * This method is called in both parts of the DCF protocol.
+     *
      * @param result result object to be checked
      * @throws ServiceException MsalServiceException object reflecting error code returned by the result
      */
