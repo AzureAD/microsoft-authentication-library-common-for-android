@@ -38,17 +38,20 @@ import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -162,10 +165,11 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     try {
-                        final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                         // set correlation id on parameters as it may not already be set
-                        command.getParameters().setCorrelationId(correlationId);
+                        commandParameters.setCorrelationId(correlationId);
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
@@ -216,6 +220,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
+                        DiagnosticContext.clear();
                     }
                 }
             });
@@ -426,48 +431,55 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId()
-                    );
+                    try {
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(
+                                commandParameters.getCorrelationId(),
+                                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion()
+                        );
 
-                    // set correlation id on parameters as it may not already be set
-                    command.getParameters().setCorrelationId(correlationId);
+                        // set correlation id on parameters as it may not already be set
+                        commandParameters.setCorrelationId(correlationId);
 
-                    EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
-                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                    if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
-                        logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
-                    }
-
-                    final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            completeInteractive(intent);
+                        if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
+                            logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
                         }
-                    };
 
-                    CommandResult commandResult;
-                    Handler handler = new Handler(Looper.getMainLooper());
+                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                completeInteractive(intent);
+                            }
+                        };
 
-                    localBroadcastManager.registerReceiver(
-                            resultReceiver,
-                            new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                        CommandResult commandResult;
+                        Handler handler = new Handler(Looper.getMainLooper());
 
-                    sCommand = command;
+                        localBroadcastManager.registerReceiver(
+                                resultReceiver,
+                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
 
-                    //Try executing request
-                    commandResult = executeCommand(command);
-                    sCommand = null;
-                    localBroadcastManager.unregisterReceiver(resultReceiver);
+                        sCommand = command;
 
-                    // set correlation id on Local Authentication Result
-                    setCorrelationIdOnResult(commandResult, correlationId);
+                        //Try executing request
+                        commandResult = executeCommand(command);
+                        sCommand = null;
+                        localBroadcastManager.unregisterReceiver(resultReceiver);
 
-                    EstsTelemetry.getInstance().flush(command, commandResult);
-                    Telemetry.getInstance().flush(correlationId);
-                    returnCommandResult(command, commandResult, handler);
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        Telemetry.getInstance().flush(correlationId);
+                        returnCommandResult(command, commandResult, handler);
+                    } finally {
+                        DiagnosticContext.clear();
+                    }
                 }
             });
         }
@@ -596,7 +608,7 @@ public class CommandDispatcher {
         }
     }
 
-    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId) {
+    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
         final String methodName = ":initializeDiagnosticContext";
 
         final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
@@ -606,6 +618,8 @@ public class CommandDispatcher {
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
+        rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,

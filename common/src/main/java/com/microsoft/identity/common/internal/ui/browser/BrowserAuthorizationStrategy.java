@@ -59,14 +59,11 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
-    private boolean mIsRequestFromBroker;
 
     public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment,
-                                        @NonNull boolean isRequestFromBroker) {
+                                        @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
-        mIsRequestFromBroker = isRequestFromBroker;
     }
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
@@ -77,7 +74,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public Future<AuthorizationResult> requestAuthorization(
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException, UnsupportedEncodingException {
+            throws ClientException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
         mOAuth2Strategy = oAuth2Strategy;
@@ -110,17 +107,6 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         authIntent.setData(requestUrl);
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
-        // singleTask launchMode is required for the authorization redirect is from an external browser
-        // in the browser authorization flow
-        // For broker request we need to clear all activities in the task and bring Authorization Activity to the
-        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
-        // Authenticator's or Company Portal's active activity which would be confusing to the user.
-        if(mIsRequestFromBroker) {
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        }else {
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
-
         launchIntent(intent);
 
         return mAuthorizationResultFuture;
@@ -130,14 +116,14 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, Uri requestUrl) {
         return AuthorizationActivity.createStartIntent(
-                    getApplicationContext(),
-                    authIntent,
-                    requestUrl.toString(),
-                    mAuthorizationRequest.getRedirectUri(),
-                    mAuthorizationRequest.getRequestHeaders(),
-                    AuthorizationAgent.BROWSER,
-                    true,
-                    true);
+                getApplicationContext(),
+                authIntent,
+                requestUrl.toString(),
+                mAuthorizationRequest.getRedirectUri(),
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.BROWSER,
+                true,
+                true);
     }
 
     private void checkNotDisposed() {

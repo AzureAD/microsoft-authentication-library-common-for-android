@@ -92,7 +92,7 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
      */
     public abstract Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                                      GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException, UnsupportedEncodingException;
+            throws ClientException;
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 }
