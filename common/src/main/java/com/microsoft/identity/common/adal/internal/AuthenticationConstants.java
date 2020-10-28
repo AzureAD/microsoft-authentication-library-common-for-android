@@ -645,9 +645,19 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACTIVITY_NAME = "broker.activity.name";
 
         /**
+         * The Msal-To-Broker protocol name.
+         */
+        public static final String MSAL_TO_BROKER_PROTOCOL_NAME = "msal.to.broker";
+
+        /**
          * The newest Msal-To-Broker protocol version.
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "5.0";
+
+        /**
+         * The BrokerAPI-To-Broker protocol name.
+         */
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_NAME = "broker.api.to.broker";
 
         /**
          * The newest BrokerAPI-To-Broker protocol version.
