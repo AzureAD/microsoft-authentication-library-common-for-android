@@ -311,12 +311,12 @@ public class MsalOAuth2TokenCache
                 idTokenToSave
         );
 
-        // remove old refresh token if it's MRRT or FRT
-        removeRefreshTokenIfNeeded(accountToSave, refreshTokenToSave);
-
         // Save the Account and Credentials...
         saveAccounts(accountToSave);
         saveCredentialsInternal(accessTokenToSave, refreshTokenToSave, idTokenToSave);
+
+        // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
+        removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountToSave);
@@ -325,6 +325,137 @@ public class MsalOAuth2TokenCache
         setToCacheRecord(result, idTokenToSave);
 
         return result;
+    }
+
+    /**
+     * Removes the refresh tokens in the cache for the provided {@link AccountRecord}; will not
+     * remove the deletionExempt credential.
+     *
+     * @param accountRecord              The AccountRecord for which RTs should be removed.
+     * @param deletionExemptRefreshToken The RT record we wish to exempt from deletion.
+     */
+    private void removeAllRefreshTokensExcept(@NonNull final AccountRecord accountRecord,
+                                              @NonNull final RefreshTokenRecord deletionExemptRefreshToken) {
+        // Delete all of the refresh tokens associated with this account, except for the provided one
+        final String methodName = ":removeAllRefreshTokensExcept";
+        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                deletionExemptRefreshToken.getFamilyId()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
+        );
+
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+                accountRecord.getAuthorityType()
+        );
+
+        Logger.info(
+                TAG + methodName,
+                "isMultiResourceCapable? [" + isMultiResourceCapable + "]"
+        );
+
+        if (isFamilyRefreshToken || isMultiResourceCapable) {
+            final String environment = accountRecord.getEnvironment();
+            final String clientId = deletionExemptRefreshToken.getClientId();
+
+            final int refreshTokensRemoved = removeRefreshTokensForAccountExcept(
+                    accountRecord,
+                    isFamilyRefreshToken,
+                    environment,
+                    clientId,
+                    deletionExemptRefreshToken
+            );
+
+            Logger.info(
+                    TAG + methodName,
+                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
+            );
+
+            if (refreshTokensRemoved > 1) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Multiple refresh tokens found for Account."
+                );
+            }
+        }
+    }
+
+    /**
+     * Deletes all of the local refresh tokens on disk for the associated account, except for the
+     * refresh token provided.
+     *
+     * @param accountRecord                    The {@link AccountRecord} for whome tokens should be deleted.
+     * @param isFamilyRefreshToken             Indicates whether or not the tokens targeted for deletion should
+     *                                         scope across all client_ids or not.
+     * @param environment                      The cloud for which tokens should be deleted.
+     * @param clientId                         The client_id for which tokens should be deleted, if not FRT.
+     * @param deletionExemptRefreshTokenRecord The refresh token we want to exempt from deletion.
+     * @return The number of tokens we removed from the cache.
+     */
+    private int removeRefreshTokensForAccountExcept(@NonNull final AccountRecord accountRecord,
+                                                    final boolean isFamilyRefreshToken,
+                                                    @NonNull final String environment,
+                                                    @Nullable final String clientId,
+                                                    @NonNull final RefreshTokenRecord deletionExemptRefreshTokenRecord) {
+        return removeCredentialsOfTypeForAccountExcept(
+                environment,
+                isFamilyRefreshToken
+                        // Delete all RTs, irrespective of client_id
+                        // (so long as it is not the exempted record)
+                        ? null
+                        : clientId,
+                CredentialType.RefreshToken,
+                accountRecord,
+                true,
+                deletionExemptRefreshTokenRecord // The RT we want to preserve
+        );
+    }
+
+    /**
+     * Removes Credentials of the supplied type for the supplied Account; skipping any record
+     * specified as exempt.
+     *
+     * @param environment          Entity which issued the token represented as a host.
+     * @param clientId             The clientId of the target app.
+     * @param credentialType       The type of Credential to remove.
+     * @param targetAccount        The target Account whose Credentials should be removed.
+     * @param realmAgnostic        True if the specified action should be completed irrespective of realm.
+     * @param deletionExemptRecord A record which explicitly must not be removed.
+     * @return The number of Credentials removed.
+     */
+    private int removeCredentialsOfTypeForAccountExcept(@NonNull final String environment,
+                                                        @Nullable final String clientId,
+                                                        @NonNull final CredentialType credentialType,
+                                                        @NonNull final AccountRecord targetAccount,
+                                                        final boolean realmAgnostic,
+                                                        @NonNull final Credential deletionExemptRecord) {
+        int credentialsRemoved = 0;
+
+        // Query it for Credentials matching the supplied targetAccount
+        final List<Credential> credentialsToRemove =
+                mAccountCredentialCache.getCredentialsFilteredBy(
+                        targetAccount.getHomeAccountId(),
+                        environment,
+                        credentialType,
+                        clientId,
+                        realmAgnostic
+                                ? null // wildcard (*) realm
+                                : targetAccount.getRealm(),
+                        null, // wildcard (*) target,
+                        null
+                );
+
+        for (final Credential credentialToRemove : credentialsToRemove) {
+            // Do not delete the record, if it is the supplied exempted Credential.
+            if (!deletionExemptRecord.equals(credentialToRemove)
+                    && mAccountCredentialCache.removeCredential(credentialToRemove)) {
+                credentialsRemoved++;
+            }
+        }
+
+        return credentialsRemoved;
     }
 
     @Override
@@ -1680,6 +1811,9 @@ public class MsalOAuth2TokenCache
                 idToken
         );
 
+        saveAccounts(accountDto);
+        saveCredentialsInternal(idToken, rt);
+
         final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
                 refreshToken.getFamilyId()
         );
@@ -1689,11 +1823,12 @@ public class MsalOAuth2TokenCache
         );
 
         if (isFamilyRefreshToken || isMultiResourceCapable) {
-            final int refreshTokensRemoved = removeRefreshTokensForAccount(
+            final int refreshTokensRemoved = removeRefreshTokensForAccountExcept(
                     accountDto,
                     isFamilyRefreshToken,
                     accountDto.getEnvironment(),
-                    rt.getClientId()
+                    rt.getClientId(),
+                    rt
             );
 
             Logger.info(
@@ -1708,9 +1843,6 @@ public class MsalOAuth2TokenCache
                 );
             }
         }
-
-        saveAccounts(accountDto);
-        saveCredentialsInternal(idToken, rt);
     }
 
     @Override
