@@ -8,6 +8,10 @@ vNext
 - Added support for signing and verifying arbitrary String data with select RSA algorithms.
 - Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
 - Bugfix: Added a workaround for keypair generation on API < 23 devices using locales with non-Gregorian calendars. (#1075)
+- Fixed following Android 11 issues (#1095):
+    * Unable to query package manager for and launch browsers that support custom tabs.
+    * Unable to query package manager for and launch regular browsers that don’t support custom tabs.
+    * Unable to query package manager for Broker apps installed on the device.
 
 Version 3.0.4
 ----------
