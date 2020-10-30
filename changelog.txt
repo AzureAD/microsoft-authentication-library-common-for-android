@@ -1,3 +1,7 @@
+Version 3.0.2-hf1
+----------
+- Changed the order of the writing and deletion of credentials such that new credentials are written before the old ones are cleaned up (#1098)
+
 Version 3.0.2
 ----------
 - Added a check for UNSET OpenIdConnectPromptParameter value (#1042)
