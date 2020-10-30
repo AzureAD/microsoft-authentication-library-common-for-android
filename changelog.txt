@@ -1,6 +1,6 @@
 Version 3.0.2-hf1
 ----------
-- Ordering the writing and deletion of credentials such that new credentials are written before the old ones are cleaned up (#1098)
+- Ordering writing and deletion of credentials so that new credentials are written before the old ones are cleaned up (#1098)
 
 Version 3.0.2
 ----------
