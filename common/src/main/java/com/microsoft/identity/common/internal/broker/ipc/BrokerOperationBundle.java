@@ -62,7 +62,10 @@ public class BrokerOperationBundle {
         MSAL_GET_DEVICE_MODE,
         MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE,
         MSAL_SIGN_OUT_FROM_SHARED_DEVICE,
-        BROKER_GET_KEY_FROM_INACTIVE_BROKER
+        BROKER_GET_KEY_FROM_INACTIVE_BROKER,
+        BROKER_API_HELLO,
+        BROKER_API_GET_BROKER_ACCOUNTS,
+        BROKER_API_REMOVE_BROKER_ACCOUNT
     }
 
     @Getter
@@ -135,28 +138,37 @@ public class BrokerOperationBundle {
 
         switch (operation) {
             case MSAL_HELLO:
-                return BrokerContentProvider.HELLO_PATH;
+                return BrokerContentProvider.MSAL_HELLO_PATH;
 
             case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
-                return BrokerContentProvider.ACQUIRE_TOKEN_INTERACTIVE_PATH;
+                return BrokerContentProvider.MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH;
 
             case MSAL_ACQUIRE_TOKEN_SILENT:
-                return BrokerContentProvider.ACQUIRE_TOKEN_SILENT_PATH;
+                return BrokerContentProvider.MSAL_ACQUIRE_TOKEN_SILENT_PATH;
 
             case MSAL_GET_ACCOUNTS:
-                return BrokerContentProvider.GET_ACCOUNTS_PATH;
+                return BrokerContentProvider.MSAL_GET_ACCOUNTS_PATH;
 
             case MSAL_REMOVE_ACCOUNT:
-                return BrokerContentProvider.REMOVE_ACCOUNTS_PATH;
+                return BrokerContentProvider.MSAL_REMOVE_ACCOUNTS_PATH;
 
             case MSAL_GET_DEVICE_MODE:
-                return BrokerContentProvider.GET_DEVICE_MODE_PATH;
+                return BrokerContentProvider.MSAL_GET_DEVICE_MODE_PATH;
 
             case MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE:
-                return BrokerContentProvider.GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH;
+                return BrokerContentProvider.MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH;
 
             case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
-                return BrokerContentProvider.SIGN_OUT_FROM_SHARED_DEVICE_PATH;
+                return BrokerContentProvider.MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH;
+
+            case BROKER_API_HELLO:
+                return BrokerContentProvider.BROKER_API_HELLO_PATH;
+
+            case BROKER_API_GET_BROKER_ACCOUNTS:
+                return BrokerContentProvider.BROKER_API_GET_BROKER_ACCOUNTS_PATH;
+
+            case BROKER_API_REMOVE_BROKER_ACCOUNT:
+                return BrokerContentProvider.BROKER_API_REMOVE_BROKER_ACCOUNT_PATH;
 
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
