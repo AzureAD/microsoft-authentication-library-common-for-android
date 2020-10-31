@@ -20,28 +20,36 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.ipc.mock;
 
-package com.microsoft.identity.common.internal.util;
+import android.content.ContentResolver;
+import android.database.CharArrayBuffer;
+import android.database.ContentObserver;
+import android.database.Cursor;
+import android.database.DataSetObserver;
+import android.database.MatrixCursor;
+import android.net.Uri;
+import android.os.Bundle;
 
-import android.text.TextUtils;
-
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresPermission;
 
-/**
- * Class to provide util methods to compare different features with respect to Broker Protocol version.
- */
-public class BrokerProtocolVersionUtil {
+import com.microsoft.identity.common.internal.ipc.IpcStrategyTests;
 
-    public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
+import org.robolectric.annotation.Implements;
 
-    public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
-        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
-            return false;
-        }
+@Implements(ContentResolver.class)
+public class ShadowContentResolverWithSuccessResult {
+    public final @Nullable Cursor query(@RequiresPermission.Read @NonNull Uri uri,
+                                        @Nullable String[] projection, @Nullable String selection,
+                                        @Nullable String[] selectionArgs, @Nullable String sortOrder) {
 
-        return StringUtil.isFirstVersionLargerOrEqual(
-                negotiatedBrokerProtocol,
-                MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
-
+        return new MatrixCursor(new String[0]) {
+            @Override
+            public Bundle getExtras() {
+                return IpcStrategyTests.getMockIpcResultBundle();
+            }
+        };
     }
 }

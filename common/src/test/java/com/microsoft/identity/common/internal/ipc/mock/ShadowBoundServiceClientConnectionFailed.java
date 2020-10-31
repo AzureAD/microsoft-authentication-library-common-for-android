@@ -20,28 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.ipc.mock;
 
-package com.microsoft.identity.common.internal.util;
+import android.os.IInterface;
 
-import android.text.TextUtils;
+import androidx.annotation.NonNull;
 
-import androidx.annotation.Nullable;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.broker.BoundServiceClient;
 
-/**
- * Class to provide util methods to compare different features with respect to Broker Protocol version.
- */
-public class BrokerProtocolVersionUtil {
+import org.robolectric.annotation.Implements;
 
-    public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
-    public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
-        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
-            return false;
-        }
-
-        return StringUtil.isFirstVersionLargerOrEqual(
-                negotiatedBrokerProtocol,
-                MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
-
+@Implements(BoundServiceClient.class)
+public class ShadowBoundServiceClientConnectionFailed<T extends IInterface> {
+    protected @NonNull T connect(@NonNull final String targetServicePackageName)
+            throws ClientException, InterruptedException, TimeoutException, ExecutionException {
+        throw new TimeoutException("Connection timed out");
     }
 }

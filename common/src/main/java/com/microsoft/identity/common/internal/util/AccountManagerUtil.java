@@ -39,7 +39,8 @@ public final class AccountManagerUtil {
 
     private static final String MANIFEST_PERMISSION_MANAGE_ACCOUNTS = "android.permission.MANAGE_ACCOUNTS";
 
-    private AccountManagerUtil() {}
+    private AccountManagerUtil() {
+    }
 
     /**
      * To verify if the caller can use to AccountManager to use broker.
@@ -58,8 +59,8 @@ public final class AccountManagerUtil {
             // Check if our account type is disabled.
             final DevicePolicyManager devicePolicyManager =
                     (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
-            for (final String accountType : devicePolicyManager.getAccountTypesWithManagementDisabled()){
-                if (AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)){
+            for (final String accountType : devicePolicyManager.getAccountTypesWithManagementDisabled()) {
+                if (AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)) {
                     Logger.verbose(TAG + methodName, "Broker account type is disabled by MDM.");
                     return false;
                 }
@@ -80,8 +81,8 @@ public final class AccountManagerUtil {
         return false;
     }
 
-    private static boolean isPermissionGranted(@NonNull final Context context,
-                                               @NonNull final String permissionName) {
+    public static boolean isPermissionGranted(@NonNull final Context context,
+                                              @NonNull final String permissionName) {
         final String methodName = ":isPermissionGranted";
         final PackageManager pm = context.getPackageManager();
         final boolean isGranted = pm.checkPermission(permissionName, context.getPackageName())
