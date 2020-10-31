@@ -62,7 +62,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_BROKER_INTENT;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_BROKER_BUNDLE;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
@@ -163,7 +163,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final List<ICacheRecord> tenantProfileCacheRecords = brokerResult.getTenantProfileData();
         if (tenantProfileCacheRecords == null) {
             Logger.error(TAG, "getTenantProfileData is null", null);
-            throw new ClientException(INVALID_BROKER_INTENT, "getTenantProfileData is null.");
+            throw new ClientException(INVALID_BROKER_BUNDLE, "getTenantProfileData is null.");
         }
 
         return new LocalAuthenticationResult(
@@ -246,7 +246,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 // We should never hit this ideally unless the string/bytes are malformed for some unknown reason.
                 // The caller should handle the null broker result
                 Logger.error(TAG, "Failed to decompress broker result :", e);
-                throw new ClientException(INVALID_BROKER_INTENT, "Failed to decompress broker result", e);
+                throw new ClientException(INVALID_BROKER_BUNDLE, "Failed to decompress broker result", e);
             }
         } else {
             brokerResultString = resultBundle.getString(AuthenticationConstants.Broker.BROKER_RESULT_V2);
@@ -254,7 +254,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         if (StringUtil.isEmpty(brokerResultString)) {
             Logger.error(TAG, "Broker Result not returned from Broker", null);
-            throw new ClientException(INVALID_BROKER_INTENT, "Broker Result not returned from Broker", null);
+            throw new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker", null);
         }
 
         return JsonExtensions.getBrokerResultFromJsonString(brokerResultString);
@@ -504,7 +504,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final String className = interactiveRequestBundle.getString(BROKER_ACTIVITY_NAME);
         if (StringUtil.isEmpty(packageName) ||
                 StringUtil.isEmpty(className)) {
-            throw new ClientException(INVALID_BROKER_INTENT, "Content of Authorization Intent's package and class name should not be null.");
+            throw new ClientException(INVALID_BROKER_BUNDLE, "Content of Authorization Intent's package and class name should not be null.");
         }
 
         final Intent intent = new Intent();
@@ -578,7 +578,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 accountJson = GzipUtil.decompressBytesToString(compressedData);
             } catch (IOException e) {
                 Logger.error(TAG, " Failed to decompress account list to bytes", e);
-                throw new ClientException(INVALID_BROKER_INTENT, " Failed to decompress account list to bytes.");
+                throw new ClientException(INVALID_BROKER_BUNDLE, " Failed to decompress account list to bytes.");
             }
         } else {
             accountJson = bundle.getString(BROKER_ACCOUNTS);
@@ -626,6 +626,6 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     public @NonNull ClientException getExceptionForEmptyResultBundle() {
-        return new ClientException(INVALID_BROKER_INTENT, "Broker Result not returned from Broker.");
+        return new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
     }
 }

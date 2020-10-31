@@ -419,7 +419,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(
                 AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION_CODE
+                AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
         );
 
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {

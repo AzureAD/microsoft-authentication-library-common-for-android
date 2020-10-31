@@ -645,9 +645,14 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACTIVITY_NAME = "broker.activity.name";
 
         /**
-         * The maximum broker protocol version that common supports.
+         * The newest Msal-To-Broker protocol version.
          */
-        public static final String BROKER_PROTOCOL_VERSION_CODE = "5.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "5.0";
+
+        /**
+         * The newest BrokerAPI-To-Broker protocol version.
+         */
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = "1.0";
 
         /**
          * The key of maximum broker protocol version that client advertised.
@@ -656,6 +661,7 @@ public final class AuthenticationConstants {
 
         /**
          * The key of minimum broker protocol version the client requires.
+         * Broker will reject the request (in hello()) if its current version is older than its client's minimum version.
          */
         public static final String CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY = "required.broker.protocol.version.name";
 
@@ -1089,7 +1095,6 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_REQUEST_V2 = "broker_request_v2";
 
-
         /**
          * String to send MSAL V2 Request params as gzip compressed byte array.
          */
@@ -1172,11 +1177,6 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_ACCOUNTS_COMPRESSED = "broker_accounts_compressed";
 
-        /**
-         * String to return current account from broker (only available in shared device mode)
-         */
-        public static final String BROKER_CURRENT_ACCOUNT = "broker_current_account";
-
         public static final String BROKER_KEYSTORE_SYMMETRIC_KEY = "broker_keystore_symmetric_key";
 
         /**
@@ -1184,6 +1184,16 @@ public final class AuthenticationConstants {
          * See BrokerAccountManagerOperation for more info.
          */
         public static final String BROKER_ACCOUNT_MANAGER_OPERATION_KEY = "com.microsoft.broker_accountmanager_operation_key";
+
+        /**
+         * Boolean to return when a broker account is successfully removed.
+         */
+        public static final String REMOVE_BROKER_ACCOUNT_SUCCEEDED = "remove_broker_account_succeeded";
+
+        /**
+         * Time out for the AccountManager's remove account operation in broker.
+         */
+        public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
@@ -1284,85 +1294,114 @@ public final class AuthenticationConstants {
         public static final String AUTHORITY = "microsoft.identity.broker";
 
         /**
-         * URI Path constant for Broker hello request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker hello request using ContentProvider.
          */
-        public static final String HELLO_PATH = "/hello";
+        public static final String MSAL_HELLO_PATH = "/hello";
 
         /**
-         * URI Path constant for Broker acquireTokenInteractive request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker acquireTokenInteractive request using ContentProvider.
          */
-        public static final String ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
+        public static final String MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH = "/acquireTokenInteractive";
 
         /**
-         * URI Path constant for Broker acquireTokenSilent request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker acquireTokenSilent request using ContentProvider.
          */
-        public static final String ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
+        public static final String MSAL_ACQUIRE_TOKEN_SILENT_PATH = "/acquireTokenSilent";
 
         /**
-         * URI Path constant for Broker getAccounts request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker getAccounts request using ContentProvider.
          */
-        public static final String GET_ACCOUNTS_PATH = "/getAccounts";
+        public static final String MSAL_GET_ACCOUNTS_PATH = "/getAccounts";
 
         /**
-         * URI Path constant for Broker removeAccounts request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker removeAccounts request using ContentProvider.
          */
-        public static final String REMOVE_ACCOUNTS_PATH = "/removeAccounts";
+        public static final String MSAL_REMOVE_ACCOUNTS_PATH = "/removeAccounts";
 
         /**
-         * URI Path constant for Broker getCurrentAccountSharedDevice request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker getCurrentAccountSharedDevice request using ContentProvider.
          */
-        public static final String GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH = "/getCurrentAccountSharedDevice";
+        public static final String MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH = "/getCurrentAccountSharedDevice";
 
         /**
-         * URI Path constant for Broker getDeviceMode request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker getDeviceMode request using ContentProvider.
          */
-        public static final String GET_DEVICE_MODE_PATH = "/getDeviceMode";
+        public static final String MSAL_GET_DEVICE_MODE_PATH = "/getDeviceMode";
 
         /**
-         * URI Path constant for Broker signOutFromSharedDevice request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker signOutFromSharedDevice request using ContentProvider.
          */
-        public static final String SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
-
-
-        /**
-         * BrokerContentProvider URI code constant for hello request.
-         */
-        public static final int HELLO_URI_CODE = 1;
+        public static final String MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
 
         /**
-         * BrokerContentProvider URI code constant for acquireTokenInteractive request.
+         * URI Path constant for BrokerApi-to-Broker hello request using ContentProvider.
          */
-        public static final int ACQUIRE_TOKEN_INTERACTIVE_CODE = 2;
+        public static final String BROKER_API_HELLO_PATH = "/brokerApi/hello";
 
         /**
-         * BrokerContentProvider URI code constant for acquireTokenSilent request.
+         * URI Path constant for BrokerApi-to-Broker getBrokerAccounts request using ContentProvider.
          */
-        public static final int ACQUIRE_TOKEN_SILENT_CODE = 3;
+        public static final String BROKER_API_GET_BROKER_ACCOUNTS_PATH = "/brokerApi/getBrokerAccounts";
 
         /**
-         * BrokerContentProvider URI code constant for getAccounts request.
+         * URI Path constant for BrokerApi-to-Broker removeBrokerAccount request using ContentProvider.
          */
-        public static final int GET_ACCOUNTS_CODE = 4;
+        public static final String BROKER_API_REMOVE_BROKER_ACCOUNT_PATH = "/brokerApi/removeBrokerAccount";
 
         /**
-         * BrokerContentProvider URI code constant for removeAccounts request.
+         * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
-        public static final int REMOVE_ACCOUNTS_CODE = 5;
+        public static final int MSAL_HELLO_URI_CODE = 1;
 
         /**
-         * BrokerContentProvider URI code constant for getCurrentAccountSharedDevice request.
+         * BrokerContentProvider URI code constant for MSAL-to-Broker acquireTokenInteractive request.
          */
-        public static final int GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE = 6;
+        public static final int MSAL_ACQUIRE_TOKEN_INTERACTIVE_CODE = 2;
 
         /**
-         * BrokerContentProvider URI code constant for getDeviceMode request.
+         * BrokerContentProvider URI code constant for MSAL-to-Broker acquireTokenSilent request.
          */
-        public static final int GET_DEVICE_MODE_CODE = 7;
+        public static final int MSAL_ACQUIRE_TOKEN_SILENT_CODE = 3;
 
         /**
-         * BrokerContentProvider URI code constant for signOutFromSharedDevice request.
+         * BrokerContentProvider URI code constant for MSAL-to-Broker getAccounts request.
          */
-        public static final int SIGN_OUT_FROM_SHARED_DEVICE_CODE = 8;
+        public static final int MSAL_GET_ACCOUNTS_CODE = 4;
+
+        /**
+         * BrokerContentProvider URI code constant for MSAL-to-Broker removeAccounts request.
+         */
+        public static final int MSAL_REMOVE_ACCOUNTS_CODE = 5;
+
+        /**
+         * BrokerContentProvider URI code constant for MSAL-to-Broker getCurrentAccountSharedDevice request.
+         */
+        public static final int MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE = 6;
+
+        /**
+         * BrokerContentProvider URI code constant for MSAL-to-Broker getDeviceMode request.
+         */
+        public static final int MSAL_GET_DEVICE_MODE_CODE = 7;
+
+        /**
+         * BrokerContentProvider URI code constant for MSAL-to-Broker signOutFromSharedDevice request.
+         */
+        public static final int MSAL_SIGN_OUT_FROM_SHARED_DEVICE_CODE = 8;
+
+        /**
+         * BrokerContentProvider URI code constant for BrokerApi-to-Broker signOutFromSharedDevice request.
+         */
+        public static final int BROKER_API_HELLO_URI_CODE = 9;
+
+        /**
+         * BrokerContentProvider URI code constant for BrokerApi-to-Broker getBrokerAccounts request.
+         */
+        public static final int BROKER_API_GET_BROKER_ACCOUNTS_CODE = 10;
+
+        /**
+         * BrokerContentProvider URI code constant for BrokerApi-to-Broker removeBrokerAccount request.
+         */
+        public static final int BROKER_API_REMOVE_BROKER_ACCOUNT_CODE = 11;
 
     }
 

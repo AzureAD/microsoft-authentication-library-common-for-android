@@ -16,7 +16,8 @@ public interface IIpcStrategy {
     enum Type {
         BOUND_SERVICE("bound_service"),
         ACCOUNT_MANAGER_ADD_ACCOUNT("account_manager_add_account"),
-        CONTENT_PROVIDER("content_provider");
+        CONTENT_PROVIDER("content_provider"),
+        LEGACY_ACCOUNT_MANAGER_FOR_BROKER_API("legacy_account_manager_for_broker_api");
 
         final String name;
 

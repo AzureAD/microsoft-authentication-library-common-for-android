@@ -108,7 +108,7 @@ public class BrokerOperationExecutor {
      * A generic method that would initialize and iterate through available strategies.
      * It will return a result immediately if any of the strategy succeeds, or throw an exception if all of the strategies fails.
      */
-    public <T extends CommandParameters, U> U execute(@NonNull final T parameters,
+    public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
                                                       @NonNull final BrokerOperation<U> operation)
             throws BaseException {
         final String methodName = ":execute";
@@ -155,7 +155,7 @@ public class BrokerOperationExecutor {
         throw exception;
     }
 
-    private <T extends CommandParameters, U> void emitOperationStartEvent(@NonNull final T parameters,
+    private <T extends CommandParameters, U> void emitOperationStartEvent(@Nullable final T parameters,
                                                                           @NonNull final BrokerOperation<U> operation) {
         if (operation.getTelemetryApiId() != null) {
             Telemetry.emit(

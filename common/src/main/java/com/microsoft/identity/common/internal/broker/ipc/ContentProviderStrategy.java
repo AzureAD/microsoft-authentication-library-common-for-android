@@ -41,6 +41,7 @@ import java.util.List;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.AUTHORITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.CONTENT_SCHEME;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.CONTENT_PROVIDER;
 
 /**
@@ -88,6 +89,14 @@ public class ContentProviderStrategy implements IIpcStrategy {
         if (cursor != null) {
             final Bundle resultBundle = cursor.getExtras();
             cursor.close();
+
+            if (resultBundle == null) {
+                final String message = "Received an empty bundle. This means the operation is not supported on the other side. " +
+                        "If you're using a newer feature, please bump the minimum protocol version.";
+                Logger.error(TAG + methodName, message, null);
+                throw new BrokerCommunicationException(OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE, getType(), message, null);
+            }
+
             Logger.info(TAG + methodName, "Received successful result from Broker Content Provider.");
             return resultBundle;
         } else {
