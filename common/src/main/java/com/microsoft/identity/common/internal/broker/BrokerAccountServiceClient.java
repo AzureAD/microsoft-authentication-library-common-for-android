@@ -32,8 +32,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.aad.adal.IBrokerAccountService;
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 
 /**
  * Client that wraps the code necessary to bind to the a service that implements IBrokerAccountService.aidl
@@ -82,14 +85,18 @@ public class BrokerAccountServiceClient extends BoundServiceClient<IBrokerAccoun
     @Override
     public @Nullable Bundle performOperationInternal(@NonNull BrokerOperationBundle brokerOperationBundle,
                                                      @NonNull IBrokerAccountService brokerAccountService)
-            throws RemoteException, BaseException {
+            throws RemoteException, BrokerCommunicationException {
         final Bundle inputBundle = brokerOperationBundle.getBundle();
         switch (brokerOperationBundle.getOperation()) {
             case BROKER_GET_KEY_FROM_INACTIVE_BROKER:
                 return brokerAccountService.getInactiveBrokerKey(inputBundle);
 
             default:
-                throw new BaseException("Operation not supported. Wrong service bound.");
+                throw new BrokerCommunicationException(
+                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                        BOUND_SERVICE,
+                        "Operation not supported. Wrong BoundServiceClient used.",
+                        null);
         }
     }
 }

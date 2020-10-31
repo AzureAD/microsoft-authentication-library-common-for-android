@@ -33,9 +33,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.IMicrosoftAuthService;
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
-import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
+
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 
 /**
  * Client that wraps the code necessary to bind to the a service that implements IMicrosoftAuthService.aidl
@@ -72,7 +74,7 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
     @Override
     @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle brokerOperationBundle,
                                               @NonNull final IMicrosoftAuthService microsoftAuthService)
-            throws RemoteException, BaseException {
+            throws RemoteException, BrokerCommunicationException {
 
         final Bundle inputBundle = brokerOperationBundle.getBundle();
         switch (brokerOperationBundle.getOperation()) {
@@ -102,7 +104,11 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
                 return microsoftAuthService.removeAccountFromSharedDevice(inputBundle);
 
             default:
-                throw new BaseException("Operation not supported. Wrong service bound.");
+                final String errorMessage = "Operation " + brokerOperationBundle.getOperation().name() + " is not supported by MicrosoftAuthClient.";
+                throw new BrokerCommunicationException(
+                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                        BOUND_SERVICE,
+                        errorMessage, null);
         }
     }
 

@@ -34,9 +34,9 @@ import android.os.RemoteException;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 
@@ -45,7 +45,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.microsoft.identity.common.exception.ClientException.BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 
 /**
  * Interface for a Bound Service client.
@@ -68,7 +69,7 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * Perform the given operation with the given .aidl {@link IInterface}
      */
     abstract @Nullable Bundle performOperationInternal(@NonNull final BrokerOperationBundle inputBundle,
-                                                       @NonNull final T aidlInterface) throws RemoteException, BaseException;
+                                                       @NonNull final T aidlInterface) throws RemoteException, BrokerCommunicationException;
 
     /**
      * Extracts {@link IInterface} from a given {@link IBinder}
@@ -116,7 +117,7 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @return a bundle that contains a response from the AIDL service.
      */
     public @Nullable Bundle performOperation(@NonNull final BrokerOperationBundle inputBundle)
-            throws RemoteException, BaseException, InterruptedException, ExecutionException, TimeoutException {
+            throws RemoteException, BrokerCommunicationException, InterruptedException, ExecutionException, TimeoutException {
         final T aidlInterface = connect(inputBundle.getTargetBrokerAppPackageName());
         return performOperationInternal(inputBundle, aidlInterface);
     }
@@ -127,15 +128,17 @@ public abstract class BoundServiceClient<T extends IInterface> {
      * @param targetServicePackageName Package name of the app this client will talk to.
      */
     protected @NonNull T connect(@NonNull final String targetServicePackageName)
-            throws ClientException, InterruptedException, TimeoutException, ExecutionException {
+            throws BrokerCommunicationException, InterruptedException, TimeoutException, ExecutionException {
         final String methodName = ":connect";
 
         if (!isBoundServiceSupported(targetServicePackageName)) {
             final String errorMessage = "Bound service is not supported.";
             Logger.info(TAG + methodName, errorMessage);
-            throw new ClientException(
-                    BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED,
-                    errorMessage);
+            throw new BrokerCommunicationException(
+                    OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                    BOUND_SERVICE,
+                    errorMessage,
+                    null);
         }
 
         final ResultFuture<IBinder> future = new ResultFuture<>();
@@ -145,9 +148,11 @@ public abstract class BoundServiceClient<T extends IInterface> {
         if (!mHasStartedBinding) {
             final String errorMessage = "failed to bind. The service is not available.";
             Logger.info(TAG + methodName, errorMessage);
-            throw new ClientException(
-                    BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED,
-                    errorMessage);
+            throw new BrokerCommunicationException(
+                    OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE,
+                    BOUND_SERVICE,
+                    errorMessage,
+                    null);
         }
 
         Logger.info(TAG + "connect", "Android is establishing the bound service connection.");
