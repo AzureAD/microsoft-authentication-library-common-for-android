@@ -131,10 +131,16 @@ public class ContentProviderStrategy implements IIpcStrategy {
      * Returns true if the target package name supports this content provider strategy.
      */
     public boolean isBrokerContentProviderAvailable(@NonNull final String targetedBrokerPackageName) {
+        final String methodName = ":isBrokerContentProviderAvailable";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 
         final List<ProviderInfo> providers = mContext.getPackageManager()
                 .queryContentProviders(null, 0, 0);
+
+        if (providers == null) {
+            Logger.error(TAG + methodName, "Content Provider not found.", null);
+            return false;
+        }
 
         for (final ProviderInfo providerInfo : providers) {
             if (providerInfo.authority != null && providerInfo.authority.equals(contentProviderAuthority)) {

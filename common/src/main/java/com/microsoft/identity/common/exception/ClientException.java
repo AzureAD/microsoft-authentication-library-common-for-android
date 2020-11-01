@@ -256,6 +256,16 @@ public class ClientException extends BaseException {
     public static final String MISSING_PARAMETER = "missing_parameter";
 
     /**
+     * A required account cannot be found.
+     */
+    public static final String ACCOUNT_NOT_FOUND = "account_not_found";
+
+    /**
+     * An access to perform a given operation is denied.
+     */
+    public static final String ACCESS_DENIED = "access_denied";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
