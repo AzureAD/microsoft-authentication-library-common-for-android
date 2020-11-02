@@ -160,6 +160,22 @@ public final class StringUtil {
     }
 
     /**
+     * Returns true if the first semantic version is smaller or equal to the second version.
+     */
+    public static boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
+                                                       @Nullable final String second) {
+        return compareSemanticVersion(first, second) <= 0;
+    }
+
+    /**
+     * Returns true if the first semantic version is larger or equal to the second version.
+     */
+    public static boolean isFirstVersionLargerOrEqual(@NonNull final String first,
+                                                      @Nullable final String second) {
+        return compareSemanticVersion(first, second) >= 0;
+    }
+
+    /**
      * Counts the number of occurrences of one String in another.
      *
      * @param str
