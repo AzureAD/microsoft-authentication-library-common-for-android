@@ -65,7 +65,8 @@ public class BrokerOperationBundle {
         BROKER_GET_KEY_FROM_INACTIVE_BROKER,
         BROKER_API_HELLO,
         BROKER_API_GET_BROKER_ACCOUNTS,
-        BROKER_API_REMOVE_BROKER_ACCOUNT
+        BROKER_API_REMOVE_BROKER_ACCOUNT,
+        BROKER_API_UPDATE_BRT
     }
 
     @Getter
@@ -169,6 +170,9 @@ public class BrokerOperationBundle {
 
             case BROKER_API_REMOVE_BROKER_ACCOUNT:
                 return BrokerContentProvider.BROKER_API_REMOVE_BROKER_ACCOUNT_PATH;
+
+            case BROKER_API_UPDATE_BRT:
+                return BrokerContentProvider.BROKER_API_UPDATE_BRT_PATH;
 
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";

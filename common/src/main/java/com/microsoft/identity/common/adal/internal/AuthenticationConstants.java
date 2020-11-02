@@ -645,9 +645,19 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACTIVITY_NAME = "broker.activity.name";
 
         /**
+         * The Msal-To-Broker protocol name.
+         */
+        public static final String MSAL_TO_BROKER_PROTOCOL_NAME = "msal.to.broker";
+
+        /**
          * The newest Msal-To-Broker protocol version.
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "5.0";
+
+        /**
+         * The BrokerAPI-To-Broker protocol name.
+         */
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_NAME = "broker.api.to.broker";
 
         /**
          * The newest BrokerAPI-To-Broker protocol version.
@@ -1191,10 +1201,15 @@ public final class AuthenticationConstants {
         public static final String REMOVE_BROKER_ACCOUNT_SUCCEEDED = "remove_broker_account_succeeded";
 
         /**
+         * Boolean to return when a Broker RT is successfully updated.
+         */
+        public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
-
+        
         /**
          * Bundle identifiers for x-ms-clitelem info.
          */
@@ -1349,6 +1364,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_REMOVE_BROKER_ACCOUNT_PATH = "/brokerApi/removeBrokerAccount";
 
         /**
+         * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
+         */
+        public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
+
+        /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
         public static final int MSAL_HELLO_URI_CODE = 1;
@@ -1403,6 +1423,10 @@ public final class AuthenticationConstants {
          */
         public static final int BROKER_API_REMOVE_BROKER_ACCOUNT_CODE = 11;
 
+        /**
+         * BrokerContentProvider URI code constant for BrokerApi-to-Broker updateBrt request.
+         */
+        public static final int BROKER_API_UPDATE_BRT_CODE = 12;
     }
 
     public static final class AuthorizationIntentKey {

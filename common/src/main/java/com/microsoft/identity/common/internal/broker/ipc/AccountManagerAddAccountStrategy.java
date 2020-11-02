@@ -61,7 +61,7 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
     }
 
     @Override
-    @Nullable public Bundle communicateToBroker(@NonNull final BrokerOperationBundle brokerOperationBundle)
+    @Nullable public Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodName = brokerOperationBundle.getOperation().name();
         try {

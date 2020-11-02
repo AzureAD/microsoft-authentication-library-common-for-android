@@ -57,7 +57,7 @@ public class ContentProviderStrategy implements IIpcStrategy {
     }
 
     @Override
-    @Nullable public Bundle communicateToBroker(@NonNull BrokerOperationBundle brokerOperationBundle)
+    public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
 
         final String methodName = brokerOperationBundle.getOperation().name();
@@ -114,8 +114,8 @@ public class ContentProviderStrategy implements IIpcStrategy {
     /**
      * Returns a content provider URI for the given path.
      */
-    private Uri getContentProviderURI(@NonNull final String targetedBrokerPackageName,
-                                      @NonNull final String path) {
+    private Uri getContentProviderURI(final @NonNull String targetedBrokerPackageName,
+                                      final @NonNull String path) {
         final String authority = getContentProviderAuthority(targetedBrokerPackageName);
         return Uri.parse(CONTENT_SCHEME + authority + path);
     }
@@ -123,18 +123,24 @@ public class ContentProviderStrategy implements IIpcStrategy {
     /**
      * Returns content provider authority.
      */
-    private String getContentProviderAuthority(@NonNull final String targetedBrokerPackageName) {
+    private String getContentProviderAuthority(final @NonNull String targetedBrokerPackageName) {
         return targetedBrokerPackageName + "." + AUTHORITY;
     }
 
     /**
      * Returns true if the target package name supports this content provider strategy.
      */
-    public boolean isBrokerContentProviderAvailable(@NonNull final String targetedBrokerPackageName) {
+    public boolean isBrokerContentProviderAvailable(final @NonNull String targetedBrokerPackageName) {
+        final String methodName = ":isBrokerContentProviderAvailable";
         final String contentProviderAuthority = getContentProviderAuthority(targetedBrokerPackageName);
 
         final List<ProviderInfo> providers = mContext.getPackageManager()
                 .queryContentProviders(null, 0, 0);
+
+        if (providers == null) {
+            Logger.error(TAG + methodName, "Content Provider not found.", null);
+            return false;
+        }
 
         for (final ProviderInfo providerInfo : providers) {
             if (providerInfo.authority != null && providerInfo.authority.equals(contentProviderAuthority)) {
