@@ -1772,7 +1772,7 @@ public class MsalOAuth2TokenCache
     @Override
     public void setSingleSignOnState(final GenericAccount account,
                                      final GenericRefreshToken refreshToken) throws ClientException {
-        final String methodName = "setSingleSignOnState";
+        Logger.info(TAG + ":setSingleSignOnState", "Set SSO state called.");
 
         final AccountRecord accountDto = mAccountCredentialAdapter.asAccount(account);
         final RefreshTokenRecord rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
