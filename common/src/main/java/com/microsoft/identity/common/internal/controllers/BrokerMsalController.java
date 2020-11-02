@@ -31,6 +31,7 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -49,6 +50,7 @@ import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -79,6 +81,9 @@ import java.util.List;
 
 import lombok.EqualsAndHashCode;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
@@ -103,15 +108,27 @@ public class BrokerMsalController extends BaseController {
     private final Context mApplicationContext;
     private final String mActiveBrokerPackageName;
     private final BrokerOperationExecutor mBrokerOperationExecutor;
+    private final HelloCache mHelloCache;
 
     public BrokerMsalController(final Context applicationContext) {
         mApplicationContext = applicationContext;
-        mActiveBrokerPackageName = new BrokerValidator(mApplicationContext).getCurrentActiveBrokerPackageName();
+        mActiveBrokerPackageName = getActiveBrokerPackageName();
         if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
             throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
         }
 
         mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
+        mHelloCache = getHelloCache();
+    }
+
+    @VisibleForTesting
+    public HelloCache getHelloCache() {
+        return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName);
+    }
+
+    @VisibleForTesting
+    public String getActiveBrokerPackageName() {
+        return new BrokerValidator(mApplicationContext).getCurrentActiveBrokerPackageName();
     }
 
     /**
@@ -153,16 +170,44 @@ public class BrokerMsalController extends BaseController {
      * @param parameters a {@link CommandParameters}
      * @return a protocol version negotiated by MSAL and Broker.
      */
-    private @NonNull String hello(@NonNull IIpcStrategy strategy,
-                                  final @NonNull CommandParameters parameters) throws BaseException {
+    @VisibleForTesting
+    public @NonNull String hello(final @NonNull IIpcStrategy strategy,
+                                 final @NonNull CommandParameters parameters) throws BaseException {
+
+        final Bundle bundle = mRequestAdapter.getRequestBundleForHello(parameters);
+        final String minimumProtocolVersion = bundle.getString(CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY);
+        final String maximumProtocolVersion = bundle.getString(CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY);
+
+        // This should be part of the bundle.
+        // If we're hitting this, it means that the hello protocol changed. see getRequestBundleForHello().
+        if (StringUtil.isEmpty(maximumProtocolVersion)){
+            throw new ClientException(ClientException.MISSING_PARAMETER,
+                    "maximum protocol version should never be null or empty");
+        }
+
+        final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
+                minimumProtocolVersion,
+                maximumProtocolVersion);
+
+        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
+            return cachedProtocolVersion;
+        }
+
         final BrokerOperationBundle helloBundle = new BrokerOperationBundle(
                 BrokerOperationBundle.Operation.MSAL_HELLO,
                 mActiveBrokerPackageName,
                 mRequestAdapter.getRequestBundleForHello(parameters));
 
-        return mResultAdapter.verifyHelloFromResultBundle(
+        final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
                 strategy.communicateToBroker(helloBundle)
         );
+
+        mHelloCache.saveNegotiatedProtocolVersion(
+                minimumProtocolVersion,
+                maximumProtocolVersion,
+                negotiatedProtocolVersion);
+
+        return negotiatedProtocolVersion;
     }
 
     /**
@@ -270,7 +315,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST,
                                 mActiveBrokerPackageName,
@@ -291,12 +337,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return ":getBrokerAuthorizationIntent";
                     }
 
                     @Override
-                    public @Nullable String getTelemetryApiId() {
+                    public @Nullable
+                    String getTelemetryApiId() {
                         return null;
                     }
 
@@ -324,7 +372,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_SILENT,
                                 mActiveBrokerPackageName,
                                 mRequestAdapter.getRequestBundleForAcquireTokenSilent(
@@ -342,12 +391,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return ":acquireTokenSilent";
                     }
 
                     @Override
-                    public @NonNull String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_SILENT;
                     }
 
@@ -377,7 +428,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_GET_ACCOUNTS,
                                 mActiveBrokerPackageName,
@@ -396,12 +448,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return ":getAccounts";
                     }
 
                     @Override
-                    public @NonNull String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_GET_ACCOUNTS;
                     }
 
@@ -430,7 +484,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_REMOVE_ACCOUNT,
                                 mActiveBrokerPackageName,
@@ -447,12 +502,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return ":removeAccount";
                     }
 
                     @Override
-                    public @NonNull String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_REMOVE_ACCOUNT;
                     }
 
@@ -477,7 +534,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_GET_DEVICE_MODE,
                                 mActiveBrokerPackageName,
@@ -493,12 +551,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return ":getDeviceMode";
                     }
 
                     @Override
-                    public @NonNull String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.GET_BROKER_DEVICE_MODE;
                     }
 
@@ -535,7 +595,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE,
                                 mActiveBrokerPackageName,
@@ -554,12 +615,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return methodName;
                     }
 
                     @Override
-                    public @NonNull String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_GET_CURRENT_ACCOUNT;
                     }
 
@@ -606,7 +669,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull BrokerOperationBundle getBundle() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
                         return new BrokerOperationBundle(
                                 MSAL_SIGN_OUT_FROM_SHARED_DEVICE,
                                 mActiveBrokerPackageName,
@@ -624,12 +688,14 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return methodName;
                     }
 
                     @Override
-                    public @NonNull String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE;
                     }
 
