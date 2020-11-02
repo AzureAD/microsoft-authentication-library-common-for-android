@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.telemetry.events;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -62,7 +63,7 @@ public class ApiStartEvent extends BaseEvent {
     }
 
     public ApiStartEvent putProperties(
-            @NonNull final CommandParameters parameters) {
+            @Nullable final CommandParameters parameters) {
         if (parameters == null) {
             return this;
         }

@@ -25,9 +25,16 @@ package com.microsoft.identity.common.internal.util;
 
 import android.app.ActivityManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.microsoft.identity.common.exception.ClientException;
 
 import java.util.List;
 
@@ -39,7 +46,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  */
 public class ProcessUtil {
 
-    private ProcessUtil(){}
+    private ProcessUtil() {
+    }
 
     /**
      * Returns true if the calling app is the auth process.
@@ -57,8 +65,7 @@ public class ProcessUtil {
     /**
      * Returns the running process name.
      */
-    @Nullable
-    private static String getProcessName(@NonNull final Context context) {
+    private static @Nullable String getProcessName(@NonNull final Context context) {
         final int pid = android.os.Process.myPid();
         final ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
         final List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
@@ -71,5 +78,16 @@ public class ProcessUtil {
         }
 
         return null;
+    }
+
+    /**
+     * Returns a handler based on the current looper.
+     */
+    public static @NonNull Handler getPreferredHandler() {
+        if (null != Looper.myLooper()) {
+            return new Handler(Looper.myLooper());
+        } else {
+            return new Handler(Looper.getMainLooper());
+        }
     }
 }
