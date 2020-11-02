@@ -79,7 +79,7 @@ project.afterEvaluate{
         publications {
             aar(MavenPublication) {
                 artifact sourcesJar
-                groupId = 'common'
+                groupId 'com.microsoft.identity'
                 artifactId = 'testutils'
                 version = getAppVersionName()
 
@@ -130,7 +130,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'common', name: 'keyvault', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'keyvault', version: '0.0.+')
     }
 
     // labapi per product flavor
@@ -141,7 +141,7 @@ dependencies {
         }
     } else {
         //Always use the latest release
-        implementation(group: 'common', name: 'labapi', version: '0.0.+')
+        implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
     implementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
