@@ -109,7 +109,7 @@ public class BrokerOperationExecutorTests {
 
         expectUserCancelledException(strategyList);
     }
-    
+
     // Providing 1 strategy and it fails with BrokerCommunicationException inside IIpcStrategy.
     @Test
     public void testOneStrategyWithBrokerCommunicationException() {
@@ -221,8 +221,7 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithValidResult() {
         return new IIpcStrategy() {
             @Override
-            @Nullable
-            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(SUCCESS_BUNDLE_KEY, true);
                 return result;
@@ -239,8 +238,7 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithCorruptedResult() {
         return new IIpcStrategy() {
             @Override
-            @Nullable
-            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 return new Bundle();
             }
 
@@ -255,8 +253,7 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithServiceExceptionResult() {
         return new IIpcStrategy() {
             @Override
-            @Nullable
-            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(SERVICE_EXCEPTION_BUNDLE_KEY, true);
                 return result;
@@ -273,8 +270,7 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithUserCanceledResult() {
         return new IIpcStrategy() {
             @Override
-            @Nullable
-            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @NonNull Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 final Bundle result = new Bundle();
                 result.putBoolean(USER_CANCEL_BUNDLE_KEY, true);
                 return result;
@@ -291,8 +287,7 @@ public class BrokerOperationExecutorTests {
     private IIpcStrategy getStrategyWithBrokerCommunicationException() {
         return new IIpcStrategy() {
             @Override
-            @Nullable
-            public Bundle communicateToBroker(@NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
+            public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle bundle) throws BrokerCommunicationException {
                 throw new BrokerCommunicationException(CONNECTION_ERROR, BOUND_SERVICE, "Some connection error", null);
             }
 
@@ -311,14 +306,15 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
-            @NonNull
-            public BrokerOperationBundle getBundle() {
-                return null;
+            public @NonNull BrokerOperationBundle getBundle() {
+                return new BrokerOperationBundle(
+                        BrokerOperationBundle.Operation.BROKER_API_HELLO,
+                        "MOCK_TARGET_APP",
+                        new Bundle());
             }
 
             @Override
-            @NonNull
-            public Boolean extractResultBundle(@Nullable Bundle resultBundle) throws BaseException {
+            public @NonNull Boolean extractResultBundle(@Nullable Bundle resultBundle) throws BaseException {
                 if (resultBundle == null)
                     throw new ClientException(NULL_BUNDLE_ERROR_CODE);
                 else if (resultBundle.containsKey(SUCCESS_BUNDLE_KEY))
@@ -333,19 +329,17 @@ public class BrokerOperationExecutorTests {
             }
 
             @Override
-            @NonNull
-            public String getMethodName() {
+            public @NonNull String getMethodName() {
                 return "";
             }
 
             @Override
-            @Nullable
-            public String getTelemetryApiId() {
+            public @Nullable String getTelemetryApiId() {
                 return null;
             }
 
             @Override
-            public void putValueInSuccessEvent(ApiEndEvent event, Boolean result) {
+            public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
             }
         };
     }

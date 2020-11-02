@@ -64,7 +64,7 @@ public class BrokerOperationExecutor {
          * Trigger any prerequisite works before making the actual request.
          * This was added because the existing MSAL-Broker logic has a separate hello() call.
          */
-        void performPrerequisites(@NonNull IIpcStrategy strategy) throws BaseException;
+        void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException;
 
         /**
          * Gets a BrokerOperationBundle bundle to pass to each IpcStrategies.
@@ -75,7 +75,7 @@ public class BrokerOperationExecutor {
          * Extracts the result object from a bundle returned by an IpcStrategy.
          * If the broker returns an error, this will throw an exception.
          */
-        @NonNull T extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException;
+        @NonNull T extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException;
 
         /**
          * Returns method name (for logging/telemetry purpose).
@@ -92,7 +92,7 @@ public class BrokerOperationExecutor {
          * A method that will be invoked before the success event is emitted.
          * If the calling operation wants to put any value in the success event, put it here.
          */
-        void putValueInSuccessEvent(ApiEndEvent event, T result);
+        void putValueInSuccessEvent(final @NonNull ApiEndEvent event,final @NonNull T result);
     }
 
     private final List<IIpcStrategy> mStrategies;
@@ -100,7 +100,7 @@ public class BrokerOperationExecutor {
     /**
      * @param strategies list of IIpcStrategy to be invoked.
      */
-    public BrokerOperationExecutor(@NonNull final List<IIpcStrategy> strategies) {
+    public BrokerOperationExecutor(final @NonNull List<IIpcStrategy> strategies) {
         mStrategies = strategies;
     }
 
