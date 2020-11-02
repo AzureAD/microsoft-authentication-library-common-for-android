@@ -24,13 +24,12 @@ public class BoundServiceStrategy<T extends IInterface> implements IIpcStrategy 
 
     private final BoundServiceClient<T> mClient;
 
-    public BoundServiceStrategy(@NonNull final BoundServiceClient<T> boundServiceClient) {
+    public BoundServiceStrategy(final @NonNull BoundServiceClient<T> boundServiceClient) {
         mClient = boundServiceClient;
     }
 
-    @Nullable
     @Override
-    public Bundle communicateToBroker(@NonNull BrokerOperationBundle brokerOperationBundle)
+    public @Nullable Bundle communicateToBroker(final @NonNull BrokerOperationBundle brokerOperationBundle)
             throws BrokerCommunicationException {
         final String methodName = brokerOperationBundle.getOperation().name();
 
