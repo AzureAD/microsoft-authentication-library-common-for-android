@@ -10,6 +10,7 @@ name: dev_updated
 on:
   watch:
     types: [started]
+    branches: [android/package-test-utilities]
 
 # Jobs run in parrelel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
