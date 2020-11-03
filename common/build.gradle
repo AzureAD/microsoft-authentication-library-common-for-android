@@ -321,7 +321,12 @@ afterEvaluate {
         }
     }
 }
+<<<<<<< HEAD
 preBuild.dependsOn('checkstyle')
+=======
+
+build.dependsOn('checkstyle')
+>>>>>>> 6be94820... Update build.gradle with dependency change.
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
