@@ -3,6 +3,10 @@
       "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
 
 <suppressions>
+    <suppress checks=".*" files=".*Test.java" />
+    <suppress checks=".*" files=".*[\\/]unit[\\/]" />
+    <suppress checks="JavadocVariable" files="MicrosoftStsIdToken.java" />
+    <suppress checks="EmptyBlock" files="AzureActiveDirectoryOAuth2Strategy.java" />
     <suppress checks=".*" files="common/src/androidTest/java/com/microsoft/identity/common/AzureActiveDirectoryAuthorizationResultFactoryTest.java" />
     <suppress checks=".*" files="common/src/androidTest/java/com/microsoft/identity/common/BrokerOAuth2TokenCacheTest.java" />
     <suppress checks=".*" files="common/src/androidTest/java/com/microsoft/identity/common/BrowserSelectorTest.java" />
