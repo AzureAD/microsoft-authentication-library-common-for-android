@@ -12,7 +12,7 @@ on:
     types: [started]
     branches: [android/package-test-utilities]
 
-# Jobs run in parrelel by default.  Use "needs:" to indicate dependencies run sequentially
+# Jobs run in parallel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
   # Increment 
   incrementLatestPatch:
