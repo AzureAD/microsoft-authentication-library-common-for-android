@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.net.URL;
 
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
@@ -49,6 +50,7 @@ public class PopAuthenticationSchemeInternal
         public static final String HTTP_METHOD = "http_method";
         public static final String URL = "url";
         public static final String NONCE = "nonce";
+        public static final String CLIENT_CLAIMS = "client_claims";
     }
 
     /**
@@ -68,6 +70,9 @@ public class PopAuthenticationSchemeInternal
     @SerializedName(NONCE)
     private String mNonce;
 
+    @SerializedName(CLIENT_CLAIMS)
+    private String mClientClaims;
+
     /**
      * Constructor for gson use.
      */
@@ -75,15 +80,29 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
+    @Deprecated
     public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
-                                    @Nullable final String httpMethod,
-                                    @NonNull final URL url,
-                                    @Nullable final String nonce) {
+                                           @Nullable final String httpMethod,
+                                           @NonNull final URL url,
+                                           @Nullable final String nonce) {
         super(SCHEME_POP);
         mClockSkewManager = clockSkewManager;
         mHttpMethod = httpMethod;
         mUrl = url;
         mNonce = nonce;
+    }
+
+    public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
+                                           @Nullable final String httpMethod,
+                                           @NonNull final URL url,
+                                           @Nullable final String nonce,
+                                           @Nullable final String clientClaims) {
+        super(SCHEME_POP);
+        mClockSkewManager = clockSkewManager;
+        mHttpMethod = httpMethod;
+        mUrl = url;
+        mNonce = nonce;
+        mClientClaims = clientClaims;
     }
 
     @Override
@@ -115,6 +134,11 @@ public class PopAuthenticationSchemeInternal
     @Override
     public URL getUrl() {
         return mUrl;
+    }
+
+    @Override
+    public String getClientClaims() {
+        return mClientClaims;
     }
 
     @Override
