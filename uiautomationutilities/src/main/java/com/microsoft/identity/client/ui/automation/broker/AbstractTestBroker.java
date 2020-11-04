@@ -121,16 +121,16 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     @Override
     public void confirmJoinInJoinActivity(@NonNull final String username) {
-        final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
-                "Workplace Joined to " + username
-        );
-
-        Assert.assertTrue(joinConfirmation.exists());
-
-        UiAutomatorUtils.handleButtonClick(getResourceId(
-                getPackageName(),
-                "JoinButton"
-        ));
+//        final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
+//                "Workplace Joined to " + username
+//        );
+//
+//        Assert.assertTrue(joinConfirmation.exists());
+//
+//        UiAutomatorUtils.handleButtonClick(getResourceId(
+//                getPackageName(),
+//                "JoinButton"
+//        ));
     }
 
 }

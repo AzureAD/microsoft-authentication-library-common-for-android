@@ -72,8 +72,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         performDeviceRegistrationHelper(
                 username,
                 password,
-                "com.azure.authenticator:id/manage_device_registration_email_input",
-                "com.azure.authenticator:id/manage_device_registration_register_button"
+                "com.azure.authenticator:id/email_input",
+                "com.azure.authenticator:id/register_button"
         );
 
 
@@ -81,7 +81,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             // after device registration, make sure that we see the unregister btn to confirm successful
             // registration
             final UiObject unRegisterBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/manage_device_registration_unregister_button"
+                    "com.azure.authenticator:id/unregister_button"
             );
             Assert.assertTrue(
                     "Microsoft Authenticator - Unregister Button appears.",
@@ -96,7 +96,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             // after device registration, make sure that the current registration upn matches with
             // with what was passed in
             final UiObject currentRegistration = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                    "com.azure.authenticator:id/manage_device_registration_current_registered_email"
+                    "com.azure.authenticator:id/current_registered_email"
             );
 
             Assert.assertTrue(
@@ -164,7 +164,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
         // Click enable browser access
         UiAutomatorUtils.handleButtonClick(
-                "com.azure.authenticator:id/manage_device_registration_enable_browser_access_button"
+                "com.azure.authenticator:id/enable_browser_access_button"
         );
 
         // click continue in Dialog
@@ -311,16 +311,25 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         aadPromptHandler.handlePrompt(username, password);
     }
 
+//    @Override
+//    public void handleFirstRun() {
+//        final String skipButtonResourceId = CommonUtils.getResourceId(
+//                AUTHENTICATOR_APP_PACKAGE_NAME, "frx_slide_skip_button"
+//        );
+//        UiAutomatorUtils.handleButtonClick("android:id/button1");
+//        // the skip button is actually rendered 3 times in the swipe/slide view
+//        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
+//        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
+//        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
+//        shouldHandleFirstRun = false;
+//    }
+
     @Override
     public void handleFirstRun() {
-        final String skipButtonResourceId = CommonUtils.getResourceId(
-                AUTHENTICATOR_APP_PACKAGE_NAME, "frx_slide_skip_button"
-        );
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
-        // the skip button is actually rendered 3 times in the swipe/slide view
-        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
+        // privacy dialog
+        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
+        // the skip button
+        UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/frx_skip_button");
         shouldHandleFirstRun = false;
     }
 }
