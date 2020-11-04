@@ -117,7 +117,8 @@ public class PopAuthenticationSchemeInternal
                         timestampMillis / ONE_SECOND_MILLIS,
                         getUrl(),
                         accessToken,
-                        getNonce()
+                        getNonce(),
+                        getClientClaims()
                 );
     }
 
