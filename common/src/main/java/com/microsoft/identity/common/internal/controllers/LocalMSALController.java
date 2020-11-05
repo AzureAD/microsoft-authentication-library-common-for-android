@@ -712,6 +712,16 @@ public class LocalMSALController extends BaseController {
         }
     }
 
+    /**
+     * Generates an AT-less SHR using the PoPMgr's internal signing key.
+     *
+     * @param context          The current application's {@link Context}.
+     * @param clockSkewManager An instance of {@link IClockSkewManager}, used to mitigate
+     *                         clock-skew/drift.
+     * @param popSchemeParams  The input params used to create the resulting SHR.
+     * @return The {@link GenerateShrResult} containing the resulint SHR.
+     * @throws ClientException If an error is encountered.
+     */
     private synchronized GenerateShrResult generateSignedHttpRequestInternal(@NonNull final Context context,
                                                                              @NonNull final IClockSkewManager clockSkewManager,
                                                                              @NonNull final IPoPAuthenticationSchemeParams popSchemeParams) throws ClientException {
