@@ -120,7 +120,15 @@ dependencies {
     implementation project(':keyvault')
     implementation project(':labapi')
 
-    implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.22')
+    if (findProject(":common") != null) {
+        //Use project reference if available
+        implementation(project(":common")) {
+            transitive = false
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.+')
+    }
 
     // keyvault per product flavor
     if (findProject(":keyvault") != null) {
