@@ -34,9 +34,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class GenerateShrCommandParameters extends CommandParameters {
 
-    private static final String TAG = GenerateShrCommandParameters.class.getSimpleName();
-
+    /**
+     * The home_account_id of the account for which we will generate the resulting SHR.
+     */
     private String homeAccountId;
 
+    /**
+     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
+     */
     private IPoPAuthenticationSchemeParams popParameters;
 }
