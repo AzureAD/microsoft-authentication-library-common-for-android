@@ -105,8 +105,35 @@ public class PopAuthenticationSchemeInternal
         mClientClaims = clientClaims;
     }
 
+    /**
+     * This constructor intended to be used when this class is acting as a DTO between
+     * MSAL -> Broker. Because no {@link IClockSkewManager} is supplied, functions related to access
+     * token signing cannot be used.
+     *
+     * @param httpMethod
+     * @param url
+     * @param nonce
+     * @param clientClaims
+     */
+    public PopAuthenticationSchemeInternal(@Nullable final String httpMethod,
+                                           @NonNull final URL url,
+                                           @Nullable final String nonce,
+                                           @Nullable final String clientClaims) {
+        super(SCHEME_POP);
+        mClockSkewManager = null;
+        mHttpMethod = httpMethod;
+        mUrl = url;
+        mNonce = nonce;
+        mClientClaims = clientClaims;
+    }
+
     @Override
     public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+        if (null == mClockSkewManager) {
+            // Shouldn't happen, would indicate a development-time bug.
+            throw new RuntimeException("IClockSkewManager not initialized.");
+        }
+
         final long ONE_SECOND_MILLIS = 1000L;
         final long timestampMillis = mClockSkewManager.getAdjustedReferenceTime().getTime();
 

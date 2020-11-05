@@ -24,11 +24,14 @@ package com.microsoft.identity.common.internal.result;
 
 import androidx.annotation.Nullable;
 
+import com.google.gson.annotations.SerializedName;
+
 /**
  * The result of a generateShr request.
  */
 public class GenerateShrResult {
 
+    @SerializedName("shr")
     private String mShr;
 
     /**

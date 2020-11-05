@@ -62,6 +62,7 @@ public class BrokerOperationBundle {
         MSAL_GET_DEVICE_MODE,
         MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE,
         MSAL_SIGN_OUT_FROM_SHARED_DEVICE,
+        MSAL_GENERATE_SHR,
         BROKER_GET_KEY_FROM_INACTIVE_BROKER,
         BROKER_API_HELLO,
         BROKER_API_GET_BROKER_ACCOUNTS,
@@ -173,6 +174,9 @@ public class BrokerOperationBundle {
 
             case BROKER_API_UPDATE_BRT:
                 return BrokerContentProvider.BROKER_API_UPDATE_BRT_PATH;
+
+            case MSAL_GENERATE_SHR:
+                return BrokerContentProvider.GENERATE_SHR_PATH;
 
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";

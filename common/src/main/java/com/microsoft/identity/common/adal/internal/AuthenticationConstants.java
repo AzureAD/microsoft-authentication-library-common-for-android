@@ -1209,7 +1209,12 @@ public final class AuthenticationConstants {
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
-        
+
+        /**
+         * The Bundle key name of serialized parameters for the PoP auth scheme.
+         */
+        public static final String AUTHSCHEME_PARAMS_POP = "";
+
         /**
          * Bundle identifiers for x-ms-clitelem info.
          */
@@ -1367,6 +1372,11 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
+
+        /**
+         * URI Path constant for BrokerApi-to-Broker generateShr request using ContentProvider.
+         */
+        public static final String GENERATE_SHR_PATH = "/brokerApi/generateShr";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.

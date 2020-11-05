@@ -628,4 +628,14 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public @NonNull ClientException getExceptionForEmptyResultBundle() {
         return new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
     }
+
+    public GenerateShrResult getGenerateShrResultFromResultBundle(@NonNull final Bundle resultBundle) {
+        final String resultJson = resultBundle.getString("");
+        final GenerateShrResult shrResult = sRequestAdapterGsonInstance.fromJson(
+                resultJson,
+                GenerateShrResult.class
+        );
+
+        return shrResult;
+    }
 }
