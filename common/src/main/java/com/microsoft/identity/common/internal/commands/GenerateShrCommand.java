@@ -26,13 +26,14 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.UiRequiredException;
-import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
 import java.util.List;
+
+import static com.microsoft.identity.common.exception.ErrorStrings.NO_ACCOUNT_FOUND;
+import static com.microsoft.identity.common.exception.ServiceException.INVALID_REQUEST;
 
 /**
  * Command class to perform generation of AT-less SHRs on behalf of a user.
@@ -66,13 +67,20 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                             + controller.getClass().getSimpleName()
             );
 
-            // TODO invoke the call on the controller...
             try {
                 result = controller.generateSignedHttpRequest(parameters);
             } catch (final UiRequiredException e) {
-                // TODO Move on to the next controller
-            } catch (final Exception e) {
+                final String errorCode = e.getErrorCode();
 
+                if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)
+                        && getControllers().size() > ii + 1) {
+                    // The request could not be serviced locally, because the account doesn't exist
+                    // Since there are more controllers to try, continue
+                    continue;
+                } else {
+                    // We did not have the account cached anywhere... simply return an error
+                    throw e;
+                }
             }
         }
 
