@@ -1,11 +1,6 @@
-plugins {
-    id "org.sonarqube" version "2.6.2"
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
 
@@ -256,7 +251,6 @@ afterEvaluate {
 
                 artifact(sourcesJar)
                 artifact(releaseJavadocJar)
-                artifact("$buildDir/outputs/aar/common-${project.version}.aar")
 
             }
         }
