@@ -704,7 +704,7 @@ public class LocalMSALController extends BaseController {
         final String homeAccountId = parameters.getHomeAccountId();
         final IPoPAuthenticationSchemeParams popSchemeParams = parameters.getPopParameters();
 
-        if (credentialsExistForAccountLocally(cache, clientId, homeAccountId)) {
+        if (userHasLocalAccountRecord(cache, clientId, homeAccountId)) {
             // Perform the signing locally...
             return generateSignedHttpRequestInternal(context, clockSkewManager, popSchemeParams);
         } else {
@@ -745,9 +745,17 @@ public class LocalMSALController extends BaseController {
         return result;
     }
 
-    private boolean credentialsExistForAccountLocally(@NonNull final OAuth2TokenCache cache,
-                                                      @NonNull final String clientId,
-                                                      @NonNull final String homeAccountId) {
+    /**
+     * Checks if the local cache contains an {@link AccountRecord} for the supplied input.
+     *
+     * @param cache         The cache to consult.
+     * @param clientId      The clientId of the app on behalf of whom we are querying the cache.
+     * @param homeAccountId The home_account_id of the targeted user.
+     * @return True, if an {@link AccountRecord} exists. False otherwise.
+     */
+    private boolean userHasLocalAccountRecord(@NonNull final OAuth2TokenCache cache,
+                                              @NonNull final String clientId,
+                                              @NonNull final String homeAccountId) {
         // If we have an account for this user, then we will service this request locally
         return null != cache.getAccountByHomeAccountId(null, clientId, homeAccountId);
     }
