@@ -708,7 +708,7 @@ public class LocalMSALController extends BaseController {
             // Perform the signing locally...
             return generateSignedHttpRequestInternal(context, clockSkewManager, popSchemeParams);
         } else {
-            throw new UiRequiredException(NO_ACCOUNT_FOUND, "Account does not exist locally.");
+            throw new UiRequiredException(NO_ACCOUNT_FOUND, "Account does not exist.");
         }
     }
 
@@ -722,9 +722,9 @@ public class LocalMSALController extends BaseController {
      * @return The {@link GenerateShrResult} containing the resulint SHR.
      * @throws ClientException If an error is encountered.
      */
-    private synchronized GenerateShrResult generateSignedHttpRequestInternal(@NonNull final Context context,
-                                                                             @NonNull final IClockSkewManager clockSkewManager,
-                                                                             @NonNull final IPoPAuthenticationSchemeParams popSchemeParams) throws ClientException {
+    public static synchronized GenerateShrResult generateSignedHttpRequestInternal(@NonNull final Context context,
+                                                                                   @NonNull final IClockSkewManager clockSkewManager,
+                                                                                   @NonNull final IPoPAuthenticationSchemeParams popSchemeParams) throws ClientException {
         // Clock-skew correction values
         final long ONE_SECOND_MILLIS = 1000L;
         final long timestampMillis = clockSkewManager.getAdjustedReferenceTime().getTime();

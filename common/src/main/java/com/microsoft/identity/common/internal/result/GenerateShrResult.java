@@ -25,14 +25,41 @@ package com.microsoft.identity.common.internal.result;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.exception.ErrorStrings;
 
 /**
  * The result of a generateShr request.
  */
 public class GenerateShrResult {
 
+    /**
+     * Errors that can be returned in this object. These values also used by OneAuth/MSAL CPP.
+     */
+    public static class Errors {
+
+        /**
+         * Indicates that the supplied home_account_id does not match any
+         * {@link com.microsoft.identity.common.internal.dto.AccountRecord} in our [broker] local
+         * cache.
+         */
+        public static final String NO_ACCOUNT_FOUND = ErrorStrings.NO_ACCOUNT_FOUND;
+
+        /**
+         * Indicates an error in client-side processing, review the contents of the error message
+         * for additional info as to why this error could be thrown. Most likely, there was an
+         * issue initializing the keystore to produce the requested SHR.
+         */
+        public static final String CLIENT_EXCEPTION = "client_exception";
+    }
+
     @SerializedName("shr")
     private String mShr;
+
+    @SerializedName("error_code")
+    private String mErrorCode;
+
+    @SerializedName("error_msg")
+    private String mErrorMsg;
 
     /**
      * Gets the SHR.
@@ -50,5 +77,41 @@ public class GenerateShrResult {
      */
     public void setShr(@Nullable final String shr) {
         mShr = shr;
+    }
+
+    /**
+     * Gets the error code associated with this result.
+     *
+     * @return The error code to get.
+     */
+    public String getErrorCode() {
+        return mErrorCode;
+    }
+
+    /**
+     * Sets the error code associated with this result.
+     *
+     * @param errorCode The error code to set.
+     */
+    public void setErrorCode(@Nullable final String errorCode) {
+        mErrorCode = errorCode;
+    }
+
+    /**
+     * Gets the error message associated with this result.
+     *
+     * @return The error message to get.
+     */
+    public String getErrorMessage() {
+        return mErrorMsg;
+    }
+
+    /**
+     * Sets the error message associated with this result.
+     *
+     * @param errorMsg The error message to set.
+     */
+    public void setErrorMessage(@Nullable final String errorMsg) {
+        mErrorMsg = errorMsg;
     }
 }

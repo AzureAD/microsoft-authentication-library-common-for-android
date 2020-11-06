@@ -1443,6 +1443,9 @@ public final class AuthenticationConstants {
          */
         public static final int BROKER_API_UPDATE_BRT_CODE = 12;
 
+        /**
+         * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
+         */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
     }
 

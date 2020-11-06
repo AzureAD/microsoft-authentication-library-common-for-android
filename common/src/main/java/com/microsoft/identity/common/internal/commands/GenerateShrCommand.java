@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -33,7 +34,6 @@ import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import java.util.List;
 
 import static com.microsoft.identity.common.exception.ErrorStrings.NO_ACCOUNT_FOUND;
-import static com.microsoft.identity.common.exception.ServiceException.INVALID_REQUEST;
 
 /**
  * Command class to perform generation of AT-less SHRs on behalf of a user.
@@ -44,7 +44,7 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
     public GenerateShrCommand(@NonNull final GenerateShrCommandParameters parameters,
                               @NonNull final List<BaseController> controllers,
-                              @NonNull final CommandCallback<GenerateShrResult, ClientException> callback,
+                              @NonNull final CommandCallback<GenerateShrResult, BaseException> callback,
                               @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
@@ -69,6 +69,18 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
             try {
                 result = controller.generateSignedHttpRequest(parameters);
+
+                if (null != result.getErrorCode()) {
+                    final String errorCode = result.getErrorCode();
+                    final String errorMessage = result.getErrorMessage();
+
+                    if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)) {
+                        throw new UiRequiredException(errorCode, errorMessage);
+                    } else {
+                        throw new ClientException(errorCode, errorMessage);
+                    }
+                }
+
             } catch (final UiRequiredException e) {
                 final String errorCode = e.getErrorCode();
 
