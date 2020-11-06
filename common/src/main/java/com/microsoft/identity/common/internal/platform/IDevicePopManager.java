@@ -306,7 +306,7 @@ public interface IDevicePopManager {
     ) throws ClientException;
 
     /**
-     * Api to create the signed PoP access token.
+     * Api to create the signed HTTP requests (SHRs) without embedding a PoP-AT.
      *
      * @param httpMethod   (Optional) The HTTP method that will be used with this outbound request.
      * @param timestamp    Seconds since January 1st, 1970 (UTC).
