@@ -1127,6 +1127,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_DEVICE_MODE = "broker_device_mode";
 
         /**
+         * String for generate shr result.
+         */
+        public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
+
+        /**
          * String to return a true if the request succeeded, false otherwise.
          */
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
@@ -1354,6 +1359,11 @@ public final class AuthenticationConstants {
         public static final String MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
 
         /**
+         * URI Path constant for BrokerApi-to-Broker generateShr request using ContentProvider.
+         */
+        public static final String GENERATE_SHR_PATH = "/brokerApi/generateShr";
+
+        /**
          * URI Path constant for BrokerApi-to-Broker hello request using ContentProvider.
          */
         public static final String BROKER_API_HELLO_PATH = "/brokerApi/hello";
@@ -1372,11 +1382,6 @@ public final class AuthenticationConstants {
          * URI Path constant for BrokerApi-to-Broker updateBrt request using ContentProvider.
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
-
-        /**
-         * URI Path constant for BrokerApi-to-Broker generateShr request using ContentProvider.
-         */
-        public static final String GENERATE_SHR_PATH = "/brokerApi/generateShr";
 
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
@@ -1437,6 +1442,8 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for BrokerApi-to-Broker updateBrt request.
          */
         public static final int BROKER_API_UPDATE_BRT_CODE = 12;
+
+        public static final int MSAL_GENERATE_SHR_CODE = 13;
     }
 
     public static final class AuthorizationIntentKey {

@@ -41,7 +41,9 @@ import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.authscheme.INameable;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -599,7 +601,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                                                  @NonNull final String negotiatedBrokerProtocolVersion) {
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getHomeAccountId();
-        final PopAuthenticationSchemeInternal popParameters = (PopAuthenticationSchemeInternal) parameters.getPopParameters();
+
+        // Convert the supplied public class to the internal representation
+        final PopAuthenticationSchemeInternal popParameters =
+                (PopAuthenticationSchemeInternal) AuthenticationSchemeFactory.createScheme(
+                        parameters.getAndroidApplicationContext(),
+                        (INameable) parameters.getPopParameters()
+        );
+
         final String popParamsJson = sRequestAdapterGsonInstance.toJson(
                 popParameters,
                 PopAuthenticationSchemeInternal.class
