@@ -1013,6 +1013,8 @@ class DevicePopManager implements IDevicePopManager {
         try {
             final JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder();
 
+            // This is supported/allowed only to support the generateShr API. By definition, all
+            // AT/PoP requests will contain an access token, but an SPO signed-cookie will not.
             if (!TextUtils.isEmpty(accessToken)) {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.ACCESS_TOKEN,
