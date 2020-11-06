@@ -23,8 +23,11 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
+import android.text.TextUtils;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -40,6 +43,11 @@ import java.util.Map;
 public final class Device {
 
     private static IDevicePopManager sDevicePoPManager;
+
+    /**
+     * The String representing the sdk platform version.
+     */
+    public static final String PRODUCT_VERSION = "2.0.2";
 
     /**
      * Private constructor to prevent a help class from being initiated.
@@ -66,6 +74,15 @@ public final class Device {
         platformParameters.put(PlatformIdParameters.DEVICE_MODEL, Build.MODEL);
 
         return Collections.unmodifiableMap(platformParameters);
+    }
+
+    public static String getProductVersion() {
+        final String version = DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
+        if (TextUtils.isEmpty(version)) {
+            return PRODUCT_VERSION;
+        } else {
+            return version;
+        }
     }
 
     public static final class PlatformIdParameters {
