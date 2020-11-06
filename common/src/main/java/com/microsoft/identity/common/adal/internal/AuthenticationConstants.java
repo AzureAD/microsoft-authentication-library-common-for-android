@@ -1359,7 +1359,7 @@ public final class AuthenticationConstants {
         public static final String MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
 
         /**
-         * URI Path constant for BrokerApi-to-Broker generateShr request using ContentProvider.
+         * URI Path constant for MSAL-to-Broker generateShr request using ContentProvider.
          */
         public static final String GENERATE_SHR_PATH = "/brokerApi/generateShr";
 
