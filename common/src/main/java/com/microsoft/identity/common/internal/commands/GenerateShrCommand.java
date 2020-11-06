@@ -78,34 +78,24 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                             + controller.getClass().getSimpleName()
             );
 
-            try {
-                result = controller.generateSignedHttpRequest(parameters);
+            result = controller.generateSignedHttpRequest(parameters);
 
-                if (null != result.getErrorCode()) {
-                    final String errorCode = result.getErrorCode();
-                    final String errorMessage = result.getErrorMessage();
+            if (null != result.getErrorCode()) {
+                final String errorCode = result.getErrorCode();
+                final String errorMessage = result.getErrorMessage();
 
-                    // To support a shared communication model between the local flow and the
-                    // broker flow, errors will be returned as properties of the result, instead
-                    // of as thrown Exceptions
-                    if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)) {
-                        throw new UiRequiredException(errorCode, errorMessage);
+                // To support a shared communication model between the local flow and the
+                // broker flow, errors will be returned as properties of the result, instead
+                // of as thrown Exceptions
+                if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)) {
+                    if (getControllers().size() > ii + 1) {
+                        // Try our next controller
+                        continue;
                     } else {
-                        throw new ClientException(errorCode, errorMessage);
+                        throw new UiRequiredException(errorCode, errorMessage);
                     }
-                }
-
-            } catch (final UiRequiredException e) {
-                final String errorCode = e.getErrorCode();
-
-                if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)
-                        && getControllers().size() > ii + 1) {
-                    // The request could not be serviced locally, because the account doesn't exist
-                    // Since there are more controllers to try, continue
-                    continue;
                 } else {
-                    // We did not have the account cached anywhere... simply return an error
-                    throw e;
+                    throw new ClientException(errorCode, errorMessage);
                 }
             }
         }

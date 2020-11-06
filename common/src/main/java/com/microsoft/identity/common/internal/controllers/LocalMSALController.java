@@ -35,7 +35,6 @@ import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
@@ -83,7 +82,6 @@ import java.util.concurrent.Future;
 import lombok.EqualsAndHashCode;
 
 import static com.microsoft.identity.common.adal.internal.net.HttpWebRequest.throwIfNetworkNotAvailable;
-import static com.microsoft.identity.common.exception.ErrorStrings.NO_ACCOUNT_FOUND;
 
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class LocalMSALController extends BaseController {
@@ -702,12 +700,18 @@ public class LocalMSALController extends BaseController {
         final String homeAccountId = parameters.getHomeAccountId();
         final IPoPAuthenticationSchemeParams popSchemeParams = parameters.getPopParameters();
 
+        final GenerateShrResult result;
         if (userHasLocalAccountRecord(cache, clientId, homeAccountId)) {
             // Perform the signing locally...
-            return DevicePoPUtils.generateSignedHttpRequest(context, clockSkewManager, popSchemeParams);
+            result = DevicePoPUtils.generateSignedHttpRequest(context, clockSkewManager, popSchemeParams);
         } else {
-            throw new UiRequiredException(NO_ACCOUNT_FOUND, "Account does not exist.");
+            // Populate the error on the result and return...
+            result = new GenerateShrResult();
+            result.setErrorCode(GenerateShrResult.Errors.NO_ACCOUNT_FOUND);
+            result.setErrorMessage("Account does not exist.");
         }
+
+        return result;
     }
 
     /**
