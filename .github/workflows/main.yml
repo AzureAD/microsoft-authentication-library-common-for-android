@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        token: ${{PAT}}
+        token: '${{PAT}}'
     - uses: actions/setup-java@v1
       with:
         java-version: 8
