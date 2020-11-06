@@ -74,6 +74,9 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
                     final String errorCode = result.getErrorCode();
                     final String errorMessage = result.getErrorMessage();
 
+                    // To support a shared communication model between the local flow and the
+                    // broker flow, errors will be returned as properties of the result, instead
+                    // of as thrown Exceptions
                     if (NO_ACCOUNT_FOUND.equalsIgnoreCase(errorCode)) {
                         throw new UiRequiredException(errorCode, errorMessage);
                     } else {
