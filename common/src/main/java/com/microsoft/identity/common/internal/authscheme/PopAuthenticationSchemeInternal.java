@@ -80,6 +80,15 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
+    /**
+     * Constructs a new PopAuthenticationSchemeInternal.
+     *
+     * @param clockSkewManager Used to compute and compensate for any client clock-skew relative to
+     *                         AAD.
+     * @param httpMethod       The HTTP method associated with this request. Optional.
+     * @param url              The resource URL of future-recipient of this SHR.
+     * @param nonce            Client nonce value; for replay protection.
+     */
     @Deprecated
     public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
                                            @Nullable final String httpMethod,
@@ -92,6 +101,17 @@ public class PopAuthenticationSchemeInternal
         mNonce = nonce;
     }
 
+    /**
+     * Constructs a new PopAuthenticationSchemeInternal.
+     *
+     * @param clockSkewManager Used to compute and compensate for any client clock-skew
+     *                         (relative to AAD).
+     * @param httpMethod       The HTTP method associated with this request. Optional.
+     * @param url              The resource URL of future-recipient of this SHR.
+     * @param nonce            Client nonce value; for replay protection.
+     * @param clientClaims     Optional claims provided by the caller to embed in the client_claims
+     *                         property of the resulting SHR.
+     */
     public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
                                            @Nullable final String httpMethod,
                                            @NonNull final URL url,
@@ -110,10 +130,11 @@ public class PopAuthenticationSchemeInternal
      * MSAL -> Broker. Because no {@link IClockSkewManager} is supplied, functions related to access
      * token signing cannot be used.
      *
-     * @param httpMethod
-     * @param url
-     * @param nonce
-     * @param clientClaims
+     * @param httpMethod   The HTTP method associated with this request. Optional.
+     * @param url          The resource URL of future-recipient of this SHR.
+     * @param nonce        Client nonce value; for replay protection.
+     * @param clientClaims Optional claims provided by the caller to embed in the client_claims
+     *                     property of the resulting SHR.
      */
     public PopAuthenticationSchemeInternal(@Nullable final String httpMethod,
                                            @NonNull final URL url,
