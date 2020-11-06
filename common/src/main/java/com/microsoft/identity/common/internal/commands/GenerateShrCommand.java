@@ -42,6 +42,14 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
     private static final String TAG = GenerateShrCommand.class.getSimpleName();
 
+    /**
+     * Constructs a new GenerateShrCommand.
+     *
+     * @param parameters  The command's input parameters.
+     * @param controllers The controllers on which to run this command.
+     * @param callback    The command to notify once execution has completed.
+     * @param publicApiId The public API ID of this command.
+     */
     public GenerateShrCommand(@NonNull final GenerateShrCommandParameters parameters,
                               @NonNull final List<BaseController> controllers,
                               @NonNull final CommandCallback<GenerateShrResult, BaseException> callback,
