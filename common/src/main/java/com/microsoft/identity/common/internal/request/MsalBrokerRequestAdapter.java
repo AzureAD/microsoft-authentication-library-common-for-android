@@ -205,9 +205,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             return BrokerInteractiveTokenCommandParameters.builder().build();
         }
 
-        int callingAppUid = intent.getIntExtra(
-                CALLER_INFO_UID, 0
-        );
+        int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
 
         List<Pair<String, String>> extraQP = new ArrayList<>();
 
