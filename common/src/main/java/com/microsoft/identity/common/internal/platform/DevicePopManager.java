@@ -995,7 +995,7 @@ class DevicePopManager implements IDevicePopManager {
                 httpMethod,
                 timestamp,
                 requestUrl,
-                null, // No AT used in this flow
+                null, // No AT used in this flow (generateShr)
                 nonce,
                 clientClaims
         );
