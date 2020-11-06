@@ -1,7 +1,7 @@
 # This is a workflow to run the deploy snapshot pipeline in Azure DevOps
 name: dev_updated
 env:
-    GITHUB_TOKEN: ${{ secrets.ACTION_PAT }}
+    PAT: ${{ secrets.ACTION_PAT }}
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the dev branch
@@ -23,7 +23,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        token: GITHUB_TOKEN
+        token: ${{PAT}}
     - uses: actions/setup-java@v1
       with:
         java-version: 8
