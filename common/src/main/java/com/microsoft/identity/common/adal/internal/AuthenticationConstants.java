@@ -1218,7 +1218,7 @@ public final class AuthenticationConstants {
         /**
          * The Bundle key name of serialized parameters for the PoP auth scheme.
          */
-        public static final String AUTHSCHEME_PARAMS_POP = "";
+        public static final String AUTHSCHEME_PARAMS_POP = "pop_parameters";
 
         /**
          * Bundle identifiers for x-ms-clitelem info.
