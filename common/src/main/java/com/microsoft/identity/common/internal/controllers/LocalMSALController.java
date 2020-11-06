@@ -48,8 +48,7 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.platform.Device;
-import com.microsoft.identity.common.internal.platform.IDevicePopManager;
+import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
@@ -76,7 +75,6 @@ import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -706,53 +704,10 @@ public class LocalMSALController extends BaseController {
 
         if (userHasLocalAccountRecord(cache, clientId, homeAccountId)) {
             // Perform the signing locally...
-            return generateSignedHttpRequestInternal(context, clockSkewManager, popSchemeParams);
+            return DevicePoPUtils.generateSignedHttpRequest(context, clockSkewManager, popSchemeParams);
         } else {
             throw new UiRequiredException(NO_ACCOUNT_FOUND, "Account does not exist.");
         }
-    }
-
-    /**
-     * Generates an AT-less SHR using the PoPMgr's internal signing key.
-     *
-     * @param context          The current application's {@link Context}.
-     * @param clockSkewManager An instance of {@link IClockSkewManager}, used to mitigate
-     *                         clock-skew/drift.
-     * @param popSchemeParams  The input params used to create the resulting SHR.
-     * @return The {@link GenerateShrResult} containing the resulint SHR.
-     * @throws ClientException If an error is encountered.
-     */
-    public static synchronized GenerateShrResult generateSignedHttpRequestInternal(@NonNull final Context context,
-                                                                                   @NonNull final IClockSkewManager clockSkewManager,
-                                                                                   @NonNull final IPoPAuthenticationSchemeParams popSchemeParams) throws ClientException {
-        // Clock-skew correction values
-        final long ONE_SECOND_MILLIS = 1000L;
-        final long timestampMillis = clockSkewManager.getAdjustedReferenceTime().getTime();
-
-        final String httpMethodStr = popSchemeParams.getHttpMethod();
-        final URL resourceUrl = popSchemeParams.getUrl();
-        final String nonce = popSchemeParams.getNonce();
-        final String clientClaims = popSchemeParams.getClientClaims();
-        final IDevicePopManager popMgr = Device.getDevicePoPManagerInstance();
-
-        // Generate keys, if none exist (should already be initialized)
-        if (!popMgr.asymmetricKeyExists()) {
-            popMgr.generateAsymmetricKey(context);
-        }
-
-        final String shr = popMgr.mintSignedHttpRequest(
-                httpMethodStr,
-                timestampMillis / ONE_SECOND_MILLIS,
-                resourceUrl,
-                nonce,
-                clientClaims
-        );
-
-        // Create our result object
-        final GenerateShrResult result = new GenerateShrResult();
-        result.setShr(shr);
-
-        return result;
     }
 
     /**
