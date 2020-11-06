@@ -10,15 +10,13 @@ name: dev_updated
 on:
   watch:
     types: [started]
-    branches: [android/package-test-utilities]
+    branches: [dev]
 
 # Jobs run in parallel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
   # Increment 
   incrementLatestPatch:
     runs-on: ubuntu-latest
-
-    if: github.actor == github.event.repository.owner.login
 
     steps:
     - uses: actions/checkout@v2
