@@ -360,11 +360,16 @@ public class MsalOAuth2TokenCache
             final String environment = accountRecord.getEnvironment();
             final String clientId = deletionExemptRefreshToken.getClientId();
 
-            final int refreshTokensRemoved = removeRefreshTokensForAccountExcept(
-                    accountRecord,
-                    isFamilyRefreshToken,
+            final int refreshTokensRemoved = removeCredentialsOfTypeForAccountExcept(
                     environment,
-                    clientId,
+                    isFamilyRefreshToken
+                            // Delete all RTs, irrespective of client_id
+                            // (so long as it is not the exempted record)
+                            ? null
+                            : clientId,
+                    CredentialType.RefreshToken,
+                    accountRecord,
+                    true,
                     deletionExemptRefreshToken
             );
 
@@ -380,37 +385,6 @@ public class MsalOAuth2TokenCache
                 );
             }
         }
-    }
-
-    /**
-     * Deletes all of the local refresh tokens on disk for the associated account, except for the
-     * refresh token provided.
-     *
-     * @param accountRecord                    The {@link AccountRecord} for whome tokens should be deleted.
-     * @param isFamilyRefreshToken             Indicates whether or not the tokens targeted for deletion should
-     *                                         scope across all client_ids or not.
-     * @param environment                      The cloud for which tokens should be deleted.
-     * @param clientId                         The client_id for which tokens should be deleted, if not FRT.
-     * @param deletionExemptRefreshTokenRecord The refresh token we want to exempt from deletion.
-     * @return The number of tokens we removed from the cache.
-     */
-    private int removeRefreshTokensForAccountExcept(@NonNull final AccountRecord accountRecord,
-                                                    final boolean isFamilyRefreshToken,
-                                                    @NonNull final String environment,
-                                                    @Nullable final String clientId,
-                                                    @NonNull final RefreshTokenRecord deletionExemptRefreshTokenRecord) {
-        return removeCredentialsOfTypeForAccountExcept(
-                environment,
-                isFamilyRefreshToken
-                        // Delete all RTs, irrespective of client_id
-                        // (so long as it is not the exempted record)
-                        ? null
-                        : clientId,
-                CredentialType.RefreshToken,
-                accountRecord,
-                true,
-                deletionExemptRefreshTokenRecord // The RT we want to preserve
-        );
     }
 
     /**
@@ -1798,7 +1772,7 @@ public class MsalOAuth2TokenCache
     @Override
     public void setSingleSignOnState(final GenericAccount account,
                                      final GenericRefreshToken refreshToken) throws ClientException {
-        final String methodName = "setSingleSignOnState";
+        Logger.info(TAG + ":setSingleSignOnState", "Set SSO state called.");
 
         final AccountRecord accountDto = mAccountCredentialAdapter.asAccount(account);
         final RefreshTokenRecord rt = mAccountCredentialAdapter.asRefreshToken(refreshToken);
@@ -1814,35 +1788,7 @@ public class MsalOAuth2TokenCache
         saveAccounts(accountDto);
         saveCredentialsInternal(idToken, rt);
 
-        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
-                refreshToken.getFamilyId()
-        );
-
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
-                accountDto.getAuthorityType()
-        );
-
-        if (isFamilyRefreshToken || isMultiResourceCapable) {
-            final int refreshTokensRemoved = removeRefreshTokensForAccountExcept(
-                    accountDto,
-                    isFamilyRefreshToken,
-                    accountDto.getEnvironment(),
-                    rt.getClientId(),
-                    rt
-            );
-
-            Logger.info(
-                    TAG + methodName,
-                    "Refresh tokens removed: [" + refreshTokensRemoved + "]"
-            );
-
-            if (refreshTokensRemoved > 1) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Multiple refresh tokens found for Account."
-                );
-            }
-        }
+        removeAllRefreshTokensExcept(accountDto, rt);
     }
 
     @Override

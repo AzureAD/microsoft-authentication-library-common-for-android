@@ -1,5 +1,3 @@
-package com.microsoft.identity.common.internal.broker;
-
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -23,30 +21,51 @@ package com.microsoft.identity.common.internal.broker;
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
+package com.microsoft.identity.common.internal.broker;
+
 import android.content.ComponentName;
 import android.os.IBinder;
+import android.os.IInterface;
 
-import com.microsoft.aad.adal.IBrokerAccountService;
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.client.IMicrosoftAuthService;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.result.ResultFuture;
 
-public class BrokerAccountServiceConnection implements android.content.ServiceConnection {
-    private static final String TAG = MicrosoftAuthServiceConnection.class.getSimpleName();
-    private IBrokerAccountService mBrokerAccountService;
-    private BrokerAccountServiceFuture mBrokerAccountServiceFuture;
+/**
+ * A bound service connection.
+ */
+public class BoundServiceConnection implements android.content.ServiceConnection {
+    private static final String TAG = BoundServiceConnection.class.getSimpleName();
+    private final ResultFuture<IBinder> mFuture;
 
-    public BrokerAccountServiceConnection(BrokerAccountServiceFuture future) {
-        mBrokerAccountServiceFuture = future;
+    public BoundServiceConnection(@NonNull final ResultFuture<IBinder> future) {
+        mFuture = future;
     }
 
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
-        Logger.verbose(TAG, "BrokerAccountService is connected.");
-        mBrokerAccountService = IBrokerAccountService.Stub.asInterface(service);
-        mBrokerAccountServiceFuture.setBrokerAccountService(mBrokerAccountService);
+        Logger.info(TAG, name.getClassName() + " is connected.");
+        mFuture.setResult(service);
     }
 
+    /*
+    //Needed for API level 26 and above
     @Override
-    public void onServiceDisconnected(ComponentName name) {
-        Logger.verbose(TAG, "BrokerAccountService is disconnected.");
+    public void onBindingDied(ComponentName name){
+
+    }
+
+    //Needed for API level 28 and above
+    @Override
+    public void onNullBinding(ComponentName name){
+
+    }
+    */
+
+    @Override
+    public void onServiceDisconnected(@NonNull final ComponentName name) {
+        Logger.info(TAG, name.getClassName() + " is disconnected.");
     }
 }

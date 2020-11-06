@@ -235,6 +235,35 @@ public class ClientException extends BaseException {
      */
     public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
 
+    /**
+     * Bound service is unavailable or not supported.
+     */
+    public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
+
+    /**
+     * The returned bundle does not contain the expected data.
+     */
+    public static final String INVALID_BROKER_BUNDLE = "invalid_broker_bundle";
+
+    /**
+     * An account manager operation failed.
+     */
+    public static final String ACCOUNT_MANAGER_OPERATION_ERROR = "account_manager_operation_error";
+
+    /**
+     * An expected parameter is missing.
+     */
+    public static final String MISSING_PARAMETER = "missing_parameter";
+
+    /**
+     * A required account cannot be found.
+     */
+    public static final String ACCOUNT_NOT_FOUND = "account_not_found";
+
+    /**
+     * An access to perform a given operation is denied.
+     */
+    public static final String ACCESS_DENIED = "access_denied";
 
     /**
      * Constructor of ClientException.
