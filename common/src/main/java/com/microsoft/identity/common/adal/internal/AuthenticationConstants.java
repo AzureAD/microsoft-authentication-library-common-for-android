@@ -652,7 +652,7 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "5.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "6.0";
 
         /**
          * The BrokerAPI-To-Broker protocol name.
