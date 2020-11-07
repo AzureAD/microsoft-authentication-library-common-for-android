@@ -1361,7 +1361,7 @@ public final class AuthenticationConstants {
         /**
          * URI Path constant for MSAL-to-Broker generateShr request using ContentProvider.
          */
-        public static final String GENERATE_SHR_PATH = "/brokerApi/generateShr";
+        public static final String GENERATE_SHR_PATH = "/generateShr";
 
         /**
          * URI Path constant for BrokerApi-to-Broker hello request using ContentProvider.
