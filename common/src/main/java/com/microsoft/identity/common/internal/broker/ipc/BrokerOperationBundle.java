@@ -124,6 +124,9 @@ public class BrokerOperationBundle {
             case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
                 return BrokerAccountManagerOperation.REMOVE_ACCOUNT_FROM_SHARED_DEVICE;
 
+            case MSAL_GENERATE_SHR:
+                return BrokerAccountManagerOperation.GENERATE_SHR;
+
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
                 Logger.warn(TAG + methodName, errorMessage);

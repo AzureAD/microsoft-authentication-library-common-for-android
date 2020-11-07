@@ -1301,6 +1301,8 @@ public final class AuthenticationConstants {
         public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
 
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
+
+        public static final String GENERATE_SHR = "GENERATE_SHR";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
