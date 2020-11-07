@@ -630,6 +630,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         return new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
     }
 
+    /**
+     * Deserializes the {@link GenerateShrResult} object from the broker response {@link Bundle}.
+     * @param resultBundle The result Bundle produced by the broker.
+     * @return The deserialized GenerateShrResult object containing the result (or corresponding
+     * error).
+     */
     public GenerateShrResult getGenerateShrResultFromResultBundle(@NonNull final Bundle resultBundle) {
         final String resultJson = resultBundle.getString(BROKER_GENERATE_SHR_RESULT);
         final GenerateShrResult shrResult = sRequestAdapterGsonInstance.fromJson(
