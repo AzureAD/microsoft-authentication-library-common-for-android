@@ -66,7 +66,7 @@ public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
         // Iterate over our controllers, to service the request either locally or via the broker...
         // if the local (embedded) cache contains tokens for the supplied user, we will sign using
-        // the embedded PoP keys. If not local user-state exists, the broker will be delegated to
+        // the embedded PoP keys. If no local user-state exists, the broker will be delegated to
         // where the same check is performed.
         BaseController controller;
         for (int ii = 0; ii < getControllers().size(); ii++) {
