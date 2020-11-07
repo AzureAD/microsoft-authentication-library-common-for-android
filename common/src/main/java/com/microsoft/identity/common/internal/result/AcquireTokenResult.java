@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
@@ -29,7 +30,10 @@ public class AcquireTokenResult {
 
     private ILocalAuthenticationResult mLocalAuthenticationResult;
     private TokenResult mTokenResult;
+
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationResult mAuthorizationResult;
+
     private Boolean mSucceeded = false;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
@@ -49,11 +53,13 @@ public class AcquireTokenResult {
         this.mTokenResult = tokenResult;
     }
 
+    // Suppressing rawtype warnings due to the generic type AuthorizationResult
+    @SuppressWarnings(WarningType.rawtype_warning)
     public AuthorizationResult getAuthorizationResult() {
         return mAuthorizationResult;
     }
 
-    public void setAuthorizationResult(AuthorizationResult authorizationResult) {
+    public void setAuthorizationResult(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult) {
         this.mAuthorizationResult = authorizationResult;
     }
 

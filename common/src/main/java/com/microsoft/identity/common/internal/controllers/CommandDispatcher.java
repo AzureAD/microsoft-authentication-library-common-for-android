@@ -37,17 +37,21 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -80,6 +84,8 @@ public class CommandDispatcher {
 
     private static final Object mapAccessLock = new Object();
     @GuardedBy("mapAccessLock")
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
@@ -89,6 +95,8 @@ public class CommandDispatcher {
      *
      * @param command the command whose identity to use to cleanse the map.
      */
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
@@ -112,7 +120,7 @@ public class CommandDispatcher {
      *
      * @param command
      */
-    public static void submitSilent(@NonNull final BaseCommand command) {
+    public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
         submitSilentReturningFuture(command);
     }
 
@@ -122,7 +130,7 @@ public class CommandDispatcher {
      * @param command
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@NonNull final BaseCommand command) {
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
 
         final String methodName = ":submitSilent";
         Logger.verbose(
@@ -157,10 +165,11 @@ public class CommandDispatcher {
                 @Override
                 public void run() {
                     try {
-                        final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                         // set correlation id on parameters as it may not already be set
-                        command.getParameters().setCorrelationId(correlationId);
+                        commandParameters.setCorrelationId(correlationId);
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
@@ -211,6 +220,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
+                        DiagnosticContext.clear();
                     }
                 }
             });
@@ -219,7 +229,7 @@ public class CommandDispatcher {
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
-            @NonNull final BaseCommand command,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
             @NonNull final Handler handler) {
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
@@ -228,7 +238,7 @@ public class CommandDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            command.getCallback().onError(throwable);
+                            commandCallBackOnError(command, throwable);
                         }
                     });
                     return;
@@ -238,6 +248,12 @@ public class CommandDispatcher {
                 returnCommandResult(command, result, handler);
             }
         };
+    }
+
+    // Suppressing unchecked warnings due to casting of Throwable to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallBackOnError(@SuppressWarnings(WarningType.rawtype_warning) @NonNull BaseCommand command, Throwable throwable) {
+        command.getCallback().onError(throwable);
     }
 
     static void clearCommandCache() {
@@ -252,7 +268,7 @@ public class CommandDispatcher {
      * @param command
      * @return
      */
-    private static CommandResult executeCommand(BaseCommand command) {
+    private static CommandResult executeCommand(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command) {
 
         Object result = null;
         BaseException baseException = null;
@@ -297,24 +313,37 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
+    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command, final CommandResult result, Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 switch (result.getStatus()) {
                     case ERROR:
-                        command.getCallback().onError(result.getResult());
+                        commandCallbackOnError(command, result);
                         break;
                     case COMPLETED:
-                        command.getCallback().onTaskCompleted(result.getResult());
+                        commandCallbackOnTaskCompleted(command, result);
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
+                        break;
                     default:
 
                 }
             }
         });
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onError(result.getResult());
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onTaskCompleted(result.getResult());
     }
 
     /**
@@ -324,7 +353,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
-    private static void cacheCommandResult(BaseCommand command, CommandResult commandResult) {
+    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command, CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
             sCommandResultCache.put(command, commandResult);
         }
@@ -402,48 +431,55 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId()
-                    );
+                    try {
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(
+                                commandParameters.getCorrelationId(),
+                                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion()
+                        );
 
-                    // set correlation id on parameters as it may not already be set
-                    command.getParameters().setCorrelationId(correlationId);
+                        // set correlation id on parameters as it may not already be set
+                        commandParameters.setCorrelationId(correlationId);
 
-                    EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
-                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                    if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
-                        logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
-                    }
-
-                    final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            completeInteractive(intent);
+                        if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
+                            logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
                         }
-                    };
 
-                    CommandResult commandResult;
-                    Handler handler = new Handler(Looper.getMainLooper());
+                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                completeInteractive(intent);
+                            }
+                        };
 
-                    localBroadcastManager.registerReceiver(
-                            resultReceiver,
-                            new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                        CommandResult commandResult;
+                        Handler handler = new Handler(Looper.getMainLooper());
 
-                    sCommand = command;
+                        localBroadcastManager.registerReceiver(
+                                resultReceiver,
+                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
 
-                    //Try executing request
-                    commandResult = executeCommand(command);
-                    sCommand = null;
-                    localBroadcastManager.unregisterReceiver(resultReceiver);
+                        sCommand = command;
 
-                    // set correlation id on Local Authentication Result
-                    setCorrelationIdOnResult(commandResult, correlationId);
+                        //Try executing request
+                        commandResult = executeCommand(command);
+                        sCommand = null;
+                        localBroadcastManager.unregisterReceiver(resultReceiver);
 
-                    EstsTelemetry.getInstance().flush(command, commandResult);
-                    Telemetry.getInstance().flush(correlationId);
-                    returnCommandResult(command, commandResult, handler);
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        Telemetry.getInstance().flush(correlationId);
+                        returnCommandResult(command, commandResult, handler);
+                    } finally {
+                        DiagnosticContext.clear();
+                    }
                 }
             });
         }
@@ -572,7 +608,7 @@ public class CommandDispatcher {
         }
     }
 
-    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId) {
+    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
         final String methodName = ":initializeDiagnosticContext";
 
         final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
@@ -582,6 +618,8 @@ public class CommandDispatcher {
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
+        rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,

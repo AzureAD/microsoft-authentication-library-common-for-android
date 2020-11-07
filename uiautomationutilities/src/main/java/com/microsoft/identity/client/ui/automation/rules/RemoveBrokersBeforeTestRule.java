@@ -23,13 +23,14 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
-import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
-import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
+
+import java.util.List;
 
 /**
  * A Test Rule to remove all brokers from the device prior to executing the test case.
@@ -41,22 +42,19 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                final BrokerMicrosoftAuthenticator authenticator = new BrokerMicrosoftAuthenticator();
-                authenticator.uninstall();
+                final List<ITestBroker> testBrokers = CommonUtils.getAllPossibleTestBrokers();
 
-                // Auth App may still be installed if device admin (Samsung devices for instance)
-                if (authenticator.isInstalled()) {
-                    TestContext.getTestContext().getTestDevice().getSettings().disableAdmin(DeviceAdmin.MICROSOFT_AUTHENTICATOR);
-                    authenticator.uninstall();
-                }
+                for (final ITestBroker broker : testBrokers) {
+                    broker.uninstall();
 
-                final BrokerCompanyPortal companyPortal = new BrokerCompanyPortal();
-                companyPortal.uninstall();
-
-                // CP may still be installed if device admin
-                if (companyPortal.isInstalled()) {
-                    TestContext.getTestContext().getTestDevice().getSettings().disableAdmin(DeviceAdmin.COMPANY_PORTAL);
-                    companyPortal.uninstall();
+                    if (broker.isInstalled()) {
+                        // The broker app will still be installed on the device if it is enabled
+                        // as a device admin. In this case, we need to disable the admin and then
+                        // uninstall.
+                        TestContext.getTestContext().getTestDevice()
+                                .getSettings().disableAdmin(broker.getAdminName());
+                        broker.uninstall();
+                    }
                 }
 
                 base.evaluate();

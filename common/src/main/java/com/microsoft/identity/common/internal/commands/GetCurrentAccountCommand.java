@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
@@ -43,14 +44,14 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
 
     public GetCurrentAccountCommand(@NonNull CommandParameters parameters,
                                     @NonNull BaseController controller,
-                                    @NonNull CommandCallback callback,
+                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                     @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
     public GetCurrentAccountCommand(@NonNull CommandParameters parameters,
                                     @NonNull List<BaseController> controllers,
-                                    @NonNull CommandCallback callback,
+                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                     @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }

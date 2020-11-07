@@ -67,6 +67,11 @@ public class ClientException extends BaseException {
     public static final String IO_ERROR = "io_error";
 
     /**
+     * Emitted when a particular padding mechanism is requested but is not available in the environment.
+     */
+    public static final String NO_SUCH_PADDING = "no_such_padding";
+
+    /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
      */
     public static final String MALFORMED_URL = "malformed_url";
@@ -171,15 +176,37 @@ public class ClientException extends BaseException {
     public static final String KEYSTORE_NOT_INITIALIZED = "keystore_not_initialized";
 
     /**
+     * Emitted if any of the certificates in the keystore fail to load.
+     */
+    public static final String CERTIFICATE_LOAD_FAILURE = "certificate_load_failure";
+
+    /**
      * Emitted when the Protection Params provided to the KeyStore are invalid or insufficient.
+     * This error will be emitted if the underlying key material has been cleared or removed from
+     * the keystore.
      */
     public static final String INVALID_PROTECTION_PARAMS = "protection_params_invalid";
+
+    /**
+     * Invalid key: cannot be used due to invalid encoding, wrong length, uninitialized, etc.
+     */
+    public static final String INVALID_KEY = "invalid_key";
+
+    /**
+     * Private key material cannot be loaded for use.
+     */
+    public static final String INVALID_KEY_MISSING = INVALID_KEY + "_private_key_missing";
 
     /**
      * Emitted when the target certificate's thumbprint cannot be computed due to lack of support for
      * SHA-256.
      */
     public static final String THUMBPRINT_COMPUTATION_FAILURE = "failed_to_compute_thumbprint_with_sha256";
+
+    /**
+     * Emitted when the requested export format of our public key is unknown or unsupported.
+     */
+    public static final String UNKNOWN_EXPORT_FORMAT = "unknown_public_key_export_format";
 
     /**
      * Emitted when the Android subsystem emits errors thrown while constructing new JSON objects.
@@ -192,9 +219,14 @@ public class ClientException extends BaseException {
     public static final String INTERRUPTED_OPERATION = "operation_interrupted";
 
     /**
+     * Generic signing failure.
+     */
+    public static final String SIGNING_FAILURE = "failed_to_sign";
+
+    /**
      * Emitted when an error is encountered during signing.
      */
-    public static final String JWT_SIGNING_FAILURE = "failed_to_sign_jwt";
+    public static final String JWT_SIGNING_FAILURE = SIGNING_FAILURE + "_jwt";
 
     /**
      * Emitted if the STS returns an unexpected/incorrect token_type.
@@ -203,6 +235,35 @@ public class ClientException extends BaseException {
      */
     public static final String AUTH_SCHEME_MISMATCH = "auth_scheme_mismatch";
 
+    /**
+     * Bound service is unavailable or not supported.
+     */
+    public static final String BOUND_SERVICE_UNAVAILABLE_OR_NOT_SUPPORTED = "bound_service_unavaliable_or_not_supported";
+
+    /**
+     * The returned bundle does not contain the expected data.
+     */
+    public static final String INVALID_BROKER_BUNDLE = "invalid_broker_bundle";
+
+    /**
+     * An account manager operation failed.
+     */
+    public static final String ACCOUNT_MANAGER_OPERATION_ERROR = "account_manager_operation_error";
+
+    /**
+     * An expected parameter is missing.
+     */
+    public static final String MISSING_PARAMETER = "missing_parameter";
+
+    /**
+     * A required account cannot be found.
+     */
+    public static final String ACCOUNT_NOT_FOUND = "account_not_found";
+
+    /**
+     * An access to perform a given operation is denied.
+     */
+    public static final String ACCESS_DENIED = "access_denied";
 
     /**
      * Constructor of ClientException.

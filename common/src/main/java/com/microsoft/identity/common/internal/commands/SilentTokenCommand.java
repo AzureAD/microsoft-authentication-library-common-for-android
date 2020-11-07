@@ -26,6 +26,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
@@ -45,14 +46,14 @@ public class SilentTokenCommand extends TokenCommand {
 
     public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
                               @NonNull BaseController controller,
-                              @NonNull CommandCallback callback,
+                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                               @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
     public SilentTokenCommand(@NonNull SilentTokenCommandParameters parameters,
                               @NonNull List<BaseController> controllers,
-                              @NonNull CommandCallback callback,
+                              @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                               @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }

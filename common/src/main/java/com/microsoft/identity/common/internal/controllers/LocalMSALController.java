@@ -26,6 +26,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -69,9 +73,6 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
-
 import lombok.EqualsAndHashCode;
 
 import static com.microsoft.identity.common.adal.internal.net.HttpWebRequest.throwIfNetworkNotAvailable;
@@ -81,7 +82,10 @@ public class LocalMSALController extends BaseController {
 
     private static final String TAG = LocalMSALController.class.getSimpleName();
 
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationStrategy mAuthorizationStrategy = null;
+
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
 
     @Override
@@ -140,12 +144,14 @@ public class LocalMSALController extends BaseController {
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
         //1) Get oAuth2Strategy for Authority Type
+        @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2Strategy oAuth2Strategy = parametersWithScopes
                 .getAuthority()
                 .createOAuth2Strategy(strategyParameters);
 
 
         //2) Request authorization interactively
+        @SuppressWarnings(WarningType.rawtype_warning)
         final AuthorizationResult result = performAuthorizationRequest(
                 oAuth2Strategy,
                 parametersWithScopes.getAndroidApplicationContext(),
@@ -202,6 +208,8 @@ public class LocalMSALController extends BaseController {
         return acquireTokenResult;
     }
 
+    // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
+    @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationResult performAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                             @NonNull final Context context,
                                                             @NonNull final InteractiveTokenCommandParameters parameters)
@@ -215,6 +223,8 @@ public class LocalMSALController extends BaseController {
                 );
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
+        // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
+        @SuppressWarnings(WarningType.unchecked_warning)
         final Future<AuthorizationResult> future = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
@@ -279,6 +289,7 @@ public class LocalMSALController extends BaseController {
                 .scopes(mergedScopes)
                 .build();
 
+        @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2TokenCache tokenCache = parametersWithScopes.getOAuth2TokenCache();
 
         final AccountRecord targetAccount = getCachedAccountRecord(parametersWithScopes);
@@ -288,8 +299,11 @@ public class LocalMSALController extends BaseController {
         final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
+        @SuppressWarnings(WarningType.rawtype_warning)
         final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
+        // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
+        @SuppressWarnings(WarningType.unchecked_warning)
         final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
                 parametersWithScopes.getClientId(),
                 TextUtils.join(" ", parametersWithScopes.getScopes()),
@@ -395,7 +409,7 @@ public class LocalMSALController extends BaseController {
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
 
-        final List<ICacheRecord> accountsInCache =
+        @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()
                         .getAccountsWithAggregatedAccountData(
@@ -467,6 +481,8 @@ public class LocalMSALController extends BaseController {
         return removeAccount(parameters);
     }
 
+    // Suppressing rawtype warnings due to the generic types AuthorizationResult and OAuth2Strategy
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
@@ -527,8 +543,7 @@ public class LocalMSALController extends BaseController {
 
             validateServiceResult(authorizationResult);
 
-        }
-        catch (Exception error){
+        } catch (Exception error) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(error)
@@ -554,7 +569,7 @@ public class LocalMSALController extends BaseController {
 
     @Override
     public AcquireTokenResult acquireDeviceCodeFlowToken(
-            final AuthorizationResult authorizationResult,
+            @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult,
             final DeviceCodeFlowCommandParameters parameters)
             throws ServiceException, ClientException, IOException {
 
@@ -588,11 +603,14 @@ public class LocalMSALController extends BaseController {
             final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
             strategyParameters.setContext(parameters.getAndroidApplicationContext());
 
+            @SuppressWarnings(WarningType.rawtype_warning)
             final OAuth2Strategy oAuth2Strategy = parameters
                     .getAuthority()
                     .createOAuth2Strategy(strategyParameters);
 
             // Create token request outside of loop so it isn't re-created after every loop
+            // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and MicrosoftStsAuthorizationResponse to GenericAuthorizationResponse in the arguments of call to createTokenRequest method
+            @SuppressWarnings(WarningType.unchecked_warning)
             final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
                     mAuthorizationRequest,
                     authorizationResponse,
@@ -614,7 +632,11 @@ public class LocalMSALController extends BaseController {
                 errorCode = ""; // Reset error code
 
                 // Execute Token Request
-                tokenResult = oAuth2Strategy.requestToken(tokenRequest);
+                // Suppressing unchecked warnings due to casting of MicrosoftStsTokenRequest to GenericTokenRequest in the arguments of call to requestToken method
+                @SuppressWarnings(WarningType.unchecked_warning)
+                TokenResult tokenResultFromRequestToken = oAuth2Strategy.requestToken(tokenRequest);
+
+                tokenResult = tokenResultFromRequestToken;
 
                 // Fetch error if the request failed
                 if (tokenResult.getErrorResponse() != null) {
@@ -649,8 +671,7 @@ public class LocalMSALController extends BaseController {
                             false
                     )
             );
-        }
-        catch (Exception error){
+        } catch (Exception error) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(error)
@@ -673,6 +694,7 @@ public class LocalMSALController extends BaseController {
 
     /**
      * Returns true if the given error shows authorization is pending.
+     *
      * @param errorCode error from response
      * @return true or false if error is pending
      */
@@ -683,6 +705,7 @@ public class LocalMSALController extends BaseController {
     /**
      * Helper method to check if a result object is valid (was a success). If not, an exception will be generated and thrown.
      * This method is called in both parts of the DCF protocol.
+     *
      * @param result result object to be checked
      * @throws ServiceException MsalServiceException object reflecting error code returned by the result
      */

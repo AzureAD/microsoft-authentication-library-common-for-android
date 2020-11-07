@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 
@@ -41,14 +42,14 @@ public class RemoveAccountCommand extends BaseCommand<Boolean> {
 
     public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
                                 @NonNull BaseController controller,
-                                @NonNull CommandCallback callback,
+                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                 @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
     public RemoveAccountCommand(@NonNull RemoveAccountCommandParameters parameters,
                                 @NonNull List<BaseController> controllers,
-                                @NonNull CommandCallback callback,
+                                @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                 @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }

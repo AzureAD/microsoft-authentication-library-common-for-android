@@ -1,5 +1,3 @@
-package com.microsoft.identity.common.internal.broker;
-
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -22,31 +20,43 @@ package com.microsoft.identity.common.internal.broker;
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.platform;
 
-import android.content.ComponentName;
-import android.os.IBinder;
+/**
+ * Information about the backing of an underlying keystore.
+ */
+public enum SecureHardwareState {
 
-import com.microsoft.aad.adal.IBrokerAccountService;
-import com.microsoft.identity.common.internal.logging.Logger;
+    /**
+     * Returned if the underlying private key resides inside secure hardware (e.g., Trusted
+     * Execution Environment (TEE) or Secure Element (SE)) and its hardware backing has been
+     * attested.
+     *
+     * @see <a href="https://developer.android.com/training/articles/security-key-attestation">Security Key Attestation</a>
+     */
+    TRUE_ATTESTED,
 
-public class BrokerAccountServiceConnection implements android.content.ServiceConnection {
-    private static final String TAG = MicrosoftAuthServiceConnection.class.getSimpleName();
-    private IBrokerAccountService mBrokerAccountService;
-    private BrokerAccountServiceFuture mBrokerAccountServiceFuture;
+    /**
+     * Returned if the underlying private key resides inside secure hardware (e.g., Trusted
+     * Execution Environment (TEE) or Secure Element (SE)). No mechanism of attestation is
+     * provided or specified.
+     */
+    TRUE_UNATTESTED,
 
-    public BrokerAccountServiceConnection(BrokerAccountServiceFuture future) {
-        mBrokerAccountServiceFuture = future;
-    }
+    /**
+     * The the underlying private key is not inside secure hardware.
+     */
+    FALSE,
 
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        Logger.verbose(TAG, "BrokerAccountService is connected.");
-        mBrokerAccountService = IBrokerAccountService.Stub.asInterface(service);
-        mBrokerAccountServiceFuture.setBrokerAccountService(mBrokerAccountService);
-    }
+    /**
+     * It is unknown where the underlying key resides, due to lack of API support for
+     * determination.
+     */
+    UNKNOWN_DOWNLEVEL,
 
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        Logger.verbose(TAG, "BrokerAccountService is disconnected.");
-    }
+    /**
+     * It is unknown where the underlying key resides, due to an error during keystore
+     * interrogation.
+     */
+    UNKNOWN_QUERY_ERROR
 }

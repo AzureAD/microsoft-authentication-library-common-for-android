@@ -24,11 +24,16 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import java.util.Date;
+
 /**
  * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
  * verification_uri, and message midway through the protocol. This is done through the
  * getUserCode() method shown below
  */
 public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri, @NonNull String userCode, @NonNull String message);
+    void onUserCodeReceived(@NonNull String vUri,
+                            @NonNull String userCode,
+                            @NonNull String message,
+                            @NonNull final Date sessionExpirationDate);
 }

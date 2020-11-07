@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.internal.util.ProcessUtil;
 
 import java.util.HashMap;
 
@@ -45,7 +46,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-public final class AuthorizationActivity extends DualScreenActivity {
+public class AuthorizationActivity extends DualScreenActivity {
 
     private AuthorizationFragment mFragment;
 
@@ -57,7 +58,13 @@ public final class AuthorizationActivity extends DualScreenActivity {
                                            final AuthorizationAgent authorizationAgent,
                                            final boolean webViewZoomEnabled,
                                            final boolean webViewZoomControlsEnabled) {
-        final Intent intent = new Intent(context, AuthorizationActivity.class);
+        Intent intent;
+        if (ProcessUtil.isBrokerProcess(context)) {
+            intent = new Intent(context, BrokerAuthorizationActivity.class);
+        } else {
+            intent = new Intent(context, AuthorizationActivity.class);
+        }
+
         intent.putExtra(AUTH_INTENT, authIntent);
         intent.putExtra(REQUEST_URL, requestUrl);
         intent.putExtra(REDIRECT_URI, redirectUri);
@@ -69,9 +76,9 @@ public final class AuthorizationActivity extends DualScreenActivity {
         return intent;
     }
 
-    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent){
+    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
         AuthorizationFragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent)intent.getSerializableExtra(AUTHORIZATION_AGENT);
+        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
         Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
 
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
@@ -83,7 +90,7 @@ public final class AuthorizationActivity extends DualScreenActivity {
         fragment.setInstanceState(intent.getExtras());
         return fragment;
     }
-    
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +100,7 @@ public final class AuthorizationActivity extends DualScreenActivity {
 
     @Override
     public void onBackPressed() {
-        if (!mFragment.onBackPressed()){
+        if (!mFragment.onBackPressed()) {
             super.onBackPressed();
         }
     }

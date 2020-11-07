@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BuildConfig;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
@@ -56,7 +57,11 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
+
+    // Suppressing rawtype warnings due to the generic type ITelemetryObserver
+    @SuppressWarnings(WarningType.rawtype_warning)
     private static Queue<ITelemetryObserver> mObservers;
+
     private Queue<Map<String, String>> mTelemetryRawDataMap;
     private TelemetryConfiguration mDefaultConfiguration;
     private TelemetryContext mTelemetryContext;
@@ -114,7 +119,7 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver
      */
-    public void addObserver(final ITelemetryObserver observer) {
+    public void addObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
         if (null == observer) {
             throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
@@ -141,6 +146,8 @@ public class Telemetry {
             return;
         }
 
+        // Suppressing rawtype warnings due to the generic type ITelemetryObserver
+        @SuppressWarnings(WarningType.rawtype_warning)
         final Iterator<ITelemetryObserver> observerIterator = mObservers.iterator();
 
         while (observerIterator.hasNext()) {
@@ -156,7 +163,7 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver object.
      */
-    public void removeObserver(final ITelemetryObserver observer) {
+    public void removeObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
         if (null == observer || null == mObservers) {
             Logger.warn(
                     TAG,
@@ -182,12 +189,15 @@ public class Telemetry {
      *
      * @return List of ITelemetryObserver object.
      */
+    // Suppressing rawtype warnings due to the generic type ITelemetryObserver
+    // Suppressing unchecked warnings as generic type not provided for CopyOnWriteArrayList and Collections
+    @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
     public List<ITelemetryObserver> getObservers() {
-        List observersList;
+        List<ITelemetryObserver> observersList;
         if (mObservers != null) {
-            observersList = new CopyOnWriteArrayList(mObservers);
+            observersList = new CopyOnWriteArrayList<ITelemetryObserver>(mObservers);
         } else {
-            observersList = new CopyOnWriteArrayList();
+            observersList = new CopyOnWriteArrayList<ITelemetryObserver>();
         }
         return Collections.unmodifiableList(observersList);
     }
@@ -252,7 +262,7 @@ public class Telemetry {
         //Add the telemetry context to the telemetry data
         finalRawMap.add(applyPiiOiiRule(mTelemetryContext.getProperties()));
 
-        for (ITelemetryObserver observer : mObservers) {
+        for (@SuppressWarnings(WarningType.rawtype_warning) ITelemetryObserver observer : mObservers) {
             if (observer instanceof ITelemetryAggregatedObserver) {
                 new TelemetryAggregationAdapter((ITelemetryAggregatedObserver) observer).process(finalRawMap);
             } else if (observer instanceof ITelemetryDefaultObserver) {
