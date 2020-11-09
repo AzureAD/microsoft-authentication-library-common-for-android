@@ -46,7 +46,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-public final class AuthorizationActivity extends DualScreenActivity {
+public class AuthorizationActivity extends DualScreenActivity {
 
     private AuthorizationFragment mFragment;
 
@@ -58,15 +58,11 @@ public final class AuthorizationActivity extends DualScreenActivity {
                                            final AuthorizationAgent authorizationAgent,
                                            final boolean webViewZoomEnabled,
                                            final boolean webViewZoomControlsEnabled) {
-        final Intent intent = new Intent(context, AuthorizationActivity.class);
-
-        // For broker request we need to clear all activities in the task and bring Authorization Activity to the
-        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
-        // Authenticator's or Company Portal's active activity which would be confusing to the user.
+        Intent intent;
         if (ProcessUtil.isBrokerProcess(context)) {
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent = new Intent(context, BrokerAuthorizationActivity.class);
         } else {
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            intent = new Intent(context, AuthorizationActivity.class);
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);
