@@ -35,7 +35,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git commit -m "incremented latest patch version"
+        git commit -m "Increment latest patch version"
         git push
   build:
     # Make this workflow sequential by indicating what this job needs in order to run
