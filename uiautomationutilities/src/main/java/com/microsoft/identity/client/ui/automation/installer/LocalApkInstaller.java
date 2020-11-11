@@ -51,7 +51,6 @@ public class LocalApkInstaller implements IAppInstaller {
     @Override
     public void installApp(@NonNull final String apkFileName) {
         final String fullPath = LOCAL_APK_PATH_PREFIX + apkFileName;
-        final UiDevice device = UiDevice.getInstance(getInstrumentation());
         // using -t flag to also allow installation of test only packages
         AdbShellUtils.installPackage(fullPath, "-t");
     }

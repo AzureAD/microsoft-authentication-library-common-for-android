@@ -79,5 +79,8 @@ public interface IApp {
      */
     boolean isInstalled();
 
-    void copyApk();
+    /**
+     * Copy Installed APK to supplied destination.
+     */
+    void copyApk(String destApkFileName);
 }

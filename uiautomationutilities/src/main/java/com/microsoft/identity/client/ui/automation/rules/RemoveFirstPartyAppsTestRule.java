@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import android.util.Log;
+
 import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.app.TeamsApp;
 import com.microsoft.identity.client.ui.automation.app.WordApp;
@@ -36,11 +38,14 @@ import org.junit.runners.model.Statement;
  */
 public class RemoveFirstPartyAppsTestRule implements TestRule {
 
+    private final static String TAG = RemoveFirstPartyAppsTestRule.class.getSimpleName();
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Log.i(TAG, "Applying rule....");
                 new OutlookApp().uninstall();
                 new TeamsApp().uninstall();
                 new WordApp().uninstall();

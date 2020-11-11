@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.internal.testutils.labutils.LabUserHelper;
@@ -36,6 +38,8 @@ import org.junit.runners.model.Statement;
  * A Test Rule to load lab user for the provided query prior to executing the test case.
  */
 public class LoadLabUserTestRule implements TestRule {
+
+    private final static String TAG = LoadLabUserTestRule.class.getSimpleName();
 
     public static final int TEMP_USER_WAIT_TIME = 15000;
 
@@ -57,6 +61,7 @@ public class LoadLabUserTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Log.i(TAG, "Applying rule....");
                 if (query != null) {
                     upn = LabUserHelper.loadUserForTest(query);
                 } else if (tempUserType != null) {

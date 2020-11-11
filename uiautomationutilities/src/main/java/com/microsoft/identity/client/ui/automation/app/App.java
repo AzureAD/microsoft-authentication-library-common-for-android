@@ -137,13 +137,7 @@ public abstract class App implements IApp {
     }
 
     @Override
-    public void copyApk() {
-        if (!TextUtils.isEmpty(localApkFileName)) {
-            final String destApkFileName = LocalApkInstaller.LOCAL_APK_PATH_PREFIX + localApkFileName;
-            AdbShellUtils.copyApkForPackage(packageName, destApkFileName);
-        } else {
-            throw new IllegalArgumentException("Local Apk File Name was empty. Unable to decide how" +
-                    "to copy APK.");
-        }
+    public void copyApk(@NonNull final String destApkFileName) {
+        AdbShellUtils.copyApkForPackage(packageName, destApkFileName);
     }
 }

@@ -22,8 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import org.junit.rules.TestRule;
@@ -34,6 +37,8 @@ import org.junit.runners.model.Statement;
  * A Test Rule to install the provided broker on the device prior to executing the test case.
  */
 public class InstallBrokerTestRule implements TestRule {
+
+    private final static String TAG = InstallBrokerTestRule.class.getSimpleName();
 
     private final ITestBroker broker;
 
@@ -46,9 +51,8 @@ public class InstallBrokerTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                if (broker != null) {
-                    broker.install();
-                }
+                Log.i(TAG, "Installing broker: " + ((App) broker).getAppName());
+                broker.install();
                 base.evaluate();
             }
         };
