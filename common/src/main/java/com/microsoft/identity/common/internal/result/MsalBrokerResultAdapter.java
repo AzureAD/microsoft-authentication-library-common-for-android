@@ -632,6 +632,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     /**
      * Deserializes the {@link GenerateShrResult} object from the broker response {@link Bundle}.
+     *
      * @param resultBundle The result Bundle produced by the broker.
      * @return The deserialized GenerateShrResult object containing the result (or corresponding
      * error).
