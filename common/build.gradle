@@ -1,11 +1,6 @@
-plugins {
-    id "org.sonarqube" version "2.6.2"
-}
-
 apply plugin: 'com.android.library'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
 
@@ -13,7 +8,6 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     def sliceParameter = "" // will be blank unless specified by developer
     def dcParameter = "" // will be blank unless specified by developer
@@ -195,6 +189,15 @@ task pmd(type: Pmd) {
 
 // For publishing to the remote maven repo.
 afterEvaluate {
+    // Gradle 6.1.1 and Android Gradle Plugin 4.0.1 doesn't rename the file (see 'outputFileName' above)
+    // Adding this work around to have the file properly renamed.
+    def buildFile = file("$buildDir/outputs/aar/${archivesBaseName}-release.aar")
+    tasks.named("assembleRelease").configure {
+        doLast {
+            buildFile.renameTo("$buildDir/outputs/aar/${archivesBaseName}-${version}.aar")
+        }
+    }
+
     publishing {
         publications {
             common(MavenPublication) {
@@ -257,7 +260,6 @@ afterEvaluate {
 
                 artifact(sourcesJar)
                 artifact(releaseJavadocJar)
-                artifact("$buildDir/outputs/aar/common-${project.version}.aar")
 
             }
         }

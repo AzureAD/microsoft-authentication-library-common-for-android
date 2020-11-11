@@ -32,16 +32,16 @@ import androidx.annotation.Nullable;
  */
 public class BrokerProtocolVersionUtil {
 
-    public static final String BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
+    public static final String MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION = "5.0";
 
     public static boolean canCompressBrokerPayloads(@Nullable String negotiatedBrokerProtocol) {
-        if (TextUtils.isEmpty(negotiatedBrokerProtocol)) {
+        if (StringUtil.isEmpty(negotiatedBrokerProtocol)) {
             return false;
         }
 
-        return StringUtil.compareSemanticVersion(
+        return StringUtil.isFirstVersionLargerOrEqual(
                 negotiatedBrokerProtocol,
-                BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION) >= 0;
+                MSAL_TO_BROKER_PROTOCOL_COMPRESSION_CHANGES_MINIMUM_VERSION);
 
     }
 }
