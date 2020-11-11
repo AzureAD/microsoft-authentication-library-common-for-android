@@ -241,7 +241,6 @@ public class ExceptionAdapter {
     }
 
     public static BaseException baseExceptionFromException(final Exception exception) {
-
         Throwable e = exception;
         if (exception instanceof ExecutionException){
             e = exception.getCause();
