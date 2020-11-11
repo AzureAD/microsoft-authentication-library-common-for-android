@@ -36,7 +36,6 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
@@ -590,10 +589,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     }
 
     /**
-     * Method to construct a request {@link Bundle} for broker generateShr
-     * @param parameters
-     * @param negotiatedBrokerProtocolVersion
-     * @return
+     * Method to construct a request {@link Bundle} for broker generateShr.
+     *
+     * @param parameters                      Input request params.
+     * @param negotiatedBrokerProtocolVersion The negotiated broker protocol version in use.
+     * @return The result Bundle from the Broker.
      */
     public Bundle getRequestBundleForGenerateShr(@NonNull final GenerateShrCommandParameters parameters,
                                                  @NonNull final String negotiatedBrokerProtocolVersion) {
@@ -605,7 +605,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 (PopAuthenticationSchemeInternal) AuthenticationSchemeFactory.createScheme(
                         parameters.getAndroidApplicationContext(),
                         (INameable) parameters.getPopParameters()
-        );
+                );
 
         final String popParamsJson = sRequestAdapterGsonInstance.toJson(
                 popParameters,
