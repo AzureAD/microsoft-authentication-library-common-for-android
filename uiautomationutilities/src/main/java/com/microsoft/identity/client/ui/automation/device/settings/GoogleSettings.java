@@ -203,19 +203,22 @@ public class GoogleSettings extends BaseSettings {
         }
     }
 
-    //obtaining date button in different devices.
-    UiObject changeDateButton()
-    {
-        if(android.os.Build.VERSION.SDK_INT == 28)
+    /**
+     * @return returns the button of date in the settings screen.
+     */
+    private UiObject changeDateButton() {
+        if (android.os.Build.VERSION.SDK_INT == 28)
             return UiAutomatorUtils.obtainUiObjectWithText("Set date");
 
         return UiAutomatorUtils.obtainEnabledUiObjectWithExactText("Date");
     }
 
-    //obtaining button in a scrollable in different devices.
-    UiObject obtainButtonInScrollable(String Text)
-    {
-        if(android.os.Build.VERSION.SDK_INT == 28)
+    /**
+     * @param Text Text for which we need to find button in the UI.
+     * @return returns the button of the matched text in the scrollable UI.
+     */
+    private UiObject obtainButtonInScrollable(final String Text) {
+        if (android.os.Build.VERSION.SDK_INT == 28)
             return UiAutomatorUtils.obtainChildInScrollable(
                     "com.android.settings:id/list",
                     Text
@@ -227,10 +230,12 @@ public class GoogleSettings extends BaseSettings {
         );
     }
 
-    //obtaining disable admin button in different devices.
-    UiObject disableAdminButton(final DeviceAdmin deviceAdmin)
-    {
-        if(android.os.Build.VERSION.SDK_INT == 28)
+    /**
+     * @param deviceAdmin deviceAdmin.getAdminName() for which we need to find button in the scrollable UI.
+     * @return the button of the device admin name in the UI.
+     */
+    private UiObject disableAdminButton(final DeviceAdmin deviceAdmin) {
+        if (android.os.Build.VERSION.SDK_INT == 28)
             return UiAutomatorUtils.obtainChildInScrollable(
                     "android:id/list",
                     deviceAdmin.getAdminName()
