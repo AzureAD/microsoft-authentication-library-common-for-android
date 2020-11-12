@@ -116,6 +116,13 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
+        performSharedDeviceRegistration(username, password, true);
+    }
+
+    @Override
+    public void performSharedDeviceRegistration(@NonNull final String username,
+                                                @NonNull final String password,
+                                                @NonNull final boolean expectedSuccess) {
         performDeviceRegistrationHelper(
                 username,
                 password,

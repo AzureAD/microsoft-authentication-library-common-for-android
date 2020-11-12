@@ -91,6 +91,13 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
+        performSharedDeviceRegistration(username, password, true);
+    }
+
+    @Override
+    public void performSharedDeviceRegistration(@NonNull final String username,
+                                                @NonNull final String password,
+                                                @NonNull final boolean expectedSuccess) {
         performDeviceRegistrationHelper(username);
 
         // Click the join shared device btn
@@ -103,7 +110,6 @@ public class BrokerHost extends AbstractTestBroker {
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-
 
         final PromptHandlerParameters promptHandlerParameters = PromptHandlerParameters.builder()
                 .prompt(PromptParameter.LOGIN)
@@ -119,8 +125,10 @@ public class BrokerHost extends AbstractTestBroker {
 
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
-
-        postJoinConfirmHelper(username);
+        if (expectedSuccess)
+            postJoinConfirmHelper(username);
+        else
+            postJoinFailure();
     }
 
     private void performDeviceRegistrationHelper(@NonNull final String username) {
@@ -162,6 +170,29 @@ public class BrokerHost extends AbstractTestBroker {
             throw new AssertionError(e);
         }
     }
+
+    private void postJoinFailure() {
+        // Look for join op completion dialog
+        final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "android:id/message"
+        );
+
+        Assert.assertTrue(joinFinishDialog.exists());
+
+        try {
+            // Obtain the text from the dialog box
+            final String joinFinishDialogText = joinFinishDialog.getText();
+            final String joinStatus = joinFinishDialogText.split(":")[1];
+            // The status should be successful
+            Assert.assertTrue("FAILED".equalsIgnoreCase(joinStatus));
+
+            // dismiss the dialog
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
 
     @Nullable
     @Override
