@@ -3,14 +3,17 @@ name: dev_updated
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the dev branch
-#on:
-#  push:
-#    branches: [ dev ]
-
 on:
-  watch:
-    types: [started]
-    branches: [dev]
+  push:
+    branches: [ dev ]
+    paths-ignore:
+    - 'common/versioning/version.properties'
+
+#For Testing... runs when project is starred
+#on:
+#  watch:
+#    types: [started]
+#    branches: [dev]
 
 # Jobs run in parallel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
@@ -32,7 +35,7 @@ jobs:
         git config user.name github-actions
         git config user.email github-actions@github.com
         git add .
-        git commit -m "incremented latest patch version"
+        git commit -m "Increment latest patch version"
         git push
   build:
     # Make this workflow sequential by indicating what this job needs in order to run
