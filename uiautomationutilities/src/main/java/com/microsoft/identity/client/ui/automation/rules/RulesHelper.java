@@ -1,4 +1,28 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
+
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
@@ -8,11 +32,21 @@ import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import org.junit.rules.RuleChain;
 
+/**
+ * A helper class to instantiate and return a {@link RuleChain} comprised of the rules required for
+ * a given scenario.
+ */
 public class RulesHelper {
 
     private final static String TAG = RulesHelper.class.getSimpleName();
 
-    public static RuleChain getPrimaryRules(final ITestBroker broker) {
+    /**
+     * Get a RuleChain object containing the necessary rules.
+     *
+     * @param broker the broker that may be used during this test
+     * @return a {@link RuleChain} object
+     */
+    public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker) {
         RuleChain ruleChain = RuleChain.outerRule(new RetryTestRule());
 
         System.out.println(TAG + ": Adding UiAutomatorTestRule");
@@ -40,7 +74,7 @@ public class RulesHelper {
             ruleChain = ruleChain.around(new InstallBrokerTestRule(broker));
 
             System.out.println(TAG + ": Adding PowerLiftIncidentRule");
-            ruleChain =  ruleChain.around(new PowerLiftIncidentRule(broker));
+            ruleChain = ruleChain.around(new PowerLiftIncidentRule(broker));
 
             System.out.println(TAG + ": Adding DeviceEnrollmentFailureRecoveryRule");
             ruleChain = ruleChain.around(new DeviceEnrollmentFailureRecoveryRule());
