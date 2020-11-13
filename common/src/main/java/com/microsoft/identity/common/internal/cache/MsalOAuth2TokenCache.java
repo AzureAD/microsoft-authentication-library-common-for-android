@@ -322,10 +322,9 @@ public class MsalOAuth2TokenCache
         result.mAccount(accountToSave);
         result.mAccessToken(accessTokenToSave);
         result.mRefreshToken(refreshTokenToSave);
-        final CacheRecord record = result.build();
-        setToCacheRecord(record, idTokenToSave);
+        setToCacheRecord(result, idTokenToSave);
 
-        return record;
+        return result.build();
     }
 
     /**
@@ -476,12 +475,11 @@ public class MsalOAuth2TokenCache
         final CacheRecord.CacheRecordBuilder associatedRecord = CacheRecord.builder();
         associatedRecord.mAccount(acct);
 
-        final CacheRecord record = associatedRecord.build();
         for (final IdTokenRecord idTokenRecord : acctIdTokens) {
-            setToCacheRecord(record, idTokenRecord);
+            setToCacheRecord(associatedRecord, idTokenRecord);
         }
 
-        return record;
+        return associatedRecord.build();
     }
 
     /**
@@ -1044,11 +1042,10 @@ public class MsalOAuth2TokenCache
 
             result = CacheRecord.builder();
             result.mAccount(acct);
-            CacheRecord record = result.build();
             for (final IdTokenRecord idTokenRecord : acctIdTokens) {
-                setToCacheRecord(record, idTokenRecord);
+                setToCacheRecord(result, idTokenRecord);
             }
-            return record;
+            return result.build();
         }
 
         return null;
@@ -1057,11 +1054,10 @@ public class MsalOAuth2TokenCache
     /**
      * Given a CacheRecord and IdTokenRecord, set the IdToken on the cache record in the field
      * corresponding to the IdToken's version.
-     *
-     * @param target        The CacheRecord into which said IdToken should be placed.
+     *  @param target        The CacheRecord into which said IdToken should be placed.
      * @param idTokenRecord The IdToken to associate.
      */
-    private void setToCacheRecord(@NonNull final CacheRecord target,
+    private void setToCacheRecord(@NonNull final CacheRecord.CacheRecordBuilder target,
                                   @NonNull final IdTokenRecord idTokenRecord) {
         final String methodName = ":setToCacheRecord";
 
@@ -1071,9 +1067,9 @@ public class MsalOAuth2TokenCache
 
         if (null != type) {
             if (CredentialType.V1IdToken == type) {
-                target.setV1IdToken(idTokenRecord);
+                target.mV1IdToken(idTokenRecord);
             } else if (CredentialType.IdToken == type) {
-                target.setIdToken(idTokenRecord);
+                target.mIdToken(idTokenRecord);
             } else {
                 Logger.warn(
                         TAG + methodName,
@@ -1216,13 +1212,12 @@ public class MsalOAuth2TokenCache
             // Construct the cache record....
             final CacheRecord.CacheRecordBuilder cacheRecordBuilder = CacheRecord.builder();
             cacheRecordBuilder.mAccount(accountRecord);
-            final CacheRecord cacheRecord = cacheRecordBuilder.build();
             // Set the IdTokens...
             for (IdTokenRecord idTokenRecord : idTokensForAccount) {
-                setToCacheRecord(cacheRecord, idTokenRecord);
+                setToCacheRecord(cacheRecordBuilder, idTokenRecord);
             }
 
-            result.add(cacheRecord);
+            result.add(cacheRecordBuilder.build());
 
         }
 
