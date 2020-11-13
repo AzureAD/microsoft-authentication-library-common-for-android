@@ -29,9 +29,22 @@ public class PowerLiftIncidentRule implements TestRule {
                 Log.i(TAG, "Applying rule....");
                 try {
                     base.evaluate();
-                } catch (final Throwable throwable) {
-                    powerLiftIntegratedApp.createPowerLiftIncident();
-                    throw throwable;
+                } catch (final Throwable originalThrowable) {
+                    try {
+                        Log.e(
+                                TAG,
+                                "Encountered error during test....creating PowerLift incident.",
+                                originalThrowable
+                        );
+                        powerLiftIntegratedApp.createPowerLiftIncident();
+                    } catch (final Throwable powerLiftError) {
+                        Log.e(
+                                TAG,
+                                "Oops...something went wrong...unable to create PowerLift incident.",
+                                powerLiftError
+                        );
+                    }
+                    throw originalThrowable;
                 }
             }
         };
