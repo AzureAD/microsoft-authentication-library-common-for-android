@@ -43,7 +43,7 @@ public class CacheRecord implements ICacheRecord {
     private final IdTokenRecord mIdToken;
     private final IdTokenRecord mV1IdToken;
 
-    public class CacheRecordBuilder {
+    public static class CacheRecordBuilder {
         public CacheRecordBuilder mAccount(final @NonNull AccountRecord mAccount) {
             if (mAccount == null) {
                 throw new NullPointerException("The account record for a CacheRecord may not be null");
