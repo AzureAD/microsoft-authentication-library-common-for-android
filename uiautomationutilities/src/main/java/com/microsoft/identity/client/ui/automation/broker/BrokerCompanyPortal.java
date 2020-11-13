@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
@@ -55,7 +56,7 @@ import static org.junit.Assert.fail;
  * A model for interacting with the Company Portal Broker App during UI Test.
  */
 @Getter
-public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent {
+public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBroker, IMdmAgent, IPowerLiftIntegratedApp {
 
     public static final String TAG = BrokerCompanyPortal.class.getSimpleName();
 
