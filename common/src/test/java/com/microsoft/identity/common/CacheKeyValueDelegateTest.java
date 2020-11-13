@@ -66,12 +66,17 @@ public class CacheKeyValueDelegateTest {
     private static final String FIRST_NAME = "Jane";
     private static final String FAMILY_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
+    public static final String ESCAPE_SEQ_CHARS = "\r\f\n\t";
 
     private ICacheKeyValueDelegate mDelegate;
 
     @Before
     public void setUp() {
         mDelegate = new CacheKeyValueDelegate();
+    }
+
+    private static String wrapInEscapeSequenceChars(final String inputString) {
+        return ESCAPE_SEQ_CHARS + inputString + ESCAPE_SEQ_CHARS;
     }
 
     // AccessTokens
@@ -98,12 +103,12 @@ public class CacheKeyValueDelegateTest {
     @Test
     public void accessTokenCreateCacheKeyCompleteWithEscapeSequences() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
-        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
-        accessToken.setEnvironment("\r\f\n\t" + ENVIRONMENT + "\r\f\n\t");
-        accessToken.setCredentialType(CredentialType.AccessToken.name());
-        accessToken.setClientId(CLIENT_ID);
-        accessToken.setRealm(REALM);
-        accessToken.setTarget(TARGET);
+        accessToken.setHomeAccountId(wrapInEscapeSequenceChars(HOME_ACCOUNT_ID));
+        accessToken.setEnvironment(wrapInEscapeSequenceChars(ENVIRONMENT));
+        accessToken.setCredentialType(wrapInEscapeSequenceChars(CredentialType.AccessToken.name()));
+        accessToken.setClientId(wrapInEscapeSequenceChars(CLIENT_ID));
+        accessToken.setRealm(wrapInEscapeSequenceChars(REALM));
+        accessToken.setTarget(wrapInEscapeSequenceChars(TARGET));
 
         final String expectedKey = "" // just for formatting
                 + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
