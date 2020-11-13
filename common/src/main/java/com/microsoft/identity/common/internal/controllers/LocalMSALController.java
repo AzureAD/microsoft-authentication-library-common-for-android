@@ -37,14 +37,17 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
@@ -59,12 +62,15 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
+import com.microsoft.identity.common.internal.util.ClockSkewManager;
+import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.io.IOException;
@@ -144,15 +150,13 @@ public class LocalMSALController extends BaseController {
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
         //1) Get oAuth2Strategy for Authority Type
-        @SuppressWarnings(WarningType.rawtype_warning)
-        final OAuth2Strategy oAuth2Strategy = parametersWithScopes
+        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parametersWithScopes
                 .getAuthority()
                 .createOAuth2Strategy(strategyParameters);
 
 
         //2) Request authorization interactively
-        @SuppressWarnings(WarningType.rawtype_warning)
-        final AuthorizationResult result = performAuthorizationRequest(
+        @SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult result = performAuthorizationRequest(
                 oAuth2Strategy,
                 parametersWithScopes.getAndroidApplicationContext(),
                 parametersWithScopes
@@ -224,8 +228,7 @@ public class LocalMSALController extends BaseController {
         mAuthorizationRequest = getAuthorizationRequest(strategy, parameters);
 
         // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and AuthorizationStrategy to GenericAuthorizationStrategy in the arguments of call to requestAuthorization method
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final Future<AuthorizationResult> future = strategy.requestAuthorization(
+        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> future = strategy.requestAuthorization(
                 mAuthorizationRequest,
                 mAuthorizationStrategy
         );
@@ -289,8 +292,7 @@ public class LocalMSALController extends BaseController {
                 .scopes(mergedScopes)
                 .build();
 
-        @SuppressWarnings(WarningType.rawtype_warning)
-        final OAuth2TokenCache tokenCache = parametersWithScopes.getOAuth2TokenCache();
+        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2TokenCache tokenCache = parametersWithScopes.getOAuth2TokenCache();
 
         final AccountRecord targetAccount = getCachedAccountRecord(parametersWithScopes);
 
@@ -299,12 +301,10 @@ public class LocalMSALController extends BaseController {
         final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
 
-        @SuppressWarnings(WarningType.rawtype_warning)
-        final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
+        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
         // Suppressing unchecked warning of converting List<ICacheRecord> to List due to generic type not provided for tokenCache
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
+        @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> cacheRecords = tokenCache.loadWithAggregatedAccountData(
                 parametersWithScopes.getClientId(),
                 TextUtils.join(" ", parametersWithScopes.getScopes()),
                 targetAccount,
@@ -603,15 +603,13 @@ public class LocalMSALController extends BaseController {
             final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
             strategyParameters.setContext(parameters.getAndroidApplicationContext());
 
-            @SuppressWarnings(WarningType.rawtype_warning)
-            final OAuth2Strategy oAuth2Strategy = parameters
+            @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parameters
                     .getAuthority()
                     .createOAuth2Strategy(strategyParameters);
 
             // Create token request outside of loop so it isn't re-created after every loop
             // Suppressing unchecked warnings due to casting of AuthorizationRequest to GenericAuthorizationRequest and MicrosoftStsAuthorizationResponse to GenericAuthorizationResponse in the arguments of call to createTokenRequest method
-            @SuppressWarnings(WarningType.unchecked_warning)
-            final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
+            @SuppressWarnings(WarningType.unchecked_warning) final MicrosoftStsTokenRequest tokenRequest = (MicrosoftStsTokenRequest) oAuth2Strategy.createTokenRequest(
                     mAuthorizationRequest,
                     authorizationResponse,
                     parameters.getAuthenticationScheme()
@@ -690,6 +688,45 @@ public class LocalMSALController extends BaseController {
         );
 
         return acquireTokenResult;
+    }
+
+    @Override
+    public GenerateShrResult generateSignedHttpRequest(
+            @NonNull final GenerateShrCommandParameters parameters) throws Exception {
+        final Context context = parameters.getAndroidApplicationContext();
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
+        final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
+        final String clientId = parameters.getClientId();
+        final String homeAccountId = parameters.getHomeAccountId();
+        final IPoPAuthenticationSchemeParams popSchemeParams = parameters.getPopParameters();
+
+        final GenerateShrResult result;
+        if (userHasLocalAccountRecord(cache, clientId, homeAccountId)) {
+            // Perform the signing locally...
+            result = DevicePoPUtils.generateSignedHttpRequest(context, clockSkewManager, popSchemeParams);
+        } else {
+            // Populate the error on the result and return...
+            result = new GenerateShrResult();
+            result.setErrorCode(GenerateShrResult.Errors.NO_ACCOUNT_FOUND);
+            result.setErrorMessage("Account does not exist.");
+        }
+
+        return result;
+    }
+
+    /**
+     * Checks if the local cache contains an {@link AccountRecord} for the supplied input.
+     *
+     * @param cache         The cache to consult.
+     * @param clientId      The clientId of the app on behalf of whom we are querying the cache.
+     * @param homeAccountId The home_account_id of the targeted user.
+     * @return True, if an {@link AccountRecord} exists. False otherwise.
+     */
+    private boolean userHasLocalAccountRecord(@NonNull final OAuth2TokenCache cache,
+                                              @NonNull final String clientId,
+                                              @NonNull final String homeAccountId) {
+        // If we have an account for this user, then we will service this request locally
+        return null != cache.getAccountByHomeAccountId(null, clientId, homeAccountId);
     }
 
     /**
