@@ -231,7 +231,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             Assert.assertTrue(postLogSubmissionMsg.exists());
 
             // This will post the incident id in text logs
-            Log.i(TAG, postLogSubmissionMsg.getText());
+            Log.w(TAG, postLogSubmissionMsg.getText());
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
