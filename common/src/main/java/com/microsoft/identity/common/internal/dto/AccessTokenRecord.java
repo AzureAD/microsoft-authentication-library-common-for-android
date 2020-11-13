@@ -42,7 +42,7 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 public class AccessTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {

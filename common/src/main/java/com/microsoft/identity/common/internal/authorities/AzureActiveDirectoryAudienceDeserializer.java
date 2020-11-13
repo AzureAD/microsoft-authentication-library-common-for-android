@@ -29,8 +29,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import net.jcip.annotations.Immutable;
+
 import java.lang.reflect.Type;
 
+@Immutable
 public class AzureActiveDirectoryAudienceDeserializer implements JsonDeserializer<AzureActiveDirectoryAudience> {
 
     private static final String TAG = AzureActiveDirectoryAudienceDeserializer.class.getSimpleName();

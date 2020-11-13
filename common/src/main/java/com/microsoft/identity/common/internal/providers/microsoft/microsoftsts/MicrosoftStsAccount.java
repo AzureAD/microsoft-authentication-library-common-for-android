@@ -34,7 +34,7 @@ import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 public class MicrosoftStsAccount extends MicrosoftAccount {
 
     private static final String TAG = MicrosoftStsAccount.class.getSimpleName();

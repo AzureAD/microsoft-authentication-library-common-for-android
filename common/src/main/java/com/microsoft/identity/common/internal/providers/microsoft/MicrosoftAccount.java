@@ -45,7 +45,7 @@ import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 
-@EqualsAndHashCode
+@EqualsAndHashCode(callSuper = true)
 public abstract class MicrosoftAccount extends BaseAccount {
 
     public static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
