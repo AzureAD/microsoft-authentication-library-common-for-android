@@ -96,6 +96,26 @@ public class CacheKeyValueDelegateTest {
     }
 
     @Test
+    public void accessTokenCreateCacheKeyCompleteWithEscapeSequences() {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setEnvironment("\r\f\n\t" + ENVIRONMENT + "\r\f\n\t");
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setTarget(TARGET);
+
+        final String expectedKey = "" // just for formatting
+                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_ACCESS_TOKEN + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + REALM + CACHE_VALUE_SEPARATOR
+                + TARGET;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(accessToken));
+    }
+
+    @Test
     public void accessTokenCreateCacheKeyNoHomeAccountId() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setEnvironment(ENVIRONMENT);
