@@ -97,15 +97,15 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = homeAccountId.equalsIgnoreCase(account.getHomeAccountId());
+                matches = homeAccountId.equalsIgnoreCase(account.getHomeAccountId().trim());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
+                matches = matches && environment.equalsIgnoreCase(account.getEnvironment().trim());
             }
 
             if (mustMatchOnRealm) {
-                matches = matches && realm.equalsIgnoreCase(account.getRealm());
+                matches = matches && realm.equalsIgnoreCase(account.getRealm().trim());
             }
 
             if (matches) {
@@ -160,38 +160,38 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = homeAccountId.equalsIgnoreCase(credential.getHomeAccountId());
+                matches = homeAccountId.equalsIgnoreCase(credential.getHomeAccountId().trim());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
+                matches = matches && environment.equalsIgnoreCase(credential.getEnvironment().trim());
             }
 
             if (mustMatchOnCredentialType) {
-                matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
+                matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType().trim());
             }
 
             if (mustMatchOnClientId) {
-                matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
+                matches = matches && clientId.equalsIgnoreCase(credential.getClientId().trim());
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
+                matches = matches && realm.equalsIgnoreCase(accessToken.getRealm().trim());
             }
 
             if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
                 final IdTokenRecord idToken = (IdTokenRecord) credential;
-                matches = matches && realm.equalsIgnoreCase(idToken.getRealm());
+                matches = matches && realm.equalsIgnoreCase(idToken.getRealm().trim());
             }
 
             if (mustMatchOnTarget) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, accessToken.getTarget(), true);
+                    matches = matches && targetsIntersect(target, accessToken.getTarget().trim(), true);
                 } else if (credential instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
-                    matches = matches && targetsIntersect(target, refreshToken.getTarget(), true);
+                    matches = matches && targetsIntersect(target, refreshToken.getTarget().trim(), true);
                 } else {
                     Logger.verbose(TAG, "Query specified target-match, but no target to match.");
                 }
@@ -199,7 +199,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
             if (mustMatchOnAuthScheme && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && authScheme.equalsIgnoreCase(accessToken.getAccessTokenType());
+                String atType = accessToken.getAccessTokenType();
+
+                if (null != atType) {
+                    atType = atType.trim();
+                }
+
+                matches = matches && authScheme.equalsIgnoreCase(atType);
             }
 
             if (matches) {
