@@ -1,1 +1,2 @@
+rootProject.name = "com.microsoft.identity"
 include ':common', ':keyvault', ':labapi', ':testutils', ':uiautomationutilities'
