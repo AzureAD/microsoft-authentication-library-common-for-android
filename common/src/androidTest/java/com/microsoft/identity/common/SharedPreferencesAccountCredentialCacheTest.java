@@ -72,6 +72,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     static final String EXPIRES_ON = "0";
     static final String SECRET = "3642fe2f-2c46-4824-9f27-e44b0e3e1278";
     static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
+    public static final String ESCAPE_SEQ_CHARS = "\r\f\n\t";
 
     private static final String ENVIRONMENT_LEGACY = "login.windows.net";
     private static final String REALM3 = "fc5171ec-2889-4ba6-bd1f-216fe87a8613";
@@ -104,6 +105,10 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     public void tearDown() {
         // Wipe the SharedPreferences between tests...
         mSharedPreferencesAccountCredentialCache.clearAll();
+    }
+
+    private static String wrapInEscapeSequenceChars(final String inputString) {
+        return ESCAPE_SEQ_CHARS + inputString + ESCAPE_SEQ_CHARS;
     }
 
     @Test
@@ -202,6 +207,27 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
         refreshToken.setClientId(CLIENT_ID);
         refreshToken.setSecret(SECRET);
         refreshToken.setTarget(TARGET);
+
+        // Save the Credential
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+
+        // Synthesize a cache key for it
+        final String credentialCacheKey = mDelegate.generateCacheKey(refreshToken);
+
+        // Resurrect the Credential
+        final Credential restoredRefreshToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        assertTrue(refreshToken.equals(restoredRefreshToken));
+    }
+
+    @Test
+    public void saveCredentialWithEscapeChars() {
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setCredentialType(wrapInEscapeSequenceChars(CredentialType.RefreshToken.name()));
+        refreshToken.setEnvironment(wrapInEscapeSequenceChars(ENVIRONMENT));
+        refreshToken.setHomeAccountId(wrapInEscapeSequenceChars(HOME_ACCOUNT_ID));
+        refreshToken.setClientId(wrapInEscapeSequenceChars(CLIENT_ID));
+        refreshToken.setSecret(wrapInEscapeSequenceChars(SECRET));
+        refreshToken.setTarget(wrapInEscapeSequenceChars(TARGET));
 
         // Save the Credential
         mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
