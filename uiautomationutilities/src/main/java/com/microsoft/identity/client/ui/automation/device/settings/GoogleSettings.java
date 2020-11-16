@@ -53,7 +53,7 @@ public class GoogleSettings extends BaseSettings {
 
         try {
             // scroll down the recycler view to find the list item for this admin
-            final UiObject adminAppListItem = disableAdminButton(deviceAdmin);
+            final UiObject adminAppListItem = obtainDisableAdminButton(deviceAdmin);
 
             // select this admin by clicking it
             assert adminAppListItem != null;
@@ -152,7 +152,7 @@ public class GoogleSettings extends BaseSettings {
 
         try {
             // Click the set date button
-            final UiObject setDateBtn = changeDateButton();
+            final UiObject setDateBtn = obtainDateButton();
             setDateBtn.click();
 
             // Make sure we see the calendar
@@ -203,26 +203,21 @@ public class GoogleSettings extends BaseSettings {
         }
     }
 
-    /**
-     * @return returns the button of date in the settings screen.
-     */
-    private UiObject changeDateButton() {
-        if (android.os.Build.VERSION.SDK_INT == 28)
+    private UiObject obtainDateButton() {
+        if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainUiObjectWithText("Set date");
+        }
 
         return UiAutomatorUtils.obtainEnabledUiObjectWithExactText("Date");
     }
 
-    /**
-     * @param Text Text for which we need to find button in the UI.
-     * @return returns the button of the matched text in the scrollable UI.
-     */
     private UiObject obtainButtonInScrollable(final String Text) {
-        if (android.os.Build.VERSION.SDK_INT == 28)
+        if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainChildInScrollable(
                     "com.android.settings:id/list",
                     Text
             );
+        }
 
         return UiAutomatorUtils.obtainChildInScrollable(
                 "com.android.settings:id/recycler_view",
@@ -230,16 +225,14 @@ public class GoogleSettings extends BaseSettings {
         );
     }
 
-    /**
-     * @param deviceAdmin deviceAdmin.getAdminName() for which we need to find button in the scrollable UI.
-     * @return the button of the device admin name in the UI.
-     */
-    private UiObject disableAdminButton(final DeviceAdmin deviceAdmin) {
-        if (android.os.Build.VERSION.SDK_INT == 28)
+
+    private UiObject obtainDisableAdminButton(final DeviceAdmin deviceAdmin) {
+        if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainChildInScrollable(
                     "android:id/list",
                     deviceAdmin.getAdminName()
             );
+        }
 
         return UiAutomatorUtils.obtainChildInScrollable(
                 "com.android.settings:id/recycler_view",
