@@ -34,6 +34,8 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+
 import org.junit.Assert;
 
 import java.util.concurrent.TimeUnit;
@@ -119,25 +121,46 @@ public class PlayStore implements IAppInstaller {
         }
     }
 
-    private void installAppFromMarketPage() {
+    private void installAppFromMarketPageInternal() throws UiObjectNotFoundException {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
+        final UiObject installBtn = device.findObject(
+                new UiSelector().className(Button.class).text("Install").enabled(true)
+        );
+
+        installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+
+        installBtn.click();
+
+        final UiObject openButton = device.findObject(
+                new UiSelector().className(Button.class).text("Open").enabled(true)
+        );
+
+        // if we see open button, then we know that the installation is complete
+        openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
+    }
+
+    private void installAppFromMarketPage() {
         try {
-            final UiObject installBtn = device.findObject(
-                    new UiSelector().className(Button.class).text("Install").enabled(true)
-            );
-
-            installBtn.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-
-            installBtn.click();
-
-            final UiObject openButton = device.findObject(
-                    new UiSelector().className(Button.class).text("Open").enabled(true)
-            );
-
-            // if we see open button, then we know that the installation is complete
-            openButton.waitForExists(PLAY_STORE_INSTALL_APP_TIMEOUT);
+            installAppFromMarketPageInternal();
         } catch (final UiObjectNotFoundException e) {
+            acceptGooglePlayTermsOfService();
+            try {
+                installAppFromMarketPageInternal();
+            } catch (UiObjectNotFoundException ex) {
+                Assert.fail(ex.getMessage());
+            }
+        }
+    }
+
+    private void acceptGooglePlayTermsOfService() {
+        final UiObject termsOfService = UiAutomatorUtils.obtainUiObjectWithText("Terms of Service");
+        Assert.assertTrue(termsOfService.exists());
+        final UiObject acceptBtn = UiAutomatorUtils.obtainUiObjectWithText("ACCEPT");
+        Assert.assertTrue(acceptBtn.exists());
+        try {
+            acceptBtn.click();
+        } catch (UiObjectNotFoundException e) {
             Assert.fail(e.getMessage());
         }
     }

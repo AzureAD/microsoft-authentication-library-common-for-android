@@ -43,6 +43,7 @@ public class RetryTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Log.i(TAG, "Applying rule....");
                 Throwable caughtThrowable = null;
                 int numAttempts = 1;
 
