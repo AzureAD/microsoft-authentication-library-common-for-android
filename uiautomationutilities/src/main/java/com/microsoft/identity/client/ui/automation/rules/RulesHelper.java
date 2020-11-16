@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import android.util.Log;
+
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
@@ -50,36 +52,36 @@ public class RulesHelper {
     public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker) {
         RuleChain ruleChain = RuleChain.outerRule(new RetryTestRule());
 
-        System.out.println(TAG + ": Adding UiAutomatorTestRule");
+        Log.i(TAG, "Adding UiAutomatorTestRule");
         ruleChain = ruleChain.around(new UiAutomatorTestRule());
 
-        System.out.println(TAG + ": Adding ResetAutomaticTimeZoneTestRule");
+        Log.i(TAG, "Adding ResetAutomaticTimeZoneTestRule");
         ruleChain = ruleChain.around(new ResetAutomaticTimeZoneTestRule());
 
         if (com.microsoft.identity.client.ui.automation.BuildConfig.PREFER_PRE_INSTALLED_APKS) {
-            System.out.println(TAG + ": Adding CopyPreInstalledApkRule");
+            Log.i(TAG, "Adding CopyPreInstalledApkRule");
             ruleChain = ruleChain.around(new CopyPreInstalledApkRule(
                     new BrokerMicrosoftAuthenticator(), new BrokerCompanyPortal(),
                     new BrokerHost(), new AzureSampleApp()
             ));
         }
 
-        System.out.println(TAG + ": Adding RemoveBrokersBeforeTestRule");
+        Log.i(TAG, "Adding RemoveBrokersBeforeTestRule");
         ruleChain = ruleChain.around(new RemoveBrokersBeforeTestRule());
 
         if (broker != null) {
-            System.out.println(TAG + ": Adding BrokerSupportRule");
+            Log.i(TAG, "Adding BrokerSupportRule");
             ruleChain = ruleChain.around(new BrokerSupportRule(broker));
 
-            System.out.println(TAG + ": Adding InstallBrokerTestRule");
+            Log.i(TAG, "Adding InstallBrokerTestRule");
             ruleChain = ruleChain.around(new InstallBrokerTestRule(broker));
 
             if (broker instanceof IPowerLiftIntegratedApp) {
-                System.out.println(TAG + ": Adding PowerLiftIncidentRule");
+                Log.i(TAG, "Adding PowerLiftIncidentRule");
                 ruleChain = ruleChain.around(new PowerLiftIncidentRule((IPowerLiftIntegratedApp) broker));
             }
 
-            System.out.println(TAG + ": Adding DeviceEnrollmentFailureRecoveryRule");
+            Log.i(TAG, "Adding DeviceEnrollmentFailureRecoveryRule");
             ruleChain = ruleChain.around(new DeviceEnrollmentFailureRecoveryRule());
         }
 

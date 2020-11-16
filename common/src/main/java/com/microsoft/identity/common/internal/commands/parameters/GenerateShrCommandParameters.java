@@ -20,33 +20,27 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authscheme;
+package com.microsoft.identity.common.internal.commands.parameters;
 
-import java.net.URL;
+import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
+
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Interface representation of properties required to perform PoP protected token functions.
+ * Parameter class for generating SHRs.
  */
-public interface IPoPAuthenticationSchemeParams extends INonced {
+@Getter
+@SuperBuilder
+public class GenerateShrCommandParameters extends CommandParameters {
 
     /**
-     * Gets the HTTP method.
-     *
-     * @return The HTTP method to get.
+     * The home_account_id of the account for which we will generate the resulting SHR.
      */
-    String getHttpMethod();
+    private String homeAccountId;
 
     /**
-     * Gets the URL.
-     *
-     * @return The URL to get.
+     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
      */
-    URL getUrl();
-
-    /**
-     * Gets the client_claims.
-     *
-     * @return The client_claims to get.
-     */
-    String getClientClaims();
+    private IPoPAuthenticationSchemeParams popParameters;
 }
