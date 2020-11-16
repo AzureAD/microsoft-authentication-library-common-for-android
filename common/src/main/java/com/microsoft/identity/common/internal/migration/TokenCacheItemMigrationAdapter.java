@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -184,7 +185,7 @@ public class TokenCacheItemMigrationAdapter {
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();
-        final String scopes = BaseController.getDelimitedDefaultScopeString();
+        final String scopes = AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE;
 
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
