@@ -906,6 +906,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 mDefaultAppUidTestBundle.mGeneratedIdToken,
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
                 null
         );
 
@@ -913,7 +914,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(saveResult.getAccount());
         assertNotNull(saveResult.getIdToken());
         assertNotNull(saveResult.getAccessToken());
-        assertNull(saveResult.getRefreshToken());
+        assertNotNull(saveResult.getRefreshToken());
 
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -930,6 +931,11 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 saveResult.getAccessToken()
         );
 
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
                 mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
@@ -941,7 +947,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(retrievedResult.getAccount());
         assertNotNull(retrievedResult.getIdToken());
         assertNotNull(retrievedResult.getAccessToken());
-        assertNull(retrievedResult.getRefreshToken());
+        assertNotNull(retrievedResult.getRefreshToken());
 
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -957,6 +963,11 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
                 retrievedResult.getAccessToken()
         );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
     }
 
     @Test
@@ -965,6 +976,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 mDefaultAppUidTestBundle.mGeneratedIdToken,
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
                 "1"
         );
 
@@ -972,7 +984,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(saveResult.getAccount());
         assertNotNull(saveResult.getIdToken());
         assertNotNull(saveResult.getAccessToken());
-        assertNull(saveResult.getRefreshToken());
+        assertNotNull(saveResult.getRefreshToken());
 
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -987,6 +999,11 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
                 saveResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
         );
 
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(

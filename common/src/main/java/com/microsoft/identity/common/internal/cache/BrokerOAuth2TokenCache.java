@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -180,6 +181,7 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord save(@NonNull AccountRecord accountRecord,
                              @NonNull IdTokenRecord idTokenRecord,
                              @NonNull AccessTokenRecord accessTokenRecord,
+                             @NonNull RefreshTokenRecord refreshTokenRecord,
                              @Nullable String familyId) throws ClientException {
         final String methodName = ":save";
 
@@ -199,7 +201,8 @@ public class BrokerOAuth2TokenCache
             result = mFociCache.save(
                     accountRecord,
                     idTokenRecord,
-                    accessTokenRecord
+                    accessTokenRecord,
+                    refreshTokenRecord
             );
         } else {
             // Save to the processUid cache... or create a new one
@@ -224,7 +227,8 @@ public class BrokerOAuth2TokenCache
             result = targetCache.save(
                     accountRecord,
                     idTokenRecord,
-                    accessTokenRecord
+                    accessTokenRecord,
+                    refreshTokenRecord
             );
         }
 
@@ -243,6 +247,7 @@ public class BrokerOAuth2TokenCache
             @NonNull final AccountRecord accountRecord,
             @NonNull final IdTokenRecord idTokenRecord,
             @NonNull final AccessTokenRecord accessTokenRecord,
+            @NonNull final RefreshTokenRecord refreshTokenRecord,
             @Nullable final String familyId,
             @NonNull final AbstractAuthenticationScheme authScheme) throws ClientException {
         synchronized (this) {
@@ -250,6 +255,7 @@ public class BrokerOAuth2TokenCache
                     accountRecord,
                     idTokenRecord,
                     accessTokenRecord,
+                    refreshTokenRecord,
                     familyId
             );
 

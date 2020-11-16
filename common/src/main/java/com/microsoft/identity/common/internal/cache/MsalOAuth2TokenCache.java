@@ -178,7 +178,8 @@ public class MsalOAuth2TokenCache
      */
     ICacheRecord save(@NonNull AccountRecord accountRecord,
                       @NonNull IdTokenRecord idTokenRecord,
-                      @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
+                      @NonNull AccessTokenRecord accessTokenRecord,
+                      @NonNull RefreshTokenRecord refreshTokenRecord) throws ClientException {
         final String methodName = ":save (broker 3 arg)";
 
         // Validate the supplied Accounts/Credentials
@@ -204,11 +205,12 @@ public class MsalOAuth2TokenCache
         );
 
         saveAccounts(accountRecord);
-        saveCredentialsInternal(idTokenRecord, accessTokenRecord);
+        saveCredentialsInternal(idTokenRecord, accessTokenRecord, refreshTokenRecord);
 
         final CacheRecord result = new CacheRecord();
         result.setAccount(accountRecord);
         result.setAccessToken(accessTokenRecord);
+        result.setRefreshToken(refreshTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
             result.setV1IdToken(idTokenRecord);
@@ -217,19 +219,6 @@ public class MsalOAuth2TokenCache
         }
 
         return result;
-    }
-
-    // TODO Add unit test
-    @NonNull
-    List<ICacheRecord> saveAndLoadAggregatedAccountData(
-            @NonNull AccountRecord accountRecord,
-            @NonNull IdTokenRecord idTokenRecord,
-            @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
-        // Use the just-saved ICacheRecord to locate other cache records belonging to this
-        // principal which may be associated to another tenant
-        return mergeCacheRecordWithOtherTenantCacheRecords(
-                save(accountRecord, idTokenRecord, accessTokenRecord)
-        );
     }
 
     @NonNull
