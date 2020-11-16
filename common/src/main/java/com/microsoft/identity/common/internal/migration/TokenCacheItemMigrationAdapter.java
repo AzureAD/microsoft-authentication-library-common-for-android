@@ -205,7 +205,7 @@ public class TokenCacheItemMigrationAdapter {
         );
 
         Logger.verbose(TAG + methodName,
-                "Start refreshing token with correlationId ["
+                "Start refreshing token (to verify foci) with correlationId ["
                         + correlationId
                         + "]");
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
