@@ -167,6 +167,10 @@ public class TokenCacheItemMigrationAdapter {
                                                         @NonNull final RefreshTokenRecord refreshTokenRecord,
                                                         @NonNull final IAccountRecord accountRecord)
             throws ClientException, IOException {
+        if (clientId.equalsIgnoreCase("87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
+            return true;
+        }
+
         final String methodName = ":tryFociTokenWithGivenClientId";
         final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
 
@@ -194,6 +198,7 @@ public class TokenCacheItemMigrationAdapter {
                 "Create the token request with correlationId ["
                         + correlationId
                         + "]");
+
         final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
                 clientId,
                 scopes,
