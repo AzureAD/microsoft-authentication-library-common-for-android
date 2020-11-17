@@ -3,6 +3,10 @@ vNext
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
 
+Version 3.0.7
+----------
+- Fix exception casting issue in CommandDispatcher (#1121)
+
 Version 3.0.6
 ----------
 - Expose expiresIn in MSAL Device Code flow callback (#1064)

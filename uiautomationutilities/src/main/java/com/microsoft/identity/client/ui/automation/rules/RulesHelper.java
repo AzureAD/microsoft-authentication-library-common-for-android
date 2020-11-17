@@ -27,6 +27,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
+import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
@@ -75,8 +76,10 @@ public class RulesHelper {
             Log.i(TAG, "Adding InstallBrokerTestRule");
             ruleChain = ruleChain.around(new InstallBrokerTestRule(broker));
 
-            Log.i(TAG, "Adding PowerLiftIncidentRule");
-            ruleChain = ruleChain.around(new PowerLiftIncidentRule(broker));
+            if (broker instanceof IPowerLiftIntegratedApp) {
+                Log.i(TAG, "Adding PowerLiftIncidentRule");
+                ruleChain = ruleChain.around(new PowerLiftIncidentRule((IPowerLiftIntegratedApp) broker));
+            }
 
             Log.i(TAG, "Adding DeviceEnrollmentFailureRecoveryRule");
             ruleChain = ruleChain.around(new DeviceEnrollmentFailureRecoveryRule());
