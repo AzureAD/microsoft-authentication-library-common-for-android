@@ -109,7 +109,7 @@ public enum AuthenticationSettings {
      * Set raw bytes to derive secretKey to use in encrypt/decrypt. KeySpec
      * algorithm is AES.
      * <p>
-     * Please note: if a device with an existing installation of the ADAL/MSAL host-app is upgraded
+     * Please note: If a device with an existing installation of the ADAL/MSAL host-app is upgraded
      * from API 17 -> API 18+ then the previously-used secret key data must continue to be supplied
      * in order to not lose SSO state when reading cache entries written prior to upgrade.
      * <p>
