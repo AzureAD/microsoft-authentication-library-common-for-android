@@ -224,12 +224,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
-
-    @Override
-    public void createPowerLiftIncident() {
-        throw new UnsupportedOperationException("Not supported on Broker Host App :(");
-    }
-
+    
     @Override
     public DeviceAdmin getAdminName() {
         return DeviceAdmin.BROKER_HOST;
