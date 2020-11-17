@@ -31,6 +31,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -49,6 +50,7 @@ import static com.microsoft.identity.common.internal.platform.IDevicePopManager.
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
+@Ignore //https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1103
 @RunWith(Parameterized.class)
 public class DevicePoPManagerEncryptionTests {
 

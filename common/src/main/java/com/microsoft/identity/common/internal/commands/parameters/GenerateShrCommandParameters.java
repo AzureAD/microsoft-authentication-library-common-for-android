@@ -1,5 +1,3 @@
-package com.microsoft.identity.common.internal.broker;
-
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -22,31 +20,27 @@ package com.microsoft.identity.common.internal.broker;
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.internal.commands.parameters;
 
-import android.content.ComponentName;
-import android.os.IBinder;
+import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 
-import com.microsoft.aad.adal.IBrokerAccountService;
-import com.microsoft.identity.common.internal.logging.Logger;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
-public class BrokerAccountServiceConnection implements android.content.ServiceConnection {
-    private static final String TAG = MicrosoftAuthServiceConnection.class.getSimpleName();
-    private IBrokerAccountService mBrokerAccountService;
-    private BrokerAccountServiceFuture mBrokerAccountServiceFuture;
+/**
+ * Parameter class for generating SHRs.
+ */
+@Getter
+@SuperBuilder
+public class GenerateShrCommandParameters extends CommandParameters {
 
-    public BrokerAccountServiceConnection(BrokerAccountServiceFuture future) {
-        mBrokerAccountServiceFuture = future;
-    }
+    /**
+     * The home_account_id of the account for which we will generate the resulting SHR.
+     */
+    private String homeAccountId;
 
-    @Override
-    public void onServiceConnected(ComponentName name, IBinder service) {
-        Logger.verbose(TAG, "BrokerAccountService is connected.");
-        mBrokerAccountService = IBrokerAccountService.Stub.asInterface(service);
-        mBrokerAccountServiceFuture.setBrokerAccountService(mBrokerAccountService);
-    }
-
-    @Override
-    public void onServiceDisconnected(ComponentName name) {
-        Logger.verbose(TAG, "BrokerAccountService is disconnected.");
-    }
+    /**
+     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
+     */
+    private IPoPAuthenticationSchemeParams popParameters;
 }

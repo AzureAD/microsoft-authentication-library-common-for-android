@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequ
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 
@@ -59,11 +60,14 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
+    private boolean mIsRequestFromBroker;
 
     public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment) {
+                                        @Nullable Fragment fragment,
+                                        boolean isRequestFromBroker) {
         super(applicationContext, activity, fragment);
+        mIsRequestFromBroker = isRequestFromBroker;
     }
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
@@ -107,6 +111,18 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         authIntent.setData(requestUrl);
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
+
+        // singleTask launchMode is required for the authorization redirect is from an external browser
+        // in the browser authorization flow
+        // For broker request we need to clear all activities in the task and bring Authorization Activity to the
+        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
+        // Authenticator's or Company Portal's active activity which would be confusing to the user.
+        if (mIsRequestFromBroker) {
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        } else {
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        }
+
         launchIntent(intent);
 
         return mAuthorizationResultFuture;
@@ -138,8 +154,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
             dispose();
 
             //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-            @SuppressWarnings(WarningType.unchecked_warning)
-            final AuthorizationResult result = mOAuth2Strategy
+            @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(
                             resultCode,
                             data,

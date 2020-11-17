@@ -31,7 +31,6 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -160,6 +159,22 @@ public final class StringUtil {
     }
 
     /**
+     * Returns true if the first semantic version is smaller or equal to the second version.
+     */
+    public static boolean isFirstVersionSmallerOrEqual(@NonNull final String first,
+                                                       @Nullable final String second) {
+        return compareSemanticVersion(first, second) <= 0;
+    }
+
+    /**
+     * Returns true if the first semantic version is larger or equal to the second version.
+     */
+    public static boolean isFirstVersionLargerOrEqual(@NonNull final String first,
+                                                      @Nullable final String second) {
+        return compareSemanticVersion(first, second) >= 0;
+    }
+
+    /**
      * Counts the number of occurrences of one String in another.
      *
      * @param str
@@ -205,5 +220,16 @@ public final class StringUtil {
      */
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
         return one == two || (one != null && one.equalsIgnoreCase(two));
+    }
+
+    /**
+     * Utility to null-safe-compare string in a case-insensitive manner, trimming the second input.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return
+     */
+    public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
+        return one == two || equalsIgnoreCase(one, two.trim());
     }
 }
