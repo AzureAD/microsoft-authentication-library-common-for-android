@@ -248,7 +248,7 @@ public class BrokerHost extends AbstractTestBroker {
             handleFirstRun(); // handle first run experience
         }
 
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetUpn");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetWpjUpn");
 
         // Look for the UPN dialog box
         final UiObject showUpnDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
