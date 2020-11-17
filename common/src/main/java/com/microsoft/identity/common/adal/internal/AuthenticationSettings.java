@@ -117,8 +117,8 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("rawKey");
         }
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            Logger.warn(":setSecretKey", "You're using setSecretKey in a version of android" +
-                    "that supports keyStore functionality.  Consider not doing this, as it only exists" +
+            Logger.warn(":setSecretKey", "You're using setSecretKey in a version of android " +
+                    "that supports keyStore functionality.  Consider not doing this, as it only exists " +
                     "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
         }
         mSecretKeyData.set(rawKey);
@@ -400,4 +400,3 @@ public enum AuthenticationSettings {
         return mEnableHardwareAcceleration;
     }
 }
-
