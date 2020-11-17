@@ -82,6 +82,11 @@ public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
             @Override public Bundle removeAccountFromSharedDevice(Bundle bundle) throws RemoteException {
                 return IpcStrategyTests.getMockIpcResultBundle();
             }
+
+            @Override
+            public Bundle generateSignedHttpRequest(Bundle bundle) throws RemoteException {
+                return IpcStrategyTests.getMockIpcResultBundle();
+            }
         };
 
         return (T) authService;
