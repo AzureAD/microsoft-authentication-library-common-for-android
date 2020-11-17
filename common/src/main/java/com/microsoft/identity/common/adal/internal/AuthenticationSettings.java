@@ -110,7 +110,7 @@ public enum AuthenticationSettings {
      * algorithm is AES.
      * <p>
      * Please note: if a device with an existing installation of the ADAL/MSAL host-app is upgraded
-     * from API 17 -> API 18+ then the previously-used secret key data must continued to be supplied
+     * from API 17 -> API 18+ then the previously-used secret key data must continue to be supplied
      * in order to not lose SSO state when reading cache entries written prior to upgrade.
      * <p>
      * For apps which may wish to transition away from this API long-term, they may do so
