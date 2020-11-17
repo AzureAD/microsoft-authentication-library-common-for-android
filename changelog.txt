@@ -1,6 +1,6 @@
 vNext
 ----------
-- Expose IAccountCredentialCache to MSALCPP for accessing lower-level cache functions.
+- Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
 
 Version 3.0.6
