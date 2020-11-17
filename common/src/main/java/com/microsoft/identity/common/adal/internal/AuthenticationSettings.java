@@ -112,7 +112,7 @@ public enum AuthenticationSettings {
      *
      * @param rawKey App related key to use in encrypt/decrypt
      */
-    public synchronized void setSecretKey(byte[] rawKey) {
+    public void setSecretKey(byte[] rawKey) {
         if (rawKey == null || rawKey.length != SECRET_RAW_KEY_LENGTH) {
             throw new IllegalArgumentException("rawKey");
         }
