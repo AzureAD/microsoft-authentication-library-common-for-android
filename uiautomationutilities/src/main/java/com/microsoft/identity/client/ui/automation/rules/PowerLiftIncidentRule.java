@@ -2,7 +2,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import android.util.Log;
 
-import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -15,10 +15,10 @@ public class PowerLiftIncidentRule implements TestRule {
 
     private final static String TAG = PowerLiftIncidentRule.class.getSimpleName();
 
-    private ITestBroker broker;
+    private IPowerLiftIntegratedApp powerLiftIntegratedApp;
 
-    public PowerLiftIncidentRule(final ITestBroker broker) {
-        this.broker = broker;
+    public PowerLiftIncidentRule(final IPowerLiftIntegratedApp powerLiftIntegratedApp) {
+        this.powerLiftIntegratedApp = powerLiftIntegratedApp;
     }
 
     @Override
@@ -29,10 +29,22 @@ public class PowerLiftIncidentRule implements TestRule {
                 Log.i(TAG, "Applying rule....");
                 try {
                     base.evaluate();
-                } catch (final Throwable throwable) {
-                    Log.w(TAG, "Encountered error during execution....creating powerlift incident.");
-                    broker.createPowerLiftIncident();
-                    throw throwable;
+                } catch (final Throwable originalThrowable) {
+                    try {
+                        Log.e(
+                                TAG,
+                                "Encountered error during test....creating PowerLift incident.",
+                                originalThrowable
+                        );
+                        powerLiftIntegratedApp.createPowerLiftIncident();
+                    } catch (final Throwable powerLiftError) {
+                        Log.e(
+                                TAG,
+                                "Oops...something went wrong...unable to create PowerLift incident.",
+                                powerLiftError
+                        );
+                    }
+                    throw originalThrowable;
                 }
             }
         };
