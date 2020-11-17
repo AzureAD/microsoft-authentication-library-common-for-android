@@ -60,6 +60,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACCOUNTS_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_BROKER_BUNDLE;
@@ -627,5 +628,22 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     public @NonNull ClientException getExceptionForEmptyResultBundle() {
         return new ClientException(INVALID_BROKER_BUNDLE, "Broker Result not returned from Broker.");
+    }
+
+    /**
+     * Deserializes the {@link GenerateShrResult} object from the broker response {@link Bundle}.
+     *
+     * @param resultBundle The result Bundle produced by the broker.
+     * @return The deserialized GenerateShrResult object containing the result (or corresponding
+     * error).
+     */
+    public GenerateShrResult getGenerateShrResultFromResultBundle(@NonNull final Bundle resultBundle) {
+        final String resultJson = resultBundle.getString(BROKER_GENERATE_SHR_RESULT);
+        final GenerateShrResult shrResult = sRequestAdapterGsonInstance.fromJson(
+                resultJson,
+                GenerateShrResult.class
+        );
+
+        return shrResult;
     }
 }
