@@ -88,11 +88,6 @@ public interface ITestBroker extends IApp {
     void enableBrowserAccess();
 
     /**
-     * Create a PowerLift Incident using this broker.
-     */
-    void createPowerLiftIncident();
-
-    /**
      * The admin name for this broker app. This name is used to represent the broker app as an
      * admin on the Device Administrator page on the Android settings app when enabled as a
      * device admin.
