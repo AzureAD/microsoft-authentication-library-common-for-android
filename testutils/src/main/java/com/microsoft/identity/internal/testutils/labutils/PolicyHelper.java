@@ -63,7 +63,7 @@ public class PolicyHelper {
     }
 
     /**
-     * lets you disable CA/Special Policies for any Locked User.
+     * Disable CA/Special Policies for any Locked User.
      * Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
      *
      * @param upn    Enter a valid Locked User UPN (optional)
