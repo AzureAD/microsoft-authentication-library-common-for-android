@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -32,6 +33,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.BuildConfig;
+import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
@@ -52,6 +54,25 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getR
  * A model for interacting with a Broker App during UI Test.
  */
 public abstract class AbstractTestBroker extends App implements ITestBroker {
+
+    private final static String TAG = AbstractTestBroker.class.getSimpleName();
+
+    @Override
+    public void uninstall() {
+        super.uninstall();
+
+        if (isInstalled()) {
+            // The broker app will still be installed on the device if it is enabled
+            // as a device admin. In this case, we need to disable the admin and then
+            // uninstall.
+            Log.w(TAG, "Unable to uninstall broker " + getAppName() + " from device..." +
+                    "the broker is potentially enabled as an active device admin.");
+            Log.i(TAG, "Disabling admin for " + getAppName());
+            TestContext.getTestContext().getTestDevice().getSettings().disableAdmin(getAdminName());
+            Log.i(TAG, "Reattempting uninstall for " + getAppName());
+            super.uninstall();
+        }
+    }
 
     public AbstractTestBroker(@NonNull final String packageName,
                               @NonNull final String appName) {
