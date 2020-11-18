@@ -605,13 +605,17 @@ public class StorageHelper implements IStorageHelper {
 
         switch (keyType) {
             case LEGACY_AUTHENTICATOR_APP_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME));
+                final byte[] legacySecretKeyData = AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+                return legacySecretKeyData == null ? null : getSecretKey(legacySecretKeyData);
+
 
             case LEGACY_COMPANY_PORTAL_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
+                final byte[] secretKeyData = AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME);
+                return secretKeyData == null ? null : getSecretKey(secretKeyData);
 
             case ADAL_USER_DEFINED_KEY:
-                return getSecretKey(AuthenticationSettings.INSTANCE.getSecretKeyData());
+                final byte[] userSecretKeyData = AuthenticationSettings.INSTANCE.getSecretKeyData();
+                return userSecretKeyData == null ? null : getSecretKey(userSecretKeyData);
 
             case KEYSTORE_ENCRYPTED_KEY:
                 return loadKeyStoreEncryptedKey();
