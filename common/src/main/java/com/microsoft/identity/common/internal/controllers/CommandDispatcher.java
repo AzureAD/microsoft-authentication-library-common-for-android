@@ -253,7 +253,7 @@ public class CommandDispatcher {
     // Suppressing unchecked warnings due to casting of Throwable to the generic type of TaskCompletedCallbackWithError
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallBackOnError(@SuppressWarnings(WarningType.rawtype_warning) @NonNull BaseCommand command, Throwable throwable) {
-        command.getCallback().onError(throwable);
+        command.getCallback().onError(ExceptionAdapter.baseExceptionFromException(throwable));
     }
 
     static void clearCommandCache() {
@@ -337,7 +337,7 @@ public class CommandDispatcher {
     // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
-        command.getCallback().onError(result.getResult());
+        command.getCallback().onError(ExceptionAdapter.baseExceptionFromException((Throwable) result.getResult()));
     }
 
     // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
