@@ -71,7 +71,9 @@ public class DefaultConnectionService implements IConnectionService {
             isConnectionAvailable = capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
         } else {
             final NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-            isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+            @SuppressWarnings("deprecation")
+            final boolean isConnectedOrConnecting = activeNetwork.isConnectedOrConnecting();
+            isConnectionAvailable = activeNetwork != null && isConnectedOrConnecting;
         }
         Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(isConnectionAvailable)));
         return isConnectionAvailable;
