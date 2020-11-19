@@ -161,6 +161,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else if (isInstallRequestUrl(formattedURL)) {
             Logger.info(TAG, "It is an install request");
             return processInstallRequest(view, url);
+        } else if (isWebCpUrl(formattedURL)) {
+            Logger.info(TAG, "It is a request from WebCP");
+            return processWebCpRequest(view, url);
         } else {
             Logger.info(TAG, "It is an invalid redirect uri.");
             return processInvalidUrl(view, url);
@@ -188,6 +191,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return callingIntent != null
                 && !StringExtensions.isNullOrBlank(callingIntent
                 .getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST));
+    }
+
+    private boolean isWebCpUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_WEB_CP);
     }
 
     // This function is only called when the client received a redirect that starts with the apps
@@ -250,17 +257,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
                     packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
-                    Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
-                    final Intent intent = new Intent();
-                    intent.setComponent(new ComponentName(
-                            COMPANY_PORTAL_APP_PACKAGE_NAME,
-                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    getActivity().startActivity(intent);
-
-                    getCompletionCallback().onChallengeResponseReceived(
-                            AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
-                            new Intent());
+                    launchCompanyPortal();
                     return true;
                 } catch (final Exception ex) {
                     Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
@@ -282,6 +279,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return true;
     }
 
+    private void launchCompanyPortal(){
+        final String methodName = "#launchCompanyPortal";
+
+        Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
+        final Intent intent = new Intent();
+        intent.setComponent(new ComponentName(
+                COMPANY_PORTAL_APP_PACKAGE_NAME,
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        getActivity().startActivity(intent);
+
+        getCompletionCallback().onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
+                new Intent());
+    }
+
     private void openLinkInBrowser(final String url) {
         final String methodName = "#openLinkInBrowser";
         Logger.info(TAG + methodName, "Try to open url link in browser");
@@ -294,6 +307,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else {
             Logger.warn(TAG + methodName, "Unable to find an app to resolve the activity.");
         }
+    }
+
+    private boolean processWebCpRequest(@NonNull final WebView view, @NonNull final String url) {
+
+        view.stopLoading();
+        
+        if (url.equalsIgnoreCase(AuthenticationConstants.Broker.WEBCP_LAUNCH_COMPANY_PORTAL_URL)) {
+            launchCompanyPortal();
+            return true;
+        }
+
+        returnError(ErrorStrings.WEBCP_URI_INVALID,
+                "Unexpected URL from WebCP: " + url);
+        return true;
     }
 
     private boolean processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
