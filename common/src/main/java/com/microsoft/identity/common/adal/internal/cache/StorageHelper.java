@@ -52,6 +52,7 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.security.DigestException;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -70,9 +71,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.Mac;
+import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -238,6 +242,8 @@ public class StorageHelper implements IStorageHelper {
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
+        Logger.info(TAG + methodName, "Using key with thumbprint " + getKeyThumbPrint(mEncryptionKey, mEncryptionHMACKey));
+
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
@@ -280,6 +286,17 @@ public class StorageHelper implements IStorageHelper {
         Logger.verbose(TAG + methodName, "Finished encryption");
 
         return getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
+    }
+
+    private String getKeyThumbPrint(final @NonNull SecretKey secretKey, final @NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        final Cipher thumbPrintCipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        final byte[] thumbprintBytes = "012345678910111213141516".getBytes();
+        thumbPrintCipher.init(Cipher.ENCRYPT_MODE, secretKey);
+        byte[] bytesOut = thumbPrintCipher.doFinal();
+        Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
+        thumbprintMac.init(hmacKey);
+        byte[] thumprintFinal = thumbprintMac.doFinal(bytesOut);
+        return Base64.encodeToString(thumprintFinal, Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
     @Override
@@ -465,6 +482,7 @@ public class StorageHelper implements IStorageHelper {
         mac.init(hmacKey);
         mac.update(bytes, 0, macIndex);
         final byte[] macDigest = mac.doFinal();
+        Logger.info(TAG + ":decryptWithSecretKey", "Using key with thumbprint " + getKeyThumbPrint(secretKey, hmacKey));
 
         // Compare digest of input message and calculated digest
         assertHMac(bytes, macIndex, bytes.length, macDigest);

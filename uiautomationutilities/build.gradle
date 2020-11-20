@@ -13,6 +13,8 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
+
     def final installSourcePlayStore = "PlayStore"
     def final installSourceLocalApk = "LocalApk"
 
@@ -42,6 +44,7 @@ android {
         buildConfigField("String", "BROKER_INSTALL_SOURCE", "\"$brokerInstallationSource\"")
         buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
         buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
+        buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
     }
 
     buildTypes {
@@ -104,6 +107,14 @@ project.afterEvaluate{
                 credentials {
                     username project.ext.vstsUsername
                     password project.ext.vstsPassword
+                }
+            }
+            maven {
+                name "vsts-maven-android"
+                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+                credentials {
+                    username project.vstsUsername
+                    password project.vstsPassword
                 }
             }
         }

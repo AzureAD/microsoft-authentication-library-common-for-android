@@ -103,6 +103,9 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
             case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
                 return microsoftAuthService.removeAccountFromSharedDevice(inputBundle);
 
+            case MSAL_GENERATE_SHR:
+                return microsoftAuthService.generateSignedHttpRequest(inputBundle);
+
             default:
                 final String errorMessage = "Operation " + brokerOperationBundle.getOperation().name() + " is not supported by MicrosoftAuthClient.";
                 throw new BrokerCommunicationException(
