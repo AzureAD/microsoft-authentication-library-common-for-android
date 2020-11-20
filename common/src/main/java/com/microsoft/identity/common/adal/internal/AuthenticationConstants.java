@@ -1081,7 +1081,7 @@ public final class AuthenticationConstants {
         /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
-        public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = "companyportal://enrollment";
+        public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
 
         /**
          * A query param indicating that this is an intune device CA link.
