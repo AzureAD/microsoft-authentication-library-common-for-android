@@ -312,19 +312,6 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         aadPromptHandler.handlePrompt(username, password);
     }
 
-//    @Override
-//    public void handleFirstRun() {
-//        final String skipButtonResourceId = CommonUtils.getResourceId(
-//                AUTHENTICATOR_APP_PACKAGE_NAME, "frx_slide_skip_button"
-//        );
-//        UiAutomatorUtils.handleButtonClick("android:id/button1");
-//        // the skip button is actually rendered 3 times in the swipe/slide view
-//        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-//        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-//        UiAutomatorUtils.handleButtonClick(skipButtonResourceId);
-//        shouldHandleFirstRun = false;
-//    }
-
     @Override
     public void handleFirstRun() {
         // privacy dialog
