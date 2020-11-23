@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.utils;
 
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 
 import org.junit.Assert;
@@ -41,6 +42,18 @@ public class AdbShellUtils {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             return device.executeShellCommand(command);
+        } catch (final IOException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
+
+    private static String executeShellCommandAsCurrentPackage(@NonNull final String command) {
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+        try {
+            final String pkg = ApplicationProvider.getApplicationContext().getPackageName();
+            final String completeCmd = "run-as " + pkg + " " + command;
+            return device.executeShellCommand(completeCmd);
         } catch (final IOException e) {
             Assert.fail(e.getMessage());
             return null;
@@ -149,5 +162,10 @@ public class AdbShellUtils {
      */
     public static void copyFile(@NonNull final String srcFile, @NonNull final String destFile) {
         executeShellCommand("cp " + srcFile + " " + destFile);
+    }
+
+    public static void copyToSdCard(@NonNull final String srcFile, @NonNull final String destFile) {
+        executeShellCommand("mkdir /sdcard/automation");
+        executeShellCommandAsCurrentPackage("cp " + srcFile + " " + destFile);
     }
 }

@@ -27,6 +27,7 @@ import android.util.Log;
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.app.IApp;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -61,15 +62,15 @@ public class CopyPreInstalledApkRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 for (final IApp app : mPreInstalledAppsToCopy) {
-                    Log.i(TAG, "Attempting to copy APK for " + ((App) app).getAppName());
+                    Logger.i(TAG, "Attempting to copy APK for " + ((App) app).getAppName());
                     if (app.isInstalled()) {
-                        Log.i(TAG, "Detected pre-installed app: " + ((App) app).getAppName());
-                        Log.i(TAG, "Proceeding with copying apk for: " + ((App) app).getAppName());
+                        Logger.i(TAG, "Detected pre-installed app: " + ((App) app).getAppName());
+                        Logger.i(TAG, "Proceeding with copying apk for: " + ((App) app).getAppName());
                         app.copyApk(getDestApkFileName(app));
                     } else {
-                        Log.i(TAG, "Can't copy APK for: " + ((App) app).getAppName() + " as it is not pre-installed");
+                        Logger.i(TAG, "Can't copy APK for: " + ((App) app).getAppName() + " as it is not pre-installed");
                     }
                 }
 

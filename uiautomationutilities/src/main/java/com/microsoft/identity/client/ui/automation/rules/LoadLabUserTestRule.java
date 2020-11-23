@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.internal.testutils.labutils.LabUserHelper;
 import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
 
@@ -61,7 +62,7 @@ public class LoadLabUserTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 if (query != null) {
                     upn = LabUserHelper.loadUserForTest(query);
                 } else if (tempUserType != null) {
