@@ -15,16 +15,55 @@ import java.io.IOException;
 import lombok.EqualsAndHashCode;
 
 @EqualsAndHashCode
-public class FileLogStrategy implements LogStrategy {
+public class FileLogger implements ILogger {
 
     private final String mFileName;
 
-    public FileLogStrategy(@NonNull final String filename) {
+    public FileLogger(@NonNull final String filename) {
         mFileName = filename;
     }
 
     @Override
-    public void log(LogLevel logLevel, String tag, String message, Throwable throwable) {
+    public void e(@NonNull String tag, @NonNull String message) {
+        log(LogLevel.ERROR, tag, message, null);
+    }
+
+    @Override
+    public void e(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
+        log(LogLevel.ERROR, tag, message, exception);
+    }
+
+    @Override
+    public void w(@NonNull String tag, @NonNull String message) {
+        log(LogLevel.WARN, tag, message, null);
+    }
+
+    @Override
+    public void w(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
+        log(LogLevel.WARN, tag, message, exception);
+    }
+
+    @Override
+    public void i(@NonNull String tag, @NonNull String message) {
+        log(LogLevel.INFO, tag, message, null);
+    }
+
+    @Override
+    public void i(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
+        log(LogLevel.INFO, tag, message, exception);
+    }
+
+    @Override
+    public void v(@NonNull String tag, @NonNull String message) {
+        log(LogLevel.VERBOSE, tag, message, null);
+    }
+
+    @Override
+    public void v(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
+        log(LogLevel.VERBOSE, tag, message, exception);
+    }
+
+    private void log(LogLevel logLevel, String tag, String message, Throwable throwable) {
         final String logMessage = formatMessage(logLevel, tag, message, throwable);
         writeLogToFile(logMessage);
     }
@@ -64,12 +103,6 @@ public class FileLogStrategy implements LogStrategy {
             return "";
         }
     }
-//
-//    private FileOutputStream getLogFile() throws IOException {
-//        final Context context = ApplicationProvider.getApplicationContext();
-//        final String fileName = mFileName + ".log";
-//        return context.openFileOutput(fileName, MODE_APPEND);
-//    }
 
     private String formatMessage(
             @NonNull final LogLevel logLevel,

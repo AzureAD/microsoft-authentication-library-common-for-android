@@ -1,6 +1,6 @@
 package com.microsoft.identity.client.ui.automation.logging;
 
-public enum LogLevel {
+enum LogLevel {
 
     /**
      * Error level logging.
