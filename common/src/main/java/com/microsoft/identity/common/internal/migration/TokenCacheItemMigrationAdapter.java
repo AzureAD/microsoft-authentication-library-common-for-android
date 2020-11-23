@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import android.util.Pair;
 
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -204,7 +205,7 @@ public class TokenCacheItemMigrationAdapter {
         );
 
         Logger.verbose(TAG + methodName,
-                "Start refreshing token with correlationId ["
+                "Start refreshing token (to verify foci) with correlationId ["
                         + correlationId
                         + "]");
         final TokenResult tokenResult = strategy.requestToken(tokenRequest);
