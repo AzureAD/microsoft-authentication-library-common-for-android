@@ -30,6 +30,9 @@ import com.google.gson.annotations.SerializedName;
  * https://tools.ietf.org/html/rfc6749#section-4.1.4
  * It should include all of the required and optional parameters based on the protocol and
  * support an extension to allow the authorization server / openid provider to send back additional information
+ *
+ * TODO: make the request object part of this response class
+ *       (so that the caller does NOT have to persist the request object even after the request is made).
  */
 public class TokenResponse implements ISuccessResponse {
 
