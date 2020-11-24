@@ -24,10 +24,20 @@ package com.microsoft.identity.client.ui.automation.logging;
 
 import androidx.annotation.NonNull;
 
+/**
+ * An abstract logger to write/send logs. The actual implementation of logger used may differ.
+ * The logger must be registered with the {@link LoggerRegistry} to use that logging implementation.
+ */
 public class Logger {
 
+    private static final LoggerRegistry LOGGER_REGISTRY = LoggerRegistry.getInstance();
+
+    public static LoggerRegistry getLoggerRegistry() {
+        return LOGGER_REGISTRY;
+    }
+
     /**
-     * Send a {@link LogLevel#ERROR} log message without PII.
+     * Send a {@link LogLevel#ERROR} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -35,13 +45,13 @@ public class Logger {
      */
     public static void e(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.e(tag, message);
         }
     }
 
     /**
-     * Send a {@link LogLevel#ERROR} log message without PII.
+     * Send a {@link LogLevel#ERROR} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -51,14 +61,14 @@ public class Logger {
     public static void e(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.e(tag, message, exception);
         }
     }
 
 
     /**
-     * Send a {@link LogLevel#WARN} log message without PII.
+     * Send a {@link LogLevel#WARN} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -66,13 +76,13 @@ public class Logger {
      */
     public static void w(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.w(tag, message);
         }
     }
 
     /**
-     * Send a {@link LogLevel#WARN} log message without PII.
+     * Send a {@link LogLevel#WARN} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -82,13 +92,13 @@ public class Logger {
     public static void w(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.w(tag, message, exception);
         }
     }
 
     /**
-     * Send a {@link LogLevel#INFO} log message without PII.
+     * Send a {@link LogLevel#INFO} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -96,13 +106,13 @@ public class Logger {
      */
     public static void i(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.i(tag, message);
         }
     }
 
     /**
-     * Send a {@link LogLevel#INFO} log message without PII.
+     * Send a {@link LogLevel#INFO} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -112,14 +122,14 @@ public class Logger {
     public static void i(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.i(tag, message, exception);
         }
     }
 
 
     /**
-     * Send a {@link LogLevel#VERBOSE} log message without PII.
+     * Send a {@link LogLevel#VERBOSE} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -127,13 +137,13 @@ public class Logger {
      */
     public static void v(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.v(tag, message);
         }
     }
 
     /**
-     * Send a {@link LogLevel#VERBOSE} log message without PII.
+     * Send a {@link LogLevel#VERBOSE} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -143,7 +153,7 @@ public class Logger {
     public static void v(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LoggerRegistry.getRegisteredLoggers()) {
+        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
             logger.v(tag, message, exception);
         }
     }

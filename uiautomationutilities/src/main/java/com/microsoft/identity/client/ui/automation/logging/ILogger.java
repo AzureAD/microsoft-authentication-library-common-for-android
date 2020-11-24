@@ -27,7 +27,7 @@ import androidx.annotation.NonNull;
 public interface ILogger {
 
     /**
-     * Send a {@link LogLevel#ERROR} log message without PII.
+     * Send a {@link LogLevel#ERROR} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -37,7 +37,7 @@ public interface ILogger {
            @NonNull final String message);
 
     /**
-     * Send a {@link LogLevel#ERROR} log message without PII.
+     * Send a {@link LogLevel#ERROR} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -50,7 +50,7 @@ public interface ILogger {
 
 
     /**
-     * Send a {@link LogLevel#WARN} log message without PII.
+     * Send a {@link LogLevel#WARN} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -60,7 +60,7 @@ public interface ILogger {
            @NonNull final String message);
 
     /**
-     * Send a {@link LogLevel#WARN} log message without PII.
+     * Send a {@link LogLevel#WARN} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -72,7 +72,7 @@ public interface ILogger {
            @NonNull final Throwable exception);
 
     /**
-     * Send a {@link LogLevel#INFO} log message without PII.
+     * Send a {@link LogLevel#INFO} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -82,7 +82,7 @@ public interface ILogger {
            @NonNull final String message);
 
     /**
-     * Send a {@link LogLevel#INFO} log message without PII.
+     * Send a {@link LogLevel#INFO} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.
@@ -94,7 +94,7 @@ public interface ILogger {
            @NonNull final Throwable exception);
 
     /**
-     * Send a {@link LogLevel#VERBOSE} log message without PII.
+     * Send a {@link LogLevel#VERBOSE} log message.
      *
      * @param tag     Used to identify the source of a log message.
      *                It usually identifies the class or activity where the log call occurs.
@@ -104,7 +104,7 @@ public interface ILogger {
            @NonNull final String message);
 
     /**
-     * Send a {@link LogLevel#VERBOSE} log message without PII.
+     * Send a {@link LogLevel#VERBOSE} log message.
      *
      * @param tag       Used to identify the source of a log message.
      *                  It usually identifies the class or activity where the log call occurs.

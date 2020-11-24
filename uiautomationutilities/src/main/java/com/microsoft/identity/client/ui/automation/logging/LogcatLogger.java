@@ -28,11 +28,25 @@ import androidx.annotation.NonNull;
 
 import lombok.EqualsAndHashCode;
 
+/**
+ * An implementation of {@link ILogger} to send logs to Android logcat. This is just a wrapper
+ * around {@link Log} utility provided by Android. If you just want to purely send logs to logcat,
+ * then you should not use this {@link LogcatLogger} and rather use the Android provided
+ * {@link Log} API.
+ * <p>
+ * The purpose of this {@link LogcatLogger} is to facilitate sending logs to multiple places when
+ * used in conjunction with {@link Logger} and {@link LoggerRegistry#registerLogger(ILogger)}.
+ */
 @EqualsAndHashCode
 public class LogcatLogger implements ILogger {
 
     private static final LogcatLogger INSTANCE = new LogcatLogger();
 
+    /**
+     * Get an instance of the {@link LogcatLogger}.
+     *
+     * @return a LogcatLogger
+     */
     public static LogcatLogger getInstance() {
         return INSTANCE;
     }

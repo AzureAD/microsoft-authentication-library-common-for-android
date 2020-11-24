@@ -27,6 +27,9 @@ import androidx.annotation.NonNull;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A registry that holds all the loggers in use by the {@link Logger}.
+ */
 public class LoggerRegistry {
 
     private static final LoggerRegistry INSTANCE = new LoggerRegistry();
@@ -36,23 +39,41 @@ public class LoggerRegistry {
     private LoggerRegistry() {
     }
 
-    private static LoggerRegistry getInstance() {
+    public static LoggerRegistry getInstance() {
         return INSTANCE;
     }
 
-    public static void registerLogger(@NonNull final ILogger logger) {
-        getInstance().mRegisteredLoggers.add(logger);
+    /**
+     * Register a new logger to be used with {@link Logger}.
+     *
+     * @param logger the logger to register
+     */
+    public void registerLogger(@NonNull final ILogger logger) {
+        mRegisteredLoggers.add(logger);
     }
 
-    public static void unregisterLogger(@NonNull final ILogger logger) {
-        getInstance().mRegisteredLoggers.remove(logger);
+    /**
+     * Unregister a logger that was being used with {@link Logger}.
+     *
+     * @param logger the logger to unregister
+     */
+    public void unregisterLogger(@NonNull final ILogger logger) {
+        mRegisteredLoggers.remove(logger);
     }
 
-    public static Set<ILogger> getRegisteredLoggers() {
-        return getInstance().mRegisteredLoggers;
+    /**
+     * Get all the loggers currently registered with the {@link Logger}.
+     *
+     * @return a set containging loggers
+     */
+    public Set<ILogger> getRegisteredLoggers() {
+        return mRegisteredLoggers;
     }
 
+    /**
+     * Remove all loggers currently registered with {@link Logger}.
+     */
     public void unregisterAllLoggers() {
-        getInstance().mRegisteredLoggers.clear();
+        mRegisteredLoggers.clear();
     }
 }

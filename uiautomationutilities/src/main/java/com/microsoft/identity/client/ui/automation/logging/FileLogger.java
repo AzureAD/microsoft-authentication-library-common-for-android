@@ -36,6 +36,11 @@ import java.io.IOException;
 
 import lombok.EqualsAndHashCode;
 
+/**
+ * An implementation of {@link ILogger} to write logs to a file on desk. The filename must be
+ * supplied to the FileLogger and the file will be created in the files directory reserved by the OS
+ * for the calling application. This directory is what is returned by {@link Context#getFilesDir()}.
+ */
 @EqualsAndHashCode
 public class FileLogger implements ILogger {
 
@@ -122,7 +127,7 @@ public class FileLogger implements ILogger {
         try {
             return getLogFile().getAbsolutePath();
         } catch (IOException e) {
-            return "";
+            return null;
         }
     }
 
