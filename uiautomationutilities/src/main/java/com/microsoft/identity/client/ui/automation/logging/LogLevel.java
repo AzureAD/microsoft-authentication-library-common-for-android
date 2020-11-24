@@ -52,6 +52,11 @@ enum LogLevel {
         this.label = label;
     }
 
+    /**
+     * Get the label used to represent this log level.
+     *
+     * @return the character representing this log leve.
+     */
     public char getLabel() {
         return this.label;
     }
