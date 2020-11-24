@@ -338,7 +338,6 @@ repositories {
         }
     }
 }
->>>>>>> 7de3a70d... Update checkstyle build, add suppressions for new violations.
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
