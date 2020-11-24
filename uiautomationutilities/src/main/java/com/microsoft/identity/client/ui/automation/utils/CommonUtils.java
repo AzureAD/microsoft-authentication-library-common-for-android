@@ -37,7 +37,6 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthent
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -128,6 +127,12 @@ public class CommonUtils {
         return false;
     }
 
+    /**
+     * Get a list of all brokers supported by our MSAL/ADAL sdks. These list contains all possible
+     * broker apps regardless of active build variant.
+     *
+     * @return a {@link List} of {@link ITestBroker} objects
+     */
     public static List<ITestBroker> getAllPossibleTestBrokers() {
         final List<ITestBroker> brokerList = new ArrayList<>();
         brokerList.add(new BrokerCompanyPortal());
@@ -136,6 +141,13 @@ public class CommonUtils {
         return brokerList;
     }
 
+    /**
+     * Copy the provided file object to the sdcard directory on the device. Callers can optionally
+     * supply a folder name to copy the file within that folder inside sdcard.
+     *
+     * @param file   the file to copy
+     * @param folder the folder inside sdcard where to copy the file
+     */
     public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
         final String filePath = file.getAbsolutePath();
         final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
