@@ -324,21 +324,6 @@ afterEvaluate {
 
 preBuild.dependsOn('checkstyle')
 
-// Repositories from which Gradle can fetch dependencies
-repositories {
-    google()
-    mavenLocal()
-    jcenter()
-    maven {
-        name "vsts-maven-adal-android"
-        url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
-        credentials {
-            username project.vstsUsername
-            password project.vstsPassword
-        }
-    }
-}
-
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'checkstyle', 'sourcesJar', 'pmd'
