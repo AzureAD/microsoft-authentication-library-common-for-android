@@ -33,6 +33,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import lombok.EqualsAndHashCode;
 
@@ -43,6 +47,8 @@ import lombok.EqualsAndHashCode;
  */
 @EqualsAndHashCode
 public class FileLogger implements ILogger {
+
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     private final String mFileName;
 
@@ -136,7 +142,15 @@ public class FileLogger implements ILogger {
             @NonNull final String tag,
             @NonNull final String message,
             @Nullable final Throwable throwable) {
-        final String logMessage = logLevel.getLabel() + "/" + tag + ": " + message;
+        final String logMessage = getUTCDateTimeAsString() + ": " + logLevel.getLabel() + "/" + tag
+                + ": " + message;
         return logMessage + (throwable == null ? "" : '\n' + Log.getStackTraceString(throwable));
+    }
+
+    private static String getUTCDateTimeAsString() {
+        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        return dateFormat.format(new Date());
     }
 }
