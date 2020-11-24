@@ -29,6 +29,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -129,12 +131,8 @@ public class FileLogger implements ILogger {
         return logFile;
     }
 
-    public String getLogFilePath() {
-        try {
-            return getLogFile().getAbsolutePath();
-        } catch (IOException e) {
-            return null;
-        }
+    public String getLogFileName() {
+        return mFileName;
     }
 
     private String formatMessage(

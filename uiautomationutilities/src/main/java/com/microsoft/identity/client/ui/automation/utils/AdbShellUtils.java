@@ -38,7 +38,7 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  */
 public class AdbShellUtils {
 
-    private static String executeShellCommand(@NonNull final String command) {
+    public static String executeShellCommand(@NonNull final String command) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             return device.executeShellCommand(command);
@@ -48,7 +48,7 @@ public class AdbShellUtils {
         }
     }
 
-    private static String executeShellCommandAsCurrentPackage(@NonNull final String command) {
+    public static String executeShellCommandAsCurrentPackage(@NonNull final String command) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             final String pkg = ApplicationProvider.getApplicationContext().getPackageName();

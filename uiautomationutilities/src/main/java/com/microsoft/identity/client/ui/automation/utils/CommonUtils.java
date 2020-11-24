@@ -28,6 +28,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
@@ -35,6 +36,8 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -42,6 +45,8 @@ import java.util.concurrent.TimeUnit;
 public class CommonUtils {
 
     public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+
+    private final static String SD_CARD = "/sdcard";
 
     /**
      * Launch (open) the supplied package on the device.
@@ -129,5 +134,15 @@ public class CommonUtils {
         brokerList.add(new BrokerMicrosoftAuthenticator());
         brokerList.add(new BrokerHost());
         return brokerList;
+    }
+
+    public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
+        final String filePath = file.getAbsolutePath();
+        final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
+        final File dir = new File(destinationPath);
+        final File destFile = new File(dir, file.getName());
+        final String destFilePath = destFile.getAbsolutePath();
+        AdbShellUtils.executeShellCommand("mkdir /sdcard/automation");
+        AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
     }
 }
