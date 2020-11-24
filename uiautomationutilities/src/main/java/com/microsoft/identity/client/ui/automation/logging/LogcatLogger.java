@@ -34,7 +34,7 @@ import lombok.EqualsAndHashCode;
  * then you should not use this {@link LogcatLogger} and rather use the Android provided
  * {@link Log} API.
  * <p>
- * The purpose of this {@link LogcatLogger} is to facilitate sending logs to multiple places when
+ * The purpose of this {@link LogcatLogger} is to facilitate sending logs to logcat when
  * used in conjunction with {@link Logger} and {@link LoggerRegistry#registerLogger(ILogger)}.
  */
 @EqualsAndHashCode

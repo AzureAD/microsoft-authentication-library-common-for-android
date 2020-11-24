@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.logging;
 
 import androidx.annotation.NonNull;
 
+/**
+ * An interface for sending log messages.
+ */
 public interface ILogger {
 
     /**

@@ -22,6 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.logging;
 
+/**
+ * Logging Levels supported by {@link Logger}.
+ */
 enum LogLevel {
 
     /**
