@@ -84,7 +84,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
         final AccessTokenRecord accessTokenRecord = authenticationResult.getAccessTokenRecord();
 
-        final BrokerResult brokerResult = new BrokerResult.Builder()
+        final BrokerResult brokerResult = BrokerResult.builder()
                 .tenantProfileRecords(authenticationResult.getCacheRecordWithTenantProfileData())
                 .accessToken(authenticationResult.getAccessToken())
                 .idToken(authenticationResult.getIdToken())
@@ -120,7 +120,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                                                    @Nullable final String negotiatedBrokerProtocolVersion) {
         Logger.info(TAG, "Constructing result bundle from ClientException");
 
-        final BrokerResult.Builder builder = new BrokerResult.Builder()
+        final BrokerResult.BrokerResultBuilder builder = BrokerResult.builder()
                 .success(false)
                 .errorCode(exception.getErrorCode())
                 .errorMessage(exception.getMessage())

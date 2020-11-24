@@ -25,12 +25,19 @@ package com.microsoft.identity.common.internal.telemetry;
 public final class TelemetryEventStrings {
     private static final String EVENT_PREFIX = "Microsoft.MSAL.";
 
+    /**
+     * Application telemetry keys.
+     */
     public static final class App {
         public static final String BUILD = EVENT_PREFIX + "application_build";
         public static final String NAME = EVENT_PREFIX + "application_name";
         public static final String VERSION = EVENT_PREFIX + "application_version";
     }
 
+    /**
+     * Operating system telemetry keys.
+     *
+     */
     public static final class Os {
         public static final String NAME = EVENT_PREFIX + "os_name";
         public static final String OS_NAME = "android";
@@ -38,6 +45,9 @@ public final class TelemetryEventStrings {
         public static final String SECURITY_PATCH = EVENT_PREFIX + "security_patch";
     }
 
+    /**
+     * Device telemetry keys.
+     */
     public static final class Device {
         public static final String MANUFACTURER = EVENT_PREFIX + "device_manufacturer";
         public static final String MODEL = EVENT_PREFIX + "device_model";
@@ -46,6 +56,9 @@ public final class TelemetryEventStrings {
         public static final String ID = EVENT_PREFIX + "device_id";
     }
 
+    /**
+     * Event Telemetry keys.
+     */
     public static final class Event {
         public static final String API_START_EVENT = "api_start_event";
         public static final String API_END_EVENT = "api_end_event";
@@ -63,6 +76,9 @@ public final class TelemetryEventStrings {
         public static final String BROKER_END_EVENT = "broker_end_event";
     }
 
+    /**
+     * Event type telemetry keys.
+     */
     public static final class EventType {
         public static final String API_EVENT = EVENT_PREFIX + "api_event";
         public static final String CACHE_EVENT = EVENT_PREFIX + "cache_event";
@@ -71,6 +87,9 @@ public final class TelemetryEventStrings {
         public static final String BROKER_EVENT = EVENT_PREFIX + "broker_event";
     }
 
+    /**
+     * Keys for telemetry events.
+     */
     public static final class Key {
         public static final String EVENT_NAME = EVENT_PREFIX + "event_name";
         public static final String EVENT_TYPE = EVENT_PREFIX + "event_type";
@@ -153,6 +172,9 @@ public final class TelemetryEventStrings {
         public static final String IS_DEVICE_SHARED = EVENT_PREFIX + "is_device_shared";
     }
 
+    /**
+     * Values for telemetry fields.
+     */
     public static final class Value {
         public static final String TRUE = "true";
         public static final String FALSE = "false";
@@ -177,6 +199,9 @@ public final class TelemetryEventStrings {
         public static final String CONTENT_PROVIDER = "content_provider";
     }
 
+    /**
+     * API values for telemetry events.
+     */
     public static final class Api {
         public static final String BROKER_ACQUIRE_TOKEN_INTERACTIVE = "201";
         public static final String BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE = "202";

@@ -20,7 +20,6 @@ android {
     }
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 

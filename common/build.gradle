@@ -246,6 +246,7 @@ ext.checkstyleConfigDir = "$configDir/checkstyle"
 
 checkstyle {
     ignoreFailures = false
+    maxWarnings = 0
     reportsDir = file("$project.buildDir/outputs/")
 }
 
@@ -320,6 +321,7 @@ afterEvaluate {
         }
     }
 }
+preBuild.dependsOn('checkstyle')
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
