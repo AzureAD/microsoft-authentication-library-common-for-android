@@ -29,6 +29,10 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Junit Rule to turn on logging for automation infrastructure and set a logger to dump these logs
+ * to their separate file.
+ */
 public class AutomationLoggingRule implements TestRule {
 
     final static String LOG_FOLDER_NAME = "automation";
