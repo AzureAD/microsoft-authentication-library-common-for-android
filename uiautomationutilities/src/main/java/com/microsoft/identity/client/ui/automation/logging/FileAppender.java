@@ -45,37 +45,57 @@ import java.util.TimeZone;
  */
 public class FileAppender implements IAppender {
 
+    private static final String TAG = FileAppender.class.getSimpleName();
+
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     private final String mFileName;
+    private final File mLogFile;
+    private BufferedWriter mBufferedWriter;
 
-    public FileAppender(@NonNull final String filename) {
+
+    public FileAppender(@NonNull final String filename) throws IOException {
         mFileName = filename;
+        mLogFile = createLogFile(filename);
     }
 
     @Override
     public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
         final String logMessage = formatMessage(logLevel, tag, message, throwable);
-        writeLogToFile(logMessage);
-    }
-
-    private void writeLogToFile(final String logMessage) {
         try {
-            final File logFile = getLogFile();
-            //BufferedWriter for performance, true to set append to file flag
-            BufferedWriter buf = new BufferedWriter(new FileWriter(logFile, true));
-            buf.append(logMessage);
-            buf.newLine();
-            buf.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            writeLogToFile(logMessage);
+        } catch (final IOException e) {
+            Log.e(TAG, "Error while trying to write log to file.", e);
         }
     }
 
-    public File getLogFile() throws IOException {
+    private void writeLogToFile(final String logMessage) throws IOException {
+        try {
+            writeUsingBufferedWriter(logMessage);
+        } catch (IOException e) {
+            // the writer may have got closed. So let's create a new one and re-attempt write.
+            mBufferedWriter = createBufferedWriterForLogFile();
+            writeUsingBufferedWriter(logMessage);
+        }
+    }
+
+    private void writeUsingBufferedWriter(final String message) throws IOException {
+        if (mBufferedWriter == null) {
+            mBufferedWriter = createBufferedWriterForLogFile();
+        }
+
+        mBufferedWriter.append(message);
+        mBufferedWriter.newLine();
+    }
+
+    private BufferedWriter createBufferedWriterForLogFile() throws IOException {
+        return new BufferedWriter(new FileWriter(mLogFile, true));
+    }
+
+    private File createLogFile(@NonNull final String filename) throws IOException {
         final Context context = ApplicationProvider.getApplicationContext();
         final File directory = context.getFilesDir();
-        final File logFile = new File(directory, mFileName);
+        final File logFile = new File(directory, filename);
 
         if (!logFile.exists()) {
             final boolean fileCreated = logFile.createNewFile();
@@ -89,6 +109,10 @@ public class FileAppender implements IAppender {
 
     public String getLogFileName() {
         return mFileName;
+    }
+
+    public File getLogFile() {
+        return mLogFile;
     }
 
     private String formatMessage(
@@ -106,5 +130,13 @@ public class FileAppender implements IAppender {
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         return dateFormat.format(new Date());
+    }
+
+    public void closeWriter() {
+        try {
+            mBufferedWriter.close();
+        } catch (final IOException e) {
+            Log.e(TAG, "Error while trying to close writer", e);
+        }
     }
 }

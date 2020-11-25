@@ -29,6 +29,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.io.IOException;
+
 /**
  * A Junit Rule to turn on logging for automation infrastructure and set a logger to dump these logs
  * to their separate file.
@@ -46,6 +48,8 @@ public class AutomationLoggingRule implements TestRule {
 
                 base.evaluate();
 
+                automationLogFileAppender.closeWriter();
+
                 CommonUtils.copyFileToFolderInSdCard(
                         automationLogFileAppender.getLogFile(),
                         LOG_FOLDER_NAME
@@ -54,7 +58,7 @@ public class AutomationLoggingRule implements TestRule {
         };
     }
 
-    private FileAppender turnOnAutomationLogging(final Description description) {
+    private FileAppender turnOnAutomationLogging(final Description description) throws IOException {
         final String automationLogFileName = description.getMethodName() + "-automation.log";
         final FileAppender automationLogFileAppender = new FileAppender(
                 automationLogFileName
