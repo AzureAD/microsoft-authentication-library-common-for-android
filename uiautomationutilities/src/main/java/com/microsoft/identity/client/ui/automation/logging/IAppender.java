@@ -23,41 +23,18 @@
 package com.microsoft.identity.client.ui.automation.logging;
 
 /**
- * Logging Levels supported by {@link Logger}.
+ * An interface for appending log messages to the desired destination.
  */
-public enum LogLevel {
+public interface IAppender {
 
     /**
-     * Error level logging.
-     */
-    ERROR('E'),
-
-    /**
-     * Warn level logging.
-     */
-    WARN('W'),
-    /**
-     * Info level logging.
-     */
-    INFO('I'),
-
-    /**
-     * Verbose level logging.
-     */
-    VERBOSE('V');
-
-    private final char label;
-
-    LogLevel(char label) {
-        this.label = label;
-    }
-
-    /**
-     * Get the label used to represent this log level.
+     * Appends the log message to wherever needed as determined by the implementation.
      *
-     * @return the character representing this log leve.
+     * @param logLevel  the level of the log
+     * @param tag       the tag associated to this log
+     * @param message   the message to log
+     * @param throwable the exception to log
      */
-    public char getLabel() {
-        return this.label;
-    }
+    void append(LogLevel logLevel, String tag, String message, Throwable throwable);
+
 }

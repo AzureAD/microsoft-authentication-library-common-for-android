@@ -22,42 +22,31 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.logging;
 
+import android.util.Log;
+
 /**
- * Logging Levels supported by {@link Logger}.
+ * An implementation of {@link IAppender} to send logs to Android logcat.
  */
-public enum LogLevel {
+public class LogcatAppender implements IAppender {
 
-    /**
-     * Error level logging.
-     */
-    ERROR('E'),
-
-    /**
-     * Warn level logging.
-     */
-    WARN('W'),
-    /**
-     * Info level logging.
-     */
-    INFO('I'),
-
-    /**
-     * Verbose level logging.
-     */
-    VERBOSE('V');
-
-    private final char label;
-
-    LogLevel(char label) {
-        this.label = label;
-    }
-
-    /**
-     * Get the label used to represent this log level.
-     *
-     * @return the character representing this log leve.
-     */
-    public char getLabel() {
-        return this.label;
+    @Override
+    public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
+        switch (logLevel) {
+            case VERBOSE:
+                Log.v(tag, message, throwable);
+                break;
+            case INFO:
+                Log.i(tag, message, throwable);
+                break;
+            case WARN:
+                Log.w(tag, message, throwable);
+                break;
+            case ERROR:
+                Log.e(tag, message, throwable);
+                break;
+            default:
+                Log.d(tag, message, throwable);
+                break;
+        }
     }
 }

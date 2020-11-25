@@ -30,35 +30,35 @@ import java.util.Set;
 /**
  * A registry that holds all the loggers in use by the {@link Logger}.
  */
-public class LoggerRegistry {
+public class AppenderRegistry {
 
-    private static final LoggerRegistry INSTANCE = new LoggerRegistry();
+    private static final AppenderRegistry INSTANCE = new AppenderRegistry();
 
-    private final Set<ILogger> mRegisteredLoggers = new HashSet<>();
+    private final Set<IAppender> mRegisteredAppenders = new HashSet<>();
 
-    private LoggerRegistry() {
+    private AppenderRegistry() {
     }
 
-    public static LoggerRegistry getInstance() {
+    public static AppenderRegistry getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Register a new logger to be used with {@link Logger}.
+     * Register a new appender to be used with {@link Logger}.
      *
-     * @param logger the logger to register
+     * @param appender the appender to register
      */
-    public void registerLogger(@NonNull final ILogger logger) {
-        mRegisteredLoggers.add(logger);
+    public void registerAppender(@NonNull final IAppender appender) {
+        mRegisteredAppenders.add(appender);
     }
 
     /**
-     * Unregister a logger that was being used with {@link Logger}.
+     * Unregister a appender that was being used with {@link Logger}.
      *
-     * @param logger the logger to unregister
+     * @param appender the appender to unregister
      */
-    public void unregisterLogger(@NonNull final ILogger logger) {
-        mRegisteredLoggers.remove(logger);
+    public void unregisterAppender(@NonNull final IAppender appender) {
+        mRegisteredAppenders.remove(appender);
     }
 
     /**
@@ -66,14 +66,14 @@ public class LoggerRegistry {
      *
      * @return a set containging loggers
      */
-    public Set<ILogger> getRegisteredLoggers() {
-        return mRegisteredLoggers;
+    public Set<IAppender> getRegisteredAppenders() {
+        return mRegisteredAppenders;
     }
 
     /**
      * Remove all loggers currently registered with {@link Logger}.
      */
-    public void unregisterAllLoggers() {
-        mRegisteredLoggers.clear();
+    public void unregisterAllAppenders() {
+        mRegisteredAppenders.clear();
     }
 }

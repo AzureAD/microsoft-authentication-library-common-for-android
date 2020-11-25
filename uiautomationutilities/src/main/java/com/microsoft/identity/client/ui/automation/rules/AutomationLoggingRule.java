@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import com.microsoft.identity.client.ui.automation.logging.FileLogger;
+import com.microsoft.identity.client.ui.automation.logging.FileAppender;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
@@ -42,28 +42,28 @@ public class AutomationLoggingRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                final FileLogger automationLogStrategy = turnOnAutomationLogging(description);
+                final FileAppender automationLogFileAppender = turnOnAutomationLogging(description);
 
                 base.evaluate();
 
                 CommonUtils.copyFileToFolderInSdCard(
-                        automationLogStrategy.getLogFile(),
+                        automationLogFileAppender.getLogFile(),
                         LOG_FOLDER_NAME
                 );
             }
         };
     }
 
-    private FileLogger turnOnAutomationLogging(final Description description) {
+    private FileAppender turnOnAutomationLogging(final Description description) {
         final String automationLogFileName = description.getMethodName() + "-automation.log";
-        final FileLogger automationFileLogger = new FileLogger(
+        final FileAppender automationLogFileAppender = new FileAppender(
                 automationLogFileName
         );
 
         com.microsoft.identity.client.ui.automation.logging.Logger
-                .getLoggerRegistry()
-                .registerLogger(automationFileLogger);
+                .getAppenderRegistry()
+                .registerAppender(automationLogFileAppender);
 
-        return automationFileLogger;
+        return automationLogFileAppender;
     }
 }

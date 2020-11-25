@@ -25,15 +25,16 @@ package com.microsoft.identity.client.ui.automation.logging;
 import androidx.annotation.NonNull;
 
 /**
- * An abstract logger to write/send logs. The actual implementation of logger used may differ.
- * The logger must be registered with the {@link LoggerRegistry} to use that logging implementation.
+ * An logger to write/send logs. The logs will be sent to all the registered appenders.
+ * See {@link IAppender}. The appender must be registered with the {@link AppenderRegistry} to use
+ * that logging implementation.
  */
 public class Logger {
 
-    private static final LoggerRegistry LOGGER_REGISTRY = LoggerRegistry.getInstance();
+    private static final AppenderRegistry APPENDER_REGISTRY = AppenderRegistry.getInstance();
 
-    public static LoggerRegistry getLoggerRegistry() {
-        return LOGGER_REGISTRY;
+    public static AppenderRegistry getAppenderRegistry() {
+        return APPENDER_REGISTRY;
     }
 
     /**
@@ -45,9 +46,7 @@ public class Logger {
      */
     public static void e(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.e(tag, message);
-        }
+        log(LogLevel.ERROR, tag, message, null);
     }
 
     /**
@@ -61,9 +60,7 @@ public class Logger {
     public static void e(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.e(tag, message, exception);
-        }
+        log(LogLevel.ERROR, tag, message, exception);
     }
 
 
@@ -76,9 +73,7 @@ public class Logger {
      */
     public static void w(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.w(tag, message);
-        }
+        log(LogLevel.WARN, tag, message, null);
     }
 
     /**
@@ -92,9 +87,7 @@ public class Logger {
     public static void w(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.w(tag, message, exception);
-        }
+        log(LogLevel.WARN, tag, message, exception);
     }
 
     /**
@@ -106,9 +99,7 @@ public class Logger {
      */
     public static void i(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.i(tag, message);
-        }
+        log(LogLevel.INFO, tag, message, null);
     }
 
     /**
@@ -122,9 +113,7 @@ public class Logger {
     public static void i(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.i(tag, message, exception);
-        }
+        log(LogLevel.INFO, tag, message, exception);
     }
 
 
@@ -137,9 +126,7 @@ public class Logger {
      */
     public static void v(@NonNull final String tag,
                          @NonNull final String message) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.v(tag, message);
-        }
+        log(LogLevel.VERBOSE, tag, message, null);
     }
 
     /**
@@ -153,8 +140,15 @@ public class Logger {
     public static void v(@NonNull final String tag,
                          @NonNull final String message,
                          @NonNull final Throwable exception) {
-        for (ILogger logger : LOGGER_REGISTRY.getRegisteredLoggers()) {
-            logger.v(tag, message, exception);
+        log(LogLevel.VERBOSE, tag, message, exception);
+    }
+
+    private static void log(final LogLevel logLevel,
+                            final String tag,
+                            final String message,
+                            final Throwable throwable) {
+        for (final IAppender appender : APPENDER_REGISTRY.getRegisteredAppenders()) {
+            appender.append(logLevel, tag, message, throwable);
         }
     }
 }

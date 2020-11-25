@@ -29,8 +29,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -40,65 +38,23 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import lombok.EqualsAndHashCode;
-
 /**
- * An implementation of {@link ILogger} to write logs to a file on desk. The filename must be
+ * An implementation of {@link IAppender} to write logs to a file on desk. The filename must be
  * supplied to the FileLogger and the file will be created in the files directory reserved by the OS
  * for the calling application. This directory is what is returned by {@link Context#getFilesDir()}.
  */
-@EqualsAndHashCode
-public class FileLogger implements ILogger {
+public class FileAppender implements IAppender {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
     private final String mFileName;
 
-    public FileLogger(@NonNull final String filename) {
+    public FileAppender(@NonNull final String filename) {
         mFileName = filename;
     }
 
     @Override
-    public void e(@NonNull String tag, @NonNull String message) {
-        log(LogLevel.ERROR, tag, message, null);
-    }
-
-    @Override
-    public void e(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
-        log(LogLevel.ERROR, tag, message, exception);
-    }
-
-    @Override
-    public void w(@NonNull String tag, @NonNull String message) {
-        log(LogLevel.WARN, tag, message, null);
-    }
-
-    @Override
-    public void w(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
-        log(LogLevel.WARN, tag, message, exception);
-    }
-
-    @Override
-    public void i(@NonNull String tag, @NonNull String message) {
-        log(LogLevel.INFO, tag, message, null);
-    }
-
-    @Override
-    public void i(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
-        log(LogLevel.INFO, tag, message, exception);
-    }
-
-    @Override
-    public void v(@NonNull String tag, @NonNull String message) {
-        log(LogLevel.VERBOSE, tag, message, null);
-    }
-
-    @Override
-    public void v(@NonNull String tag, @NonNull String message, @NonNull Throwable exception) {
-        log(LogLevel.VERBOSE, tag, message, exception);
-    }
-
-    private void log(LogLevel logLevel, String tag, String message, Throwable throwable) {
+    public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
         final String logMessage = formatMessage(logLevel, tag, message, throwable);
         writeLogToFile(logMessage);
     }
