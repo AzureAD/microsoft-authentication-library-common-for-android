@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
+import androidx.test.uiautomator.UiObjectNotFoundException;
+
 import com.microsoft.identity.client.ui.automation.app.IApp;
 
 /**
@@ -34,6 +36,6 @@ public interface IBrowser extends IApp {
      *
      * @param url the url to open
      */
-    void navigateTo(String url);
+    void navigateTo(String url) throws UiObjectNotFoundException;
 
 }

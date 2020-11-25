@@ -22,10 +22,17 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
+import android.app.Instrumentation;
+
 import androidx.annotation.NonNull;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+
 
 /**
  * A model for interacting with the Google Chrome Browser App during UI Test.
@@ -46,7 +53,11 @@ public class BrowserChrome extends App implements IBrowser {
     }
 
     @Override
-    public void navigateTo(@NonNull final String url) {
+    public void navigateTo(@NonNull final String url) throws UiObjectNotFoundException {
         //TODO: implement browsing for Chrome
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        UiAutomatorUtils.handleButtonClick("com.android.chrome:id/search_box_text");
+        UiAutomatorUtils.handleInput("com.android.chrome:id/url_bar",url);
+        device.pressEnter();
     }
 }
