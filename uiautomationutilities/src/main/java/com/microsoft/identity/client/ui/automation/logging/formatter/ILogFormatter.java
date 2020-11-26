@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.logging.formatter;
 
 import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
+/**
+ * An interface for formatting log messages.
+ */
 public interface ILogFormatter {
 
     /**

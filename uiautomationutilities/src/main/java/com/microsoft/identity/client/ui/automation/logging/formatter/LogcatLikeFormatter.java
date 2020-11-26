@@ -31,6 +31,10 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
+/**
+ * A log formatter that formats logs into a single string following the same format as used by the
+ * the Android {@link Log} utility.
+ */
 public class LogcatLikeFormatter implements ILogFormatter {
 
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
