@@ -27,6 +27,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -36,7 +37,7 @@ public class AppenderRegistry {
 
     private static final AppenderRegistry INSTANCE = new AppenderRegistry();
 
-    private final Set<IAppender> mRegisteredAppenders = new HashSet<>();
+    private final Set<IAppender> mRegisteredAppenders = new LinkedHashSet<>();
 
     private AppenderRegistry() {
     }
