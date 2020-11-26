@@ -26,7 +26,6 @@ import android.content.Context;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.logging.LogLevel;
@@ -36,10 +35,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
 
 /**
  * An implementation of {@link IAppender} to write logs to a file on desk. The filename must be
@@ -52,13 +47,14 @@ public class FileAppender implements IAppender {
 
     private final String mFileName;
     private final File mLogFile;
-    private BufferedWriter mBufferedWriter;
+    private final BufferedWriter mBufferedWriter;
     private final ILogFormatter mLogFormatter;
 
 
     public FileAppender(@NonNull final String filename, @NonNull final ILogFormatter logFormatter) throws IOException {
         mFileName = filename;
         mLogFile = createLogFile(filename);
+        mBufferedWriter = new BufferedWriter(new FileWriter(mLogFile, true));
         mLogFormatter = logFormatter;
     }
 
@@ -66,33 +62,15 @@ public class FileAppender implements IAppender {
     public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
         final String logMessage = mLogFormatter.format(logLevel, tag, message, throwable);
         try {
-            writeLogToFile(logMessage);
+            writeUsingBufferedWriter(logMessage);
         } catch (final IOException e) {
             Log.e(TAG, "Error while trying to write log to file.", e);
         }
     }
 
-    private void writeLogToFile(final String logMessage) throws IOException {
-        try {
-            writeUsingBufferedWriter(logMessage);
-        } catch (IOException e) {
-            // the writer may have got closed. So let's create a new one and re-attempt write.
-            mBufferedWriter = createBufferedWriterForLogFile();
-            writeUsingBufferedWriter(logMessage);
-        }
-    }
-
     private void writeUsingBufferedWriter(final String message) throws IOException {
-        if (mBufferedWriter == null) {
-            mBufferedWriter = createBufferedWriterForLogFile();
-        }
-
         mBufferedWriter.append(message);
         mBufferedWriter.newLine();
-    }
-
-    private BufferedWriter createBufferedWriterForLogFile() throws IOException {
-        return new BufferedWriter(new FileWriter(mLogFile, true));
     }
 
     private File createLogFile(@NonNull final String filename) throws IOException {
@@ -121,8 +99,9 @@ public class FileAppender implements IAppender {
     public void closeWriter() {
         try {
             mBufferedWriter.close();
-        } catch (final IOException e) {
-            Log.e(TAG, "Error while trying to close writer", e);
+            AppenderRegistry.getInstance().unregisterAppender(this);
+        } catch (IOException e) {
+            Log.e(TAG, "Error while trying to close file writer.", e);
         }
     }
 }

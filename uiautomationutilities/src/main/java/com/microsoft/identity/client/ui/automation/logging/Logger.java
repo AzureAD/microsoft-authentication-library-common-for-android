@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.logging;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.logging.appender.AppenderRegistry;
 import com.microsoft.identity.client.ui.automation.logging.appender.IAppender;
 
 /**
