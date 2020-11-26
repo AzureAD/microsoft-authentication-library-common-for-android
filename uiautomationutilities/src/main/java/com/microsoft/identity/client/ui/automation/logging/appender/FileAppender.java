@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.logging.LogLevel;
+import com.microsoft.identity.client.ui.automation.logging.formatter.ILogFormatter;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -49,21 +50,21 @@ public class FileAppender implements IAppender {
 
     private static final String TAG = FileAppender.class.getSimpleName();
 
-    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-
     private final String mFileName;
     private final File mLogFile;
     private BufferedWriter mBufferedWriter;
+    private final ILogFormatter mLogFormatter;
 
 
-    public FileAppender(@NonNull final String filename) throws IOException {
+    public FileAppender(@NonNull final String filename, @NonNull final ILogFormatter logFormatter) throws IOException {
         mFileName = filename;
         mLogFile = createLogFile(filename);
+        mLogFormatter = logFormatter;
     }
 
     @Override
     public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
-        final String logMessage = formatMessage(logLevel, tag, message, throwable);
+        final String logMessage = mLogFormatter.format(logLevel, tag, message, throwable);
         try {
             writeLogToFile(logMessage);
         } catch (final IOException e) {
@@ -115,23 +116,6 @@ public class FileAppender implements IAppender {
 
     public File getLogFile() {
         return mLogFile;
-    }
-
-    private String formatMessage(
-            @NonNull final LogLevel logLevel,
-            @NonNull final String tag,
-            @NonNull final String message,
-            @Nullable final Throwable throwable) {
-        final String logMessage = getUTCDateTimeAsString() + ": " + logLevel.getLabel() + "/" + tag
-                + ": " + message;
-        return logMessage + (throwable == null ? "" : '\n' + Log.getStackTraceString(throwable));
-    }
-
-    private static String getUTCDateTimeAsString() {
-        final SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT, Locale.getDefault());
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-        return dateFormat.format(new Date());
     }
 
     public void closeWriter() {

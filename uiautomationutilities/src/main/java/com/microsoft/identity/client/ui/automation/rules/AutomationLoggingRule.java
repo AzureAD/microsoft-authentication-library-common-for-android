@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
 import com.microsoft.identity.client.ui.automation.logging.appender.FileAppender;
+import com.microsoft.identity.client.ui.automation.logging.formatter.LogcatLikeFormatter;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
@@ -61,7 +62,7 @@ public class AutomationLoggingRule implements TestRule {
     private FileAppender turnOnAutomationLogging(final Description description) throws IOException {
         final String automationLogFileName = description.getMethodName() + "-automation.log";
         final FileAppender automationLogFileAppender = new FileAppender(
-                automationLogFileName
+                automationLogFileName, new LogcatLikeFormatter()
         );
 
         com.microsoft.identity.client.ui.automation.logging.Logger
