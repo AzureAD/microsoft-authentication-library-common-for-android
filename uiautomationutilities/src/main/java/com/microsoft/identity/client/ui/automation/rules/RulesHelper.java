@@ -32,7 +32,6 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
-import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.RuleChain;
 
@@ -60,7 +59,7 @@ public class RulesHelper {
         Log.i(TAG, "Adding UiAutomatorTestRule");
         ruleChain = ruleChain.around(new UiAutomatorTestRule());
 
-        Logger.i(TAG, "Adding ResetAutomaticTimeZoneTestRule");
+        Log.i(TAG, "Adding ResetAutomaticTimeZoneTestRule");
         ruleChain = ruleChain.around(new ResetAutomaticTimeZoneTestRule());
 
         if (com.microsoft.identity.client.ui.automation.BuildConfig.PREFER_PRE_INSTALLED_APKS) {
