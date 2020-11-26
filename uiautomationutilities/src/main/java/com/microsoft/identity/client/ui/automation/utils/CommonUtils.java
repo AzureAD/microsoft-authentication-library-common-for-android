@@ -37,7 +37,7 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthent
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -134,11 +134,13 @@ public class CommonUtils {
      * @return a {@link List} of {@link ITestBroker} objects
      */
     public static List<ITestBroker> getAllPossibleTestBrokers() {
-        final List<ITestBroker> brokerList = new ArrayList<>();
-        brokerList.add(new BrokerCompanyPortal());
-        brokerList.add(new BrokerMicrosoftAuthenticator());
-        brokerList.add(new BrokerHost());
-        return brokerList;
+        return Arrays.asList(
+                new ITestBroker[]{
+                        new BrokerCompanyPortal(),
+                        new BrokerMicrosoftAuthenticator(),
+                        new BrokerHost()
+                }
+        );
     }
 
     /**
@@ -154,7 +156,7 @@ public class CommonUtils {
         final File dir = new File(destinationPath);
         final File destFile = new File(dir, file.getName());
         final String destFilePath = destFile.getAbsolutePath();
-        AdbShellUtils.executeShellCommand("mkdir /sdcard/automation");
+        AdbShellUtils.executeShellCommand("mkdir -p " + destinationPath);
         AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
     }
 }
