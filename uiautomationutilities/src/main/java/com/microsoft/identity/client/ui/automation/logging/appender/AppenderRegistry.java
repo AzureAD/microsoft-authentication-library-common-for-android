@@ -64,7 +64,7 @@ public class AppenderRegistry {
     }
 
     /**
-     * Get all the loggers currently registered with the {@link Logger}.
+     * Get all the appenders currently registered with the {@link Logger}.
      *
      * @return a set containging loggers
      */
@@ -73,7 +73,7 @@ public class AppenderRegistry {
     }
 
     /**
-     * Remove all loggers currently registered with {@link Logger}.
+     * Remove all appenders currently registered with {@link Logger}.
      */
     public void unregisterAllAppenders() {
         mRegisteredAppenders.clear();
