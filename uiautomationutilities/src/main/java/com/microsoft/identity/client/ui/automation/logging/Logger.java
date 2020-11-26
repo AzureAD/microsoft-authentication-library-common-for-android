@@ -24,7 +24,7 @@ package com.microsoft.identity.client.ui.automation.logging;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.logging.appenders.IAppender;
+import com.microsoft.identity.client.ui.automation.logging.appender.IAppender;
 
 /**
  * A logger to write/send logs. The logs will be sent to all the registered appenders.

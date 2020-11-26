@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import com.microsoft.identity.client.ui.automation.logging.appenders.FileAppender;
+import com.microsoft.identity.client.ui.automation.logging.appender.FileAppender;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
