@@ -69,6 +69,7 @@ public class FileAppender extends AbstractAppender {
         try {
             mBufferedWriter.append(message);
             mBufferedWriter.newLine();
+            mBufferedWriter.flush();
         } catch (final IOException e) {
             Log.e(TAG, "Error while trying to write log to file.", e);
         }
