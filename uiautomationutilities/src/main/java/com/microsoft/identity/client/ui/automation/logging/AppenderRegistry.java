@@ -24,6 +24,8 @@ package com.microsoft.identity.client.ui.automation.logging;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.logging.appenders.IAppender;
+
 import java.util.HashSet;
 import java.util.Set;
 

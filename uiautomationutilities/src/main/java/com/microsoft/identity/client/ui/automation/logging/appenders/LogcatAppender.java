@@ -20,21 +20,36 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.logging;
+package com.microsoft.identity.client.ui.automation.logging.appenders;
+
+import android.util.Log;
+
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
+import com.microsoft.identity.client.ui.automation.logging.appenders.IAppender;
 
 /**
- * An interface for appending log messages to the desired destination.
+ * An implementation of {@link IAppender} to send logs to Android logcat.
  */
-public interface IAppender {
+public class LogcatAppender implements IAppender {
 
-    /**
-     * Appends the log message to wherever needed as determined by the implementation.
-     *
-     * @param logLevel  the level of the log
-     * @param tag       the tag associated to this log
-     * @param message   the message to log
-     * @param throwable the exception to log
-     */
-    void append(LogLevel logLevel, String tag, String message, Throwable throwable);
-
+    @Override
+    public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
+        switch (logLevel) {
+            case VERBOSE:
+                Log.v(tag, message, throwable);
+                break;
+            case INFO:
+                Log.i(tag, message, throwable);
+                break;
+            case WARN:
+                Log.w(tag, message, throwable);
+                break;
+            case ERROR:
+                Log.e(tag, message, throwable);
+                break;
+            default:
+                Log.d(tag, message, throwable);
+                break;
+        }
+    }
 }

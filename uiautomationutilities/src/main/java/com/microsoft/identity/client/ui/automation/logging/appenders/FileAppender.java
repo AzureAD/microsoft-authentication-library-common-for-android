@@ -20,7 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.logging;
+package com.microsoft.identity.client.ui.automation.logging.appenders;
 
 import android.content.Context;
 import android.util.Log;
@@ -28,6 +28,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
 import java.io.BufferedWriter;
 import java.io.File;
