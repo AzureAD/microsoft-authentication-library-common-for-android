@@ -50,7 +50,15 @@ public class FileAppender implements IAppender {
     private final BufferedWriter mBufferedWriter;
     private final ILogFormatter mLogFormatter;
 
-
+    /**
+     * Constructor for create a new File Appender object. This file appender will write logs to a
+     * log file with the name that is supplied via this constructor. It will throw an
+     * {@link IOException} if an error occurs while trying to create and open the log file.
+     *
+     * @param filename     the filename to use while creating log file
+     * @param logFormatter the log formatter to use while writing logs to file
+     * @throws IOException an exception that is thrown if an error occurs while creating log file
+     */
     public FileAppender(@NonNull final String filename, @NonNull final ILogFormatter logFormatter) throws IOException {
         mFileName = filename;
         mLogFile = createLogFile(filename);
@@ -88,14 +96,30 @@ public class FileAppender implements IAppender {
         return logFile;
     }
 
+    /**
+     * Get the name of the log file where logs are being written.
+     *
+     * @return a String representing log file name
+     */
     public String getLogFileName() {
         return mFileName;
     }
 
+    /**
+     * Get the Log File object for the file where logs are being written.
+     *
+     * @return a {@link File} object for the log file
+     */
     public File getLogFile() {
         return mLogFile;
     }
 
+    /**
+     * Close the file writer that was writing logs to a file. This method allows to clean up
+     * resources if you are done using this file appender. Upon closing the writer, this method will
+     * also unregister this appender with the {@link AppenderRegistry} and this appender will no
+     * longer be used while writing logs.
+     */
     public void closeWriter() {
         try {
             mBufferedWriter.close();
