@@ -22,19 +22,28 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.logging.appender;
 
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 import com.microsoft.identity.client.ui.automation.logging.formatter.ILogFormatter;
 
 /**
- * An implementation of {@link IAppender} to send logs to Console (Standard Output).
+ * An abstract {@link IAppender} that uses a {@link ILogFormatter} to format the logs into a single
+ * String and write those logs to desired destination as determined by implementations of the
+ * {@link AbstractAppender#append(String)} method.
  */
-public class ConsoleAppender extends AbstractAppender {
+public abstract class AbstractAppender implements IAppender {
 
-    public ConsoleAppender(final ILogFormatter logFormatter) {
-        super(logFormatter);
+    private final ILogFormatter mLogFormatter;
+
+    public AbstractAppender(final ILogFormatter logFormatter) {
+        this.mLogFormatter = logFormatter;
     }
 
     @Override
-    public void append(final String message) {
-        System.out.println(message);
+    public void append(final LogLevel logLevel, final String tag, final String message, final Throwable throwable) {
+        final String logMessage = mLogFormatter.format(logLevel, tag, message, throwable);
+        append(logMessage);
     }
+
+    abstract public void append(final String message);
+
 }
