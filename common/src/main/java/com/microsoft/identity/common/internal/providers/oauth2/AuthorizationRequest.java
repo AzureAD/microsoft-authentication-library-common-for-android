@@ -252,10 +252,8 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         public Builder<B> setCpInstallationDetail(final @NonNull Context context) {
             try {
-                // Do not use COMPANY_PORTAL_APP_PACKAGE_NAME, since we actually want this to be
-                // CP's package name - not brokerHost's - even in localDebug mode.
                 final PackageInfo packageInfo =
-                        context.getPackageManager().getPackageInfo("com.microsoft.windowsintune.companyportal", 0);
+                        context.getPackageManager().getPackageInfo(COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
                 mCpVersion = packageInfo.versionName;
             } catch (final PackageManager.NameNotFoundException e) {
                 // CP is not installed. No need to do anything.

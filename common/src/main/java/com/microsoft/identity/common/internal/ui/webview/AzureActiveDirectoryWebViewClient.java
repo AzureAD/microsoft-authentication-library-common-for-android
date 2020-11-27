@@ -128,6 +128,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * <li>A url that starts with the same prefix as the tenant's redirect url</li>
      * <li>An explicit request to open the browser (starts with "browser://")</li>
      * <li>A request to install the auth broker (starts with "msauth://")</li>
+     * <li>A request from WebCP (starts with "companyportal://")</li>
      * <li>It is a request that has the intent of starting the broker and the url starts with "browser://"</li>
      * <li>It <strong>does not</strong> begin with "https://".</li></ul>
      *
