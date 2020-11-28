@@ -163,9 +163,4 @@ public class AdbShellUtils {
     public static void copyFile(@NonNull final String srcFile, @NonNull final String destFile) {
         executeShellCommand("cp " + srcFile + " " + destFile);
     }
-
-    public static void copyToSdCard(@NonNull final String srcFile, @NonNull final String destFile) {
-        executeShellCommand("mkdir /sdcard/automation");
-        executeShellCommandAsCurrentPackage("cp " + srcFile + " " + destFile);
-    }
 }
