@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
-import androidx.test.uiautomator.UiObjectNotFoundException;
-
 import com.microsoft.identity.client.ui.automation.app.IApp;
 
 /**
