@@ -53,11 +53,10 @@ public class BrowserChrome extends App implements IBrowser {
     }
 
     @Override
-    public void navigateTo(@NonNull final String url) throws UiObjectNotFoundException {
-        //TODO: implement browsing for Chrome
+    public void navigateTo(@NonNull final String url) {
         UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/search_box_text");
-        UiAutomatorUtils.handleInput("com.android.chrome:id/url_bar",url);
+        UiAutomatorUtils.handleInput("com.android.chrome:id/url_bar", url);
         device.pressEnter();
     }
 }

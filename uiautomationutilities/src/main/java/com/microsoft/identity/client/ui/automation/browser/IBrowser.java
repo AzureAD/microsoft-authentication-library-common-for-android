@@ -36,6 +36,6 @@ public interface IBrowser extends IApp {
      *
      * @param url the url to open
      */
-    void navigateTo(String url) throws UiObjectNotFoundException;
+    void navigateTo(String url);
 
 }
