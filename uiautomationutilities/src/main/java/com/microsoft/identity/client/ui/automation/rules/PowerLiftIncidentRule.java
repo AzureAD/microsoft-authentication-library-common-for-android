@@ -3,6 +3,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 import android.util.Log;
 
 import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -26,19 +27,19 @@ public class PowerLiftIncidentRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 try {
                     base.evaluate();
                 } catch (final Throwable originalThrowable) {
                     try {
-                        Log.e(
+                        Logger.e(
                                 TAG,
                                 "Encountered error during test....creating PowerLift incident.",
                                 originalThrowable
                         );
                         powerLiftIntegratedApp.createPowerLiftIncident();
                     } catch (final Throwable powerLiftError) {
-                        Log.e(
+                        Logger.e(
                                 TAG,
                                 "Oops...something went wrong...unable to create PowerLift incident.",
                                 powerLiftError

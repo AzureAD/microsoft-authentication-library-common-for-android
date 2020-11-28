@@ -50,7 +50,11 @@ public class RulesHelper {
      * @return a {@link RuleChain} object
      */
     public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker) {
-        RuleChain ruleChain = RuleChain.outerRule(new RetryTestRule());
+        Log.i(TAG, "Adding AutomationLoggingRule");
+        RuleChain ruleChain = RuleChain.outerRule(new AutomationLoggingRule());
+
+        Log.i(TAG, "Adding RetryTestRule");
+        ruleChain = ruleChain.around(new RetryTestRule());
 
         Log.i(TAG, "Adding UiAutomatorTestRule");
         ruleChain = ruleChain.around(new UiAutomatorTestRule());

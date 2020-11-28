@@ -26,6 +26,7 @@ import android.util.Log;
 
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
@@ -46,13 +47,13 @@ public class RemoveBrokersBeforeTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 final List<ITestBroker> testBrokers = CommonUtils.getAllPossibleTestBrokers();
 
                 for (final ITestBroker broker : testBrokers) {
                     if (broker.isInstalled()) {
-                        Log.i(TAG, "Detected pre-installed broker: " + ((App) broker).getAppName());
-                        Log.i(TAG, "Uninstalling broker: " + ((App) broker).getAppName());
+                        Logger.i(TAG, "Detected pre-installed broker: " + ((App) broker).getAppName());
+                        Logger.i(TAG, "Uninstalling broker: " + ((App) broker).getAppName());
                         broker.uninstall();
                     }
                 }

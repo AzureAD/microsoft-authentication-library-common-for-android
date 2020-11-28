@@ -20,34 +20,30 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
+package com.microsoft.identity.client.ui.automation.logging.appender;
 
-import android.util.Log;
-
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
+import com.microsoft.identity.client.ui.automation.logging.formatter.ILogFormatter;
 
 /**
- * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case.
+ * An abstract {@link IAppender} that uses a {@link ILogFormatter} to format the logs into a single
+ * String and write those logs to desired destination as determined by implementations of the
+ * {@link AbstractAppender#append(String)} method.
  */
-public class ResetAutomaticTimeZoneTestRule implements TestRule {
+public abstract class AbstractAppender implements IAppender {
 
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
+    private final ILogFormatter mLogFormatter;
+
+    public AbstractAppender(final ILogFormatter logFormatter) {
+        this.mLogFormatter = logFormatter;
+    }
 
     @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                AdbShellUtils.enableAutomaticTimeZone();
-                base.evaluate();
-            }
-        };
+    public void append(final LogLevel logLevel, final String tag, final String message, final Throwable throwable) {
+        final String logMessage = mLogFormatter.format(logLevel, tag, message, throwable);
+        append(logMessage);
     }
+
+    abstract public void append(final String message);
 
 }
