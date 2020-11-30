@@ -45,10 +45,10 @@ public class CacheRecord implements ICacheRecord {
 
     public static class CacheRecordBuilder {
         public CacheRecordBuilder mAccount(final @NonNull AccountRecord account) {
-            if (mAccount == null) {
+            if (account == null) {
                 throw new NullPointerException("The account record for a CacheRecord may not be null");
             }
-            this.mAccount = mAccount;
+            this.mAccount = account;
             return this;
         }
     }
