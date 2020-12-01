@@ -192,8 +192,11 @@ public class TokenCacheItemMigrationAdapter {
         // based on the RT (Which the given clientId might not be pre-authorized for).
         // TODO: make pre-authorization of MSGraph User.read (and the default scopes) a requirement
         //       for every FoCI apps (and hardcode it here).
+        //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
         if (TextUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
             scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
+            Logger.info(TAG + methodName,
+                    "Teams agent client ID - making a test request with teams agent resource.");
         } else {
             scopes = BaseController.getDelimitedDefaultScopeString();
         }
