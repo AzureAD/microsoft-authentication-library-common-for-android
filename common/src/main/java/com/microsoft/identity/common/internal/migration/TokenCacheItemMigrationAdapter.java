@@ -153,9 +153,9 @@ public class TokenCacheItemMigrationAdapter {
     /**
      * Testing whether the given client ID can use the cached foci to refresh token.
      *
-     * @param clientId    String of the given client id.
-     * @param redirectUri redirect url string of the given client id.
-     * @param accountRecord account record of request
+     * @param clientId           String of the given client id.
+     * @param redirectUri        redirect url string of the given client id.
+     * @param accountRecord      account record of request
      * @param refreshTokenRecord refresh token record of FOCI account
      * @return true if the given client id can use the cached foci token. False, otherwise.
      * @throws ClientException
@@ -185,7 +185,21 @@ public class TokenCacheItemMigrationAdapter {
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();
-        final String scopes = BaseController.getDelimitedDefaultScopeString();
+
+        final String scopes;
+        // Hardcoding Teams Agent's client ID with the scope it's pre-authorized for.
+        // This is because if only the default scope is passed, eSTS will set the resource ID (on its side)
+        // based on the RT (Which the given clientId might not be pre-authorized for).
+        // TODO: make pre-authorization of MSGraph User.read (and the default scopes) a requirement
+        //       for every FoCI apps (and hardcode it here).
+        //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
+        if (TextUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
+            scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
+            Logger.info(TAG + methodName,
+                    "Teams agent client ID - making a test request with teams agent resource.");
+        } else {
+            scopes = BaseController.getDelimitedDefaultScopeString();
+        }
 
         // Create a correlation_id for the request
         final UUID correlationId = UUID.randomUUID();
@@ -194,6 +208,7 @@ public class TokenCacheItemMigrationAdapter {
                 "Create the token request with correlationId ["
                         + correlationId
                         + "]");
+
         final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
                 clientId,
                 scopes,
@@ -653,11 +668,11 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     private static MicrosoftStsAuthorizationRequest createAuthRequest(@NonNull final MicrosoftStsOAuth2Strategy strategy,
-                                                                     @NonNull final String clientId,
-                                                                     @NonNull final String redirectUri,
-                                                                     @NonNull final String scope,
-                                                                     @NonNull final IAccountRecord accountRecord,
-                                                                     @Nullable final UUID correlationId) {
+                                                                      @NonNull final String clientId,
+                                                                      @NonNull final String redirectUri,
+                                                                      @NonNull final String scope,
+                                                                      @NonNull final IAccountRecord accountRecord,
+                                                                      @Nullable final UUID correlationId) {
         final MicrosoftStsAuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(
                 accountRecord
         );

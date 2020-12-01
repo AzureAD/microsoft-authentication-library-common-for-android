@@ -1,5 +1,6 @@
 Version 3.0.8
 ----------
+- Hardcode Teams Agent clientID/scope for FoCi call (#1140)
 - (Make changes to) persist refresh token in joined flow. (#1130)
 
 Version 3.0.7
