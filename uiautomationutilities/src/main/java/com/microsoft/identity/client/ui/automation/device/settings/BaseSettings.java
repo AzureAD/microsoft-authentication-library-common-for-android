@@ -35,16 +35,11 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
+
 public abstract class BaseSettings implements ISettings {
 
     final static String SETTINGS_PKG = "com.android.settings";
-
-    private static void launchIntent(@NonNull final String action) {
-        final Context context = ApplicationProvider.getApplicationContext();
-        final Intent intent = new Intent(action);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-        context.startActivity(intent);
-    }
 
     @Override
     public void launchDeviceAdminSettingsPage() {
