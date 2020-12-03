@@ -160,6 +160,10 @@ public class CommonUtils {
         AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
     }
 
+    /**
+     * it will launch activity specified in the action.
+     * @param action action is which operation to be performed.
+     */
     public static void launchIntent(@NonNull final String action) {
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(action);
