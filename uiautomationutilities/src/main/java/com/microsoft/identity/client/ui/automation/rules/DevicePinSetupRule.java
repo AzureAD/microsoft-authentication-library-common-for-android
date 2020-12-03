@@ -1,3 +1,25 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
 import android.app.KeyguardManager;
@@ -20,6 +42,10 @@ import org.junit.runners.model.Statement;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
 
+/**
+ * A test rule that allows you to setup PIN for the device if the pin is not setup and
+ * if it is already setup then it will do nothing.
+ */
 public class DevicePinSetupRule implements TestRule {
 
     final Boolean isLocked = IsDeviceSecured();
@@ -55,28 +81,21 @@ public class DevicePinSetupRule implements TestRule {
         UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
         Assert.assertTrue(screenLock.exists());
         screenLock.click();
-        //click on PIN.
-        UiObject PinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
-        Assert.assertTrue(PinButton.exists());
-        PinButton.click();
-
-        //click on NO
+        UiObject pinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
+        Assert.assertTrue(pinButton.exists());
+        pinButton.click();
         UiObject noButton = UiAutomatorUtils.obtainUiObjectWithExactText("NO");
         Assert.assertTrue(noButton.exists());
         noButton.click();
 
-        //press 1234
         UiObject passwordField = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry");
         Assert.assertTrue(passwordField.exists());
         passwordField.setText("1234");
-        //press Enter.
-        //UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         device.pressEnter();
-        //press
         passwordField = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry");
         passwordField.setText("1234");
         device.pressEnter();
-        //click on done button.
+
         UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/redaction_done_button");
         Assert.assertTrue(doneButton.exists());
         doneButton.click();
