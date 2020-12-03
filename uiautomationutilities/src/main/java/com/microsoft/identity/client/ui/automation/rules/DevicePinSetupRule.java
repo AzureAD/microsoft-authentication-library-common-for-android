@@ -49,6 +49,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
 public class DevicePinSetupRule implements TestRule {
 
     final String password = "1234";
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
@@ -63,7 +64,7 @@ public class DevicePinSetupRule implements TestRule {
     }
 
     private boolean isDeviceSecured() {
-        Context context = ApplicationProvider.getApplicationContext();
+        final Context context = ApplicationProvider.getApplicationContext();
         KeyguardManager keyguardManager =
                 (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
