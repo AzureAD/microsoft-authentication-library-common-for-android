@@ -75,7 +75,7 @@ public class DevicePinSetupRule implements TestRule {
 
     private void setLock() throws UiObjectNotFoundException {
 
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         launchIntent(Settings.ACTION_SECURITY_SETTINGS);
 
         final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
