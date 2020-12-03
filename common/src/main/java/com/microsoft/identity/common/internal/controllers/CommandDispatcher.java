@@ -225,8 +225,8 @@ public class CommandDispatcher {
                                             + " the calling application was " + command.getParameters().getApplicationName(), null);
                                     cleanMap(command);
                                 }
-                                finalFuture.setCleanedUp();
                             }
+                            finalFuture.setCleanedUp();
                         }
                         DiagnosticContext.clear();
                     }
