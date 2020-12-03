@@ -81,9 +81,4 @@ public class InteractiveTokenCommand extends TokenCommand {
     public boolean isEligibleForEstsTelemetry() {
         return true;
     }
-
-    @Override
-    public boolean isEligibleForCaching() {
-        return true;
-    }
 }
