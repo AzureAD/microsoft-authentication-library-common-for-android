@@ -65,7 +65,7 @@ public class DevicePinSetupRule implements TestRule {
 
     private boolean isDeviceSecured() {
         final Context context = ApplicationProvider.getApplicationContext();
-        KeyguardManager keyguardManager =
+        final KeyguardManager keyguardManager =
                 (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             return keyguardManager.isDeviceSecure();
