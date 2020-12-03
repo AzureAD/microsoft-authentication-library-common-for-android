@@ -44,7 +44,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
 
 /**
  * A test rule that allows you to setup PIN for the device if the pin is not setup and
- * if it is already setup then it will do nothing.
+ * if it is already setup then it will keep the same PIN.
  */
 public class DevicePinSetupRule implements TestRule {
 
