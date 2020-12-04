@@ -4,6 +4,7 @@ vNext
 - Adds unit test to verify .trim() behavior of cache keys.
 - Make CacheRecord immutable, insist on NonNull AccountRecord (#1225)
 - Bugfix for incorrect error code when cancelling requests (#1144)
+- Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 
 Version 3.0.7
 ----------
