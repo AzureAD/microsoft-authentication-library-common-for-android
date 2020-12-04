@@ -39,6 +39,12 @@ import lombok.NonNull;
 public class PolicyHelper {
 
     private static final String TAG = PolicyHelper.class.getName();
+    private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+
+    public PolicyHelper() {
+        instance.setupApiClientWithAccessToken();
+    }
+
     /**
      * Enable CA/Special Policies for any Locked User.
      * Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
@@ -48,7 +54,7 @@ public class PolicyHelper {
      * @return boolean value indicating policy enabled or not.
      */
     public boolean enablePolicy(@NonNull final String upn, @NonNull final String policy) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
             final CustomSuccessResponse customSuccessResponse = enablePolicyApi.putPolicy(upn, policy);
@@ -71,7 +77,7 @@ public class PolicyHelper {
      * @return boolean value indicating policy is disabled or not for the upn.
      */
     public boolean disablePolicy(@NonNull final String upn, @NonNull final String policy) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
             final CustomSuccessResponse customSuccessResponse = disablePolicyApi.put(upn, policy);

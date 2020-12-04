@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
@@ -37,12 +39,28 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
 
     private String mAppId;
     private String mAppSecret;
+    private final String mKeyVaultSecret;
 
     private static LabAuthenticationHelper sLabAuthHelper;
+
+    private LabAuthenticationHelper(String keyVaultSecret) {
+        mAppId = null;
+        mAppSecret = null;
+        this.mKeyVaultSecret = keyVaultSecret;
+    }
 
     private LabAuthenticationHelper() {
         mAppId = null;
         mAppSecret = null;
+        mKeyVaultSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
+    }
+
+    public static ConfidentialClientHelper getInstance(String keyVaultSecret) {
+        if (sLabAuthHelper == null) {
+            sLabAuthHelper = new LabAuthenticationHelper(keyVaultSecret);
+        }
+
+        return sLabAuthHelper;
     }
 
     public static ConfidentialClientHelper getInstance() {
@@ -60,8 +78,8 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
 
     @Override
     public TokenRequest createTokenRequest() {
-        final String appId = getAppId();
-        final String appSecret = getAppSecret();
+        final String appId = getAppId(mKeyVaultSecret);
+        final String appSecret = getAppSecret(mKeyVaultSecret);
 
         TokenRequest tr = new MicrosoftStsTokenRequest();
 
@@ -71,31 +89,31 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
         return tr;
     }
 
-    private String getAppId() {
+    private String getAppId(final String secret) {
         if (mAppId == null) {
-            mAppId = getSecretFromKeyVault(SECRET_NAME_LAB_APP_ID);
+            mAppId = getSecretFromKeyVault(SECRET_NAME_LAB_APP_ID, secret);
         }
 
         return mAppId;
     }
 
-    private String getAppSecret() {
+    private String getAppSecret(String secret) {
         if (mAppSecret == null) {
-            mAppSecret = getSecretFromKeyVault(SECRET_NAME_LAB_APP_SECRET);
+            mAppSecret = getSecretFromKeyVault(SECRET_NAME_LAB_APP_SECRET, secret);
         }
 
         return mAppSecret;
     }
 
-    private String getSecretFromKeyVault(final String secretName) {
-        KeyVaultAuthHelper.getInstance().setupApiClientWithAccessToken();
+    private String getSecretFromKeyVault(final String secretName, final @Nullable String secret) {
+        KeyVaultAuthHelper.getInstanceWithSecret(secret).setupApiClientWithAccessToken();
         SecretsApi secretsApi = new SecretsApi();
         SecretBundle secretBundle;
         try {
             secretBundle = secretsApi.getSecret(secretName, "", KEY_VAULT_API_VERSION);
+            return secretBundle.getValue();
         } catch (ApiException e) {
-            throw new IllegalStateException("Unable to get lab secret from KeyVault");
+            throw new IllegalStateException("Unable to get lab secret from KeyVault", e);
         }
-        return secretBundle.getValue();
     }
 }

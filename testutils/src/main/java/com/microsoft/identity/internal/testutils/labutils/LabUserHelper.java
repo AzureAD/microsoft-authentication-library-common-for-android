@@ -40,10 +40,12 @@ import java.util.Map;
 public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
+    private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+    {
+        instance.setupApiClientWithAccessToken();
+    }
 
     static List<ConfigInfo> getConfigInfos(LabUserQuery query) {
-
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
 
@@ -57,6 +59,7 @@ public class LabUserHelper {
                     query.homeUpn,
                     query.b2cProvider,
                     query.federationProvider,
+
                     query.azureEnvironment,
                     query.appType,
                     query.publicClient,
@@ -168,7 +171,6 @@ public class LabUserHelper {
     }
 
     public static ConfigInfo getConfigInfoFromUpn(final String upn) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
 
@@ -213,7 +215,6 @@ public class LabUserHelper {
     }
 
     public static String loadTempUser(final String userType) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
 
         TempUser tempUser;
@@ -231,7 +232,6 @@ public class LabUserHelper {
     }
 
     public static TempUser loadTempUserForTest(final String userType) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
 
         try {
@@ -277,7 +277,7 @@ public class LabUserHelper {
 
     public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
                                      IsAdminConsented isAdminConsented, PublicClient publicClient) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
             return api.getAppByParam(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
