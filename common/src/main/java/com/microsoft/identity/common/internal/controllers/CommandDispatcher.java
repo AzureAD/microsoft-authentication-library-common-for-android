@@ -37,6 +37,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.microsoft.identity.common.CodeMarker;
+import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
@@ -131,7 +133,8 @@ public class CommandDispatcher {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
-
+        //CodeMarkerManager.clear();
+        CodeMarkerManager.codemarker(10011);
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -164,6 +167,7 @@ public class CommandDispatcher {
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    CodeMarkerManager.codemarker(10012);
                     try {
                         final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
@@ -188,7 +192,9 @@ public class CommandDispatcher {
 
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
+                            CodeMarkerManager.codemarker(10013);
                             commandResult = executeCommand(command);
+                            CodeMarkerManager.codemarker(10014);
                             cacheCommandResult(command, commandResult);
                         } else {
                             Logger.info(
@@ -222,6 +228,8 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.clear();
                     }
+                    CodeMarkerManager.codemarker(10020);
+                    CodeMarkerManager.writeToFile("PerfData.txt");
                 }
             });
             return finalFuture;
@@ -431,6 +439,8 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    CodeMarkerManager.clear();
+                    CodeMarkerManager.codemarker(1);
                     try {
                         final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(
@@ -467,7 +477,9 @@ public class CommandDispatcher {
                         sCommand = command;
 
                         //Try executing request
+                        CodeMarkerManager.codemarker(2);
                         commandResult = executeCommand(command);
+                        CodeMarkerManager.codemarker(3);
                         sCommand = null;
                         localBroadcastManager.unregisterReceiver(resultReceiver);
 
@@ -477,6 +489,8 @@ public class CommandDispatcher {
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         Telemetry.getInstance().flush(correlationId);
                         returnCommandResult(command, commandResult, handler);
+                        CodeMarkerManager.codemarker(4);
+                        CodeMarkerManager.writeToFile("PerfData.txt");
                     } finally {
                         DiagnosticContext.clear();
                     }
