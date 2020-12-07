@@ -22,11 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import android.text.TextUtils;
+
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
@@ -40,16 +43,21 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
+import org.reflections.Reflections;
+
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Set;
 
 abstract class ConfidentialClientHelper {
 
     private final static String GRANT_TYPE = "client_credentials";
+    private static String sClasspathSecret = null;
 
     // tenant id where lab api and key vault api is registered
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
@@ -59,6 +67,35 @@ abstract class ConfidentialClientHelper {
     abstract TokenRequest createTokenRequest()
             throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
             KeyStoreException, NoSuchProviderException, IOException;
+
+    protected synchronized static String getBuildConfigSecretFromClasspath() {
+        if (sClasspathSecret != null) {
+            return sClasspathSecret;
+        }
+        final Reflections r = new Reflections("com.microsoft");
+        final Set<Class<?>> allClasses = r.getSubTypesOf(Object.class);
+        for (final Class<?> clazz : allClasses) {
+            if (clazz.getSimpleName() == "BuildConfig") {
+                try {
+                    final Field labField = clazz.getDeclaredField("LAB_CLIENT_SECRET");
+                    if (labField != null) {
+                        String secret = (String) labField.get(null);
+                        if (!TextUtils.isEmpty(secret)) {
+                            Logger.info("LabAuthenticationHelper:init", "Found lab secret on class with name " + clazz.getCanonicalName());
+                            sClasspathSecret = secret;
+                            return secret;
+                        }
+                    }
+                    //Swallow all exceptions.
+                } catch (final NoSuchFieldException e) {
+                } catch (final IllegalAccessException e) {
+                } catch (final ClassCastException e) {
+                }
+            }
+        }
+        sClasspathSecret = "";
+        return sClasspathSecret;
+    }
 
     abstract void setupApiClientWithAccessToken(String accessToken);
 
