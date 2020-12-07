@@ -40,11 +40,15 @@ import java.util.Map;
 public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
-    private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+    private static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
     {
         instance.setupApiClientWithAccessToken();
     }
 
+    public void resetWithSecret(final String secret) {
+        instance = LabAuthenticationHelper.getInstance(secret);
+        instance.setupApiClientWithAccessToken();
+    }
     static List<ConfigInfo> getConfigInfos(LabUserQuery query) {
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
@@ -289,7 +293,6 @@ public class LabUserHelper {
 
     public static void resetPassword(final String upn) {
         ResetApi resetApi = new ResetApi();
-
         try {
             resetApi.putResetInfo(upn, "Password");
         } catch (ApiException e) {

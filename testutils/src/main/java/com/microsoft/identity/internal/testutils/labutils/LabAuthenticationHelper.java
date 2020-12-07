@@ -22,14 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import android.text.TextUtils;
+
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
 import com.microsoft.identity.internal.test.labapi.Configuration;
+
+import org.reflections.Reflections;
+
+import java.lang.reflect.Field;
+import java.util.Set;
 
 class LabAuthenticationHelper extends ConfidentialClientHelper {
     private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
@@ -52,10 +60,36 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     private LabAuthenticationHelper() {
         mAppId = null;
         mAppSecret = null;
-        mKeyVaultSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
+        // Changing all of the classes that use this to be configurable is a large change.  This
+        // isn't necessarily the safest way to do this, but doesn't require a rewrite of everything
+        // that uses this package.
+        String buildConfigSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
+        if (TextUtils.isEmpty(buildConfigSecret)) {
+            final Reflections r = new Reflections("com.microsoft");
+            final Set<Class<?>> allClasses = r.getSubTypesOf(Object.class);
+            for (final Class<?> clazz : allClasses) {
+                if (clazz.getSimpleName() == "BuildConfig") {
+                    try {
+                        final Field labField = clazz.getDeclaredField("LAB_CLIENT_SECRET");
+                        if (labField != null) {
+                            String s = (String) labField.get(null);
+                            if (!TextUtils.isEmpty(s)) {
+                                Logger.info("LabAuthenticationHelper:init", "Found lab secret on class with name " + clazz.getCanonicalName());
+                                buildConfigSecret = s;
+                            }
+                        }
+                        //Swallow all exceptions.
+                    } catch (final NoSuchFieldException e) {
+                    } catch (final IllegalAccessException e) {
+                    } catch (final ClassCastException e) {
+                    }
+                }
+            }
+        }
+        mKeyVaultSecret = buildConfigSecret;
     }
 
-    public static ConfidentialClientHelper getInstance(String keyVaultSecret) {
+    public static synchronized ConfidentialClientHelper getInstance(String keyVaultSecret) {
         if (sLabAuthHelper == null) {
             sLabAuthHelper = new LabAuthenticationHelper(keyVaultSecret);
         }
@@ -63,7 +97,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
         return sLabAuthHelper;
     }
 
-    public static ConfidentialClientHelper getInstance() {
+    public static synchronized ConfidentialClientHelper getInstance() {
         if (sLabAuthHelper == null) {
             sLabAuthHelper = new LabAuthenticationHelper();
         }
