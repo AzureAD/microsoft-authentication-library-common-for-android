@@ -42,6 +42,7 @@ public class LabResetHelper {
      * @return a boolean indicating if password reset was successful
      */
     public static boolean resetPassword(@NonNull final String upn) {
+        INSTANCE.setupApiClientWithAccessToken();
         final ResetApi resetApi = new ResetApi();
 
         try {
@@ -62,6 +63,7 @@ public class LabResetHelper {
      * @return a boolean indicating if MFA reset was successful
      */
     public static boolean resetMfa(@NonNull final String upn) {
+        INSTANCE.setupApiClientWithAccessToken();
         final ResetApi resetApi = new ResetApi();
 
         try {
