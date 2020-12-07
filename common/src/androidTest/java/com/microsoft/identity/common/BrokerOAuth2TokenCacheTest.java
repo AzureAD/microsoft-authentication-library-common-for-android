@@ -55,6 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -124,8 +125,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
 
-        // Init Mockito mocks
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
 
         // Our test context
         final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -211,13 +211,16 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         }
     }
 
+
     @After
     public void tearDown() {
         if (null != mAppUidCredentialCache) {
             mAppUidCredentialCache.clearAll();
         }
 
-        mFociCredentialCache.clearAll();
+        if (null != mFociCredentialCache) {
+            mFociCredentialCache.clearAll();
+        }
 
         for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
             cache.clearAll();
@@ -225,6 +228,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mApplicationMetadataCache.clear();
     }
+
 
     private void initOtherCaches(final Context context) {
         testAppUids = new int[]{

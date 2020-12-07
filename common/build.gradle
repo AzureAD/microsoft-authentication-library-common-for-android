@@ -18,7 +18,16 @@ def bothTestType = "BothTest"
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
+
+    compileOptions {
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
+        // Sets Java compatibility to Java 8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    compileSdkVersion 30//rootProject.ext.compileSdkVersion
 
     def sliceParameter = "" // will be blank unless specified by developer
     def dcParameter = "" // will be blank unless specified by developer
@@ -32,6 +41,7 @@ android {
     }
 
     defaultConfig {
+        multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode getAppVersionCode()
@@ -57,8 +67,8 @@ android {
             minifyEnabled false
             debuggable false
             testCoverageEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            consumerProguardFiles 'consumer-rules.pro'
+            //proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //consumerProguardFiles 'consumer-rules.pro'
         }
     }
 
@@ -103,6 +113,9 @@ android {
 }
 
 dependencies {
+    //Java 8 - Desugaring
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.9'
+
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
