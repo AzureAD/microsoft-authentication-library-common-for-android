@@ -34,9 +34,6 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
 public class LabResetHelper {
 
     public static final ConfidentialClientHelper INSTANCE = LabAuthenticationHelper.getInstance();
-    static {
-        INSTANCE.setupApiClientWithAccessToken();
-    }
 
     /**
      * Reset the password for the supplied account.

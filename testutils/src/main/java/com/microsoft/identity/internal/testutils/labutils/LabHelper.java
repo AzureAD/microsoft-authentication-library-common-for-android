@@ -36,9 +36,6 @@ import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 public class LabHelper {
 
     private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
-    {
-        instance.setupApiClientWithAccessToken();
-    }
 
     /**
      * Get the tenant id of a lab from the LAB API.

@@ -41,10 +41,6 @@ public class PolicyHelper {
     private static final String TAG = PolicyHelper.class.getName();
     private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
 
-    public PolicyHelper() {
-        instance.setupApiClientWithAccessToken();
-    }
-
     /**
      * Enable CA/Special Policies for any Locked User.
      * Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Also test users can have more than 1 policy assigned to the same user.
