@@ -57,7 +57,11 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     private KeyVaultAuthHelper() {
-        mSecret = null;
+        String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
+        if (TextUtils.isEmpty(secret)) {
+            secret = getBuildConfigSecretFromClasspath()
+        }
+        mSecret = secret;
     }
 
     public static ConfidentialClientHelper getInstanceWithSecret(String secret) {
@@ -82,14 +86,20 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
     @Override
     public TokenRequest createTokenRequest() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        final String labClientSecret = mSecret != null ? mSecret : com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
-        final String classpathSecret = getBuildConfigSecretFromClasspath();
-        if (TextUtils.isEmpty(labClientSecret) && TextUtils.isEmpty(classpathSecret)) {
+        if (TextUtils.isEmpty(mSecret)) {
             return createTokenRequestWithClientAssertion();
         } else {
-            return !TextUtils.isEmpty(labClientSecret) ? createTokenRequestWithClientSecret(labClientSecret)
-                                                       : createTokenRequestWithClientSecret(classpathSecret);
+            return createTokenRequestWithClientSecret(mSecret);
         }
+    }
+
+    private TokenRequest createTokenRequestWithClientSecret() {
+        TokenRequest tr = new MicrosoftStsTokenRequest();
+
+        tr.setClientSecret(mSecret);
+        tr.setClientId(CLIENT_ID);
+        tr.setScope(SCOPE);
+        return tr;
     }
 
     private TokenRequest createTokenRequestWithClientSecret(String secret) {
