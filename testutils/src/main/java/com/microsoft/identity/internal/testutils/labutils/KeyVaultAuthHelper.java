@@ -59,7 +59,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     private KeyVaultAuthHelper() {
         String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
         if (TextUtils.isEmpty(secret)) {
-            secret = getBuildConfigSecretFromClasspath()
+            secret = getBuildConfigSecretFromClasspath();
         }
         mSecret = secret;
     }
