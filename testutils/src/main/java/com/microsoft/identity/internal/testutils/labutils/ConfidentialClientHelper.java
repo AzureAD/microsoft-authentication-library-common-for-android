@@ -57,6 +57,7 @@ import java.util.Set;
 abstract class ConfidentialClientHelper {
 
     private final static String GRANT_TYPE = "client_credentials";
+    public static final String LAB_CLIENT_SECRET_FIELD_NAME = "LAB_CLIENT_SECRET";
     private static String sClasspathSecret = null;
 
     // tenant id where lab api and key vault api is registered
@@ -75,9 +76,9 @@ abstract class ConfidentialClientHelper {
         final Reflections r = new Reflections("com.microsoft");
         final Set<Class<?>> allClasses = r.getSubTypesOf(Object.class);
         for (final Class<?> clazz : allClasses) {
-            if (clazz.getSimpleName() == "BuildConfig") {
+            if ("BuildConfig".equals(clazz.getSimpleName())) {
                 try {
-                    final Field labField = clazz.getDeclaredField("LAB_CLIENT_SECRET");
+                    final Field labField = clazz.getDeclaredField(LAB_CLIENT_SECRET_FIELD_NAME);
                     if (labField != null) {
                         String secret = (String) labField.get(null);
                         if (!TextUtils.isEmpty(secret)) {
@@ -87,9 +88,7 @@ abstract class ConfidentialClientHelper {
                         }
                     }
                     //Swallow all exceptions.
-                } catch (final NoSuchFieldException e) {
-                } catch (final IllegalAccessException e) {
-                } catch (final ClassCastException e) {
+                } catch (final NoSuchFieldException | IllegalAccessException | ClassCastException e) {
                 }
             }
         }
