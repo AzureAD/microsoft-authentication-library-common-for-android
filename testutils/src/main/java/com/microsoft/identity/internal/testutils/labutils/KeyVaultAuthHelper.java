@@ -102,7 +102,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
         return tr;
     }
 
-    private TokenRequest createTokenRequestWithClientSecret(String secret) {
+    private TokenRequest createTokenRequestWithClientSecret(@NonNull final String secret) {
         TokenRequest tr = new MicrosoftStsTokenRequest();
 
         tr.setClientSecret(secret);
