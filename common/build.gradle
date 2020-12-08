@@ -5,9 +5,12 @@ apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
 apply plugin: 'jacoco'
 
-// To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
+//To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
+    //This needs to be excluded for JDK 11
+    //SEE: https://support.circleci.com/hc/en-us/articles/360047926852-Android-Builds-Fail-with-java-lang-ClassNotFoundException-jdk-internal-reflect-GeneratedSerializationConstructorAccessor1-
+    jacoco.excludes = ['jdk.internal.*']
 }
 
 //Constants:- used to generate Coverage report task
@@ -17,7 +20,10 @@ def bothTestType = "BothTest"
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
 android {
+
+
 
     compileOptions {
         // Flag to enable support for the new language APIs
@@ -89,6 +95,7 @@ android {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
         }
+
     }
 
     sourceSets {
