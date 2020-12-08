@@ -4,6 +4,7 @@ vNext
 - Adds unit test to verify .trim() behavior of cache keys.
 - Make CacheRecord immutable, insist on NonNull AccountRecord (#1225)
 - Bugfix for incorrect error code when cancelling requests (#1144)
+- Remove initial about:blank page load when using WebView based auth.
 
 Version 3.0.7
 ----------
