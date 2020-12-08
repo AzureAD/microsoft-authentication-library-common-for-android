@@ -43,8 +43,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
-import org.reflections.Reflections;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.security.KeyStoreException;
