@@ -45,7 +45,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
 
     private static LabAuthenticationHelper sLabAuthHelper;
 
-    private LabAuthenticationHelper(String keyVaultSecret) {
+    private LabAuthenticationHelper(final String keyVaultSecret) {
         mAppId = null;
         mAppSecret = null;
         this.mKeyVaultSecret = keyVaultSecret;
