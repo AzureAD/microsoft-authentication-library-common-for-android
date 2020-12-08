@@ -69,6 +69,19 @@ abstract class ConfidentialClientHelper {
             throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException,
             KeyStoreException, NoSuchProviderException, IOException;
 
+    /**
+     * What's going on here.  Since the BuildConfig values are compile-time generated, and the way
+     * this was working was to pass a property to the gradle build which ended up in the build-time
+     * configuration of the testUtils package, if we're going to be able to do this from any consumer
+     * we have to have a way to search for this value.  This isn't very scientific, but what we
+     * can do is look for every class with the name "BuildConfig" in the "com.microsoft.*" namespace,
+     * and find the first class with a non-blank static field named "LAB_CLIENT_SECRET" and use it.
+     *
+     * This is not really what we want to do, but should let us move to a world where this is passed
+     * in on client construction without too much disruption.
+     *
+     * @return the lab secret string, if found, otherwise an empty string.
+     */
     protected synchronized static String getBuildConfigSecretFromClasspath() {
         if (sClasspathSecret != null) {
             return sClasspathSecret;
