@@ -54,13 +54,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     private LabAuthenticationHelper() {
         mAppId = null;
         mAppSecret = null;
-        // Changing all of the classes that use this to be configurable is a large change.  This
-        // isn't necessarily the safest way to do this, but doesn't require a rewrite of everything
-        // that uses this package.
         String buildConfigSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
-        if (TextUtils.isEmpty(buildConfigSecret)) {
-            buildConfigSecret = getBuildConfigSecretFromClasspath();
-        }
         mKeyVaultSecret = buildConfigSecret;
     }
 

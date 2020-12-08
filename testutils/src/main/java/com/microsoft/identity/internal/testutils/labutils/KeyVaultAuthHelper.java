@@ -24,6 +24,8 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -57,10 +59,7 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     }
 
     private KeyVaultAuthHelper() {
-        String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
-        if (TextUtils.isEmpty(secret)) {
-            secret = getBuildConfigSecretFromClasspath();
-        }
+        final String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
         mSecret = secret;
     }
 

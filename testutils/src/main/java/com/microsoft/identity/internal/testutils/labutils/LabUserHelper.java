@@ -40,12 +40,13 @@ import java.util.Map;
 public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
-    private static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+    private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
 
     public void resetWithSecret(final String secret) {
         instance = LabAuthenticationHelper.getInstance(secret);
         instance.setupApiClientWithAccessToken();
     }
+
     static List<ConfigInfo> getConfigInfos(LabUserQuery query) {
         instance.setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
