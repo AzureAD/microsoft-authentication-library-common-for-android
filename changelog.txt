@@ -3,6 +3,7 @@ vNext
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
 - Make CacheRecord immutable, insist on NonNull AccountRecord (#1225)
+- Bugfix for incorrect error code when cancelling requests (#1144)
 
 Version 3.0.7
 ----------
