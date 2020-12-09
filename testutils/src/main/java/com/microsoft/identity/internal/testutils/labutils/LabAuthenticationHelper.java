@@ -28,6 +28,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.util.ObjectUtils;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.internal.test.keyvault.model.SecretBundle;
@@ -59,7 +60,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     }
 
     public static synchronized ConfidentialClientHelper getInstance(String keyVaultSecret) {
-        if (sLabAuthHelper == null) {
+        if (sLabAuthHelper == null || !ObjectUtils.equals(sLabAuthHelper.mKeyVaultSecret, keyVaultSecret)) {
             sLabAuthHelper = new LabAuthenticationHelper(keyVaultSecret);
         }
 
