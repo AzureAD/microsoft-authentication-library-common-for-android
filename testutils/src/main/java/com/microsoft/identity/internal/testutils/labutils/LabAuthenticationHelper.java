@@ -55,8 +55,7 @@ class LabAuthenticationHelper extends ConfidentialClientHelper {
     private LabAuthenticationHelper() {
         mAppId = null;
         mAppSecret = null;
-        String buildConfigSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
-        mKeyVaultSecret = buildConfigSecret;
+        mKeyVaultSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
     }
 
     public static synchronized ConfidentialClientHelper getInstance(String keyVaultSecret) {
