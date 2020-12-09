@@ -30,7 +30,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
-import android.text.TextUtils;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
@@ -81,7 +80,7 @@ public class BrokerValidator {
     /**
      * Verifies that the installed broker package's signing certificate hash matches the known
      * release certificate hash.
-     *
+     * <p>
      * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
      *
      * @param brokerPackageName The broker package to inspect.
@@ -126,7 +125,7 @@ public class BrokerValidator {
         final String methodName = ":verifySignature";
         try {
             return verifySignatureAndThrow(brokerPackageName) != null;
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
         }
 
@@ -235,7 +234,7 @@ public class BrokerValidator {
     /**
      * Returns the package that is currently active relative to the Work Account custom account type
      * Note: either the company portal or the authenticator
-     *
+     * <p>
      * There may be multiple packages containing the android authenticator implementation (custom account)
      * but there is only one entry for custom account type currently registered by the AccountManager.
      * If another app tries to install same authenticator (custom account type) type, it will
@@ -257,7 +256,24 @@ public class BrokerValidator {
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
                                                 @NonNull final String packageName) {
-        return StringUtil.equalsIgnoreCase(redirectUri, getBrokerRedirectUri(context, packageName));
+        final String methodName = ":isValidBrokerRedirect";
+        final String expectedBrokerRedirectUri = getBrokerRedirectUri(context, packageName);
+        final boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+
+        if (!isValidBrokerRedirect) {
+            Logger.error(
+                    TAG + methodName,
+                    "Broker redirect uri is invalid."
+                            + "\n"
+                            + "Expected: " + expectedBrokerRedirectUri
+                            + "\n"
+                            + "Actual: " + redirectUri
+                    ,
+                    null
+            );
+        }
+
+        return isValidBrokerRedirect;
     }
 
     /**
