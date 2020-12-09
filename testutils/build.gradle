@@ -124,8 +124,10 @@ project.afterEvaluate{
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
       implementation project(':keyvault')
       implementation project(':labapi')
+
     if (findProject(":common") != null) {
         //Use project reference if available
         implementation(project(":common")) {
