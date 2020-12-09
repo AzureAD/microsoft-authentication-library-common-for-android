@@ -147,8 +147,10 @@ public class BrokerValidator {
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
+            final String alternateSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_SIGNATURE;
             if (mCompanyPortalSignature.equals(signatureHash)
-                    || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
+                    || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)
+                    || (!TextUtils.isEmpty(alternateSignature) && alternateSignature.equals(signatureHash))) {
                 return signatureHash;
             }
         }
