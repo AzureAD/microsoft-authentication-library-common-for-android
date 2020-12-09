@@ -2,15 +2,17 @@ package com.microsoft.identity.client.ui.automation.sdk;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
-
 import com.microsoft.aad.adal.AuthenticationCallback;
 import com.microsoft.aad.adal.AuthenticationContext;
 import com.microsoft.aad.adal.AuthenticationResult;
+import com.microsoft.identity.client.ui.automation.TokenRequestTimeout;
 import com.microsoft.identity.client.ui.automation.interaction.OnInteractionRequired;
 
 import java.util.Map;
 import java.util.TreeMap;
+
+import androidx.annotation.NonNull;
+import lombok.SneakyThrows;
 
 /**
  * A Sdk wrapper for Azure Active Directory Authentication Library (ADAL) which implements
@@ -22,9 +24,10 @@ public class AdalSdk implements IAuthSdk {
 
     protected Map<String, String> upnUserIdMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
+    @SneakyThrows
     @Override
     public AuthResult acquireTokenInteractive(@NonNull final AuthTestParams authTestParams,
-                                              OnInteractionRequired interactionRequiredCallback) {
+                                              OnInteractionRequired interactionRequiredCallback, TokenRequestTimeout tokenRequestTimeout) {
         final AuthenticationContext authenticationContext = createAuthContext(
                 authTestParams.getActivity(),
                 authTestParams.getAuthority()
@@ -44,16 +47,25 @@ public class AdalSdk implements IAuthSdk {
             interactionRequiredCallback.handleUserInteraction();
         }
 
+        AuthResult authResult = null;
         try {
-            final AuthenticationResult result = future.get();
-            return new AuthResult(result);
+            final AuthenticationResult result;
+            if(tokenRequestTimeout!=null) {
+                result = future.get(tokenRequestTimeout.getTime(), tokenRequestTimeout.getTimeUnit());
+            } else {
+                result = future.get();
+            }
+            authResult = new AuthResult(result);
         } catch (Exception exception) {
-            return new AuthResult(exception);
+            authResult = new AuthResult(exception);
         }
+
+        return authResult;
     }
 
+    @SneakyThrows
     @Override
-    public AuthResult acquireTokenSilent(AuthTestParams authTestParams) {
+    public AuthResult acquireTokenSilent(AuthTestParams authTestParams, TokenRequestTimeout tokenRequestTimeout) {
         final AuthenticationContext authenticationContext = createAuthContext(
                 authTestParams.getActivity(),
                 authTestParams.getAuthority()
@@ -67,12 +79,20 @@ public class AdalSdk implements IAuthSdk {
                 getAuthenticationCallback(future)
         );
 
+        AuthResult authResult = null;
         try {
-            final AuthenticationResult result = future.get();
-            return new AuthResult(result);
+            final AuthenticationResult result;
+            if(tokenRequestTimeout!=null) {
+                result = future.get(tokenRequestTimeout.getTime(), tokenRequestTimeout.getTimeUnit());
+            } else {
+                result = future.get();
+            }
+            authResult = new AuthResult(result);
         } catch (Exception exception) {
-            return new AuthResult(exception);
+            authResult = new AuthResult(exception);
         }
+
+        return authResult;
     }
 
     private AuthenticationContext createAuthContext(final Context context, final String authority) {

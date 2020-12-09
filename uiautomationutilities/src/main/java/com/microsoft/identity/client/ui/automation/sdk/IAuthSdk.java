@@ -1,5 +1,6 @@
 package com.microsoft.identity.client.ui.automation.sdk;
 
+import com.microsoft.identity.client.ui.automation.TokenRequestTimeout;
 import com.microsoft.identity.client.ui.automation.interaction.OnInteractionRequired;
 
 /**
@@ -15,12 +16,12 @@ public interface IAuthSdk {
      * @return A resultant token or an exception occurred while acquiring token interactively
      */
     AuthResult acquireTokenInteractive(AuthTestParams authTestParams,
-                                       OnInteractionRequired interactionRequiredCallback);
+                                       OnInteractionRequired interactionRequiredCallback, TokenRequestTimeout tokenRequestTimeout);
 
     /**
      * Get the token that can be used to verify user and granted permissions.
      *
      * @return A resultant token or an exception occurred while acquiring token silently
      */
-    AuthResult acquireTokenSilent(AuthTestParams authTestParams);
+    AuthResult acquireTokenSilent(AuthTestParams authTestParams, TokenRequestTimeout tokenRequestTimeout);
 }
