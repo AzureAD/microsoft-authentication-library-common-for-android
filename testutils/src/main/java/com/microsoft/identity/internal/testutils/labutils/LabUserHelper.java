@@ -42,7 +42,7 @@ public class LabUserHelper {
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
     private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
 
-    public void resetWithSecret(final String secret) {
+    public static void resetWithSecret(final String secret) {
         instance = LabAuthenticationHelper.getInstance(secret);
         instance.setupApiClientWithAccessToken();
     }
