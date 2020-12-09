@@ -140,4 +140,6 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
+    implementation("com.microsoft.aad:adal:3.0.0")
+    implementation 'com.microsoft.identity.client:msal:2.0.2'
 }
