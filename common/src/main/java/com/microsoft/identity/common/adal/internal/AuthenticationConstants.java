@@ -988,6 +988,25 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
+         * Apk packagename that will install AD-Authenticator. It is used to
+         * query if this app installed or not from package manager.
+         */
+        public static final String COMPANY_PORTAL_PROD_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Signature info for Intune Company portal app that installs authenticator
+         * component.
+         */
+        public static final String COMPANY_PORTAL_PROD_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_PROD_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+
+        /**
+         * Signature info for Intune Company portal app that installs authenticator
+         * component.
+         */
+        public static final String BROKER_HOST_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_PROD_APP_SIGNATURE ;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+
+
+        /**
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
