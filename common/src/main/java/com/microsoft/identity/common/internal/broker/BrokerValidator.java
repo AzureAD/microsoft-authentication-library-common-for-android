@@ -266,11 +266,10 @@ public class BrokerValidator {
         if (!isValidBrokerRedirect) {
             Logger.error(
                     TAG + methodName,
-                    "Broker redirect uri is invalid."
-                            + "\n"
-                            + "Expected: " + expectedBrokerRedirectUri
-                            + "\n"
-                            + "Actual: " + redirectUri
+                    "Broker redirect uri is invalid. Expected: "
+                            + expectedBrokerRedirectUri
+                            + " Actual: "
+                            + redirectUri
                     ,
                     null
             );
