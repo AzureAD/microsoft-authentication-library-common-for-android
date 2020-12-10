@@ -48,7 +48,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
  */
 public class DevicePinSetupRule implements TestRule {
 
-    final String password = "1234";
+    static final String PASSWORD = "1234";
 
     @Override
     public Statement apply(final Statement base, final Description description) {
@@ -90,10 +90,10 @@ public class DevicePinSetupRule implements TestRule {
 
         UiObject passwordField = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry");
         Assert.assertTrue(passwordField.exists());
-        passwordField.setText(password);
+        passwordField.setText(PASSWORD);
         device.pressEnter();
         passwordField = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry");
-        passwordField.setText(password);
+        passwordField.setText(PASSWORD);
         device.pressEnter();
 
         final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/redaction_done_button");
