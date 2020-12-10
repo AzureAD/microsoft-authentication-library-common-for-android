@@ -55,9 +55,10 @@ public class BrokerHost extends AbstractTestBroker {
 
     /**
      * allows you to install different versions of BrokerHost.
+     *
      * @param appName
      */
-    public BrokerHost(String appName){
+    public BrokerHost(String appName) {
         super(BROKER_HOST_APP_PACKAGE_NAME, appName, new LocalApkInstaller());
         localApkFileName = appName;
     }
@@ -233,7 +234,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
-    
+
     @Override
     public DeviceAdmin getAdminName() {
         return DeviceAdmin.BROKER_HOST;
