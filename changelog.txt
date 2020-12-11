@@ -7,6 +7,7 @@ vNext
 - Remove initial about:blank page load when using WebView based auth.
 - Log an informative error message when application redirect_uri does not match the broker's expected value (#1155).
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
+- Replace deprecated HttpRequest.sendGet usage with HttpClient.get
 
 Version 3.0.7
 ----------
