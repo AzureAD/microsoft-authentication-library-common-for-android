@@ -74,6 +74,7 @@ public class AzureActiveDirectory
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
     private static boolean sIsInitialized = false;
     private static Environment sEnvironment = Environment.Production;
+    private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config) {
@@ -181,9 +182,8 @@ public class AzureActiveDirectory
                 .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
-        final Map<String, String> headers = new HashMap<>();
-
-        final HttpResponse response = UrlConnectionHttpClient.getDefaultInstance().get(new URL(instanceDiscoveryRequestUri.toString()), headers);
+        final HttpResponse response =
+                httpClient.get(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Log.d("Discovery", "Error getting cloud information");

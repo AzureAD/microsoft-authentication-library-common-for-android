@@ -32,6 +32,7 @@ import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.HttpClient;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
@@ -55,6 +56,7 @@ public class OpenIdProviderConfigurationClient {
     private static final String sWellKnownConfig = "/.well-known/openid-configuration";
     private static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
     private static final Map<URL, OpenIdProviderConfiguration> sConfigCache = new HashMap<>();
+    private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     public interface OpenIdProviderConfigurationCallback
             extends TaskCompletedCallbackWithError<OpenIdProviderConfiguration, Exception> {
@@ -140,9 +142,7 @@ public class OpenIdProviderConfigurationClient {
                     "Using request URL: " + configUrl
             );
 
-            final Map<String, String> headers = new HashMap<>();
-
-            final HttpResponse providerConfigResponse = UrlConnectionHttpClient.getDefaultInstance().get(configUrl, headers);
+            final HttpResponse providerConfigResponse = httpClient.get(configUrl, new HashMap<String, String>());
 
             final int statusCode = providerConfigResponse.getStatusCode();
 
