@@ -2,8 +2,10 @@ vNext
 ----------
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
-- Make CacheRecord immutable, insist on NonNull AccountRecord (#1225)
-- Bugfix for incorrect error code when cancelling requests (#1144)
+- Make CacheRecord immutable, insist on NonNull AccountRecord (#1225).
+- Bugfix for incorrect error code when cancelling requests (#1144).
+- Remove initial about:blank page load when using WebView based auth.
+- Log an informative error message when application redirect_uri does not match the broker's expected value (#1155).
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 
 Version 3.0.7
