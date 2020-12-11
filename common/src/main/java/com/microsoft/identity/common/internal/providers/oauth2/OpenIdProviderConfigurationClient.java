@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -139,9 +140,9 @@ public class OpenIdProviderConfigurationClient {
                     "Using request URL: " + configUrl
             );
 
-            // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendGet(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1038
-            @SuppressWarnings(WarningType.deprecation_warning)
-            final HttpResponse providerConfigResponse = HttpRequest.sendGet(configUrl, new HashMap<String, String>());
+            final Map<String, String> headers = new HashMap<>();
+
+            final HttpResponse providerConfigResponse = UrlConnectionHttpClient.getDefaultInstance().get(configUrl, headers);
 
             final int statusCode = providerConfigResponse.getStatusCode();
 

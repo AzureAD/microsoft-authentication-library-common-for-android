@@ -32,9 +32,11 @@ import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
+import com.microsoft.identity.common.internal.net.HttpClient;
 import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
@@ -179,14 +181,9 @@ public class AzureActiveDirectory
                 .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
-        Map<String, String> headers = new HashMap<>();
+        final Map<String, String> headers = new HashMap<>();
 
-        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendGet(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1038
-        @SuppressWarnings(WarningType.deprecation_warning)
-        HttpResponse response = HttpRequest.sendGet(
-                new URL(instanceDiscoveryRequestUri.toString()),
-                headers
-        );
+        final HttpResponse response = UrlConnectionHttpClient.getDefaultInstance().get(new URL(instanceDiscoveryRequestUri.toString()), headers);
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Log.d("Discovery", "Error getting cloud information");
