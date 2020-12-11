@@ -97,9 +97,9 @@ project.afterEvaluate{
                             dependencyNode.appendNode('artifactId', it.name)
                             dependencyNode.appendNode('version', it.version)
                         }
-                   }
-               }
-          }
+                    }
+                }
+            }
         }
 
         repositories {
