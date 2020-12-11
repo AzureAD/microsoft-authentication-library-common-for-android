@@ -24,6 +24,8 @@ package com.microsoft.identity.internal.testutils.kusto;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.BuildConfig;
 
 import org.junit.rules.TestRule;
@@ -69,7 +71,7 @@ public class CaptureKustoTestResultRule implements TestRule {
                                     .runnerVersion(runnerVersion)
                                     .result(result)
                                     .scaleUnit(scaleUnit)
-                                    .errorMessage(errorMessage)
+                                    .errorMessage(sanitizeErrorMessage(errorMessage))
                                     .build();
 
                     TestResultFileUtils.writeTestResultsToCsv(
@@ -78,5 +80,9 @@ public class CaptureKustoTestResultRule implements TestRule {
                 }
             }
         };
+    }
+
+    private String sanitizeErrorMessage(@NonNull final String msg) {
+        return msg.replaceAll("\n", " ").replaceAll("\r"," ");
     }
 }
