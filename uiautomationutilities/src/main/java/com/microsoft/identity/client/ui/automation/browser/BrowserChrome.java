@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
-import android.app.Instrumentation;
-
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -54,9 +52,23 @@ public class BrowserChrome extends App implements IBrowser {
 
     @Override
     public void navigateTo(@NonNull final String url) {
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/search_box_text");
-        UiAutomatorUtils.handleInput("com.android.chrome:id/url_bar", url);
+
+        final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                "com.android.chrome:id/url_bar"
+        );
+
+        try {
+            // enter the URL
+            inputField.setText(url);
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        // press enter on the Keyboard
         device.pressEnter();
     }
 }
