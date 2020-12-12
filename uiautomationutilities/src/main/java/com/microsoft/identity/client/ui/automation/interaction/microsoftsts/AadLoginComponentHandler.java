@@ -76,7 +76,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         }
 
         final UiObject account = uiDevice.findObject(new UiSelector()
-                .text("Sign in with " + username + " work or school account.")
+                .textContains(username)
         );
 
         account.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
