@@ -31,6 +31,8 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
  */
 public class LabDeviceHelper {
 
+    public static final ConfidentialClientHelper INSTANCE = LabAuthenticationHelper.getInstance();
+
     /**
      * Deletes the provided device from the directory.
      *
@@ -39,7 +41,7 @@ public class LabDeviceHelper {
      * @return a boolean indicating if the device has been deleted successfully
      */
     public static boolean deleteDevice(final String upn, final String deviceId) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        INSTANCE.setupApiClientWithAccessToken();
         final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
         try {

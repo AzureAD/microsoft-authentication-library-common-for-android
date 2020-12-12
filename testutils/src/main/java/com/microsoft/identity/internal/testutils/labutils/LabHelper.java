@@ -35,6 +35,8 @@ import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
  */
 public class LabHelper {
 
+    private static final ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+
     /**
      * Get the tenant id of a lab from the LAB API.
      *
@@ -42,7 +44,7 @@ public class LabHelper {
      * @return a String representing the tenant id associated to this LAB
      */
     public static String getLabTenantId(final String labName) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         LabApi labApi = new LabApi();
         LabInfo labInfo;
         try {
@@ -73,7 +75,7 @@ public class LabHelper {
      * @return a String representing secret value
      */
     public static String getSecret(@NonNull final String secretName) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         LabSecretApi labSecretApi = new LabSecretApi();
         SecretResponse secretResponse;
 
