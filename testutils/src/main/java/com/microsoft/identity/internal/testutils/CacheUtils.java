@@ -201,4 +201,17 @@ public class CacheUtils {
         segments[2] = signatureBuilder.toString();
         return TextUtils.join(".", segments);
     }
+
+    public void clear(String sharedPrefName, boolean encrypted) {
+        final SharedPreferences sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+                TestUtils.getSharedPreferences(sharedPrefName);
+        final SharedPreferences.Editor prefEditor = sharedPref.edit();
+        final Map<String, ?> cacheEntries = sharedPref.getAll();
+        //get all the key from the cache entry, verify and edit it.
+        for (final Map.Entry<String, ?> cacheEntry : cacheEntries.entrySet()) {
+            final String keyToEdit = cacheEntry.getKey();
+            prefEditor.remove(keyToEdit);
+        }
+        prefEditor.commit();
+    }
 }

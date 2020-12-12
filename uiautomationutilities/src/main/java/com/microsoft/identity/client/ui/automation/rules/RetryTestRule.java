@@ -22,9 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
 import com.microsoft.identity.client.ui.automation.annotations.RetryOnFailure;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -43,7 +42,7 @@ public class RetryTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 Throwable caughtThrowable = null;
                 int numAttempts = 1;
 
@@ -57,24 +56,24 @@ public class RetryTestRule implements TestRule {
 
                 if (retryOnFailure != null) {
                     final int retryCount = retryOnFailure.retryCount();
-                    Log.i(TAG, "Received retry count annotation with value: " + retryCount);
+                    Logger.i(TAG, "Received retry count annotation with value: " + retryCount);
                     numAttempts += retryCount;
                 }
 
                 for (int i = 0; i < numAttempts; i++) {
                     try {
-                        Log.i(TAG, "Executing attempt #" + (i + 1) + " of " + numAttempts);
+                        Logger.i(TAG, "Executing attempt #" + (i + 1) + " of " + numAttempts);
                         base.evaluate();
-                        Log.i(TAG, "Attempt #" + (i + 1) + " has succeeded!!");
+                        Logger.i(TAG, "Attempt #" + (i + 1) + " has succeeded!!");
                         return;
                     } catch (final Throwable throwable) {
                         caughtThrowable = throwable;
-                        Log.e(TAG, description.getMethodName() + ": Attempt " + (i + 1) +
+                        Logger.e(TAG, description.getMethodName() + ": Attempt " + (i + 1) +
                                 " failed with " + throwable.getClass().getSimpleName(), throwable);
                     }
                 }
 
-                Log.e(TAG, "Test " + description.getMethodName() +
+                Logger.e(TAG, "Test " + description.getMethodName() +
                         " - Giving up after " + numAttempts + " attempts as all attempts have failed :(");
 
                 assert caughtThrowable != null;

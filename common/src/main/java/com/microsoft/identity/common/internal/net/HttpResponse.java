@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.net;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import net.jcip.annotations.Immutable;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -32,12 +34,13 @@ import java.util.Map;
 /**
  * Internal class to wrap the raw server response, headers and status code.
  */
+@Immutable
 public final class HttpResponse {
 
     private final int mStatusCode;
     private final String mResponseBody;
     private final Map<String, List<String>> mResponseHeaders;
-    private Date mDate;
+    private final Date mDate;
 
     /**
      * Constructor for {@link HttpResponse}.
@@ -48,9 +51,7 @@ public final class HttpResponse {
      */
     public HttpResponse(final int statusCode, final String responseBody,
                         final Map<String, List<String>> responseHeaders) {
-        mStatusCode = statusCode;
-        mResponseBody = responseBody;
-        mResponseHeaders = responseHeaders;
+        this(null, statusCode, responseBody, responseHeaders);
     }
 
     public HttpResponse(@Nullable final Date date,

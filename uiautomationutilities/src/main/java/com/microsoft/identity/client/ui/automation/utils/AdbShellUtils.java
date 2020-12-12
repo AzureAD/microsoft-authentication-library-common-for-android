@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.utils;
 
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 
 import org.junit.Assert;
@@ -37,10 +38,22 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  */
 public class AdbShellUtils {
 
-    private static String executeShellCommand(@NonNull final String command) {
+    public static String executeShellCommand(@NonNull final String command) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             return device.executeShellCommand(command);
+        } catch (final IOException e) {
+            Assert.fail(e.getMessage());
+            return null;
+        }
+    }
+
+    public static String executeShellCommandAsCurrentPackage(@NonNull final String command) {
+        final UiDevice device = UiDevice.getInstance(getInstrumentation());
+        try {
+            final String pkg = ApplicationProvider.getApplicationContext().getPackageName();
+            final String completeCmd = "run-as " + pkg + " " + command;
+            return device.executeShellCommand(completeCmd);
         } catch (final IOException e) {
             Assert.fail(e.getMessage());
             return null;
