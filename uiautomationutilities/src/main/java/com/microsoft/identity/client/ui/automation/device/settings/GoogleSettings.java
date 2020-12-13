@@ -261,11 +261,10 @@ public class GoogleSettings extends BaseSettings {
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
         } else {
-            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("DONE");
+            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
             doneButton.click();
         }
     }
 
 }
-
 
