@@ -36,18 +36,20 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.internal.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.authscheme.INameable;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -74,9 +76,16 @@ import java.util.UUID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 import static com.microsoft.identity.common.internal.util.GzipUtil.decompressBytesToString;
@@ -195,9 +204,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             return BrokerInteractiveTokenCommandParameters.builder().build();
         }
 
-        int callingAppUid = intent.getIntExtra(
-                AuthenticationConstants.Broker.CALLER_INFO_UID, 0
-        );
+        int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
 
         List<Pair<String, String>> extraQP = new ArrayList<>();
 
@@ -224,8 +231,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
-        @SuppressWarnings("rawtypes")
-        final BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder
+        @SuppressWarnings("rawtypes") final BrokerInteractiveTokenCommandParameters.BrokerInteractiveTokenCommandParametersBuilder
                 commandParametersBuilder = BrokerInteractiveTokenCommandParameters.builder()
                 .authenticationScheme(getAuthenticationScheme(callingActivity, brokerRequest))
                 .activity(callingActivity)
@@ -291,13 +297,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
                     "validation is expected to fail", null
             );
-            return BrokerSilentTokenCommandParameters
-                    .builder().build();
+
+            return BrokerSilentTokenCommandParameters.builder().build();
         }
 
-        int callingAppUid = bundle.getInt(
-                AuthenticationConstants.Broker.CALLER_INFO_UID
-        );
+        int callingAppUid = bundle.getInt(CALLER_INFO_UID);
 
         final Authority authority = Authority.getAuthorityFromAuthorityUrl(
                 brokerRequest.getAuthority()
@@ -360,10 +364,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerRequest brokerRequestFromBundle(@NonNull final Bundle requestBundle) {
         BrokerRequest brokerRequest = null;
 
-        if (requestBundle.containsKey(AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED)) {
+        if (requestBundle.containsKey(BROKER_REQUEST_V2_COMPRESSED)) {
             try {
                 final String deCompressedString = decompressBytesToString(
-                        requestBundle.getByteArray(AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED)
+                        requestBundle.getByteArray(BROKER_REQUEST_V2_COMPRESSED)
                 );
                 brokerRequest = sRequestAdapterGsonInstance.fromJson(
                         deCompressedString, BrokerRequest.class
@@ -378,7 +382,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         } else {
             brokerRequest = sRequestAdapterGsonInstance.fromJson(
-                    requestBundle.getString(AuthenticationConstants.Broker.BROKER_REQUEST_V2),
+                    requestBundle.getString(BROKER_REQUEST_V2),
                     BrokerRequest.class
             );
         }
@@ -418,13 +422,13 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForHello(@NonNull final CommandParameters parameters) {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(
-                AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
-                AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
+                CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
         );
 
         if (!StringUtil.isEmpty(parameters.getRequiredBrokerProtocolVersion())) {
             requestBundle.putString(
-                    AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     parameters.getRequiredBrokerProtocolVersion()
             );
         }
@@ -456,10 +460,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 resultBundle.getString(BROKER_PACKAGE_NAME, ""),
                 resultBundle.getString(BROKER_ACTIVITY_NAME, "")
         );
-        interactiveRequestIntent.putExtra(
-                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
-                negotiatedBrokerProtocolVersion
-        );
+        interactiveRequestIntent.putExtra(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         return interactiveRequestIntent;
     }
 
@@ -473,10 +474,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForAcquireTokenInteractive(@NonNull final InteractiveTokenCommandParameters parameters,
                                                              @Nullable final String negotiatedBrokerProtocolVersion) {
         final BrokerRequest brokerRequest = brokerRequestFromAcquireTokenParameters(parameters);
-        return getRequestBundleFromBrokerRequest(
-                brokerRequest,
-                negotiatedBrokerProtocolVersion
-        );
+        return getRequestBundleFromBrokerRequest(brokerRequest, negotiatedBrokerProtocolVersion);
     }
 
     /**
@@ -499,7 +497,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
 
         requestBundle.putInt(
-                AuthenticationConstants.Broker.CALLER_INFO_UID,
+                CALLER_INFO_UID,
                 parameters.getAndroidApplicationContext().getApplicationInfo().uid
         );
 
@@ -517,14 +515,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 Logger.info(TAG, "Broker Result, raw payload size:"
                         + jsonString.getBytes().length + " ,compressed bytes size: " + compressedBytes.length
                 );
-                requestBundle.putByteArray(
-                        AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED,
-                        compressedBytes
-                );
+                requestBundle.putByteArray(BROKER_REQUEST_V2_COMPRESSED, compressedBytes);
             } catch (IOException e) {
                 Logger.error(TAG, "Compression to bytes failed, sending broker request as json String", e);
                 requestBundle.putString(
-                        AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                        BROKER_REQUEST_V2,
                         sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
                 );
             }
@@ -533,14 +528,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     " lower than compression changes, sending as string"
             );
             requestBundle.putString(
-                    AuthenticationConstants.Broker.BROKER_REQUEST_V2,
+                    BROKER_REQUEST_V2,
                     sRequestAdapterGsonInstance.toJson(brokerRequest, BrokerRequest.class)
             );
         }
-        requestBundle.putString(
-                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
-                negotiatedBrokerProtocolVersion
-        );
+        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         return requestBundle;
     }
 
@@ -556,10 +548,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         final Bundle requestBundle = new Bundle();
         requestBundle.putString(ACCOUNT_CLIENTID_KEY, parameters.getClientId());
         requestBundle.putString(ACCOUNT_REDIRECT, parameters.getRedirectUri());
-        requestBundle.putString(
-                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
-                negotiatedBrokerProtocolVersion
-        );
+        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         //Disable the environment and tenantID. Just return all accounts belong to this clientID.
         return requestBundle;
     }
@@ -579,10 +568,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             requestBundle.putString(ENVIRONMENT, parameters.getAccount().getEnvironment());
             requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, parameters.getAccount().getHomeAccountId());
         }
-        requestBundle.putString(
-                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
-                negotiatedBrokerProtocolVersion
-        );
+        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
 
         return requestBundle;
     }
@@ -597,10 +583,40 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public Bundle getRequestBundleForRemoveAccountFromSharedDevice(@NonNull final RemoveAccountCommandParameters parameters,
                                                                    @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle requestBundle = new Bundle();
-        requestBundle.putString(
-                AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY,
-                negotiatedBrokerProtocolVersion
+        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
+
+        return requestBundle;
+    }
+
+    /**
+     * Method to construct a request {@link Bundle} for broker generateShr.
+     *
+     * @param parameters                      Input request params.
+     * @param negotiatedBrokerProtocolVersion The negotiated broker protocol version in use.
+     * @return The result Bundle from the Broker.
+     */
+    public Bundle getRequestBundleForGenerateShr(@NonNull final GenerateShrCommandParameters parameters,
+                                                 @NonNull final String negotiatedBrokerProtocolVersion) {
+        final String clientId = parameters.getClientId();
+        final String homeAccountId = parameters.getHomeAccountId();
+
+        // Convert the supplied public class to the internal representation
+        final PopAuthenticationSchemeInternal popParameters =
+                (PopAuthenticationSchemeInternal) AuthenticationSchemeFactory.createScheme(
+                        parameters.getAndroidApplicationContext(),
+                        (INameable) parameters.getPopParameters()
+                );
+
+        final String popParamsJson = sRequestAdapterGsonInstance.toJson(
+                popParameters,
+                PopAuthenticationSchemeInternal.class
         );
+
+        final Bundle requestBundle = new Bundle();
+        requestBundle.putString(ACCOUNT_CLIENTID_KEY, clientId);
+        requestBundle.putString(ACCOUNT_HOME_ACCOUNT_ID, homeAccountId);
+        requestBundle.putString(AUTH_SCHEME_PARAMS_POP, popParamsJson);
+        requestBundle.putString(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
 
         return requestBundle;
     }

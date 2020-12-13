@@ -189,78 +189,22 @@ task pmd(type: Pmd) {
 
 // For publishing to the remote maven repo.
 afterEvaluate {
-    // Gradle 6.1.1 and Android Gradle Plugin 4.0.1 doesn't rename the file (see 'outputFileName' above)
-    // Adding this work around to have the file properly renamed.
-    def buildFile = file("$buildDir/outputs/aar/${archivesBaseName}-release.aar")
-    tasks.named("assembleRelease").configure {
-        doLast {
-            buildFile.renameTo("$buildDir/outputs/aar/${archivesBaseName}-${version}.aar")
-        }
-    }
 
     publishing {
         publications {
-            common(MavenPublication) {
+            release(MavenPublication) {
+                from components.release
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
-
-                pom.withXml {
-                    // Custom values
-
-                    // Description
-                    asNode().appendNode(
-                            'description',
-                            'This library contains code shared between the Active Directory ' +
-                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
-                                    'Authentication Library (MSAL) for Android. This library ' +
-                                    'includes only internal classes and is NOT part of the ' +
-                                    'public API'
-                    )
-
-                    // Name
-                    asNode().appendNode('name', 'common')
-
-                    // Developers
-                    def developerNode = asNode().appendNode('developers').appendNode('developer')
-                    developerNode.appendNode('id', 'microsoft')
-                    developerNode.appendNode('name', 'Microsoft')
-
-                    // URL
-                    asNode().appendNode('url', 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android')
-
-                    // Licenses
-                    asNode().appendNode('licenses').appendNode('license').appendNode('name', 'MIT License')
-
-                    // Inception Year
-                    asNode().appendNode('inceptionYear', '2017')
-
-                    // SCM
-                    asNode().appendNode('scm').appendNode('url', 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master')
-
-                    // Properties
-                    def propertiesNode = asNode().appendNode('properties')
-                    propertiesNode.appendNode('branch', 'master')
-                    propertiesNode.appendNode('version', project.version)
-
-                    // Dependencies
-                    def dependenciesNode = asNode().appendNode('dependencies')
-
-                    //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
-                    configurations.implementation.allDependencies.each {
-                        if (it.group != null && it.name != null) {
-                            def dependencyNode = dependenciesNode.appendNode('dependency')
-                            dependencyNode.appendNode('groupId', it.group)
-                            dependencyNode.appendNode('artifactId', it.name)
-                            dependencyNode.appendNode('version', it.version)
-                        }
-                    }
-                }
-
-                artifact(sourcesJar)
-                artifact(releaseJavadocJar)
-
+            }
+            debug(MavenPublication) {
+                from components.debug
+                groupId 'com.microsoft.identity'
+                artifactId 'common-debug'
+                //Edit the 'version' here for VSTS RC build
+                version = project.version
             }
         }
 
@@ -274,21 +218,14 @@ afterEvaluate {
                     password project.vstsPassword
                 }
             }
-        }
-    }
-}
-
-// Repositories from which Gradle can fetch dependencies
-repositories {
-    google()
-    mavenLocal()
-    jcenter()
-    maven {
-        name "vsts-maven-adal-android"
-        url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
-        credentials {
-            username project.vstsUsername
-            password project.vstsPassword
+            maven {
+                name "vsts-maven-android"
+                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+                credentials {
+                    username project.vstsUsername
+                    password project.vstsPassword
+                }
+            }
         }
     }
 }

@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
@@ -53,7 +54,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
  * A model for interacting with the Microsoft Authenticator Broker App during UI Test.
  */
 @Getter
-public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker {
+public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements ITestBroker, IPowerLiftIntegratedApp {
 
     public final static String AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
@@ -237,7 +238,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             Assert.assertTrue(postLogSubmissionMsg.exists());
 
             // This will post the incident id in text logs
-            Log.i(TAG, postLogSubmissionMsg.getText());
+            Log.w(TAG, postLogSubmissionMsg.getText());
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

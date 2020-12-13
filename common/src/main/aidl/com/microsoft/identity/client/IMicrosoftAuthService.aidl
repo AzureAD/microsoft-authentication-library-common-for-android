@@ -45,4 +45,6 @@ interface IMicrosoftAuthService {
     Bundle getCurrentAccount(in Bundle bundle);
 
     Bundle removeAccountFromSharedDevice(in Bundle bundle);
+
+    Bundle generateSignedHttpRequest(in Bundle bundle);
 }

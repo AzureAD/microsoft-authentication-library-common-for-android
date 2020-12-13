@@ -20,39 +20,27 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
+package com.microsoft.identity.common.internal.commands.parameters;
 
-import android.util.Log;
+import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 
-import com.microsoft.identity.client.ui.automation.app.OutlookApp;
-import com.microsoft.identity.client.ui.automation.app.TeamsApp;
-import com.microsoft.identity.client.ui.automation.app.WordApp;
-import com.microsoft.identity.client.ui.automation.browser.BrowserEdge;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * A Test Rule to remove all first party apps from the device prior to executing the test case.
+ * Parameter class for generating SHRs.
  */
-public class RemoveFirstPartyAppsTestRule implements TestRule {
+@Getter
+@SuperBuilder
+public class GenerateShrCommandParameters extends CommandParameters {
 
-    private final static String TAG = RemoveFirstPartyAppsTestRule.class.getSimpleName();
+    /**
+     * The home_account_id of the account for which we will generate the resulting SHR.
+     */
+    private String homeAccountId;
 
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
-                new OutlookApp().uninstall();
-                new TeamsApp().uninstall();
-                new WordApp().uninstall();
-                new BrowserEdge().uninstall();
-
-                base.evaluate();
-            }
-        };
-    }
+    /**
+     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
+     */
+    private IPoPAuthenticationSchemeParams popParameters;
 }

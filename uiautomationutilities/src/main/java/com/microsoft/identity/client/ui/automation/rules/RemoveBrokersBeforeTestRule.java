@@ -22,7 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import com.microsoft.identity.client.ui.automation.TestContext;
+import android.util.Log;
+
+import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
@@ -37,22 +39,20 @@ import java.util.List;
  */
 public class RemoveBrokersBeforeTestRule implements TestRule {
 
+    private final static String TAG = RemoveBrokersBeforeTestRule.class.getSimpleName();
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Log.i(TAG, "Applying rule....");
                 final List<ITestBroker> testBrokers = CommonUtils.getAllPossibleTestBrokers();
 
                 for (final ITestBroker broker : testBrokers) {
-                    broker.uninstall();
-
                     if (broker.isInstalled()) {
-                        // The broker app will still be installed on the device if it is enabled
-                        // as a device admin. In this case, we need to disable the admin and then
-                        // uninstall.
-                        TestContext.getTestContext().getTestDevice()
-                                .getSettings().disableAdmin(broker.getAdminName());
+                        Log.i(TAG, "Detected pre-installed broker: " + ((App) broker).getAppName());
+                        Log.i(TAG, "Uninstalling broker: " + ((App) broker).getAppName());
                         broker.uninstall();
                     }
                 }

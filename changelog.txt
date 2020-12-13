@@ -1,3 +1,12 @@
+vNext
+----------
+- Expose IAccountCredentialCache for accessing lower-level cache functions.
+- Adds unit test to verify .trim() behavior of cache keys.
+
+Version 3.0.7
+----------
+- Fix exception casting issue in CommandDispatcher (#1121)
+
 Version 3.0.6
 ----------
 - Expose expiresIn in MSAL Device Code flow callback (#1064)
@@ -21,6 +30,9 @@ Version 3.0.6
     - [Part 5.5] make changes to support the Broker API work (#1101)
 - Make change to support Broker API's updateBrokerRT() functionality (#1107).
 - Introduce a cache for Hello() protocol (#1108)
+- Bumped MSAL Broker Protocol version to 6.0
+- (Requires minimum_required_broker_protocol_version of 6.0+) Adds support for client_claims in PoP token requests.
+- (Requires minimum_required_broker_protocol_version of 6.0+) Adds support for generating SignedHttpRequests (SHRs) without embedding an AT.
 
 Version 3.0.4
 ----------

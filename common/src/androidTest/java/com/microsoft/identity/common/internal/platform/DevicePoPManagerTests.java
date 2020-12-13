@@ -145,6 +145,49 @@ public class DevicePoPManagerTests {
     }
 
     @Test
+    public void testMintSignedAccessTokenWithClientClaims()
+            throws ClientException, MalformedURLException, ParseException {
+        Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
+        mDevicePopManager.generateAsymmetricKey(mContext);
+        Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
+        final String httpMethod = "GET";
+        final long timestamp = 12345;
+        final String scheme = "https://";
+        final String path = "/path1/path2";
+        final String host = "www.contoso.com:443";
+        final String hostWithSchemeAndPath = scheme + host + path;
+        final String at = "a_token_for_you";
+        final String nonce = "54321";
+        final String clientClaims = "some_claims";
+        final String shr = mDevicePopManager.mintSignedAccessToken(
+                httpMethod,
+                timestamp,
+                new URL(hostWithSchemeAndPath),
+                at,
+                nonce,
+                clientClaims
+        );
+        Assert.assertNotNull(shr);
+
+        final SignedJWT jwt = SignedJWT.parse(shr);
+
+        // Verify headers
+        final JWSHeader jwsHeader = jwt.getHeader();
+        Assert.assertEquals("RS256", jwsHeader.getAlgorithm().getName());
+        Assert.assertEquals(jwsHeader.getKeyID(), mDevicePopManager.getAsymmetricKeyThumbprint());
+
+        // Verify body
+        final JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
+        Assert.assertEquals(httpMethod, jwtClaimsSet.getClaim("m"));
+        Assert.assertEquals(timestamp, jwtClaimsSet.getClaim("ts"));
+        Assert.assertEquals(host, jwtClaimsSet.getClaim("u"));
+        Assert.assertEquals(path, jwtClaimsSet.getClaim("p"));
+        Assert.assertEquals(nonce, jwtClaimsSet.getClaim("nonce"));
+        Assert.assertNotNull(jwtClaimsSet.getClaim("cnf"));
+        Assert.assertEquals(clientClaims, jwtClaimsSet.getClaim("client_claims"));
+    }
+
+    @Test
     public void testMintSignedAccessTokenWithNullHttpMethod()
             throws ClientException, MalformedURLException, ParseException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
@@ -366,5 +409,44 @@ public class DevicePoPManagerTests {
         final JsonElement n = jwkObj.get("n");
         Assert.assertNotNull(n);
         Assert.assertFalse(n.getAsString().isEmpty());
+    }
+
+    @Test
+    public void testGenerateShr() throws ClientException, MalformedURLException, ParseException {
+        final String httpMethod = "TRACE";
+        final String path = "/path1/path2";
+        final String host = "www.contoso.com:443";
+        final String hostWithScheme = "https://" + host;
+        final String hostWithPath = hostWithScheme + path;
+        final long timestamp = 12345;
+        final String nonce = "a_nonce_value";
+        final String clientClaims = "test claims!";
+
+        Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
+        mDevicePopManager.generateAsymmetricKey(mContext);
+        Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
+        final String shr = mDevicePopManager.mintSignedHttpRequest(
+                httpMethod,
+                timestamp,
+                new URL(hostWithPath),
+                nonce,
+                clientClaims
+        );
+        final SignedJWT jwt = SignedJWT.parse(shr);
+
+        // Verify headers
+        final JWSHeader jwsHeader = jwt.getHeader();
+        Assert.assertEquals("RS256", jwsHeader.getAlgorithm().getName());
+        Assert.assertEquals(jwsHeader.getKeyID(), mDevicePopManager.getAsymmetricKeyThumbprint());
+
+        // Verify body
+        final JWTClaimsSet jwtClaimsSet = jwt.getJWTClaimsSet();
+        Assert.assertEquals(httpMethod, jwtClaimsSet.getClaim("m"));
+        Assert.assertEquals(timestamp, jwtClaimsSet.getClaim("ts"));
+        Assert.assertEquals(host, jwtClaimsSet.getClaim("u"));
+        Assert.assertEquals(path, jwtClaimsSet.getClaim("p"));
+        Assert.assertEquals(nonce, jwtClaimsSet.getClaim("nonce"));
+        Assert.assertNotNull(jwtClaimsSet.getClaim("cnf"));
+        Assert.assertEquals(clientClaims, jwtClaimsSet.getClaim("client_claims"));
     }
 }

@@ -74,7 +74,8 @@ public class AuthenticationSchemeFactory {
                             clockSkewManager,
                             params.getHttpMethod(),
                             params.getUrl(),
-                            params.getNonce()
+                            params.getNonce(),
+                            params.getClientClaims()
                     );
                 } else {
                     throw new IllegalStateException("Unrecognized parameter type.");

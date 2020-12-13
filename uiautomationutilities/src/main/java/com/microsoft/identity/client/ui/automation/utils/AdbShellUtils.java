@@ -37,17 +37,50 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  */
 public class AdbShellUtils {
 
-    private static void executeShellCommand(@NonNull final String command) {
+    private static String executeShellCommand(@NonNull final String command) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
-            device.executeShellCommand(command);
+            return device.executeShellCommand(command);
         } catch (final IOException e) {
             Assert.fail(e.getMessage());
+            return null;
         }
     }
 
     /**
-     * Remove the supplied package name from the device
+     * Installs the supplied package on the device.
+     *
+     * @param packageName the name of the package to install
+     */
+    public static void installPackage(@NonNull final String packageName) {
+        final String result = executeShellCommand("pm install " + packageName);
+        Assert.assertNotNull(result);
+        Assert.assertEquals("Success", result.trim());
+    }
+
+    /**
+     * Installs the supplied package on the device with the supplied flags.
+     *
+     * @param packageName the name of the package to install
+     * @param flags       the flags to use during installation of the app
+     */
+    public static void installPackage(@NonNull final String packageName, @NonNull String... flags) {
+        final StringBuilder installCmdBuilder = new StringBuilder();
+        installCmdBuilder.append("pm install ");
+
+        for (final String flag : flags) {
+            installCmdBuilder.append(flag);
+            installCmdBuilder.append(" ");
+        }
+
+        installCmdBuilder.append(packageName);
+        final String result = executeShellCommand(installCmdBuilder.toString());
+        Assert.assertNotNull(result);
+        Assert.assertEquals("Success", result.trim());
+    }
+
+    /**
+     * Remove the supplied package name from the device.
      *
      * @param packageName the package name to remove
      */
@@ -56,7 +89,7 @@ public class AdbShellUtils {
     }
 
     /**
-     * Clear the contents of the storage associated to the given package name
+     * Clear the contents of the storage associated to the given package name.
      *
      * @param packageName the package name to clear
      */
@@ -65,7 +98,7 @@ public class AdbShellUtils {
     }
 
     /**
-     * Force stop (shut down) the supplied the package
+     * Force stop (shut down) the supplied the package.
      *
      * @param packageName the package to force stop
      */
@@ -78,16 +111,43 @@ public class AdbShellUtils {
     }
 
     /**
-     * Enable automatic time zone on the device
+     * Enable automatic time zone on the device.
      */
     public static void enableAutomaticTimeZone() {
         putGlobalSettings("auto_time", "1");
     }
 
     /**
-     * Disable automatic time zone on the device
+     * Disable automatic time zone on the device.
      */
     public static void disableAutomaticTimeZone() {
         putGlobalSettings("auto_time", "0");
+    }
+
+    private static String getApkPath(@NonNull final String packageName) {
+        return executeShellCommand("pm path " + packageName);
+    }
+
+    /**
+     * Copy APK of the specified package to the specified location.
+     *
+     * @param packageName     the package name of the APK to copy
+     * @param destApkFileName the destination location where to copy the APK
+     */
+    public static void copyApkForPackage(@NonNull final String packageName,
+                                         @NonNull final String destApkFileName) {
+        final String apkPath = getApkPath(packageName);
+        final String sanitizedPath = apkPath.trim().replace("package:", "");
+        copyFile(sanitizedPath, destApkFileName);
+    }
+
+    /**
+     * Copy a file to the specified destination.
+     *
+     * @param srcFile  the file to copy
+     * @param destFile the destination location where to copy the file
+     */
+    public static void copyFile(@NonNull final String srcFile, @NonNull final String destFile) {
+        executeShellCommand("cp " + srcFile + " " + destFile);
     }
 }

@@ -36,6 +36,14 @@ publishing {
                 password project.ext.vstsPassword
             }
         }
+        maven {
+            name "vsts-maven-android"
+            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+            credentials {
+                username project.vstsUsername
+                password project.vstsPassword
+            }
+        }
     }
 }
 

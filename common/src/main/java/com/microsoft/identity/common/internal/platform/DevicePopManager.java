@@ -222,6 +222,11 @@ class DevicePopManager implements IDevicePopManager {
         private static final String NONCE = "nonce";
 
         /**
+         * Arbitrary string data supplied by the caller to be embedded in the resulting SHR.
+         */
+        private static final String CLIENT_CLAIMS = "client_claims";
+
+        /**
          * JWK for inner object.
          */
         public static final String JWK = "jwk";
@@ -953,15 +958,70 @@ class DevicePopManager implements IDevicePopManager {
                                         @NonNull final URL requestUrl,
                                         @NonNull final String accessToken,
                                         @Nullable final String nonce) throws ClientException {
+        return mintSignedAccessToken(
+                httpMethod,
+                timestamp,
+                requestUrl,
+                accessToken,
+                nonce,
+                null
+        );
+    }
+
+    @Override
+    public String mintSignedAccessToken(@Nullable String httpMethod,
+                                        final long timestamp,
+                                        @NonNull final URL requestUrl,
+                                        @NonNull final String accessToken,
+                                        @Nullable final String nonce,
+                                        @Nullable final String clientClaims) throws ClientException {
+        return mintSignedHttpRequestInternal(
+                httpMethod,
+                timestamp,
+                requestUrl,
+                accessToken,
+                nonce,
+                clientClaims
+        );
+    }
+
+    @Override
+    public String mintSignedHttpRequest(@Nullable final String httpMethod,
+                                        final long timestamp,
+                                        @NonNull final URL requestUrl,
+                                        @Nullable final String nonce,
+                                        @Nullable final String clientClaims) throws ClientException {
+        return mintSignedHttpRequestInternal(
+                httpMethod,
+                timestamp,
+                requestUrl,
+                null, // No AT used in this flow (generateShr)
+                nonce,
+                clientClaims
+        );
+    }
+
+    private String mintSignedHttpRequestInternal(@Nullable final String httpMethod,
+                                                 final long timestamp,
+                                                 @NonNull final URL requestUrl,
+                                                 @Nullable final String accessToken,
+                                                 @Nullable final String nonce,
+                                                 @Nullable final String clientClaims) throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
             final JWTClaimsSet.Builder claimsBuilder = new JWTClaimsSet.Builder();
-            claimsBuilder.claim(
-                    SignedHttpRequestJwtClaims.ACCESS_TOKEN,
-                    accessToken
-            );
+
+            // This is supported/allowed only to support the generateShr API. By definition, all
+            // AT/PoP requests will contain an access token, but an SPO signed-cookie will not.
+            if (!TextUtils.isEmpty(accessToken)) {
+                claimsBuilder.claim(
+                        SignedHttpRequestJwtClaims.ACCESS_TOKEN,
+                        accessToken
+                );
+            }
+
             claimsBuilder.claim(
                     SignedHttpRequestJwtClaims.TIMESTAMP,
                     timestamp
@@ -994,6 +1054,13 @@ class DevicePopManager implements IDevicePopManager {
                 claimsBuilder.claim(
                         SignedHttpRequestJwtClaims.NONCE,
                         nonce
+                );
+            }
+
+            if (!TextUtils.isEmpty(clientClaims)) {
+                claimsBuilder.claim(
+                        SignedHttpRequestJwtClaims.CLIENT_CLAIMS,
+                        clientClaims
                 );
             }
 

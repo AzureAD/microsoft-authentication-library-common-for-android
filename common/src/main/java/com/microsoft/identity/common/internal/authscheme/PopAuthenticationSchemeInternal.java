@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.net.URL;
 
+import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
@@ -49,6 +50,7 @@ public class PopAuthenticationSchemeInternal
         public static final String HTTP_METHOD = "http_method";
         public static final String URL = "url";
         public static final String NONCE = "nonce";
+        public static final String CLIENT_CLAIMS = "client_claims";
     }
 
     /**
@@ -68,6 +70,9 @@ public class PopAuthenticationSchemeInternal
     @SerializedName(NONCE)
     private String mNonce;
 
+    @SerializedName(CLIENT_CLAIMS)
+    private String mClientClaims;
+
     /**
      * Constructor for gson use.
      */
@@ -75,10 +80,20 @@ public class PopAuthenticationSchemeInternal
         super(SCHEME_POP);
     }
 
+    /**
+     * Constructs a new PopAuthenticationSchemeInternal.
+     *
+     * @param clockSkewManager Used to compute and compensate for any client clock-skew relative to
+     *                         AAD.
+     * @param httpMethod       The HTTP method associated with this request. Optional.
+     * @param url              The resource URL of future-recipient of this SHR.
+     * @param nonce            Client nonce value; for replay protection.
+     */
+    @Deprecated
     public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
-                                    @Nullable final String httpMethod,
-                                    @NonNull final URL url,
-                                    @Nullable final String nonce) {
+                                           @Nullable final String httpMethod,
+                                           @NonNull final URL url,
+                                           @Nullable final String nonce) {
         super(SCHEME_POP);
         mClockSkewManager = clockSkewManager;
         mHttpMethod = httpMethod;
@@ -86,8 +101,60 @@ public class PopAuthenticationSchemeInternal
         mNonce = nonce;
     }
 
+    /**
+     * Constructs a new PopAuthenticationSchemeInternal.
+     *
+     * @param clockSkewManager Used to compute and compensate for any client clock-skew
+     *                         (relative to AAD).
+     * @param httpMethod       The HTTP method associated with this request. Optional.
+     * @param url              The resource URL of future-recipient of this SHR.
+     * @param nonce            Client nonce value; for replay protection.
+     * @param clientClaims     Optional claims provided by the caller to embed in the client_claims
+     *                         property of the resulting SHR.
+     */
+    public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
+                                           @Nullable final String httpMethod,
+                                           @NonNull final URL url,
+                                           @Nullable final String nonce,
+                                           @Nullable final String clientClaims) {
+        super(SCHEME_POP);
+        mClockSkewManager = clockSkewManager;
+        mHttpMethod = httpMethod;
+        mUrl = url;
+        mNonce = nonce;
+        mClientClaims = clientClaims;
+    }
+
+    /**
+     * This constructor intended to be used when this class is acting as a DTO between
+     * MSAL -> Broker. Because no {@link IClockSkewManager} is supplied, functions related to access
+     * token signing cannot be used.
+     *
+     * @param httpMethod   The HTTP method associated with this request. Optional.
+     * @param url          The resource URL of future-recipient of this SHR.
+     * @param nonce        Client nonce value; for replay protection.
+     * @param clientClaims Optional claims provided by the caller to embed in the client_claims
+     *                     property of the resulting SHR.
+     */
+    public PopAuthenticationSchemeInternal(@Nullable final String httpMethod,
+                                           @NonNull final URL url,
+                                           @Nullable final String nonce,
+                                           @Nullable final String clientClaims) {
+        super(SCHEME_POP);
+        mClockSkewManager = null;
+        mHttpMethod = httpMethod;
+        mUrl = url;
+        mNonce = nonce;
+        mClientClaims = clientClaims;
+    }
+
     @Override
     public String getAccessTokenForScheme(@NonNull final String accessToken) throws ClientException {
+        if (null == mClockSkewManager) {
+            // Shouldn't happen, would indicate a development-time bug.
+            throw new RuntimeException("IClockSkewManager not initialized.");
+        }
+
         final long ONE_SECOND_MILLIS = 1000L;
         final long timestampMillis = mClockSkewManager.getAdjustedReferenceTime().getTime();
 
@@ -98,7 +165,8 @@ public class PopAuthenticationSchemeInternal
                         timestampMillis / ONE_SECOND_MILLIS,
                         getUrl(),
                         accessToken,
-                        getNonce()
+                        getNonce(),
+                        getClientClaims()
                 );
     }
 
@@ -115,6 +183,11 @@ public class PopAuthenticationSchemeInternal
     @Override
     public URL getUrl() {
         return mUrl;
+    }
+
+    @Override
+    public String getClientClaims() {
+        return mClientClaims;
     }
 
     @Override

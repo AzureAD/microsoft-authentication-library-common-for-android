@@ -61,6 +61,7 @@ public class BrokerSupportRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Log.i(TAG, "Applying rule....");
                 SupportedBrokers supportedBrokersAnnotation = description.getAnnotation(SupportedBrokers.class);
 
                 if (supportedBrokersAnnotation == null) {

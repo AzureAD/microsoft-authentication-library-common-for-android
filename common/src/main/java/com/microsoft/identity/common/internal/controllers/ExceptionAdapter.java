@@ -49,6 +49,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class ExceptionAdapter {
 
@@ -239,7 +240,12 @@ public class ExceptionAdapter {
         return null;
     }
 
-    public static BaseException baseExceptionFromException(final Exception e) {
+    public static BaseException baseExceptionFromException(final Throwable exception) {
+        Throwable e = exception;
+        if (exception instanceof ExecutionException){
+            e = exception.getCause();
+        }
+
         if (e instanceof IOException) {
             return new ClientException(
                     ClientException.IO_ERROR,
