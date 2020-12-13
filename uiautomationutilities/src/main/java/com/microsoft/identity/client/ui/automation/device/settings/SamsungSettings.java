@@ -188,4 +188,9 @@ public class SamsungSettings extends BaseSettings {
         UiAutomatorUtils.handleButtonClick("com.samsung.klmsagent:id/checkBox1");
         UiAutomatorUtils.handleButtonClick("com.samsung.klmsagent:id/eula_bottom_confirm_agree");
     }
+
+    @Override
+    public void addPinSetup(){
+        //TODO: implement addPinSetup for samsung device.
+    }
 }

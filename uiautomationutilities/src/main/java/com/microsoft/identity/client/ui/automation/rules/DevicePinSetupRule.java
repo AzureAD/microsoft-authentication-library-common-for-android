@@ -33,6 +33,9 @@ import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.device.settings.BaseSettings;
+import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -48,15 +51,13 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
  */
 public class DevicePinSetupRule implements TestRule {
 
-    final String password = "1234";
-
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 if (!isDeviceSecured()) {
-                    setLock();
+                    TestContext.getTestContext().getTestDevice().getSettings().addPinSetup();
                 }
                 base.evaluate();
             }
@@ -73,31 +74,4 @@ public class DevicePinSetupRule implements TestRule {
         return keyguardManager.isKeyguardSecure();
     }
 
-    private void setLock() throws UiObjectNotFoundException {
-
-        final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        launchIntent(Settings.ACTION_SECURITY_SETTINGS);
-
-        final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
-        Assert.assertTrue(screenLock.exists());
-        screenLock.click();
-        final UiObject pinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
-        Assert.assertTrue(pinButton.exists());
-        pinButton.click();
-        final UiObject noButton = UiAutomatorUtils.obtainUiObjectWithExactText("NO");
-        Assert.assertTrue(noButton.exists());
-        noButton.click();
-
-        UiObject passwordField = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry");
-        Assert.assertTrue(passwordField.exists());
-        passwordField.setText(password);
-        device.pressEnter();
-        passwordField = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/password_entry");
-        passwordField.setText(password);
-        device.pressEnter();
-
-        final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithResourceId("com.android.settings:id/redaction_done_button");
-        Assert.assertTrue(doneButton.exists());
-        doneButton.click();
-    }
 }

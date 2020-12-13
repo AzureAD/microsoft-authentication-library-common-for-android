@@ -29,7 +29,10 @@ import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -69,5 +72,10 @@ public abstract class BaseSettings implements ISettings {
     @Override
     public void launchDateTimeSettingsPage() {
         launchIntent(Settings.ACTION_DATE_SETTINGS);
+    }
+
+    @Override
+    public void launchScreenLockPage() {
+        launchIntent(Settings.ACTION_SECURITY_SETTINGS);
     }
 }
