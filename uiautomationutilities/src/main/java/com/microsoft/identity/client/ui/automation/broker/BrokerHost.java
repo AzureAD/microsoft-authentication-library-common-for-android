@@ -125,10 +125,11 @@ public class BrokerHost extends AbstractTestBroker {
 
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
-        if (expectedSuccess)
+        if (expectedSuccess) {
             postJoinConfirmHelper(username);
-        else
+        } else {
             postJoinFailure();
+        }
     }
 
     private void performDeviceRegistrationHelper(@NonNull final String username) {
