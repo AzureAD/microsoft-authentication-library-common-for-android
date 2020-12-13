@@ -190,7 +190,7 @@ public class SamsungSettings extends BaseSettings {
     }
 
     @Override
-    public void addPinSetup(){
+    public void setPinOnDevice(final String password) {
         //TODO: implement addPinSetup for samsung device.
     }
 }

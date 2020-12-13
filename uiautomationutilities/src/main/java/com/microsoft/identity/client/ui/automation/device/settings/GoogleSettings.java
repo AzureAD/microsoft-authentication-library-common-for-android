@@ -241,19 +241,18 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void addPinSetup() throws UiObjectNotFoundException {
+    public void setPinOnDevice(final String password) throws UiObjectNotFoundException {
         UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         launchScreenLockPage();
-        final String PASSWORD = "1234";
         final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
         Assert.assertTrue(screenLock.exists());
         screenLock.click();
         final UiObject pinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
         Assert.assertTrue(pinButton.exists());
         pinButton.click();
-        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", PASSWORD);
+        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
         device.pressEnter();
-        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", PASSWORD);
+        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
         device.pressEnter();
         handleDoneButton();
     }

@@ -92,7 +92,7 @@ public interface ISettings {
     /**
      * Adds screen lock to the device.
      */
-    void addPinSetup() throws UiObjectNotFoundException;
+    void setPinOnDevice(final String password) throws UiObjectNotFoundException;
 
     /**
      * Launches the security page in Settings app.
