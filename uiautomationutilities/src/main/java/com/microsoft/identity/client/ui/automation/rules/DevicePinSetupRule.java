@@ -59,7 +59,7 @@ public class DevicePinSetupRule implements TestRule {
             @Override
             public void evaluate() throws Throwable {
                 if (!isDeviceSecured()) {
-                    TestContext.getTestContext().getTestDevice().getSettings().setPinOnDevice(PASSWORD);
+                    TestContext.getTestContext().getTestDevice().getSettings().setPinOnDevice(PIN);
                 }
                 base.evaluate();
             }
