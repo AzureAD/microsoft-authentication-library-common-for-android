@@ -51,7 +51,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
  */
 public class DevicePinSetupRule implements TestRule {
 
-    static final String PASSWORD = "1234";
+    static final String PIN = "1234";
 
     @Override
     public Statement apply(final Statement base, final Description description) {
