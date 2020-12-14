@@ -24,6 +24,8 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
@@ -31,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftClien
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
+import com.microsoft.identity.internal.testutils.BuildConfig;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -49,10 +52,25 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
     private final static String MSSTS_CLIENT_ASSERTION_AUDIENCE = "https://login.microsoftonline.com/microsoft.com/oauth2/v2.0/token";
 
     private static KeyVaultAuthHelper sKeyVaultAuthHelper;
+    private final String mSecret;
 
-    private KeyVaultAuthHelper() {
+    private KeyVaultAuthHelper(final String secret) {
+        mSecret = secret;
     }
 
+    private KeyVaultAuthHelper() {
+        final String secret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
+        mSecret = secret;
+    }
+
+    public static ConfidentialClientHelper getInstanceWithSecret(String secret) {
+        if (sKeyVaultAuthHelper == null) {
+            sKeyVaultAuthHelper = new KeyVaultAuthHelper(secret);
+        }
+        return sKeyVaultAuthHelper;
+    }
+
+    @Deprecated
     public static ConfidentialClientHelper getInstance() {
         if (sKeyVaultAuthHelper == null) {
             sKeyVaultAuthHelper = new KeyVaultAuthHelper();
@@ -67,18 +85,26 @@ class KeyVaultAuthHelper extends ConfidentialClientHelper {
 
     @Override
     public TokenRequest createTokenRequest() throws CertificateException, UnrecoverableKeyException, NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
-        final String labClientSecret = com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET;
-        if (TextUtils.isEmpty(labClientSecret)) {
+        if (TextUtils.isEmpty(mSecret)) {
             return createTokenRequestWithClientAssertion();
         } else {
-            return createTokenRequestWithClientSecret();
+            return createTokenRequestWithClientSecret(mSecret);
         }
     }
 
     private TokenRequest createTokenRequestWithClientSecret() {
         TokenRequest tr = new MicrosoftStsTokenRequest();
 
-        tr.setClientSecret(com.microsoft.identity.internal.testutils.BuildConfig.LAB_CLIENT_SECRET);
+        tr.setClientSecret(mSecret);
+        tr.setClientId(CLIENT_ID);
+        tr.setScope(SCOPE);
+        return tr;
+    }
+
+    private TokenRequest createTokenRequestWithClientSecret(@NonNull final String secret) {
+        TokenRequest tr = new MicrosoftStsTokenRequest();
+
+        tr.setClientSecret(secret);
         tr.setClientId(CLIENT_ID);
         tr.setScope(SCOPE);
         return tr;
