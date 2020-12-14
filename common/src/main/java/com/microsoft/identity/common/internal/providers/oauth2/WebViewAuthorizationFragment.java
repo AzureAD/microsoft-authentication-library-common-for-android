@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -138,7 +139,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
                         // Inject string from test suites.
                         if (!StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
-                            mWebView.loadUrl(mPostPageLoadedUrl);
+                            mWebView.loadUrl(mPostPageLoadedUrl, getWebViewHeaders(null));
                         }
                     }
                 },
@@ -150,7 +151,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             public void run() {
                 Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mWebView.loadUrl(mAuthorizationRequestUrl, getWebViewHeaders(mRequestHeaders));
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
@@ -160,6 +161,18 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         });
 
         return view;
+    }
+
+    private Map<String, String> getWebViewHeaders(@Nullable final Map<String, String> inputHeaders) {
+        final Map<String, String> headers = new HashMap<>();
+
+        if (null != inputHeaders) {
+            headers.putAll(inputHeaders);
+        }
+
+        headers.put("Google-Accounts-Check-OAuth-Login","true");
+
+        return headers;
     }
 
     /**
