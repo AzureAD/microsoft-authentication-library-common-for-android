@@ -83,6 +83,6 @@ public class CaptureKustoTestResultRule implements TestRule {
     }
 
     private String sanitizeErrorMessage(@NonNull final String msg) {
-        return msg.replaceAll("\n", " ").replaceAll("\r"," ");
+        return msg.replaceAll("[\n\r]", " ");
     }
 }
