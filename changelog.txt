@@ -8,6 +8,7 @@ vNext
 - Log an informative error message when application redirect_uri does not match the broker's expected value (#1155).
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
+- Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
 
 Version 3.0.7
 ----------
