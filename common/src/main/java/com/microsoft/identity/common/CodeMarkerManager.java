@@ -1,7 +1,6 @@
 package com.microsoft.identity.common;
 
 import android.os.Environment;
-import android.text.format.DateUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,7 +20,6 @@ public class CodeMarkerManager {
         if(codeMarkers.size() == 0) {
             baseMilliSeconds = currentMiliSeconds;
         }
-        Date currentTime = new Date();
         SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
         codeMarkers.add(new CodeMarker(marker, currentMiliSeconds - baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
     }
@@ -31,18 +29,7 @@ public class CodeMarkerManager {
     }
 
     public static void writeToFile(String fileName) {
-        String stringToWrite = "TimeStamp,Marker,Time,Thread,CpuUsed,CpuTotal,ResidentSize,VirtualSize,WifiSent,WifiRecv,WwanSent,WwanRecv,AppSent,AppRecv,Battery,SystemDiskRead,SystemDiskWrite\r\n";
-
-        for(CodeMarker codeMarker : codeMarkers) {
-            stringToWrite += ""
-                            + codeMarker.getTimeStamp()
-                            + "," + codeMarker.getMarker()
-                            + "," + codeMarker.getTimeMilliseconds()
-                            + "," + codeMarker.getThreadId()
-                            + "," + ",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA"
-                            + "\r\n";
-        }
-
+        String stringToWrite = getFileContent();
         File file = Environment.getExternalStorageDirectory();
         String strFilePath = file.getAbsolutePath() + "/" + fileName;
         try {
@@ -58,6 +45,19 @@ public class CodeMarkerManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    public static String getFileContent() {
+        String stringToWrite = "TimeStamp,Marker,Time,Thread,CpuUsed,CpuTotal,ResidentSize,VirtualSize,WifiSent,WifiRecv,WwanSent,WwanRecv,AppSent,AppRecv,Battery,SystemDiskRead,SystemDiskWrite";
+
+        for(CodeMarker codeMarker : codeMarkers) {
+            stringToWrite += "\n"
+                            + codeMarker.getTimeStamp()
+                            + "," + codeMarker.getMarker()
+                            + "," + codeMarker.getTimeMilliseconds()
+                            + "," + codeMarker.getThreadId()
+                            + "," + ",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA";
+        }
+        return stringToWrite;
     }
 }

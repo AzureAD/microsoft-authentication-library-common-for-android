@@ -37,7 +37,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.microsoft.identity.common.CodeMarker;
 import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -133,7 +132,6 @@ public class CommandDispatcher {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
-        //CodeMarkerManager.clear();
         CodeMarkerManager.codemarker(10011);
         final String methodName = ":submitSilent";
         Logger.verbose(
@@ -229,7 +227,6 @@ public class CommandDispatcher {
                         DiagnosticContext.clear();
                     }
                     CodeMarkerManager.codemarker(10020);
-                    CodeMarkerManager.writeToFile("PerfData.txt");
                 }
             });
             return finalFuture;
@@ -439,7 +436,6 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    CodeMarkerManager.clear();
                     CodeMarkerManager.codemarker(1);
                     try {
                         final CommandParameters commandParameters = command.getParameters();
@@ -490,7 +486,6 @@ public class CommandDispatcher {
                         Telemetry.getInstance().flush(correlationId);
                         returnCommandResult(command, commandResult, handler);
                         CodeMarkerManager.codemarker(4);
-                        CodeMarkerManager.writeToFile("PerfData.txt");
                     } finally {
                         DiagnosticContext.clear();
                     }
