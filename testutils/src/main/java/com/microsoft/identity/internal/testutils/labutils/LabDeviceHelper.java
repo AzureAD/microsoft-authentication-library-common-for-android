@@ -40,7 +40,7 @@ public class LabDeviceHelper {
      * @param deviceId the device id of the device to delete
      * @return a boolean indicating if the device has been deleted successfully
      */
-    public static boolean deleteDevice(final String upn, final String deviceId) {
+    public static boolean deleteDevice(final String upn, final String deviceId) throws LabApiException {
         INSTANCE.setupApiClientWithAccessToken();
         final DeleteDeviceApi deleteDeviceApi = new DeleteDeviceApi();
 
@@ -51,8 +51,8 @@ public class LabDeviceHelper {
             return customSuccessResponse.getResult().contains(
                     deviceId + ", successfully deleted from AAD."
             );
-        } catch (ApiException e) {
-            throw new RuntimeException(e.getMessage());
+        } catch (final ApiException e) {
+            throw new LabApiException(e);
         }
     }
 }
