@@ -29,6 +29,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * A wrapper class to remove the dependency on latches to wait for setting result or exception
+ * with some fix timeout or infinite time. This class could be inherited by Test Cases to await
+ * for the result and leveraging it to set result or exceptions as output of Test Case.
+ */
 public class ResultFuture<T, E extends Exception> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);

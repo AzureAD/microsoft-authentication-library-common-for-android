@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.sdk;
 
-//import com.microsoft.aad.adal.AuthenticationResult;
 import android.text.TextUtils;
 import org.junit.Assert;
 import androidx.annotation.NonNull;
@@ -36,12 +35,12 @@ import lombok.Getter;
 @Getter
 public abstract class AuthResult {
 
-    protected static String accessToken;
-    protected static String idToken;
-    protected static String userId;
-    protected static String username;
-    protected static String authority;
-    protected static Exception exception;
+    protected String accessToken;
+    protected String idToken;
+    protected String userId;
+    protected String username;
+    protected String authority;
+    protected Exception exception;
 
     // defaul no-arguments constructor to let parent class create their own constructor
     protected AuthResult() {

@@ -23,7 +23,7 @@
 package com.microsoft.identity.client.ui.automation.interaction;
 
 /**
- * Interface for handling user interaction in an interaction acquire token request.
+ * Interface for handling user interaction in an interactive acquire token request.
  */
 public interface OnInteractionRequired {
 
