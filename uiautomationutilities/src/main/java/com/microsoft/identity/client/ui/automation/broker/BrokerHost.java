@@ -54,7 +54,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     /**
-     * allows you to install different versions of BrokerHost.
+     * Allows you to install different broker host app apk with given file name.
      *
      * @param appName
      */
