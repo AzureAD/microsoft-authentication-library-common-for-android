@@ -69,7 +69,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     /**
-     * allows you to choose which appInstaller should we use to install Microsoft authenticator.The app can be installed from playstore or from localApkinstaller.
+     * Allows you to choose which appInstaller should we use to install Microsoft Authenticator. The app can be installed from playstore or from localApkinstaller.
      *
      * @param appInstaller appInstaller can be either play store or localapkinstaller
      */
