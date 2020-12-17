@@ -35,5 +35,5 @@ jobs:
           echo Add other actions to build,
           echo test, and deploy your project.
           docker --version
-          docker ps
+          gradle --version
           env
