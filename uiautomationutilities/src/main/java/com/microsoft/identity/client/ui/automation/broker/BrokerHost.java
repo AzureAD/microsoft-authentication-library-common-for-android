@@ -58,7 +58,7 @@ public class BrokerHost extends AbstractTestBroker {
      *
      * @param appName
      */
-    public BrokerHost(String appName) {
+    public BrokerHost(String apkFileName) {
         super(BROKER_HOST_APP_PACKAGE_NAME, appName, new LocalApkInstaller());
         localApkFileName = appName;
     }
