@@ -22,48 +22,53 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
-
-import com.microsoft.identity.client.ui.automation.broker.DeviceLimitReachedException;
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.client.ui.automation.logging.appender.FileAppender;
+import com.microsoft.identity.client.ui.automation.logging.formatter.LogcatLikeFormatter;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-/**
- * A Test Rule that allows recovery from device enrollment failures by catching the {@link DeviceLimitReachedException}
- * and removing devices from Company Portal to allow successful enrollments in the future.
- */
-public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
+import java.io.IOException;
 
-    private final static String TAG = DeviceEnrollmentFailureRecoveryRule.class.getSimpleName();
+/**
+ * A Junit Rule to turn on logging for automation infrastructure and set a logger to dump these logs
+ * to their separate file.
+ */
+public class AutomationLoggingRule implements TestRule {
+
+    final static String LOG_FOLDER_NAME = "automation";
 
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                try {
-                    base.evaluate();
-                } catch (final Throwable throwable) {
-                    if (throwable instanceof DeviceLimitReachedException) {
-                        Logger.w(TAG, "Received DeviceLimitReachedException....removing devices..");
-                        // Click REMOVE DEVICE btn in the dialog
-                        UiAutomatorUtils.handleButtonClick("android:id/button1");
+                final FileAppender automationLogFileAppender = turnOnAutomationLogging(description);
 
-                        // we delete 10 devices as it is much more efficient
-                        for (int i = 0; i < 10; i++) {
-                            ((DeviceLimitReachedException) throwable).getCompanyPortal().removeDevice();
-                        }
-                    }
+                base.evaluate();
 
-                    throw throwable; // the retry rule should handle retries
-                }
+                automationLogFileAppender.closeWriter();
+
+                CommonUtils.copyFileToFolderInSdCard(
+                        automationLogFileAppender.getLogFile(),
+                        LOG_FOLDER_NAME
+                );
             }
         };
     }
 
+    private FileAppender turnOnAutomationLogging(final Description description) throws IOException {
+        final String automationLogFileName = description.getMethodName() + "-automation.log";
+        final FileAppender automationLogFileAppender = new FileAppender(
+                automationLogFileName, new LogcatLikeFormatter()
+        );
+
+        com.microsoft.identity.client.ui.automation.logging.Logger
+                .getAppenderRegistry()
+                .registerAppender(automationLogFileAppender);
+
+        return automationLogFileAppender;
+    }
 }

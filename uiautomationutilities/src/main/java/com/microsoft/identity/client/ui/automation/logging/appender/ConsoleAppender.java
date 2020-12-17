@@ -20,34 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
+package com.microsoft.identity.client.ui.automation.logging.appender;
 
-import android.util.Log;
-
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import com.microsoft.identity.client.ui.automation.logging.formatter.ILogFormatter;
 
 /**
- * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case.
+ * An implementation of {@link IAppender} to send logs to Console (Standard Output).
  */
-public class ResetAutomaticTimeZoneTestRule implements TestRule {
+public class ConsoleAppender extends AbstractAppender {
 
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
-
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                AdbShellUtils.enableAutomaticTimeZone();
-                base.evaluate();
-            }
-        };
+    public ConsoleAppender(final ILogFormatter logFormatter) {
+        super(logFormatter);
     }
 
+    @Override
+    public void append(final String message) {
+        System.out.println(message);
+    }
 }

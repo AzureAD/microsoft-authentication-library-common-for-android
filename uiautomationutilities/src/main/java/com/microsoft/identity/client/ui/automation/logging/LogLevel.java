@@ -20,34 +20,44 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
-
-import android.util.Log;
-
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+package com.microsoft.identity.client.ui.automation.logging;
 
 /**
- * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case.
+ * Logging Levels supported by {@link Logger}.
  */
-public class ResetAutomaticTimeZoneTestRule implements TestRule {
+public enum LogLevel {
 
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
+    /**
+     * Error level logging.
+     */
+    ERROR('E'),
 
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                AdbShellUtils.enableAutomaticTimeZone();
-                base.evaluate();
-            }
-        };
+    /**
+     * Warn level logging.
+     */
+    WARN('W'),
+    /**
+     * Info level logging.
+     */
+    INFO('I'),
+
+    /**
+     * Verbose level logging.
+     */
+    VERBOSE('V');
+
+    private final char label;
+
+    LogLevel(char label) {
+        this.label = label;
     }
 
+    /**
+     * Get the label used to represent this log level.
+     *
+     * @return the character representing this log leve.
+     */
+    public char getLabel() {
+        return this.label;
+    }
 }

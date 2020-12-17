@@ -20,34 +20,35 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
+package com.microsoft.identity.client.ui.automation.logging.appender;
 
 import android.util.Log;
 
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
 /**
- * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case.
+ * An implementation of {@link IAppender} to send logs to Android logcat.
  */
-public class ResetAutomaticTimeZoneTestRule implements TestRule {
-
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
+public class LogcatAppender implements IAppender {
 
     @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                AdbShellUtils.enableAutomaticTimeZone();
-                base.evaluate();
-            }
-        };
+    public void append(LogLevel logLevel, String tag, String message, Throwable throwable) {
+        switch (logLevel) {
+            case VERBOSE:
+                Log.v(tag, message, throwable);
+                break;
+            case INFO:
+                Log.i(tag, message, throwable);
+                break;
+            case WARN:
+                Log.w(tag, message, throwable);
+                break;
+            case ERROR:
+                Log.e(tag, message, throwable);
+                break;
+            default:
+                Log.d(tag, message, throwable);
+                break;
+        }
     }
-
 }

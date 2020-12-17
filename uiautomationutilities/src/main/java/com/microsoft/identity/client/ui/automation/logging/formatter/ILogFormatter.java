@@ -20,34 +20,23 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
+package com.microsoft.identity.client.ui.automation.logging.formatter;
 
-import android.util.Log;
-
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
 /**
- * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case.
+ * An interface for formatting log messages.
  */
-public class ResetAutomaticTimeZoneTestRule implements TestRule {
+public interface ILogFormatter {
 
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
-
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                AdbShellUtils.enableAutomaticTimeZone();
-                base.evaluate();
-            }
-        };
-    }
+    /**
+     * Formats the log message into a single String and returns it.
+     *
+     * @param logLevel  the level of the log
+     * @param tag       the tag associated to this log
+     * @param message   the message to log
+     * @param throwable the exception to log
+     */
+    String format(LogLevel logLevel, String tag, String message, Throwable throwable);
 
 }

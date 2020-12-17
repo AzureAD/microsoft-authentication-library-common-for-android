@@ -24,6 +24,8 @@ package com.microsoft.identity.internal.testutils.mocks;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.internal.testutils.labutils.LabConfig;
@@ -35,7 +37,7 @@ import java.util.HashMap;
 /**
  * A class to provide a Fake Authorization Result object to be used in ROPC flow
  */
-public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationResult {
+public class MockSuccessAuthorizationResultNetworkTests extends AuthorizationResult<AuthorizationResponse, AuthorizationErrorResponse> {
 
     @Override
     public boolean getSuccess() {

@@ -29,22 +29,20 @@ import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
+
 public abstract class BaseSettings implements ISettings {
 
     final static String SETTINGS_PKG = "com.android.settings";
-
-    private static void launchIntent(@NonNull final String action) {
-        final Context context = ApplicationProvider.getApplicationContext();
-        final Intent intent = new Intent(action);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-        context.startActivity(intent);
-    }
 
     @Override
     public void launchDeviceAdminSettingsPage() {
@@ -74,5 +72,10 @@ public abstract class BaseSettings implements ISettings {
     @Override
     public void launchDateTimeSettingsPage() {
         launchIntent(Settings.ACTION_DATE_SETTINGS);
+    }
+
+    @Override
+    public void launchScreenLockPage() {
+        launchIntent(Settings.ACTION_SECURITY_SETTINGS);
     }
 }

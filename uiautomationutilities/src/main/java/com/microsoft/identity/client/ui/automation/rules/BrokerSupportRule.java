@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.annotations.SupportedBrokers;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.Assume;
 import org.junit.rules.TestRule;
@@ -61,7 +62,7 @@ public class BrokerSupportRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 SupportedBrokers supportedBrokersAnnotation = description.getAnnotation(SupportedBrokers.class);
 
                 if (supportedBrokersAnnotation == null) {
@@ -73,7 +74,7 @@ public class BrokerSupportRule implements TestRule {
                 if (supportedBrokersAnnotation != null) {
                     final List<Class<? extends ITestBroker>> supportedBrokerClasses =
                             Arrays.asList(supportedBrokersAnnotation.brokers());
-                    Log.i(TAG, "Received supported broker annotation with value: " + supportedBrokerClasses.toString());
+                    Logger.i(TAG, "Received supported broker annotation with value: " + supportedBrokerClasses.toString());
                     Assume.assumeTrue(
                             "Ignoring test as not applicable with supplied broker",
                             supportedBrokerClasses.contains(mBroker.getClass())

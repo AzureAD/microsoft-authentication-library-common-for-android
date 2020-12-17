@@ -206,17 +206,17 @@ public class MsalOAuth2TokenCache
         saveAccounts(accountRecord);
         saveCredentialsInternal(idTokenRecord, accessTokenRecord);
 
-        final CacheRecord result = new CacheRecord();
-        result.setAccount(accountRecord);
-        result.setAccessToken(accessTokenRecord);
+        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+        result.mAccount(accountRecord);
+        result.mAccessToken(accessTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.setV1IdToken(idTokenRecord);
+            result.mV1IdToken(idTokenRecord);
         } else {
-            result.setIdToken(idTokenRecord);
+            result.mIdToken(idTokenRecord);
         }
 
-        return result;
+        return result.build();
     }
 
     // TODO Add unit test
@@ -318,13 +318,13 @@ public class MsalOAuth2TokenCache
         // Remove old refresh tokens (except for the one we just saved) if it's MRRT or FRT
         removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
 
-        final CacheRecord result = new CacheRecord();
-        result.setAccount(accountToSave);
-        result.setAccessToken(accessTokenToSave);
-        result.setRefreshToken(refreshTokenToSave);
+        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+        result.mAccount(accountToSave);
+        result.mAccessToken(accessTokenToSave);
+        result.mRefreshToken(refreshTokenToSave);
         setToCacheRecord(result, idTokenToSave);
 
-        return result;
+        return result.build();
     }
 
     /**
@@ -472,14 +472,14 @@ public class MsalOAuth2TokenCache
             );
         }
 
-        final CacheRecord associatedRecord = new CacheRecord();
-        associatedRecord.setAccount(acct);
+        final CacheRecord.CacheRecordBuilder associatedRecord = CacheRecord.builder();
+        associatedRecord.mAccount(acct);
 
         for (final IdTokenRecord idTokenRecord : acctIdTokens) {
             setToCacheRecord(associatedRecord, idTokenRecord);
         }
 
-        return associatedRecord;
+        return associatedRecord.build();
     }
 
     /**
@@ -586,7 +586,7 @@ public class MsalOAuth2TokenCache
         final boolean isAccountCompliant = isAccountSchemaCompliant(accountToSave);
         final boolean isIdTokenCompliant = isIdTokenSchemaCompliant(idTokenToSave);
 
-        final CacheRecord result = new CacheRecord();
+        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
 
         if (!(isAccountCompliant && isIdTokenCompliant)) {
             String nonCompliantCredentials = "[";
@@ -612,15 +612,15 @@ public class MsalOAuth2TokenCache
             saveCredentialsInternal(idTokenToSave);
 
             // Set them as the result outputs
-            result.setAccount(accountToSave);
+            result.mAccount(accountToSave);
             if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
-                result.setV1IdToken(idTokenToSave);
+                result.mV1IdToken(idTokenToSave);
             } else {
-                result.setIdToken(idTokenToSave);
+                result.mIdToken(idTokenToSave);
             }
         }
 
-        return result;
+        return result.build();
     }
 
     @Override
@@ -712,15 +712,15 @@ public class MsalOAuth2TokenCache
                 null // not applicable
         );
 
-        final CacheRecord result = new CacheRecord();
-        result.setAccount(account);
-        result.setAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
-        result.setRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
-        result.setIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
-        result.setV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
+        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+        result.mAccount(account);
+        result.mAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
+        result.mRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
+        result.mIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
+        result.mV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
-        Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result));
-        return result;
+        Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result.build()));
+        return result.build();
     }
 
     /**
@@ -1026,7 +1026,7 @@ public class MsalOAuth2TokenCache
             @Nullable String environment,
             @NonNull String clientId,
             @NonNull String localAccountId) {
-        CacheRecord result = null;
+        CacheRecord.CacheRecordBuilder result = null;
 
         final AccountRecord acct = getAccountByLocalAccountId(
                 environment,
@@ -1040,25 +1040,24 @@ public class MsalOAuth2TokenCache
                     acct
             );
 
-            result = new CacheRecord();
-            result.setAccount(acct);
-
+            result = CacheRecord.builder();
+            result.mAccount(acct);
             for (final IdTokenRecord idTokenRecord : acctIdTokens) {
                 setToCacheRecord(result, idTokenRecord);
             }
+            return result.build();
         }
 
-        return result;
+        return null;
     }
 
     /**
      * Given a CacheRecord and IdTokenRecord, set the IdToken on the cache record in the field
      * corresponding to the IdToken's version.
-     *
-     * @param target        The CacheRecord into which said IdToken should be placed.
+     *  @param target        The CacheRecord into which said IdToken should be placed.
      * @param idTokenRecord The IdToken to associate.
      */
-    private void setToCacheRecord(@NonNull final CacheRecord target,
+    private void setToCacheRecord(@NonNull final CacheRecord.CacheRecordBuilder target,
                                   @NonNull final IdTokenRecord idTokenRecord) {
         final String methodName = ":setToCacheRecord";
 
@@ -1068,9 +1067,9 @@ public class MsalOAuth2TokenCache
 
         if (null != type) {
             if (CredentialType.V1IdToken == type) {
-                target.setV1IdToken(idTokenRecord);
+                target.mV1IdToken(idTokenRecord);
             } else if (CredentialType.IdToken == type) {
-                target.setIdToken(idTokenRecord);
+                target.mIdToken(idTokenRecord);
             } else {
                 Logger.warn(
                         TAG + methodName,
@@ -1211,15 +1210,14 @@ public class MsalOAuth2TokenCache
             );
 
             // Construct the cache record....
-            final CacheRecord cacheRecord = new CacheRecord();
-            cacheRecord.setAccount(accountRecord);
-
+            final CacheRecord.CacheRecordBuilder cacheRecordBuilder = CacheRecord.builder();
+            cacheRecordBuilder.mAccount(accountRecord);
             // Set the IdTokens...
             for (IdTokenRecord idTokenRecord : idTokensForAccount) {
-                setToCacheRecord(cacheRecord, idTokenRecord);
+                setToCacheRecord(cacheRecordBuilder, idTokenRecord);
             }
 
-            result.add(cacheRecord);
+            result.add(cacheRecordBuilder.build());
 
         }
 

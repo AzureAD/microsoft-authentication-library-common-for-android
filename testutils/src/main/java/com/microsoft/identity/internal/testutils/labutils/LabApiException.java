@@ -20,34 +20,31 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.rules;
+package com.microsoft.identity.internal.testutils.labutils;
 
-import android.util.Log;
+import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.logging.Logger;
-import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
+import com.microsoft.identity.internal.test.labapi.ApiException;
 
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import java.util.List;
+import java.util.Map;
+
+import lombok.Getter;
 
 /**
- * A Test Rule to reset (enable) Automatic Time Zone on the device prior to executing the test case.
+ * An exception wrapping the {@link ApiException}.
  */
-public class ResetAutomaticTimeZoneTestRule implements TestRule {
+@Getter
+public class LabApiException extends Throwable {
 
-    private final static String TAG = ResetAutomaticTimeZoneTestRule.class.getSimpleName();
+    private int code = 0;
+    private Map<String, List<String>> responseHeaders = null;
+    private String responseBody = null;
 
-    @Override
-    public Statement apply(final Statement base, final Description description) {
-        return new Statement() {
-            @Override
-            public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                AdbShellUtils.enableAutomaticTimeZone();
-                base.evaluate();
-            }
-        };
+    public LabApiException(@NonNull final ApiException apiException) {
+        this.code = apiException.getCode();
+        this.responseHeaders = apiException.getResponseHeaders();
+        this.responseBody = apiException.getResponseBody();
     }
 
 }

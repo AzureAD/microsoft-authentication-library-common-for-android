@@ -3,6 +3,17 @@ apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'maven-publish'
 apply from: 'versioning/version_tasks.gradle'
+//apply plugin: 'jacoco'
+
+// To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
+//tasks.withType(Test) {
+//    jacoco.includeNoLocationClasses = true
+//}
+
+//Constants:- used to generate Coverage report task
+def unitTestType = "UnitTest"
+def androidTestType = "AndroidTest"
+def bothTestType = "BothTest"
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
@@ -34,17 +45,22 @@ android {
 
     buildTypes {
         debug {
+            //testCoverageEnabled true
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.identity.testuserapp\"")
+            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
+            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
         }
         release {
             buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
             buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
+            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_SIGNATURE", "\"\"")
+            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_PACKAGE_NAME", "\"\"")
             minifyEnabled false
             debuggable false
-            testCoverageEnabled false
+            //testCoverageEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             consumerProguardFiles 'consumer-rules.pro'
         }
@@ -81,6 +97,12 @@ android {
         variant.outputs.all {
             outputFileName = "${archivesBaseName}-${version}.aar"
         }
+
+        // create separate code coverage tasks(for unitTests, androidTests and both Tests) for every build variant
+//        def buildVariant = variant.name
+//        createCoverageTask(buildVariant, unitTestType)
+//        createCoverageTask(buildVariant, androidTestType)
+//        createCoverageTask(buildVariant, bothTestType)
     }
 }
 
@@ -115,6 +137,55 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 }
+
+//ext.createCoverageTask = { buildVariant, testType ->
+//    // Code coverage task depends on additional task to run all unit tests and android tests
+//    def unitTestTask = "test${buildVariant.capitalize()}UnitTest"
+//    def androidTestTask = "connected${buildVariant.capitalize()}AndroidTest"
+//
+//    // Output of those additional tasks are stored in .exec file for unit tests and .ec file for android tests
+//    def unitTestFile = "jacoco/${unitTestTask}.exec"
+//    def androidTestFile = "outputs/code_coverage/${buildVariant}AndroidTest/connected/*.ec"
+//
+//    // Include Task and corresponding output file of tests, according to testType
+//    def taskList, executionFiles
+//    if (testType.matches(bothTestType)) {
+//        taskList = [unitTestTask, androidTestTask]
+//        executionFiles = [unitTestFile, androidTestFile]
+//    } else if (testType.matches(unitTestType)){
+//        taskList = [unitTestTask]
+//        executionFiles = [unitTestFile]
+//    } else {
+//        taskList = [androidTestTask]
+//        executionFiles = [androidTestFile]
+//    }
+//
+//    // Task to generate coverage report for particular build variant, that depends on additional tasks depending on testType
+//    task "${buildVariant}Common${testType}CoverageReport" (type:JacocoReport, dependsOn: taskList) {
+//        group = "Code Coverage"
+//        description = "Generate Common Coverage Reports(${testType}) on the ${buildVariant.capitalize()}"
+//
+//        // Include source files(of Common) in which code coverage needs to be found, after filtering out some set of files
+//        def coverageSourceDirs = "${projectDir}/src/main/java";
+//        def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test.*']
+//        def javaClasses = fileTree(
+//                dir: "${buildDir}/intermediates/javac/${buildVariant}/classes",
+//                excludes: fileFilter
+//        )
+//
+//        //Include all those directories for source files and additional source files defined above
+//        sourceDirectories.from = files([coverageSourceDirs])
+//        classDirectories.from = files([javaClasses])
+//
+//        //Code coverage report is generated based on the the output files of additional tasks(unitTestTask, androidTestTask or both)
+//        executionData.from = fileTree(dir: "$buildDir", includes: executionFiles)
+//
+//        // html reports are auto-generated without enabling flag, so enabling xml flag
+//        reports {
+//            xml.enabled = true
+//        }
+//    }
+//}
 
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->

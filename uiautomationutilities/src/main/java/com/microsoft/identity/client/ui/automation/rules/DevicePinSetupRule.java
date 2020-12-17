@@ -22,48 +22,59 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
+import android.app.KeyguardManager;
+import android.content.Context;
+import android.os.Build;
+import android.provider.Settings;
 
-import com.microsoft.identity.client.ui.automation.broker.DeviceLimitReachedException;
-import com.microsoft.identity.client.ui.automation.logging.Logger;
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.platform.app.InstrumentationRegistry;
+import androidx.test.uiautomator.UiDevice;
+import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
+
+import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.device.settings.BaseSettings;
+import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
+import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-/**
- * A Test Rule that allows recovery from device enrollment failures by catching the {@link DeviceLimitReachedException}
- * and removing devices from Company Portal to allow successful enrollments in the future.
- */
-public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
+import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
 
-    private final static String TAG = DeviceEnrollmentFailureRecoveryRule.class.getSimpleName();
+/**
+ * A test rule that allows you to setup PIN for the device if the pin is not setup and
+ * if it is already setup then it will keep the same PIN.
+ */
+public class DevicePinSetupRule implements TestRule {
+
+    static final String PIN = "1234";
 
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Logger.i(TAG, "Applying rule....");
-                try {
-                    base.evaluate();
-                } catch (final Throwable throwable) {
-                    if (throwable instanceof DeviceLimitReachedException) {
-                        Logger.w(TAG, "Received DeviceLimitReachedException....removing devices..");
-                        // Click REMOVE DEVICE btn in the dialog
-                        UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-                        // we delete 10 devices as it is much more efficient
-                        for (int i = 0; i < 10; i++) {
-                            ((DeviceLimitReachedException) throwable).getCompanyPortal().removeDevice();
-                        }
-                    }
-
-                    throw throwable; // the retry rule should handle retries
+                if (!isDeviceSecured()) {
+                    TestContext.getTestContext().getTestDevice().getSettings().setPinOnDevice(PIN);
                 }
+                base.evaluate();
             }
         };
+    }
+
+
+    private boolean isDeviceSecured() {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final KeyguardManager keyguardManager =
+                (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return keyguardManager.isDeviceSecure();
+        }
+        return keyguardManager.isKeyguardSecure();
     }
 
 }

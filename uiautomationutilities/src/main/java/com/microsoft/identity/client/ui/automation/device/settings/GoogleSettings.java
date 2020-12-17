@@ -240,6 +240,31 @@ public class GoogleSettings extends BaseSettings {
         );
     }
 
-}
+    @Override
+    public void setPinOnDevice(final String password) throws UiObjectNotFoundException {
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        launchScreenLockPage();
+        final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
+        Assert.assertTrue(screenLock.exists());
+        screenLock.click();
+        final UiObject pinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
+        Assert.assertTrue(pinButton.exists());
+        pinButton.click();
+        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
+        device.pressEnter();
+        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
+        device.pressEnter();
+        handleDoneButton();
+    }
 
+    private void handleDoneButton() throws UiObjectNotFoundException {
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
+        } else {
+            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
+            doneButton.click();
+        }
+    }
+
+}
 
