@@ -36,4 +36,5 @@ jobs:
           echo test, and deploy your project.
           docker --version
           gradle --version
+          docker pull authclient.azurecr.io/samples/dbi-instrumented-api30
           env
