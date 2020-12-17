@@ -73,7 +73,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     /**
-     * allows you to choose which appInstaller should we use to install CompanyPortal.The app can be installed from playstore or from localApkinstaller.
+     * Allows you to choose which appInstaller should we use to install CompanyPortal. The app can be installed from playstore or from localApkinstaller.
      *
      * @param appInstaller appInstaller can be either play store or localapkinstaller.
      */
