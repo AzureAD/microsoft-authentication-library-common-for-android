@@ -36,6 +36,6 @@ jobs:
           echo test, and deploy your project.
           docker --version
           docker pull authclient.azurecr.io/samples/dbi-instrumented-api30
-          docker run --privileged -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 /bin/bash -c "scripts/run-instrumented-tests.sh"
+          docker run --privileged -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 sh scripts/run-instrumented-tests.sh
           gradle --version
           env
