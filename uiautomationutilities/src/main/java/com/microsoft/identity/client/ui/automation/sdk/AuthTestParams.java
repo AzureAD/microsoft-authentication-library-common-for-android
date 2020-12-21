@@ -23,13 +23,16 @@
 package com.microsoft.identity.client.ui.automation.sdk;
 
 import android.app.Activity;
+
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
  * A wrapper class for all the parameters that are required to acquire token
  * either interactively or silently.
  */
 @Getter
+@SuperBuilder
 public class AuthTestParams {
 
     protected String loginHint;
