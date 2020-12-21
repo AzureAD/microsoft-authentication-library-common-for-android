@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.device.settings;
 
 import androidx.annotation.NonNull;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
@@ -87,4 +88,14 @@ public interface ISettings {
      * UI appears on the device. It will activate the admin for whichever admin requested the activation.
      */
     void activateAdmin();
+
+    /**
+     * Adds screen lock to the device.
+     */
+    void setPinOnDevice(final String password) throws UiObjectNotFoundException;
+
+    /**
+     * Launches the security page in Settings app.
+     */
+    void launchScreenLockPage();
 }
