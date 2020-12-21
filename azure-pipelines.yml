@@ -8,6 +8,9 @@ steps:
 - script: |
     echo Run instrumented tests
     docker --version
+    echo Kill all running containers
+    docker container kill $(docker ps -q)
+    echo Run test inside new container
     docker run --privileged --cpus="1.5" --memory="8g" --memory-swap="16g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 sh scripts/run-instrumented-tests.sh
     env
   displayName: 'Run a multi-line script'
