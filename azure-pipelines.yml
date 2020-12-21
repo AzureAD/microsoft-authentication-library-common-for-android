@@ -5,10 +5,9 @@ pool:
  name: DockerBuildAgents
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
 - script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
+    echo Run instrumented tests
+    docker --version
+    docker run --privileged -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 sh scripts/run-instrumented-tests.sh
+    env
   displayName: 'Run a multi-line script'
