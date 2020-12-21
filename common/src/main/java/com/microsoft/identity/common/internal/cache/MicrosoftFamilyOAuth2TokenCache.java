@@ -171,14 +171,14 @@ public class MicrosoftFamilyOAuth2TokenCache
             }
         }
 
-        final CacheRecord result = new CacheRecord();
-        result.setAccount(accountRecord);
-        result.setRefreshToken(rtToReturn);
-        result.setAccessToken(atRecordToReturn);
-        result.setV1IdToken(v1IdTokenToReturn);
-        result.setIdToken(idTokenToReturn);
+        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+        result.mAccount(accountRecord);
+        result.mRefreshToken(rtToReturn);
+        result.mAccessToken(atRecordToReturn);
+        result.mV1IdToken(v1IdTokenToReturn);
+        result.mIdToken(idTokenToReturn);
 
-        return result;
+        return result.build();
     }
 
     public List<ICacheRecord> loadByFamilyIdWithAggregatedAccountData(
@@ -221,9 +221,9 @@ public class MicrosoftFamilyOAuth2TokenCache
 
             for (final AccountRecord accountRecord : accountsInOtherTenants) {
                 // Declare our container
-                final CacheRecord cacheRecord = new CacheRecord();
-                cacheRecord.setAccount(accountRecord);
-                cacheRecord.setRefreshToken(result.get(0).getRefreshToken());
+                final CacheRecord.CacheRecordBuilder cacheRecord = CacheRecord.builder();
+                cacheRecord.mAccount(accountRecord);
+                cacheRecord.mRefreshToken(result.get(0).getRefreshToken());
 
                 // Load all of the IdTokens and set as appropriate...
                 final List<IdTokenRecord> idTokensForAccount = getIdTokensForAccountRecord(
@@ -233,14 +233,14 @@ public class MicrosoftFamilyOAuth2TokenCache
 
                 for (final IdTokenRecord idTokenRecord : idTokensForAccount) {
                     if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-                        cacheRecord.setV1IdToken(idTokenRecord);
+                        cacheRecord.mV1IdToken(idTokenRecord);
                     } else {
-                        cacheRecord.setIdToken(idTokenRecord);
+                        cacheRecord.mIdToken(idTokenRecord);
                     }
                 }
 
                 // We can ignore the A/T, since this account isn't being authorized...
-                result.add(cacheRecord);
+                result.add(cacheRecord.build());
             }
         }
 

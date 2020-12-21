@@ -1434,9 +1434,9 @@ public class BrokerOAuth2TokenCache
 
                 // Construct the ICacheRecord
                 if (!refreshTokens.isEmpty()) {
-                    final CacheRecord cacheRecord = new CacheRecord();
-                    cacheRecord.setAccount(account);
-                    cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+                    final CacheRecord.CacheRecordBuilder cacheRecord = CacheRecord.builder();
+                    cacheRecord.mAccount(account);
+                    cacheRecord.mRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
 
                     // Add the V1IdToken (if exists, should have 1 if ADAL used)
                     if (!v1IdTokens.isEmpty()) {
@@ -1447,7 +1447,7 @@ public class BrokerOAuth2TokenCache
                                         + "] V1IdTokens"
                         );
 
-                        cacheRecord.setV1IdToken((IdTokenRecord) v1IdTokens.get(0));
+                        cacheRecord.mV1IdToken((IdTokenRecord) v1IdTokens.get(0));
                     } else {
                         Logger.warn(
                                 TAG + methodName,
@@ -1464,7 +1464,7 @@ public class BrokerOAuth2TokenCache
                                         + "] IdTokens"
                         );
 
-                        cacheRecord.setIdToken((IdTokenRecord) idTokens.get(0));
+                        cacheRecord.mIdToken((IdTokenRecord) idTokens.get(0));
                     } else {
                         Logger.warn(
                                 TAG + methodName,
@@ -1473,7 +1473,7 @@ public class BrokerOAuth2TokenCache
                     }
 
                     // Add it to the result
-                    result.add(cacheRecord);
+                    result.add(cacheRecord.build());
                 }
             }
         }

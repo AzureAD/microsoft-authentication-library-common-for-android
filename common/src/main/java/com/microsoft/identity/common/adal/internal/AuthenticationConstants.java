@@ -652,7 +652,7 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "5.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "6.0";
 
         /**
          * The BrokerAPI-To-Broker protocol name.
@@ -988,10 +988,28 @@ public final class AuthenticationConstants {
         public static final String COMPANY_PORTAL_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
 
         /**
+         * Apk packagename that will install AD-Authenticator. It is used to
+         * query if this app installed or not from package manager.
+         */
+        public static final String COMPANY_PORTAL_PROD_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Signature info for Intune Company portal app that installs authenticator
+         * component.
+         */
+        public static final String COMPANY_PORTAL_PROD_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_PROD_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+
+        /**
          * Signature info for Azure authenticator app that installs authenticator
          * component.
          */
         public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
 
         /**
          * Azure Authenticator app signature hash.
@@ -1127,6 +1145,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_DEVICE_MODE = "broker_device_mode";
 
         /**
+         * String for generate shr result.
+         */
+        public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
+
+        /**
          * String to return a true if the request succeeded, false otherwise.
          */
         public static final String BROKER_REQUEST_V2_SUCCESS = "broker_request_v2_success";
@@ -1209,7 +1232,12 @@ public final class AuthenticationConstants {
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
-        
+
+        /**
+         * The Bundle key name of serialized parameters for the PoP auth scheme.
+         */
+        public static final String AUTH_SCHEME_PARAMS_POP = "pop_parameters";
+
         /**
          * Bundle identifiers for x-ms-clitelem info.
          */
@@ -1291,6 +1319,8 @@ public final class AuthenticationConstants {
         public static final String GET_CURRENT_ACCOUNT = "GET_CURRENT_ACCOUNT";
 
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
+
+        public static final String GENERATE_SHR = "GENERATE_SHR";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -1347,6 +1377,11 @@ public final class AuthenticationConstants {
          * URI Path constant for MSAL-to-Broker signOutFromSharedDevice request using ContentProvider.
          */
         public static final String MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH = "/signOutFromSharedDevice";
+
+        /**
+         * URI Path constant for MSAL-to-Broker generateShr request using ContentProvider.
+         */
+        public static final String GENERATE_SHR_PATH = "/generateShr";
 
         /**
          * URI Path constant for BrokerApi-to-Broker hello request using ContentProvider.
@@ -1427,6 +1462,11 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for BrokerApi-to-Broker updateBrt request.
          */
         public static final int BROKER_API_UPDATE_BRT_CODE = 12;
+
+        /**
+         * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
+         */
+        public static final int MSAL_GENERATE_SHR_CODE = 13;
     }
 
     public static final class AuthorizationIntentKey {

@@ -42,4 +42,11 @@ public interface IPoPAuthenticationSchemeParams extends INonced {
      * @return The URL to get.
      */
     URL getUrl();
+
+    /**
+     * Gets the client_claims.
+     *
+     * @return The client_claims to get.
+     */
+    String getClientClaims();
 }

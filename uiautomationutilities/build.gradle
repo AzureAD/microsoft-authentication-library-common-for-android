@@ -1,8 +1,19 @@
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+apply from: '../common/versioning/version_tasks.gradle'
+
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
+
+    boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
     def final installSourcePlayStore = "PlayStore"
     def final installSourceLocalApk = "LocalApk"
@@ -33,15 +44,83 @@ android {
         buildConfigField("String", "BROKER_INSTALL_SOURCE", "\"$brokerInstallationSource\"")
         buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
         buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
+        buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
     }
 
     buildTypes {
+        debug {
+            testCoverageEnabled false
+            debuggable true
+        }
         release {
+            testCoverageEnabled false
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            debuggable false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
+}
+
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+        task.dependsOn 'sourcesJar'
+    }
+}
+
+project.afterEvaluate{
+    publishing {
+        publications {
+            aar(MavenPublication) {
+                artifact "$buildDir/outputs/aar/uiautomationutilities-release.aar"
+                artifact sourcesJar
+                groupId 'com.microsoft.identity'
+                artifactId = 'uiautomationutilities'
+                version = getAppVersionName()
+
+                pom.withXml {
+
+                    // Dependencies
+                    def dependenciesNode = asNode().appendNode('dependencies')
+
+                    //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                    configurations.implementation.allDependencies.each {
+                        if (it.group != null && it.name != null) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name "vsts-maven-adal-android"
+                url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+                credentials {
+                    username project.ext.vstsUsername
+                    password project.ext.vstsPassword
+                }
+            }
+            maven {
+                name "vsts-maven-android"
+                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+                credentials {
+                    username project.vstsUsername
+                    password project.vstsPassword
+                }
+            }
+        }
+    }
 }
 
 dependencies {
@@ -51,7 +130,15 @@ dependencies {
     implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
     implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-    implementation project(':testutils')
+    if (findProject(":testutils") != null) {
+        //Use project reference if available
+        implementation(project(":testutils")) {
+            transitive = true
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'testutils', version: '0.0.+')
+    }
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"

@@ -292,7 +292,7 @@ public class CommandDispatcher {
                 //Post On Error
                 commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
             }
-        } else {
+        } else /* baseException == null */ {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
                 commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result);

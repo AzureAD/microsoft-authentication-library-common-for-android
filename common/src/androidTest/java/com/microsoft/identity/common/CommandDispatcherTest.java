@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -41,6 +42,7 @@ import com.microsoft.identity.common.internal.controllers.CommandResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
+import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -287,6 +289,11 @@ public class CommandDispatcherTest {
 
             @Override
             public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters parameters) throws Exception {
+                return null;
+            }
+
+            @Override
+            public GenerateShrResult generateSignedHttpRequest(GenerateShrCommandParameters parameters) throws Exception {
                 return null;
             }
         };

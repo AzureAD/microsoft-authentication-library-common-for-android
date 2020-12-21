@@ -284,4 +284,42 @@ public interface IDevicePopManager {
                                  String accessToken,
                                  String nonce
     ) throws ClientException;
+
+    /**
+     * Api to create the signed PoP access token.
+     *
+     * @param httpMethod   (Optional) The HTTP method that will be used with this outbound request.
+     * @param timestamp    Seconds since January 1st, 1970 (UTC).
+     * @param requestUrl   The recipient URL of the outbound request.
+     * @param accessToken  The access_token from which to derive the signed JWT.
+     * @param nonce        (Optional) Arbitrary value used for replay protection by middleware.
+     * @param clientClaims (Optional) Arbitrary String data provided by the caller. Used as the
+     *                     client_claims value.
+     * @return The signed PoP access token.
+     */
+    String mintSignedAccessToken(String httpMethod,
+                                 long timestamp,
+                                 URL requestUrl,
+                                 String accessToken,
+                                 String nonce,
+                                 String clientClaims
+    ) throws ClientException;
+
+    /**
+     * Api to create the signed HTTP requests (SHRs) without embedding a PoP-AT.
+     *
+     * @param httpMethod   (Optional) The HTTP method that will be used with this outbound request.
+     * @param timestamp    Seconds since January 1st, 1970 (UTC).
+     * @param requestUrl   The recipient URL of the outbound request.
+     * @param nonce        (Optional) Arbitrary value used for replay protection by middleware.
+     * @param clientClaims (Optional) Arbitrary String data provided by the caller. Used as the
+     *                     client_claims value.
+     * @return The signed PoP access token.
+     */
+    String mintSignedHttpRequest(String httpMethod,
+                                 long timestamp,
+                                 URL requestUrl,
+                                 String nonce,
+                                 String clientClaims
+    ) throws ClientException;
 }

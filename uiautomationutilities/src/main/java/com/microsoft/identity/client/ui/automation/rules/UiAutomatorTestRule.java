@@ -22,8 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import android.util.Log;
+
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
+
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -34,6 +38,8 @@ import org.junit.runners.model.Statement;
  */
 public class UiAutomatorTestRule implements TestRule {
 
+    private final static String TAG = UiAutomatorTestRule.class.getSimpleName();
+
     private UiDevice device;
 
     @Override
@@ -41,6 +47,7 @@ public class UiAutomatorTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Logger.i(TAG, "Applying rule....");
                 device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
                 base.evaluate();
             }

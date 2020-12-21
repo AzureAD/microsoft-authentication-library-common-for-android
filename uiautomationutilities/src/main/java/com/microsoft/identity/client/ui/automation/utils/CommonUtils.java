@@ -28,6 +28,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
@@ -35,13 +36,16 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
 
     public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+
+    private final static String SD_CARD = "/sdcard";
 
     /**
      * Launch (open) the supplied package on the device.
@@ -123,11 +127,47 @@ public class CommonUtils {
         return false;
     }
 
+    /**
+     * Get a list of all brokers supported by our MSAL/ADAL sdks. These list contains all possible
+     * broker apps regardless of active build variant.
+     *
+     * @return a {@link List} of {@link ITestBroker} objects
+     */
     public static List<ITestBroker> getAllPossibleTestBrokers() {
-        final List<ITestBroker> brokerList = new ArrayList<>();
-        brokerList.add(new BrokerCompanyPortal());
-        brokerList.add(new BrokerMicrosoftAuthenticator());
-        brokerList.add(new BrokerHost());
-        return brokerList;
+        return Arrays.asList(
+                new ITestBroker[]{
+                        new BrokerCompanyPortal(),
+                        new BrokerMicrosoftAuthenticator(),
+                        new BrokerHost()
+                }
+        );
+    }
+
+    /**
+     * Copy the provided file object to the sdcard directory on the device. Callers can optionally
+     * supply a folder name to copy the file within that folder inside sdcard.
+     *
+     * @param file   the file to copy
+     * @param folder the folder inside sdcard where to copy the file
+     */
+    public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
+        final String filePath = file.getAbsolutePath();
+        final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
+        final File dir = new File(destinationPath);
+        final File destFile = new File(dir, file.getName());
+        final String destFilePath = destFile.getAbsolutePath();
+        AdbShellUtils.executeShellCommand("mkdir -p " + destinationPath);
+        AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
+    }
+
+    /**
+     * Launches an activity specified by the action.
+     * @param action action is which operation to be performed.
+     */
+    public static void launchIntent(@NonNull final String action) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(action);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        context.startActivity(intent);
     }
 }

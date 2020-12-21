@@ -106,6 +106,10 @@ public class MsalCppOAuth2TokenCache
         return msalCppOAuth2TokenCache;
     }
 
+    public IAccountCredentialCache getAccountCredentialCache() {
+        return super.getAccountCredentialCache();
+    }
+
     /**
      * @param accountRecord : AccountRecord associated with the input credentials, can be null.
      * @param credentials   : list of Credential which can include AccessTokenRecord, IdTokenRecord and RefreshTokenRecord.

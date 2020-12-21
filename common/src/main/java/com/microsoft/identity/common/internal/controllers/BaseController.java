@@ -46,6 +46,7 @@ import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -74,6 +75,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -268,8 +270,7 @@ public abstract class BaseController {
         );
 
         // Suppressing unchecked warnings due to casting of type AuthorizationRequest to GenericAuthorizationRequest and AuthorizationResponse to GenericAuthorizationResponse in arguments of method call to createTokenRequest
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final TokenRequest tokenRequest = strategy.createTokenRequest(
+        @SuppressWarnings(WarningType.unchecked_warning) final TokenRequest tokenRequest = strategy.createTokenRequest(
                 request,
                 response,
                 parameters.getAuthenticationScheme()
@@ -283,8 +284,7 @@ public abstract class BaseController {
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
+        @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
         logResult(TAG, tokenResult);
 
@@ -324,8 +324,7 @@ public abstract class BaseController {
             );
 
             // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
-            @SuppressWarnings(WarningType.unchecked_warning)
-            final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
+            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
                     strategy,
                     getAuthorizationRequest(strategy, parameters),
                     tokenResult.getTokenResponse()
@@ -745,4 +744,13 @@ public abstract class BaseController {
 
         return cacheRecord;
     }
+
+    /**
+     * Generates a SHR sans AT.
+     *
+     * @param parameters The input command params.
+     * @return The {@link GenerateShrResult} containing the resulting SHR.
+     * @throws Exception If an error is encountered during SHR generation.
+     */
+    public abstract GenerateShrResult generateSignedHttpRequest(GenerateShrCommandParameters parameters) throws Exception;
 }
