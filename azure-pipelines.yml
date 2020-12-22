@@ -22,6 +22,10 @@ steps:
     echo =============================================
     docker run --privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 gradle clean
     echo =============================================
+    echo prune containers to avoid running out of disk space - shutdown containers still exist on disk
+    echo =============================================
+    docker system prune -f
+    echo =============================================
     echo Dump environment variables for build agent
     echo =============================================
     env
