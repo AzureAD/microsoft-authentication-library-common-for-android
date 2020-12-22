@@ -12,6 +12,8 @@ steps:
     docker container kill $(docker ps -q)
     echo Run test inside new container
     docker run --privileged --cpus="2" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 sh scripts/run-instrumented-tests.sh
+    displayName: 'Run instrumented tests'
+- script: |
     sudo rm ~/myagent/_work/1 -f -r
     env
-  displayName: 'Run a multi-line script'
+    displayName: 'Cleanup'
