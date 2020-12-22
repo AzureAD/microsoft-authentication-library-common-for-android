@@ -176,10 +176,11 @@ public class MsalOAuth2TokenCache
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
      * @see OAuth2TokenCache#save(AccountRecord, IdTokenRecord)
      */
+    @Deprecated
     ICacheRecord save(@NonNull AccountRecord accountRecord,
                       @NonNull IdTokenRecord idTokenRecord,
                       @NonNull AccessTokenRecord accessTokenRecord) throws ClientException {
-        final String methodName = ":save (broker 3 arg)";
+        final String methodName = ":save (3 arg)";
 
         // Validate the supplied Accounts/Credentials
         final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
@@ -217,6 +218,65 @@ public class MsalOAuth2TokenCache
         }
 
         return result.build();
+    }
+
+    /**
+     * @param accountRecord      The {@link AccountRecord} to store.
+     * @param idTokenRecord      The {@link IdTokenRecord} to store.
+     * @param accessTokenRecord  The {@link AccessTokenRecord} to store.
+     * @param refreshTokenRecord The {@link RefreshTokenRecord} to store.
+     * @return The {@link ICacheRecord} result of this save action.
+     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
+     * @see OAuth2TokenCache#save(AccountRecord, IdTokenRecord)
+     */
+    ICacheRecord save(final @NonNull AccountRecord accountRecord,
+                      final @NonNull IdTokenRecord idTokenRecord,
+                      final @NonNull AccessTokenRecord accessTokenRecord,
+                      final @NonNull RefreshTokenRecord refreshTokenRecord) throws ClientException {
+        final String methodName = ":save (4 arg)";
+
+        // Validate the supplied Accounts/Credentials
+        final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
+        final boolean isIdTokenValid = isIdTokenSchemaCompliant(idTokenRecord);
+        final boolean isAccessTokenValid = isAccessTokenSchemaCompliant(accessTokenRecord);
+        final boolean isRefreshTokenValid = isRefreshTokenSchemaCompliant(refreshTokenRecord);
+
+        if (!isAccountValid) {
+            throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
+        }
+
+        if (!isIdTokenValid) {
+            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(ID)]");
+        }
+
+        if (!isAccessTokenValid) {
+            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
+        }
+
+        if (!isRefreshTokenValid) {
+            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
+        }
+
+        Logger.verbose(
+                TAG + methodName,
+                "Accounts/Credentials are valid.... proceeding"
+        );
+
+        saveAccounts(accountRecord);
+        saveCredentialsInternal(idTokenRecord, accessTokenRecord, refreshTokenRecord);
+
+        final CacheRecord result = new CacheRecord();
+        result.setAccount(accountRecord);
+        result.setAccessToken(accessTokenRecord);
+        result.setRefreshToken(refreshTokenRecord);
+
+        if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
+            result.setV1IdToken(idTokenRecord);
+        } else {
+            result.setIdToken(idTokenRecord);
+        }
+
+        return result;
     }
 
     // TODO Add unit test
@@ -1529,6 +1589,9 @@ public class MsalOAuth2TokenCache
 
     void saveCredentialsInternal(final Credential... credentials) {
         for (final Credential credential : credentials) {
+            if (credential == null) {
+                continue;
+            }
 
             if (credential instanceof AccessTokenRecord) {
                 deleteAccessTokensWithIntersectingScopes((AccessTokenRecord) credential);

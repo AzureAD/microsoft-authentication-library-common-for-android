@@ -9,6 +9,11 @@ vNext
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
 
+Version 3.0.8
+----------
+- Hardcode Teams Agent clientID/scope for FoCi call (#1140)
+- (Make changes to) persist refresh token in joined flow. (#1130)
+
 Version 3.0.7
 ----------
 - Fix exception casting issue in CommandDispatcher (#1121)
