@@ -265,18 +265,18 @@ public class MsalOAuth2TokenCache
         saveAccounts(accountRecord);
         saveCredentialsInternal(idTokenRecord, accessTokenRecord, refreshTokenRecord);
 
-        final CacheRecord result = new CacheRecord();
-        result.setAccount(accountRecord);
-        result.setAccessToken(accessTokenRecord);
-        result.setRefreshToken(refreshTokenRecord);
+        final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
+        result.mAccount(accountRecord);
+        result.mAccessToken(accessTokenRecord);
+        result.mRefreshToken(refreshTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.setV1IdToken(idTokenRecord);
+            result.mV1IdToken(idTokenRecord);
         } else {
-            result.setIdToken(idTokenRecord);
+            result.mIdToken(idTokenRecord);
         }
 
-        return result;
+        return result.build();
     }
 
     // TODO Add unit test
