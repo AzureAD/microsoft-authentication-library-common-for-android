@@ -33,6 +33,8 @@ import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
  */
 public class LabResetHelper {
 
+    public static final ConfidentialClientHelper INSTANCE = LabAuthenticationHelper.getInstance();
+
     /**
      * Reset the password for the supplied account.
      *
@@ -40,7 +42,7 @@ public class LabResetHelper {
      * @return a boolean indicating if password reset was successful
      */
     public static boolean resetPassword(@NonNull final String upn) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        INSTANCE.setupApiClientWithAccessToken();
         final ResetApi resetApi = new ResetApi();
 
         try {
@@ -61,7 +63,7 @@ public class LabResetHelper {
      * @return a boolean indicating if MFA reset was successful
      */
     public static boolean resetMfa(@NonNull final String upn) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        INSTANCE.setupApiClientWithAccessToken();
         final ResetApi resetApi = new ResetApi();
 
         try {

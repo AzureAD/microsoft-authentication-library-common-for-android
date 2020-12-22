@@ -75,6 +75,7 @@ android {
 
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
 }
 
 tasks.whenTaskAdded { task ->
@@ -87,6 +88,7 @@ project.afterEvaluate{
     publishing {
         publications {
             aar(MavenPublication) {
+                artifact "$buildDir/outputs/aar/testutils-release.aar"
                 artifact sourcesJar
                 groupId 'com.microsoft.identity'
                 artifactId = 'testutils'
