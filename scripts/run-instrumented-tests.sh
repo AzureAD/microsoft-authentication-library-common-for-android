@@ -9,15 +9,15 @@ gradle -version
 echo =============================================
 echo Running unit tests
 echo =============================================
-gradle common:testDebugUnitTest -debug
+gradle common:testDebugUnitTest -i
 echo =============================================
-echo Running instrumented tests -debug
+echo Running instrumented tests -i
 echo =============================================
-gradle common:connectedDebugAndroidTest -debug
+gradle common:connectedDebugAndroidTest -i
 echo =============================================================
 echo Running gradle clean to remove files now owned by docker user
 echo =============================================================
-gradle clean -debug
+gradle clean -i
 echo =============================================================
 echo Dumping environment variables of docker container
 echo =============================================================
