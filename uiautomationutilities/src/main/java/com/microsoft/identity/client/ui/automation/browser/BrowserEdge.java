@@ -91,7 +91,7 @@ public class BrowserEdge extends App implements IBrowser {
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -130,7 +130,7 @@ public class BrowserEdge extends App implements IBrowser {
                 signInWithWorkOrSchoolAccount(username, password, promptHandlerParameters);
             }
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         //todo implement MSA sign in for Microsoft Edge

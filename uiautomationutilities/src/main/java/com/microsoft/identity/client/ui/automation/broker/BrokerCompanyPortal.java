@@ -227,7 +227,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
                         this
                 );
             } else {
-                // We don't see device limit issue, but the enrollment still failed due to reasons
+                // We don' see device tlimit issue, but the enrollment still failed due to reasons
                 // that aren't immediately known
                 Assert.fail("Unable to complete enrollment due to unknown reason");
             }
