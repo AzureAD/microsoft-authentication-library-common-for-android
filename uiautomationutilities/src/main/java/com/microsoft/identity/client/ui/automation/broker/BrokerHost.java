@@ -53,11 +53,6 @@ public class BrokerHost extends AbstractTestBroker {
         localApkFileName = BROKER_HOST_APK;
     }
 
-    public BrokerHost(final String apkName){
-        super(BROKER_HOST_APP_PACKAGE_NAME, apkName, new LocalApkInstaller());
-        localApkFileName = apkName;
-    }
-
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
@@ -229,7 +224,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
-    
+
     @Override
     public DeviceAdmin getAdminName() {
         return DeviceAdmin.BROKER_HOST;
