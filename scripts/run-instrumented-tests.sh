@@ -7,7 +7,7 @@ emulator @test -no-window -no-audio -wipe-data &
 sleep 30
 gradle -version
 echo =============================================
-echo Running unit and instrumented tests
+echo Running instrumented tests
 echo =============================================
-gradle common:testDebugUnitTest common:connectedDebugAndroidTest -i
+gradle common:connectedDebugAndroidTest -i
 
