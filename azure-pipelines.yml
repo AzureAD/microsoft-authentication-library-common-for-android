@@ -1,5 +1,7 @@
+name: Instrumented Tests
 trigger:
 - main
+
 
 pool:
  name: DockerBuildAgents
