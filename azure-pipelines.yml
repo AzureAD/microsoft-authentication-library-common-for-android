@@ -18,7 +18,11 @@ steps:
   displayName: 'Build and test inside docker container'
 - script: |
     echo =============================================
-    echo dumping environment variables for build agent
+    echo Cleaning up build output that's owned by docker user rather than agent user
+    echo =============================================
+    docker run --privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 gradle clean
+    echo =============================================
+    echo Dump environment variables for build agent
     echo =============================================
     env
   displayName: 'Cleanup'
