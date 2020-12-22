@@ -1,0 +1,351 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<PerfDataConfiguration>
+  <MeasurementsConfigurations>
+    <MeasurementConfiguration Id="400001" StartMarker="503"    EndMarker="40046" startskip="0" EndSkip="0" Name="FileOpenFromBackStage(503-40046)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400011" StartMarker="503"    EndMarker="50649" startskip="0" EndSkip="0" Name="FileOpenFromBackStage(503-50649)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400004" StartMarker="logcat" EndMarker="40061" startskip="0" EndSkip="0" Name="WarmBoot(ActStart-40061)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400014" StartMarker="50730"  EndMarker="40061" startskip="0" EndSkip="0" Name="WarmBoot(50730-40061)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400005" StartMarker="logcat" EndMarker="40061" startskip="0" EndSkip="0" Name="ColdBoot(ActStart-40061)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400015" StartMarker="50730"  EndMarker="40061" startskip="0" EndSkip="0" Name="ColdBoot(50730-40061)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="40046"  StartMarker="logcat" EndMarker="40046" startskip="0" EndSkip="0" Name="FileActFullFSRender(ActStart-40046)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="50649"  StartMarker="logcat" EndMarker="50649" startskip="0" EndSkip="0" Name="FileActFullAppDocsOpEnd(ActStart-50649)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400503" StartMarker="logcat" EndMarker="50648" startskip="0" EndSkip="0" Name="FileActPreFO(ActStart-50648)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400649" StartMarker="50648"  EndMarker="50649" startskip="0" EndSkip="0" Name="FileActFO(50648-50649)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400650" StartMarker="logcat" EndMarker="40093" startskip="0" EndSkip="0" Name="FirstBoot(ActStart-40093)"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400651" StartMarker="logcat" EndMarker="activityDisplay" startskip="0" EndSkip="0" Name="ActivityDisplayTime"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400652" StartMarker="logcat" EndMarker="40061" startskip="0" EndSkip="0" Name="BackgroundBoot(ActStart-40061)"></MeasurementConfiguration>
+  </MeasurementsConfigurations>
+
+  <ScenarioMeasurementsMapping>
+    <Apps>
+      <App>
+        <Name>Word</Name>
+        <Scenarios>
+          <Scenario>
+            <Name>coldboot</Name>
+            <Measurements>
+              <Measurement Id="400005" IsPrimary="true"></Measurement>
+              <Measurement Id="400015" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>firstboot</Name>
+            <Measurements>
+              <Measurement Id="400650" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>warmboot</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>fileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>ColdFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OneDriveFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>FileActivationLargeFile</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>P0Scenario</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400011" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+              <Measurement Id="400001" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+        </Scenarios>
+      </App>
+      <App>
+        <Name>Excel</Name>
+        <Scenarios>
+          <Scenario>
+            <Name>coldboot</Name>
+            <Measurements>
+              <Measurement Id="400005" IsPrimary="true"></Measurement>
+              <Measurement Id="400015" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>firstboot</Name>
+            <Measurements>
+              <Measurement Id="400650" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>warmboot</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>fileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>ColdFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OneDriveFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>FileActivationLargeFile</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>P0Scenario</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400011" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+              <Measurement Id="400001" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+        </Scenarios>
+      </App>
+      <App>
+        <Name>Powerpoint</Name>
+        <Scenarios>
+          <Scenario>
+            <Name>coldboot</Name>
+            <Measurements>
+              <Measurement Id="400005" IsPrimary="true"></Measurement>
+              <Measurement Id="400015" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>firstboot</Name>
+            <Measurements>
+              <Measurement Id="400650" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>warmboot</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>fileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>ColdFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OneDriveFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>FileActivationLargeFile</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>P0Scenario</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400011" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+              <Measurement Id="400001" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+        </Scenarios>
+      </App>
+      <App>
+        <Name>OfficeMobile</Name>
+        <Scenarios>
+          <Scenario>
+            <Name>coldboot</Name>
+            <Measurements>
+              <Measurement Id="400651" IsPrimary="false"></Measurement>
+              <Measurement Id="400652" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>firstboot</Name>
+            <Measurements>
+              <Measurement Id="400651" IsPrimary="false"></Measurement>
+              <Measurement Id="400652" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>warmboot</Name>
+            <Measurements>
+              <Measurement Id="400651" IsPrimary="false"></Measurement>
+              <Measurement Id="400652" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OM_WordFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OM_ExcelFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OM_PPTFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OM_WordOneDriveFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OM_ExcelOneDriveFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>OM_PPTOneDriveFileActivation</Name>
+            <Measurements>
+              <Measurement Id="50649" IsPrimary="true"></Measurement>
+              <Measurement Id="40046" IsPrimary="false"></Measurement>
+              <Measurement Id="400503" IsPrimary="false"></Measurement>
+              <Measurement Id="400649" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+
+        </Scenarios>
+      </App>
+      <App>
+        <Name>OneNote</Name>
+        <Scenarios>
+          <Scenario>
+            <Name>coldboot</Name>
+            <Measurements>
+              <Measurement Id="400005" IsPrimary="true"></Measurement>
+              <Measurement Id="400015" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>firstboot</Name>
+            <Measurements>
+              <Measurement Id="400650" IsPrimary="true"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>warmboot</Name>
+            <Measurements>
+              <Measurement Id="400004" IsPrimary="true"></Measurement>
+              <Measurement Id="400014" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>notescoldboot</Name>
+            <Measurements>
+              <Measurement Id="400651" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+          <Scenario>
+            <Name>noteswarmboot</Name>
+            <Measurements>
+              <Measurement Id="400651" IsPrimary="false"></Measurement>
+            </Measurements>
+          </Scenario>
+        </Scenarios>
+      </App>
+    </Apps>
+  </ScenarioMeasurementsMapping>
+</PerfDataConfiguration>
