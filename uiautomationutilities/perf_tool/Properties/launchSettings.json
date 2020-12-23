@@ -2,7 +2,7 @@
   "profiles": {
     "ConsoleApp1": {
       "commandName": "Project",
-      "commandLineArgs": ". . PerfDataBase PerfDataTarget \"\" 1123 Pixel2 API28 21.11.3.3 21.11.3.4 MSALTestApp idlab1@msidlab4.onmicrosoft.com Yama#844 Neerav.Agarwal@microsoft.com"
+      "commandLineArgs": "C:\\testdata\\ . PerfDataBase PerfDataTarget \"\" 1123 Pixel2 API28 21.11.3.3 21.11.3.4 MSALTestApp idlab1@msidlab4.onmicrosoft.com Yama#844 Neerav.Agarwal@microsoft.com"
     }
   }
 }
