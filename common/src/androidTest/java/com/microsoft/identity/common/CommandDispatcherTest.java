@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -99,6 +100,7 @@ public class CommandDispatcherTest {
      * and then make sure it gets cleaned up.
      * @throws Exception
      */
+    @Ignore
     @Test
     public void testSubmitSilentWithParamMutation() throws Exception {
         final CountDownLatch testLatch = new CountDownLatch(1);
