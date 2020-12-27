@@ -16,7 +16,6 @@ using System.Collections.Generic;
 using System.Collections;
 using PerfDiffResultMailer;
 using PerfClTool;
-using ConsoleApp1.measurement_definitions;
 using ConsoleApp1;
 
 
@@ -48,12 +47,14 @@ namespace TestScript {
             string fromAddress = args[11];
             string fromPassword = args[12];
             string emailToList = args[13];
+            string scenarioName = args[14];
 
             
 
             DateTime startTime = DateTime.MinValue;
-            MSALAcquireTokenPerfMeasurementConfigurationsProvider configProvider = new MSALAcquireTokenPerfMeasurementConfigurationsProvider();
+            PerfMeasurementConfigurationsProvider configProvider = new PerfMeasurementConfigurationsProvider(appName, scenarioName);
             List<PerfMeasurementConfiguration> msalAcquireTokenMeasurementConfigurations = configProvider.getActiveMeasurements();
+
             deletePreviousRunOutputCSVs(outputFileLocation, outputFileNamePrefix);
 
             string[] baseFileList = System.IO.Directory.GetFiles(inputFileLocation, codemarkerBaseFileNamePreFix + "*.txt");
