@@ -76,6 +76,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     static final String EXPIRES_ON = "0";
     static final String SECRET = "3642fe2f-2c46-4824-9f27-e44b0e3e1278";
     static final String REALM2 = "20d3e9fa-982a-40bc-bea4-26bbe3fd332e";
+    static final String SESSION_KEY = "ZmVldnVvWDBvYmVldGg5aQo=";
     public static final String ESCAPE_SEQ_CHARS = "\r\f\n\t";
 
     private static final String ENVIRONMENT_LEGACY = "login.windows.net";
