@@ -33,23 +33,23 @@ namespace TestScript {
             for (int i = 0; i < 14; i++)
                 Console.WriteLine(args[i]);
 
-            string inputFileLocation = args[0];
-            string outputFileLocation = args[1];
-            string codemarkerBaseFileNamePreFix = args[2];
-            string codemarkerTargetFileNamePreFix = args[3];
-            string outputFileNamePrefix = args[4];
-            string jobID = args[5];
-            string deviceModel = args[6];
-            string OS = args[7];
-            string baseBuild = args[8];
-            string targetBuild = args[9];
-            string appName = args[10];
-            string fromAddress = args[11];
-            string fromPassword = args[12];
-            string emailToList = args[13];
-            string scenarioName = args[14];
+            string inputFileLocation = args[0]; // Directory where PerfData base and target files are present. Example value: "C:\testdata\" 
+            string outputFileLocation = args[1]; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
+            string codemarkerBaseFileNamePreFix = args[2]; // Prefix of the files which should be taken as base PerfData files for raw data. Example value: "PerfDataBase"
+            string codemarkerTargetFileNamePreFix = args[3]; // Prefix of the files which should be taken as target PerfData files for raw data. Example value: "PerfDataTarget"
+            string outputFileNamePrefix = args[4]; // Prefix of the file names to be generated. Example value: "run_output"
+            string jobID = args[5]; // Job id which should be written in the final Email report. Example value: "1234"
+            string deviceModel = args[6]; // Device model to be written in the final Email report. Example value: "Pixel2"
+            string OS = args[7]; // Device OS to be written in the final Email report. Example value: "API28"
+            string baseBuild = args[8]; // Base build number to be written in the Email report. Example value: "1.2.1"
+            string targetBuild = args[9]; // Target build number to be written in the Email report. Example value: "1.2.2"
+            string appName = args[10]; // App name to be written in the Email report. Example value: "MSALTestApp"
+            string fromAddress = args[11]; // Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
+            string fromPassword = args[12]; // Password of the sender's account.
+            string emailToList = args[13]; // Email To list separated by comma
+            string scenarioName = args[14]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
 
-            
+
 
             DateTime startTime = DateTime.MinValue;
             PerfMeasurementConfigurationsProvider configProvider = new PerfMeasurementConfigurationsProvider(appName, scenarioName);
@@ -77,6 +77,10 @@ namespace TestScript {
             jobInfoHtml.Add(View.CreateAppInfoTable(baseTasks, targetTasks, appName));
 
             List<Parameter> updatedParameters = new List<Parameter>();
+
+            // Primary measurements are those which are necessary to produce a result to pass the scenario run.
+            // If there is starting point of a primary measurement available but not the endpoint of the measurement in the PerfData file, the test will fail. 
+            // However, if starting point or end point of a secondary measurement is missing, the test run will pass with ignoring the particular measurement.
             HashSet<string> primaryMeasurements = new HashSet<string>();
             HashSet<string> secondaryMeasurements = new HashSet<string>();
             string[] heading = { "Task Runs", baseTasks[0].AppName, baseTasks[0].Device };
