@@ -35,10 +35,10 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class AuthTestParams {
 
-    protected String loginHint;
-    protected String resource;
-    protected String clientId;
-    protected String redirectUri;
-    protected String authority;
-    protected Activity activity;
+    private final String loginHint;
+    private final String resource;
+    private final String clientId;
+    private final String redirectUri;
+    private final String authority;
+    private final Activity activity;
 }
