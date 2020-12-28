@@ -49,8 +49,6 @@ namespace TestScript {
             string emailToList = args[13]; // Email To list separated by comma
             string scenarioName = args[14]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
 
-
-
             DateTime startTime = DateTime.MinValue;
             PerfMeasurementConfigurationsProvider configProvider = new PerfMeasurementConfigurationsProvider(appName, scenarioName);
             List<PerfMeasurementConfiguration> msalAcquireTokenMeasurementConfigurations = configProvider.getActiveMeasurements();
@@ -128,6 +126,7 @@ namespace TestScript {
                 {
                     if (!task.TargetScenarioToPerfValueMap[key].ContainsKey(pms._measurementConfiguration.Name))
                     {
+                        // Below, we can take MeasurementValue of any kind like average, best75 percentile, 75 percentile, min, max or any other one available in pms object.
                         task.TargetScenarioToPerfValueMap[key].Add(pms._measurementConfiguration.Name, pms._average.ResponseTime.MeasurementValue);
                     }
                 }
