@@ -479,7 +479,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 } else if (CredentialType.V1IdToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.V1IdToken;
                     break;
-                } else {
+                } else if (CredentialType.PrimaryRefreshToken.name().equalsIgnoreCase(credentialTypeStr)) {
+                    type = CredentialType.PrimaryRefreshToken;
+                    break;
+                }else {
                     // TODO Log a warning and skip this value?
                     Logger.warn(TAG, "Unexpected credential type.");
                 }

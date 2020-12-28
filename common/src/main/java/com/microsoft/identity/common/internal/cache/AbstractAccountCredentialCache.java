@@ -31,6 +31,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -64,6 +65,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             case IdToken:
             case V1IdToken:
                 credentialClass = IdTokenRecord.class;
+                break;
+            case PrimaryRefreshToken:
+                credentialClass = PrimaryRefreshTokenRecord.class;
                 break;
             default:
                 Logger.warn(TAG, "Could not match CredentialType to class. "

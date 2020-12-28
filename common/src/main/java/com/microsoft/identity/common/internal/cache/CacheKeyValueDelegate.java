@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -153,10 +154,11 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
 
-        RefreshTokenRecord rt;
+        String familyIdForCacheKey;
         if ((credential instanceof RefreshTokenRecord)
-                && !StringExtensions.isNullOrBlank((rt = (RefreshTokenRecord) credential).getFamilyId())) {
-            String familyIdForCacheKey = rt.getFamilyId();
+                && !StringExtensions.isNullOrBlank(familyIdForCacheKey = ((RefreshTokenRecord) credential).getFamilyId()) ||
+                (credential instanceof PrimaryRefreshTokenRecord)
+                        && !StringExtensions.isNullOrBlank(familyIdForCacheKey = ((PrimaryRefreshTokenRecord) credential).getFamilyId())) {
 
             if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
                 familyIdForCacheKey = familyIdForCacheKey.replace(FOCI_PREFIX, "");
@@ -192,6 +194,10 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             final IdTokenRecord idToken = (IdTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, "");
+        } else if (credential instanceof PrimaryRefreshTokenRecord) {
+            final PrimaryRefreshTokenRecord primaryRefreshTokenRecord = (PrimaryRefreshTokenRecord) credential;
+            cacheKey = cacheKey.replace(REALM, sanitizeNull(primaryRefreshTokenRecord.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, sanitizeNull(primaryRefreshTokenRecord.getTarget()));
         }
 
         return cacheKey;
