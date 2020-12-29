@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -47,8 +48,11 @@ import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils
  */
 public class GoogleSettings extends BaseSettings {
 
+    private final static String TAG = GoogleSettings.class.getSimpleName();
+
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
+        Logger.i(TAG, "Disable Admin on Google Device..");
         launchDeviceAdminSettingsPage();
 
         try {
@@ -77,6 +81,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void removeAccount(@NonNull final String username) {
+        Logger.i(TAG, "Remove Account from Google Device..");
         launchAccountListPage();
 
         try {
@@ -110,6 +115,7 @@ public class GoogleSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        Logger.i(TAG, "Add Work Account on Google Device..");
         launchAddAccountPage();
 
         try {
@@ -145,6 +151,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
+        Logger.i(TAG, "Forward Time For OneDay on Google Device..");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
         // Launch the date time settings page
@@ -188,6 +195,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void activateAdmin() {
+        Logger.i(TAG, "Activate Admin on Google Device..");
         try {
             // scroll down the recycler view to find activate device admin btn
             final UiObject activeDeviceAdminBtn = UiAutomatorUtils.obtainChildInScrollable(
@@ -204,6 +212,7 @@ public class GoogleSettings extends BaseSettings {
     }
 
     private UiObject obtainDateButton() {
+        Logger.i(TAG, "Obtain Date Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainUiObjectWithText("Set date");
         }
@@ -212,6 +221,7 @@ public class GoogleSettings extends BaseSettings {
     }
 
     private UiObject obtainButtonInScrollable(final String Text) {
+        Logger.i(TAG, "Obtain Button In Scrollable on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainChildInScrollable(
                     "com.android.settings:id/list",
@@ -227,6 +237,7 @@ public class GoogleSettings extends BaseSettings {
 
 
     private UiObject obtainDisableAdminButton(final DeviceAdmin deviceAdmin) {
+        Logger.i(TAG, "Obtain Disable Admin Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             return UiAutomatorUtils.obtainChildInScrollable(
                     "android:id/list",
@@ -242,6 +253,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void setPinOnDevice(final String password) throws UiObjectNotFoundException {
+        Logger.i(TAG, "Set Pin on Google Device..");
         UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
         launchScreenLockPage();
         final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
@@ -258,6 +270,7 @@ public class GoogleSettings extends BaseSettings {
     }
 
     private void handleDoneButton() throws UiObjectNotFoundException {
+        Logger.i(TAG, "Handle Done Button on Google Device..");
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
         } else {

@@ -113,7 +113,7 @@ public class SamsungSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
-        Logger.i(TAG, "Adding Work Account on Samsung Device..");
+        Logger.i(TAG, "Add Work Account on Samsung Device..");
         launchAddAccountPage();
 
         try {
@@ -144,7 +144,7 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        Logger.i(TAG, "Forwarding Time For OneDay for Samsung Device..");
+        Logger.i(TAG, "Forward Time For OneDay on Samsung Device..");
         // Disable automatic time zone
         AdbShellUtils.disableAutomaticTimeZone();
         // Open the date & time settings page
