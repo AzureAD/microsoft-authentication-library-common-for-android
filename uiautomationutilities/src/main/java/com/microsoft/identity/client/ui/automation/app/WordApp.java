@@ -65,6 +65,8 @@ public class WordApp extends App implements IFirstPartyApp {
         UiAutomatorUtils.handleInput("com.microsoft.office.word:id/OfcEditText", username);
         // Click continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/OfcActionButton2");
+
+        Logger.i(TAG, "Handle First Account Sign-In Prompt on the APP..");
         // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
@@ -110,6 +112,7 @@ public class WordApp extends App implements IFirstPartyApp {
             Assert.fail(e.getMessage());
         }
 
+        Logger.i(TAG, "Handle Sign-In Prompt on the APP..");
         // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);

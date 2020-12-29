@@ -82,6 +82,7 @@ public class AzureSampleApp extends App {
             ((IApp) browser).handleFirstRun();
         }
 
+        Logger.i(TAG, "Handle AAD Login page prompt..");
         // handle prompt in AAD login page
         final MicrosoftStsPromptHandler microsoftStsPromptHandler =
                 new MicrosoftStsPromptHandler(promptHandlerParameters);

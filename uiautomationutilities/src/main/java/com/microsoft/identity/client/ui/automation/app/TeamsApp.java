@@ -69,6 +69,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
                 email.click();
 
+                Logger.i(TAG, "Handle Sign-In Prompt on the APP for account which is in TSL..");
                 final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
                 microsoftStsPromptHandler.handlePrompt(username, password);
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
@@ -107,6 +108,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
         // Click Sign in btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button");
 
+        Logger.i(TAG, "Handle Sign-In with Email Prompt on the APP..");
         // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);

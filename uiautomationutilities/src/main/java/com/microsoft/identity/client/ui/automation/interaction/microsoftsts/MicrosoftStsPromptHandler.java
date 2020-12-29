@@ -46,6 +46,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 parameters.isFederated() ? new AdfsLoginComponentHandler() : new AadLoginComponentHandler(),
                 parameters
         );
+        Logger.i(TAG, "Initializing Microsoft Sts Prompt Handler..");
     }
 
     public MicrosoftStsPromptHandler(
@@ -59,7 +60,6 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
 
     @Override
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
-        Logger.i(TAG, "Handling Prompt..");
         final boolean loginHintProvided = !TextUtils.isEmpty(parameters.getLoginHint());
 
         // if login hint was not provided, then we need to handle either account picker or email
