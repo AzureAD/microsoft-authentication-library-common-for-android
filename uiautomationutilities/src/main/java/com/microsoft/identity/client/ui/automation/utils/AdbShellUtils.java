@@ -26,6 +26,9 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 
+import com.microsoft.identity.client.ui.automation.app.OutlookApp;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
+
 import org.junit.Assert;
 
 import java.io.IOException;
@@ -37,6 +40,8 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  * code during the execution of a UI Test.
  */
 public class AdbShellUtils {
+
+    private final static String TAG = AdbShellUtils.class.getSimpleName();
 
     public static String executeShellCommand(@NonNull final String command) {
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
@@ -98,6 +103,7 @@ public class AdbShellUtils {
      * @param packageName the package name to remove
      */
     public static void removePackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Remove the " + packageName + " App from device..");
         executeShellCommand("pm uninstall " + packageName);
     }
 
@@ -107,6 +113,7 @@ public class AdbShellUtils {
      * @param packageName the package name to clear
      */
     public static void clearPackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Clear the contents of the storage of " + packageName + " App..");
         executeShellCommand("pm clear " + packageName);
     }
 
@@ -116,6 +123,7 @@ public class AdbShellUtils {
      * @param packageName the package to force stop
      */
     public static void forceStopPackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Force stop the " + packageName + " App..");
         executeShellCommand("am force-stop " + packageName);
     }
 
@@ -149,6 +157,7 @@ public class AdbShellUtils {
      */
     public static void copyApkForPackage(@NonNull final String packageName,
                                          @NonNull final String destApkFileName) {
+        Logger.i(TAG, "Copy APK of the " + packageName + " to the given location..");
         final String apkPath = getApkPath(packageName);
         final String sanitizedPath = apkPath.trim().replace("package:", "");
         copyFile(sanitizedPath, destApkFileName);
