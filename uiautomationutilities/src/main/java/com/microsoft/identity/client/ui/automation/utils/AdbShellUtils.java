@@ -142,6 +142,7 @@ public class AdbShellUtils {
      * Disable automatic time zone on the device.
      */
     public static void disableAutomaticTimeZone() {
+        Logger.i(TAG,"Disable automatic time zone on the device..");
         putGlobalSettings("auto_time", "0");
     }
 

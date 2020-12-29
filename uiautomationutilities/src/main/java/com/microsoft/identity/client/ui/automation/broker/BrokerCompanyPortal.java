@@ -74,6 +74,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
+        Log.i(TAG, "Perform Device Registration for the given account..");
         TestContext.getTestContext().getTestDevice().getSettings().addWorkAccount(
                 this,
                 username,
@@ -101,6 +102,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void createPowerLiftIncident() {
+        Log.i(TAG, "Create Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
             handleFirstRun();
@@ -159,6 +161,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     @Override
     public void enrollDevice(@NonNull final String username,
                              @NonNull final String password) {
+        Log.i(TAG, "Enroll Device for the given account..");
         launch(); // launch CP app
 
         handleFirstRun(); // handle CP first run
@@ -176,6 +179,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
+        Log.i(TAG, "Handle prompt in AAD login page for enrolling device..");
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
 
@@ -222,6 +226,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             );
 
             if (deviceLimitReachedDialog.exists()) {
+                Log.i(TAG, "Device limit reached for the given account..");
                 throw new DeviceLimitReachedException(
                         "Unable to complete enrollment as device limit reached for this account.",
                         this
@@ -244,6 +249,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void handleAppProtectionPolicy() {
+        Log.i(TAG, "Handle App Protection Policy..");
         final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
         // get access screen
@@ -256,6 +262,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         // get access screen - continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.windowsintune.companyportal:id/positive_button");
 
+        Log.i(TAG, "Handle PIN to enable App Protection Policy..");
         // handle PIN
         final Random random = new Random();
         final int randomPin = random.nextInt(10000);
@@ -288,6 +295,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     private void openDevicesTab() {
+        Log.i(TAG, "Open Devices Tab..");
         // launch CP
         launch();
 
@@ -311,6 +319,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
      * Removes a device from Company Portal (from the devices listed in CP Devices Tab)
      */
     public void removeDevice() {
+        Log.i(TAG, "Remove a device from Company Portal..");
         // if enrollment failed, then Devices Tab is automatically opened for us
         if (enrollmentPerformedSuccessfully) {
             openDevicesTab();
