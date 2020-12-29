@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import com.microsoft.identity.client.ui.automation.app.App;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -42,6 +43,7 @@ import static org.junit.Assert.fail;
  */
 public class BrowserEdge extends App implements IBrowser {
 
+    private final static String TAG = BrowserEdge.class.getSimpleName();
     private static final String EDGE_PACKAGE_NAME = "com.microsoft.emmx";
     private static final String EDGE_APP_NAME = "Microsoft Edge";
 
@@ -51,6 +53,7 @@ public class BrowserEdge extends App implements IBrowser {
 
     @Override
     public void handleFirstRun() {
+        Logger.i(TAG, "Handle First Run of Browser..");
         // cancel sync in Edge
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/not_now");
         sleep(); // need to use sleep due to Edge animations
@@ -66,6 +69,7 @@ public class BrowserEdge extends App implements IBrowser {
     }
 
     public void navigateTo(@NonNull final String url) {
+        Logger.i(TAG, "Navigate to the URL in the browser..");
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 
@@ -88,6 +92,7 @@ public class BrowserEdge extends App implements IBrowser {
     }
 
     private void sleep() {
+        Logger.i(TAG, "Put Browser on Sleep for 3 sec..");
         try {
             Thread.sleep(3000);
         } catch (InterruptedException e) {
@@ -101,6 +106,7 @@ public class BrowserEdge extends App implements IBrowser {
         // The Sign In UI in Edge is different depending on if account(s) are in TSL
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
+                Logger.i(TAG, "Sign-In on the browser if account is expected to be in TSL..");
                 // This case handles the UI if our account is expected to be in TSL
                 final String expectedText = "Sign in as " + username;
 
@@ -108,12 +114,14 @@ public class BrowserEdge extends App implements IBrowser {
                 final UiObject signInAsBtn = UiAutomatorUtils.obtainUiObjectWithText(expectedText);
                 signInAsBtn.click();
 
+                Logger.i(TAG, "Handle Sign-In Prompt for account which is expected to be in TSL..");
                 // handle prompt
                 final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
                 aadPromptHandler.handlePrompt(username, password);
 
                 handleFirstRun();
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
+                Logger.i(TAG, "Sign-In on the browser if given account is not in TSL but others could be..");
                 // This case handles UI when our account is not in TSL, however, there are other
                 // accounts in TSL
 
@@ -127,6 +135,7 @@ public class BrowserEdge extends App implements IBrowser {
                 // now select sign in with work or school account
                 signInWithWorkOrSchoolAccount(username, password, promptHandlerParameters);
             } else {
+                Logger.i(TAG, "Sign-In on the browser if no account is in TSL..");
                 signInWithWorkOrSchoolAccount(username, password, promptHandlerParameters);
             }
         } catch (final UiObjectNotFoundException e) {
@@ -146,6 +155,7 @@ public class BrowserEdge extends App implements IBrowser {
         // click Sign In with work or school account btn
         signInWithWorkAccountBtn.click();
 
+        Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
         // handle prompt
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
         aadPromptHandler.handlePrompt(username, password);
