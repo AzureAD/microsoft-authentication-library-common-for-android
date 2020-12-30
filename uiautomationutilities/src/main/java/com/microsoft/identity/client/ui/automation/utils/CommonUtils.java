@@ -141,6 +141,7 @@ public class CommonUtils {
      * @return a {@link List} of {@link ITestBroker} objects
      */
     public static List<ITestBroker> getAllPossibleTestBrokers() {
+        Logger.i(TAG, "Get All Possible Test Brokers..");
         return Arrays.asList(
                 new ITestBroker[]{
                         new BrokerCompanyPortal(),
@@ -158,6 +159,7 @@ public class CommonUtils {
      * @param folder the folder inside sdcard where to copy the file
      */
     public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
+        Logger.i(TAG, "Copy the provided file object to the sdcard directory on the device..");
         final String filePath = file.getAbsolutePath();
         final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
         final File dir = new File(destinationPath);
@@ -172,6 +174,7 @@ public class CommonUtils {
      * @param action action is which operation to be performed.
      */
     public static void launchIntent(@NonNull final String action) {
+        Logger.i(TAG, "Launches an activity specified by the action..");
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(action);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);

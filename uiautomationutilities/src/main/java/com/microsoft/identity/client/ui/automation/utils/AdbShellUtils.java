@@ -44,6 +44,7 @@ public class AdbShellUtils {
     private final static String TAG = AdbShellUtils.class.getSimpleName();
 
     public static String executeShellCommand(@NonNull final String command) {
+        Logger.i(TAG, "Execute Shell Command..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             return device.executeShellCommand(command);
@@ -54,6 +55,7 @@ public class AdbShellUtils {
     }
 
     public static String executeShellCommandAsCurrentPackage(@NonNull final String command) {
+        Logger.i(TAG, "Execute Shell Command As Current Package..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             final String pkg = ApplicationProvider.getApplicationContext().getPackageName();
@@ -71,6 +73,7 @@ public class AdbShellUtils {
      * @param packageName the name of the package to install
      */
     public static void installPackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Installs the supplied package on the device..");
         final String result = executeShellCommand("pm install " + packageName);
         Assert.assertNotNull(result);
         Assert.assertEquals("Success", result.trim());
@@ -83,6 +86,7 @@ public class AdbShellUtils {
      * @param flags       the flags to use during installation of the app
      */
     public static void installPackage(@NonNull final String packageName, @NonNull String... flags) {
+        Logger.i(TAG, "Installs the supplied package on the device with the supplied flags..");
         final StringBuilder installCmdBuilder = new StringBuilder();
         installCmdBuilder.append("pm install ");
 
