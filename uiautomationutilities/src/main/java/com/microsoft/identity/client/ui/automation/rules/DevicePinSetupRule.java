@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.device.settings.BaseSettings;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -51,6 +52,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
  */
 public class DevicePinSetupRule implements TestRule {
 
+    private final static String TAG = DevicePinSetupRule.class.getSimpleName();
     static final String PIN = "1234";
 
     @Override
@@ -58,6 +60,7 @@ public class DevicePinSetupRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Logger.i(TAG, "Applying rule..");
                 if (!isDeviceSecured()) {
                     TestContext.getTestContext().getTestDevice().getSettings().setPinOnDevice(PIN);
                 }
@@ -68,6 +71,7 @@ public class DevicePinSetupRule implements TestRule {
 
 
     private boolean isDeviceSecured() {
+        Logger.i(TAG, "Check If Device is Secured or not..");
         final Context context = ApplicationProvider.getApplicationContext();
         final KeyguardManager keyguardManager =
                 (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
