@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -36,6 +37,8 @@ import org.junit.Assert;
  * A login component handler for Facebook IdP.
  */
 public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+
+    private final static String TAG = FacebookLoginComponentHandler.class.getSimpleName();
 
     @Override
     protected String getHandlerName() {
@@ -49,6 +52,7 @@ public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHand
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
+        Logger.i(TAG, "Handle Facebook Login Password UI..");
         UiAutomatorUtils.handleInput("m_login_password", password);
         handleNextButton();
     }

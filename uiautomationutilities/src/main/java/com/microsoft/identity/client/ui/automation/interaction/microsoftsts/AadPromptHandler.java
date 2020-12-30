@@ -32,7 +32,7 @@ import com.microsoft.identity.client.ui.automation.logging.Logger;
  */
 public class AadPromptHandler extends MicrosoftStsPromptHandler {
 
-    private final static String TAG = MicrosoftStsPromptHandler.class.getSimpleName();
+    private final static String TAG = AadPromptHandler.class.getSimpleName();
 
     public AadPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AadLoginComponentHandler(), parameters);

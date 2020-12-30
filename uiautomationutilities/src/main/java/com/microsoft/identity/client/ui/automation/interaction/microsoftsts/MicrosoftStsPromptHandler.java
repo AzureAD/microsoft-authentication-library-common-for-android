@@ -56,6 +56,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 loginComponentHandler,
                 parameters
         );
+        Logger.i(TAG, "Initializing IMicrosoft Sts Prompt Handler..");
     }
 
     @Override
