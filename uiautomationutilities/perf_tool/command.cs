@@ -38,7 +38,7 @@ namespace TestScript {
             string codemarkerBaseFileNamePreFix = args[2]; // Prefix of the files which should be taken as base PerfData files for raw data. Example value: "PerfDataBase"
             string codemarkerTargetFileNamePreFix = args[3]; // Prefix of the files which should be taken as target PerfData files for raw data. Example value: "PerfDataTarget"
             string outputFileNamePrefix = args[4]; // Prefix of the file names to be generated. Example value: "run_output"
-            string jobID = args[5]; // Job id which should be written in the final Email report. Example value: "1234"
+            string jobID = args[5]; // Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
             string deviceModel = args[6]; // Device model to be written in the final Email report. Example value: "Pixel2"
             string OS = args[7]; // Device OS to be written in the final Email report. Example value: "API28"
             string baseBuild = args[8]; // Base build number to be written in the Email report. Example value: "1.2.1"
@@ -48,8 +48,13 @@ namespace TestScript {
             string fromPassword = args[12]; // Password of the sender's account.
             string emailToList = args[13]; // Email To list separated by comma
             string scenarioName = args[14]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
+            string basejobID = args[15]; // Build id of the base task.
+
+
 
             DateTime startTime = DateTime.MinValue;
+            string baseJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + basejobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
+            string targetJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + jobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
             PerfMeasurementConfigurationsProvider configProvider = new PerfMeasurementConfigurationsProvider(appName, scenarioName);
             List<PerfMeasurementConfiguration> msalAcquireTokenMeasurementConfigurations = configProvider.getActiveMeasurements();
 
@@ -67,10 +72,10 @@ namespace TestScript {
             jobInfoHtml.AddRange(View.InfoInit(jobID, deviceModel, OS, "command"));
 
             List<Task> baseTasks = new List<Task>();
-            baseTasks.Add(createTask(deviceModel, baseBuild, appName));
+            baseTasks.Add(createTask(deviceModel, baseBuild, appName, jobID, baseJobArtifactURL));
 
             List<Task> targetTasks = new List<Task>();
-            targetTasks.Add(createTask(deviceModel, targetBuild, appName));
+            targetTasks.Add(createTask(deviceModel, targetBuild, appName, jobID, "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + jobID + targetJobArtifactURL));
 
             jobInfoHtml.Add(View.CreateAppInfoTable(baseTasks, targetTasks, appName));
 
@@ -88,6 +93,9 @@ namespace TestScript {
             Parameter task = new Parameter("Response Time(ms)", "NA", 3, "lemon");
             task.BaseCheckpoint = baseBuild;
             task.TargetCheckPoint = targetBuild;
+            task.BaseLogDir = baseJobArtifactURL;
+            task.TargetLogDir = targetJobArtifactURL;
+
             foreach (string key in baseMeasurements.Keys)
             {
                 if (task.BaseScenarioToPerfValueMap == null)
@@ -155,14 +163,16 @@ namespace TestScript {
             ReportHelper.ShowResultNSendEmail(emailBody, fromAddress, fromPassword, emailToList);
         }
 
-        private static Task createTask(string deviceModel, string baseBuild, string appName)
+        private static Task createTask(string deviceModel, string baseBuild, string appName, string id, string artifactURL)
         {
-            Task baseTask = new Task();
-            baseTask.Checkpoint = baseBuild;
-            baseTask.AppName = appName;
-            baseTask.Device = deviceModel;
-            baseTask.FeatureGateOverrides = new Dictionary<string, string>();
-            return baseTask;
+            Task task = new Task();
+            task.Checkpoint = baseBuild;
+            task.AppName = appName;
+            task.Device = deviceModel;
+            task.FeatureGateOverrides = new Dictionary<string, string>();
+            task.Id = id;
+            task.LogsDir = artifactURL;
+            return task;
         }
 
         private static void deletePreviousRunOutputCSVs(string outputFileLocation, string outputFileNamePrefix)

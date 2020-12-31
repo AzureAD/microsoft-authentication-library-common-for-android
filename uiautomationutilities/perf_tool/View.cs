@@ -201,7 +201,7 @@ namespace PerfDiffResultMailer
                 {
                     htmlBuilder.Append("<tr>");
                 }
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + task.Checkpoint.Substring(5) + "</td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + task.Checkpoint + "</td>");
                // htmlBuilder.Append("<td  align=\"center\" style=\"padding-left:5px; padding-right:5px;\">" + task.Device + " - "+task.AndroidVersion + "</td>");
                 htmlBuilder.Append("<td style=\"padding-left:7px; padding-right:7px;\">" + task.ApkPath + "</td>");
                 string featuregateoverrides = "";
@@ -245,8 +245,8 @@ namespace PerfDiffResultMailer
             htmlBuilder.Append("<td colspan=\"" + /*1*/2 + "\"align=\"center\"> Checkpoint </td>");
             foreach (var parameter in parameters)
             {
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + parameter.BaseCheckpoint.Substring(5) + "</td>");
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + parameter.TargetCheckPoint.Substring(5) + "</td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.BaseLogDir + "\">" + parameter.BaseCheckpoint + "</a></td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.TargetLogDir + "\">" + parameter.TargetCheckPoint + "</a></td>");
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "Difference" + "</td>");
             }
             htmlBuilder.Append("</tr>");
@@ -289,12 +289,12 @@ namespace PerfDiffResultMailer
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Feature Gates</td>");
                 foreach (Task baseTask in baseTasks)
                 {
-                    htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\" align=\"center\">" + baseTask.Checkpoint.Substring(5) +
+                    htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\" align=\"center\">" + baseTask.Checkpoint +
                                        "<a href=\"" + baseTask.LogsDir + "\"><u> (" + baseTask.Id + ") </u></a></td>");
                 }
                 foreach (Task targetTask in targetTasks)
                 {
-                    htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\" align=\"center\">" + targetTask.Checkpoint.Substring(5) +
+                    htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\" align=\"center\">" + targetTask.Checkpoint +
                                        "<a href=\"" + targetTask.LogsDir + "\"><u> (" + targetTask.Id + ") </u></a></td>");
                 }
                 htmlBuilder.Append("</tr>");
