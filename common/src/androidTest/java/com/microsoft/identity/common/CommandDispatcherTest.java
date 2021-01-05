@@ -29,6 +29,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.internal.commands.Command;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -44,7 +45,9 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -52,12 +55,26 @@ import org.junit.runner.RunWith;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
 
     private static final String TEST_RESULT_STR = "test_result_str";
+
+    @Before
+    public void setUp() throws Exception {
+        CommandDispatcher.clearState();
+    }
+
+    @After
+    public void cleanUp() throws Exception {
+        CommandDispatcher.clearState();
+    }
 
     @Test
     public void testCanSubmitSilently() throws InterruptedException {
@@ -89,7 +106,12 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                         Assert.assertEquals(TEST_RESULT_STR, s);
                     }
-                }, 0);
+                }, 0) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+        };
     }
 
     /**
@@ -126,7 +148,12 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                         Assert.assertEquals(TEST_RESULT_STR, s);
                     }
-                }, 0, submitLatch, submitLatch1);
+                }, 0, submitLatch, submitLatch1) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+        };
         FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
         submitLatch1.await();
         testCommand.value = 2;
@@ -188,6 +215,7 @@ public class CommandDispatcherTest {
         f.isCleanedUp();
         Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
     }
+
     @Test
     public void testSubmitSilentWithException() {
         final CountDownLatch testLatch = new CountDownLatch(1);
@@ -212,14 +240,34 @@ public class CommandDispatcherTest {
                 }));
     }
 
+
     @Test
     public void iterateTests() throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(100);
+        final AtomicReference<Throwable> ex = new AtomicReference<>(null);
         for (int i = 0; i < 100_000; i++) {
             if (i % 100 == 0) {
                 System.out.println("Iteration " + i);
             }
-            testSubmitSilentWithParamMutation();
-            testSubmitSilentWithParamMutationUncacheable();
+            final int j = i;
+            executor.submit(() -> {
+                try {
+                    testSubmitSilentWithParamMutation();
+                    testSubmitSilentWithParamMutationUncacheable();
+                    System.out.println("Completed " + j);
+                } catch (Throwable t) {
+                    ex.compareAndSet(null, t);
+                }
+            });
+        }
+        executor.shutdown();
+        while (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
+            System.out.println("Waiting...");
+        }
+
+        executor.shutdownNow();
+        if (ex.get() != null) {
+            Assert.assertNull(ex.get());
         }
     }
 
