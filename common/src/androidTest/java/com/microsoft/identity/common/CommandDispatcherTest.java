@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -70,12 +71,12 @@ public class CommandDispatcherTest {
 
     @Before
     public void setUp() throws Exception {
-        CommandDispatcher.clearState();
+        //CommandDispatcher.clearState();
     }
 
     @After
     public void cleanUp() throws Exception {
-        CommandDispatcher.clearState();
+        //CommandDispatcher.clearState();
     }
 
     @Test
@@ -242,7 +243,12 @@ public class CommandDispatcherTest {
                 }));
     }
 
-
+    /**
+     * This test takes a while to run.  But it should always work.  Just put it here in order
+     * to save anyone else from having to write it.
+     * @throws Exception
+     */
+    @Ignore
     @Test
     public void iterateTests() throws Exception {
         final int nThreads = 100;
