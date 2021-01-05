@@ -52,16 +52,20 @@ import org.junit.runner.RunWith;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
 
+    private static final AtomicInteger INTEGER = new AtomicInteger(0);
     private static final String TEST_RESULT_STR = "test_result_str";
 
     @Before
@@ -104,7 +108,7 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                         Assert.assertEquals(TEST_RESULT_STR, s);
                     }
-                }, 0) {
+                }, INTEGER.getAndIncrement()) {
             @Override
             public boolean isEligibleForCaching() {
                 return true;
@@ -146,7 +150,7 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                         Assert.assertEquals(TEST_RESULT_STR, s);
                     }
-                }, 0, submitLatch, submitLatch1) {
+                }, INTEGER.getAndIncrement(), submitLatch, submitLatch1) {
             @Override
             public boolean isEligibleForCaching() {
                 return true;
@@ -154,7 +158,7 @@ public class CommandDispatcherTest {
         };
         FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
         submitLatch1.await();
-        testCommand.value = 2;
+        testCommand.value = INTEGER.getAndIncrement();
         submitLatch.countDown();
         testLatch.await();
         Assert.assertTrue(f.isDone());
@@ -197,7 +201,7 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                         Assert.assertEquals(TEST_RESULT_STR, s);
                     }
-                }, 0, submitLatch, submitLatch1) {
+                }, INTEGER.getAndIncrement(), submitLatch, submitLatch1) {
             @Override
             public boolean isEligibleForCaching() {
                 return false;
@@ -205,7 +209,7 @@ public class CommandDispatcherTest {
         };
         FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
         submitLatch1.await();
-        testCommand.value = 2;
+        testCommand.value = INTEGER.getAndIncrement();
         submitLatch.countDown();
         testLatch.await();
         Assert.assertTrue(f.isDone());
@@ -244,30 +248,33 @@ public class CommandDispatcherTest {
         final int nThreads = 100;
         ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         final AtomicReference<Throwable> ex = new AtomicReference<>(null);
-        final int nTasks = 10_000;
+        final int nTasks = 100_000;
         final CountDownLatch latch = new CountDownLatch(nTasks);
+        final ConcurrentHashMap<Integer, Future<?>> map = new ConcurrentHashMap<>();
         for (int i = 0; i < nTasks; i++) {
             if (i % 100 == 0) {
                 System.out.println("Iteration " + i);
             }
             final int j = i;
-            executor.submit(() -> {
+            map.put(j, executor.submit(() -> {
                 try {
                     testSubmitSilentWithParamMutation();
                     testSubmitSilentWithParamMutationUncacheable();
-                    System.out.println("Completed " + j);
+                    //System.out.println("Completed " + j);
                 } catch (Throwable t) {
                     System.out.println("ERROR " + j + " outstanding commands " + CommandDispatcher.outstandingCommands());
                     t.printStackTrace();
                     ex.compareAndSet(null, t);
                 } finally {
                     latch.countDown();
+                    map.remove(j);
                 }
-            });
+            }));
         }
         System.out.println("Waiting on latch");
         while (!latch.await(30, TimeUnit.SECONDS)) {
             System.out.println("Waiting, " + latch.getCount() + " outstanding");
+            System.out.println("Waiting keys " +  map.keySet());
         }
         executor.shutdown();
         System.out.println("Waiting, on executor");
