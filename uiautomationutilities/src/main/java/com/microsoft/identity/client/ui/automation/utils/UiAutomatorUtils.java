@@ -261,7 +261,7 @@ public class UiAutomatorUtils {
         try {
             button.click();
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
