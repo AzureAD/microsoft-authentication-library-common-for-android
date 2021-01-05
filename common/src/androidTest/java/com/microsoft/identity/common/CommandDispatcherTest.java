@@ -100,7 +100,6 @@ public class CommandDispatcherTest {
      * and then make sure it gets cleaned up.
      * @throws Exception
      */
-    @Ignore
     @Test
     public void testSubmitSilentWithParamMutation() throws Exception {
         final CountDownLatch testLatch = new CountDownLatch(1);
@@ -139,6 +138,56 @@ public class CommandDispatcherTest {
         Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
     }
 
+    /**
+     * This test represents the case where a command changes underneath our system
+     * while we're using it as a key.  They're not immutable, so they're not safe to
+     * use as keys in a map.  It won't hurt, though, unless we can't get rid of them.
+     * To test this, we submit a command, block before it executes, alter it, release it,
+     * and then make sure it gets cleaned up.
+     * @throws Exception
+     */
+    @Test
+    public void testSubmitSilentWithParamMutationUncacheable() throws Exception {
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch1 = new CountDownLatch(1);
+
+        final TestCommand testCommand = new LatchedTestCommand(
+                getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        testLatch.countDown();
+                        Assert.assertEquals(TEST_RESULT_STR, s);
+                    }
+                }, 0, submitLatch, submitLatch1) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return false;
+            }
+        };
+        FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        submitLatch1.await();
+        testCommand.value = 2;
+        submitLatch.countDown();
+        testLatch.await();
+        Assert.assertTrue(f.isDone());
+        Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
+        f.isCleanedUp();
+        Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
+    }
     @Test
     public void testSubmitSilentWithException() {
         final CountDownLatch testLatch = new CountDownLatch(1);
@@ -161,6 +210,17 @@ public class CommandDispatcherTest {
                         Assert.fail();
                     }
                 }));
+    }
+
+    @Test
+    public void iterateTests() throws Exception {
+        for (int i = 0; i < 100_000; i++) {
+            if (i % 100 == 0) {
+                System.out.println("Iteration " + i);
+            }
+            testSubmitSilentWithParamMutation();
+            testSubmitSilentWithParamMutationUncacheable();
+        }
     }
 
     static class ExceptionCommand extends BaseCommand<String> {
@@ -194,6 +254,11 @@ public class CommandDispatcherTest {
         @Override
         public String execute() {
             return TEST_RESULT_STR;
+        }
+
+        @Override
+        public boolean isEligibleForCaching() {
+            return true;
         }
 
         @Override
