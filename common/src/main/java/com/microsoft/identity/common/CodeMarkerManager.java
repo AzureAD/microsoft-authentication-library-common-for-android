@@ -13,15 +13,27 @@ import java.util.Date;
 import java.util.List;
 
 public class CodeMarkerManager {
+
+    private static boolean enableCodeMarker = false;
+    private static int MAX_SIZE_CODE_MARKER = 1000;
     private static volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
     private static long baseMilliSeconds = 0;
-    public static void codemarker(int marker) {
-        long currentMiliSeconds = System.currentTimeMillis();
-        if(codeMarkers.size() == 0) {
-            baseMilliSeconds = currentMiliSeconds;
+    public static void markCode(int marker) {
+        if(enableCodeMarker) {
+            if(codeMarkers.size() >= MAX_SIZE_CODE_MARKER) {
+                clear();
+            }
+            long currentMilliSeconds = System.currentTimeMillis();
+            if (codeMarkers.size() == 0) {
+                baseMilliSeconds = currentMilliSeconds;
+            }
+            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            codeMarkers.add(new CodeMarker(marker, currentMilliSeconds - baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
         }
-        SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-        codeMarkers.add(new CodeMarker(marker, currentMiliSeconds - baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
+    }
+
+    public static void setEnableCodeMarker(boolean enableCodeMarker) {
+        CodeMarkerManager.enableCodeMarker = enableCodeMarker;
     }
 
     public static void clear(){
