@@ -71,7 +71,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirmation
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -102,7 +102,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirm in confirmation dialog
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -139,7 +139,7 @@ public class GoogleSettings extends BaseSettings {
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -182,7 +182,7 @@ public class GoogleSettings extends BaseSettings {
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -199,7 +199,7 @@ public class GoogleSettings extends BaseSettings {
             // click on activate device admin btn
             activeDeviceAdminBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
