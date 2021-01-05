@@ -110,7 +110,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                     currentRegistration.getText().equalsIgnoreCase(username)
             );
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -282,7 +282,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 grantPermission(Manifest.permission.GET_ACCOUNTS);
             }
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 

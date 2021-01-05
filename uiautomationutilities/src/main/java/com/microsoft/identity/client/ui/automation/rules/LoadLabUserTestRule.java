@@ -74,7 +74,7 @@ public class LoadLabUserTestRule implements TestRule {
                         // returned by the LAB API. Adding a wait here before we proceed with the test.
                         Thread.sleep(TEMP_USER_WAIT_TIME);
                     } catch (final InterruptedException e) {
-                        Assert.fail(e.getMessage());
+                        throw new AssertionError(e);
                     }
                 } else {
                     throw new IllegalArgumentException("Both Lab User query and temp user type were null.");

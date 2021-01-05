@@ -70,7 +70,7 @@ public class SamsungSettings extends BaseSettings {
                 UiAutomatorUtils.handleButtonClick("android:id/button1");
             }
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -105,7 +105,7 @@ public class SamsungSettings extends BaseSettings {
 
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -138,7 +138,7 @@ public class SamsungSettings extends BaseSettings {
             // make sure account appears in Join activity and join successful
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -182,7 +182,7 @@ public class SamsungSettings extends BaseSettings {
             // Click ok to set date
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+           throw new AssertionError(e);
         }
     }
 

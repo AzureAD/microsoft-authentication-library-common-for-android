@@ -235,7 +235,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
-    
+
     @Override
     public DeviceAdmin getAdminName() {
         Logger.i(TAG,"Get Admin name..");

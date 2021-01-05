@@ -89,7 +89,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         try {
             account.click();
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 

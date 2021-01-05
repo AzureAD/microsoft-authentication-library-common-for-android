@@ -109,7 +109,7 @@ public class WordApp extends App implements IFirstPartyApp {
 
             nextBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         Logger.i(TAG, "Handle Sign-In Prompt on the APP..");

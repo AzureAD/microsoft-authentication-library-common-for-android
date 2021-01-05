@@ -84,7 +84,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
                 signInWithEmail(username, password, promptHandlerParameters);
             }
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
