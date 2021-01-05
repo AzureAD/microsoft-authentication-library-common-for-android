@@ -67,7 +67,7 @@ public class FacebookLoginComponentHandler extends AbstractB2CLoginComponentHand
         try {
             nextBtn.click();
         } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 }
