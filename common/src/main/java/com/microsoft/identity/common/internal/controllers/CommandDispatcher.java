@@ -102,7 +102,7 @@ public class CommandDispatcher {
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
-            if (command != e.getKey()) {
+            if (! (command == e.getKey())) {
                 newMap.put(e.getKey(), e.getValue());
             }
         }
@@ -113,6 +113,19 @@ public class CommandDispatcher {
     public static int outstandingCommands() {
         synchronized (mapAccessLock) {
             return sExecutingCommandMap.size();
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static boolean isCommandOutstanding(BaseCommand c) {
+        synchronized (mapAccessLock) {
+            for (Map.Entry<BaseCommand, ?> e : sExecutingCommandMap.entrySet()) {
+                if (e.getKey() == c) {
+                    System.out.println("Command out there " + c);
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

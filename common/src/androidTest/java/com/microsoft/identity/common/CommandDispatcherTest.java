@@ -29,7 +29,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
-import com.microsoft.identity.common.internal.commands.Command;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -48,7 +47,6 @@ import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -162,7 +160,7 @@ public class CommandDispatcherTest {
         Assert.assertTrue(f.isDone());
         Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
         f.isCleanedUp();
-        Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
     }
 
     /**
@@ -213,7 +211,7 @@ public class CommandDispatcherTest {
         Assert.assertTrue(f.isDone());
         Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
         f.isCleanedUp();
-        Assert.assertEquals(0, CommandDispatcher.outstandingCommands());
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
     }
 
     @Test
@@ -243,9 +241,12 @@ public class CommandDispatcherTest {
 
     @Test
     public void iterateTests() throws Exception {
-        ExecutorService executor = Executors.newFixedThreadPool(100);
+        final int nThreads = 100;
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         final AtomicReference<Throwable> ex = new AtomicReference<>(null);
-        for (int i = 0; i < 100_000; i++) {
+        final int nTasks = 10_000;
+        final CountDownLatch latch = new CountDownLatch(nTasks);
+        for (int i = 0; i < nTasks; i++) {
             if (i % 100 == 0) {
                 System.out.println("Iteration " + i);
             }
@@ -256,15 +257,21 @@ public class CommandDispatcherTest {
                     testSubmitSilentWithParamMutationUncacheable();
                     System.out.println("Completed " + j);
                 } catch (Throwable t) {
+                    System.out.println("ERROR " + j + " outstanding commands " + CommandDispatcher.outstandingCommands());
+                    t.printStackTrace();
                     ex.compareAndSet(null, t);
+                } finally {
+                    latch.countDown();
                 }
             });
         }
-        executor.shutdown();
-        while (!executor.awaitTermination(30, TimeUnit.SECONDS)) {
-            System.out.println("Waiting...");
+        System.out.println("Waiting on latch");
+        while (!latch.await(30, TimeUnit.SECONDS)) {
+            System.out.println("Waiting, " + latch.getCount() + " outstanding");
         }
-
+        executor.shutdown();
+        System.out.println("Waiting, on executor");
+        executor.awaitTermination(30, TimeUnit.SECONDS);
         executor.shutdownNow();
         if (ex.get() != null) {
             Assert.assertNull(ex.get());
@@ -330,25 +337,26 @@ public class CommandDispatcherTest {
     }
 
     public static class LatchedTestCommand extends TestCommand {
-        final CountDownLatch latch;
-        final CountDownLatch latch1;
+        final CountDownLatch testStartLatch;
+        final CountDownLatch exeutionStartLatch;
 
         public LatchedTestCommand(@NonNull final CommandParameters parameters,
                                   @NonNull final CommandCallback callback,
                                   final int value,
-                                  @NonNull final CountDownLatch latch,
-                                  @NonNull final CountDownLatch latch1) {
+                                  @NonNull final CountDownLatch testStartLatch,
+                                  @NonNull final CountDownLatch exeutionStartLatch) {
             super(parameters, callback, value);
-            this.latch = latch;
-            this.latch1 = latch1;
+            this.testStartLatch = testStartLatch;
+            this.exeutionStartLatch = exeutionStartLatch;
         }
 
         @Override
         public String execute() {
-            latch1.countDown();
+            exeutionStartLatch.countDown();
             try {
-                latch.await();
+                testStartLatch.await();
             } catch (InterruptedException e) {
+                e.printStackTrace();
                 throw new RuntimeException(e);
             }
             return super.execute();
