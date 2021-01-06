@@ -35,15 +35,19 @@ import lombok.Getter;
 @Getter
 public abstract class AuthResult {
 
-    protected String accessToken;
-    protected String idToken;
-    protected String userId;
-    protected String username;
-    protected String authority;
-    protected Exception exception;
+    private String accessToken;
+    private String idToken;
+    private String userId;
+    private String username;
+    private String authority;
+    private Exception exception;
 
-    // defaul no-arguments constructor to let parent class create their own constructor
-    protected AuthResult() {
+    protected AuthResult(@NonNull final String accessToken, @NonNull final String idToken, @NonNull final String userId, @NonNull final String username, @NonNull final String authority) {
+        this.accessToken = accessToken;
+        this.idToken = idToken;
+        this.userId = userId;
+        this.username = username;
+        this.authority = authority;
     }
 
     protected AuthResult(@NonNull final Exception exception) {
@@ -58,7 +62,9 @@ public abstract class AuthResult {
         Assert.assertFalse(TextUtils.isEmpty(idToken));
         Assert.assertFalse(TextUtils.isEmpty(userId));
         Assert.assertFalse(TextUtils.isEmpty(username));
-//        Assert.assertFalse(TextUtils.isEmpty(authority));
+        if (authority != null) {
+            Assert.assertFalse(TextUtils.isEmpty(authority));
+        }
     }
 
     public void assertFailure() {
