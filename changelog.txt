@@ -1,5 +1,6 @@
 vNext
 ----------
+- Check for eligible for caching when putting command in executing command map
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
 - Make CacheRecord immutable, insist on NonNull AccountRecord (#1225).
