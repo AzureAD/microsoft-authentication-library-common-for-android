@@ -226,7 +226,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             );
 
             if (deviceLimitReachedDialog.exists()) {
-                Log.i(TAG, "Device limit reached for the given account..");
+                Log.w(TAG, "Device limit reached for the given account..");
                 throw new DeviceLimitReachedException(
                         "Unable to complete enrollment as device limit reached for this account.",
                         this
@@ -319,7 +319,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
      * Removes a device from Company Portal (from the devices listed in CP Devices Tab)
      */
     public void removeDevice() {
-        Log.i(TAG, "Remove a device from Company Portal..");
+        Log.i(TAG, "Removes a device from Company Portal..");
         // if enrollment failed, then Devices Tab is automatically opened for us
         if (enrollmentPerformedSuccessfully) {
             openDevicesTab();

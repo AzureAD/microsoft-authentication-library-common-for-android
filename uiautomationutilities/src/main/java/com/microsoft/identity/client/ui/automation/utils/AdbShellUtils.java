@@ -139,6 +139,7 @@ public class AdbShellUtils {
      * Enable automatic time zone on the device.
      */
     public static void enableAutomaticTimeZone() {
+        Logger.i(TAG, "Enable automatic time zone on the device..");
         putGlobalSettings("auto_time", "1");
     }
 
@@ -146,7 +147,7 @@ public class AdbShellUtils {
      * Disable automatic time zone on the device.
      */
     public static void disableAutomaticTimeZone() {
-        Logger.i(TAG,"Disable automatic time zone on the device..");
+        Logger.i(TAG, "Disable automatic time zone on the device..");
         putGlobalSettings("auto_time", "0");
     }
 

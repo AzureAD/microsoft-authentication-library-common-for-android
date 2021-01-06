@@ -120,7 +120,7 @@ public class WordApp extends App implements IFirstPartyApp {
 
     @Override
     public void confirmAccount(@NonNull final String username) {
-        Logger.i(TAG, "Confirm Account with Username on the APP..");
+        Logger.i(TAG, "Confirming account with supplied username is signed in..");
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);

@@ -59,7 +59,7 @@ public class BrokerHost extends AbstractTestBroker {
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
 
-        Logger.i(TAG,"Perform Device Registration for the given account..");
+        Logger.i(TAG, "Perform Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join btn
@@ -96,7 +96,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
-        Logger.i(TAG,"Perform Shared Device Registration for the given account..");
+        Logger.i(TAG, "Perform Shared Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join shared device btn
@@ -131,7 +131,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     private void performDeviceRegistrationHelper(@NonNull final String username) {
-        Logger.i(TAG,"Execution of Helper for Device Registration..");
+        Logger.i(TAG, "Execution of Helper for Device Registration..");
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
@@ -146,7 +146,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) {
-        Logger.i(TAG,"Helper for confirming Shared Device Registration..");
+        Logger.i(TAG, "Helper for confirming Shared Device Registration..");
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
@@ -175,7 +175,7 @@ public class BrokerHost extends AbstractTestBroker {
     @Nullable
     @Override
     public String obtainDeviceId() {
-        Logger.i(TAG,"Obtain Device Id..");
+        Logger.i(TAG, "Obtain Device Id..");
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
@@ -210,7 +210,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void enableBrowserAccess() {
-        Logger.i(TAG,"Enable Browser Access..");
+        Logger.i(TAG, "Enable Browser Access..");
         launch();
 
         if (shouldHandleFirstRun) {
@@ -238,7 +238,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public DeviceAdmin getAdminName() {
-        Logger.i(TAG,"Get Admin name..");
+        Logger.i(TAG, "Get Admin name..");
         return DeviceAdmin.BROKER_HOST;
     }
 
@@ -249,7 +249,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Nullable
     public String getAccountUpn() {
-        Logger.i(TAG,"Get Account Upn..");
+        Logger.i(TAG, "Get Account Upn..");
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {

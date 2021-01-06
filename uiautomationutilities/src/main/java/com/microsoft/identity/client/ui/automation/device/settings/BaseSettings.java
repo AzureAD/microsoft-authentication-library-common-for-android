@@ -72,7 +72,7 @@ public abstract class BaseSettings implements ISettings {
 
     @Override
     public void launchDateTimeSettingsPage() {
-        Logger.i(TAG,"Open the date & time settings page..");
+        Logger.i(TAG, "Open the date & time settings page..");
         launchIntent(Settings.ACTION_DATE_SETTINGS);
     }
 

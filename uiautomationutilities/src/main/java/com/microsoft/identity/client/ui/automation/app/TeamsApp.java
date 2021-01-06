@@ -124,7 +124,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
     @Override
     public void confirmAccount(@NonNull final String username) {
-        Logger.v(TAG, "confirmAccount function Not Implemented");
+        Logger.w(TAG, "confirmAccount function Not Implemented..");
         throw new UnsupportedOperationException("Not implemented");
     }
 }

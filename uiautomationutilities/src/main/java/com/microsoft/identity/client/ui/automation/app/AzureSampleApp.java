@@ -105,7 +105,7 @@ public class AzureSampleApp extends App {
      * @param username the username of the account for which to confirm sign in
      */
     public void confirmSignedIn(@NonNull final String username) {
-        Logger.i(TAG, "Confirm Account with Username on the APP..");
+        Logger.i(TAG, "Confirming account with supplied username is signed in..");
         final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
         try {
             Assert.assertEquals("User is signed into Azure Sample App", signedInUser.getText(), username);

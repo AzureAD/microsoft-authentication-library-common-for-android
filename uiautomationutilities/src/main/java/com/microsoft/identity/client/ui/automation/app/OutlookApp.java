@@ -100,7 +100,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
     @Override
     public void confirmAccount(@NonNull final String username) {
-        Logger.i(TAG, "Confirm Account with Username on the APP..");
+        Logger.i(TAG, "Confirming account with supplied username is signed in..");
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
 

@@ -91,10 +91,10 @@ public abstract class App implements IApp {
         //TODO: make it build time configurable to specify the installer that should be used.
         // Ideally we can specify different installers on app basis
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
-            Logger.i(TAG, "Installing the "+ this.appName + "from local..");
+            Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
             appInstaller.installApp(localApkFileName);
         } else {
-            Logger.i(TAG, "Installing the "+ this.appName + "from Play Store..");
+            Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
             appInstaller.installApp(packageName);
         }
 
