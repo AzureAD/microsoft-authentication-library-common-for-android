@@ -36,13 +36,14 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpClient;
+import com.microsoft.identity.common.internal.net.HttpConstants;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
@@ -100,6 +101,8 @@ public class MicrosoftStsOAuth2Strategy
                 AuthorizationResult> {
 
     private static final String TAG = MicrosoftStsOAuth2Strategy.class.getSimpleName();
+
+    private final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     /**
      * Constructor of MicrosoftStsOAuth2Strategy.
@@ -483,17 +486,13 @@ public class MicrosoftStsOAuth2Strategy
                     authority.toString()
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
+            headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
-            // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
-            @SuppressWarnings(WarningType.deprecation_warning)
-            final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
+            return httpClient.post(
                     authority,
                     headers,
-                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                    TOKEN_REQUEST_CONTENT_TYPE
+                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
             );
-
-            return pkeyAuthResponse;
         } catch (final UnsupportedEncodingException exception) {
             throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
                     "Unsupported encoding", exception);

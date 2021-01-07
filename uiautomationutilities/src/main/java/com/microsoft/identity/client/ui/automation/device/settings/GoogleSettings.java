@@ -247,9 +247,7 @@ public class GoogleSettings extends BaseSettings {
         final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
         Assert.assertTrue(screenLock.exists());
         screenLock.click();
-        final UiObject pinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
-        Assert.assertTrue(pinButton.exists());
-        pinButton.click();
+        UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
         UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
         device.pressEnter();
         UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
