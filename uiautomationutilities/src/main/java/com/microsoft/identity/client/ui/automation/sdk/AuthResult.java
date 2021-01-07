@@ -42,7 +42,7 @@ public abstract class AuthResult {
     private String authority;
     private Exception exception;
 
-    protected AuthResult(@NonNull final String accessToken, @NonNull final String idToken, @NonNull final String userId, @NonNull final String username, @NonNull final String authority) {
+    public AuthResult(@NonNull final String accessToken, @NonNull final String idToken, @NonNull final String userId, @NonNull final String username, @NonNull final String authority) {
         this.accessToken = accessToken;
         this.idToken = idToken;
         this.userId = userId;
@@ -50,7 +50,7 @@ public abstract class AuthResult {
         this.authority = authority;
     }
 
-    protected AuthResult(@NonNull final Exception exception) {
+    public AuthResult(@NonNull final Exception exception) {
         this.exception = exception;
     }
 
@@ -62,9 +62,6 @@ public abstract class AuthResult {
         Assert.assertFalse(TextUtils.isEmpty(idToken));
         Assert.assertFalse(TextUtils.isEmpty(userId));
         Assert.assertFalse(TextUtils.isEmpty(username));
-        if (authority != null) {
-            Assert.assertFalse(TextUtils.isEmpty(authority));
-        }
     }
 
     public void assertFailure() {
