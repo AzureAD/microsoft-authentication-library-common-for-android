@@ -71,7 +71,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirmation
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -102,7 +102,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirm in confirmation dialog
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -139,7 +139,7 @@ public class GoogleSettings extends BaseSettings {
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -182,7 +182,7 @@ public class GoogleSettings extends BaseSettings {
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -199,7 +199,7 @@ public class GoogleSettings extends BaseSettings {
             // click on activate device admin btn
             activeDeviceAdminBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -247,9 +247,7 @@ public class GoogleSettings extends BaseSettings {
         final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
         Assert.assertTrue(screenLock.exists());
         screenLock.click();
-        final UiObject pinButton = UiAutomatorUtils.obtainUiObjectWithExactText("PIN");
-        Assert.assertTrue(pinButton.exists());
-        pinButton.click();
+        UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
         UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
         device.pressEnter();
         UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);

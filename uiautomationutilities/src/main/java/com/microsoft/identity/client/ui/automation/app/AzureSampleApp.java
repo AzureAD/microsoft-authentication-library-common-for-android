@@ -104,7 +104,7 @@ public class AzureSampleApp extends App {
         try {
             Assert.assertEquals("User is signed into Azure Sample App", signedInUser.getText(), username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 }

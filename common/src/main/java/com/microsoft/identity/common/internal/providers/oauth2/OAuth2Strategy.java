@@ -39,9 +39,11 @@ import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.HttpRequest;
+import com.microsoft.identity.common.internal.net.HttpClient;
+import com.microsoft.identity.common.internal.net.HttpConstants;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -54,7 +56,6 @@ import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
@@ -92,6 +93,8 @@ public abstract class OAuth2Strategy
     protected static final String TOKEN_REQUEST_CONTENT_TYPE = "application/x-www-form-urlencoded";
     protected static final String DEVICE_CODE_CONTENT_TYPE = TOKEN_REQUEST_CONTENT_TYPE;
 
+    protected final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+
     protected final GenericOAuth2Configuration mConfig;
     protected final GenericOAuth2StrategyParameters mStrategyParameters;
     protected final IClockSkewManager mClockSkewManager;
@@ -124,14 +127,14 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public @NonNull Future<AuthorizationResult> requestAuthorization(
+    public @NonNull
+    Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) throws ClientException {
         validateAuthorizationRequest(request);
 
         // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final Future<AuthorizationResult> authorizationFuture = authorizationStrategy.requestAuthorization(request, this);
+        @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> authorizationFuture = authorizationStrategy.requestAuthorization(request, this);
 
         return authorizationFuture;
     }
@@ -194,6 +197,7 @@ public abstract class OAuth2Strategy
         headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+        headers.put(HttpConstants.HeaderField.CONTENT_TYPE, TOKEN_REQUEST_CONTENT_TYPE);
 
         if (request instanceof MicrosoftTokenRequest) {
             headers.put(
@@ -206,13 +210,10 @@ public abstract class OAuth2Strategy
             );
         }
 
-        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
-        @SuppressWarnings(WarningType.deprecation_warning)
-        final HttpResponse response = HttpRequest.sendPost(
+        final HttpResponse response = httpClient.post(
                 new URL(mTokenEndpoint),
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                TOKEN_REQUEST_CONTENT_TYPE
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
         );
 
         // Record the clock skew between *this device* and EVO...
@@ -271,15 +272,12 @@ public abstract class OAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(EstsTelemetry.getInstance().getTelemetryHeaders());
+        headers.put(HttpConstants.HeaderField.CONTENT_TYPE, DEVICE_CODE_CONTENT_TYPE);
 
-        // Send request
-        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
-        @SuppressWarnings(WarningType.deprecation_warning)
-        final HttpResponse response = HttpRequest.sendPost(
+        final HttpResponse response = httpClient.post(
                 ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
-                DEVICE_CODE_CONTENT_TYPE
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
         );
 
         // Create the authorization result
