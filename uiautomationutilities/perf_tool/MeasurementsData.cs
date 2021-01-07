@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PerfDiffResultMailer
 {
-    public class Gen3MeasurementsData : IEquatable<Gen3MeasurementsData>
+    public class MeasurementsData : IEquatable<MeasurementsData>
     {
         public string ScenarioName { get; set; }
         public string ActivityName { get; set; }
@@ -14,14 +14,14 @@ namespace PerfDiffResultMailer
 
         public override bool Equals(object obj)
         {
-            return this.Equals(obj as Gen3MeasurementsData);
+            return this.Equals(obj as MeasurementsData);
         }
         public override int GetHashCode()
         {
             string x = this.MeasurementName + this.ScenarioName + this.ActivityName;
             return x.GetHashCode();
         }
-        public bool Equals(Gen3MeasurementsData other)
+        public bool Equals(MeasurementsData other)
         {
             if (other == null)
                 return false;

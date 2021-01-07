@@ -11,7 +11,6 @@ namespace PerfClTool.Measurement
     {
         public List<PerfDataRecord> PerfDataRecordsList = new List<PerfDataRecord>();
         private PerfDataRecord _headers;
-        //private static readonly string s_perfMarkersNameMappingFile = Path.Combine("codemarkersMapping.csv");
         public PerfData(string filePath)
         {
             if (!File.Exists(filePath))
@@ -21,23 +20,23 @@ namespace PerfClTool.Measurement
             PerfDataRecordsList = File.ReadLines(filePath)
                 .Select(line => line.Split(','))
                 .Select(tokens => new PerfDataRecord(
-                    tokens[0], //TimeStamp
-                    tokens[1], //Marker
-                    tokens[2], //Time
-                    tokens[3], //Thread
-                    tokens[4], //CpuUsed
-                    tokens[5], //CpuTotal
-                    tokens[6], //ResidentSize
-                    tokens[7], //VirtualSize
-                    tokens[8], //WifiSent
-                    tokens[9], //WifiRecv
-                    tokens[10], //WwanSent
-                    tokens[11], //WwanRecv
-                    tokens[12], //AppSent
-                    tokens[13], //AppRecv
-                    tokens[14], //Battery
-                    tokens[15], //SystemDiskRead
-                    tokens[16] //SystemDiskWrite
+                    tokens[MapHeaderToIndex("TimeStamp")],
+                    tokens[MapHeaderToIndex("Marker")],
+                    tokens[MapHeaderToIndex("Time")],
+                    tokens[MapHeaderToIndex("Thread")],
+                    tokens[MapHeaderToIndex("CpuUsed")],
+                    tokens[MapHeaderToIndex("CpuTotal")],
+                    tokens[MapHeaderToIndex("ResidentSize")],
+                    tokens[MapHeaderToIndex("VirtualSize")],
+                    tokens[MapHeaderToIndex("WifiSent")],
+                    tokens[MapHeaderToIndex("WifiRecv")],
+                    tokens[MapHeaderToIndex("WwanSent")],
+                    tokens[MapHeaderToIndex("WwanRecv")],
+                    tokens[MapHeaderToIndex("AppSent")],
+                    tokens[MapHeaderToIndex("AppRecv")],
+                    tokens[MapHeaderToIndex("Battery")],
+                    tokens[MapHeaderToIndex("SystemDiskRead")],
+                    tokens[MapHeaderToIndex("SystemDiskWrite")]
                     )
                 ).ToList();
             //Check if header is present
@@ -47,6 +46,32 @@ namespace PerfClTool.Measurement
                 PerfDataRecordsList.RemoveAt(0);
             }
         }
+
+        private int MapHeaderToIndex(string token)
+        {
+            switch(token)
+            {
+                case "TimeStamp": return 0;
+                case "Marker": return 1;
+                case "Time": return 2;
+                case "Thread": return 3;
+                case "CpuUsed": return 4;
+                case "CpuTotal": return 5;
+                case "ResidentSize": return 6;
+                case "VirtualSize": return 7;
+                case "WifiSent": return 8;
+                case "WifiRecv": return 9;
+                case "WwanSent": return 10;
+                case "WwanRecv": return 11;
+                case "AppSent": return 12;
+                case "AppRecv": return 13;
+                case "Battery": return 14;
+                case "SystemDiskRead": return 15;
+                case "SystemDiskWrite": return 16;
+                default: return -1;
+            }
+        }
+
         public PerfDataRecord FindMarker(String marker, int skipCount = 0)
         {
             var records = PerfDataRecordsList.Where(t => t.Marker.Equals(marker, StringComparison.InvariantCultureIgnoreCase));
@@ -56,31 +81,12 @@ namespace PerfClTool.Measurement
             }
             else
             {
-                //PerfConsole.LogErrorMessage($"Marker {marker} not found");
                 return null;
             }
         }
         public void AddMarkerNames()
         {
-            //Dictionary<string, string> markersDict = new Dictionary<string, string>();
-            //using (var reader = new StreamReader("C:\\codemarkersMapping.csv"))
-            //{
-            //    string line;
-            //    while ((line = reader.ReadLine()) != null)
-            //    {
-            //        var parts = line.Split(',');
-            //        markersDict.Add(parts[0], parts[1]);
-            //    }
-            //}
-
             _headers.MarkerName = "MarkerName";
-            /*foreach(var perfdataRecord in PerfDataRecordsList)
-            {
-                if(markersDict.ContainsKey(perfdataRecord.Marker))
-                {
-                    perfdataRecord.MarkerName = markersDict[perfdataRecord.Marker];
-                }
-            }*/
         }
         public void AdjustTimeElapsed()
         {

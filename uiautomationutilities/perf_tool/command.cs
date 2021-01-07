@@ -30,26 +30,27 @@ namespace TestScript {
         // Main Method - Takes 2 arguments sender's outlook email(from which report email needs to be sent) & reciever's outlook email
         public static void main(string[] args)
         {
-            for (int i = 0; i < 14; i++)
+            int i;
+            for (i = 0; i < args.Length; i++)
                 Console.WriteLine(args[i]);
-
-            string inputFileLocation = args[0]; // Directory where PerfData base and target files are present. Example value: "C:\testdata\" 
-            string outputFileLocation = args[1]; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
-            string codemarkerBaseFileNamePreFix = args[2]; // Prefix of the files which should be taken as base PerfData files for raw data. Example value: "PerfDataBase"
-            string codemarkerTargetFileNamePreFix = args[3]; // Prefix of the files which should be taken as target PerfData files for raw data. Example value: "PerfDataTarget"
-            string outputFileNamePrefix = args[4]; // Prefix of the file names to be generated. Example value: "run_output"
-            string jobID = args[5]; // Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
-            string deviceModel = args[6]; // Device model to be written in the final Email report. Example value: "Pixel2"
-            string OS = args[7]; // Device OS to be written in the final Email report. Example value: "API28"
-            string baseBuild = args[8]; // Base build number to be written in the Email report. Example value: "1.2.1"
-            string targetBuild = args[9]; // Target build number to be written in the Email report. Example value: "1.2.2"
-            string appName = args[10]; // App name to be written in the Email report. Example value: "MSALTestApp"
-            string fromAddress = args[11]; // Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
-            string fromPassword = args[12]; // Password of the sender's account.
-            string emailToList = args[13]; // Email To list separated by comma
-            string scenarioName = args[14]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
-            string basejobID = args[15]; // Build id of the base task.
-
+            i = 0;
+            string inputBaseFileLocation = args[i++]; // Directory where PerfData base files are present. Example value: "C:\testdata\basefiles" 
+            string outputFileLocation = args[i++]; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
+            string codemarkerBaseFileNamePreFix = args[i++]; // Prefix of the files which should be taken as base PerfData files for raw data. Example value: "PerfDataBase"
+            string codemarkerTargetFileNamePreFix = args[i++]; // Prefix of the files which should be taken as target PerfData files for raw data. Example value: "PerfDataTarget"
+            string outputFileNamePrefix = args[i++]; // Prefix of the file names to be generated. Example value: "run_output"
+            string jobID = args[i++]; // Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
+            string deviceModel = args[i++]; // Device model to be written in the final Email report. Example value: "Pixel2"
+            string OS = args[i++]; // Device OS to be written in the final Email report. Example value: "API28"
+            string baseBuild = args[i++]; // Base build number to be written in the Email report. Example value: "1.2.1"
+            string targetBuild = args[i++]; // Target build number to be written in the Email report. Example value: "1.2.2"
+            string appName = args[i++]; // App name to be written in the Email report. Example value: "MSALTestApp"
+            string fromAddress = args[i++]; // Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
+            string fromPassword = args[i++]; // Password of the sender's account.
+            string emailToList = args[i++]; // Email To list separated by comma
+            string scenarioName = args[i++]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
+            string basejobID = args[i++]; // Build id of the base task.
+            string inputTargetFileLocation = args[i++]; // Directory where PerfData target files are present. Example value: "C:\testdata\targetfiles" 
 
 
             DateTime startTime = DateTime.MinValue;
@@ -60,10 +61,10 @@ namespace TestScript {
 
             deletePreviousRunOutputCSVs(outputFileLocation, outputFileNamePrefix);
 
-            string[] baseFileList = System.IO.Directory.GetFiles(inputFileLocation, codemarkerBaseFileNamePreFix + "*.txt");
+            string[] baseFileList = System.IO.Directory.GetFiles(inputBaseFileLocation, codemarkerBaseFileNamePreFix + "*.txt");
             Dictionary<string, List<PerfMeasurementsSet>> baseMeasurements = measure(startTime, msalAcquireTokenMeasurementConfigurations, baseFileList, "Base", configProvider.getScenarioName());
 
-            string[] targetFileList = System.IO.Directory.GetFiles(inputFileLocation, codemarkerTargetFileNamePreFix + "*.txt");
+            string[] targetFileList = System.IO.Directory.GetFiles(inputTargetFileLocation, codemarkerTargetFileNamePreFix + "*.txt");
             Dictionary<string, List<PerfMeasurementsSet>> targetMeasurements = measure(startTime, msalAcquireTokenMeasurementConfigurations, targetFileList, "Target", configProvider.getScenarioName());
 
             List<string> htmlResult = new List<string>();

@@ -77,7 +77,6 @@ namespace PerfClTool.Measurement
             }
 
             var setSize = (int)(0.5 + (float)values.Count * factor / 100);
-            //PerfConsole.LogInfoMessage("For a sample size of {0}, closest set size is {1}", values.Count, setSize);
 
             if (setSize <= 0)
             {
@@ -103,8 +102,6 @@ namespace PerfClTool.Measurement
                 currHigh++;
                 currLow++;
             }
-            /*PerfConsole.LogInfoMessage("Closest Subset {0}%/{1} Range is {2} - {3} ", factor, values.Count, globalLow,
-                globalHigh);*/
             return values.GetRange(globalLow, setSize);
         }
     }
