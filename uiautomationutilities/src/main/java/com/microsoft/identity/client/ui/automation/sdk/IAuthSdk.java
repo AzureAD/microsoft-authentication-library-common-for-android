@@ -41,12 +41,12 @@ public interface IAuthSdk<T extends AuthTestParams> {
      * @return A resultant token or an exception occurred while acquiring token interactively
      */
     AuthResult acquireTokenInteractive(@NonNull final T authTestParams,
-                                       final OnInteractionRequired interactionRequiredCallback, final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
+                                       final OnInteractionRequired interactionRequiredCallback, @NonNull final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
 
     /**
      * Get the token silently that can be used to access resources.
      *
      * @return A resultant token or an exception occurred while acquiring token silently
      */
-    AuthResult acquireTokenSilent(@NonNull final T authTestParams, final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
+    AuthResult acquireTokenSilent(@NonNull final T authTestParams, @NonNull final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
 }
