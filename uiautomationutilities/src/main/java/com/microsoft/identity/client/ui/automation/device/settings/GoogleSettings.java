@@ -71,7 +71,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirmation
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -102,7 +102,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirm in confirmation dialog
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -139,7 +139,7 @@ public class GoogleSettings extends BaseSettings {
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -182,7 +182,7 @@ public class GoogleSettings extends BaseSettings {
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -199,7 +199,7 @@ public class GoogleSettings extends BaseSettings {
             // click on activate device admin btn
             activeDeviceAdminBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -240,6 +240,29 @@ public class GoogleSettings extends BaseSettings {
         );
     }
 
-}
+    @Override
+    public void setPinOnDevice(final String password) throws UiObjectNotFoundException {
+        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+        launchScreenLockPage();
+        final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
+        Assert.assertTrue(screenLock.exists());
+        screenLock.click();
+        UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
+        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
+        device.pressEnter();
+        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
+        device.pressEnter();
+        handleDoneButton();
+    }
 
+    private void handleDoneButton() throws UiObjectNotFoundException {
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
+        } else {
+            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
+            doneButton.click();
+        }
+    }
+
+}
 

@@ -61,7 +61,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
 
             passwordInput.setText(password);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         handleNextButton();
@@ -78,7 +78,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
         try {
             nextBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 }
