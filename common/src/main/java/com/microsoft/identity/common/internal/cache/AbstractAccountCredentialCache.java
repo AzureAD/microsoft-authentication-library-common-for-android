@@ -215,9 +215,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
             if (mustMatchOnRequestedClaims && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                // Reversed order of equalsIgnoreCaseTrim parameters is intentional due to potential null value
-                // from access token, which can cause an exception to be thrown.
-                matches = matches && equalsIgnoreCaseTrim(accessToken.getRequestedClaims(), requestedClaims);
+                matches = matches && equalsIgnoreCaseTrim(requestedClaims, accessToken.getRequestedClaims());
             }
 
             if (matches) {
