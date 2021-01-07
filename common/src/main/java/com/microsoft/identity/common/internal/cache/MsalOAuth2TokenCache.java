@@ -478,6 +478,7 @@ public class MsalOAuth2TokenCache
                                 ? null // wildcard (*) realm
                                 : targetAccount.getRealm(),
                         null, // wildcard (*) target,
+                        null,
                         null
                 );
 
@@ -702,7 +703,8 @@ public class MsalOAuth2TokenCache
                 clientId,
                 account.getRealm(),
                 target,
-                authScheme.getName()
+                authScheme.getName(),
+                null // Used only by MSAL C++ to differentiate AT's
         );
 
         // Load the RefreshTokens
@@ -717,7 +719,8 @@ public class MsalOAuth2TokenCache
                 isMultiResourceCapable
                         ? null // wildcard (*)
                         : target,
-                null // not applicable
+                null, // not applicable
+                null
         );
 
         if (refreshTokens.isEmpty()) {
@@ -758,7 +761,8 @@ public class MsalOAuth2TokenCache
                 clientId,
                 account.getRealm(),
                 null, // wildcard (*),
-                null // not applicable
+                null, // not applicable
+                null
         );
 
         // Load the v1 IdTokens
@@ -769,7 +773,8 @@ public class MsalOAuth2TokenCache
                 clientId,
                 account.getRealm(),
                 null, // wildcard (*)
-                null // not applicable
+                null, // not applicable
+                null
         );
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
@@ -805,7 +810,8 @@ public class MsalOAuth2TokenCache
                 null, // wildcard (*)
                 null, // wildcard (*) -- all FRTs are MRRTs by definition
                 null, // wildcard (*) -- all FRTs are MRRTs by definition
-                null // not applicable
+                null, // not applicable
+                null
         );
 
         if (!fallbackRts.isEmpty()) {
@@ -900,7 +906,8 @@ public class MsalOAuth2TokenCache
                 clientId, // If null, behaves as wildcard
                 accountRecord.getRealm(),
                 null, // wildcard (*),
-                null // not applicable
+                null, // not applicable
+                null
         );
 
         idTokens.addAll(
@@ -911,7 +918,8 @@ public class MsalOAuth2TokenCache
                         clientId,
                         accountRecord.getRealm(),
                         null, // wildcard (*)
-                        null // not applicable
+                        null, // not applicable
+                        null
                 )
         );
 
@@ -1176,7 +1184,8 @@ public class MsalOAuth2TokenCache
                         clientId,
                         null, // realm
                         null, // target,
-                        null // not applicable
+                        null, // not applicable
+                        null
                 );
 
         // And also grab any V1IdTokens....
@@ -1188,7 +1197,8 @@ public class MsalOAuth2TokenCache
                         clientId,
                         null, // realm
                         null, // target
-                        null // not applicable
+                        null, // not applicable
+                        null
                 )
         );
 
@@ -1199,6 +1209,7 @@ public class MsalOAuth2TokenCache
                         environment,
                         CredentialType.RefreshToken,
                         clientId,
+                        null,
                         null,
                         null,
                         null
@@ -1569,6 +1580,7 @@ public class MsalOAuth2TokenCache
                                 ? null // wildcard (*) realm
                                 : targetAccount.getRealm(),
                         null, // wildcard (*) target,
+                        null,
                         null
                 );
 
@@ -1670,7 +1682,8 @@ public class MsalOAuth2TokenCache
                 referenceToken.getClientId(),
                 referenceToken.getRealm(),
                 null, // Wildcard (*)
-                referenceToken.getAccessTokenType()
+                referenceToken.getAccessTokenType(),
+                null // Wildcard (*)
         );
 
         Logger.verbose(

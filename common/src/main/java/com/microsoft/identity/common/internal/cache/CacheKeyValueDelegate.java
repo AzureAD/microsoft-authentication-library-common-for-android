@@ -58,6 +58,7 @@ import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
@@ -90,6 +91,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String CLIENT_ID = "<client_id>";
         static final String TARGET = "<target>";
         static final String AUTH_SCHEME = "<auth_scheme>";
+        static final String REQUESTED_CLAIMS = "<requested_claims>";
     }
 
     private static String sanitizeNull(final String input) {
@@ -173,6 +175,14 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             if (TokenRequest.TokenType.POP.equalsIgnoreCase(accessToken.getAccessTokenType())) {
                 cacheKey += CACHE_VALUE_SEPARATOR + AUTH_SCHEME;
                 cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
+            }
+
+            if(!StringExtensions.isNullOrBlank(accessToken.getRequestedClaims()))
+            {
+                // The Requested Claims string has no guarantee it doesn't contain a delimiter, so we hash it
+                cacheKey += CACHE_VALUE_SEPARATOR + REQUESTED_CLAIMS;
+                String reqClaimsHash = String.valueOf(sanitizeNull(accessToken.getRequestedClaims()).hashCode());
+                cacheKey = cacheKey.replace(REQUESTED_CLAIMS, sanitizeNull(reqClaimsHash));
             }
 
         } else if (credential instanceof RefreshTokenRecord) {

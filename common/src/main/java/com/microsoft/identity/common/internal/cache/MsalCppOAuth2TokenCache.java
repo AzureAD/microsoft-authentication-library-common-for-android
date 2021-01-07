@@ -242,7 +242,8 @@ public class MsalCppOAuth2TokenCache
                 null,
                 realm,
                 null,
-                SCHEME_BEARER
+                SCHEME_BEARER,
+                null
         );
 
         if (credentials != null && !credentials.isEmpty()) {
