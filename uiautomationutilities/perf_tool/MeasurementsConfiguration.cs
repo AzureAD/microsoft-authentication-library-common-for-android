@@ -28,6 +28,13 @@ namespace PerfClTool.Measurement
         private static readonly string configurationFile = "PerfDataConfiguration.xml";
         private static MeasurementData _appScenarios = new MeasurementData(StringComparer.OrdinalIgnoreCase);
         private static Dictionary<string, MeasurementConfiguration> _measurementConfigurations = new Dictionary<string, MeasurementConfiguration>(StringComparer.OrdinalIgnoreCase);
+        private static List<string> AllScenarios = new List<string>();
+
+        public static List<string> getAllScenarioNames()
+        {
+            return AllScenarios;
+        }
+
         static MeasurementsConfiguration()
         {
             var myConfiguration = XmlUtility.DeSerialize<PerfDataConfiguration>(configurationFile);
@@ -49,6 +56,7 @@ namespace PerfClTool.Measurement
                 foreach(var scenario in scenarios)
                 {
                     string scenarioName = scenario.Name;
+                    AllScenarios.Add(scenarioName);
                     _appScenarios[appName][scenarioName] = scenario.Measurements.Measurement;
                     
                     //Assert that for each measurement Id defined for a scenario, measurement details exist

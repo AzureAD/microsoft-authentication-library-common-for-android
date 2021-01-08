@@ -25,8 +25,8 @@ using ConsoleApp1;
 namespace TestScript { 
     
     // Class declaration 
-    class SendEmail { 
-        
+    class SendEmail {
+
         // Main Method - Takes 2 arguments sender's outlook email(from which report email needs to be sent) & reciever's outlook email
         public static void main(string[] args)
         {
@@ -48,24 +48,48 @@ namespace TestScript {
             string fromAddress = args[i++]; // Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
             string fromPassword = args[i++]; // Password of the sender's account.
             string emailToList = args[i++]; // Email To list separated by comma
-            string scenarioName = args[i++]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
+            //string scenarioName = args[i++]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
             string basejobID = args[i++]; // Build id of the base task.
             string inputTargetFileLocation = args[i++]; // Directory where PerfData target files are present. Example value: "C:\testdata\targetfiles" 
 
+            HashSet<string> primaryMeasurements = new HashSet<string>();
+            HashSet<string> secondaryMeasurements = new HashSet<string>();
+            HashSet<string> activeScenarios = new HashSet<string>();
+            HashSet<string> activeMeasurements = new HashSet<string>();
 
             DateTime startTime = DateTime.MinValue;
             string baseJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + basejobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
             string targetJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + jobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
-            PerfMeasurementConfigurationsProvider configProvider = new PerfMeasurementConfigurationsProvider(appName, scenarioName);
-            List<PerfMeasurementConfiguration> msalAcquireTokenMeasurementConfigurations = configProvider.getActiveMeasurements();
+            PerfMeasurementConfigurationsProvider configProvider;
 
-            deletePreviousRunOutputCSVs(outputFileLocation, outputFileNamePrefix);
 
             string[] baseFileList = System.IO.Directory.GetFiles(inputBaseFileLocation, codemarkerBaseFileNamePreFix + "*.txt");
-            Dictionary<string, List<PerfMeasurementsSet>> baseMeasurements = measure(startTime, msalAcquireTokenMeasurementConfigurations, baseFileList, "Base", configProvider.getScenarioName());
-
             string[] targetFileList = System.IO.Directory.GetFiles(inputTargetFileLocation, codemarkerTargetFileNamePreFix + "*.txt");
-            Dictionary<string, List<PerfMeasurementsSet>> targetMeasurements = measure(startTime, msalAcquireTokenMeasurementConfigurations, targetFileList, "Target", configProvider.getScenarioName());
+            deletePreviousRunOutputCSVs(outputFileLocation, outputFileNamePrefix);
+
+
+            MeasurementsStore.clear();
+            Dictionary<string, List<PerfMeasurementsSet>> baseMeasurements = new Dictionary<string, List<PerfMeasurementsSet>>();
+            Dictionary<string, List<PerfMeasurementsSet>> targetMeasurements = new Dictionary<string, List<PerfMeasurementsSet>>();
+            foreach (string s in MeasurementsConfiguration.getAllScenarioNames()) 
+            {
+                configProvider = new PerfMeasurementConfigurationsProvider(appName, s);
+                foreach (String measurementName in configProvider.getActiveMeasurementNames())
+                {
+                    secondaryMeasurements.Add(measurementName);
+                    activeMeasurements.Add(measurementName);
+                }
+                foreach (KeyValuePair<string, List<PerfMeasurementsSet>> pair in measure(startTime, baseFileList, "Base", configProvider))
+                {
+                    if(!baseMeasurements.ContainsKey(pair.Key))
+                        baseMeasurements.Add(pair.Key, pair.Value);
+                }
+                foreach (KeyValuePair<string, List<PerfMeasurementsSet>> pair in measure(startTime, targetFileList, "Target", configProvider))
+                {
+                    if(!targetMeasurements.ContainsKey(pair.Key))
+                        targetMeasurements.Add(pair.Key, pair.Value);
+                }
+            }
 
             List<string> htmlResult = new List<string>();
 
@@ -85,11 +109,7 @@ namespace TestScript {
             // Primary measurements are those which are necessary to produce a result to pass the scenario run.
             // If there is starting point of a primary measurement available but not the endpoint of the measurement in the PerfData file, the test will fail. 
             // However, if starting point or end point of a secondary measurement is missing, the test run will pass with ignoring the particular measurement.
-            HashSet<string> primaryMeasurements = new HashSet<string>();
-            HashSet<string> secondaryMeasurements = new HashSet<string>();
             string[] heading = { "Task Runs", baseTasks[0].AppName, baseTasks[0].Device };
-            HashSet<string> activeScenarios = new HashSet<string>();
-            HashSet<string> activeMeasurements = new HashSet<string>();
 
             Parameter task = new Parameter("Response Time(ms)", "NA", 3, "lemon");
             task.BaseCheckpoint = baseBuild;
@@ -143,10 +163,6 @@ namespace TestScript {
             }
             updatedParameters.Add(task);
             
-            foreach(String measurementName in configProvider.getActiveMeasurementNames()) { 
-                secondaryMeasurements.Add(measurementName);
-                activeMeasurements.Add(measurementName);
-            }
 
             htmlResult.Add(View.CreateTableHtml(updatedParameters, primaryMeasurements, secondaryMeasurements,
                                         heading, activeScenarios, activeMeasurements));
@@ -186,8 +202,10 @@ namespace TestScript {
             }
         }
 
-        private static Dictionary<string, List<PerfMeasurementsSet>> measure(DateTime startTime, List<PerfMeasurementConfiguration> measurementConfigurations, string[] files, string typeOfBuild, string scenario)
+        private static Dictionary<string, List<PerfMeasurementsSet>> measure(DateTime startTime, string[] files, string typeOfBuild, PerfMeasurementConfigurationsProvider configProvider)
         {
+            string scenario = configProvider.getScenarioName();
+            List<PerfMeasurementConfiguration> measurementConfigurations = configProvider.getActiveMeasurements();
             MeasurementsStore.clear();
             foreach (string file in files) { 
                 PerfData perfData = new PerfData(file);

@@ -203,14 +203,14 @@ namespace PerfDiffResultMailer
                 }
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + task.Checkpoint + "</td>");
                // htmlBuilder.Append("<td  align=\"center\" style=\"padding-left:5px; padding-right:5px;\">" + task.Device + " - "+task.AndroidVersion + "</td>");
-                htmlBuilder.Append("<td style=\"padding-left:7px; padding-right:7px;\">" + task.ApkPath + "</td>");
+                //htmlBuilder.Append("<td style=\"padding-left:7px; padding-right:7px;\">" + task.ApkPath + "</td>");
                 string featuregateoverrides = "";
                 foreach(var featuregate in task.FeatureGateOverrides)
                 {
                     featuregateoverrides += featuregate.Key + "|" + featuregate.Value+" , ";
                 }
                 featuregateoverrides = featuregateoverrides.TrimEnd(',',' ');
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + ((featuregateoverrides.Length==0)?"-":featuregateoverrides) + "</td>");
+                //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + ((featuregateoverrides.Length==0)?"-":featuregateoverrides) + "</td>");
                 htmlBuilder.Append("</tr>");
                 start = false;
             }
@@ -373,8 +373,8 @@ namespace PerfDiffResultMailer
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + device +" | "+os+"</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Checkpoint</td>");
             //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Device</td>");
-            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">ApkPaths</td>");
-            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">FeatureGate Overrides</td>");
+            //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">ApkPaths</td>");
+            //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">FeatureGate Overrides</td>");
             htmlBuilder.Append("</tr>");
             info.Add(htmlBuilder.ToString());
             return info;
