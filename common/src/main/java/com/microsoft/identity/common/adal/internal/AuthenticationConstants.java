@@ -1091,7 +1091,7 @@ public final class AuthenticationConstants {
         /**
          * Activity name to launch company portal.
          */
-        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME + ".views.SplashActivity";
 
         /**
          * Redirect URI parameter key to get link to install broker
