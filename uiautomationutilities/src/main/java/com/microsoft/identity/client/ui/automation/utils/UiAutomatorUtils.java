@@ -197,10 +197,9 @@ public class UiAutomatorUtils {
             child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             return child;
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
-        return null;
     }
 
     /**
@@ -226,10 +225,9 @@ public class UiAutomatorUtils {
             child.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             return child;
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
-        return null;
     }
 
     /**
@@ -246,7 +244,7 @@ public class UiAutomatorUtils {
             inputField.setText(inputText);
             closeKeyboardIfNeeded();
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 

@@ -77,7 +77,7 @@ public class BrowserEdge extends App implements IBrowser {
             // enter the URL
             inputField.setText(url);
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         final UiDevice device =

@@ -153,8 +153,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             final int colonIndex = deviceIdText.indexOf(":");
             return deviceIdText.substring(colonIndex + 1);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
-            return null;
+            throw new AssertionError(e);
         }
     }
 

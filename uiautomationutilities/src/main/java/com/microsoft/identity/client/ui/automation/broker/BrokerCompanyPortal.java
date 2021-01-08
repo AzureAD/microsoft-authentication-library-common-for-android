@@ -229,7 +229,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             } else {
                 // We don't see device limit issue, but the enrollment still failed due to reasons
                 // that aren't immediately known
-                Assert.fail("Unable to complete enrollment due to unknown reason");
+                throw new AssertionError("Unable to complete enrollment due to unknown reason");
             }
         }
 
@@ -267,7 +267,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         try {
             pinField.setText(String.valueOf(randomPin));
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         device.pressEnter();
@@ -281,7 +281,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
         try {
             pinConfirmField.setText(String.valueOf(randomPin));
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         device.pressEnter();
@@ -303,7 +303,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             devicesTab.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -357,7 +357,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             // Confirm removal
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 }
