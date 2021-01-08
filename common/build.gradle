@@ -214,7 +214,7 @@ dependencies {
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        source = variant.javaCompiler.source
+        source = variant.javaCompileProvider.get().source
 
         title = "Microsoft Identity Android Common"
 
