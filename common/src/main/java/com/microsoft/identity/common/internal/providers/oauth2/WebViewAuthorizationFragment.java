@@ -137,7 +137,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         mProgressBar.setVisibility(View.INVISIBLE);
 
                         // Inject string from test suites.
-                        if (!StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
+                        // if result already sent don't load url again
+                        if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
                             mWebView.loadUrl(mPostPageLoadedUrl);
                         }
                     }

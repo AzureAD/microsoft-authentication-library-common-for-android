@@ -1006,6 +1006,12 @@ public final class AuthenticationConstants {
         public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
 
         /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
+
+        /**
          * Azure Authenticator app signature hash.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
