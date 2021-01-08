@@ -133,7 +133,7 @@ public class CommandDispatcher {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
 
-        CodeMarkerManager.markCode(10011);
+        CodeMarkerManager.markCode("10011");
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -166,7 +166,7 @@ public class CommandDispatcher {
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    CodeMarkerManager.markCode(10012);
+                    CodeMarkerManager.markCode("10012");
                     try {
                         final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
@@ -191,9 +191,9 @@ public class CommandDispatcher {
 
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
-                            CodeMarkerManager.markCode(10013);
+                            CodeMarkerManager.markCode("10013");
                             commandResult = executeCommand(command);
-                            CodeMarkerManager.markCode(10014);
+                            CodeMarkerManager.markCode("10014");
                             cacheCommandResult(command, commandResult);
                         } else {
                             Logger.info(
@@ -227,7 +227,7 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.clear();
                     }
-                    CodeMarkerManager.markCode(10020);
+                    CodeMarkerManager.markCode("10020");
                 }
             });
             return finalFuture;

@@ -1,12 +1,12 @@
 package com.microsoft.identity.common;
 
 public class CodeMarker {
-    private int marker;
+    private String marker;
     private long timeMilliseconds;
     private String timeStamp;
     private long threadId;
 
-    public CodeMarker(int marker, long timeMilliseconds, String timeStamp, long id) {
+    public CodeMarker(String marker, long timeMilliseconds, String timeStamp, long id) {
         this.marker = marker;
         this.timeMilliseconds = timeMilliseconds;
         this.timeStamp = timeStamp;
@@ -29,11 +29,11 @@ public class CodeMarker {
         this.timeStamp = timeStamp;
     }
 
-    public int getMarker() {
+    public String getMarker() {
         return marker;
     }
 
-    public void setMarker(int marker) {
+    public void setMarker(String marker) {
         this.marker = marker;
     }
 

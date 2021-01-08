@@ -18,17 +18,23 @@ public class CodeMarkerManager {
     private static int MAX_SIZE_CODE_MARKER = 1000;
     private static volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
     private static long baseMilliSeconds = 0;
-    public static void markCode(int marker) {
+    private static String scenarioCode = "";
+
+    public static void setPrefixScenarioCode(String scenarioCode) {
+        CodeMarkerManager.scenarioCode = scenarioCode;
+    }
+
+    public static void markCode(String marker) {
         if(enableCodeMarker) {
             if(codeMarkers.size() >= MAX_SIZE_CODE_MARKER) {
-                clear();
+                clearMarkers();
             }
             long currentMilliSeconds = System.currentTimeMillis();
             if (codeMarkers.size() == 0) {
                 baseMilliSeconds = currentMilliSeconds;
             }
             SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-            codeMarkers.add(new CodeMarker(marker, currentMilliSeconds - baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
+            codeMarkers.add(new CodeMarker(scenarioCode + marker, currentMilliSeconds - baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
         }
     }
 
@@ -36,8 +42,13 @@ public class CodeMarkerManager {
         CodeMarkerManager.enableCodeMarker = enableCodeMarker;
     }
 
-    public static void clear(){
+    public static void clearMarkers(){
         codeMarkers.clear();
+    }
+
+    public static void clearAll() {
+        codeMarkers.clear();
+        CodeMarkerManager.scenarioCode = "";
     }
 
     public static void writeToFile(String fileName) {
