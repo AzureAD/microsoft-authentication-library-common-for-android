@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -253,7 +253,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         public Builder<B> setCpInstallationDetail(final @NonNull Context context) {
             try {
                 final PackageInfo packageInfo =
-                        context.getPackageManager().getPackageInfo(COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
+                        context.getPackageManager().getPackageInfo(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME, 0);
                 mCpVersion = packageInfo.versionName;
             } catch (final PackageManager.NameNotFoundException e) {
                 // CP is not installed. No need to do anything.
