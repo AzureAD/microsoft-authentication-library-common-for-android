@@ -61,12 +61,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
 
-    private static final AtomicInteger INTEGER = new AtomicInteger(0);
+    private static final AtomicInteger INTEGER = new AtomicInteger(1);
     private static final String TEST_RESULT_STR = "test_result_str";
 
     @Before
@@ -168,6 +169,8 @@ public class CommandDispatcherTest {
         Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
     }
 
+
+
     /**
      * This test represents the case where a command changes underneath our system
      * while we're using it as a key.  They're not immutable, so they're not safe to
@@ -245,31 +248,25 @@ public class CommandDispatcherTest {
 
     /**
      * This test takes a while to run.  But it should always work.  Just put it here in order
-     * to save anyone else from having to write it.
+     * to save anyone else from having to write it.  Effectively all of these results are non
+     * cacheable, so this does not execute the deduplication logic at all.
      * @throws Exception
      */
-    @Ignore
     @Test
     public void iterateTests() throws Exception {
         final int nThreads = 100;
         ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         final AtomicReference<Throwable> ex = new AtomicReference<>(null);
-        final int nTasks = 100_000;
+        final int nTasks = 10_000;
         final CountDownLatch latch = new CountDownLatch(nTasks);
         final ConcurrentHashMap<Integer, Future<?>> map = new ConcurrentHashMap<>();
         for (int i = 0; i < nTasks; i++) {
-            if (i % 100 == 0) {
-                System.out.println("Iteration " + i);
-            }
             final int j = i;
             map.put(j, executor.submit(() -> {
                 try {
                     testSubmitSilentWithParamMutation();
                     testSubmitSilentWithParamMutationUncacheable();
-                    //System.out.println("Completed " + j);
                 } catch (Throwable t) {
-                    System.out.println("ERROR " + j + " outstanding commands " + CommandDispatcher.outstandingCommands());
-                    t.printStackTrace();
                     ex.compareAndSet(null, t);
                 } finally {
                     latch.countDown();
@@ -287,6 +284,91 @@ public class CommandDispatcherTest {
         executor.awaitTermination(30, TimeUnit.SECONDS);
         executor.shutdownNow();
         if (ex.get() != null) {
+            Assert.assertNull(ex.get());
+        }
+    }
+
+    public void testSubmitSilentWithParamMutationSameCommand(final Consumer<String> c) throws Exception {
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch1 = new CountDownLatch(1);
+
+        final TestCommand testCommand = new LatchedTestCommand(
+                getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        testLatch.countDown();
+                        c.accept("FAIL");
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        testLatch.countDown();
+                        error.printStackTrace();
+                        c.accept("FAIL");
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        testLatch.countDown();
+                        c.accept(s);
+                    }
+                }, 0, submitLatch, submitLatch1) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+        };
+        FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        // We do not know if this command will execute, since it may be deduped.  We cannot await
+        // the start of execution.
+        testCommand.value = INTEGER.getAndIncrement();
+        submitLatch.countDown();
+        testLatch.await();
+        Assert.assertTrue(f.isDone());
+        final String result = (String) f.get().getResult();
+        Assert.assertEquals(TEST_RESULT_STR, result);
+        f.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
+    }
+
+    /**
+     * The other iteration test is all non-cacheable commands.  These are cachable.
+     * @throws Exception
+     */
+    @Test
+    public void iterateTestsSame() throws Exception {
+        final int nThreads = 100;
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+        final AtomicReference<Throwable> ex = new AtomicReference<>(null);
+        final int nTasks = 10_000;
+        final CountDownLatch latch = new CountDownLatch(nTasks);
+        final ConcurrentHashMap<Integer, String> map = new ConcurrentHashMap<>();
+        for (int i = 0; i < nTasks; i++) {
+            final int j = i;
+            executor.submit(() -> {
+                try {
+                    map.put(j, "foo");
+                    testSubmitSilentWithParamMutationSameCommand(s -> { map.remove(j); if ("FAIL".equals(s)) { ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + j)); }});
+                } catch (Throwable t) {
+                    ex.compareAndSet(null, t);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+        System.out.println("Waiting on latch");
+        while (!latch.await(30, TimeUnit.SECONDS)) {
+            System.out.println("Waiting, " + latch.getCount() + " outstanding");
+            System.out.println("Waiting keys " +  map.keySet().size());
+        }
+        executor.shutdown();
+        System.out.println("Waiting, on executor");
+        executor.awaitTermination(30, TimeUnit.SECONDS);
+        executor.shutdownNow();
+        if (ex.get() != null) {
+            // If this fails, there has been at least one error.
             Assert.assertNull(ex.get());
         }
     }
