@@ -121,10 +121,10 @@ namespace PerfClTool.Measurement
         public void AddPidCreationTime(DateTime startTime)
         {
             var firstRecord = PerfDataRecordsList.ElementAt(0);
-            if (!(firstRecord.Marker.Equals("1") || firstRecord.Marker.Equals("10011")))
+            /*if (!(firstRecord.Marker.Equals("1") || firstRecord.Marker.Equals("10011")))
             {
                 throw new Exception("Unable to find first marker in PerfData.txt");
-            }
+            }*/
             var timeDifference = DateTime.Parse(firstRecord.TimeStamp) - startTime;
 
             var logcatRecord = new PerfDataRecord()

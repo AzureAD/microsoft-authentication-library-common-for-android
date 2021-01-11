@@ -217,16 +217,20 @@ namespace TestScript {
                 string perfDataModifiedFileOnHost = "generatedPerfData_" + scenario + "_" + file.Substring(file.Length-7,3) + "_" + typeOfBuild + ".csv";
                 perfData.AddMarkerNames();
                 perfData.AdjustTimeElapsed();
-                PerfData.AppendAllHeadersToFile(perfDataModifiedFileOnHost);
+
+                // Followings can generate csv forms of the codemarker files.
+                /*PerfData.AppendAllHeadersToFile(perfDataModifiedFileOnHost);
                 perfData.AppendMarkersDataToFile(perfDataModifiedFileOnHost);
-                perfData.AppendMarkersDataToFile("generatedBeautified_" + scenario + "_" + file.Substring(file.Length - 7, 3) + "_" + typeOfBuild + ".csv");
+                perfData.AppendMarkersDataToFile("generatedBeautified_" + scenario + "_" + file.Substring(file.Length - 7, 3) + "_" + typeOfBuild + ".csv");*/
             }
             MeasurementsStore.GenerateAggregateMeasurements();
 
             MeasurementsStore.DumpAllMeasurementsDataToFile("generatedDumpAllMeasurements" + scenario + "_" + typeOfBuild + ".csv");
             MeasurementsStore.DumpResponseTimeSummaryToFile("generatedDumpResponseTimeSummary" + scenario + "_" + typeOfBuild + ".csv");
-            MeasurementsStore.DumpVssEndSummaryToFile("generatedDumpVssEndSummary" + scenario + "_" + typeOfBuild + ".csv");
-            MeasurementsStore.DumpRssEndSummaryToFile("generatedDumpRssEndSummary" + scenario + "_" + typeOfBuild + ".csv");
+
+            // Followings are useful if we are using RSS and VSS parameters which are used to measure memory usage.
+            /*MeasurementsStore.DumpVssEndSummaryToFile("generatedDumpVssEndSummary" + scenario + "_" + typeOfBuild + ".csv");
+            MeasurementsStore.DumpRssEndSummaryToFile("generatedDumpRssEndSummary" + scenario + "_" + typeOfBuild + ".csv");*/
             return MeasurementsStore.AllScenarioMeasurements;
         }
     } 
