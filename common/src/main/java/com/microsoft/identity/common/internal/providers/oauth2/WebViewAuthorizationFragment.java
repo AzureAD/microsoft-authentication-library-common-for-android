@@ -198,6 +198,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.getSettings().setJavaScriptEnabled(true);
         mWebView.requestFocus(View.FOCUS_DOWN);
 
+        // clear cookies from web view session before processing new login request
+        WebViewUtil.removeCookiesFromWebView(getContext());
+        WebViewUtil.removeSessionCookiesFromWebView(getContext());
+
         // Set focus to the view for touch event
         mWebView.setOnTouchListener(new View.OnTouchListener() {
             @Override
