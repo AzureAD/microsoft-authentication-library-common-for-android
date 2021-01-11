@@ -59,7 +59,7 @@ public class BrokerHost extends AbstractTestBroker {
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
 
-        Logger.i(TAG, "Perform Device Registration for the given account..");
+        Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join btn
@@ -96,7 +96,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
-        Logger.i(TAG, "Perform Shared Device Registration for the given account..");
+        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join shared device btn
@@ -146,7 +146,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) {
-        Logger.i(TAG, "Helper for confirming Shared Device Registration..");
+        Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"

@@ -56,7 +56,7 @@ public class PlayStore implements IAppInstaller {
     private static final long PLAY_STORE_INSTALL_APP_TIMEOUT = TimeUnit.MINUTES.toMillis(5);
 
     private void launchMarketPageForPackage(final String appPackageName) {
-        Logger.i(TAG, "launch Market Page For " + appPackageName + " Package..");
+        Logger.i(TAG, "Launch Market Page For " + appPackageName + " Package..");
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)); //sets the intent to start your app
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen

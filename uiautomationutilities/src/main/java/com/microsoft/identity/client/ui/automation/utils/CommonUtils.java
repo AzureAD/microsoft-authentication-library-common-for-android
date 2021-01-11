@@ -72,7 +72,7 @@ public class CommonUtils {
      * just responds to that by accepting that permission.
      */
     public static void grantPackagePermission() {
-        Logger.i(TAG, "Granting Package the requested Permission..");
+        Logger.i(TAG, "Granting(Allows) the Package for the requested Permission..");
         UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
     }
 
@@ -84,7 +84,7 @@ public class CommonUtils {
      * @return a boolean indicating whether permission was already granted or not
      */
     public static boolean hasPermission(@NonNull final String packageName, @NonNull final String permission) {
-        Logger.i(TAG, "Check if supplied permission for " + packageName + " has been granted or not..");
+        Logger.i(TAG, "Check if given permission:" + permission + " for " + packageName + " has been granted or not..");
         final Context context = ApplicationProvider.getApplicationContext();
         final PackageManager packageManager = context.getPackageManager();
         return PackageManager.PERMISSION_GRANTED == packageManager.checkPermission(
@@ -141,7 +141,7 @@ public class CommonUtils {
      * @return a {@link List} of {@link ITestBroker} objects
      */
     public static List<ITestBroker> getAllPossibleTestBrokers() {
-        Logger.i(TAG, "Get All Possible Test Brokers..");
+        Logger.i(TAG, "Get the List of all Possible Test Brokers..");
         return Arrays.asList(
                 new ITestBroker[]{
                         new BrokerCompanyPortal(),
@@ -159,7 +159,7 @@ public class CommonUtils {
      * @param folder the folder inside sdcard where to copy the file
      */
     public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
-        Logger.i(TAG, "Copy the provided file object to the sdcard directory on the device..");
+        Logger.i(TAG, "Copy the provided file object to " + folder + " inside sdcard directory on the device..");
         final String filePath = file.getAbsolutePath();
         final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
         final File dir = new File(destinationPath);
@@ -174,7 +174,7 @@ public class CommonUtils {
      * @param action action is which operation to be performed.
      */
     public static void launchIntent(@NonNull final String action) {
-        Logger.i(TAG, "Launches an activity specified by the action..");
+        Logger.i(TAG, "Launching an activity specified by the action: " + action);
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(action);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);

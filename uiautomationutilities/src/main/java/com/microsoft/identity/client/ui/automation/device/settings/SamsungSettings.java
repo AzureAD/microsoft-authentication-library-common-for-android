@@ -48,7 +48,7 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
-        Logger.i(TAG, "Disable Admin on Samsung Device..");
+        Logger.i(TAG, "Disabling Admin on Samsung Device..");
         launchDeviceAdminSettingsPage();
 
         try {
@@ -76,7 +76,7 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void removeAccount(@NonNull final String username) {
-        Logger.i(TAG, "Remove Account from Samsung Device..");
+        Logger.i(TAG, "Removing Account from Samsung Device..");
         launchAccountListPage();
         try {
             // scroll down the recycler view to find the list item for this account
@@ -113,7 +113,7 @@ public class SamsungSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
-        Logger.i(TAG, "Add Work Account on Samsung Device..");
+        Logger.i(TAG, "Adding Work Account on Samsung Device..");
         launchAddAccountPage();
 
         try {
@@ -144,7 +144,7 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        Logger.i(TAG, "Forward Time For OneDay on Samsung Device..");
+        Logger.i(TAG, "Forwarding Time For One Day on Samsung Device..");
         // Disable automatic time zone
         AdbShellUtils.disableAutomaticTimeZone();
         // Open the date & time settings page

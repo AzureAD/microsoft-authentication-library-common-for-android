@@ -69,7 +69,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        Log.i(TAG, "Perform Device Registration for the given account..");
+        Log.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(
                 username,
                 password,
@@ -117,7 +117,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
-        Log.i(TAG, "Perform Shared Device Registration for the given account..");
+        Log.i(TAG, "Performing Shared Device Registration for the given account..");
         performDeviceRegistrationHelper(
                 username,
                 password,
@@ -190,7 +190,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void createPowerLiftIncident() {
-        Log.i(TAG, "Create Power Lift Incident..");
+        Log.i(TAG, "Creating Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
             handleFirstRun();

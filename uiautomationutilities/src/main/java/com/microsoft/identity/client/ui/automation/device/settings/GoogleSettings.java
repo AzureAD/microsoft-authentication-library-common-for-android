@@ -52,7 +52,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
-        Logger.i(TAG, "Disable Admin on Google Device..");
+        Logger.i(TAG, "Disabling Admin on Google Device..");
         launchDeviceAdminSettingsPage();
 
         try {
@@ -81,7 +81,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void removeAccount(@NonNull final String username) {
-        Logger.i(TAG, "Remove Account from Google Device..");
+        Logger.i(TAG, "Removing Account from Google Device..");
         launchAccountListPage();
 
         try {
@@ -115,7 +115,7 @@ public class GoogleSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
-        Logger.i(TAG, "Add Work Account on Google Device..");
+        Logger.i(TAG, "Adding Work Account on Google Device..");
         launchAddAccountPage();
 
         try {
@@ -151,7 +151,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        Logger.i(TAG, "Forward Time For OneDay on Google Device..");
+        Logger.i(TAG, "Forwarding Time For One Day on Google Device..");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
         // Launch the date time settings page
@@ -195,7 +195,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void activateAdmin() {
-        Logger.i(TAG, "Activate Admin on Google Device..");
+        Logger.i(TAG, "Activating Admin on Google Device..");
         try {
             // scroll down the recycler view to find activate device admin btn
             final UiObject activeDeviceAdminBtn = UiAutomatorUtils.obtainChildInScrollable(

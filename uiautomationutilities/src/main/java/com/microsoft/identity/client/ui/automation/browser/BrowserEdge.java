@@ -69,7 +69,7 @@ public class BrowserEdge extends App implements IBrowser {
     }
 
     public void navigateTo(@NonNull final String url) {
-        Logger.i(TAG, "Navigate to the URL in the browser..");
+        Logger.i(TAG, "Navigate to the given URL:" + url + " in the browser..");
         //  Click on the search bar in the browser UI
         UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/search_box_text");
 

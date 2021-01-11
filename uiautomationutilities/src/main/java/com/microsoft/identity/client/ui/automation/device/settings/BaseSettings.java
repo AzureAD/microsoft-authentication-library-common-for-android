@@ -44,7 +44,7 @@ public abstract class BaseSettings implements ISettings {
 
     @Override
     public void launchDeviceAdminSettingsPage() {
-        Logger.i(TAG, "Launch Device Admin Settings Page..");
+        Logger.i(TAG, "Launching Device Admin Settings Page..");
         final Intent intent = new Intent();
         intent.setComponent(new ComponentName(
                 SETTINGS_PKG,
@@ -60,13 +60,13 @@ public abstract class BaseSettings implements ISettings {
 
     @Override
     public void launchAddAccountPage() {
-        Logger.i(TAG, "Launch Add Account Page..");
+        Logger.i(TAG, "Launching Add Account Page..");
         launchIntent(Settings.ACTION_ADD_ACCOUNT);
     }
 
     @Override
     public void launchAccountListPage() {
-        Logger.i(TAG, "Launch Account List Page..");
+        Logger.i(TAG, "Launching Account List Page..");
         launchIntent(Settings.ACTION_SYNC_SETTINGS);
     }
 
@@ -78,7 +78,7 @@ public abstract class BaseSettings implements ISettings {
 
     @Override
     public void launchScreenLockPage() {
-        Logger.i(TAG, "Launch Screen Lock Page..");
+        Logger.i(TAG, "Launching Screen Lock Page..");
         launchIntent(Settings.ACTION_SECURITY_SETTINGS);
     }
 }

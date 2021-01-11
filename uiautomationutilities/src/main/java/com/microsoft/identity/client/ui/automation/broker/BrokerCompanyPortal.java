@@ -102,7 +102,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
     @Override
     public void createPowerLiftIncident() {
-        Log.i(TAG, "Create Power Lift Incident..");
+        Log.i(TAG, "Creating Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
             handleFirstRun();
