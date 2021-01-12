@@ -19,7 +19,6 @@
 				<Name>MSALAcquireToken - Non Brokered Auth</Name>
 				<Measurements>
 					<Measurement Id="400649" IsPrimary="false"></Measurement>
-					<Measurement Id="400650" IsPrimary="false"></Measurement>
 					<Measurement Id="400651" IsPrimary="false"></Measurement>
 				</Measurements>
 			</Scenario>
@@ -27,7 +26,6 @@
 				<Name>MSALAcquireToken - Brokered Auth</Name>
 				<Measurements>
 					<Measurement Id="400652" IsPrimary="false"></Measurement>
-					<Measurement Id="400653" IsPrimary="false"></Measurement>
 					<Measurement Id="400654" IsPrimary="false"></Measurement>
 					<Measurement Id="400655" IsPrimary="false"></Measurement>
 				</Measurements>
