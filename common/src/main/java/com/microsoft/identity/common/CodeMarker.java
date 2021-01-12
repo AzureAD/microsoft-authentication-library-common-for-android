@@ -1,14 +1,39 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common;
 
 public class CodeMarker {
+
     private String marker;
-    private long timeMilliseconds;
+    // timeInMilliseconds represents time in milliseconds where zero(0) means the time when first codemarker was captured.
+    private long timeInMilliseconds;
+    // timeStamp is the system time at the time of the capture of the codemarker.
     private String timeStamp;
     private long threadId;
 
-    public CodeMarker(String marker, long timeMilliseconds, String timeStamp, long id) {
+    public CodeMarker(String marker, long timeInMilliseconds, String timeStamp, long id) {
         this.marker = marker;
-        this.timeMilliseconds = timeMilliseconds;
+        this.timeInMilliseconds = timeInMilliseconds;
         this.timeStamp = timeStamp;
         this.threadId = id;
     }
@@ -17,31 +42,16 @@ public class CodeMarker {
         return threadId;
     }
 
-    public void setThreadId(long threadId) {
-        this.threadId = threadId;
-    }
-
     public String getTimeStamp() {
         return timeStamp;
-    }
-
-    public void setTimeStamp(String timeStamp) {
-        this.timeStamp = timeStamp;
     }
 
     public String getMarker() {
         return marker;
     }
 
-    public void setMarker(String marker) {
-        this.marker = marker;
+    public long getTimeInMilliseconds() {
+        return timeInMilliseconds;
     }
 
-    public long getTimeMilliseconds() {
-        return timeMilliseconds;
-    }
-
-    public void setTimeMilliseconds(long timeMilliseconds) {
-        this.timeMilliseconds = timeMilliseconds;
-    }
 }

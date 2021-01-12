@@ -12,6 +12,7 @@ vNext
 Version 3.0.7
 ----------
 - Fix exception casting issue in CommandDispatcher (#1121)
+- Adding codemarkers for usage in the Test cases of brokered and non-brokered Acquire Token silently scenarios.
 
 Version 3.0.6
 ----------
