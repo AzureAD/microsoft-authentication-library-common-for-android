@@ -111,7 +111,7 @@ namespace TestScript {
             // However, if starting point or end point of a secondary measurement is missing, the test run will pass with ignoring the particular measurement.
             string[] heading = { "Task Runs", baseTasks[0].AppName, baseTasks[0].Device };
 
-            Parameter task = new Parameter("Response Time(ms)", "NA", 3, "lemon");
+            Parameter task = new Parameter("Response Time(seconds)", "NA", 3, "lemon");
             task.BaseCheckpoint = baseBuild;
             task.TargetCheckPoint = targetBuild;
             task.BaseLogDir = baseJobArtifactURL;
