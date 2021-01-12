@@ -201,7 +201,7 @@ namespace PerfDiffResultMailer
                 {
                     htmlBuilder.Append("<tr>");
                 }
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + task.Checkpoint + "</td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "<a href=\"" + task.LogsDir + "\"><u> (" + task.Checkpoint + ") </u></a></td>");
                // htmlBuilder.Append("<td  align=\"center\" style=\"padding-left:5px; padding-right:5px;\">" + task.Device + " - "+task.AndroidVersion + "</td>");
                 //htmlBuilder.Append("<td style=\"padding-left:7px; padding-right:7px;\">" + task.ApkPath + "</td>");
                 string featuregateoverrides = "";
