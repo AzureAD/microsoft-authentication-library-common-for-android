@@ -246,6 +246,8 @@ public abstract class BaseController {
                 interactiveTokenCommandParameters.isWebViewZoomEnabled()
         ).setWebViewZoomControlsEnabled(
                 interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
+        ).setCpInstallationDetail(
+                parameters.getAndroidApplicationContext()
         );
     }
 
