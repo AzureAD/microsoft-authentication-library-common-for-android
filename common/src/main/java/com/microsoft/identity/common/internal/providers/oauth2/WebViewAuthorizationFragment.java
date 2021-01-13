@@ -50,7 +50,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuth
 import java.util.HashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_JAVASCRIPT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REDIRECT_URI;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_HEADERS;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_URL;
@@ -82,7 +82,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private HashMap<String, String> mRequestHeaders;
 
     // For MSAL CPP test cases only
-    private String mPostPageLoadedUrl;
+    private String mPostPageLoadedJavascript;
 
     private boolean webViewZoomControlsEnabled;
 
@@ -102,7 +102,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putString(REDIRECT_URI, mRedirectUri);
         outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
         outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
-        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
+        outState.putSerializable(POST_PAGE_LOADED_JAVASCRIPT, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
     }
@@ -115,7 +115,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
-        mPostPageLoadedUrl = state.getString(POST_PAGE_LOADED_URL);
+        mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_JAVASCRIPT);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
     }
@@ -137,8 +137,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
                         // Inject string from test suites.
                         // if result already sent don't load url again
-                        if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
-                            mWebView.loadUrl(mPostPageLoadedUrl);
+                        if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
+                            mWebView.loadUrl(mPostPageLoadedJavascript);
                         }
                     }
                 },
