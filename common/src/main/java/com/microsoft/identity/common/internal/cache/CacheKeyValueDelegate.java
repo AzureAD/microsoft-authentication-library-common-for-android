@@ -177,8 +177,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
             }
 
-            if(!StringExtensions.isNullOrBlank(accessToken.getRequestedClaims()))
-            {
+            if (!StringExtensions.isNullOrBlank(accessToken.getRequestedClaims())) {
                 // The Requested Claims string has no guarantee it doesn't contain a delimiter, so we hash it
                 cacheKey += CACHE_VALUE_SEPARATOR + REQUESTED_CLAIMS;
                 String reqClaimsHash = String.valueOf(sanitizeNull(accessToken.getRequestedClaims()).hashCode());

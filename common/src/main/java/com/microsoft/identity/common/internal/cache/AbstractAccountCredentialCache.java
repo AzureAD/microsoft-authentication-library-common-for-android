@@ -213,9 +213,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && authScheme.equalsIgnoreCase(atType);
             }
 
-            if (mustMatchOnRequestedClaims && credential instanceof AccessTokenRecord) {
-                final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && equalsIgnoreCaseTrim(requestedClaims, accessToken.getRequestedClaims());
+            if (mustMatchOnRequestedClaims) {
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                    matches = matches && equalsIgnoreCaseTrim(requestedClaims, accessToken.getRequestedClaims());
+                } else {
+                    Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
+                }
             }
 
             if (matches) {

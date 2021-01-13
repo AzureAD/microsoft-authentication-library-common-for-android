@@ -84,7 +84,7 @@ public class AccessTokenRecord extends Credential {
         public static final String KID = "kid";
 
         /**
-         * A hash of claims string sent to server that produced this AT.
+         * The claims string (if present) that was sent to server to produce this AT.
          */
         public static final String REQUESTED_CLAIMS = "requested_claims";
     }
@@ -170,18 +170,18 @@ public class AccessTokenRecord extends Credential {
     }
 
     /**
-     * Gets the requested_claims hash.
-     * @return The hashed copy of the claims string.
+     * Gets the requested_claims string.
+     *
+     * @return The requested_claims string.
      */
     public String getRequestedClaims() {
         return mRequestedClaims;
     }
 
     /**
-     * Hashes the incoming string (we don't know the length or potential special characters)
-     * then stores the int hash value.
+     * Sets the requested_claims string
      *
-     * @param requestedClaims The requested_claims to set.
+     * @param requestedClaims The claims string to set.
      */
     public void setRequestedClaims(final String requestedClaims) {
         mRequestedClaims = requestedClaims;
