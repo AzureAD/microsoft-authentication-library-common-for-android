@@ -1401,8 +1401,7 @@ public class BrokerOAuth2TokenCache
                                         clientId,
                                         null, // wildcard (*)
                                         null, // wildcard (*)
-                                        null, // Not applicable
-                                        null
+                                        null // Not applicable
                                 );
 
                 // Load the V1IdToken (v1 if adal used)
@@ -1416,8 +1415,7 @@ public class BrokerOAuth2TokenCache
                                         clientId,
                                         realm,
                                         null,
-                                        null, // Not applicable
-                                        null
+                                        null // Not applicable
                                 );
 
                 // Load the IdToken
@@ -1431,8 +1429,7 @@ public class BrokerOAuth2TokenCache
                                         clientId,
                                         realm,
                                         null,
-                                        null, // not applicable
-                                        null
+                                        null // not applicable
                                 );
 
                 // Construct the ICacheRecord

@@ -94,12 +94,12 @@ public interface IAccountCredentialCache {
     /**
      * Returns all of the Credentials matching the supplied criteria.
      *
-     * @param homeAccountId   The homeAccountId used to match Credential cache keys.
-     * @param environment     The environment used to match Credential cache keys.
-     * @param credentialType  The sought CredentialType.
-     * @param clientId        The clientId used to match Credential cache keys.
-     * @param realm           The realm used to match Credential cache keys.
-     * @param target          The target used to match Credential cache keys.
+     * @param homeAccountId  The homeAccountId used to match Credential cache keys.
+     * @param environment    The environment used to match Credential cache keys.
+     * @param credentialType The sought CredentialType.
+     * @param clientId       The clientId used to match Credential cache keys.
+     * @param realm          The realm used to match Credential cache keys.
+     * @param target         The target used to match Credential cache keys.
      * @return A mutable List of Credentials matching the supplied criteria.
      */
     List<Credential> getCredentialsFilteredBy(
