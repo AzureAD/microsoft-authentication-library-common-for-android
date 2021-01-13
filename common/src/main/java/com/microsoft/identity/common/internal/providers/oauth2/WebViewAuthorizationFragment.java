@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -135,10 +136,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public void onPageLoaded() {
                         mProgressBar.setVisibility(View.INVISIBLE);
 
-                        // Inject string from test suites.
-                        // if result already sent don't load url again
+                        // Inject the javascript string from testing. This should only be evaluated if we haven't sent
+                        // an auth result already.
                         if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
-                            mWebView.loadUrl(mPostPageLoadedJavascript);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                mWebView.evaluateJavascript(mPostPageLoadedJavascript, null);
+                            } else {
+                                // On earlier versions of Android, javascript has to be loaded with a custom scheme.
+                                // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
+                                // our javascript may contain the '%' character, so we escape it again, to undo that.
+                                mWebView.loadUrl("javascript:" + mPostPageLoadedJavascript.replace("%", "%25"));
+                            }
                         }
                     }
                 },
