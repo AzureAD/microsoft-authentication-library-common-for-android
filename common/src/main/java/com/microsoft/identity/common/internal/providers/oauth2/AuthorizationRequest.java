@@ -22,8 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
+
+import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -35,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -99,13 +106,18 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     @SerializedName("claims")
     private String mClaims;
 
+    /**
+     * Version name of the installed Company Portal app.
+     * */
     @Expose()
-    @SerializedName("web_view_zoom_controls_enabled")
-    private boolean webViewZoomControlsEnabled;
+    @SerializedName("cpVersion")
+    private String mCpVersion;
 
     @Expose()
-    @SerializedName("web_view_zoom_enabled")
-    private boolean webViewZoomEnabled;
+    transient private boolean webViewZoomControlsEnabled;
+
+    @Expose()
+    transient private boolean webViewZoomEnabled;
 
     /**
      * Header of the request.
@@ -135,8 +147,9 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mExtraQueryParams = extraQueryParams;
         mClaims = builder.mClaims;
         mRequestHeaders = requestHeaders;
-        webViewZoomEnabled = builder.webViewZoomEnabled;
-        webViewZoomControlsEnabled = builder.webViewZoomControlsEnabled;
+        webViewZoomEnabled = builder.mWebViewZoomEnabled;
+        webViewZoomControlsEnabled = builder.mWebViewZoomControlsEnabled;
+        mCpVersion = builder.mCpVersion;
     }
 
     public static final class ResponseType {
@@ -151,8 +164,9 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mScope;
         private String mClaims;
         private HashMap<String, String> mRequestHeaders;
-        private boolean webViewZoomControlsEnabled;
-        private boolean webViewZoomEnabled;
+        private boolean mWebViewZoomControlsEnabled;
+        private boolean mWebViewZoomEnabled;
+        private String mCpVersion;
 
         /**
          * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
@@ -221,18 +235,30 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-        public B setRequestHeaders(HashMap<String, String> requestHeaders){
+        public B setRequestHeaders(HashMap<String, String> requestHeaders) {
             mRequestHeaders = requestHeaders;
             return self();
         }
 
         public Builder<B> setWebViewZoomEnabled(boolean webViewZoomEnabled) {
-            this.webViewZoomEnabled = webViewZoomEnabled;
+            mWebViewZoomEnabled = webViewZoomEnabled;
             return self();
         }
 
         public Builder<B> setWebViewZoomControlsEnabled(boolean webViewZoomControlsEnabled) {
-            this.webViewZoomControlsEnabled = webViewZoomControlsEnabled;
+            mWebViewZoomControlsEnabled = webViewZoomControlsEnabled;
+            return self();
+        }
+
+        public Builder<B> setCpInstallationDetail(final @NonNull Context context) {
+            try {
+                final PackageInfo packageInfo =
+                        context.getPackageManager().getPackageInfo(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME, 0);
+                mCpVersion = packageInfo.versionName;
+            } catch (final PackageManager.NameNotFoundException e) {
+                // CP is not installed. No need to do anything.
+            }
+
             return self();
         }
 
@@ -240,7 +266,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         @SuppressWarnings(WarningType.rawtype_warning)
         public abstract AuthorizationRequest build();
-
     }
 //
 //    /**
@@ -283,6 +308,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     public String getRedirectUri() {
         return mRedirectUri;
     }
+
     /**
      * @return mState of the authorization request.
      */

@@ -1,5 +1,8 @@
 vNext
 ----------
+
+- Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
+- Sends CP version to ESTS and handle WebCP uri. (#1137)
 - Check for eligible for caching when putting command in executing command map
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
