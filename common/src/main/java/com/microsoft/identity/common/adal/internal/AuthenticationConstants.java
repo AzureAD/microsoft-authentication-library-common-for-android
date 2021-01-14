@@ -976,45 +976,44 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMETER = ";";
 
         /**
-         * Apk packagename that will install AD-Authenticator. It is used to
-         * query if this app installed or not from package manager.
+         * Broker Host app package name.
          */
-        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
+        public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
-         * Signature info for Intune Company portal app that installs authenticator
-         * component.
-         */
-        public static final String COMPANY_PORTAL_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
-
-        /**
-         * Apk packagename that will install AD-Authenticator. It is used to
-         * query if this app installed or not from package manager.
-         */
-        public static final String COMPANY_PORTAL_PROD_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
-
-        /**
-         * Signature info for Intune Company portal app that installs authenticator
-         * component.
-         */
-        public static final String COMPANY_PORTAL_PROD_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_PROD_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
-
-        /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
-         */
-        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
-
-        /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
-         */
-        public static final String AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
-
-        /**
-         * Azure Authenticator app signature hash.
+         * Azure Authenticator app package name.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
+
+        /**
+         * Intune Company Portal app package name.
+         */
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Signature info for Intune Company portal app that installs authenticator
+         * component.
+         */
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
+
+        /**
+         * Signature info for Broker Host app that installs authenticator
+         * component.
+         */
+        public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
+
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.

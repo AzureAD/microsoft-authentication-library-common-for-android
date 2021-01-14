@@ -29,14 +29,63 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
+
 /**
  * Represents packageName and SignatureHash of a broker app.
  */
 public class BrokerData {
+
+    public static final BrokerData MICROSOFT_AUTHENTICATOR_DEBUG = new BrokerData(
+            AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+            AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE
+    );
+
+    public static final BrokerData MICROSOFT_AUTHENTICATOR_PROD = new BrokerData(
+            AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
+            AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE
+    );
+
+    public static final BrokerData COMPANY_PORTAL = new BrokerData(
+            COMPANY_PORTAL_APP_PACKAGE_NAME,
+            COMPANY_PORTAL_APP_RELEASE_SIGNATURE
+    );
+
+    public static final BrokerData BROKER_HOST = new BrokerData(
+            BROKER_HOST_APP_PACKAGE_NAME,
+            BROKER_HOST_APP_SIGNATURE
+    );
+
+    private static final Set<BrokerData> debugBrokers = new HashSet<BrokerData>() {{
+        add(MICROSOFT_AUTHENTICATOR_DEBUG);
+        add(BROKER_HOST);
+    }};
+
+    private static final Set<BrokerData> prodBrokers = new HashSet<BrokerData>() {{
+        add(MICROSOFT_AUTHENTICATOR_PROD);
+        add(COMPANY_PORTAL);
+    }};
+
+    private static final Set<BrokerData> allBrokers = new HashSet<BrokerData>() {{
+        addAll(debugBrokers);
+        addAll(prodBrokers);
+    }};
+
     public final String packageName;
     public final String signatureHash;
+    public int versionWithKeyMigrationViaAccountManager;
 
-    private BrokerData(String packageName, String hash) {
+    private BrokerData(@NonNull final String packageName,
+                       @NonNull final String hash) {
         this.packageName = packageName;
         this.signatureHash = hash;
     }
@@ -47,10 +96,22 @@ public class BrokerData {
      * @throws ClientException an exception containing mismatch signature hashes as its error message.
      */
     public static @NonNull BrokerData getBrokerDataForBrokerApp(@NonNull final Context context,
-                                                                @NonNull String brokerPackageName) throws ClientException {
+                                                                @NonNull final String brokerPackageName) throws ClientException {
 
         // Verify the signature to make sure that we're not binding to malicious apps.
         final BrokerValidator validator = new BrokerValidator(context);
         return new BrokerData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
+    }
+
+    public static Set<BrokerData> getProdBrokers() {
+        return prodBrokers;
+    }
+
+    public static Set<BrokerData> getDebugBrokers() {
+        return debugBrokers;
+    }
+
+    public static Set<BrokerData> getAllBrokers() {
+        return allBrokers;
     }
 }

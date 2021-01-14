@@ -36,6 +36,7 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.ClientException;
@@ -60,10 +61,21 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
+
+    private static boolean shouldTrustDebugBrokers = BuildConfig.DEBUG;
+
+    public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
+        BrokerValidator.shouldTrustDebugBrokers = shouldTrustDebugBrokers;
+    }
+
+    public static boolean getShouldTrustDebugBrokers() {
+        return shouldTrustDebugBrokers;
+    }
 
     private final Context mContext;
     private final String mCompanyPortalSignature;
@@ -133,6 +145,14 @@ public class BrokerValidator {
         return false;
     }
 
+    public Set<BrokerData> getValidBrokers() {
+        final Set<BrokerData> validBrokers = shouldTrustDebugBrokers
+                ? BrokerData.getAllBrokers()
+                : BrokerData.getProdBrokers();
+
+        return validBrokers;
+    }
+
     private String verifySignatureHash(final List<X509Certificate> certs) throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
 
@@ -148,13 +168,10 @@ public class BrokerValidator {
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
-            final String alternateSignatureCp = AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_SIGNATURE;
-            final String alternateSignatureAuthApp = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
-            if (mCompanyPortalSignature.equals(signatureHash)
-                    || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)
-                    || (!TextUtils.isEmpty(alternateSignatureCp) && alternateSignatureCp.equals(signatureHash))
-                    || (!TextUtils.isEmpty(alternateSignatureAuthApp) && alternateSignatureAuthApp.equals(signatureHash))) {
-                return signatureHash;
+            for (final BrokerData brokerData : getValidBrokers()) {
+                if (!TextUtils.isEmpty(brokerData.signatureHash) && brokerData.signatureHash.equals(signatureHash)) {
+                    return signatureHash;
+                }
             }
         }
 
@@ -247,7 +264,8 @@ public class BrokerValidator {
      *
      * @return String current active broker package name, null if no broker is available
      */
-    @Nullable public String getCurrentActiveBrokerPackageName() {
+    @Nullable
+    public String getCurrentActiveBrokerPackageName() {
         AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
