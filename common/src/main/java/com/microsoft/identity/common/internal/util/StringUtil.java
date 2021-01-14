@@ -230,6 +230,6 @@ public final class StringUtil {
      * @return
      */
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
-        return one == two || equalsIgnoreCase(one, two.trim());
+        return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
 }

@@ -129,6 +129,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable String realm,
                                                                 @Nullable String target,
                                                                 @Nullable String authScheme,
+                                                                @Nullable String requestedClaims,
                                                                 @NonNull List<Credential> allCredentials) {
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
@@ -139,6 +140,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
                 && !StringExtensions.isNullOrBlank(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
+        final boolean mustMatchOnRequestedClaims = !StringExtensions.isNullOrBlank(requestedClaims);
 
         Logger.verbose(
                 TAG,
@@ -153,6 +155,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                         + "Credential lookup filtered by credential type? [" + mustMatchOnCredentialType + "]"
                         + NEW_LINE
                         + "Credential lookup filtered by auth scheme? [" + mustMatchOnAuthScheme + "]"
+                        + NEW_LINE
+                        + "Credential lookup filtered by requested claims? [" + mustMatchOnRequestedClaims + "]"
         );
 
         final List<Credential> matchingCredentials = new ArrayList<>();
@@ -207,6 +211,15 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 }
 
                 matches = matches && authScheme.equalsIgnoreCase(atType);
+            }
+
+            if (mustMatchOnRequestedClaims) {
+                if (credential instanceof AccessTokenRecord) {
+                    final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
+                    matches = matches && equalsIgnoreCaseTrim(requestedClaims, accessToken.getRequestedClaims());
+                } else {
+                    Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
+                }
             }
 
             if (matches) {
