@@ -41,6 +41,7 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
 @EqualsAndHashCode(callSuper = true)
@@ -87,6 +88,11 @@ public class AccessTokenRecord extends Credential {
          * The claims string (if present) that was sent to server to produce this AT.
          */
         public static final String REQUESTED_CLAIMS = "requested_claims";
+
+        /**
+         * String of refresh_in.
+         */
+        public static final String REFRESH_ON = "refresh_on";
     }
 
     /**
@@ -145,6 +151,15 @@ public class AccessTokenRecord extends Credential {
      */
     @SerializedName(EXPIRES_ON)
     private String mExpiresOn;
+
+    /**
+     * Token recommended refresh time. This value should be calculated based on the current UTC time
+     * measured locally and the value refresh_in returned from the service. Measured in milliseconds from
+     * epoch (1970). Note that this value will not always be present, and is only a recommendation to
+     * kick off an async token refresh. The token is still valid until the expires_on value.
+     */
+    @SerializedName(REFRESH_ON)
+    private String mRefreshOn;
 
     /**
      * Gets the kid.
@@ -293,6 +308,24 @@ public class AccessTokenRecord extends Credential {
      */
     public void setExpiresOn(final String expiresOn) {
         mExpiresOn = expiresOn;
+    }
+
+    /**
+     * Gets the refresh_on timestamp.
+     *
+     * @return The refresh_on to get.
+     */
+    public String getRefreshOn() {
+        return mRefreshOn;
+    }
+
+    /**
+     * Sets the refresh_on timestamp.
+     *
+     * @param refreshOn The refresh_on to set.
+     */
+    public void setRefreshOn(final String refreshOn) {
+        mRefreshOn = refreshOn;
     }
 
     private boolean isExpired(final String expires) {

@@ -24,11 +24,12 @@ package com.microsoft.identity.common;
 
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 
 import java.util.Calendar;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AccessTokenTest {
 
@@ -36,7 +37,18 @@ public class AccessTokenTest {
     public void testExpiry() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setExpiresOn(getCurrentTimeStr());
-        Assert.assertTrue(accessToken.isExpired());
+        assertTrue(accessToken.isExpired());
+    }
+
+    @Test
+    public void testRefreshOn() {
+        // As refresh_on is only being implemented by MSAL C++ at the time of writing, I'm getting
+        // unused method warnings. This test is to shut the compiler up and exercise the getter/setter,
+        // without messing around with unrelated tests
+
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setRefreshOn("TestValue");
+        assertEquals("TestValue", accessToken.getRefreshOn());
     }
 
     private String getCurrentTimeStr() {
