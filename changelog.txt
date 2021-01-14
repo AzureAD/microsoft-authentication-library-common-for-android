@@ -10,6 +10,7 @@ vNext
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
 - Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
+- Changes to Broker Validation to allow setting whether to trust debug brokers (prod brokers are always trusted).
 
 Version 3.0.8
 ----------
