@@ -70,6 +70,9 @@ public class BrokerValidator {
     private static boolean shouldTrustDebugBrokers = BuildConfig.DEBUG;
 
     public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
+        if (!BuildConfig.DEBUG && shouldTrustDebugBrokers) {
+            Logger.warn(TAG, "You are forcing to trust debug brokers in non-debug builds.");
+        }
         BrokerValidator.shouldTrustDebugBrokers = shouldTrustDebugBrokers;
     }
 
