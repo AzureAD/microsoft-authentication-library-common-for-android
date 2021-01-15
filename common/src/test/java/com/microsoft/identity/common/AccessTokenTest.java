@@ -28,8 +28,8 @@ import org.junit.Test;
 
 import java.util.Calendar;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class AccessTokenTest {
 
@@ -41,14 +41,16 @@ public class AccessTokenTest {
     }
 
     @Test
-    public void testRefreshOn() {
-        // As refresh_on is only being implemented by MSAL C++ at the time of writing, I'm getting
-        // unused method warnings. This test is to shut the compiler up and exercise the getter/setter,
-        // without messing around with unrelated tests
-
+    public void testShouldRefreshWhenSet() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
-        accessToken.setRefreshOn("TestValue");
-        assertEquals("TestValue", accessToken.getRefreshOn());
+        accessToken.setRefreshOn(getCurrentTimeStr());
+        assertTrue(accessToken.shouldRefresh());
+    }
+
+    @Test
+    public void testShouldRefreshWhenNotSet() {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        assertFalse(accessToken.shouldRefresh());
     }
 
     private String getCurrentTimeStr() {

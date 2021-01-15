@@ -344,4 +344,23 @@ public class AccessTokenRecord extends Credential {
     public boolean isExpired() {
         return isExpired(getExpiresOn());
     }
+
+    /**
+     * If the AT has a refresh_on timestamp (typically used for LLT's),
+     * this function will return true after the server recommended refresh
+     * interval has elapsed, prompting the library to kick off a background refresh operation.
+     *
+     * If the AT does NOT have a refresh_on timestamp, this function will always
+     * return false. Fallback to standard token expiration/refresh logic.
+     *
+     * @return Should the library kick off a background token refresh operation for this token
+     * after returning the token to the caller.
+     */
+    public boolean shouldRefresh() {
+        final String refreshOn = getRefreshOn();
+        if(refreshOn != null && !refreshOn.isEmpty()) {
+            return isExpired(refreshOn);
+        }
+        return false;
+    }
 }
