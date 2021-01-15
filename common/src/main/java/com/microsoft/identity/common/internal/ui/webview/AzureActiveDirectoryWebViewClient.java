@@ -38,6 +38,7 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -165,10 +166,17 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else if (isWebCpUrl(formattedURL)) {
             Logger.info(TAG, "It is a request from WebCP");
             return processWebCpRequest(view, url);
+        } else if (isPlayStoreUrl(formattedURL)){
+            Logger.info(TAG, "Request to open PlayStore");
+            return processPlayStoreURL(view, url);
         } else {
             Logger.info(TAG, "It is an invalid redirect uri.");
             return processInvalidUrl(view, url);
         }
+    }
+
+    private boolean isPlayStoreUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX);
     }
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
@@ -280,6 +288,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return true;
     }
 
+    private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
+        final String methodName = "#processPlayStoreURL";
+        view.stopLoading();
+        if (!(url.contains(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME)) && !(url.contains(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
+            return false;
+        }
+        final String appPackageName = (url.contains(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME) ?
+                COMPANY_PORTAL_PROD_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        Logger.verbose(TAG + methodName, "Request to open PlayStore.");
+
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX + appPackageName));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            getActivity().startActivity(intent);
+            return true;
+        } catch (android.content.ActivityNotFoundException e) {
+            //if GooglePlay is not present on the device.
+            Logger.error(TAG + methodName, "Failed to launch the PlayStore.", e);
+        }
+
+        return true;
+    }
+
     private void launchCompanyPortal(){
         final String methodName = "#launchCompanyPortal";
 
@@ -385,6 +416,11 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
         if ("about:blank".equals(lowerCaseUrl)) {
             Logger.verbose(TAG, "It is an blank page request");
+            return true;
+        }
+
+        if(url.startsWith("microsoft-authenticator://activateMfa")){
+            Logger.verbose(TAG, "Linking Account in Broker for MFA");
             return true;
         }
 

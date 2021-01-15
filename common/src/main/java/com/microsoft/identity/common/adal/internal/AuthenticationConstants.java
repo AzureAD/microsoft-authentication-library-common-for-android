@@ -1170,6 +1170,16 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_SSL_PREFIX = "https://";
 
         /**
+         * Prefix in the redirect for PlayStore.
+         */
+        public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";
+
+        /**
+         * Prefix in the redirect for PlayStore through Browser.
+         */
+        public static final String PLAY_STORE_BROWSER_INSTALL_PREFIX = REDIRECT_SSL_PREFIX + "play.google.com/store/apps/details?id=";
+
+        /**
          * String for expiration buffer.
          * Integer for token expiration buffer. see {@link AuthenticationSettings#mExpirationBuffer}
          */
