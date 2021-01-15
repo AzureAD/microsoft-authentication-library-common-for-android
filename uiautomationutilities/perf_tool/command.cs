@@ -94,15 +94,15 @@ namespace TestScript {
             List<string> htmlResult = new List<string>();
 
             List<string> jobInfoHtml = View.ResultInit();
-            jobInfoHtml.AddRange(View.InfoInit(jobID, deviceModel, OS, "command"));
+            jobInfoHtml.AddRange(View.InfoInit());
 
             List<Task> baseTasks = new List<Task>();
             baseTasks.Add(createTask(deviceModel, baseBuild, appName, jobID, baseJobArtifactURL));
 
             List<Task> targetTasks = new List<Task>();
-            targetTasks.Add(createTask(deviceModel, targetBuild, appName, jobID, "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + jobID + targetJobArtifactURL));
+            targetTasks.Add(createTask(deviceModel, targetBuild, appName, jobID, targetJobArtifactURL));
 
-            jobInfoHtml.Add(View.CreateAppInfoTable(baseTasks, targetTasks, appName));
+            jobInfoHtml.Add(View.CreateAppInfoTable(baseTasks, targetTasks, appName, deviceModel, OS));
 
             List<Parameter> updatedParameters = new List<Parameter>();
 
@@ -162,12 +162,11 @@ namespace TestScript {
                 activeScenarios.Add(key);
             }
             updatedParameters.Add(task);
-            
 
             htmlResult.Add(View.CreateTableHtml(updatedParameters, primaryMeasurements, secondaryMeasurements,
-                                        heading, activeScenarios, activeMeasurements));
+                                        heading, activeScenarios, activeMeasurements, jobID));
 
-            jobInfoHtml.Add(View.EndofJob());
+            jobInfoHtml.Add(View.EndofJobDetailsTable());
             jobInfoHtml.AddRange(htmlResult);
             jobInfoHtml.Add(View.BuildEndOfHTML());
 

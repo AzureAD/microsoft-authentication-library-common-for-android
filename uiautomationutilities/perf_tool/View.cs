@@ -47,13 +47,13 @@ namespace PerfDiffResultMailer
         }
 
         internal static string CreateTableHtml(List<Parameter> parameters, HashSet<string> primaryMeasurements, HashSet<string> secondaryMeasurements,
-            string[] heading, HashSet<string> activeScenarios, HashSet<string> activeM)
+            string[] heading, HashSet<string> activeScenarios, HashSet<string> activeM, string jobId)
         {
             StringBuilder htmlBuilder = new StringBuilder();
             // int columns = (parameters.Count * (3)) + 1;
             int columns = (parameters.Count * (3)) + 2;
             htmlBuilder.Append("<table class=\"table\">");
-            htmlBuilder.Append(CreateTableHeader(columns, parameters, heading));
+            htmlBuilder.Append(CreateTableHeader(columns, parameters, heading, jobId));
             //htmlBuilder.Append(DiffTableHTML(parameters, "grey", primaryScenarios,activeScenarios,activeM));
             //htmlBuilder.Append(DiffTableHTML(parameters, "lightgrey", secondaryScenarios, activeScenarios,activeM));
             htmlBuilder.Append(DiffTableHTML1(parameters, "grey", activeScenarios, primaryMeasurements, secondaryMeasurements));
@@ -153,11 +153,11 @@ namespace PerfDiffResultMailer
             return htmlBuilder.ToString();
         }
 
-        internal static string EndofJob()
+        internal static string EndofJobDetailsTable()
         {
             StringBuilder htmlBuilder = new StringBuilder();
             htmlBuilder.Append("</table>");
-            htmlBuilder.Append("<br><br>");
+            htmlBuilder.Append("<br>");
             return htmlBuilder.ToString();
         }
 
@@ -194,14 +194,15 @@ namespace PerfDiffResultMailer
         private static string GetTaskInfoTable(List<Task> tasks, string color)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-            bool start = true;
+            //bool start = true;
+            htmlBuilder.Append("<table cellspacing=\"0\" cellpadding=\"0\">");
             foreach (Task task in tasks)
             {
-                if (!start)
-                {
+                //if (!start)
+                //{
                     htmlBuilder.Append("<tr>");
-                }
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "<a href=\"" + task.LogsDir + "\"><u> (" + task.Checkpoint + ") </u></a></td>");
+                //}
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;border: none;\">" + "<a href=\"" + task.LogsDir + "\"><u> (" + task.Checkpoint + ") </u></a></td>");
                // htmlBuilder.Append("<td  align=\"center\" style=\"padding-left:5px; padding-right:5px;\">" + task.Device + " - "+task.AndroidVersion + "</td>");
                 //htmlBuilder.Append("<td style=\"padding-left:7px; padding-right:7px;\">" + task.ApkPath + "</td>");
                 string featuregateoverrides = "";
@@ -212,54 +213,63 @@ namespace PerfDiffResultMailer
                 featuregateoverrides = featuregateoverrides.TrimEnd(',',' ');
                 //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + ((featuregateoverrides.Length==0)?"-":featuregateoverrides) + "</td>");
                 htmlBuilder.Append("</tr>");
-                start = false;
+                //start = false;
             }
+            htmlBuilder.Append("</table>");
             return htmlBuilder.ToString();
         }
 
-        public static string CreateAppInfoTable(List<Task> baseTasks, List<Task> targetTasks, string app)
+        public static string CreateAppInfoTable(List<Task> baseTasks, List<Task> targetTasks, string app, string deviceModel, string OS)
         {
             StringBuilder htmlBuilder = new StringBuilder();
            
             htmlBuilder.Append("<tr>");
-            htmlBuilder.Append("<td style=\"font-weight:bold\" style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + (baseTasks.Count + targetTasks.Count) + "\" class=\"blue\">" + app + "</td>");
-            htmlBuilder.Append("<td  style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + baseTasks.Count + "\">" + "Base Tasks" + "</td>");
+            htmlBuilder.Append("<td style=\"font-weight:bold\" style=\"padding-left:5px; padding-right:5px;\" align=\"left\" class=\"blue\">" + app + "</td>");
+            htmlBuilder.Append("<td style=\"font-weight:bold\" style=\"padding-left:5px; padding-right:5px;\" align=\"left\" class=\"blue\">" + deviceModel + " with " + OS + "</td>");
+            //htmlBuilder.Append("<td  style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + baseTasks.Count + "\">" + "Base Tasks" + "</td>");
+            htmlBuilder.Append("<td>");
             htmlBuilder.Append(GetTaskInfoTable(baseTasks, "blue"));
-            htmlBuilder.Append("<tr><td  style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + targetTasks.Count + "\">" + "Target Tasks" + "</td>");
+            htmlBuilder.Append("</td>");
+            //htmlBuilder.Append("<tr><td  style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + targetTasks.Count + "\">" + "Target Tasks" + "</td>");
+            htmlBuilder.Append("<td>");
             htmlBuilder.Append(GetTaskInfoTable(targetTasks, ""));
+            htmlBuilder.Append("</td>");
             return htmlBuilder.ToString();
         }
 
-        private static string CreateTableHeader(int columns, List<Parameter> parameters, string[] heading)
+        private static string CreateTableHeader(int columns, List<Parameter> parameters, string[] heading, string jobId)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-            htmlBuilder.Append("<thead><tr class=\"pink\" style=\"font-weight:bold\"><td colspan=\"" + columns + "\" align=\"center\">" + heading[0] + "</td></tr></thead>");//PerfCLRuns
-            htmlBuilder.Append("<thead><tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + columns + "\" align=\"center\">" + heading[1] + "</td></tr></thead>");//AppName
-            htmlBuilder.Append("<tr class=\"yellow\" style=\"font-weight:bold\"><td colspan=\"" + /*1*/2 + "\" align=\"center\">" + heading[2] + "</td>");
+            //htmlBuilder.Append("<thead><tr class=\"pink\" style=\"font-weight:bold\"><td colspan=\"" + columns + "\" align=\"center\">" + heading[0] + "</td></tr></thead>");//PerfCLRuns
+            //htmlBuilder.Append("<thead><tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + columns + "\" align=\"center\">" + heading[1] + "</td></tr></thead>");//AppName
+            htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + /*1*/2 + "\" align=\"center\">" + "Perf Run on "+ jobId + "</td>");
             foreach (var parameter in parameters)
             {
                 htmlBuilder.Append("<td colspan=\"" + 3 + "\" align=\"center\" class=\"" + parameter.Color + "\">" + parameter.Name + "</td>"); //add indivdual colors
             }
             htmlBuilder.Append("</tr>");
-            htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\">"); // checkpoints
-            htmlBuilder.Append("<td colspan=\"" + /*1*/2 + "\"align=\"center\"> Checkpoint </td>");
+            //htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\">"); // checkpoints
+            //htmlBuilder.Append("<td colspan=\"" + /*1*/2 + "\"align=\"center\"> Checkpoint </td>");
             foreach (var parameter in parameters)
             {
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.BaseLogDir + "\">" + parameter.BaseCheckpoint + "</a></td>");
+                /*htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.BaseLogDir + "\">" + parameter.BaseCheckpoint + "</a></td>");
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.TargetLogDir + "\">" + parameter.TargetCheckPoint + "</a></td>");
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "Difference" + "</td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "Difference" + "</td>");*/
             }
-            htmlBuilder.Append("</tr>");
+            //htmlBuilder.Append("</tr>");
             htmlBuilder.Append("<tr class=\"yellow\" style=\"font-weight:bold\">"); // Scenario / Measurement Name
             htmlBuilder.Append("<td colspan=\"" + 1 + "\"align=\"center\"> Scenario Name </td>");
             htmlBuilder.Append("<td colspan=\"" + 1 + "\"align=\"center\"> Measurement Name </td>");
             foreach (var parameter in parameters)
             {
-                htmlBuilder.Append("<td align=\"middle\">");
+                /*htmlBuilder.Append("<td align=\"middle\">");
                 htmlBuilder.Append("<a href=\"" + parameter.BaseLogDir + "\"><u> " + parameter.BaseLogId + " </u></a> </td>");
                 htmlBuilder.Append("<td align=\"middle\">");
                 htmlBuilder.Append("<a href=\"" + parameter.TargetLogDir + "\"><u> " + parameter.TargetLogId + " </u></a> </td>");
-                htmlBuilder.Append("<td>" + "</td>");
+                htmlBuilder.Append("<td>" + "</td>");*/
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.BaseLogDir + "\">" + parameter.BaseCheckpoint + "</a></td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.TargetLogDir + "\">" + parameter.TargetCheckPoint + "</a></td>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "Difference" + "</td>");
             }
             htmlBuilder.Append("</tr>");
             return htmlBuilder.ToString();
@@ -349,7 +359,7 @@ namespace PerfDiffResultMailer
             result.Add(BuildHeaderofHTML());
             return result;
         }
-        public static List<string> InfoInit(string id,string device,string os,string commandLine)
+        public static List<string> InfoInit()
         {
             List<string> info = new List<string>();
            /* info.Add("<p><font color=\"red\" size=\"+2\"><bold>Command Line<bold></font></p>");
@@ -369,9 +379,10 @@ namespace PerfDiffResultMailer
             //info.Add("<font><bold>"+commandLine+"<bold></font>");
             htmlBuilder.Append("<table class=\"table\">");
             htmlBuilder.Append("<tr class=\"pink\" style=\"font-weight:bold\"  align=\"center\">");
-            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + id + "</td>");
-            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + device +" | "+os+"</td>");
-            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Checkpoint</td>");
+            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Target Application</td>");
+            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Device Configuration</td>");
+            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Base Build</td>");
+            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Target Build</td>");
             //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Device</td>");
             //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">ApkPaths</td>");
             //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">FeatureGate Overrides</td>");
