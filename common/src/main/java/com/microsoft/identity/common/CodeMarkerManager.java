@@ -34,76 +34,80 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * A utility which collects any event's information given by calling markCode on such event(s).
+ * These events can be retrieved in csv format by calling method getFileContent.
+ * The event is recognized by a string marker which is prefixed with scenario code.
+ * MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
+ */
 public class CodeMarkerManager {
 
-    private static boolean enableCodeMarker = false;
-    private static int MAX_SIZE_CODE_MARKER = 1000;
-    private static volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
-    private static long baseMilliSeconds = 0;
-    private static String scenarioCode = "";
+    private boolean enableCodeMarker = false;
+    private int MAX_SIZE_CODE_MARKER = 1000;
+    private volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
 
-    public static void setPrefixScenarioCode(String scenarioCode) {
-        CodeMarkerManager.scenarioCode = scenarioCode;
+    //baseMilliSeconds is the time in milliseconds when first codemarker was captured.
+    private long baseMilliSeconds = 0;
+    private String scenarioCode = null;
+    private static CodeMarkerManager instance = null;
+
+    public static CodeMarkerManager getInstance() {
+        if(CodeMarkerManager.instance == null) {
+            synchronized (CodeMarkerManager.class) {
+                if(CodeMarkerManager.instance == null) {
+                    CodeMarkerManager.instance = new CodeMarkerManager();
+                }
+            }
+        }
+        return CodeMarkerManager.instance;
     }
 
-    public static void markCode(String marker) {
-        if(enableCodeMarker) {
-            if(codeMarkers.size() >= MAX_SIZE_CODE_MARKER) {
+    private CodeMarkerManager() {
+    }
+
+    public void setPrefixScenarioCode(String scenarioCode) {
+        this.scenarioCode = scenarioCode;
+    }
+
+    public void markCode(String marker) {
+        if(this.enableCodeMarker) {
+            if(this.codeMarkers.size() >= MAX_SIZE_CODE_MARKER) {
                 clearMarkers();
             }
             long currentMilliSeconds = System.currentTimeMillis();
-            if (codeMarkers.size() == 0) {
-                baseMilliSeconds = currentMilliSeconds;
+            if (this.codeMarkers.size() == 0) {
+                this.baseMilliSeconds = currentMilliSeconds;
             }
             SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-            codeMarkers.add(new CodeMarker(scenarioCode + marker, currentMilliSeconds - baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
+            this.codeMarkers.add(new CodeMarker((this.scenarioCode == null ? "" : this.scenarioCode) + marker, currentMilliSeconds - this.baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
         }
     }
 
-    public static void setEnableCodeMarker(boolean enableCodeMarker) {
-        CodeMarkerManager.enableCodeMarker = enableCodeMarker;
+    public void setEnableCodeMarker(boolean enableCodeMarker) {
+        this.enableCodeMarker = enableCodeMarker;
     }
 
-    public static void clearMarkers(){
-        codeMarkers.clear();
+    public void clearMarkers(){
+        this.codeMarkers.clear();
     }
 
-    public static void clearAll() {
-        codeMarkers.clear();
-        CodeMarkerManager.scenarioCode = "";
+    public void clearAll() {
+        this.codeMarkers.clear();
+        this.scenarioCode = null;
     }
 
-    public static void writeToFile(final String fileName) {
-        String stringToWrite = getFileContent();
-        File file = Environment.getExternalStorageDirectory();
-        String strFilePath = file.getAbsolutePath() + "/" + fileName;
-        try {
-            FileOutputStream fileOutputStream = new FileOutputStream(strFilePath);
-            FileWriter fileWriter = new FileWriter(fileOutputStream.getFD());
-            fileWriter.write(stringToWrite);
-            fileWriter.close();
-            fileOutputStream.getFD().sync();
-            fileOutputStream.close();
-            System.out.println("Test");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+    public String getFileContent() {
+        StringBuilder stringToWrite = new StringBuilder("TimeStamp,Marker,Time,Thread,CpuUsed,CpuTotal,ResidentSize,VirtualSize,WifiSent,WifiRecv,WwanSent,WwanRecv,AppSent,AppRecv,Battery,SystemDiskRead,SystemDiskWrite");
 
-    public static String getFileContent() {
-        String stringToWrite = "TimeStamp,Marker,Time,Thread,CpuUsed,CpuTotal,ResidentSize,VirtualSize,WifiSent,WifiRecv,WwanSent,WwanRecv,AppSent,AppRecv,Battery,SystemDiskRead,SystemDiskWrite";
-
-        for(CodeMarker codeMarker : codeMarkers) {
+        for(CodeMarker codeMarker : this.codeMarkers) {
             StringBuilder thisLine = new StringBuilder();
             thisLine.append("\n").append(codeMarker.getTimeStamp())
                     .append(",").append(codeMarker.getMarker())
                     .append(",").append(codeMarker.getTimeInMilliseconds())
                     .append(",").append(codeMarker.getThreadId())
                     .append(",").append(",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA");
-            stringToWrite += thisLine.toString();
+            stringToWrite.append(thisLine.toString());
         }
-        return stringToWrite;
+        return stringToWrite.toString();
     }
 }

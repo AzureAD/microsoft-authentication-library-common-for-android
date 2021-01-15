@@ -27,8 +27,7 @@ import android.util.Log;
 import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
 /**
- * A log formatter that formats logs into a single string following the same format as used by the
- * the Android {@link Log} utility.
+ * A log formatter that returns a string as it is without adding any additional logging parameters.
  */
 public class SimpleTextFormatter implements ILogFormatter {
 

@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common;
 
+/**
+ * A Plain Object class containing information of a code marker which is an event in code.
+ * marker is a string which is prefixed by scenario code and is defined in class CodeMarkersConstants.
+ */
 public class CodeMarker {
 
     private String marker;
@@ -31,7 +35,7 @@ public class CodeMarker {
     private String timeStamp;
     private long threadId;
 
-    public CodeMarker(String marker, long timeInMilliseconds, String timeStamp, long id) {
+    public CodeMarker(final String marker, final long timeInMilliseconds, final String timeStamp, final long id) {
         this.marker = marker;
         this.timeInMilliseconds = timeInMilliseconds;
         this.timeStamp = timeStamp;

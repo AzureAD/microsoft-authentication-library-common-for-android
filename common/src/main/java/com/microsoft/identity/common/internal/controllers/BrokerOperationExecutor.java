@@ -128,9 +128,9 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
-                CodeMarkerManager.markCode(CodeMarkersConstants.BROKER_PROCESS_START);
+                CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.BROKER_PROCESS_START);
                 final U result = performStrategy(strategy, operation);
-                CodeMarkerManager.markCode(CodeMarkersConstants.BROKER_PROCESS_END);
+                CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.BROKER_PROCESS_END);
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {
