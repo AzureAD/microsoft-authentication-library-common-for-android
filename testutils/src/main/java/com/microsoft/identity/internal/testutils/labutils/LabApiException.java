@@ -20,33 +20,31 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
+package com.microsoft.identity.internal.testutils.labutils;
 
-import java.util.concurrent.TimeUnit;
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.internal.test.labapi.ApiException;
+
+import java.util.List;
+import java.util.Map;
+
+import lombok.Getter;
 
 /**
- * Timeout values to be used with {@link TokenRequestLatch} to perform awaits.
+ * An exception wrapping the {@link ApiException}.
  */
-public enum TokenRequestTimeout {
+@Getter
+public class LabApiException extends Throwable {
 
-    SILENT(15, TimeUnit.SECONDS),
-    SHORT(30, TimeUnit.SECONDS),
-    MEDIUM(1, TimeUnit.MINUTES),
-    LONG(2, TimeUnit.MINUTES);
+    private int code = 0;
+    private Map<String, List<String>> responseHeaders = null;
+    private String responseBody = null;
 
-    private final long time;
-    private final TimeUnit timeUnit;
-
-    TokenRequestTimeout(long time, TimeUnit timeUnit) {
-        this.time = time;
-        this.timeUnit = timeUnit;
+    public LabApiException(@NonNull final ApiException apiException) {
+        this.code = apiException.getCode();
+        this.responseHeaders = apiException.getResponseHeaders();
+        this.responseBody = apiException.getResponseBody();
     }
 
-    public long getTime() {
-        return time;
-    }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
-    }
 }

@@ -20,33 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
-
-import java.util.concurrent.TimeUnit;
+package com.microsoft.identity.client.ui.automation.interaction;
 
 /**
- * Timeout values to be used with {@link TokenRequestLatch} to perform awaits.
+ * Interface for handling user interaction in an interactive acquire token request.
  */
-public enum TokenRequestTimeout {
+public interface OnInteractionRequired {
 
-    SILENT(15, TimeUnit.SECONDS),
-    SHORT(30, TimeUnit.SECONDS),
-    MEDIUM(1, TimeUnit.MINUTES),
-    LONG(2, TimeUnit.MINUTES);
-
-    private final long time;
-    private final TimeUnit timeUnit;
-
-    TokenRequestTimeout(long time, TimeUnit timeUnit) {
-        this.time = time;
-        this.timeUnit = timeUnit;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
-    }
+    /**
+     * A callback that will be invoked after calling an interactive acquire token method.
+     * This method is supposed to implement behaviour for handling user interaction.
+     */
+    void handleUserInteraction();
 }

@@ -20,34 +20,33 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.client.ui.automation.sdk;
 
-public final class HttpConstants {
+import androidx.annotation.NonNull;
 
-    /**
-     * HTTP header fields.
-     */
-    public static final class HeaderField {
+import com.microsoft.identity.client.ui.automation.TokenRequestTimeout;
+import com.microsoft.identity.client.ui.automation.interaction.OnInteractionRequired;
 
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc1945#appendix-D.2.1">RFC-1945</a>
-         */
-        public static final String ACCEPT = "Accept";
+/**
+ * An interface describing methods of acquire token. Implementing this interface
+ * on a test facilitates specifying the necessary parameters required to acquire
+ * token either interactively or silently.
+ */
 
-        /**
-         * @see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">RFC-2616</a>
-         */
-        public static final String CONTENT_TYPE = "Content-Type";
-    }
+public interface IAuthSdk<T extends AuthTestParams> {
 
     /**
-     * Identifiers for file formats and format contents.
+     * Get the token interactively that can be used to access resources.
+     *
+     * @return A resultant token or an exception occurred while acquiring token interactively
      */
-    public static final class MediaType {
+    AuthResult acquireTokenInteractive(@NonNull final T authTestParams,
+                                       final OnInteractionRequired interactionRequiredCallback, @NonNull final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
 
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
-         */
-        public static final String APPLICATION_JSON = "application/json";
-    }
+    /**
+     * Get the token silently that can be used to access resources.
+     *
+     * @return A resultant token or an exception occurred while acquiring token silently
+     */
+    AuthResult acquireTokenSilent(@NonNull final T authTestParams, @NonNull final TokenRequestTimeout tokenRequestTimeout) throws Throwable;
 }

@@ -143,26 +143,32 @@ public class CommandDispatcher {
 
         final Handler handler = new Handler(Looper.getMainLooper());
         synchronized (mapAccessLock) {
-            FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
+            final FinalizableResultFuture<CommandResult> finalFuture;
+            if (command.isEligibleForCaching()) {
+                FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
 
-            if (null == future) {
-                future = new FinalizableResultFuture<>();
-                final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
+                if (null == future) {
+                    future = new FinalizableResultFuture<>();
+                    final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
 
-                if (null == putValue) {
-                    // our value was inserted.
-                    future.whenComplete(getCommandResultConsumer(command, handler));
+                    if (null == putValue) {
+                        // our value was inserted.
+                        future.whenComplete(getCommandResultConsumer(command, handler));
+                    } else {
+                        // Our value was not inserted, grab the one that was and hang a new listener off it
+                        putValue.whenComplete(getCommandResultConsumer(command, handler));
+                        return putValue;
+                    }
                 } else {
-                    // Our value was not inserted, grab the one that was and hang a new listener off it
-                    putValue.whenComplete(getCommandResultConsumer(command, handler));
-                    return putValue;
+                    future.whenComplete(getCommandResultConsumer(command, handler));
+                    return future;
                 }
-            } else {
-                future.whenComplete(getCommandResultConsumer(command, handler));
-                return future;
-            }
 
-            final FinalizableResultFuture<CommandResult> finalFuture = future;
+                finalFuture = future;
+            } else {
+                finalFuture = new FinalizableResultFuture<>();;
+                finalFuture.whenComplete(getCommandResultConsumer(command, handler));
+            }
 
             sSilentExecutor.execute(new Runnable() {
                 @Override
@@ -214,15 +220,17 @@ public class CommandDispatcher {
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
                         synchronized (mapAccessLock) {
-                            final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
-                            if (mapFuture == null) {
-                                // If this has happened, the command that we started with has mutated.  We will
-                                // examine every entry in the map, find the one with the same object identity
-                                // and remove it.
-                                // ADO:TODO:1153495 - Rekey this map with stable string keys.
-                                Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
-                                        + " the calling application was " + command.getParameters().getApplicationName(), null);
-                                cleanMap(command);
+                            if (command.isEligibleForCaching()) {
+                                final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                                if (mapFuture == null) {
+                                    // If this has happened, the command that we started with has mutated.  We will
+                                    // examine every entry in the map, find the one with the same object identity
+                                    // and remove it.
+                                    // ADO:TODO:1153495 - Rekey this map with stable string keys.
+                                    Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
+                                            + " the calling application was " + command.getParameters().getApplicationName(), null);
+                                    cleanMap(command);
+                                }
                             }
                             finalFuture.setCleanedUp();
                         }

@@ -159,4 +159,15 @@ public class CommonUtils {
         AdbShellUtils.executeShellCommand("mkdir -p " + destinationPath);
         AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
     }
+
+    /**
+     * Launches an activity specified by the action.
+     * @param action action is which operation to be performed.
+     */
+    public static void launchIntent(@NonNull final String action) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(action);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        context.startActivity(intent);
+    }
 }

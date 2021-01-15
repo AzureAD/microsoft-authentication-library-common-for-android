@@ -1006,6 +1006,12 @@ public final class AuthenticationConstants {
         public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
 
         /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
+
+        /**
          * Azure Authenticator app signature hash.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
@@ -1068,6 +1074,16 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_INSTALL_PREFIX = "msauth://";
 
         /**
+         * Prefix in the redirect from WebCP.
+         */
+        public static final String BROWSER_EXT_WEB_CP = "companyportal://";
+
+        /**
+         * Redirect URL from WebCP that should launch the Intune Company Portal app.
+         */
+        public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
+
+        /**
          * A query param indicating that this is an intune device CA link.
          */
         public static final String BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "&ismdmurl=1";
@@ -1075,7 +1091,7 @@ public final class AuthenticationConstants {
         /**
          * Activity name to launch company portal.
          */
-        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME + ".views.SplashActivity";
 
         /**
          * Redirect URI parameter key to get link to install broker
@@ -1473,7 +1489,7 @@ public final class AuthenticationConstants {
 
         public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
-        public static final String POST_PAGE_LOADED_URL = "com.microsoft.identity.post.page.loaded.url";
+        public static final String POST_PAGE_LOADED_JAVASCRIPT = "com.microsoft.identity.post.page.loaded.javascript";
 
         public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
 

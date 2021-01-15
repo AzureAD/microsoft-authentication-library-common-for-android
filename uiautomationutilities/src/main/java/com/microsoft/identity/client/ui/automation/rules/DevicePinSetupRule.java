@@ -20,62 +20,61 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.device.settings;
+package com.microsoft.identity.client.ui.automation.rules;
 
-import android.content.ComponentName;
+import android.app.KeyguardManager;
 import android.content.Context;
-import android.content.Intent;
+import android.os.Build;
 import android.provider.Settings;
 
-import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.TestContext;
+import com.microsoft.identity.client.ui.automation.device.settings.BaseSettings;
+import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
 
-public abstract class BaseSettings implements ISettings {
+/**
+ * A test rule that allows you to setup PIN for the device if the pin is not setup and
+ * if it is already setup then it will keep the same PIN.
+ */
+public class DevicePinSetupRule implements TestRule {
 
-    final static String SETTINGS_PKG = "com.android.settings";
+    static final String PIN = "1234";
 
     @Override
-    public void launchDeviceAdminSettingsPage() {
-        final Intent intent = new Intent();
-        intent.setComponent(new ComponentName(
-                SETTINGS_PKG,
-                SETTINGS_PKG + ".DeviceAdminSettings")
-        );
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+    public Statement apply(final Statement base, final Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                if (!isDeviceSecured()) {
+                    TestContext.getTestContext().getTestDevice().getSettings().setPinOnDevice(PIN);
+                }
+                base.evaluate();
+            }
+        };
+    }
+
+
+    private boolean isDeviceSecured() {
         final Context context = ApplicationProvider.getApplicationContext();
-        context.startActivity(intent);
-
-        final UiObject deviceAdminPage = UiAutomatorUtils.obtainUiObjectWithText("device admin");
-        Assert.assertTrue("Device Admin Settings Page appears", deviceAdminPage.exists());
+        final KeyguardManager keyguardManager =
+                (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return keyguardManager.isDeviceSecure();
+        }
+        return keyguardManager.isKeyguardSecure();
     }
 
-    @Override
-    public void launchAddAccountPage() {
-        launchIntent(Settings.ACTION_ADD_ACCOUNT);
-    }
-
-    @Override
-    public void launchAccountListPage() {
-        launchIntent(Settings.ACTION_SYNC_SETTINGS);
-    }
-
-    @Override
-    public void launchDateTimeSettingsPage() {
-        launchIntent(Settings.ACTION_DATE_SETTINGS);
-    }
-
-    @Override
-    public void launchScreenLockPage() {
-        launchIntent(Settings.ACTION_SECURITY_SETTINGS);
-    }
 }
