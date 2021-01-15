@@ -130,13 +130,12 @@ public class MsalCppOAuth2TokenCache
                 refreshTokenRecord = (RefreshTokenRecord) credential;
             }
 
-            if (credential instanceof AccessTokenRecord) {
-                if (!isAccessTokenSchemaCompliant((AccessTokenRecord) credential)) {
-                    throw new ClientException(
-                            CREDENTIAL_IS_SCHEMA_NONCOMPLIANT,
-                            "AT is missing a required property."
-                    );
-                }
+            if (credential instanceof AccessTokenRecord
+                    && !isAccessTokenSchemaCompliant((AccessTokenRecord) credential)) {
+                throw new ClientException(
+                        CREDENTIAL_IS_SCHEMA_NONCOMPLIANT,
+                        "AT is missing a required property."
+                );
             }
         }
 
