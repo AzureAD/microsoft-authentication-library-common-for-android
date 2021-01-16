@@ -25,8 +25,8 @@ package com.microsoft.identity.client.ui.automation.broker;
 import android.Manifest;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,7 +41,6 @@ import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
-import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -201,42 +200,47 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
         try {
             // select Help from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Help");
+            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Send Feedback");
             settings.click();
 
-            // scroll down the recycler view to find Send logs btn
-            final UiObject sendLogs = UiAutomatorUtils.obtainChildInScrollable(
-                    android.widget.ScrollView.class,
-                    "Send logs"
+            final UiObject sendLogs = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
+                    Button.class,
+                    "Having trouble?Report it"
             );
 
-            assert sendLogs != null;
+            Assert.assertTrue(sendLogs.exists());
 
             // click the send logs button
             sendLogs.click();
 
-            final UiObject sendLogMsgField = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
-                    EditText.class,
-                    1
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Select an option");
+
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Other");
+
+            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                    "Please don't include your name, phone number, or other personal information.",
+                    EditText.class
             );
 
-            sendLogMsgField.setText("Broker Automation Incident");
+            describeIssueBox.setText("Broker Automation Incident");
 
-            final UiObject sendBtn = UiAutomatorUtils.obtainEnabledUiObjectWithExactText(
-                    "SEND"
-            );
+            final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
             sendBtn.click();
 
-            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
-                    TextView.class,
-                    3
+            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "android:id/parentPanel"
             );
 
             Assert.assertTrue(postLogSubmissionMsg.exists());
 
+            final UiObject incidentDetails = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
+            Assert.assertTrue(incidentDetails.exists());
+
+            final String incidentIdText = incidentDetails.getText();
+
             // This will post the incident id in text logs
-            Log.w(TAG, postLogSubmissionMsg.getText());
-        } catch (UiObjectNotFoundException e) {
+            Log.w(TAG, incidentIdText);
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
     }
