@@ -22,59 +22,59 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.app.KeyguardManager;
-import android.content.Context;
-import android.os.Build;
-import android.provider.Settings;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
-
 import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.device.settings.BaseSettings;
-import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
+import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
+import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.device.TestDevice;
 
-import org.junit.Assert;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
-import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
-
 /**
- * A test rule that allows you to setup PIN for the device if the pin is not setup and
- * if it is already setup then it will keep the same PIN.
+ * A test rule that allows you to either set a PIN on the device or remove an existing PIN from the
+ * device based on the nature of the test case i.e. based on the broker being used in the test.
+ * <p>
+ * If the test is using Authenticator app then we would just remove the PIN from the device because
+ * if the device has a PIN then Authenticator turns on App Lock and some dialogs pop up when you
+ * launch Authenticator in such case and it is very complex to handle that UI during automation and
+ * we are better off not handling that UI in the first place by ensuring that the device doesn't
+ * have a lock.
+ * <p>
+ * If the test is using Company Portal then we would set a PIN on the device because some test cases
+ * exercise conditional policies to require a PIN to be set on the device. Instead of setting it
+ * within the test case when such a need arises, we would rather just set it here in the rule prior
+ * to starting the test because it just keeps test code much simpler and cleaner.
+ * <p>
+ * If the test is using Broker Host then we really don't care as the test code is not affected by
+ * whether there is a PIN on the device or not.
  */
 public class DevicePinSetupRule implements TestRule {
 
     static final String PIN = "1234";
+
+    private final ITestBroker mBroker;
+
+    public DevicePinSetupRule(final ITestBroker broker) {
+        this.mBroker = broker;
+    }
 
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                if (!isDeviceSecured()) {
-                    TestContext.getTestContext().getTestDevice().getSettings().setPinOnDevice(PIN);
-                }
+                final TestDevice device = TestContext.getTestContext().getTestDevice();
+                if (mBroker instanceof BrokerCompanyPortal && !device.isSecured()) {
+                    device.setPin(PIN);
+                } else if (mBroker instanceof BrokerMicrosoftAuthenticator && device.isSecured()) {
+                    device.removePin(PIN);
+                } // for BrokerHost it doesn't really matter (at least not yet)
+
                 base.evaluate();
             }
         };
-    }
-
-
-    private boolean isDeviceSecured() {
-        final Context context = ApplicationProvider.getApplicationContext();
-        final KeyguardManager keyguardManager =
-                (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            return keyguardManager.isDeviceSecure();
-        }
-        return keyguardManager.isKeyguardSecure();
     }
 
 }
