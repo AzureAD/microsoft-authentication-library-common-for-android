@@ -23,6 +23,8 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 
 android {
 
+    /*
+    //Commenting out until the next major version of common/msal/etc...
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
@@ -30,6 +32,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    */
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
@@ -124,8 +127,9 @@ android {
 }
 
 dependencies {
+    //Commenting out until the next major version of common/msal/etc...
     //Java 8 - Desugaring
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+    //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
