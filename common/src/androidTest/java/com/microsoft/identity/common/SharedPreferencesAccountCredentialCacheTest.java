@@ -1166,6 +1166,160 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     }
 
     @Test
+    public void getCredentialsWhenRequestedClaimsAreNotSpecified() {
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setSecret(SECRET);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
+        accessToken2.setCachedAt(CACHED_AT);
+        accessToken2.setExpiresOn(EXPIRES_ON);
+        accessToken2.setSecret(SECRET);
+        accessToken2.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget(TARGET);
+        accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
+
+        // Save the Credentials
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                REALM,
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
+        );
+        assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsWhenRequestedClaimsAreSpecified() {
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setSecret(SECRET);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret(SECRET);
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
+        accessToken2.setCachedAt(CACHED_AT);
+        accessToken2.setExpiresOn(EXPIRES_ON);
+        accessToken2.setSecret(SECRET);
+        accessToken2.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget(TARGET);
+        accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
+
+        // Save the Credentials
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                REALM,
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName(),
+                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
+        );
+        assertEquals(1, credentials.size());
+    }
+
+    @Test
+    public void getCorrectCredentialWhenRequestedClaimsAreSpecified() {
+        final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
+        refreshToken.setSecret(SECRET);
+        refreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshToken.setEnvironment(ENVIRONMENT);
+        refreshToken.setCredentialType(CredentialType.RefreshToken.name());
+        refreshToken.setClientId(CLIENT_ID);
+        refreshToken.setTarget(TARGET);
+
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setCachedAt(CACHED_AT);
+        accessToken.setExpiresOn(EXPIRES_ON);
+        accessToken.setSecret("SecretA");
+        accessToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken.setRealm(REALM);
+        accessToken.setEnvironment(ENVIRONMENT);
+        accessToken.setCredentialType(CredentialType.AccessToken.name());
+        accessToken.setClientId(CLIENT_ID);
+        accessToken.setTarget(TARGET);
+        accessToken.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":false}}}");
+
+        final AccessTokenRecord accessToken2 = new AccessTokenRecord();
+        accessToken2.setCachedAt(CACHED_AT);
+        accessToken2.setExpiresOn(EXPIRES_ON);
+        accessToken2.setSecret("SecretB");
+        accessToken2.setHomeAccountId(HOME_ACCOUNT_ID);
+        accessToken2.setRealm(REALM);
+        accessToken2.setEnvironment(ENVIRONMENT);
+        accessToken2.setCredentialType(CredentialType.AccessToken.name());
+        accessToken2.setClientId(CLIENT_ID);
+        accessToken2.setTarget(TARGET);
+        accessToken2.setRequestedClaims("{\"access_token\":{\"deviceid\":{\"essential\":true}}}");
+
+        // Save the Credentials
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken);
+        mSharedPreferencesAccountCredentialCache.saveCredential(accessToken2);
+
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.AccessToken,
+                CLIENT_ID,
+                REALM,
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName(),
+                "{\"access_token\":{\"deviceid\":{\"essential\":true}}}"
+        );
+        assertEquals(1, credentials.size());
+        assertEquals("SecretB", credentials.get(0).getSecret());
+    }
+
+    @Test
     public void getCredentialsNoRealm() {
         final RefreshTokenRecord refreshToken = new RefreshTokenRecord();
         refreshToken.setSecret(SECRET);
