@@ -59,7 +59,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
 
+    private final static String INCIDENT_MSG = "Broker Automation Incident";
+
     public static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
+
+    private boolean isInSharedDeviceMode = false;
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
@@ -140,6 +144,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Assert.assertTrue(
                 "Microsoft Authenticator - Shared Device Confirmation page appears.",
                 sharedDeviceConfirmation.exists());
+
+        isInSharedDeviceMode = true;
     }
 
     @Nullable
@@ -195,6 +201,14 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             handleFirstRun();
         }
 
+        if (isInSharedDeviceMode) {
+            createPowerLiftIncidentInSharedDeviceMode();
+        } else {
+            createPowerLiftIncidentInNonSharedMode();
+        }
+    }
+
+    private void createPowerLiftIncidentInNonSharedMode() {
         // click the 3 dot menu icon in top right
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
 
@@ -222,7 +236,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                     EditText.class
             );
 
-            describeIssueBox.setText("Broker Automation Incident");
+            describeIssueBox.setText(INCIDENT_MSG);
 
             final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
             sendBtn.click();
@@ -238,6 +252,34 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             final String incidentIdText = incidentDetails.getText();
 
+            // This will post the incident id in text logs
+            Log.w(TAG, incidentIdText);
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private void createPowerLiftIncidentInSharedDeviceMode() {
+        try {
+            final UiObject settingsBtn = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
+                    Button.class,
+                    "Settings"
+            );
+            settingsBtn.click();
+
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Send logs");
+            UiAutomatorUtils.handleInput(
+                    "com.azure.authenticator:id/send_feedback_message_input", INCIDENT_MSG
+
+            );
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/send_feedback_button");
+            final UiObject postLogSubmissionText = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/send_feedback_result"
+            );
+
+            Assert.assertTrue(postLogSubmissionText.exists());
+
+            final String incidentIdText = postLogSubmissionText.getText();
             // This will post the incident id in text logs
             Log.w(TAG, incidentIdText);
         } catch (final UiObjectNotFoundException e) {
