@@ -1,8 +1,8 @@
 {
   "profiles": {
-    "ConsoleApp1": {
+    "IdentityPerfTestApp": {
       "commandName": "Project",
-      "commandLineArgs": "C:\\testdata\\basefiles\\ . PerfData PerfData \"\" 703153 Pixel2 API28 703153 701548 MSALTestApp idlab1@msidlab4.onmicrosoft.com xxxxxxxx Neerav.Agarwal@microsoft.com 701548 C:\\testdata\\targetfiles\\"
+      "commandLineArgs": "C:\\testdata\\basefiles\\ . PerfData PerfData \"\" 705916 Pixel2 API28 705902 705916 MSALTestApp idlab1@msidlab4.onmicrosoft.com xxxxxxxx Neerav.Agarwal@microsoft.com,androididentity@microsoft.com 705902 C:\\testdata\\targetfiles\\"
     }
   }
 }
