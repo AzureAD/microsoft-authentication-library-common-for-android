@@ -61,7 +61,7 @@ public class UiAutomatorUtils {
     /**
      * Obtain an instance of an enabled UiObject for the resource Id.
      *
-     * @param text the text of the element to obtain
+     * @param resourceId the resource Id of the element to obtain
      * @return the UiObject associated to the supplied resource id
      */
     @NonNull
@@ -111,6 +111,42 @@ public class UiAutomatorUtils {
 
         final UiObject uiObject = device.findObject(new UiSelector()
                 .textContains(text));
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given text.
+     *
+     * @param description the description of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithDescription(@NonNull final String description) {
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(new UiSelector()
+                .description(description));
+
+        uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        return uiObject;
+    }
+
+    /**
+     * Obtain an instance of the UiObject for the given text.
+     *
+     * @param description the content description of the element to obtain
+     * @return the UiObject associated to the supplied text
+     */
+    public static UiObject obtainUiObjectWithClassAndDescription(@NonNull final Class clazz,
+                                                                 @NonNull final String description) {
+        final UiDevice device =
+                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+
+        final UiObject uiObject = device.findObject(new UiSelector()
+                .className(clazz)
+                .descriptionContains(description));
 
         uiObject.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
         return uiObject;
@@ -261,7 +297,22 @@ public class UiAutomatorUtils {
         try {
             button.click();
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
+        }
+    }
+
+    /**
+     * Clicks the button element associated to the supplied resource id.
+     *
+     * @param text the text on the button to click
+     */
+    public static void handleButtonClickForObjectWithText(@NonNull final String text) {
+        final UiObject button = obtainUiObjectWithText(text);
+
+        try {
+            button.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
         }
     }
 

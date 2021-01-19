@@ -37,6 +37,7 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
@@ -81,7 +82,18 @@ public class AccessTokenRecord extends Credential {
          * String of kid. A thumbprint to an RSA keypair.
          */
         public static final String KID = "kid";
+
+        /**
+         * The claims string (if present) that was sent to server to produce this AT.
+         */
+        public static final String REQUESTED_CLAIMS = "requested_claims";
     }
+
+    /**
+     * The JSON claims string sent to the server that produced this token. Used by MSAL C++
+     */
+    @SerializedName(REQUESTED_CLAIMS)
+    private String mRequestedClaims;
 
     /**
      * A key id associating this credential to a public/private keypair.
@@ -155,6 +167,24 @@ public class AccessTokenRecord extends Credential {
      */
     public void setKid(@Nullable final String kid) {
         mKid = kid;
+    }
+
+    /**
+     * Gets the requested_claims string.
+     *
+     * @return The requested_claims string.
+     */
+    public String getRequestedClaims() {
+        return mRequestedClaims;
+    }
+
+    /**
+     * Sets the requested_claims string
+     *
+     * @param requestedClaims The claims string to set.
+     */
+    public void setRequestedClaims(final String requestedClaims) {
+        mRequestedClaims = requestedClaims;
     }
 
     /**
