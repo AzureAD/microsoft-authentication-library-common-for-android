@@ -23,23 +23,24 @@
 package com.microsoft.identity.common;
 
 /**
- * A Plain Object class containing information of a code marker which is an event in code.
- * marker is a string which is prefixed by scenario code and is defined in class CodeMarkersConstants.
+ * A Class containing information of a code marker which is an event in code.
+ * Marker is a string which is prefixed by scenario code and is defined in class {@link CodeMarkerConstants}
  */
 public class CodeMarker {
 
     private String marker;
-    // timeInMilliseconds represents time in milliseconds where zero(0) means the time when first codemarker was captured.
+    /* timeInMilliseconds represents time in milliseconds from the time of creation of first codemarker.
+    If timeInMilliseconds is zero(0) then it means that this is the first codemarker of the scenario.*/
     private long timeInMilliseconds;
     // timeStamp is the system time at the time of the capture of the codemarker.
     private String timeStamp;
     private long threadId;
 
-    public CodeMarker(final String marker, final long timeInMilliseconds, final String timeStamp, final long id) {
+    public CodeMarker(final String marker, final long timeInMilliseconds, final String timeStamp, final long threadId) {
         this.marker = marker;
         this.timeInMilliseconds = timeInMilliseconds;
         this.timeStamp = timeStamp;
-        this.threadId = id;
+        this.threadId = threadId;
     }
 
     public long getThreadId() {

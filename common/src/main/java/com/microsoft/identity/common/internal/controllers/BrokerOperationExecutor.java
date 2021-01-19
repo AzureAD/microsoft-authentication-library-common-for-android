@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.CodeMarkersConstants;
+import com.microsoft.identity.common.CodeMarkerConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -128,9 +128,9 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
-                CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.BROKER_PROCESS_START);
+                CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.BROKER_PROCESS_START);
                 final U result = performStrategy(strategy, operation);
-                CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.BROKER_PROCESS_END);
+                CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.BROKER_PROCESS_END);
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {

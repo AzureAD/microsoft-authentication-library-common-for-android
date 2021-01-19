@@ -38,7 +38,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.CodeMarkersConstants;
+import com.microsoft.identity.common.CodeMarkerConstants;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
@@ -134,7 +134,7 @@ public class CommandDispatcher {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
 
-        CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_START);
+        CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START);
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -173,7 +173,7 @@ public class CommandDispatcher {
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
+                    CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
                         final CommandParameters commandParameters = command.getParameters();
                         final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
@@ -198,9 +198,9 @@ public class CommandDispatcher {
 
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
-                            CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
+                            CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
                             commandResult = executeCommand(command);
-                            CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
+                            CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
                             cacheCommandResult(command, commandResult);
                         } else {
                             Logger.info(
@@ -236,7 +236,7 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.clear();
                     }
-                    CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
+                    CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
             });
             return finalFuture;

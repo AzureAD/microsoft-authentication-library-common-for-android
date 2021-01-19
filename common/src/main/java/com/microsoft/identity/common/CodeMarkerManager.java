@@ -35,14 +35,12 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * A utility which collects any event's information given by calling markCode on such event(s).
- * These events can be retrieved in csv format by calling method getFileContent.
- * The event is recognized by a string marker which is prefixed with scenario code.
- * MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
+ * A utility which collects any event's information and also provides functionality to retrieve the events in csv format.
  */
 public class CodeMarkerManager {
 
     private boolean enableCodeMarker = false;
+    // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private int MAX_SIZE_CODE_MARKER = 1000;
     private volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
 
@@ -69,6 +67,10 @@ public class CodeMarkerManager {
         this.scenarioCode = scenarioCode;
     }
 
+    /**
+     * This method captures a particular marker and records the timestamp on which this has been received.
+     * @param marker : A string code which represents a particular place in code.
+     */
     public void markCode(String marker) {
         if(this.enableCodeMarker) {
             if(this.codeMarkers.size() >= MAX_SIZE_CODE_MARKER) {
