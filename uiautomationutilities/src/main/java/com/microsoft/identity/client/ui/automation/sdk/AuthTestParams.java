@@ -20,33 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation;
+package com.microsoft.identity.client.ui.automation.sdk;
 
-import java.util.concurrent.TimeUnit;
+import android.app.Activity;
+
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Timeout values to be used with {@link TokenRequestLatch} to perform awaits.
+ * A wrapper class for all the parameters that are required to acquire token
+ * either interactively or silently.
  */
-public enum TokenRequestTimeout {
+@Getter
+@SuperBuilder
+public class AuthTestParams {
 
-    SILENT(15, TimeUnit.SECONDS),
-    SHORT(30, TimeUnit.SECONDS),
-    MEDIUM(1, TimeUnit.MINUTES),
-    LONG(2, TimeUnit.MINUTES);
-
-    private final long time;
-    private final TimeUnit timeUnit;
-
-    TokenRequestTimeout(long time, TimeUnit timeUnit) {
-        this.time = time;
-        this.timeUnit = timeUnit;
-    }
-
-    public long getTime() {
-        return time;
-    }
-
-    public TimeUnit getTimeUnit() {
-        return timeUnit;
-    }
+    private final String loginHint;
+    private final String resource;
+    private final String clientId;
+    private final String redirectUri;
+    private final String authority;
+    private final Activity activity;
 }

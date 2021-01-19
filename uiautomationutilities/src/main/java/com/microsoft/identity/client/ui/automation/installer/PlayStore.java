@@ -72,7 +72,7 @@ public class PlayStore implements IAppInstaller {
             searchButton.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchButton.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         final UiObject searchTextField = device.findObject(new UiSelector().resourceId(
@@ -82,7 +82,7 @@ public class PlayStore implements IAppInstaller {
             searchTextField.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
             searchTextField.setText(hint);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         device.pressEnter();
@@ -116,7 +116,7 @@ public class PlayStore implements IAppInstaller {
             try {
                 selectGooglePlayAppFromAppList();
             } catch (final UiObjectNotFoundException ex) {
-                Assert.fail(ex.getMessage());
+                throw new AssertionError(e);
             }
         }
     }
@@ -148,7 +148,7 @@ public class PlayStore implements IAppInstaller {
             try {
                 installAppFromMarketPageInternal();
             } catch (UiObjectNotFoundException ex) {
-                Assert.fail(ex.getMessage());
+                throw new AssertionError(e);
             }
         }
     }
@@ -161,7 +161,7 @@ public class PlayStore implements IAppInstaller {
         try {
             acceptBtn.click();
         } catch (UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
