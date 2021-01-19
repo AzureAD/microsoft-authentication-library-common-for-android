@@ -138,3 +138,8 @@ Steps to run on local machine:
 Where is the raw Perfdata.txt stored in local run as well as in pipeline run
 - In local run, the Perfdata txt files can be stored on any directory which should be given to the C# tool as an argument. e.g. "C:\testdata\basefiles" and "C:\testdata\targetfiles"
 - On pipeline, we can find the txt files from artifact "Perf -> basefiles" or "Perf -> targetfiles"
+
+
+Where to find the intermediate files or output files
+- If output directory is default i.e. "." then the output files will be created in the directory where the applicaiton is running.
+- Default directory of output files: "bin\Release\netcoreapp3.1"

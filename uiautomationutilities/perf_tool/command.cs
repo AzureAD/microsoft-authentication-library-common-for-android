@@ -54,22 +54,22 @@ namespace TestScript {
                 Console.WriteLine(args[i]);
             i = 0;
             string inputBaseFileLocation = args[i++]; // Directory where PerfData base files are present. Example value: "C:\testdata\basefiles" 
-            string outputFileLocation = args[i++]; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
-            string codemarkerBaseFileNamePreFix = args[i++]; // Prefix of the files which should be taken as base PerfData files for raw data. Example value: "PerfDataBase"
-            string codemarkerTargetFileNamePreFix = args[i++]; // Prefix of the files which should be taken as target PerfData files for raw data. Example value: "PerfDataTarget"
-            string outputFileNamePrefix = args[i++]; // Prefix of the file names to be generated. Example value: "run_output"
-            string jobID = args[i++]; // Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
+            string inputTargetFileLocation = args[i++]; // Directory where PerfData target files are present. Example value: "C:\testdata\targetfiles" 
+            string basejobID = args[i++]; // Build id of the base task.
+            string currentJobID = args[i++]; // Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
             string deviceModel = args[i++]; // Device model to be written in the final Email report. Example value: "Pixel2"
             string OS = args[i++]; // Device OS to be written in the final Email report. Example value: "API28"
-            string baseBuild = args[i++]; // Base build number to be written in the Email report. Example value: "1.2.1"
-            string targetBuild = args[i++]; // Target build number to be written in the Email report. Example value: "1.2.2"
             string appName = args[i++]; // App name to be written in the Email report. Example value: "MSALTestApp"
             string fromAddress = args[i++]; // Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
             string fromPassword = args[i++]; // Password of the sender's account.
             string emailToList = args[i++]; // Email To list separated by comma
-            //string scenarioName = args[i++]; // Scenario Name of the application which should be present in file "PerfDataConfiguration.xml". Example value: "MSALAcquireToken"
-            string basejobID = args[i++]; // Build id of the base task.
-            string inputTargetFileLocation = args[i++]; // Directory where PerfData target files are present. Example value: "C:\testdata\targetfiles" 
+            
+            // Few constants:
+            string codemarkerBaseFileNamePreFix = "PerfData"; // Prefix of the files which should be taken as base PerfData files for raw data.
+            string codemarkerTargetFileNamePreFix = "PerfData"; // Prefix of the files which should be taken as target PerfData files for raw data.
+            string outputFileLocation = "."; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
+            string outputFileNamePrefix = ""; // Prefix of the file names to be generated. Example value: "run_output"
+
 
             HashSet<string> primaryMeasurements = new HashSet<string>();
             HashSet<string> secondaryMeasurements = new HashSet<string>();
@@ -78,7 +78,7 @@ namespace TestScript {
 
             DateTime startTime = DateTime.MinValue;
             string baseJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + basejobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
-            string targetJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + jobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
+            string targetJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=" + currentJobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
             PerfMeasurementConfigurationsProvider configProvider;
 
 
@@ -116,10 +116,10 @@ namespace TestScript {
             jobInfoHtml.AddRange(View.InfoInit());
 
             List<Task> baseTasks = new List<Task>();
-            baseTasks.Add(createTask(deviceModel, baseBuild, appName, jobID, baseJobArtifactURL));
+            baseTasks.Add(createTask(deviceModel, basejobID, appName, currentJobID, baseJobArtifactURL));
 
             List<Task> targetTasks = new List<Task>();
-            targetTasks.Add(createTask(deviceModel, targetBuild, appName, jobID, targetJobArtifactURL));
+            targetTasks.Add(createTask(deviceModel, currentJobID, appName, currentJobID, targetJobArtifactURL));
 
             jobInfoHtml.Add(View.CreateAppInfoTable(baseTasks, targetTasks, appName, deviceModel, OS));
 
@@ -130,9 +130,10 @@ namespace TestScript {
             // However, if starting point or end point of a secondary measurement is missing, the test run will pass with ignoring the particular measurement.
             string[] heading = { "Task Runs", baseTasks[0].AppName, baseTasks[0].Device };
 
+            // Starting creating object Parameter task so that it has all the information to be written to the HTML and Email.
             Parameter task = new Parameter("Response Time(seconds)", "NA", 3, "lemon");
-            task.BaseCheckpoint = baseBuild;
-            task.TargetCheckPoint = targetBuild;
+            task.BaseCheckpoint = basejobID;
+            task.TargetCheckPoint = currentJobID;
             task.BaseLogDir = baseJobArtifactURL;
             task.TargetLogDir = targetJobArtifactURL;
 
@@ -183,7 +184,7 @@ namespace TestScript {
             updatedParameters.Add(task);
 
             htmlResult.Add(View.CreateTableHtml(updatedParameters, primaryMeasurements, secondaryMeasurements,
-                                        heading, activeScenarios, activeMeasurements, jobID));
+                                        heading, activeScenarios, activeMeasurements, currentJobID));
 
             jobInfoHtml.Add(View.EndofJobDetailsTable());
             jobInfoHtml.AddRange(htmlResult);
