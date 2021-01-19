@@ -143,3 +143,16 @@ Where is the raw Perfdata.txt stored in local run as well as in pipeline run
 Where to find the intermediate files or output files
 - If output directory is default i.e. "." then the output files will be created in the directory where the applicaiton is running.
 - Default directory of output files: "bin\Release\netcoreapp3.1"
+
+
+Arguments to the tool:
+- 1. Directory where PerfData base files are present. Example value: "C:\testdata\basefiles"
+- 2. Directory where PerfData target files are present. Example value: "C:\testdata\targetfiles"
+- 3. Build id of the base task.
+- 4. Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
+- 5. Device model to be written in the final Email report. Example value: "Pixel2"
+- 6. Device OS to be written in the final Email report. Example value: "API28"
+- 7. App name to be written in the Email report. Example value: "MSALTestApp"
+- 8. Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
+- 9. Password of the sender's account.
+-10. Email To list separated by comma
