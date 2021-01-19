@@ -358,7 +358,7 @@ public class AccessTokenRecord extends Credential {
      */
     public boolean shouldRefresh() {
         final String refreshOn = getRefreshOn();
-        if(refreshOn != null && !refreshOn.isEmpty()) {
+        if (refreshOn != null && !refreshOn.isEmpty()) {
             return isExpired(refreshOn);
         }
         return false;
