@@ -13,6 +13,7 @@ vNext
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
 - Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
+- Fixes for MFA setup using Authenticator app.
 
 Version 3.0.8
 ----------
