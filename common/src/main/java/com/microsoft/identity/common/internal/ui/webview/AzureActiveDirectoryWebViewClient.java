@@ -53,6 +53,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Locale;
@@ -62,6 +63,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
 
 /**
@@ -167,16 +169,45 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             Logger.info(TAG, "It is a request from WebCP");
             return processWebCpRequest(view, url);
         } else if (isPlayStoreUrl(formattedURL)){
-            Logger.info(TAG, "Request to open PlayStore");
+            Logger.info(TAG, "Request to open PlayStore.");
             return processPlayStoreURL(view, url);
+        } else if (isAuthAppMFAUrl(formattedURL)){
+            Logger.info(TAG, "Request to link account with Authenticator.");
+            return processAuthAppMFAUrl(url);
+        } else if (isValidRedirectUri(url)){
+            Logger.info(TAG, "Check for Redirect Uri.");
+            return processRedirectUriCheck(view, url);
+        } else if (isBlankPageRequest(formattedURL)){
+            Logger.verbose(TAG, "It is an blank page request");
+            return true;
+        } else if (isUriSSLProtected(formattedURL)){
+            Logger.verbose(TAG, "Check for SSL protection");
+            return processSSLProtectionCheck(view, url);
         } else {
             Logger.info(TAG, "It is an invalid redirect uri.");
-            return processInvalidUrl(view, url);
+            return processInvalidUrl(url);
         }
     }
 
+    private boolean isUriSSLProtected(@NonNull final String url) {
+        return !(url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX));
+    }
+
+    private boolean isBlankPageRequest(@NonNull final String url) {
+        return "about:blank".equals(url);
+    }
+
+    private boolean isValidRedirectUri(@NonNull final String url) {
+        return isBrokerRequest(getActivity().getIntent())
+                && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX);
+    }
+
+    private boolean isAuthAppMFAUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING);
+    }
+
     private boolean isPlayStoreUrl(@NonNull final String url) {
-        return url.startsWith(AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX);
+        return url.startsWith(PLAY_STORE_INSTALL_PREFIX);
     }
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
@@ -290,8 +321,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
     private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
         final String methodName = "#processPlayStoreURL";
+
         view.stopLoading();
-        if (!(url.contains(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME)) && !(url.contains(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
+        if (!(url.startsWith(PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_PROD_APP_PACKAGE_NAME))
+                && !(url.startsWith(PLAY_STORE_INSTALL_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
             return false;
         }
         final String appPackageName = (url.contains(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME) ?
@@ -299,13 +332,28 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.verbose(TAG + methodName, "Request to open PlayStore.");
 
         try {
-            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX + appPackageName));
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_PREFIX + appPackageName));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             getActivity().startActivity(intent);
             return true;
         } catch (android.content.ActivityNotFoundException e) {
             //if GooglePlay is not present on the device.
             Logger.error(TAG + methodName, "Failed to launch the PlayStore.", e);
+        }
+
+        return true;
+    }
+
+    private boolean processAuthAppMFAUrl(String url) {
+        final String methodName = "#processAuthAppMFAUrl";
+        Logger.verbose(TAG + methodName, "Linking Account in Broker for MFA.");
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            getActivity().startActivity(intent);
+            return true;
+        } catch (android.content.ActivityNotFoundException e) {
+            Logger.error(TAG, "Failed to open the Authenticator application.", e);
         }
 
         return true;
@@ -401,37 +449,29 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return true;
     }
 
-    private boolean processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
-        final String lowerCaseUrl = url.toLowerCase(Locale.US);
-        if (isBrokerRequest(getActivity().getIntent())
-                && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX)) {
-            Logger.error(TAG, "The RedirectUri is not as expected.", null);
-            Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
-            returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
-                    String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
-                            mRedirectUrl));
-            view.stopLoading();
-            return true;
-        }
+    private boolean processRedirectUriCheck(@NonNull final WebView view, @NonNull final String url) {
+        final String methodName = "#processRedirectUriCheck";
 
-        if ("about:blank".equals(lowerCaseUrl)) {
-            Logger.verbose(TAG, "It is an blank page request");
-            return true;
-        }
+        Logger.error(TAG + methodName, "The RedirectUri is not as expected.", null);
+        Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
+        returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
+                String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
+                        mRedirectUrl));
+        view.stopLoading();
+        return true;
+    }
 
-        if(url.startsWith("microsoft-authenticator://activateMfa")){
-            Logger.verbose(TAG, "Linking Account in Broker for MFA");
-            return true;
-        }
+    private boolean processSSLProtectionCheck(@NonNull final WebView view, @NonNull final String url) {
+        final String redactedUrl = removeQueryParametersOrRedact(url);
 
-        if (!lowerCaseUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            final String redactedUrl = removeQueryParametersOrRedact(url);
+        Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
+        returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
+        view.stopLoading();
+        return true;
+    }
 
-            Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
-            returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
-            view.stopLoading();
-            return true;
-        }
+    private boolean processInvalidUrl(@NonNull final String url) {
+
         Logger.infoPII(TAG, "We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
         return false;

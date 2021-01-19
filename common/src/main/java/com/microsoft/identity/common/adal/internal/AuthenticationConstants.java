@@ -1079,6 +1079,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_WEB_CP = "companyportal://";
 
         /**
+         * Prefix in the redirect from WebCP.
+         */
+        public static final String AUTHENTICATOR_MFA_LINKING = "microsoft-authenticator://activatemfa";
+
+        /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
         public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
