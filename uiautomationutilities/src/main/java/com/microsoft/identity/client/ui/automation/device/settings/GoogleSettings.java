@@ -252,19 +252,43 @@ public class GoogleSettings extends BaseSettings {
     }
 
     @Override
-    public void setPinOnDevice(final String password) throws UiObjectNotFoundException {
-        Logger.i(TAG, "Set Pin on Google Device..");
-        UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
-        launchScreenLockPage();
-        final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
-        Assert.assertTrue(screenLock.exists());
-        screenLock.click();
-        UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
-        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
-        device.pressEnter();
-        UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", password);
-        device.pressEnter();
-        handleDoneButton();
+    public void setPinOnDevice(final String pin) {
+        try {
+            Logger.i(TAG, "Set Pin on Google Device..");
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            launchScreenLockPage();
+            final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
+            Assert.assertTrue(screenLock.exists());
+            screenLock.click();
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
+            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
+            device.pressEnter();
+            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
+            device.pressEnter();
+            handleDoneButton();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Override
+    public void removePinFromDevice(final String pin) {
+        try {
+            Logger.i(TAG, "Remove Pin on Google Device..");
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            launchScreenLockPage();
+            final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
+            Assert.assertTrue(screenLock.exists());
+            screenLock.click();
+            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
+            device.pressEnter();
+            // Click Lock None
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_none");
+            // confirm removal of screen lock
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
     }
 
     private void handleDoneButton() throws UiObjectNotFoundException {

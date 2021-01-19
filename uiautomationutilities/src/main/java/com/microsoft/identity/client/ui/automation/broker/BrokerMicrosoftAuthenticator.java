@@ -25,8 +25,8 @@ package com.microsoft.identity.client.ui.automation.broker;
 import android.Manifest;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,7 +59,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     public final static String AUTHENTICATOR_APP_NAME = "Microsoft Authenticator";
     public final static String AUTHENTICATOR_APK = "Authenticator.apk";
 
+    private final static String INCIDENT_MSG = "Broker Automation Incident";
+
     public static final String TAG = BrokerMicrosoftAuthenticator.class.getSimpleName();
+
+    private boolean isInSharedDeviceMode = false;
 
     public BrokerMicrosoftAuthenticator() {
         super(AUTHENTICATOR_APP_PACKAGE_NAME, AUTHENTICATOR_APP_NAME);
@@ -125,6 +129,10 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 "com.azure.authenticator:id/shared_device_registration_button"
         );
 
+        // There is a data privacy dialog that shows up when shared device registration finishes.
+        // But why? This should really not pop up at this time.
+        UiAutomatorUtils.handleButtonClick("android:id/button1");
+
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -138,6 +146,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         Assert.assertTrue(
                 "Microsoft Authenticator - Shared Device Confirmation page appears.",
                 sharedDeviceConfirmation.exists());
+
+        isInSharedDeviceMode = true;
     }
 
     @Nullable
@@ -196,47 +206,88 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             handleFirstRun();
         }
 
+        if (isInSharedDeviceMode) {
+            createPowerLiftIncidentInSharedDeviceMode();
+        } else {
+            createPowerLiftIncidentInNonSharedMode();
+        }
+    }
+
+    private void createPowerLiftIncidentInNonSharedMode() {
         // click the 3 dot menu icon in top right
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
 
         try {
             // select Help from drop down
-            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Help");
+            final UiObject settings = UiAutomatorUtils.obtainUiObjectWithText("Send Feedback");
             settings.click();
 
-            // scroll down the recycler view to find Send logs btn
-            final UiObject sendLogs = UiAutomatorUtils.obtainChildInScrollable(
-                    android.widget.ScrollView.class,
-                    "Send logs"
+            final UiObject sendLogs = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
+                    Button.class,
+                    "Having trouble?Report it"
             );
 
-            assert sendLogs != null;
+            Assert.assertTrue(sendLogs.exists());
 
             // click the send logs button
             sendLogs.click();
 
-            final UiObject sendLogMsgField = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
-                    EditText.class,
-                    1
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Select an option");
+
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Other");
+
+            final UiObject describeIssueBox = UiAutomatorUtils.obtainUiObjectWithTextAndClassType(
+                    "Please don't include your name, phone number, or other personal information.",
+                    EditText.class
             );
 
-            sendLogMsgField.setText("Broker Automation Incident");
+            describeIssueBox.setText(INCIDENT_MSG);
 
-            final UiObject sendBtn = UiAutomatorUtils.obtainEnabledUiObjectWithExactText(
-                    "SEND"
-            );
+            final UiObject sendBtn = UiAutomatorUtils.obtainUiObjectWithDescription("Send feedback");
             sendBtn.click();
 
-            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
-                    TextView.class,
-                    3
+            final UiObject postLogSubmissionMsg = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "android:id/parentPanel"
             );
 
             Assert.assertTrue(postLogSubmissionMsg.exists());
 
+            final UiObject incidentDetails = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/message");
+            Assert.assertTrue(incidentDetails.exists());
+
+            final String incidentIdText = incidentDetails.getText();
+
             // This will post the incident id in text logs
-            Log.w(TAG, postLogSubmissionMsg.getText());
-        } catch (UiObjectNotFoundException e) {
+            Log.w(TAG, incidentIdText);
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private void createPowerLiftIncidentInSharedDeviceMode() {
+        try {
+            final UiObject settingsBtn = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
+                    Button.class,
+                    "Settings"
+            );
+            settingsBtn.click();
+
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Send logs");
+            UiAutomatorUtils.handleInput(
+                    "com.azure.authenticator:id/send_feedback_message_input", INCIDENT_MSG
+
+            );
+            UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/send_feedback_button");
+            final UiObject postLogSubmissionText = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/send_feedback_result"
+            );
+
+            Assert.assertTrue(postLogSubmissionText.exists());
+
+            final String incidentIdText = postLogSubmissionText.getText();
+            // This will post the incident id in text logs
+            Log.w(TAG, incidentIdText);
+        } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
     }

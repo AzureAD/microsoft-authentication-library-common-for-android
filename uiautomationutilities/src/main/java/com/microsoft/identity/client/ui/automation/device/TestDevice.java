@@ -22,7 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device;
 
+import android.app.KeyguardManager;
+import android.content.Context;
+import android.os.Build;
+
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.device.settings.GoogleSettings;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
@@ -72,5 +77,34 @@ public class TestDevice {
         }
 
         return new GoogleSettings();
+    }
+
+    public boolean isSecured() {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final KeyguardManager keyguardManager =
+                (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            return keyguardManager.isDeviceSecure();
+        }
+        return keyguardManager.isKeyguardSecure();
+    }
+
+    public void setPin(final String pin) {
+        if (isSecured()) {
+            Logger.i(TAG, "The device already has a PIN setup so we are not going to put " +
+                    "a new one in there.");
+            return;
+        }
+        getSettings().setPinOnDevice(pin);
+    }
+
+    public void removePin(final String pin) {
+        if (!isSecured()) {
+            Logger.w(TAG, "Unable to remove pin from device as the device doesn't actually " +
+                    "have a screen lock.");
+            return;
+        }
+
+        getSettings().removePinFromDevice(pin);
     }
 }

@@ -200,6 +200,11 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void setPinOnDevice(final String password) {
-        //TODO: implement addPinSetup for samsung device.
+        //TODO: implement addPinSetup for SAMSUNG device.
+    }
+
+    @Override
+    public void removePinFromDevice(String pin) {
+        //TODO: implement removing PIN for SAMSUNG device.
     }
 }
