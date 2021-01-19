@@ -29,11 +29,9 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
@@ -74,7 +72,7 @@ public class AzureActiveDirectory
     private static ConcurrentMap<String, AzureActiveDirectoryCloud> sAadClouds = new ConcurrentHashMap<>();
     private static boolean sIsInitialized = false;
     private static Environment sEnvironment = Environment.Production;
-    private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
+    private static final HttpClient HTTP_CLIENT = UrlConnectionHttpClient.getDefaultInstance();
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config) {
@@ -183,7 +181,7 @@ public class AzureActiveDirectory
                 .build();
 
         final HttpResponse response =
-                httpClient.get(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
+                HTTP_CLIENT.get(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Log.d("Discovery", "Error getting cloud information");
