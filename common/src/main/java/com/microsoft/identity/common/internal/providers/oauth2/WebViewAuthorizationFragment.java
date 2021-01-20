@@ -26,6 +26,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -139,14 +140,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
                         if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                mWebView.evaluateJavascript(mPostPageLoadedJavascript, null);
-                            } else {
-                                // On earlier versions of Android, javascript has to be loaded with a custom scheme.
-                                // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
-                                // our javascript may contain the '%' character, so we escape it again, to undo that.
-                                mWebView.loadUrl("javascript:" + mPostPageLoadedJavascript.replace("%", "%25"));
-                            }
+                            // TODO: #1268511 use EvaluteJavascript after tests are stable.
+                            // On earlier versions of Android, javascript has to be loaded with a custom scheme.
+                            // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
+                            // our javascript may contain the '%' character, so we escape it again, to undo that.
+                            mWebView.loadUrl("javascript:" + mPostPageLoadedJavascript.replace("%", "%25"));
                         }
                     }
                 },
