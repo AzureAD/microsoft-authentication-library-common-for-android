@@ -187,8 +187,6 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
     //CHECKSTYLE:ON
 
-
-
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -221,6 +219,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
                 ", mExpiresOn='" + mExpiresOn + '\'' +
                 ", mSessionKey='" + mSessionKey + '\'' +
                 ", mPrtProtocolVersion='" + mPrtProtocolVersion + '\'' +
+                ", mSessionKeyRollingDate='" + mSessionKeyRollingDate + '\'' +
                 '}';
     }
     //CHECKSTYLE:ON
