@@ -95,6 +95,23 @@ public class LocalMSALController extends BaseController {
     private AuthorizationRequest mAuthorizationRequest = null;
 
     @Override
+    public String calculate(float first, float second, char operator) throws Exception {
+        if (operator == '+') {
+            return String.valueOf(first + second);
+        } else if (operator == '-') {
+            return String.valueOf(first - second);
+        } else if (operator == '*') {
+            return String.valueOf(first * second);
+        } else if (operator == '/') {
+            if (second == 0) {
+                throw new Exception("Division by zero.");
+            }
+            return String.valueOf(first / second);
+        }
+        throw new Exception("Unknown operator.");
+    }
+
+    @Override
     public AcquireTokenResult acquireToken(
             @NonNull final InteractiveTokenCommandParameters parameters)
             throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {

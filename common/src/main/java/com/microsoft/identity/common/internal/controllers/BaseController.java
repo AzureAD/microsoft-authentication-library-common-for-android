@@ -121,6 +121,10 @@ public abstract class BaseController {
         return stringBuilder.toString().trim();
     }
 
+    public String calculate(float first, float second, char operator) throws Exception {
+        return null;
+    }
+
     public abstract AcquireTokenResult acquireToken(final InteractiveTokenCommandParameters request)
             throws Exception;
 
