@@ -1,6 +1,5 @@
 vNext
 ----------
-
 - Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
 - Sends CP version to ESTS and handle WebCP uri. (#1137)
 - Check for eligible for caching when putting command in executing command map
@@ -13,6 +12,7 @@ vNext
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
 - Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
+- (MSALCPP) Validate ATs before persisting to the cache (#1192)
 
 Version 3.0.8
 ----------
