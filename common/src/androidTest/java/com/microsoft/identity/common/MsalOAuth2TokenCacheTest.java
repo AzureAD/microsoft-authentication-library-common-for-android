@@ -202,7 +202,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mGeneratedPrimaryRefreshToken.setExpiresOn(expiresOn);
             mGeneratedPrimaryRefreshToken.setCachedAt(cacheAt);
             mGeneratedPrimaryRefreshToken.setSessionKey(prtSessionKey);
-            mGeneratedPrimaryRefreshToken.setPrtProtocolVersion("V3");
+            mGeneratedPrimaryRefreshToken.setPrtProtocolVersion("3.0");
         }
     }
 
