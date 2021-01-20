@@ -335,7 +335,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_PREFIX + appPackageName));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             getActivity().startActivity(intent);
-            return true;
         } catch (android.content.ActivityNotFoundException e) {
             //if GooglePlay is not present on the device.
             Logger.error(TAG + methodName, "Failed to launch the PlayStore.", e);
@@ -351,7 +350,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             getActivity().startActivity(intent);
-            return true;
         } catch (android.content.ActivityNotFoundException e) {
             Logger.error(TAG, "Failed to open the Authenticator application.", e);
         }
