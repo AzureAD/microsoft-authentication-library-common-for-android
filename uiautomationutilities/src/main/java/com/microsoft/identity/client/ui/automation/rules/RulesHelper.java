@@ -63,7 +63,7 @@ public class RulesHelper {
         ruleChain = ruleChain.around(new ResetAutomaticTimeZoneTestRule());
 
         Log.i(TAG, "Adding DeviceLockSetRule");
-        ruleChain = ruleChain.around(new DevicePinSetupRule());
+        ruleChain = ruleChain.around(new DevicePinSetupRule(broker));
 
         if (com.microsoft.identity.client.ui.automation.BuildConfig.PREFER_PRE_INSTALLED_APKS) {
             Log.i(TAG, "Adding CopyPreInstalledApkRule");
