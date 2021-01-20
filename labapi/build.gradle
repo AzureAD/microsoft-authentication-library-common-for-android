@@ -1,8 +1,59 @@
-apply plugin: 'java-library'
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+}
+
+apply from: '../common/versioning/version_tasks.gradle'
+
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
+//labapi version.  Let's not change this please
+version = getAppVersionName()
+
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+}
+
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId 'com.microsoft.identity'
+            artifactId 'labapi'
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name "vsts-maven-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+            credentials {
+                username project.ext.vstsUsername
+                password project.ext.vstsPassword
+            }
+        }
+        maven {
+            name "vsts-maven-android"
+            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+            credentials {
+                username project.vstsUsername
+                password project.vstsPassword
+            }
+        }
+    }
+}
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'io.swagger:swagger-annotations:1.5.17'
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
+    implementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0'
+    implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.0'
+    implementation group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
     implementation 'com.squareup.okhttp:okhttp:2.7.5'
     implementation 'com.squareup.okhttp:logging-interceptor:2.7.5'
     implementation 'com.google.code.gson:gson:2.8.1'

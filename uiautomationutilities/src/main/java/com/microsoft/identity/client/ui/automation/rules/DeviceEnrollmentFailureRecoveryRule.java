@@ -22,7 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import android.util.Log;
+
 import com.microsoft.identity.client.ui.automation.broker.DeviceLimitReachedException;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.rules.TestRule;
@@ -35,15 +38,19 @@ import org.junit.runners.model.Statement;
  */
 public class DeviceEnrollmentFailureRecoveryRule implements TestRule {
 
+    private final static String TAG = DeviceEnrollmentFailureRecoveryRule.class.getSimpleName();
+
     @Override
     public Statement apply(final Statement base, final Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Logger.i(TAG, "Applying rule....");
                 try {
                     base.evaluate();
                 } catch (final Throwable throwable) {
                     if (throwable instanceof DeviceLimitReachedException) {
+                        Logger.w(TAG, "Received DeviceLimitReachedException....removing devices..");
                         // Click REMOVE DEVICE btn in the dialog
                         UiAutomatorUtils.handleButtonClick("android:id/button1");
 

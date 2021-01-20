@@ -55,6 +55,7 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -66,6 +67,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
@@ -85,6 +87,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
@@ -751,6 +754,61 @@ public class BrokerMsalController extends BaseController {
     @Override
     public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
         throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
+    }
+
+    @Override
+    public GenerateShrResult generateSignedHttpRequest(@NonNull final GenerateShrCommandParameters parameters) throws Exception {
+        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<GenerateShrResult>() {
+
+            private String negotiatedBrokerProtocolVersion;
+
+            @Override
+            public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+            }
+
+            @NonNull
+            @Override
+            public BrokerOperationBundle getBundle() {
+                return new BrokerOperationBundle(
+                        MSAL_GENERATE_SHR,
+                        mActiveBrokerPackageName,
+                        mRequestAdapter.getRequestBundleForGenerateShr(
+                                parameters,
+                                negotiatedBrokerProtocolVersion
+                        )
+                );
+            }
+
+            @NonNull
+            @Override
+            public GenerateShrResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                if (null == resultBundle) {
+                    throw mResultAdapter.getExceptionForEmptyResultBundle();
+                }
+
+                return mResultAdapter.getGenerateShrResultFromResultBundle(resultBundle);
+            }
+
+            @NonNull
+            @Override
+            public String getMethodName() {
+                return ":generateSignedHttpRequest";
+            }
+
+            @Nullable
+            @Override
+            public String getTelemetryApiId() {
+                // TODO Needed?
+                return null;
+            }
+
+            @Override
+            public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                               @NonNull final GenerateShrResult result) {
+                // TODO Needed?
+            }
+        });
     }
 
     /**

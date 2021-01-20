@@ -113,4 +113,10 @@ public final class PublicApiId {
     public static final String DEVICE_CODE_FLOW_WITH_CALLBACK = "650";
 
     //endregion
+
+    // region generateSignedHttpRequest
+    //==============================================================================================
+    public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST = "1100";
+    public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST_ASYNC = "1101";
+    //endregion
 }

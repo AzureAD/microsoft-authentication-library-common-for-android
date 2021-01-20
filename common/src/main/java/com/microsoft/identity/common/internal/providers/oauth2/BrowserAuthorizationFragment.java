@@ -202,7 +202,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
                 && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
             //when the user click the "cancel" button in the UI, server will send the the redirect uri with "cancel" error sub-code and redirects back to the calling app
             Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
+            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
         } else {
             Telemetry.emit(new UiEndEvent().isUiCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);

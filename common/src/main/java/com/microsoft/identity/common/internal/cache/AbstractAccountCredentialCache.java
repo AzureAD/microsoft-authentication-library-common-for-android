@@ -41,6 +41,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
+import static com.microsoft.identity.common.internal.util.StringUtil.equalsIgnoreCaseTrim;
 
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
@@ -97,15 +98,15 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = homeAccountId.equalsIgnoreCase(account.getHomeAccountId());
+                matches = equalsIgnoreCaseTrim(homeAccountId, account.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && environment.equalsIgnoreCase(account.getEnvironment());
+                matches = matches && equalsIgnoreCaseTrim(environment, account.getEnvironment());
             }
 
             if (mustMatchOnRealm) {
-                matches = matches && realm.equalsIgnoreCase(account.getRealm());
+                matches = matches && equalsIgnoreCaseTrim(realm, account.getRealm());
             }
 
             if (matches) {
@@ -160,29 +161,29 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = homeAccountId.equalsIgnoreCase(credential.getHomeAccountId());
+                matches = equalsIgnoreCaseTrim(homeAccountId, credential.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && environment.equalsIgnoreCase(credential.getEnvironment());
+                matches = matches && equalsIgnoreCaseTrim(environment, credential.getEnvironment());
             }
 
             if (mustMatchOnCredentialType) {
-                matches = matches && credentialType.name().equalsIgnoreCase(credential.getCredentialType());
+                matches = matches && equalsIgnoreCaseTrim(credentialType.name(), credential.getCredentialType());
             }
 
             if (mustMatchOnClientId) {
-                matches = matches && clientId.equalsIgnoreCase(credential.getClientId());
+                matches = matches && equalsIgnoreCaseTrim(clientId, credential.getClientId());
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && realm.equalsIgnoreCase(accessToken.getRealm());
+                matches = matches && equalsIgnoreCaseTrim(realm, accessToken.getRealm());
             }
 
             if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
                 final IdTokenRecord idToken = (IdTokenRecord) credential;
-                matches = matches && realm.equalsIgnoreCase(idToken.getRealm());
+                matches = matches && equalsIgnoreCaseTrim(realm, idToken.getRealm());
             }
 
             if (mustMatchOnTarget) {
@@ -199,7 +200,13 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
 
             if (mustMatchOnAuthScheme && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && authScheme.equalsIgnoreCase(accessToken.getAccessTokenType());
+                String atType = accessToken.getAccessTokenType();
+
+                if (null != atType) {
+                    atType = atType.trim();
+                }
+
+                matches = matches && authScheme.equalsIgnoreCase(atType);
             }
 
             if (matches) {
@@ -227,8 +234,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
         final String splitCriteria = "\\s+";
-        final String[] targetToMatchArray = targetToMatch.split(splitCriteria);
-        final String[] credentialTargetArray = credentialTarget.split(splitCriteria);
+        final String[] targetToMatchArray = targetToMatch.trim().split(splitCriteria);
+        final String[] credentialTargetArray = credentialTarget.trim().split(splitCriteria);
 
         // Declare Sets to contain these scopes
         final Set<String> soughtTargetSet = new HashSet<>();

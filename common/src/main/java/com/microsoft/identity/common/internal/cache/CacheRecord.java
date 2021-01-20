@@ -22,39 +22,43 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
+
+@Value
+@Builder
 public class CacheRecord implements ICacheRecord {
 
-    private AccountRecord mAccount;
-    private AccessTokenRecord mAccessToken;
-    private RefreshTokenRecord mRefreshToken;
-    private IdTokenRecord mIdToken;
-    private IdTokenRecord mV1IdToken;
+    private final AccountRecord mAccount;
+    private final AccessTokenRecord mAccessToken;
+    private final RefreshTokenRecord mRefreshToken;
+    private final IdTokenRecord mIdToken;
+    private final IdTokenRecord mV1IdToken;
 
-    public void setAccount(final AccountRecord account) {
-        mAccount = account;
+    public static class CacheRecordBuilder {
+        public CacheRecordBuilder mAccount(final @NonNull AccountRecord account) {
+            if (account == null) {
+                throw new NullPointerException("The account record for a CacheRecord may not be null");
+            }
+            this.mAccount = account;
+            return this;
+        }
     }
 
     @Override
-    public AccountRecord getAccount() {
-        return mAccount;
-    }
-
-    public void setAccessToken(final AccessTokenRecord accesToken) {
-        mAccessToken = accesToken;
-    }
+    public AccountRecord getAccount() { return mAccount; }
 
     @Override
     public AccessTokenRecord getAccessToken() {
         return mAccessToken;
-    }
-
-    public void setRefreshToken(final RefreshTokenRecord refreshToken) {
-        mRefreshToken = refreshToken;
     }
 
     @Override
@@ -62,17 +66,9 @@ public class CacheRecord implements ICacheRecord {
         return mRefreshToken;
     }
 
-    public void setIdToken(final IdTokenRecord idToken) {
-        mIdToken = idToken;
-    }
-
     @Override
     public IdTokenRecord getIdToken() {
         return mIdToken;
-    }
-
-    public void setV1IdToken(final IdTokenRecord idToken) {
-        mV1IdToken = idToken;
     }
 
     @Override

@@ -1,6 +1,9 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
-import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import android.util.Log;
+
+import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -11,10 +14,12 @@ import org.junit.runners.model.Statement;
  */
 public class PowerLiftIncidentRule implements TestRule {
 
-    private ITestBroker broker;
+    private final static String TAG = PowerLiftIncidentRule.class.getSimpleName();
 
-    public PowerLiftIncidentRule(final ITestBroker broker) {
-        this.broker = broker;
+    private IPowerLiftIntegratedApp powerLiftIntegratedApp;
+
+    public PowerLiftIncidentRule(final IPowerLiftIntegratedApp powerLiftIntegratedApp) {
+        this.powerLiftIntegratedApp = powerLiftIntegratedApp;
     }
 
     @Override
@@ -22,11 +27,25 @@ public class PowerLiftIncidentRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Logger.i(TAG, "Applying rule....");
                 try {
                     base.evaluate();
-                } catch (final Throwable throwable) {
-                    broker.createPowerLiftIncident();
-                    throw throwable;
+                } catch (final Throwable originalThrowable) {
+                    try {
+                        Logger.e(
+                                TAG,
+                                "Encountered error during test....creating PowerLift incident.",
+                                originalThrowable
+                        );
+                        powerLiftIntegratedApp.createPowerLiftIncident();
+                    } catch (final Throwable powerLiftError) {
+                        Logger.e(
+                                TAG,
+                                "Oops...something went wrong...unable to create PowerLift incident.",
+                                powerLiftError
+                        );
+                    }
+                    throw originalThrowable;
                 }
             }
         };

@@ -22,25 +22,43 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import android.text.TextUtils;
+
+import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.Vector;
 
 abstract class ConfidentialClientHelper {
 
     private final static String GRANT_TYPE = "client_credentials";
+    public static final String LAB_CLIENT_SECRET_FIELD_NAME = "LAB_CLIENT_SECRET";
+    private static String sClasspathSecret = null;
 
     // tenant id where lab api and key vault api is registered
     private final static String TENANT_ID = "72f988bf-86f1-41af-91ab-2d7cd011db47";
@@ -81,7 +99,10 @@ abstract class ConfidentialClientHelper {
 
         try {
             final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-            OAuth2Strategy strategy = authority.createOAuth2Strategy(strategyParameters);
+            OAuth2Strategy<AccessToken, BaseAccount, AuthorizationRequest, AuthorizationRequest.Builder,
+                    AuthorizationStrategy, OAuth2Configuration, OAuth2StrategyParameters,
+                    AuthorizationResponse, RefreshToken, TokenRequest, TokenResponse, TokenResult,
+                    AuthorizationResult> strategy = authority.createOAuth2Strategy(strategyParameters);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
             if (tokenResult.getSuccess()) {

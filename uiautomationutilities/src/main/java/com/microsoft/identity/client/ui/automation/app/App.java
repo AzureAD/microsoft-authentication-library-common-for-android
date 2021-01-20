@@ -135,4 +135,9 @@ public abstract class App implements IApp {
     public boolean isInstalled() {
         return CommonUtils.isPackageInstalled(getPackageName());
     }
+
+    @Override
+    public void copyApk(@NonNull final String destApkFileName) {
+        AdbShellUtils.copyApkForPackage(packageName, destApkFileName);
+    }
 }

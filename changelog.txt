@@ -1,3 +1,17 @@
+Version 3.0.9
+----------
+- Sends CP version to ESTS and handle WebCP uri. (#1137)
+- Check for eligible for caching when putting command in executing command map
+- Expose IAccountCredentialCache for accessing lower-level cache functions.
+- Adds unit test to verify .trim() behavior of cache keys.
+- Make CacheRecord immutable, insist on NonNull AccountRecord (#1225).
+- Bugfix for incorrect error code when cancelling requests (#1144).
+- Remove initial about:blank page load when using WebView based auth.
+- Log an informative error message when application redirect_uri does not match the broker's expected value (#1155).
+- Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
+- Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
+- Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
+
 Version 3.0.8
 ----------
 - Hardcode Teams Agent clientID/scope for FoCi call (#1140)
@@ -30,6 +44,9 @@ Version 3.0.6
     - [Part 5.5] make changes to support the Broker API work (#1101)
 - Make change to support Broker API's updateBrokerRT() functionality (#1107).
 - Introduce a cache for Hello() protocol (#1108)
+- Bumped MSAL Broker Protocol version to 6.0
+- (Requires minimum_required_broker_protocol_version of 6.0+) Adds support for client_claims in PoP token requests.
+- (Requires minimum_required_broker_protocol_version of 6.0+) Adds support for generating SignedHttpRequests (SHRs) without embedding an AT.
 
 Version 3.0.4
 ----------

@@ -226,11 +226,6 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     @Override
-    public void createPowerLiftIncident() {
-        throw new UnsupportedOperationException("Not supported on Broker Host App :(");
-    }
-
-    @Override
     public DeviceAdmin getAdminName() {
         return DeviceAdmin.BROKER_HOST;
     }
@@ -248,7 +243,7 @@ public class BrokerHost extends AbstractTestBroker {
             handleFirstRun(); // handle first run experience
         }
 
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetUpn");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetWpjUpn");
 
         // Look for the UPN dialog box
         final UiObject showUpnDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(

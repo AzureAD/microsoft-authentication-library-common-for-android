@@ -6,15 +6,41 @@ name: dev_updated
 on:
   push:
     branches: [ dev ]
+    paths-ignore:
+    - 'common/versioning/version.properties'
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+#For Testing... runs when project is starred
+#on:
+#  watch:
+#    types: [started]
+#    branches: [dev]
+
+# Jobs run in parallel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  # Increment 
+  incrementLatestPatch:
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.ACTION_PAT }}
+    - uses: actions/setup-java@v1
+      with:
+        java-version: 8
+    - uses: eskatos/gradle-command-action@v1
+      with:
+        arguments: common:incrementLatestVersion
+    - run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git add .
+        git commit -m "Increment latest patch version"
+        git push
+  build:
+    # Make this workflow sequential by indicating what this job needs in order to run
+    needs: incrementLatestPatch
+    runs-on: ubuntu-latest
     steps:
       - name: Azure Pipelines Action
         uses: Azure/pipelines@v1

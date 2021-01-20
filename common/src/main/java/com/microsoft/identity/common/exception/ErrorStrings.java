@@ -236,6 +236,11 @@ public final class ErrorStrings {
     public static final String DEVELOPER_REDIRECTURI_INVALID = "The redirectUri for broker is invalid";
 
     /**
+     * The uri from WebCP is invalid.
+     */
+    public static final String WEBCP_URI_INVALID = "webcp_uri_invalid";
+
+    /**
      * WebView  redirect url is not SSL protected.
      */
     public static final String WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED = "Redirect url scheme not SSL protected";

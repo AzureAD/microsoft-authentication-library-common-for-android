@@ -137,7 +137,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         mProgressBar.setVisibility(View.INVISIBLE);
 
                         // Inject string from test suites.
-                        if (!StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
+                        // if result already sent don't load url again
+                        if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
                             mWebView.loadUrl(mPostPageLoadedUrl);
                         }
                     }
@@ -148,8 +149,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
-                // load blank first to avoid error for not loading webView
-                mWebView.loadUrl("about:blank");
                 Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
@@ -171,18 +170,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public boolean onBackPressed() {
         Logger.info(TAG, "Back button is pressed");
-        if (null != mWebView && mWebView.canGoBack()) {
-            // User should be able to click back button to cancel. Counting blank page as well.
-            final int BACK_PRESSED_STEPS = -2;
-            if (!mWebView.canGoBackOrForward(BACK_PRESSED_STEPS)) {
-                cancelAuthorization(true);
-            } else {
-                mWebView.goBack();
-            }
-            return true;
+
+        if (mWebView.canGoBack()) {
+            mWebView.goBack();
+        } else {
+            cancelAuthorization(true);
         }
 
-        return false;
+        return true;
     }
 
     /**

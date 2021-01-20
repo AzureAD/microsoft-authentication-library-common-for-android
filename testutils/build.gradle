@@ -1,8 +1,27 @@
-apply plugin: 'com.android.library'
+plugins {
+    id 'com.android.library'
+    id 'maven-publish'
+}
+
+apply from: '../common/versioning/version_tasks.gradle'
+
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
+
+    /*
+    //Commenting out until the next major version of common/msal/etc...
+    compileOptions {
+        // Flag to enable support for the new language APIs
+        coreLibraryDesugaringEnabled true
+        // Sets Java compatibility to Java 8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    */
 
     def labClientSecret = "" // will be blank unless specified by developer
     def runId = "" // will be blank unless specified by developer
@@ -21,6 +40,7 @@ android {
     }
 
     defaultConfig {
+        multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -56,11 +76,109 @@ android {
 
 }
 
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier 'sources'
+}
+
+tasks.whenTaskAdded { task ->
+    if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
+        task.dependsOn 'sourcesJar'
+    }
+}
+
+project.afterEvaluate{
+    publishing {
+        publications {
+            aar(MavenPublication) {
+                artifact "$buildDir/outputs/aar/testutils-release.aar"
+                artifact sourcesJar
+                groupId 'com.microsoft.identity'
+                artifactId = 'testutils'
+                version = getAppVersionName()
+
+                pom.withXml {
+
+                    // Dependencies
+                    def dependenciesNode = asNode().appendNode('dependencies')
+
+                    //Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                    configurations.implementation.allDependencies.each {
+                        if (it.group != null && it.name != null) {
+                            def dependencyNode = dependenciesNode.appendNode('dependency')
+                            dependencyNode.appendNode('groupId', it.group)
+                            dependencyNode.appendNode('artifactId', it.name)
+                            dependencyNode.appendNode('version', it.version)
+                        }
+                    }
+                }
+            }
+        }
+
+        repositories {
+            maven {
+                name "vsts-maven-adal-android"
+                url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+                credentials {
+                    username project.ext.vstsUsername
+                    password project.ext.vstsPassword
+                }
+            }
+            maven {
+                name "vsts-maven-android"
+                url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+                credentials {
+                    username project.vstsUsername
+                    password project.vstsPassword
+                }
+            }
+        }
+    }
+}
+
 dependencies {
+
+    //Commenting out until the next major version of common/msal/etc...
+    //Java 8 - Desugaring
+    //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation project(':common')
+
     implementation project(':keyvault')
     implementation project(':labapi')
+
+    if (findProject(":common") != null) {
+        //Use project reference if available
+        implementation(project(":common")) {
+            transitive = false
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'common', version: '0.0.+')
+    }
+
+    // keyvault per product flavor
+    if (findProject(":keyvault") != null) {
+        //Use project reference if available
+        implementation(project(":keyvault")) {
+            transitive = true
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'keyvault', version: '0.0.+')
+    }
+
+    // labapi per product flavor
+    if (findProject(":labapi") != null) {
+        //Use project reference if available
+        implementation(project(":labapi")) {
+            transitive = true
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
+    }
+
     implementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
