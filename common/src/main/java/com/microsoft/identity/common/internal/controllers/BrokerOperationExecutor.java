@@ -128,9 +128,13 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
+                Logger.warn(TAG, "marking broker start");
                 CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.BROKER_PROCESS_START);
+                Logger.warn(TAG, "finish marking broker start");
                 final U result = performStrategy(strategy, operation);
+                Logger.warn(TAG, "marking broker end");
                 CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.BROKER_PROCESS_END);
+                Logger.warn(TAG, "finishing marking broker end");
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {
