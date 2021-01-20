@@ -192,12 +192,11 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
         } else if (credential instanceof IdTokenRecord) {
             final IdTokenRecord idToken = (IdTokenRecord) credential;
-            cacheKey = cacheKey.replace(REALM, "");
+            cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, "");
         } else if (credential instanceof PrimaryRefreshTokenRecord) {
-            final PrimaryRefreshTokenRecord primaryRefreshTokenRecord = (PrimaryRefreshTokenRecord) credential;
-            cacheKey = cacheKey.replace(REALM, sanitizeNull(primaryRefreshTokenRecord.getRealm()));
-            cacheKey = cacheKey.replace(TARGET, sanitizeNull(primaryRefreshTokenRecord.getTarget()));
+            cacheKey = cacheKey.replace(REALM, "");
+            cacheKey = cacheKey.replace(TARGET, "");
         }
 
         return cacheKey;
