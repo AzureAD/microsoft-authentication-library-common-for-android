@@ -36,6 +36,20 @@ public class CodeMarker {
     private String timeStamp;
     private long threadId;
 
+    private String cpuUsed = null;
+    private String cpuTotal = null;
+    private String residentSize = null;
+    private String virtualSize = null;
+    private String  wifiSent = null;
+    private String  wifiRecv = null;
+    private String  wwanSent = null;
+    private String  wwanRecv = null;
+    private String  appSent = null;
+    private String  appRecv = null;
+    private String battery = null;
+    private String systemDiskRead = null;
+    private String systemDiskWrite = null;
+
     public CodeMarker(final String marker, final long timeInMilliseconds, final String timeStamp, final long threadId) {
         this.marker = marker;
         this.timeInMilliseconds = timeInMilliseconds;
@@ -43,20 +57,27 @@ public class CodeMarker {
         this.threadId = threadId;
     }
 
-    public long getThreadId() {
-        return threadId;
-    }
+    public String getCSVString() {
+        StringBuilder csvStringBuilder = new StringBuilder();
+        csvStringBuilder.append(this.timeStamp == null ? "NA" : this.timeStamp);
+        csvStringBuilder.append(",").append(this.marker == null ? "NA" : this.marker);
+        csvStringBuilder.append(",").append(this.timeInMilliseconds);
+        csvStringBuilder.append(",").append(this.threadId);
+        csvStringBuilder.append(",").append(this.cpuUsed == null ? "NA" : this.cpuUsed);
+        csvStringBuilder.append(",").append(this.cpuTotal == null ? "NA" : this.cpuTotal);
+        csvStringBuilder.append(",").append(this.residentSize == null ? "NA" : this.residentSize);
+        csvStringBuilder.append(",").append(this.virtualSize == null ? "NA" : this.virtualSize);
+        csvStringBuilder.append(",").append(this.wifiSent == null ? "NA" : this.wifiSent);
+        csvStringBuilder.append(",").append(this.wifiRecv == null ? "NA" : this.wifiRecv);
+        csvStringBuilder.append(",").append(this.wwanSent == null ? "NA" : this.wwanSent);
+        csvStringBuilder.append(",").append(this.wwanRecv == null ? "NA" : this.wwanRecv);
+        csvStringBuilder.append(",").append(this.appSent == null ? "NA" : this.appSent);
+        csvStringBuilder.append(",").append(this.appRecv == null ? "NA" : this.appRecv);
+        csvStringBuilder.append(",").append(this.battery == null ? "NA" : this.battery);
+        csvStringBuilder.append(",").append(this.systemDiskRead == null ? "NA" : this.systemDiskRead);
+        csvStringBuilder.append(",").append(this.systemDiskWrite == null ? "NA" : this.systemDiskWrite);
 
-    public String getTimeStamp() {
-        return timeStamp;
-    }
-
-    public String getMarker() {
-        return marker;
-    }
-
-    public long getTimeInMilliseconds() {
-        return timeInMilliseconds;
+        return csvStringBuilder.toString();
     }
 
 }

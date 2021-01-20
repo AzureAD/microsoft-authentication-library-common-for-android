@@ -22,13 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.os.Environment;
-
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,23 +34,23 @@ public class CodeMarkerManager {
 
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
-    private int MAX_SIZE_CODE_MARKER = 1000;
+    private static int MAX_SIZE_CODE_MARKER = 1000;
     private volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
 
     //baseMilliSeconds is the time in milliseconds when first codemarker was captured.
     private long baseMilliSeconds = 0;
     private String scenarioCode = null;
-    private static CodeMarkerManager instance = null;
+    private static CodeMarkerManager sCodeMarkerManager = null;
 
     public static CodeMarkerManager getInstance() {
-        if(CodeMarkerManager.instance == null) {
+        if(CodeMarkerManager.sCodeMarkerManager == null) {
             synchronized (CodeMarkerManager.class) {
-                if(CodeMarkerManager.instance == null) {
-                    CodeMarkerManager.instance = new CodeMarkerManager();
+                if(CodeMarkerManager.sCodeMarkerManager == null) {
+                    CodeMarkerManager.sCodeMarkerManager = new CodeMarkerManager();
                 }
             }
         }
-        return CodeMarkerManager.instance;
+        return CodeMarkerManager.sCodeMarkerManager;
     }
 
     private CodeMarkerManager() {
@@ -73,7 +66,7 @@ public class CodeMarkerManager {
      */
     public void markCode(String marker) {
         if(this.enableCodeMarker) {
-            if(this.codeMarkers.size() >= MAX_SIZE_CODE_MARKER) {
+            if(this.codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
                 clearMarkers();
             }
             long currentMilliSeconds = System.currentTimeMillis();
@@ -99,17 +92,6 @@ public class CodeMarkerManager {
     }
 
     public String getFileContent() {
-        StringBuilder stringToWrite = new StringBuilder("TimeStamp,Marker,Time,Thread,CpuUsed,CpuTotal,ResidentSize,VirtualSize,WifiSent,WifiRecv,WwanSent,WwanRecv,AppSent,AppRecv,Battery,SystemDiskRead,SystemDiskWrite");
-
-        for(CodeMarker codeMarker : this.codeMarkers) {
-            StringBuilder thisLine = new StringBuilder();
-            thisLine.append("\n").append(codeMarker.getTimeStamp())
-                    .append(",").append(codeMarker.getMarker())
-                    .append(",").append(codeMarker.getTimeInMilliseconds())
-                    .append(",").append(codeMarker.getThreadId())
-                    .append(",").append(",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA");
-            stringToWrite.append(thisLine.toString());
-        }
-        return stringToWrite.toString();
+        return CodeMarkerUtil.getCSVContent(this.codeMarkers);
     }
 }

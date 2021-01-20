@@ -2,7 +2,7 @@ package com.microsoft.identity.common;
 
 /**
  * A class having the code marker value of particular event's description.
- * One or many of these can be used while capturing {@link CodeMarker} event by sending as an argument in method call to markCode of class {@link CodeMarkerManager}.
+ * One or many of these can be used while capturing {@link CodeMarker} event by sending as an argument in method call to {@link CodeMarkerManager#markCode(String)} of class {@link CodeMarkerManager}.
  */
 public class CodeMarkerConstants {
     public static String BROKER_PROCESS_START = "10111";
