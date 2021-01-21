@@ -7,6 +7,7 @@ package com.microsoft.identity.common;
 public class PerfConstants {
 
     public static class CodeMarkerConstants {
+        public static String BROKER_OPERATION_EXECUTION_START = "10110";
         public static String BROKER_PROCESS_START = "10111";
         public static String BROKER_PROCESS_END = "10120";
         public static String ACQUIRE_TOKEN_SILENT_START = "10011";

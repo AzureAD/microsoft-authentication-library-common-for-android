@@ -114,6 +114,7 @@ public class BrokerOperationExecutor {
                                                       @NonNull final BrokerOperation<U> operation)
             throws BaseException {
         Logger.warn(TAG, "BrokerOperationExecutor.execute method start");
+        CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
         final String methodName = ":execute";
 
         emitOperationStartEvent(parameters, operation);
