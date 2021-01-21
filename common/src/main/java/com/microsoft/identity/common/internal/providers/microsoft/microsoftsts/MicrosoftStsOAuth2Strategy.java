@@ -624,7 +624,7 @@ public class MicrosoftStsOAuth2Strategy
             description = "refresh token (required) is missing from token response.";
         }
 
-        if(clientException != null) {
+        if (clientException != null) {
             throw new ClientException(clientException, description);
         }
 
