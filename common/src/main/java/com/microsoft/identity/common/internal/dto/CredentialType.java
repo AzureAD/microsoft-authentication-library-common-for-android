@@ -69,6 +69,9 @@ public enum CredentialType {
      */
     AccessToken_With_AuthScheme,
 
+    /**
+     * PrimaryRefreshToken
+     */
     PrimaryRefreshToken;
 
     public static final CredentialType[] ID_TOKEN_TYPES = new CredentialType[]{IdToken, V1IdToken};

@@ -22,9 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
-import android.annotation.SuppressLint;
-
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Calendar;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.*;
 
@@ -40,12 +42,24 @@ public class PrimaryRefreshTokenRecord extends Credential {
          */
         public static final String TARGET = "target";
 
+        /**
+         * String of realm.
+         */
         public static final String REALM = "realm";
 
+        /**
+         * String of session_key.
+         */
         public static final String SESSION_KEY = "session_key";
 
+        /**
+         * String of session_key_rolling_date.
+         */
         public static final String SESSION_KEY_ROLLING_DATE = "session_key_rolling_date";
 
+        /**
+         * String of prt_protocol_version.
+         */
         public static final String PRT_PROTOCOL_VERSION = "prt_protocol_version";
     }
 
@@ -64,18 +78,35 @@ public class PrimaryRefreshTokenRecord extends Credential {
     @SerializedName(TARGET)
     private String mTarget;
 
+    /**
+     * Full tenant or organizational identifier that account belongs to. Can be null.
+     */
     @SerializedName(REALM)
     private String mRealm;
 
+    /**
+     * Token expiry time. This value should be calculated based on the current UTC time measured
+     * locally and the value expires_in returned from the service. Measured in milliseconds from
+     * epoch (1970).
+     */
     @SerializedName(EXPIRES_ON)
     private String mExpiresOn;
 
+    /**
+     * Session key of PRT.
+     */
     @SerializedName(SESSION_KEY)
     private String mSessionKey;
 
+    /**
+     * PRT protocol version, currently 3.0.
+     */
     @SerializedName(PRT_PROTOCOL_VERSION)
     private String mPrtProtocolVersion;
 
+    /**
+     * Rolling date of session key.
+     */
     @SerializedName(SESSION_KEY_ROLLING_DATE)
     private String mSessionKeyRollingDate;
 
@@ -115,47 +146,104 @@ public class PrimaryRefreshTokenRecord extends Credential {
         mFamilyId = familyId;
     }
 
-    @Override
-    public boolean isExpired() {
-        return false;
+    public boolean isExpired(final String expires) {
+        // Init a Calendar for the current time/date
+        final Calendar calendar = Calendar.getInstance();
+        final Date validity = calendar.getTime();
+        // Init a Date for the accessToken's expiry
+        long epoch = Long.valueOf(expires);
+        final Date expiresOn = new Date(
+                TimeUnit.SECONDS.toMillis(epoch)
+        );
+        return expiresOn.before(validity);
     }
 
+    @Override
+    public boolean isExpired() {
+        return isExpired(getExpiresOn());
+    }
+
+    /**
+     * Gets the realm
+     *
+     * @return The realm to get.
+     */
     public String getRealm() {
         return mRealm;
     }
 
+    /**
+     * Sets the realm.
+     * @param realm The realm to set.
+     */
     public void setRealm(String realm) {
         mRealm = realm;
     }
 
+    /**
+     * Gets the expires_on.
+     * @return The expires_on to get.
+     */
     public String getExpiresOn() {
         return mExpiresOn;
     }
 
+    /**
+     * Sets the expires_on.
+     * @param expiresOn The expires_on to set.
+     */
     public void setExpiresOn(String expiresOn) {
         mExpiresOn = expiresOn;
     }
 
+    /**
+     * Gets the session_key.
+     * @return The session_key to get.
+     */
     public String getSessionKey() {
         return mSessionKey;
     }
 
+    /**
+     * Sets the session_key.
+     *
+     * @param sessionKey The session_key to set.
+     */
     public void setSessionKey(String sessionKey) {
         mSessionKey = sessionKey;
     }
 
+    /**
+     * Gets the prt_protocol_version.
+     *
+     * @return The prt_protocol_version to get.
+     */
     public String getPrtProtocolVersion() {
         return mPrtProtocolVersion;
     }
 
+    /**
+     * Sets the prt_protocol_version.
+     *
+     * @param prtProtocolVersion The prt_protocol_version to set.
+     */
     public void setPrtProtocolVersion(String prtProtocolVersion) {
         mPrtProtocolVersion = prtProtocolVersion;
     }
 
+    /**
+     * Gets the session_key_rolling_date.
+     *
+     * @return The session_key_rolling_date to get.
+     */
     public String getSessionKeyRollingDate() {
         return mSessionKeyRollingDate;
     }
 
+    /**
+     * Sets the session_key_rolling_date.
+     * @param sessionKeyRollingDate The session_key_rolling_date to set.
+     */
     public void setSessionKeyRollingDate(String sessionKeyRollingDate) {
         mSessionKeyRollingDate = sessionKeyRollingDate;
     }
