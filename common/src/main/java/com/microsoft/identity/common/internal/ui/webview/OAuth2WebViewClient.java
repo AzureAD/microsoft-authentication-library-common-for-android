@@ -119,7 +119,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                 final int errorCode,
                                 final String description,
                                 final String failingUrl) {
-        super.onReceivedError(view, errorCode, description, failingUrl);
         sendErrorToCallback(view, errorCode, description);
     }
 
@@ -128,7 +127,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {
-        super.onReceivedError(view, request, error);
         sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
     }
 
