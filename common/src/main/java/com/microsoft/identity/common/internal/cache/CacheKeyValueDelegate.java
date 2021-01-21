@@ -154,17 +154,18 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
         cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
 
-        String familyIdForCacheKey;
+        RefreshTokenRecord rt;
         if ((credential instanceof RefreshTokenRecord)
-                && !StringExtensions.isNullOrBlank(familyIdForCacheKey = ((RefreshTokenRecord) credential).getFamilyId()) ||
-                (credential instanceof PrimaryRefreshTokenRecord)
-                        && !StringExtensions.isNullOrBlank(familyIdForCacheKey = ((PrimaryRefreshTokenRecord) credential).getFamilyId())) {
+                && !StringExtensions.isNullOrBlank((rt = (RefreshTokenRecord) credential).getFamilyId())) {
+            String familyIdForCacheKey = rt.getFamilyId();
 
             if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
                 familyIdForCacheKey = familyIdForCacheKey.replace(FOCI_PREFIX, "");
             }
 
             cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
+        } else if (credential instanceof PrimaryRefreshTokenRecord) {
+            cacheKey = cacheKey.replace(CLIENT_ID, "");
         } else {
             cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
         }
