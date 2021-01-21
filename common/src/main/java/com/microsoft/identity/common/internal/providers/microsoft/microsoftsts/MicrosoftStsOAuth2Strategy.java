@@ -614,7 +614,7 @@ public class MicrosoftStsOAuth2Strategy
             description = "id token (required) is missing from token response.";
         }
 
-        if(response.getAccessToken() == null){
+        if (response.getAccessToken() == null) {
             clientException = ClientException.ACCESS_TOKEN_MISSING;
             description = "access token (required) is missing from token response.";
         }
