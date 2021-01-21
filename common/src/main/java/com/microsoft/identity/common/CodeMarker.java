@@ -69,8 +69,8 @@ public class CodeMarker {
         List<Pair<String,String>> csvKeyValuePairs = new ArrayList<Pair<String,String>>();
         csvKeyValuePairs.add(new Pair("TimeStamp", this.timeStamp == null ? CodeMarker.csvNoValue : this.timeStamp));
         csvKeyValuePairs.add(new Pair("Marker", this.marker == null ? CodeMarker.csvNoValue : this.marker));
-        csvKeyValuePairs.add(new Pair("Time", this.timeInMilliseconds));
-        csvKeyValuePairs.add(new Pair("Thread", this.threadId));
+        csvKeyValuePairs.add(new Pair("Time", Long.toString(this.timeInMilliseconds)));
+        csvKeyValuePairs.add(new Pair("Thread", Long.toString(this.threadId)));
         csvKeyValuePairs.add(new Pair("CpuUsed", this.cpuUsed == null ? CodeMarker.csvNoValue : this.cpuUsed));
         csvKeyValuePairs.add(new Pair("CpuTotal", this.cpuTotal == null ? CodeMarker.csvNoValue : this.cpuTotal));
         csvKeyValuePairs.add(new Pair("ResidentSize", this.residentSize == null ? CodeMarker.csvNoValue : this.residentSize));
