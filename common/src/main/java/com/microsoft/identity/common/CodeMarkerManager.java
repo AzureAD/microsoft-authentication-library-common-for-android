@@ -35,27 +35,25 @@ public class CodeMarkerManager {
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private static int MAX_SIZE_CODE_MARKER = 1000;
-    private volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
+    private List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
 
     //baseMilliSeconds is the time in milliseconds when first codemarker was captured.
     private long baseMilliSeconds = 0;
     private String scenarioCode = null;
-    private static CodeMarkerManager sCodeMarkerManager = null;
+    private static CodeMarkerManager sCodeMarkerManager = new CodeMarkerManager();
 
     public static CodeMarkerManager getInstance() {
-        if(CodeMarkerManager.sCodeMarkerManager == null) {
-            synchronized (CodeMarkerManager.class) {
-                if(CodeMarkerManager.sCodeMarkerManager == null) {
-                    CodeMarkerManager.sCodeMarkerManager = new CodeMarkerManager();
-                }
-            }
-        }
         return CodeMarkerManager.sCodeMarkerManager;
     }
 
     private CodeMarkerManager() {
     }
 
+    /**
+     * This method sets a scenarioCode Defined in {@link PerfConstants.ScenarioConstants}.
+     * This scenario code will be pre-fixed to every code marker.
+     * @param scenarioCode
+     */
     public void setPrefixScenarioCode(String scenarioCode) {
         this.scenarioCode = scenarioCode;
     }
@@ -78,19 +76,35 @@ public class CodeMarkerManager {
         }
     }
 
+    /**
+     * This method enables or disables the {@link CodeMarkerManager} as per the argument passed to this.
+     * Only enabled {@link CodeMarkerManager} will be able to capture the codemarkers.
+     * @param enableCodeMarker
+     */
     public void setEnableCodeMarker(boolean enableCodeMarker) {
         this.enableCodeMarker = enableCodeMarker;
     }
 
+    /**
+     * This medhod clears all the existing markers.
+     * This medhod can be used to start another iteration after capturing the csv content.
+     */
     public void clearMarkers(){
         this.codeMarkers.clear();
     }
 
+    /**
+     * This method clears all the existing markers as well as the scenario code which might have been set earlier.
+     */
     public void clearAll() {
         this.codeMarkers.clear();
         this.scenarioCode = null;
     }
 
+    /**
+     * This method returns the content of all the codemarkers available till the time converted to CSV which can be directly written to a file.
+     * @return
+     */
     public String getFileContent() {
         return CodeMarkerUtil.getCSVContent(this.codeMarkers);
     }

@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.CodeMarkerConstants;
+import com.microsoft.identity.common.PerfConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -113,6 +113,7 @@ public class BrokerOperationExecutor {
     public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
                                                       @NonNull final BrokerOperation<U> operation)
             throws BaseException {
+        Logger.warn(TAG, "BrokerOperationExecutor.execute method start");
         final String methodName = ":execute";
 
         emitOperationStartEvent(parameters, operation);
@@ -129,11 +130,11 @@ public class BrokerOperationExecutor {
         for (final IIpcStrategy strategy : mStrategies) {
             try {
                 Logger.warn(TAG, "marking broker start");
-                CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.BROKER_PROCESS_START);
+                CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
                 Logger.warn(TAG, "finish marking broker start");
                 final U result = performStrategy(strategy, operation);
                 Logger.warn(TAG, "marking broker end");
-                CodeMarkerManager.getInstance().markCode(CodeMarkerConstants.BROKER_PROCESS_END);
+                CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
                 Logger.warn(TAG, "finishing marking broker end");
                 emitOperationSuccessEvent(operation, result);
                 return result;
