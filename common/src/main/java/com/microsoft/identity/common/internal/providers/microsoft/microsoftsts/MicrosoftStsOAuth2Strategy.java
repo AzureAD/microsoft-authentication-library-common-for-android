@@ -609,7 +609,7 @@ public class MicrosoftStsOAuth2Strategy
         String clientException = null;
         String description = null;
 
-        if(response.getIdToken() == null){
+        if (response.getIdToken() == null) {
             clientException = ClientException.ID_TOKEN_MISSING;
             description = "id token (required) is missing from token response.";
         }
