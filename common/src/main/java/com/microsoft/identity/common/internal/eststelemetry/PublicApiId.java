@@ -119,4 +119,7 @@ public final class PublicApiId {
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST = "1100";
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST_ASYNC = "1101";
     //endregion
+
+    // calculator
+    public static final String CALCULATOR = "2001";
 }
