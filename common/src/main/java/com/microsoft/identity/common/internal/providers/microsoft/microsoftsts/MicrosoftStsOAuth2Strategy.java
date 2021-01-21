@@ -619,7 +619,7 @@ public class MicrosoftStsOAuth2Strategy
             description = "access token (required) is missing from token response.";
         }
 
-        if(response.getRefreshToken() == null){
+        if (response.getRefreshToken() == null) {
             clientException = ClientException.REFRESH_TOKEN_MISSING;
             description = "refresh token (required) is missing from token response.";
         }
