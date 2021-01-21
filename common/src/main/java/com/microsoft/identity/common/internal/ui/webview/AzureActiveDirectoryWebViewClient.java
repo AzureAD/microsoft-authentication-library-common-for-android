@@ -155,46 +155,38 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 returnError(exception.getErrorCode(), exception.getMessage());
                 view.stopLoading();
             }
-            return true;
         } else if (isRedirectUrl(formattedURL)) {
             Logger.info(TAG, "Navigation starts with the redirect uri.");
             processRedirectUrl(view, url);
-            return true;
         } else if (isWebsiteRequestUrl(formattedURL)) {
             Logger.info(TAG, "It is an external website request");
             processWebsiteRequest(view, url);
-            return true;
         } else if (isInstallRequestUrl(formattedURL)) {
             Logger.info(TAG, "It is an install request");
             processInstallRequest(view, url);
-            return true;
         } else if (isWebCpUrl(formattedURL)) {
             Logger.info(TAG, "It is a request from WebCP");
             processWebCpRequest(view, url);
-            return true;
         } else if (isPlayStoreUrl(formattedURL)){
             Logger.info(TAG, "Request to open PlayStore.");
             return processPlayStoreURL(view, url);
         } else if (isAuthAppMFAUrl(formattedURL)){
             Logger.info(TAG, "Request to link account with Authenticator.");
             processAuthAppMFAUrl(url);
-            return true;
-        } else if (isValidRedirectUri(url)){
+        } else if (isInvalidRedirectUri(url)){
             Logger.info(TAG, "Check for Redirect Uri.");
             processInvalidRedirectUri(view, url);
-            return true;
         } else if (isBlankPageRequest(formattedURL)){
-            Logger.verbose(TAG, "It is an blank page request");
-            return true;
+            Logger.info(TAG, "It is an blank page request");
         } else if (isUriSSLProtected(formattedURL)){
-            Logger.verbose(TAG, "Check for SSL protection");
+            Logger.info(TAG, "Check for SSL protection");
             processSSLProtectionCheck(view, url);
-            return true;
         } else {
             Logger.info(TAG, "This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
             processInvalidUrl(url);
             return false;
         }
+        return true;
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {
@@ -205,13 +197,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return "about:blank".equals(url);
     }
 
-    private boolean isValidRedirectUri(@NonNull final String url) {
+    private boolean isInvalidRedirectUri(@NonNull final String url) {
         return isBrokerRequest(getActivity().getIntent())
                 && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX);
     }
 
     private boolean isAuthAppMFAUrl(@NonNull final String url) {
-        return url.startsWith(AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING);
+        return url.startsWith(AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX);
     }
 
     private boolean isPlayStoreUrl(@NonNull final String url) {
