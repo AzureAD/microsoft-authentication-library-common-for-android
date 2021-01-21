@@ -266,19 +266,9 @@ public class ClientException extends BaseException {
     public static final String ACCESS_DENIED = "access_denied";
 
     /**
-     * Access token missing
+     * Tokens missing
      */
-    public static final String ACCESS_TOKEN_MISSING = "access_token_missing";
-
-    /**
-     * Id token missing
-     */
-    public static final String ID_TOKEN_MISSING = "id_token_missing";
-
-    /**
-     * refresh token missing
-     */
-    public static final String REFRESH_TOKEN_MISSING = "refresh_token_missing";
+    public static final String TOKENS_MISSING = "tokens_missing";
 
     /**
      * Constructor of ClientException.

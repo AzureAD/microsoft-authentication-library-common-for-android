@@ -607,28 +607,28 @@ public class MicrosoftStsOAuth2Strategy
             throws ClientException {
 
         String clientException = null;
-        String description = null;
+        String tokens = "";
+        String tokensMissingMessage = "missing required tokens of type: {0}";
 
-        if (response.getIdToken() == null) {
-            clientException = ClientException.ID_TOKEN_MISSING;
-            description = "id token (required) is missing from token response.";
+        if (StringUtil.isEmpty(response.getIdToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat("id_token");
         }
 
-        if (response.getAccessToken() == null) {
-            clientException = ClientException.ACCESS_TOKEN_MISSING;
-            description = "access token (required) is missing from token response.";
+        if (StringUtil.isEmpty(response.getAccessToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat(" access_token");
         }
 
-        if (response.getRefreshToken() == null) {
-            clientException = ClientException.REFRESH_TOKEN_MISSING;
-            description = "refresh token (required) is missing from token response.";
+        if (StringUtil.isEmpty(response.getRefreshToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat(" refresh_token");
         }
 
         if (clientException != null) {
-            throw new ClientException(clientException, description);
+            throw new ClientException(clientException, String.format(tokensMissingMessage, tokens));
         }
 
-        return;
     }
 
     private String buildCloudSpecificTokenEndpoint(
