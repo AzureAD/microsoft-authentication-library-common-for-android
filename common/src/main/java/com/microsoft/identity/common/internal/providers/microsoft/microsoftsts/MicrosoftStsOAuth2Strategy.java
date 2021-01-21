@@ -600,7 +600,7 @@ public class MicrosoftStsOAuth2Strategy
     /**
      * Validates that the token response contains an access token, id_token and refresh token
      *
-     *      * @param response The idp response.
+     * @param response The idp response.
      * @throws ClientException
      */
     private void validateTokensAreInResponse(@NonNull final MicrosoftStsTokenResponse response)
