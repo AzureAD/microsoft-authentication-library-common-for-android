@@ -311,7 +311,7 @@ public class GoogleSettings extends BaseSettings {
             final UiObject selectBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/list", browserName);
             selectBrowser.click();
         } else {
-            UiObject selectBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.permissioncontroller:id/recycler_view", browserName);
+            final UiObject selectBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.permissioncontroller:id/recycler_view", browserName);
             selectBrowser.click();
         }
     }

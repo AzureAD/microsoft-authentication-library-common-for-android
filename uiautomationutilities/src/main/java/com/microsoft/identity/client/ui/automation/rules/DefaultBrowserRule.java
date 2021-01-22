@@ -12,7 +12,7 @@ public class DefaultBrowserRule implements TestRule {
 
     private final String browserName;
 
-    public DefaultBrowserRule(@NonNull final String browserName){
+    public DefaultBrowserRule(@NonNull final String browserName) {
         this.browserName = browserName;
 
     }

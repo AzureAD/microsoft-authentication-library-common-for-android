@@ -109,5 +109,11 @@ public interface ISettings {
      */
     void launchDefaultAppsPage();
 
+    /**
+     * function which sets the browser name as default browser
+     *
+     * @param browserName we will select browser name as default browser.
+     * @throws UiObjectNotFoundException
+     */
     void setDefaultBrowser(final String browserName) throws UiObjectNotFoundException;
 }

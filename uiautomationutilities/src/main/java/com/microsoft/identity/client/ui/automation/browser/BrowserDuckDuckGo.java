@@ -6,6 +6,7 @@ public class BrowserDuckDuckGo extends App implements IBrowser {
 
     private static final String DUCKDUCKGO_PACAKGE_NAME = "com.duckduckgo.mobile.android";
     private static final String DUCKDUCKGO_APP_NAME = "DuckDuckGo";
+
     public BrowserDuckDuckGo() {
         super(DUCKDUCKGO_PACAKGE_NAME, DUCKDUCKGO_APP_NAME);
     }
