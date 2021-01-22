@@ -314,4 +314,15 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedIdToken));
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedRefreshToken));
     }
+
+    @Test(expected = ClientException.class)
+    public void saveATSansTargetThrowsException() throws ClientException {
+        mTestBundle.mGeneratedAccessToken.setTarget(null);
+        mCppCache.saveCredentials(
+                null,
+                mTestBundle.mGeneratedAccessToken,
+                mTestBundle.mGeneratedIdToken,
+                mTestBundle.mGeneratedRefreshToken
+        );
+    }
 }
