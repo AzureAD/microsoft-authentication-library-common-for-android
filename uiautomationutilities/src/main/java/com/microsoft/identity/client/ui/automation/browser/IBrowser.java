@@ -36,4 +36,9 @@ public interface IBrowser extends IApp {
      */
     void navigateTo(String url);
 
+    /**
+     * @return the Browser name of the browser in the device.
+     */
+    String BrowserName();
+
 }

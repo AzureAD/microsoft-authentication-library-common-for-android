@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
@@ -49,7 +50,7 @@ public class RulesHelper {
      * @param broker the broker that may be used during this test
      * @return a {@link RuleChain} object
      */
-    public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker) {
+    public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker, @NonNull final String browserName) {
         Log.i(TAG, "Adding AutomationLoggingRule");
         RuleChain ruleChain = RuleChain.outerRule(new AutomationLoggingRule());
 
@@ -61,6 +62,9 @@ public class RulesHelper {
 
         Log.i(TAG, "Adding ResetAutomaticTimeZoneTestRule");
         ruleChain = ruleChain.around(new ResetAutomaticTimeZoneTestRule());
+
+        Log.i(TAG, "Adding DefaultBrowserRule");
+        ruleChain = ruleChain.around(new DefaultBrowserRule(browserName));
 
         Log.i(TAG, "Adding DeviceLockSetRule");
         ruleChain = ruleChain.around(new DevicePinSetupRule(broker));

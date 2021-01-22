@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import android.os.Build;
+
 import androidx.annotation.NonNull;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
@@ -278,12 +280,39 @@ public class GoogleSettings extends BaseSettings {
         }
     }
 
+    @Override
+    public void setDefaultBrowser(String browserName) throws UiObjectNotFoundException {
+        launchDefaultAppsPage();
+        handleBrowserApp();
+        handleSetBrowserDefault(browserName);
+    }
+
     private void handleDoneButton() throws UiObjectNotFoundException {
         if (android.os.Build.VERSION.SDK_INT == 28) {
             UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
         } else {
             final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
             doneButton.click();
+        }
+    }
+
+    private void handleBrowserApp() throws UiObjectNotFoundException {
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            final UiObject defaultBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/list", "Browser app");
+            defaultBrowser.click();
+        } else {
+            final UiObject defaultBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.permissioncontroller:id/recycler_view", "Browser app");
+            defaultBrowser.click();
+        }
+    }
+
+    private void handleSetBrowserDefault(final String browserName) throws UiObjectNotFoundException {
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            final UiObject selectBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.settings:id/list", browserName);
+            selectBrowser.click();
+        } else {
+            UiObject selectBrowser = UiAutomatorUtils.obtainChildInScrollable("com.android.permissioncontroller:id/recycler_view", browserName);
+            selectBrowser.click();
         }
     }
 

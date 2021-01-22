@@ -78,4 +78,11 @@ public abstract class BaseSettings implements ISettings {
     public void launchScreenLockPage() {
         launchIntent(Settings.ACTION_SECURITY_SETTINGS);
     }
+
+    @Override
+    public void launchDefaultAppsPage(){
+        launchIntent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS);
+    }
+
+
 }

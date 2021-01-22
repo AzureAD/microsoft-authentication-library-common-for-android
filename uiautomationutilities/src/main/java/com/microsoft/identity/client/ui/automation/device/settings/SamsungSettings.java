@@ -198,4 +198,9 @@ public class SamsungSettings extends BaseSettings {
     public void removePinFromDevice(String pin) {
         //TODO: implement removing PIN for SAMSUNG device.
     }
+
+    @Override
+    public void setDefaultBrowser(String browserName) throws UiObjectNotFoundException {
+        //TODO: implement set default browser.
+    }
 }
