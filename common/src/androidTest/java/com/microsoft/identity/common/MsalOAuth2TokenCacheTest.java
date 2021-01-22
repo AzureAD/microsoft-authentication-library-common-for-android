@@ -192,13 +192,11 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
             mGeneratedPrimaryRefreshToken = new PrimaryRefreshTokenRecord();
             mGeneratedPrimaryRefreshToken.setSecret(rtSecret);
-            mGeneratedPrimaryRefreshToken.setTarget(target);
             mGeneratedPrimaryRefreshToken.setHomeAccountId(homeAccountId);
             mGeneratedPrimaryRefreshToken.setEnvironment(environment);
             mGeneratedPrimaryRefreshToken.setCredentialType(PrimaryRefreshToken.name());
             mGeneratedPrimaryRefreshToken.setClientId(clientId);
             mGeneratedPrimaryRefreshToken.setFamilyId(familyId);
-            mGeneratedPrimaryRefreshToken.setRealm(realm);
             mGeneratedPrimaryRefreshToken.setExpiresOn(expiresOn);
             mGeneratedPrimaryRefreshToken.setCachedAt(cacheAt);
             mGeneratedPrimaryRefreshToken.setSessionKey(prtSessionKey);

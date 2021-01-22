@@ -34,6 +34,10 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
+         * String of family id.
+         */
+        public static final String FAMILY_ID = "family_id";
+        /**
          * String of realm.
          */
         public static final String REALM = "realm";
@@ -53,6 +57,12 @@ public class PrimaryRefreshTokenRecord extends Credential {
          */
         public static final String PRT_PROTOCOL_VERSION = "prt_protocol_version";
     }
+
+    /**
+     * 1st Party Application Family ID.
+     */
+    @SerializedName(FAMILY_ID)
+    private String mFamilyId;
 
     /**
      * PRT expiry time. This value is returned from the server as refresh_token_expires_in that
@@ -79,6 +89,24 @@ public class PrimaryRefreshTokenRecord extends Credential {
      */
     @SerializedName(SESSION_KEY_ROLLING_DATE)
     private String mSessionKeyRollingDate;
+
+    /**
+     * Gets the family_id.
+     *
+     * @return The family_id to get.
+     */
+    public String getFamilyId() {
+        return mFamilyId;
+    }
+
+    /**
+     * Sets the family_id.
+     *
+     * @param familyId The family_id to set.
+     */
+    public void setFamilyId(final String familyId) {
+        mFamilyId = familyId;
+    }
 
     public boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date
@@ -178,6 +206,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
         PrimaryRefreshTokenRecord that = (PrimaryRefreshTokenRecord) o;
 
+        if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null)
+            return false;
         if (mExpiresOn != null ? !mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn != null)
             return false;
         if (mSessionKey != null ? !mSessionKey.equals(that.mSessionKey) : that.mSessionKey != null)
@@ -188,6 +218,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
     //CHECKSTYLE:ON
 
+
+
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
@@ -196,6 +228,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
     @Override
     public int hashCode() {
         int result = super.hashCode();
+        result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
         result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
         result = 31 * result + (mSessionKey != null ? mSessionKey.hashCode() : 0);
         result = 31 * result + (mPrtProtocolVersion != null ? mPrtProtocolVersion.hashCode() : 0);
@@ -212,7 +245,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
     @Override
     public String toString() {
         return "PrimaryRefreshTokenRecord{" +
-                "mExpiresOn='" + mExpiresOn + '\'' +
+                "mFamilyId='" + mFamilyId + '\'' +
+                ", mExpiresOn='" + mExpiresOn + '\'' +
                 ", mSessionKey='" + mSessionKey + '\'' +
                 ", mPrtProtocolVersion='" + mPrtProtocolVersion + '\'' +
                 ", mSessionKeyRollingDate='" + mSessionKeyRollingDate + '\'' +
