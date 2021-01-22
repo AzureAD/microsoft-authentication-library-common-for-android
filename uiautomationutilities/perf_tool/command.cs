@@ -137,13 +137,12 @@ namespace TestScript {
             task.BaseLogDir = baseJobArtifactURL;
             task.TargetLogDir = targetJobArtifactURL;
 
+            task.BaseScenarioToPerfValueMap = new Dictionary<string, Dictionary<string, double>>();
+            task.TargetScenarioToPerfValueMap = new Dictionary<string, Dictionary<string, double>>();
+
             foreach (string key in baseMeasurements.Keys)
             {
-                if (task.BaseScenarioToPerfValueMap == null)
-                {
-                    task.BaseScenarioToPerfValueMap = new Dictionary<string, Dictionary<string, double>>();
-                }
-
+            
                 if (!task.BaseScenarioToPerfValueMap.ContainsKey(key))
                 {
                     task.BaseScenarioToPerfValueMap.Add(key, new Dictionary<string, double>());
@@ -161,11 +160,7 @@ namespace TestScript {
 
             foreach (string key in targetMeasurements.Keys)
             {
-                if (task.TargetScenarioToPerfValueMap == null)
-                {
-                    task.TargetScenarioToPerfValueMap = new Dictionary<string, Dictionary<string, double>>();
-                }
-
+                
                 if (!task.TargetScenarioToPerfValueMap.ContainsKey(key))
                 {
                     task.TargetScenarioToPerfValueMap.Add(key, new Dictionary<string, double>());

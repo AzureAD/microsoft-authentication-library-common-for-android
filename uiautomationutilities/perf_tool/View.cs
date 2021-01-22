@@ -94,9 +94,19 @@ namespace PerfDiffResultMailer
                 HashSet<string> activeM = new HashSet<string>();
                 foreach (var parameter in parameters)
                 {
-                    foreach (var perfM in parameter.BaseScenarioToPerfValueMap[scenario])
+                    if(parameter.BaseScenarioToPerfValueMap.ContainsKey(scenario)) {
+                        foreach (var perfM in parameter.BaseScenarioToPerfValueMap[scenario])
+                        {
+                            activeM.Add(perfM.Key);
+                        }
+                    }
+
+                    if (parameter.TargetScenarioToPerfValueMap.ContainsKey(scenario))
                     {
-                        activeM.Add(perfM.Key);
+                        foreach (var perfM in parameter.TargetScenarioToPerfValueMap[scenario])
+                        {
+                            activeM.Add(perfM.Key);
+                        }
                     }
                 }
                 bool first = true;
@@ -111,10 +121,17 @@ namespace PerfDiffResultMailer
                     htmlBuilder.Append("<td rowspan=\"" + 1 + "\"style=\"width:290px\" style=\"padding-left:5px; padding-right:5px;\" >" + measurement + "</td>");
                     foreach (var parameter in parameters)
                     {
-                        Dictionary<string, double> baseMeasurements = parameter.BaseScenarioToPerfValueMap[scenario];
-                        Dictionary<string, double> targetMeasurements = parameter.TargetScenarioToPerfValueMap[scenario];
+                        Dictionary<string, double> baseMeasurements = new Dictionary<string, double>();
+                        if(parameter.BaseScenarioToPerfValueMap.ContainsKey(scenario)){
+                            baseMeasurements = parameter.BaseScenarioToPerfValueMap[scenario];
+                        }
+                        Dictionary<string, double> targetMeasurements = new Dictionary<string, double>();
 
-                       
+                        if (parameter.TargetScenarioToPerfValueMap.ContainsKey(scenario)) {
+                            targetMeasurements = parameter.TargetScenarioToPerfValueMap[scenario];
+                        }
+
+
                         htmlBuilder.Append(DiffTableHelper(baseMeasurements, targetMeasurements, measurement, parameter.Threshhold));
                         first = false;
 
