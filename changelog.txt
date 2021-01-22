@@ -14,6 +14,8 @@ vNext
 - Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
 - (MSALCPP) Validate ATs before persisting to the cache (#1192)
 - Added explicit exceptions when access token, id token or refresh token, which are required are not included in the response.  (MSAL #563)
+- Adds API23 WebViewClient#onReceivedError overload (#1197)
+
 
 Version 3.0.8
 ----------
