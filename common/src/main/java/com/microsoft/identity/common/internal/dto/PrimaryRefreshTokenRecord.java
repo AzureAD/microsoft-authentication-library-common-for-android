@@ -34,15 +34,6 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
         /**
-         * String of family id.
-         */
-        public static final String FAMILY_ID = "family_id";
-        /**
-         * String of target.
-         */
-        public static final String TARGET = "target";
-
-        /**
          * String of realm.
          */
         public static final String REALM = "realm";
@@ -64,30 +55,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * 1st Party Application Family ID.
-     */
-    @SerializedName(FAMILY_ID)
-    private String mFamilyId;
-
-    /**
-     * Permissions that are included in the token. Formats for endpoints will be different. 
-     * <p>
-     * Mandatory, if credential is scoped down by some parameters or requirements (e.g. by
-     * resource, scopes or permissions).
-     */
-    @SerializedName(TARGET)
-    private String mTarget;
-
-    /**
-     * Full tenant or organizational identifier that account belongs to. Can be null.
-     */
-    @SerializedName(REALM)
-    private String mRealm;
-
-    /**
-     * Token expiry time. This value should be calculated based on the current UTC time measured
-     * locally and the value expires_in returned from the service. Measured in milliseconds from
-     * epoch (1970).
+     * PRT expiry time. This value is returned from the server as refresh_token_expires_in that
+     * should be added to local time.
      */
     @SerializedName(EXPIRES_ON)
     private String mExpiresOn;
@@ -99,52 +68,17 @@ public class PrimaryRefreshTokenRecord extends Credential {
     private String mSessionKey;
 
     /**
-     * PRT protocol version, currently 3.0.
+     * The version of the PRT Protocol being used, version 3 supports no device_id.
      */
     @SerializedName(PRT_PROTOCOL_VERSION)
     private String mPrtProtocolVersion;
 
     /**
-     * Rolling date of session key.
+     * Session key expiry time. This value is determined by the client and set to 60 days after the
+     * session key was initally issued
      */
     @SerializedName(SESSION_KEY_ROLLING_DATE)
     private String mSessionKeyRollingDate;
-
-    /**
-     * Gets the target.
-     *
-     * @return The target to get.
-     */
-    public String getTarget() {
-        return mTarget;
-    }
-
-    /**
-     * Sets the target.
-     *
-     * @param target The target to set.
-     */
-    public void setTarget(final String target) {
-        mTarget = target;
-    }
-
-    /**
-     * Gets the family_id.
-     *
-     * @return The family_id to get.
-     */
-    public String getFamilyId() {
-        return mFamilyId;
-    }
-
-    /**
-     * Sets the family_id.
-     *
-     * @param familyId The family_id to set.
-     */
-    public void setFamilyId(final String familyId) {
-        mFamilyId = familyId;
-    }
 
     public boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date
@@ -161,23 +95,6 @@ public class PrimaryRefreshTokenRecord extends Credential {
     @Override
     public boolean isExpired() {
         return isExpired(getExpiresOn());
-    }
-
-    /**
-     * Gets the realm
-     *
-     * @return The realm to get.
-     */
-    public String getRealm() {
-        return mRealm;
-    }
-
-    /**
-     * Sets the realm.
-     * @param realm The realm to set.
-     */
-    public void setRealm(String realm) {
-        mRealm = realm;
     }
 
     /**
@@ -256,15 +173,11 @@ public class PrimaryRefreshTokenRecord extends Credential {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof PrimaryRefreshTokenRecord)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
 
         PrimaryRefreshTokenRecord that = (PrimaryRefreshTokenRecord) o;
 
-        if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null)
-            return false;
-        if (mTarget != null ? !mTarget.equals(that.mTarget) : that.mTarget != null) return false;
-        if (mRealm != null ? !mRealm.equals(that.mRealm) : that.mRealm != null) return false;
         if (mExpiresOn != null ? !mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn != null)
             return false;
         if (mSessionKey != null ? !mSessionKey.equals(that.mSessionKey) : that.mSessionKey != null)
@@ -283,9 +196,6 @@ public class PrimaryRefreshTokenRecord extends Credential {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
-        result = 31 * result + (mTarget != null ? mTarget.hashCode() : 0);
-        result = 31 * result + (mRealm != null ? mRealm.hashCode() : 0);
         result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
         result = 31 * result + (mSessionKey != null ? mSessionKey.hashCode() : 0);
         result = 31 * result + (mPrtProtocolVersion != null ? mPrtProtocolVersion.hashCode() : 0);
@@ -298,17 +208,15 @@ public class PrimaryRefreshTokenRecord extends Credential {
     // This method is generated. Checkstyle and/or PMD has been disabled.
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
+    @SuppressWarnings("PMD")
     @Override
     public String toString() {
         return "PrimaryRefreshTokenRecord{" +
-                "mFamilyId='" + mFamilyId + '\'' +
-                ", mTarget='" + mTarget + '\'' +
-                ", mRealm='" + mRealm + '\'' +
-                ", mExpiresOn='" + mExpiresOn + '\'' +
+                "mExpiresOn='" + mExpiresOn + '\'' +
                 ", mSessionKey='" + mSessionKey + '\'' +
                 ", mPrtProtocolVersion='" + mPrtProtocolVersion + '\'' +
                 ", mSessionKeyRollingDate='" + mSessionKeyRollingDate + '\'' +
-                '}';
+                "} " + super.toString();
     }
     //CHECKSTYLE:ON
 }
