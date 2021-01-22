@@ -608,7 +608,7 @@ public class MicrosoftStsOAuth2Strategy
 
         String clientException = null;
         String tokens = "";
-        String tokensMissingMessage = "missing required tokens of type: {0}";
+        final String tokensMissingMessage = "Missing required tokens of type: {0}";
 
         if (StringUtil.isEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
