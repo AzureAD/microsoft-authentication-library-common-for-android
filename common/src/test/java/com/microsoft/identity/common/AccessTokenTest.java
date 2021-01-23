@@ -41,16 +41,23 @@ public class AccessTokenTest {
     }
 
     @Test
-    public void testShouldRefreshWhenSet() {
+    public void testShouldRefreshAfterExpiration() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setRefreshOn(getCurrentTimeStr());
         assertTrue(accessToken.shouldRefresh());
     }
 
     @Test
-    public void testShouldRefreshWhenNotSet() {
+    public void testShouldRefreshWhileStillValid() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setRefreshOn("2524608000"); // 1/1/2050
         assertFalse(accessToken.shouldRefresh());
+    }
+
+    @Test
+    public void testShouldRefreshWhenNoPropertiesAreSet() {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        assertTrue(accessToken.shouldRefresh());
     }
 
     private String getCurrentTimeStr() {

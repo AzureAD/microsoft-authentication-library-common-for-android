@@ -361,6 +361,9 @@ public class AccessTokenRecord extends Credential {
         if (refreshOn != null && !refreshOn.isEmpty()) {
             return isExpired(refreshOn);
         }
-        return isExpired();
+        else if(getRefreshOn() != null) {
+            return isExpired();
+        }
+        return true;
     }
 }
