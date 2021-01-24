@@ -56,7 +56,9 @@ public class ProcessUtil {
 
         for (final BrokerData brokerData : validBrokers) {
             final String authProcess = brokerData.packageName + ":auth";
-            return authProcess.equalsIgnoreCase(processName);
+            if (authProcess.equalsIgnoreCase(processName)) {
+                return true;
+            }
         }
 
         return false;
