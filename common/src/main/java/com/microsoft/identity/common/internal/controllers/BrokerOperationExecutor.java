@@ -111,6 +111,7 @@ public class BrokerOperationExecutor {
     public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
                                                       @NonNull final BrokerOperation<U> operation)
             throws BaseException {
+        Logger.warn(TAG, "BrokerOperationExecutor.execute method start");
         final String methodName = ":execute";
 
         emitOperationStartEvent(parameters, operation);
@@ -126,7 +127,9 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
+                Logger.warn(TAG, "BrokerOperationExecutor.execute start perform Strategy");
                 final U result = performStrategy(strategy, operation);
+                Logger.warn(TAG, "BrokerOperationExecutor.execute end perform Strategy");
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {
