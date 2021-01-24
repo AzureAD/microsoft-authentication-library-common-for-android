@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -65,20 +66,20 @@ public class BrokerData {
             BROKER_HOST_APP_SIGNATURE
     );
 
-    private static final Set<BrokerData> debugBrokers = new HashSet<BrokerData>() {{
+    private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_DEBUG);
         add(BROKER_HOST);
-    }};
+    }});
 
-    private static final Set<BrokerData> prodBrokers = new HashSet<BrokerData>() {{
+    private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_PROD);
         add(COMPANY_PORTAL);
-    }};
+    }});
 
-    private static final Set<BrokerData> allBrokers = new HashSet<BrokerData>() {{
-        addAll(debugBrokers);
-        addAll(prodBrokers);
-    }};
+    private static final Set<BrokerData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+        addAll(DEBUG_BROKERS);
+        addAll(PROD_BROKERS);
+    }});
 
     public final String packageName;
     public final String signatureHash;
@@ -104,14 +105,14 @@ public class BrokerData {
     }
 
     public static Set<BrokerData> getProdBrokers() {
-        return prodBrokers;
+        return PROD_BROKERS;
     }
 
     public static Set<BrokerData> getDebugBrokers() {
-        return debugBrokers;
+        return DEBUG_BROKERS;
     }
 
     public static Set<BrokerData> getAllBrokers() {
-        return allBrokers;
+        return ALL_BROKERS;
     }
 }
