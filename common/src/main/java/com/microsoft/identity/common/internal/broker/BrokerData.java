@@ -83,7 +83,6 @@ public class BrokerData {
 
     public final String packageName;
     public final String signatureHash;
-    public int versionWithKeyMigrationViaAccountManager;
 
     private BrokerData(@NonNull final String packageName,
                        @NonNull final String hash) {
