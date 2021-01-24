@@ -67,17 +67,17 @@ public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
 
-    private static boolean shouldTrustDebugBrokers = BuildConfig.DEBUG;
+    private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
 
     public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
         if (!BuildConfig.DEBUG && shouldTrustDebugBrokers) {
             Logger.warn(TAG, "You are forcing to trust debug brokers in non-debug builds.");
         }
-        BrokerValidator.shouldTrustDebugBrokers = shouldTrustDebugBrokers;
+        BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
     }
 
     public static boolean getShouldTrustDebugBrokers() {
-        return shouldTrustDebugBrokers;
+        return sShouldTrustDebugBrokers;
     }
 
     private final Context mContext;
@@ -149,7 +149,7 @@ public class BrokerValidator {
     }
 
     public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = shouldTrustDebugBrokers
+        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
                 ? BrokerData.getAllBrokers()
                 : BrokerData.getProdBrokers();
 
