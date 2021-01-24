@@ -27,13 +27,17 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -115,8 +119,20 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                 final int errorCode,
                                 final String description,
                                 final String failingUrl) {
-        super.onReceivedError(view, errorCode, description, failingUrl);
+        sendErrorToCallback(view, errorCode, description);
+    }
 
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onReceivedError(@NonNull final WebView view,
+                                @NonNull final WebResourceRequest request,
+                                @NonNull final WebResourceError error) {
+        sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
+    }
+
+    private void sendErrorToCallback(@NonNull final WebView view,
+                                     final int errorCode,
+                                     @NonNull final String description) {
         view.stopLoading();
 
         // Create result intent when webView received an error.
