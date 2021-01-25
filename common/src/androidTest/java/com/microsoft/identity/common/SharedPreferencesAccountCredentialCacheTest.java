@@ -40,6 +40,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import org.junit.After;
@@ -50,6 +51,7 @@ import org.junit.runner.RunWith;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
@@ -1469,6 +1471,52 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 BEARER_AUTHENTICATION_SCHEME.getName()
         );
         assertEquals(2, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsPRTNoClientId() {
+        final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
+        primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        primaryRefreshToken.setEnvironment(ENVIRONMENT);
+        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setClientId(CLIENT_ID);
+        primaryRefreshToken.setSessionKey(SESSION_KEY);
+
+        mSharedPreferencesAccountCredentialCache.saveCredential(primaryRefreshToken);
+
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.PrimaryRefreshToken,
+                null, /* client id */
+                null,
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
+        );
+        assertEquals(1, credentials.size());
+    }
+
+    @Test
+    public void getCredentialsPRTAnotherClientId() {
+        final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
+        primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        primaryRefreshToken.setEnvironment(ENVIRONMENT);
+        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setClientId(CLIENT_ID);
+        primaryRefreshToken.setSessionKey(SESSION_KEY);
+
+        mSharedPreferencesAccountCredentialCache.saveCredential(primaryRefreshToken);
+
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.PrimaryRefreshToken,
+                "another-client-id",
+                null,
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
+        );
+        assertEquals(1, credentials.size());
     }
 
     @Test

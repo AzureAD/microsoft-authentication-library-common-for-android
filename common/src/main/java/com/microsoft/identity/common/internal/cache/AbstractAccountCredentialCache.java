@@ -180,7 +180,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
             }
 
-            if (mustMatchOnClientId) {
+            if (mustMatchOnClientId && !(credential instanceof PrimaryRefreshTokenRecord)) {
                 matches = matches && equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
             }
 
