@@ -441,7 +441,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     }
 
     private void processInvalidRedirectUri(@NonNull final WebView view, @NonNull final String url) {
-        final String methodName = "#processRedirectUriCheck";
+        final String methodName = "#processInvalidRedirectUri";
 
         Logger.error(TAG + methodName, "The RedirectUri is not as expected.", null);
         Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
