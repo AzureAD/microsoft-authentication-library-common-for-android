@@ -73,7 +73,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      */
     public static final String CACHE_VALUE_SEPARATOR = "-";
     private static final String FOCI_PREFIX = "foci-";
-    private static final String RESERVED_PRT_CLIENT_ID = "1";
 
     private final Gson mGson;
 
@@ -165,8 +164,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             }
 
             cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
-        } else if (credential instanceof PrimaryRefreshTokenRecord) {
-            cacheKey = cacheKey.replace(CLIENT_ID, RESERVED_PRT_CLIENT_ID);
         } else {
             cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
         }

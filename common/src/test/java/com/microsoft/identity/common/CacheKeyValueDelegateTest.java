@@ -69,7 +69,6 @@ public class CacheKeyValueDelegateTest {
     private static final String FAMILY_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
     private static final String SESSION_KEY = "b2h3b2gzYWluYW9MOFZhaQo=";
-    private static final String RESERVED_PRT_CLIENT_ID = "1";
     public static final String ESCAPE_SEQ_CHARS = "\r\f\n\t";
 
     private ICacheKeyValueDelegate mDelegate;
@@ -807,7 +806,7 @@ public class CacheKeyValueDelegateTest {
                 + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
                 + ENVIRONMENT + CACHE_VALUE_SEPARATOR
                 + CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
-                + RESERVED_PRT_CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
                 + CACHE_VALUE_SEPARATOR;
         assertEquals(expectedKey, mDelegate.generateCacheKey(primaryRefreshTokenRecord));
     }
