@@ -3,6 +3,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -33,8 +34,8 @@ public class FactoryResetChromeRule implements TestRule {
                 final String chromeVersion = chromePackageInfo.versionName;
                 final String[] parts = chromeVersion.split("\\.");
                 final String majorVersion = parts[0];
-                Logger.i(TAG, "Chrome Version = " + chromeVersion);
-                Logger.i(TAG, "Chrome major version = " + majorVersion);
+                Log.i(TAG, "Chrome Version = " + chromeVersion);
+                Log.i(TAG, "Chrome major version = " + majorVersion);
 
 //                if (Integer.parseInt(majorVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
 //                    downgradeChromeToFactoryVersion();
