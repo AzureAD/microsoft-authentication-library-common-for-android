@@ -37,10 +37,6 @@ public class PrimaryRefreshTokenRecord extends Credential {
          * String of family id.
          */
         public static final String FAMILY_ID = "family_id";
-        /**
-         * String of realm.
-         */
-        public static final String REALM = "realm";
 
         /**
          * String of session_key.
