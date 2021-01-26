@@ -21,7 +21,7 @@ public class FactoryResetChromeRule implements TestRule {
 
     public static final String TAG = FactoryResetChromeRule.class.getSimpleName();
 
-    private final static int CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION = 71;
+    private final static int CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION = 74;
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -37,9 +37,9 @@ public class FactoryResetChromeRule implements TestRule {
                 Log.i(TAG, "Chrome Version = " + chromeVersion);
                 Log.i(TAG, "Chrome major version = " + majorVersion);
 
-//                if (Integer.parseInt(majorVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
-//                    downgradeChromeToFactoryVersion();
-//                }
+                if (Integer.parseInt(majorVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
+                    downgradeChromeToFactoryVersion();
+                }
 
                 // proceed with the test case
                 base.evaluate();
