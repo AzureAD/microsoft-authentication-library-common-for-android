@@ -36,9 +36,9 @@ public class FactoryResetChromeRule implements TestRule {
                 Logger.i(TAG, "Chrome Version = " + chromeVersion);
                 Logger.i(TAG, "Chrome major version = " + majorVersion);
 
-                if (Integer.parseInt(majorVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
-                    downgradeChromeToFactoryVersion();
-                }
+//                if (Integer.parseInt(majorVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
+//                    downgradeChromeToFactoryVersion();
+//                }
 
                 // proceed with the test case
                 base.evaluate();
