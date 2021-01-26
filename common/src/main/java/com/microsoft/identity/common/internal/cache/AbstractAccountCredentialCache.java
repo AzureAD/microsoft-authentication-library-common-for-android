@@ -139,8 +139,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
-        final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId)
-                && credentialType != CredentialType.PrimaryRefreshToken;
+        final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
         final boolean mustMatchOnCredentialType = null != credentialType;
         final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
                 && !StringExtensions.isNullOrBlank(authScheme)

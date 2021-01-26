@@ -1497,6 +1497,29 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
     }
 
     @Test
+    public void getCredentialsPRTClientId() {
+        final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
+        primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        primaryRefreshToken.setEnvironment(ENVIRONMENT);
+        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setClientId(CLIENT_ID);
+        primaryRefreshToken.setSessionKey(SESSION_KEY);
+
+        mSharedPreferencesAccountCredentialCache.saveCredential(primaryRefreshToken);
+
+        List<Credential> credentials = mSharedPreferencesAccountCredentialCache.getCredentialsFilteredBy(
+                HOME_ACCOUNT_ID,
+                ENVIRONMENT,
+                CredentialType.PrimaryRefreshToken,
+                CLIENT_ID,
+                null,
+                null,
+                BEARER_AUTHENTICATION_SCHEME.getName()
+        );
+        assertEquals(1, credentials.size());
+    }
+
+    @Test
     public void getCredentialsPRTAnotherClientId() {
         final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
         primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
@@ -1516,7 +1539,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 null,
                 BEARER_AUTHENTICATION_SCHEME.getName()
         );
-        assertEquals(1, credentials.size());
+        assertTrue(credentials.isEmpty());
     }
 
     @Test
