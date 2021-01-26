@@ -139,7 +139,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
         final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
-        final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
+        final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId)
+                && credentialType != CredentialType.PrimaryRefreshToken;
         final boolean mustMatchOnCredentialType = null != credentialType;
         final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
                 && !StringExtensions.isNullOrBlank(authScheme)
@@ -180,7 +181,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                 matches = matches && equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
             }
 
-            if (mustMatchOnClientId && !(credential instanceof PrimaryRefreshTokenRecord)) {
+            if (mustMatchOnClientId) {
                 matches = matches && equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
             }
 
