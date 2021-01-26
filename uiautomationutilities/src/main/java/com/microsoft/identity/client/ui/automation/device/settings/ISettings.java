@@ -103,4 +103,6 @@ public interface ISettings {
      * Launches the security page in Settings app.
      */
     void launchScreenLockPage();
+
+    void launchAppInfoPage(String packageName);
 }

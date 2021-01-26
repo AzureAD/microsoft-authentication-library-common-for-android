@@ -26,6 +26,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -168,6 +169,18 @@ public class CommonUtils {
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = new Intent(action);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        context.startActivity(intent);
+    }
+
+    /**
+     * Launches an activity specified by the action.
+     * @param action action is which operation to be performed.
+     */
+    public static void launchIntent(@NonNull final String action, @NonNull final Uri data) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(action);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        intent.setData(data);
         context.startActivity(intent);
     }
 }

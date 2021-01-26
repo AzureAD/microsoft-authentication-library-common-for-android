@@ -22,18 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.device.settings;
 
+import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -43,6 +43,8 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
 public abstract class BaseSettings implements ISettings {
 
     final static String SETTINGS_PKG = "com.android.settings";
+
+    public static final String TAG = BaseSettings.class.getSimpleName();
 
     @Override
     public void launchDeviceAdminSettingsPage() {
@@ -77,5 +79,18 @@ public abstract class BaseSettings implements ISettings {
     @Override
     public void launchScreenLockPage() {
         launchIntent(Settings.ACTION_SECURITY_SETTINGS);
+    }
+
+    @Override
+    public void launchAppInfoPage(@NonNull final String packageName) {
+        try {
+            //Open the specific App Info page:
+            final Uri data = Uri.parse("package:" + packageName);
+            launchIntent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, data);
+        } catch (final ActivityNotFoundException e) {
+            Logger.e(TAG, "Package: " + packageName + " probably not available on device.", e);
+            //Open the generic Apps page:
+            launchIntent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
+        }
     }
 }
