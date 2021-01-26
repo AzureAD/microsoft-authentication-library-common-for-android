@@ -346,7 +346,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         Logger.verbose(TAG + methodName, "Linking Account in Broker for MFA.");
         try {
             final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            intent.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             getActivity().startActivity(intent);
         } catch (android.content.ActivityNotFoundException e) {
             Logger.error(TAG, "Failed to open the Authenticator application.", e);
