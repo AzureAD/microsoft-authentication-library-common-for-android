@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiScrollable;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static org.junit.Assert.fail;
 
@@ -41,6 +42,8 @@ import static org.junit.Assert.fail;
  */
 public class UiAutomatorUtils {
 
+    private final static String TAG = UiAutomatorUtils.class.getSimpleName();
+
     /**
      * Obtain an instance of the UiObject for a given resource id.
      *
@@ -48,6 +51,7 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied resource id
      */
     public static UiObject obtainUiObjectWithResourceId(@NonNull final String resourceId) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with resource id:" + resourceId);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -67,6 +71,7 @@ public class UiAutomatorUtils {
     @NonNull
     public static UiObject obtainUiObjectWithResourceIdAndEnabledFlag(@NonNull final String resourceId,
                                                                       final boolean enabled) {
+        Logger.i(TAG, "Obtain an instance of an enabled UiObject with resource Id:" + resourceId + " and enabled value:" + enabled);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -87,6 +92,7 @@ public class UiAutomatorUtils {
      */
     @NonNull
     public static UiObject obtainEnabledUiObjectWithExactText(@NonNull final String text) {
+        Logger.i(TAG, "Obtain an instance of an enabled UiObject with text:" + text);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -106,6 +112,7 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithText(@NonNull final String text) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with text:" + text);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -160,6 +167,7 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithResourceIdAndText(@NonNull final String resourceId,
                                                                @NonNull final String text) {
+        Logger.i(TAG, "Obtain an instance of an UiObject with resource id:" + resourceId + " and with text:" + text);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -180,6 +188,7 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainUiObjectWithTextAndClassType(@NonNull final String text,
                                                               @NonNull Class className) {
+        Logger.i(TAG, "Obtain an instance of the UiObject with text:" + text + " and with class name:" + className);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -200,6 +209,7 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainChildInScrollable(@NonNull final String scrollableResourceId,
                                                    @NonNull final String childText) {
+        Logger.i(TAG, "Obtain a child element inside a scrollable view with resource id:" + scrollableResourceId + " and with text:" + childText);
         final UiSelector scrollSelector = new UiSelector().resourceId(scrollableResourceId);
         return obtainChildInScrollable(childText, scrollSelector);
     }
@@ -213,12 +223,14 @@ public class UiAutomatorUtils {
      */
     public static UiObject obtainChildInScrollable(@NonNull final Class clazz,
                                                    @NonNull final String childText) {
+        Logger.i(TAG, "Obtain a child element inside a scrollable view with class name:" + clazz + " and with text:" + childText);
         final UiSelector scrollSelector = new UiSelector().className(clazz);
         return obtainChildInScrollable(childText, scrollSelector);
     }
 
     private static UiObject obtainChildInScrollable(@NonNull final String childText,
                                                     @NonNull final UiSelector scrollSelector) {
+        Logger.i(TAG, "Obtain a child element inside a scrollable view with text:" + childText + " and with scrollSelector value:" + scrollSelector);
         final UiScrollable recyclerView = new UiScrollable(scrollSelector);
 
         final UiSelector childSelector = new UiSelector()
@@ -246,6 +258,7 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the desired child element
      */
     public static UiObject obtainChildInScrollable(@NonNull final String childText) {
+        Logger.i(TAG, "Obtain a child element inside a scrollable view with text:" + childText);
         final UiSelector scrollSelector = new UiSelector().className(ScrollView.class);
 
         final UiScrollable recyclerView = new UiScrollable(scrollSelector);
@@ -276,6 +289,7 @@ public class UiAutomatorUtils {
      */
     public static void handleInput(@NonNull final String resourceId,
                                    @NonNull final String inputText) {
+        Logger.i(TAG, "Fills the text:" + inputText + " into the input element associated to the resource id:" + resourceId);
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
 
         try {
@@ -292,6 +306,7 @@ public class UiAutomatorUtils {
      * @param resourceId the resource id of the button to click
      */
     public static void handleButtonClick(@NonNull final String resourceId) {
+        Logger.i(TAG, "Clicks the button element associated to the resource id:" + resourceId);
         final UiObject button = obtainUiObjectWithResourceId(resourceId);
 
         try {
@@ -320,6 +335,7 @@ public class UiAutomatorUtils {
      * Presses the device back button on the Android device.
      */
     public static void pressBack() {
+        Logger.i(TAG, "Presses the device back button on the Android device..");
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -350,6 +366,7 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithExactText(@NonNull final String text) {
+        Logger.i(TAG, "Obtain an instance of the UiObject for the given text:" + text);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -368,6 +385,7 @@ public class UiAutomatorUtils {
      * @return the UiObject associated to the supplied text
      */
     public static UiObject obtainUiObjectWithClassAndIndex(@NonNull final Class clazz, final int index) {
+        Logger.i(TAG, "Obtain an instance of the UiObject for the class name:" + clazz + " and index value:" + index);
         final UiDevice device =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 

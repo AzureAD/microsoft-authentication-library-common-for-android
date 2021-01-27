@@ -1,5 +1,6 @@
 V.Next
 ----------
+- Add refresh_on to access tokens(#1190)
 - Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
 
 Version 3.0.9

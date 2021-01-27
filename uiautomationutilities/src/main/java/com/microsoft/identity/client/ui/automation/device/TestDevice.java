@@ -42,8 +42,7 @@ import lombok.Getter;
 @Getter
 public class TestDevice {
 
-    private final String TAG = TestDevice.class.getSimpleName();
-
+    private final static String TAG = TestDevice.class.getSimpleName();
     private final String manufacturer;
     private final String model;
     private final int apiLevel;
@@ -70,6 +69,7 @@ public class TestDevice {
 
     private static ISettings getSupportedDeviceSettings(@NonNull final String manufacturer,
                                                         @NonNull final String model) {
+        Logger.i(TAG, "Get Supported Device Settings..");
         // each device could have its own version of settings depending on make, model & apiLevel
         // For simplicity right now, we just have two configurations depending on manufacturer
         if ("SAMSUNG".equalsIgnoreCase(manufacturer)) {

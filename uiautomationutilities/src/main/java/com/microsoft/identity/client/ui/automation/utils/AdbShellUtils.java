@@ -26,6 +26,9 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiDevice;
 
+import com.microsoft.identity.client.ui.automation.app.OutlookApp;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
+
 import org.junit.Assert;
 
 import java.io.IOException;
@@ -38,7 +41,10 @@ import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentat
  */
 public class AdbShellUtils {
 
+    private final static String TAG = AdbShellUtils.class.getSimpleName();
+
     public static String executeShellCommand(@NonNull final String command) {
+        Logger.i(TAG, "Execute the given command:" + command + " on the shell..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             return device.executeShellCommand(command);
@@ -49,6 +55,7 @@ public class AdbShellUtils {
     }
 
     public static String executeShellCommandAsCurrentPackage(@NonNull final String command) {
+        Logger.i(TAG, "Execute given shell command:" + command + " on Current Package..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
         try {
             final String pkg = ApplicationProvider.getApplicationContext().getPackageName();
@@ -66,6 +73,7 @@ public class AdbShellUtils {
      * @param packageName the name of the package to install
      */
     public static void installPackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Installing the given package:" + packageName + " on the device..");
         final String result = executeShellCommand("pm install " + packageName);
         Assert.assertNotNull(result);
         Assert.assertEquals("Success", result.trim());
@@ -78,6 +86,7 @@ public class AdbShellUtils {
      * @param flags       the flags to use during installation of the app
      */
     public static void installPackage(@NonNull final String packageName, @NonNull String... flags) {
+        Logger.i(TAG, "Installs the given package:" + packageName + " on the device with the supplied flags:" + flags);
         final StringBuilder installCmdBuilder = new StringBuilder();
         installCmdBuilder.append("pm install ");
 
@@ -98,6 +107,7 @@ public class AdbShellUtils {
      * @param packageName the package name to remove
      */
     public static void removePackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Remove the " + packageName + " App from device..");
         executeShellCommand("pm uninstall " + packageName);
     }
 
@@ -107,6 +117,7 @@ public class AdbShellUtils {
      * @param packageName the package name to clear
      */
     public static void clearPackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Clear the contents of the storage of " + packageName + " App..");
         executeShellCommand("pm clear " + packageName);
     }
 
@@ -116,6 +127,7 @@ public class AdbShellUtils {
      * @param packageName the package to force stop
      */
     public static void forceStopPackage(@NonNull final String packageName) {
+        Logger.i(TAG, "Force stop the " + packageName + " App..");
         executeShellCommand("am force-stop " + packageName);
     }
 
@@ -127,6 +139,7 @@ public class AdbShellUtils {
      * Enable automatic time zone on the device.
      */
     public static void enableAutomaticTimeZone() {
+        Logger.i(TAG, "Enable automatic time zone on the device..");
         putGlobalSettings("auto_time", "1");
     }
 
@@ -134,6 +147,7 @@ public class AdbShellUtils {
      * Disable automatic time zone on the device.
      */
     public static void disableAutomaticTimeZone() {
+        Logger.i(TAG, "Disable automatic time zone on the device..");
         putGlobalSettings("auto_time", "0");
     }
 
@@ -149,6 +163,7 @@ public class AdbShellUtils {
      */
     public static void copyApkForPackage(@NonNull final String packageName,
                                          @NonNull final String destApkFileName) {
+        Logger.i(TAG, "Copy APK of the " + packageName + " to the given location..");
         final String apkPath = getApkPath(packageName);
         final String sanitizedPath = apkPath.trim().replace("package:", "");
         copyFile(sanitizedPath, destApkFileName);
