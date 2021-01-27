@@ -50,14 +50,16 @@ public class AutomationLoggingRule implements TestRule {
                 Logger.i(TAG, "Applying rule..");
                 final FileAppender automationLogFileAppender = turnOnAutomationLogging(description);
 
-                base.evaluate();
+                try {
+                    base.evaluate();
+                } finally {
+                    automationLogFileAppender.closeWriter();
 
-                automationLogFileAppender.closeWriter();
-
-                CommonUtils.copyFileToFolderInSdCard(
-                        automationLogFileAppender.getLogFile(),
-                        LOG_FOLDER_NAME
-                );
+                    CommonUtils.copyFileToFolderInSdCard(
+                            automationLogFileAppender.getLogFile(),
+                            LOG_FOLDER_NAME
+                    );
+                }
             }
         };
     }
