@@ -47,14 +47,16 @@ public class AutomationLoggingRule implements TestRule {
             public void evaluate() throws Throwable {
                 final FileAppender automationLogFileAppender = turnOnAutomationLogging(description);
 
-                base.evaluate();
+                try {
+                    base.evaluate();
+                } finally {
+                    automationLogFileAppender.closeWriter();
 
-                automationLogFileAppender.closeWriter();
-
-                CommonUtils.copyFileToFolderInSdCard(
-                        automationLogFileAppender.getLogFile(),
-                        LOG_FOLDER_NAME
-                );
+                    CommonUtils.copyFileToFolderInSdCard(
+                            automationLogFileAppender.getLogFile(),
+                            LOG_FOLDER_NAME
+                    );
+                }
             }
         };
     }
