@@ -27,13 +27,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.provider.Settings;
 
-import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -42,10 +39,12 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.laun
 
 public abstract class BaseSettings implements ISettings {
 
+    private final static String TAG = BaseSettings.class.getSimpleName();
     final static String SETTINGS_PKG = "com.android.settings";
 
     @Override
     public void launchDeviceAdminSettingsPage() {
+        Logger.i(TAG, "Launching Device Admin Settings Page..");
         final Intent intent = new Intent();
         intent.setComponent(new ComponentName(
                 SETTINGS_PKG,
@@ -61,21 +60,25 @@ public abstract class BaseSettings implements ISettings {
 
     @Override
     public void launchAddAccountPage() {
+        Logger.i(TAG, "Launching Add Account Page..");
         launchIntent(Settings.ACTION_ADD_ACCOUNT);
     }
 
     @Override
     public void launchAccountListPage() {
+        Logger.i(TAG, "Launching Account List Page..");
         launchIntent(Settings.ACTION_SYNC_SETTINGS);
     }
 
     @Override
     public void launchDateTimeSettingsPage() {
+        Logger.i(TAG, "Open the date & time settings page..");
         launchIntent(Settings.ACTION_DATE_SETTINGS);
     }
 
     @Override
     public void launchScreenLockPage() {
+        Logger.i(TAG, "Launching Screen Lock Page..");
         launchIntent(Settings.ACTION_SECURITY_SETTINGS);
     }
 }

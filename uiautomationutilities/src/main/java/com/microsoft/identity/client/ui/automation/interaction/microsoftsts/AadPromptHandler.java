@@ -25,13 +25,17 @@ package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 /**
  * A Prompt Handler for AAD login flows.
  */
 public class AadPromptHandler extends MicrosoftStsPromptHandler {
 
+    private final static String TAG = AadPromptHandler.class.getSimpleName();
+
     public AadPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AadLoginComponentHandler(), parameters);
+        Logger.i(TAG, "Initializing Aad Prompt Handler..");
     }
 }

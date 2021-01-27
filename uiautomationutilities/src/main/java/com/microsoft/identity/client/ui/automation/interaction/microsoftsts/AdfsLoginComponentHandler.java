@@ -24,12 +24,15 @@ package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
  * A login component handler for ADFS.
  */
 public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
+
+    private final static String TAG = AdfsLoginComponentHandler.class.getSimpleName();
 
     @Override
     public void handleEmailField(@NonNull final String username) {
@@ -38,6 +41,7 @@ public class AdfsLoginComponentHandler extends AadLoginComponentHandler {
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
+        Logger.i(TAG, "Handle Adfs Login Password UI..");
         UiAutomatorUtils.handleInput("passwordInput", password);
         UiAutomatorUtils.handleButtonClick("submitButton");
     }

@@ -89,6 +89,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     @Override
     public void handleAccountPicker(@Nullable final String username) {
+        Log.i(TAG, "Pick account associated with given username, otherwise choose \"Use Another account\"..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
         // find the object associated to this username in account picker.
@@ -112,6 +113,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     @Override
     public void performJoinViaJoinActivity(@NonNull final String username,
                                            @NonNull final String password) {
+        Log.i(TAG, "Perform Join Via Join Activity for the given account..");
         // Enter username
         UiAutomatorUtils.handleInput(
                 CommonUtils.getResourceId(
@@ -136,12 +138,14 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
+        Log.i(TAG, "Handle prompt in AAD login page for Join Via Join Activity..");
         // Handle prompt in AAD login page
         aadPromptHandler.handlePrompt(username, password);
     }
 
     @Override
     public void confirmJoinInJoinActivity(@NonNull final String username) {
+        Log.i(TAG, "Confirm Join Via Join Activity for the given account..");
         final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
                 "Workplace Joined to " + username
         );
