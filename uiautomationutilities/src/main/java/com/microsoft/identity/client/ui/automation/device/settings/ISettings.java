@@ -23,7 +23,6 @@
 package com.microsoft.identity.client.ui.automation.device.settings;
 
 import androidx.annotation.NonNull;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
@@ -104,5 +103,10 @@ public interface ISettings {
      */
     void launchScreenLockPage();
 
+    /**
+     * Launch the app info page for the supplied package name.
+     *
+     * @param packageName the package for which to open app info page
+     */
     void launchAppInfoPage(String packageName);
 }

@@ -41,6 +41,9 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+/**
+ * A Test Rule to downgrade Chrome and WebView to factory default version.
+ */
 public class FactoryResetChromeRule implements TestRule {
 
     public static final String TAG = FactoryResetChromeRule.class.getSimpleName();
