@@ -38,9 +38,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
  */
 public class BrowserChrome extends App implements IBrowser {
 
-    private final static String TAG = BrowserChrome.class.getSimpleName();
-    private static final String CHROME_PACKAGE_NAME = "com.android.chrome";
-    private static final String CHROME_APP_NAME = "Google Chrome";
+    private static final String TAG = BrowserChrome.class.getSimpleName();
+    public static final String CHROME_PACKAGE_NAME = "com.android.chrome";
+    public static final String CHROME_APP_NAME = "Google Chrome";
 
     public BrowserChrome() {
         super(CHROME_PACKAGE_NAME, CHROME_APP_NAME);

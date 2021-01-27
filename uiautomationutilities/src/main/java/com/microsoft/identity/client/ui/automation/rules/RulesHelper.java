@@ -73,6 +73,9 @@ public class RulesHelper {
             ));
         }
 
+        Log.i(TAG, "Adding FactoryResetChromeRule");
+        ruleChain = ruleChain.around(new FactoryResetChromeRule());
+
         Log.i(TAG, "Adding RemoveBrokersBeforeTestRule");
         ruleChain = ruleChain.around(new RemoveBrokersBeforeTestRule());
 
