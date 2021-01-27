@@ -64,8 +64,10 @@ public class LoadLabUserTestRule implements TestRule {
             public void evaluate() throws Throwable {
                 Logger.i(TAG, "Applying rule....");
                 if (query != null) {
+                    Logger.i(TAG, "Loading Existing User for Test..");
                     upn = LabUserHelper.loadUserForTest(query);
                 } else if (tempUserType != null) {
+                    Logger.i(TAG, "Loading Temp User for Test....");
                     upn = LabUserHelper.loadTempUser(tempUserType);
                     try {
                         // temp user takes some time to actually being created even though it may be

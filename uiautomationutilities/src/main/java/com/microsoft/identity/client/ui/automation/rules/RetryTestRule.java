@@ -49,6 +49,7 @@ public class RetryTestRule implements TestRule {
                 RetryOnFailure retryOnFailure = description.getAnnotation(RetryOnFailure.class);
 
                 if (retryOnFailure == null) {
+                    Logger.i(TAG, "Does not Received any retryOnFailure annotation..");
                     // if the test didn't have the RetryOnFailure annotation, then we see if the
                     // class had that annotation and we try to honor that
                     retryOnFailure = description.getTestClass().getAnnotation(RetryOnFailure.class);
