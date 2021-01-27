@@ -69,16 +69,6 @@ public class CommandDispatcherTest {
     private static final AtomicInteger INTEGER = new AtomicInteger(1);
     private static final String TEST_RESULT_STR = "test_result_str";
 
-    @Before
-    public void setUp() throws Exception {
-        //CommandDispatcher.clearState();
-    }
-
-    @After
-    public void cleanUp() throws Exception {
-        //CommandDispatcher.clearState();
-    }
-
     @Test
     public void testCanSubmitSilently() throws InterruptedException {
         final CountDownLatch testLatch = new CountDownLatch(1);
