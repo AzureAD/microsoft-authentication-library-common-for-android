@@ -337,7 +337,8 @@ public class CommandDispatcherTest {
         final ConcurrentHashMap<Integer, String> map = new ConcurrentHashMap<>();
         for (int i = 0; i < nTasks; i++) {
             final int j = i;
-            executor.submit(() -> {
+            executor.submit(new Runnable() {
+                public void run() {
                 try {
                     map.put(j, "foo");
                     testSubmitSilentWithParamMutationSameCommand(new Consumer<String>() {
@@ -355,7 +356,7 @@ public class CommandDispatcherTest {
                 } finally {
                     latch.countDown();
                 }
-            });
+            }});
         }
         System.out.println("Waiting on latch");
         while (!latch.await(30, TimeUnit.SECONDS)) {
