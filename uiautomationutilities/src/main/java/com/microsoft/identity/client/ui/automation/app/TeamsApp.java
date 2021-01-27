@@ -30,6 +30,7 @@ import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -39,6 +40,7 @@ import org.junit.Assert;
  */
 public class TeamsApp extends App implements IFirstPartyApp {
 
+    private final static String TAG = TeamsApp.class.getSimpleName();
     private static final String TEAMS_PACKAGE_NAME = "com.microsoft.teams";
     private static final String TEAMS_APP_NAME = "Microsoft Teams";
 
@@ -58,6 +60,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
         // The Sign In UI in Teams changes depending on if the account(s) are in TSL
         try {
             if (promptHandlerParameters.isExpectingProvidedAccountInTSL()) {
+                Logger.i(TAG, "Adding First Account which is in TSL..");
                 // This case handles UI if our account (supplied username) is expected to be in TSL
                 final UiObject email = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
                         "com.microsoft.teams:id/email",
@@ -66,14 +69,17 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
                 email.click();
 
+                Logger.i(TAG, "Handle Sign-In Prompt on the APP for account which is in TSL..");
                 final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
                 microsoftStsPromptHandler.handlePrompt(username, password);
             } else if (promptHandlerParameters.isExpectingNonZeroAccountsInTSL()) {
+                Logger.i(TAG, "Adding First Account which is not in TSL but some other accounts could be in TSL..");
                 // This case handles UI if our account isn't in TSL, however, there are some other
                 // accounts expected to be in TSL
                 UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_another_account_button");
                 signInWithEmail(username, password, promptHandlerParameters);
             } else {
+                Logger.i(TAG, "Adding First Account where no account is in TSL..");
                 // This case handles UI when there are no accounts in TSL
                 signInWithEmail(username, password, promptHandlerParameters);
             }
@@ -92,6 +98,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
     private void signInWithEmail(@NonNull final String username,
                                  @NonNull final String password,
                                  @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Sign-In on the APP..");
         // Enter email in email field
         UiAutomatorUtils.handleInput(
                 "com.microsoft.teams:id/edit_email",
@@ -101,6 +108,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
         // Click Sign in btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/sign_in_button");
 
+        Logger.i(TAG, "Handle Sign-In with Email Prompt on the APP..");
         // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
@@ -108,6 +116,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
     @Override
     public void onAccountAdded() {
+        Logger.i(TAG, "Handling UI after account is added on the App..");
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_next_button");
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_next_button");
         UiAutomatorUtils.handleButtonClick("com.microsoft.teams:id/action_last_button");
@@ -115,6 +124,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
 
     @Override
     public void confirmAccount(@NonNull final String username) {
+        Logger.w(TAG, "confirmAccount function Not Implemented..");
         throw new UnsupportedOperationException("Not implemented");
     }
 }

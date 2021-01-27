@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadLoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
@@ -37,12 +38,15 @@ import com.microsoft.identity.internal.testutils.labutils.LabConstants;
  */
 public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
 
+    private final static String TAG = IdLabB2cSisoPolicyPromptHandler.class.getSimpleName();
+
     public IdLabB2cSisoPolicyPromptHandler(@NonNull final B2CPromptHandlerParameters parameters) {
         super(getAppropriateLoginComponentHandler(parameters), parameters);
     }
 
     @Override
     public void handlePrompt(@NonNull final String username, @NonNull final String password) {
+        Logger.i(TAG, "IdLab B2c Siso Policy Prompt Handler..");
         final B2CPromptHandlerParameters b2CPromptHandlerParameters =
                 (B2CPromptHandlerParameters) parameters;
 
@@ -74,6 +78,7 @@ public class IdLabB2cSisoPolicyPromptHandler extends AbstractPromptHandler {
     }
 
     protected static IOAuth2LoginComponentHandler getAppropriateLoginComponentHandler(@NonNull final B2CPromptHandlerParameters parameters) {
+        Logger.i(TAG, "Get Appropriate Login Component Handler..");
         switch (parameters.getB2cProvider().getProviderName()) {
             case LabConstants.B2CProvider.LOCAL:
                 return new B2CIdLabLocalLoginComponentHandler();
