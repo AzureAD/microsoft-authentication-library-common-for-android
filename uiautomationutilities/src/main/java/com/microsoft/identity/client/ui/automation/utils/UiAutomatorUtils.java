@@ -289,7 +289,7 @@ public class UiAutomatorUtils {
      */
     public static void handleInput(@NonNull final String resourceId,
                                    @NonNull final String inputText) {
-        Logger.i(TAG, "Fills the text:" + inputText + " into the input element associated to the resource id:" + resourceId);
+        Logger.i(TAG, "Handling input for resource id: " + resourceId);
         final UiObject inputField = obtainUiObjectWithResourceId(resourceId);
 
         try {
