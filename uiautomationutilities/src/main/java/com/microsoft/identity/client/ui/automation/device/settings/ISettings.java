@@ -103,4 +103,17 @@ public interface ISettings {
      * Launches the security page in Settings app.
      */
     void launchScreenLockPage();
+
+    /**
+     * Launches the default apps page in settings app.
+     */
+    void launchDefaultAppsPage();
+
+    /**
+     * function which sets the browser name as default browser
+     *
+     * @param browserName we will select browser name as default browser.
+     * @throws UiObjectNotFoundException
+     */
+    void setDefaultBrowser(final String browserName) throws UiObjectNotFoundException;
 }

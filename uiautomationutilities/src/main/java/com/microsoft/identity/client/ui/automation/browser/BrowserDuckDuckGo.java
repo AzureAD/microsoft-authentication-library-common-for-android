@@ -22,23 +22,29 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.browser;
 
-import com.microsoft.identity.client.ui.automation.app.IApp;
+import com.microsoft.identity.client.ui.automation.app.App;
 
-/**
- * An interface describing a browser app on an Android device during UI Automated test.
- */
-public interface IBrowser extends IApp {
+public class BrowserDuckDuckGo extends App implements IBrowser {
 
-    /**
-     * Browse to the supplied url using this browser.
-     *
-     * @param url the url to open
-     */
-    void navigateTo(String url);
+    private static final String DUCKDUCKGO_PACAKGE_NAME = "com.duckduckgo.mobile.android";
+    private static final String DUCKDUCKGO_APP_NAME = "DuckDuckGo";
 
-    /**
-     * @return the Browser name of the browser in the device.
-     */
-    String BrowserName();
+    public BrowserDuckDuckGo() {
+        super(DUCKDUCKGO_PACAKGE_NAME, DUCKDUCKGO_APP_NAME);
+    }
 
+    @Override
+    public void navigateTo(String url) {
+        //TODO: needs to implement navigateTo.
+    }
+
+    @Override
+    public String BrowserName() {
+        return "DuckDuckGo";
+    }
+
+    @Override
+    public void handleFirstRun() {
+        // nothing to do.
+    }
 }

@@ -87,6 +87,11 @@ public class BrowserEdge extends App implements IBrowser {
         device.pressEnter();
     }
 
+    @Override
+    public String BrowserName() {
+        return "Edge";
+    }
+
     private void sleep() {
         try {
             Thread.sleep(3000);

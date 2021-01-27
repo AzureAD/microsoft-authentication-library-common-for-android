@@ -71,4 +71,9 @@ public class BrowserChrome extends App implements IBrowser {
         // press enter on the Keyboard
         device.pressEnter();
     }
+
+    @Override
+    public String BrowserName() {
+        return "Chrome";
+    }
 }

@@ -20,25 +20,33 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.browser;
+package com.microsoft.identity.client.ui.automation.rules;
 
-import com.microsoft.identity.client.ui.automation.app.IApp;
+import com.microsoft.identity.client.ui.automation.TestContext;
 
-/**
- * An interface describing a browser app on an Android device during UI Automated test.
- */
-public interface IBrowser extends IApp {
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
-    /**
-     * Browse to the supplied url using this browser.
-     *
-     * @param url the url to open
-     */
-    void navigateTo(String url);
+import lombok.NonNull;
 
-    /**
-     * @return the Browser name of the browser in the device.
-     */
-    String BrowserName();
+public class DefaultBrowserRule implements TestRule {
 
+    private final String browserName;
+
+    public DefaultBrowserRule(@NonNull final String browserName) {
+        this.browserName = browserName;
+
+    }
+
+    @Override
+    public Statement apply(Statement base, Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                TestContext.getTestContext().getTestDevice().getSettings().setDefaultBrowser(browserName);
+                base.evaluate();
+            }
+        };
+    }
 }
