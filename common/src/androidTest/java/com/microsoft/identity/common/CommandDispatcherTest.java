@@ -47,7 +47,6 @@ import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -262,7 +261,8 @@ public class CommandDispatcherTest {
         final ConcurrentHashMap<Integer, Future<?>> map = new ConcurrentHashMap<>();
         for (int i = 0; i < nTasks; i++) {
             final int j = i;
-            map.put(j, executor.submit(() -> {
+            map.put(j, executor.submit(new Runnable() {
+            public void run() {
                 try {
                     testSubmitSilentWithParamMutation();
                     testSubmitSilentWithParamMutationUncacheable();
@@ -272,7 +272,7 @@ public class CommandDispatcherTest {
                     latch.countDown();
                     map.remove(j);
                 }
-            }));
+            }}));
         }
         System.out.println("Waiting on latch");
         while (!latch.await(30, TimeUnit.SECONDS)) {
@@ -350,7 +350,16 @@ public class CommandDispatcherTest {
             executor.submit(() -> {
                 try {
                     map.put(j, "foo");
-                    testSubmitSilentWithParamMutationSameCommand(s -> { map.remove(j); if ("FAIL".equals(s)) { ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + j)); }});
+                    testSubmitSilentWithParamMutationSameCommand(new Consumer<String>() {
+                                                                     @Override
+                                                                     public void accept(String s) {
+                                                                         map.remove(j);
+                                                                         if ("FAIL".equals(s)) {
+                                                                             ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + j));
+                                                                         }
+                                                                     }
+                                                                 }
+                    );
                 } catch (Throwable t) {
                     ex.compareAndSet(null, t);
                 } finally {

@@ -242,7 +242,7 @@ android.libraryVariants.all { variant ->
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+    destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
 def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
