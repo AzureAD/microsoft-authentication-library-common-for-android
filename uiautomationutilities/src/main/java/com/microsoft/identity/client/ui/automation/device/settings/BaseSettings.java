@@ -29,6 +29,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.provider.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiObject;
 
@@ -43,8 +44,6 @@ public abstract class BaseSettings implements ISettings {
 
     private final static String TAG = BaseSettings.class.getSimpleName();
     final static String SETTINGS_PKG = "com.android.settings";
-
-    public static final String TAG = BaseSettings.class.getSimpleName();
 
     @Override
     public void launchDeviceAdminSettingsPage() {
