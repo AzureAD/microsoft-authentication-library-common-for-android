@@ -35,6 +35,8 @@ public class FactoryResetChromeRule implements TestRule {
                 final String chromeVersion = getPackageMajorVersion(BrowserChrome.CHROME_PACKAGE_NAME);
                 if (!TextUtils.isEmpty(chromeVersion) &&
                         Integer.parseInt(chromeVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
+                    Logger.w(TAG, "Chrome version on the device is higher than the known version suitable for automation. " +
+                            "We are going to attempt to factory reset Chrome and hope that it will give us the desired version.");
                     // adb uninstall does factory reset for default apps
                     AdbShellUtils.removePackage(BrowserChrome.CHROME_PACKAGE_NAME);
                 }
@@ -42,6 +44,8 @@ public class FactoryResetChromeRule implements TestRule {
                 final String webViewVersion = getPackageMajorVersion(WEB_VIEW_PACKAGE_NAME);
                 if (!TextUtils.isEmpty(webViewVersion) &&
                         Integer.parseInt(webViewVersion) > WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
+                    Logger.w(TAG, "Chrome version on the device is higher than the known version suitable for automation. " +
+                            "We are going to attempt to factory reset Chrome and hope that it will give us the desired version.");
                     // adb uninstall does factory reset for default apps
                     AdbShellUtils.removePackage(WEB_VIEW_PACKAGE_NAME);
                 }
@@ -77,10 +81,11 @@ public class FactoryResetChromeRule implements TestRule {
             final String chromeVersion = chromePackageInfo.versionName;
             final String[] parts = chromeVersion.split("\\.");
             final String majorVersion = parts[0];
-            Log.i(TAG, "Chrome Version = " + chromeVersion);
-            Log.i(TAG, "Chrome major version = " + majorVersion);
+            Logger.i(TAG, packageName + " Version = " + chromeVersion);
+            Logger.i(TAG, packageName + " major version = " + majorVersion);
             return majorVersion;
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (final PackageManager.NameNotFoundException e) {
+            Logger.e(TAG, "Package " + packageName + " not found :(", e);
             return null;
         }
     }
