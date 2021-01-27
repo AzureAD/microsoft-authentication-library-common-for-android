@@ -26,23 +26,24 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.browser.BrowserChrome;
-import com.microsoft.identity.client.ui.automation.device.TestDevice;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
-import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 /**
- * A Test Rule to downgrade Chrome and WebView to factory default version.
+ * A Test Rule to downgrade Chrome and WebView to factory default version. The newer versions of
+ * Chrome & WebView seem to be not so suitable for automation and we run into resource id not found
+ * error. Basically it seems that Chrome rolled out an update due to which automation frameworks are
+ * not able to find elements on the web-page (at least this is the case for ESTS UX page). To
+ * mitigate this, if we find that Chrome or WebView version on the device is above the known version
+ * suitable for automation, then we would factory reset Chrome.
  */
 public class FactoryResetChromeRule implements TestRule {
 
