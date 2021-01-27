@@ -35,6 +35,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A Test Rule to load lab user for the provided query prior to executing the test case.
  */
@@ -42,7 +44,7 @@ public class LoadLabUserTestRule implements TestRule {
 
     private final static String TAG = LoadLabUserTestRule.class.getSimpleName();
 
-    public static final int TEMP_USER_WAIT_TIME = 15000;
+    public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(20);
 
     private LabUserQuery query;
     private String tempUserType;
