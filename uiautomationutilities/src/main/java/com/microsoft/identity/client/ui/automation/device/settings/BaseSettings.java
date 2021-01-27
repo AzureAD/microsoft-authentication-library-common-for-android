@@ -93,8 +93,9 @@ public abstract class BaseSettings implements ISettings {
             launchIntent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, data);
         } catch (final ActivityNotFoundException e) {
             Logger.e(TAG, "Package: " + packageName + " probably not available on device.", e);
-            //Open the generic Apps page:
-            launchIntent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS);
+            // we could probably install the package from PlayStore (but for now let's fail the test
+            // to see if this ever happens in the wild)
+            throw new AssertionError(e);
         }
     }
 }
