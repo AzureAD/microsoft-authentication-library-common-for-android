@@ -54,27 +54,15 @@ public class FactoryResetChromeRule implements TestRule {
     private final static String WEB_VIEW_PACKAGE_NAME = "com.google.android.webview";
 
     @Override
-    public Statement apply(Statement base, Description description) {
+    public Statement apply(final Statement base, Description description) {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                final String chromeVersion = getPackageMajorVersion(BrowserChrome.CHROME_PACKAGE_NAME);
-                if (!TextUtils.isEmpty(chromeVersion) &&
-                        Integer.parseInt(chromeVersion) > CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
-                    Logger.w(TAG, "Chrome version on the device is higher than the known version suitable for automation. " +
-                            "We are going to attempt to factory reset Chrome and hope that it will give us the desired version.");
-                    // adb uninstall does factory reset for default apps
-                    AdbShellUtils.removePackage(BrowserChrome.CHROME_PACKAGE_NAME);
-                }
+                // validate Chrome version is suitable for automation
+                validatePackageSuitableForAutomation(BrowserChrome.CHROME_PACKAGE_NAME, CHROME_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION);
 
-                final String webViewVersion = getPackageMajorVersion(WEB_VIEW_PACKAGE_NAME);
-                if (!TextUtils.isEmpty(webViewVersion) &&
-                        Integer.parseInt(webViewVersion) > WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION) {
-                    Logger.w(TAG, "Chrome version on the device is higher than the known version suitable for automation. " +
-                            "We are going to attempt to factory reset Chrome and hope that it will give us the desired version.");
-                    // adb uninstall does factory reset for default apps
-                    AdbShellUtils.removePackage(WEB_VIEW_PACKAGE_NAME);
-                }
+                // validate WebView version is suitable for automation
+                validatePackageSuitableForAutomation(WEB_VIEW_PACKAGE_NAME, WEB_VIEW_MAJOR_VERSION_SUITABLE_FOR_AUTOMATION);
 
                 // proceed with the test case
                 base.evaluate();
@@ -91,13 +79,35 @@ public class FactoryResetChromeRule implements TestRule {
             final String[] parts = chromeVersion.split("\\.");
             final String majorVersion = parts[0];
             Logger.i(TAG, packageName + " Version = " + chromeVersion);
-            Logger.i(TAG, packageName + " major version = " + majorVersion);
+            Logger.v(TAG, packageName + " major version = " + majorVersion);
             return majorVersion;
         } catch (final PackageManager.NameNotFoundException e) {
             Logger.e(TAG, "Package " + packageName + " not found :(", e);
             // we could probably install the package from PlayStore (but for now let's fail the test
             // to see if this ever happens in the wild)
             throw new AssertionError(e);
+        }
+    }
+
+    private void validatePackageSuitableForAutomation(final String packageName,
+                                                      final int majorVersionSuitableForAutomation) {
+        final String packageVersion = getPackageMajorVersion(packageName);
+        if (!TextUtils.isEmpty(packageVersion) &&
+                Integer.parseInt(packageVersion) > majorVersionSuitableForAutomation) {
+            Logger.w(TAG, packageName + " version on the device is higher than the known version suitable for automation. " +
+                    "We are going to attempt to factory reset this package and hope that it will give us the desired version.");
+            // adb uninstall does factory reset for default apps
+            AdbShellUtils.removePackage(packageName);
+
+            final String packageVersionAfterDowngrade = getPackageMajorVersion(packageName);
+            Logger.i(TAG, packageName + " version after factory reset = " + packageVersionAfterDowngrade);
+
+            if (Integer.parseInt(packageVersionAfterDowngrade) > majorVersionSuitableForAutomation) {
+                Logger.w(TAG, packageName + " version after factory reset is still higher " +
+                        "than the currently supported version: " + majorVersionSuitableForAutomation +
+                        " - We are just going to fail the test at this point.");
+                throw new AssertionError("Unsupported version " + packageVersionAfterDowngrade + " for package: " + packageName);
+            }
         }
     }
 }
