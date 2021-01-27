@@ -81,23 +81,6 @@ public class FactoryResetChromeRule implements TestRule {
         };
     }
 
-    private void downgradeChromeToFactoryVersion() {
-        final TestDevice device = TestContext.getTestContext().getTestDevice();
-        device.getSettings().launchAppInfoPage(BrowserChrome.CHROME_PACKAGE_NAME);
-
-        // disable chrome
-        UiAutomatorUtils.handleButtonClick("com.android.settings:id/button1_negative");
-
-        // confirm disable in dialog
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-        // confirm downgrade to factory version
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
-
-        // Enable Chrome
-        UiAutomatorUtils.handleButtonClick("com.android.settings:id/button1_positive");
-    }
-
     private String getPackageMajorVersion(final String packageName) {
         try {
             final Context context = ApplicationProvider.getApplicationContext();
