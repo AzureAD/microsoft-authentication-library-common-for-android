@@ -95,7 +95,9 @@ public class FactoryResetChromeRule implements TestRule {
             return majorVersion;
         } catch (final PackageManager.NameNotFoundException e) {
             Logger.e(TAG, "Package " + packageName + " not found :(", e);
-            return null;
+            // we could probably install the package from PlayStore (but for now let's fail the test
+            // to see if this ever happens in the wild)
+            throw new AssertionError(e);
         }
     }
 }
