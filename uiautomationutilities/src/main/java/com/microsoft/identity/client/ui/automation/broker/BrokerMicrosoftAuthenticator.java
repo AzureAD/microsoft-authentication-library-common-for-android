@@ -41,6 +41,7 @@ import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -73,7 +74,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
-        Log.i(TAG, "Performing Device Registration for the given account..");
+        Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(
                 username,
                 password,
@@ -121,7 +122,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password) {
-        Log.i(TAG, "Performing Shared Device Registration for the given account..");
+        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
         performDeviceRegistrationHelper(
                 username,
                 password,
@@ -153,7 +154,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     @Nullable
     @Override
     public String obtainDeviceId() {
-        Log.i(TAG, "Obtain Device Id..");
+        Logger.i(TAG, "Obtain Device Id..");
         openDeviceRegistrationPage();
 
         try {
@@ -172,7 +173,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void enableBrowserAccess() {
-        Log.i(TAG, "Enable Browser Access..");
+        Logger.i(TAG, "Enable Browser Access..");
         // open device registration page
         openDeviceRegistrationPage();
 
@@ -200,7 +201,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public void createPowerLiftIncident() {
-        Log.i(TAG, "Creating Power Lift Incident..");
+        Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
             handleFirstRun();
@@ -258,7 +259,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             final String incidentIdText = incidentDetails.getText();
 
             // This will post the incident id in text logs
-            Log.w(TAG, incidentIdText);
+            Logger.w(TAG, incidentIdText);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -286,7 +287,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             final String incidentIdText = postLogSubmissionText.getText();
             // This will post the incident id in text logs
-            Log.w(TAG, incidentIdText);
+            Logger.w(TAG, incidentIdText);
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
@@ -294,7 +295,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
     @Override
     public DeviceAdmin getAdminName() {
-        Log.i(TAG, "Get Admin Name..");
+        Logger.i(TAG, "Get Admin Name..");
         return DeviceAdmin.MICROSOFT_AUTHENTICATOR;
     }
 
@@ -302,7 +303,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
      * Open the device registration page in the Authenticator App
      */
     public void openDeviceRegistrationPage() {
-        Log.i(TAG, "Open the device registration page in the Authenticator App..");
+        Logger.i(TAG, "Open the device registration page in the Authenticator App..");
         launch(); // launch Authenticator app
 
         if (shouldHandleFirstRun) {
@@ -341,7 +342,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                                                  @NonNull final String password,
                                                  @NonNull final String emailInputResourceId,
                                                  @NonNull final String registerBtnResourceId) {
-        Log.i(TAG, "Execution of Helper for Device Registration..");
+        Logger.i(TAG, "Execution of Helper for Device Registration..");
         // open device registration page
         openDeviceRegistrationPage();
 
@@ -366,14 +367,14 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
-        Log.i(TAG, "Handle AAD Login page prompt for Device Registration..");
+        Logger.i(TAG, "Handle AAD Login page prompt for Device Registration..");
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
     }
 
     @Override
     public void handleFirstRun() {
-        Log.i(TAG, "Handle First Run of the APP..");
+        Logger.i(TAG, "Handle First Run of the APP..");
         // privacy dialog
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/privacy_consent_button");
         // the skip button
