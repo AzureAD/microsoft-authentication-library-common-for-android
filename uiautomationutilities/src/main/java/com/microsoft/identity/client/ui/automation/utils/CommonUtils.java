@@ -27,6 +27,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -72,8 +73,12 @@ public class CommonUtils {
      * just responds to that by accepting that permission.
      */
     public static void grantPackagePermission() {
-        Logger.i(TAG, "Granting(Allows) the Package for the requested Permission..");
-        UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
+        Logger.i(TAG, "Granting the requested permission to the package by handling allow permission dialog..");
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
+        } else {
+            UiAutomatorUtils.handleButtonClick("com.android.permissioncontroller:id/permission_allow_button");
+        }
     }
 
     /**
