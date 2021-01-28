@@ -24,7 +24,6 @@ package com.microsoft.identity.client.ui.automation.broker;
 
 import android.Manifest;
 import android.os.Build;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 
