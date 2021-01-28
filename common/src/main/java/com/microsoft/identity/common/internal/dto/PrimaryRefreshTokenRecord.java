@@ -28,8 +28,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import lombok.EqualsAndHashCode;
+
 import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.*;
 
+@EqualsAndHashCode(callSuper = true, doNotUseGetters = true)
 public class PrimaryRefreshTokenRecord extends Credential {
 
     public static class SerializedNames extends Credential.SerializedNames {
@@ -104,16 +107,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
         mFamilyId = familyId;
     }
 
-    public boolean isExpired(final String expires) {
-        // Init a Calendar for the current time/date
-        final Calendar calendar = Calendar.getInstance();
-        final Date validity = calendar.getTime();
-        // Init a Date for the accessToken's expiry
-        long epoch = Long.valueOf(expires);
-        final Date expiresOn = new Date(
-                TimeUnit.SECONDS.toMillis(epoch)
-        );
-        return expiresOn.before(validity);
+    public boolean isExpired(final String expirationTimeEpochSeconds) {
+        return Long.parseLong(expirationTimeEpochSeconds) * 1000 < System.currentTimeMillis();
     }
 
     @Override
@@ -188,50 +183,6 @@ public class PrimaryRefreshTokenRecord extends Credential {
     public void setSessionKeyRollingDate(String sessionKeyRollingDate) {
         mSessionKeyRollingDate = sessionKeyRollingDate;
     }
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @SuppressWarnings("PMD")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        PrimaryRefreshTokenRecord that = (PrimaryRefreshTokenRecord) o;
-
-        if (mFamilyId != null ? !mFamilyId.equals(that.mFamilyId) : that.mFamilyId != null)
-            return false;
-        if (mExpiresOn != null ? !mExpiresOn.equals(that.mExpiresOn) : that.mExpiresOn != null)
-            return false;
-        if (mSessionKey != null ? !mSessionKey.equals(that.mSessionKey) : that.mSessionKey != null)
-            return false;
-        if (mPrtProtocolVersion != null ? !mPrtProtocolVersion.equals(that.mPrtProtocolVersion) : that.mPrtProtocolVersion != null)
-            return false;
-        return mSessionKeyRollingDate != null ? mSessionKeyRollingDate.equals(that.mSessionKeyRollingDate) : that.mSessionKeyRollingDate == null;
-    }
-    //CHECKSTYLE:ON
-
-
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @SuppressWarnings("PMD")
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (mFamilyId != null ? mFamilyId.hashCode() : 0);
-        result = 31 * result + (mExpiresOn != null ? mExpiresOn.hashCode() : 0);
-        result = 31 * result + (mSessionKey != null ? mSessionKey.hashCode() : 0);
-        result = 31 * result + (mPrtProtocolVersion != null ? mPrtProtocolVersion.hashCode() : 0);
-        result = 31 * result + (mSessionKeyRollingDate != null ? mSessionKeyRollingDate.hashCode() : 0);
-        return result;
-    }
-    //CHECKSTYLE:ON
 
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.
