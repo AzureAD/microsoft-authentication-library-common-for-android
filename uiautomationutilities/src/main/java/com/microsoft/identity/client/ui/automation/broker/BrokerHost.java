@@ -102,7 +102,7 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public void performSharedDeviceRegistration(@NonNull final String username,
                                                 @NonNull final String password,
-                                                @NonNull final boolean expectedSuccess) {
+                                                final boolean expectedSuccess) {
         Logger.i(TAG, "Performing Shared Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
