@@ -31,7 +31,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.TestContext;
-import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.device.settings.ISettings;
 import com.microsoft.identity.client.ui.automation.device.settings.SamsungSettings;
@@ -100,7 +100,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
-    public void createPowerLiftIncident() {
+    public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
@@ -140,7 +140,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             Assert.assertTrue(incidentIdBox.exists());
 
-            Logger.w(TAG, "Incident Created with ID: " + incidentIdBox.getText());
+            final String incidentDetails = incidentIdBox.getText();
+
+            Logger.w(TAG, "Incident Created with ID: " + incidentDetails);
+
+            return incidentDetails;
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
