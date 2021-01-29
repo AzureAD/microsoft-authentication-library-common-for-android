@@ -100,7 +100,7 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
     }
 
     @Override
-    public void createPowerLiftIncident() {
+    public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
@@ -141,6 +141,8 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
             Assert.assertTrue(incidentIdBox.exists());
 
             Logger.w(TAG, "Incident Created with ID: " + incidentIdBox.getText());
+
+            return incidentIdBox.getText();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

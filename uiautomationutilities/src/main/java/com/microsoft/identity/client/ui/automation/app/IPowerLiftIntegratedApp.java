@@ -29,7 +29,9 @@ public interface IPowerLiftIntegratedApp {
 
     /**
      * Create a PowerLift Incident using this app.
+     *
+     * @return a String message containing PowerLift incident details
      */
-    void createPowerLiftIncident();
+    String createPowerLiftIncident();
 
 }
