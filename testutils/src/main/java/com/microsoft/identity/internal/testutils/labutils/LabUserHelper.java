@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class LabUserHelper {
 
@@ -228,6 +229,8 @@ public class LabUserHelper {
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        createTempUserApi.getApiClient().setConnectTimeout((int) TimeUnit.SECONDS.toMillis(15));
+        createTempUserApi.getApiClient().setReadTimeout((int) TimeUnit.SECONDS.toMillis(15));
 
         TempUser tempUser;
 
@@ -246,6 +249,8 @@ public class LabUserHelper {
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        createTempUserApi.getApiClient().setConnectTimeout((int) TimeUnit.SECONDS.toMillis(15));
+        createTempUserApi.getApiClient().setReadTimeout((int) TimeUnit.SECONDS.toMillis(15));
 
         try {
             return createTempUserApi.post(userType);
