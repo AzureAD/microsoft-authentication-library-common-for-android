@@ -43,6 +43,8 @@ public class LabUserHelper {
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
     private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
 
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
+
     /**
      * Reset the secret in use by the lab authentication helper.  This will rewrite the instance
      * in use to use a specified version of the key vault secret.
@@ -229,7 +231,7 @@ public class LabUserHelper {
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setReadTimeout((int) TimeUnit.SECONDS.toMillis(15));
+        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         TempUser tempUser;
 
@@ -248,7 +250,7 @@ public class LabUserHelper {
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setReadTimeout((int) TimeUnit.SECONDS.toMillis(15));
+        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         try {
             return createTempUserApi.post(userType);
