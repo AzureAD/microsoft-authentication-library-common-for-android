@@ -229,7 +229,6 @@ public class LabUserHelper {
     public static String loadTempUser(final String userType) {
         instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setConnectTimeout((int) TimeUnit.SECONDS.toMillis(15));
         createTempUserApi.getApiClient().setReadTimeout((int) TimeUnit.SECONDS.toMillis(15));
 
         TempUser tempUser;
@@ -249,7 +248,6 @@ public class LabUserHelper {
     public static TempUser loadTempUserForTest(final String userType) {
         instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
-        createTempUserApi.getApiClient().setConnectTimeout((int) TimeUnit.SECONDS.toMillis(15));
         createTempUserApi.getApiClient().setReadTimeout((int) TimeUnit.SECONDS.toMillis(15));
 
         try {
