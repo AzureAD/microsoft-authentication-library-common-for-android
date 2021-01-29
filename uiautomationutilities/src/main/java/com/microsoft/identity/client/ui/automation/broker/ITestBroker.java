@@ -61,9 +61,9 @@ public interface ITestBroker extends IApp {
     /**
      * Perform shared device registration with supplied username.
      *
-     * @param username username of the account to use for registration.
-     * @param password password of the account to use for registration.
-     * @param expectedSuccess expectedSuccess is are we expecting successful registration or not.
+     * @param username username of the account to use for registration
+     * @param password password of the account to use for registration
+     * @param expectedSuccess expectedSuccess is are we expecting successful registration or not
      */
     void performSharedDeviceRegistration(String username, String password, boolean expectedSuccess);
 
