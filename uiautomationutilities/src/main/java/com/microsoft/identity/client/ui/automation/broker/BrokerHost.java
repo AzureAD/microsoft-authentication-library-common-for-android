@@ -133,8 +133,10 @@ public class BrokerHost extends AbstractTestBroker {
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
         if (expectedSuccess) {
+            Logger.i(TAG, "Expecting success as outcome for shared device registration..");
             postJoinConfirmHelper(username);
         } else {
+            Logger.i(TAG, "Expecting failure as outcome for shared device registration..");
             postJoinFailure();
         }
     }

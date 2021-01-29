@@ -137,6 +137,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         );
 
         if (expectedSuccess) {
+            Logger.i(TAG, "Expecting success as outcome for shared device registration..");
             // There is a data privacy dialog that shows up when shared device registration finishes.
             // But why? This should really not pop up at this time.
             UiAutomatorUtils.handleButtonClick("android:id/button1");
@@ -157,6 +158,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             isInSharedDeviceMode = true;
         } else {
+            Logger.i(TAG, "Expecting failure as outcome for shared device registration..");
             // if we are expecting shared device registration to fail, then we should be back at
             // device registration screen in Authenticator and we should assert that we still see
             // that btn.
