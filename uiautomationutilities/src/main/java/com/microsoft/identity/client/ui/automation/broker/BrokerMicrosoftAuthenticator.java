@@ -136,25 +136,38 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
                 "com.azure.authenticator:id/shared_device_registration_button"
         );
 
-        // There is a data privacy dialog that shows up when shared device registration finishes.
-        // But why? This should really not pop up at this time.
-        UiAutomatorUtils.handleButtonClick("android:id/button1");
+        if (expectedSuccess) {
+            // There is a data privacy dialog that shows up when shared device registration finishes.
+            // But why? This should really not pop up at this time.
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
 
-        final UiDevice device =
-                UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            final UiDevice device =
+                    UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
-                .descriptionContains("Shared Device Mode")
-                .className("android.widget.ImageView");
+            final UiSelector sharedDeviceConfirmationSelector = new UiSelector()
+                    .descriptionContains("Shared Device Mode")
+                    .className("android.widget.ImageView");
 
-        //confirm that we are in Shared Device Mode inside Authenticator
-        final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
-        sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
-        Assert.assertTrue(
-                "Microsoft Authenticator - Shared Device Confirmation page appears.",
-                sharedDeviceConfirmation.exists());
+            //confirm that we are in Shared Device Mode inside Authenticator
+            final UiObject sharedDeviceConfirmation = device.findObject(sharedDeviceConfirmationSelector);
+            sharedDeviceConfirmation.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+            Assert.assertTrue(
+                    "Microsoft Authenticator - Shared Device Confirmation page appears.",
+                    sharedDeviceConfirmation.exists());
 
-        isInSharedDeviceMode = true;
+            isInSharedDeviceMode = true;
+        } else {
+            // if we are expecting shared device registration to fail, then we should be back at
+            // device registration screen in Authenticator and we should assert that we still see
+            // that btn.
+            // Authenticator app also shows a Toast with an error, however, UI Automator can't read
+            // the toast and hence we apply this work-around
+            final UiObject registerSharedDeviceBtn = UiAutomatorUtils.obtainUiObjectWithResourceId(
+                    "com.azure.authenticator:id/shared_device_registration_button"
+            );
+
+            Assert.assertTrue(registerSharedDeviceBtn.exists());
+        }
     }
 
     @Nullable
