@@ -1,5 +1,12 @@
-vNext
+V.Next
 ----------
+- Add refresh_on to access tokens(#1190)
+- Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
+
+Version 3.0.9
+----------
+- Sends CP version to ESTS and handle WebCP uri. (#1137)
+- Check for eligible for caching when putting command in executing command map
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
 - Adds unit test to verify .trim() behavior of cache keys.
 - Make CacheRecord immutable, insist on NonNull AccountRecord (#1225).
@@ -8,6 +15,15 @@ vNext
 - Log an informative error message when application redirect_uri does not match the broker's expected value (#1155).
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
+- Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
+- (MSALCPP) Validate ATs before persisting to the cache (#1192)
+- Adds API23 WebViewClient#onReceivedError overload (#1197)
+- Fixes for MFA setup using Authenticator app.
+
+Version 3.0.8
+----------
+- Hardcode Teams Agent clientID/scope for FoCi call (#1140)
+- (Make changes to) persist refresh token in joined flow. (#1130)
 
 Version 3.0.7
 ----------

@@ -28,6 +28,7 @@ import androidx.test.uiautomator.UiObject;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -37,6 +38,7 @@ import org.junit.Assert;
  */
 public class OutlookApp extends App implements IFirstPartyApp {
 
+    private final static String TAG = OutlookApp.class.getSimpleName();
     private static final String OUTLOOK_PACKAGE_NAME = "com.microsoft.office.outlook";
     private static final String OUTLOOK_APP_NAME = "Microsoft Outlook";
 
@@ -53,6 +55,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void addFirstAccount(@NonNull final String username,
                                 @NonNull final String password,
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Adding First Account..");
         // Click start btn
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_splash_start");
 
@@ -62,6 +65,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
     @Override
     public void onAccountAdded() {
+        Logger.i(TAG, "Handling UI after account is added on the App..");
         // Make sure we are on add another account (shows up after an account is added)
         final UiObject addAnotherAccountScreen = UiAutomatorUtils.obtainUiObjectWithText("Add another account");
         Assert.assertTrue(
@@ -80,6 +84,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
     public void addAnotherAccount(final String username,
                                   final String password,
                                   final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Adding Another Account..");
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
 
@@ -95,6 +100,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
 
     @Override
     public void confirmAccount(@NonNull final String username) {
+        Logger.i(TAG, "Confirming account with supplied username is signed in..");
         // Click the account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/account_button");
 
@@ -109,12 +115,14 @@ public class OutlookApp extends App implements IFirstPartyApp {
     private void signIn(@NonNull final String username,
                         @NonNull final String password,
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Sign-In on the APP..");
         // enter email in edit text email field
         UiAutomatorUtils.handleInput("com.microsoft.office.outlook:id/edit_text_email", username);
 
         // click continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_continue");
 
+        Logger.i(TAG, "Handle Sign-In Prompt on the APP..");
         // handle login prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);

@@ -55,6 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -124,7 +125,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
 
-        // Init Mockito mocks
         MockitoAnnotations.initMocks(this);
 
         // Our test context
@@ -211,13 +211,18 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         }
     }
 
+
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
+        super.tearDown();
+
         if (null != mAppUidCredentialCache) {
             mAppUidCredentialCache.clearAll();
         }
 
-        mFociCredentialCache.clearAll();
+        if (null != mFociCredentialCache) {
+            mFociCredentialCache.clearAll();
+        }
 
         for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
             cache.clearAll();
@@ -225,6 +230,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mApplicationMetadataCache.clear();
     }
+
 
     private void initOtherCaches(final Context context) {
         testAppUids = new int[]{
@@ -901,7 +907,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void testWPJSaveNonFoci() throws ClientException {
+    public void testWPJSaveNonFoci_deprecated() throws ClientException {
         final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 mDefaultAppUidTestBundle.mGeneratedIdToken,
@@ -960,19 +966,20 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void testWPJSaveFoci() throws ClientException {
+    public void testWPJSaveNonFoci() throws ClientException {
         final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
                 mDefaultAppUidTestBundle.mGeneratedIdToken,
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
-                "1"
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                null
         );
 
         assertNotNull(saveResult);
         assertNotNull(saveResult.getAccount());
         assertNotNull(saveResult.getIdToken());
         assertNotNull(saveResult.getAccessToken());
-        assertNull(saveResult.getRefreshToken());
+        assertNotNull(saveResult.getRefreshToken());
 
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -989,6 +996,11 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 saveResult.getAccessToken()
         );
 
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+
         final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
                 mDefaultAppUidTestBundle.mGeneratedIdToken.getClientId(),
                 mDefaultAppUidTestBundle.mGeneratedAccessToken.getTarget(),
@@ -1000,7 +1012,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertNotNull(retrievedResult.getAccount());
         assertNotNull(retrievedResult.getIdToken());
         assertNotNull(retrievedResult.getAccessToken());
-        assertNull(retrievedResult.getRefreshToken());
+        assertNotNull(retrievedResult.getRefreshToken());
 
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccount,
@@ -1015,6 +1027,141 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         assertEquals(
                 mDefaultAppUidTestBundle.mGeneratedAccessToken,
                 retrievedResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultAppUidTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+    }
+
+    @Test
+    public void testWPJSaveFoci_deprecated() throws ClientException {
+        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                "1"
+        );
+
+        assertNotNull(saveResult);
+        assertNotNull(saveResult.getAccount());
+        assertNotNull(saveResult.getIdToken());
+        assertNotNull(saveResult.getAccessToken());
+        assertNull(saveResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                saveResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                saveResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                saveResult.getAccessToken()
+        );
+
+
+        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
+                mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+
+        assertNotNull(retrievedResult);
+        assertNotNull(retrievedResult.getAccount());
+        assertNotNull(retrievedResult.getIdToken());
+        assertNotNull(retrievedResult.getAccessToken());
+        assertNull(retrievedResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                retrievedResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                retrievedResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                retrievedResult.getAccessToken()
+        );
+    }
+
+    @Test
+    public void testWPJSaveFoci() throws ClientException {
+        final ICacheRecord saveResult = mBrokerOAuth2TokenCache.save(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                mDefaultFociTestBundle.mGeneratedRefreshToken,
+                "1"
+        );
+
+        assertNotNull(saveResult);
+        assertNotNull(saveResult.getAccount());
+        assertNotNull(saveResult.getIdToken());
+        assertNotNull(saveResult.getAccessToken());
+        assertNotNull(saveResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                saveResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                saveResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                saveResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedRefreshToken,
+                saveResult.getRefreshToken()
+        );
+
+        final ICacheRecord retrievedResult = mBrokerOAuth2TokenCache.load(
+                mDefaultFociTestBundle.mGeneratedIdToken.getClientId(),
+                mDefaultFociTestBundle.mGeneratedAccessToken.getTarget(),
+                mDefaultFociTestBundle.mGeneratedAccount,
+                BEARER_AUTHENTICATION_SCHEME
+        );
+
+        assertNotNull(retrievedResult);
+        assertNotNull(retrievedResult.getAccount());
+        assertNotNull(retrievedResult.getIdToken());
+        assertNotNull(retrievedResult.getAccessToken());
+        assertNotNull(retrievedResult.getRefreshToken());
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccount,
+                retrievedResult.getAccount()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedIdToken,
+                retrievedResult.getIdToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedAccessToken,
+                retrievedResult.getAccessToken()
+        );
+
+        assertEquals(
+                mDefaultFociTestBundle.mGeneratedRefreshToken,
+                retrievedResult.getRefreshToken()
         );
     }
 

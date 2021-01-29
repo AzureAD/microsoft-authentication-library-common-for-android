@@ -23,7 +23,6 @@
 package com.microsoft.identity.client.ui.automation.device.settings;
 
 import androidx.annotation.NonNull;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
@@ -92,10 +91,22 @@ public interface ISettings {
     /**
      * Adds screen lock to the device.
      */
-    void setPinOnDevice(final String password) throws UiObjectNotFoundException;
+    void setPinOnDevice(final String pin);
+
+    /**
+     * Remove screen lock from the device.
+     */
+    void removePinFromDevice(final String pin);
 
     /**
      * Launches the security page in Settings app.
      */
     void launchScreenLockPage();
+
+    /**
+     * Launch the app info page for the supplied package name.
+     *
+     * @param packageName the package for which to open app info page
+     */
+    void launchAppInfoPage(String packageName);
 }

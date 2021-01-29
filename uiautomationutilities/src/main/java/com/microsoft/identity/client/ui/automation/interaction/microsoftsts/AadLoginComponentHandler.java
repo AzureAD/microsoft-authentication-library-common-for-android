@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -41,6 +42,8 @@ import static org.junit.Assert.fail;
  */
 public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHandler {
 
+    private final static String TAG = AadLoginComponentHandler.class.getSimpleName();
+
     @Override
     public void handleEmailField(@NonNull final String username) {
         UiAutomatorUtils.handleInput("i0116", username);
@@ -49,6 +52,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
+        Logger.i(TAG, "Handle Aad Login Password UI..");
         UiAutomatorUtils.handleInput("i0118", password);
         handleNextButton();
     }
@@ -65,6 +69,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handleAccountPicker(@NonNull final String username) {
+        Logger.i(TAG, "Handle Account Picker UI..");
         final UiDevice uiDevice =
                 UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
@@ -84,7 +89,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         try {
             account.click();
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -94,6 +99,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void confirmConsentPageReceived() {
+        Logger.i(TAG, "Confirm Consent on Consent Page Received..");
         final UiObject consentScreen = getConsentScreen();
         Assert.assertTrue(
                 "Consent screen appears",
@@ -114,6 +120,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handleSpeedBump() {
+        Logger.i(TAG, "Handle Speed Bump UI..");
         // Confirm On Speed Bump Screen
         final UiObject speedBump = UiAutomatorUtils.obtainUiObjectWithResourceId("appConfirmTitle");
 
@@ -144,6 +151,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void handleRegistration() {
+        Logger.i(TAG, "Handle Registration Page Received..");
         final UiObject registerBtn = UiAutomatorUtils.obtainUiObjectWithText("Register");
         Assert.assertTrue("Register page appears.", registerBtn.exists());
 

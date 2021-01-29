@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -43,8 +44,11 @@ import java.util.Calendar;
  */
 public class SamsungSettings extends BaseSettings {
 
+    private final static String TAG = SamsungSettings.class.getSimpleName();
+
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
+        Logger.i(TAG, "Disabling Admin on Samsung Device..");
         launchDeviceAdminSettingsPage();
 
         try {
@@ -66,12 +70,13 @@ public class SamsungSettings extends BaseSettings {
                 UiAutomatorUtils.handleButtonClick("android:id/button1");
             }
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
     @Override
     public void removeAccount(@NonNull final String username) {
+        Logger.i(TAG, "Removing Account from Samsung Device..");
         launchAccountListPage();
         try {
             // scroll down the recycler view to find the list item for this account
@@ -100,7 +105,7 @@ public class SamsungSettings extends BaseSettings {
 
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -108,6 +113,7 @@ public class SamsungSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        Logger.i(TAG, "Adding Work Account on Samsung Device..");
         launchAddAccountPage();
 
         try {
@@ -132,12 +138,13 @@ public class SamsungSettings extends BaseSettings {
             // make sure account appears in Join activity and join successful
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
     @Override
     public void forwardDeviceTimeForOneDay() {
+        Logger.i(TAG, "Forwarding Time For One Day on Samsung Device..");
         // Disable automatic time zone
         AdbShellUtils.disableAutomaticTimeZone();
         // Open the date & time settings page
@@ -175,22 +182,29 @@ public class SamsungSettings extends BaseSettings {
             // Click ok to set date
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+           throw new AssertionError(e);
         }
     }
 
     @Override
     public void activateAdmin() {
+        Logger.i(TAG, "Activate Admin for Samsung Device..");
         UiAutomatorUtils.handleButtonClick("com.android.settings:id/action_button");
     }
 
     public void enrollInKnox() {
+        Logger.i(TAG, "Handle Enrollment in knox for Samsung Device..");
         UiAutomatorUtils.handleButtonClick("com.samsung.klmsagent:id/checkBox1");
         UiAutomatorUtils.handleButtonClick("com.samsung.klmsagent:id/eula_bottom_confirm_agree");
     }
 
     @Override
     public void setPinOnDevice(final String password) {
-        //TODO: implement addPinSetup for samsung device.
+        //TODO: implement addPinSetup for SAMSUNG device.
+    }
+
+    @Override
+    public void removePinFromDevice(String pin) {
+        //TODO: implement removing PIN for SAMSUNG device.
     }
 }

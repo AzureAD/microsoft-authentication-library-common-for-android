@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.rules;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.logging.appender.FileAppender;
 import com.microsoft.identity.client.ui.automation.logging.formatter.LogcatLikeFormatter;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
@@ -38,6 +39,7 @@ import java.io.IOException;
  */
 public class AutomationLoggingRule implements TestRule {
 
+    private final static String TAG = AutomationLoggingRule.class.getSimpleName();
     final static String LOG_FOLDER_NAME = "automation";
 
     @Override
@@ -45,21 +47,25 @@ public class AutomationLoggingRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                Logger.i(TAG, "Applying rule..");
                 final FileAppender automationLogFileAppender = turnOnAutomationLogging(description);
 
-                base.evaluate();
+                try {
+                    base.evaluate();
+                } finally {
+                    automationLogFileAppender.closeWriter();
 
-                automationLogFileAppender.closeWriter();
-
-                CommonUtils.copyFileToFolderInSdCard(
-                        automationLogFileAppender.getLogFile(),
-                        LOG_FOLDER_NAME
-                );
+                    CommonUtils.copyFileToFolderInSdCard(
+                            automationLogFileAppender.getLogFile(),
+                            LOG_FOLDER_NAME
+                    );
+                }
             }
         };
     }
 
     private FileAppender turnOnAutomationLogging(final Description description) throws IOException {
+        Logger.i(TAG, "Turn On Automation Logging..");
         final String automationLogFileName = description.getMethodName() + "-automation.log";
         final FileAppender automationLogFileAppender = new FileAppender(
                 automationLogFileName, new LogcatLikeFormatter()

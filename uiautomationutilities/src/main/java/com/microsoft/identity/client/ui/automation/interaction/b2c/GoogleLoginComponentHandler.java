@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -37,6 +38,8 @@ import org.junit.Assert;
  * A login component handler for Google IdP.
  */
 public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+
+    private final static String TAG = GoogleLoginComponentHandler.class.getSimpleName();
 
     @Override
     protected String getHandlerName() {
@@ -51,6 +54,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
+        Logger.i(TAG, "Handle Google Login Password UI..");
         UiAutomatorUtils.handleInput("password", password);
         final UiObject passwordBox = UiAutomatorUtils.obtainUiObjectWithResourceId("password");
 
@@ -61,7 +65,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
 
             passwordInput.setText(password);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         handleNextButton();
@@ -78,7 +82,7 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
         try {
             nextBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 }

@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 
@@ -37,8 +38,9 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
  */
 public class BrowserChrome extends App implements IBrowser {
 
-    private static final String CHROME_PACKAGE_NAME = "com.android.chrome";
-    private static final String CHROME_APP_NAME = "Google Chrome";
+    private static final String TAG = BrowserChrome.class.getSimpleName();
+    public static final String CHROME_PACKAGE_NAME = "com.android.chrome";
+    public static final String CHROME_APP_NAME = "Google Chrome";
 
     public BrowserChrome() {
         super(CHROME_PACKAGE_NAME, CHROME_APP_NAME);
@@ -46,12 +48,14 @@ public class BrowserChrome extends App implements IBrowser {
 
     @Override
     public void handleFirstRun() {
+        Logger.i(TAG, "Handle First Run of Browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
     }
 
     @Override
     public void navigateTo(@NonNull final String url) {
+        Logger.i(TAG, "Navigate to the URL in the browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/search_box_text");
 
         final UiObject inputField = UiAutomatorUtils.obtainUiObjectWithResourceId(
