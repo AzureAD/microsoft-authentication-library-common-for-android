@@ -140,9 +140,11 @@ public class BrokerCompanyPortal extends AbstractTestBroker implements ITestBrok
 
             Assert.assertTrue(incidentIdBox.exists());
 
-            Logger.w(TAG, "Incident Created with ID: " + incidentIdBox.getText());
+            final String incidentDetails = incidentIdBox.getText();
 
-            return incidentIdBox.getText();
+            Logger.w(TAG, "Incident Created with ID: " + incidentDetails);
+
+            return incidentDetails;
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
