@@ -3,8 +3,9 @@ package com.microsoft.identity.client.ui.automation.rules;
 import android.text.TextUtils;
 
 import com.microsoft.identity.client.ui.automation.app.App;
-import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.powerlift.ThrowableWithPowerLiftIncident;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -50,12 +51,10 @@ public class PowerLiftIncidentRule implements TestRule {
                     if (TextUtils.isEmpty(powerLiftIncidentDetails)) {
                         throw originalThrowable;
                     } else {
-                        final String message = originalThrowable.getMessage() + "\n" +
-                                "PowerLift Incident Created via " +
-                                ((App) powerLiftIntegratedApp).getAppName() +
-                                " - " + powerLiftIncidentDetails.trim();
-                        throw new Throwable(
-                                message,
+                        assert powerLiftIncidentDetails != null;
+                        throw new ThrowableWithPowerLiftIncident(
+                                powerLiftIntegratedApp,
+                                powerLiftIncidentDetails,
                                 originalThrowable
                         );
                     }
