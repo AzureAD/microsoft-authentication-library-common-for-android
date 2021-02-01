@@ -83,9 +83,14 @@ import java.util.List;
 
 import lombok.EqualsAndHashCode;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALCULATION_FIRST_OPERAND;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALCULATION_OPERATOR;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALCULATION_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALCULATION_SECOND_OPERAND;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.CALCULATION;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -138,8 +143,9 @@ public class BrokerMsalController extends BaseController {
      * Gets a list of communication strategies.
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
-    private static @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
-                                                                final String activeBrokerPackageName) {
+    private static @NonNull
+    List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+                                        final String activeBrokerPackageName) {
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);
         sb.append("Broker Strategies added : ");
@@ -174,8 +180,9 @@ public class BrokerMsalController extends BaseController {
      * @return a protocol version negotiated by MSAL and Broker.
      */
     @VisibleForTesting
-    public @NonNull String hello(final @NonNull IIpcStrategy strategy,
-                                 final @NonNull CommandParameters parameters) throws BaseException {
+    public @NonNull
+    String hello(final @NonNull IIpcStrategy strategy,
+                 final @NonNull CommandParameters parameters) throws BaseException {
 
         final Bundle bundle = mRequestAdapter.getRequestBundleForHello(parameters);
         final String minimumProtocolVersion = bundle.getString(CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY);
@@ -183,7 +190,7 @@ public class BrokerMsalController extends BaseController {
 
         // This should be part of the bundle.
         // If we're hitting this, it means that the hello protocol changed. see getRequestBundleForHello().
-        if (StringUtil.isEmpty(maximumProtocolVersion)){
+        if (StringUtil.isEmpty(maximumProtocolVersion)) {
             throw new ClientException(ClientException.MISSING_PARAMETER,
                     "maximum protocol version should never be null or empty");
         }
@@ -306,7 +313,8 @@ public class BrokerMsalController extends BaseController {
      * @param parameters a {@link InteractiveTokenCommandParameters}
      * @return an {@link Intent} for initiating Broker interactive activity.
      */
-    private @NonNull Intent getBrokerAuthorizationIntent(
+    private @NonNull
+    Intent getBrokerAuthorizationIntent(
             final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<Intent>() {
@@ -327,7 +335,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -357,6 +366,55 @@ public class BrokerMsalController extends BaseController {
                 });
     }
 
+
+    @Override
+    public String calculate(float first, float second, char operator) throws Exception {
+        return mBrokerOperationExecutor.execute(null, new BrokerOperation<String>() {
+            @Override
+            public void performPrerequisites(@NonNull IIpcStrategy strategy) throws BaseException {
+
+            }
+
+            @NonNull
+            @Override
+            public BrokerOperationBundle getBundle() {
+                Bundle bundle = new Bundle();
+                bundle.putFloat(CALCULATION_FIRST_OPERAND, first);
+                bundle.putFloat(CALCULATION_SECOND_OPERAND, second);
+                bundle.putChar(CALCULATION_OPERATOR, operator);
+                return new BrokerOperationBundle(CALCULATION, mActiveBrokerPackageName, bundle);
+            }
+
+            @NonNull
+            @Override
+            public String extractResultBundle(@Nullable Bundle resultBundle) throws BaseException {
+                BrokerResult brokerResult = mResultAdapter.brokerResultFromBundle(resultBundle);
+                if (brokerResult.isSuccess()) {
+                    return resultBundle.getString(CALCULATION_RESULT);
+                }
+
+                throw new BaseException(brokerResult.getErrorCode(), brokerResult.getErrorMessage());
+            }
+
+            @NonNull
+            @Override
+            public String getMethodName() {
+                return ":calculate";
+            }
+
+            @Nullable
+            @Override
+            public String getTelemetryApiId() {
+                return null;
+            }
+
+            @Override
+            public void putValueInSuccessEvent(@NonNull ApiEndEvent event, @NonNull String result) {
+                event.put(CALCULATION_RESULT, result);
+            }
+        });
+    }
+
     /**
      * Performs acquire token silent with Broker.
      *
@@ -364,7 +422,8 @@ public class BrokerMsalController extends BaseController {
      * @return an {@link AcquireTokenResult}.
      */
     @Override
-    public @NonNull AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
+    public @NonNull
+    AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<AcquireTokenResult>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -386,7 +445,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -420,7 +480,8 @@ public class BrokerMsalController extends BaseController {
      * @return a list of {@link ICacheRecord}.
      */
     @Override
-    public @NonNull List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
+    public @NonNull
+    List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<List<ICacheRecord>>() {
                     private String negotiatedBrokerProtocolVersion;
@@ -443,7 +504,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -499,7 +561,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         return true;
                     }
@@ -546,7 +609,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -580,7 +644,8 @@ public class BrokerMsalController extends BaseController {
      * @return a list of {@link ICacheRecord}.
      */
     @Override
-    public @NonNull List<ICacheRecord> getCurrentAccount(final @NonNull CommandParameters parameters) throws BaseException {
+    public @NonNull
+    List<ICacheRecord> getCurrentAccount(final @NonNull CommandParameters parameters) throws BaseException {
         final String methodName = ":getCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
@@ -610,7 +675,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         if (resultBundle == null) {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
@@ -684,7 +750,8 @@ public class BrokerMsalController extends BaseController {
                     }
 
                     @Override
-                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                    public @NonNull
+                    Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
                         mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         logOutFromBrowser(mApplicationContext, parameters);
                         return true;

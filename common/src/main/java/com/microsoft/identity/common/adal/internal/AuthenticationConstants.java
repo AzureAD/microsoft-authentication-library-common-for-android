@@ -1275,6 +1275,14 @@ public final class AuthenticationConstants {
              */
             public static final String SPE_RING = PREFIX + "spe_ring";
         }
+
+        public static final String CALCULATION_FIRST_OPERAND = "calculator_first_operand";
+
+        public static final String CALCULATION_SECOND_OPERAND = "calculation_second_operand";
+
+        public static final String CALCULATION_OPERATOR = "calculation_operator";
+
+        public static final String CALCULATION_RESULT = "calculation_result";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -1331,6 +1339,8 @@ public final class AuthenticationConstants {
         public static final String REMOVE_ACCOUNT_FROM_SHARED_DEVICE = "REMOVE_ACCOUNT_FROM_SHARED_DEVICE";
 
         public static final String GENERATE_SHR = "GENERATE_SHR";
+
+        public static final String CALCULATION = "CALCULATION";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -1413,6 +1423,9 @@ public final class AuthenticationConstants {
          */
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
 
+
+        public static final String CALCULATION_PATH = "/calculate";
+
         /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
@@ -1477,6 +1490,11 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
          */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
+
+        /**
+         *
+         */
+        public static final int CALCULATION_CODE = 14;
     }
 
     public static final class AuthorizationIntentKey {

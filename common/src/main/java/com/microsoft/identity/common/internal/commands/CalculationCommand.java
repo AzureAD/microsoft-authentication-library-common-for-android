@@ -2,6 +2,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import com.microsoft.identity.common.internal.commands.parameters.CalculationCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.controllers.LocalMSALController;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -46,7 +47,7 @@ public class CalculationCommand extends BaseCommand<String> {
 
     @Override
     public BaseController getDefaultController() {
-        return new LocalMSALController();
+        return controllers.get(0);
     }
 
     @Override

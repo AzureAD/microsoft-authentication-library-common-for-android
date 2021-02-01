@@ -67,17 +67,21 @@ public class BrokerOperationBundle {
         BROKER_API_HELLO,
         BROKER_API_GET_BROKER_ACCOUNTS,
         BROKER_API_REMOVE_BROKER_ACCOUNT,
-        BROKER_API_UPDATE_BRT
+        BROKER_API_UPDATE_BRT,
+        CALCULATION
     }
 
     @Getter
-    @NonNull final private Operation operation;
+    @NonNull
+    final private Operation operation;
 
     @Getter
-    @NonNull final private String targetBrokerAppPackageName;
+    @NonNull
+    final private String targetBrokerAppPackageName;
 
     @Getter
-    @Nullable final private Bundle bundle;
+    @Nullable
+    final private Bundle bundle;
 
     /**
      * Packs the response bundle with the account manager key.
@@ -96,7 +100,7 @@ public class BrokerOperationBundle {
         return requestBundle;
     }
 
-    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
+    private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException {
         final String methodName = ":getAccountManagerAddAccountOperationKey";
 
         switch (operation) {
@@ -126,6 +130,9 @@ public class BrokerOperationBundle {
 
             case MSAL_GENERATE_SHR:
                 return BrokerAccountManagerOperation.GENERATE_SHR;
+
+            case CALCULATION:
+                return BrokerAccountManagerOperation.CALCULATION;
 
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
@@ -180,6 +187,9 @@ public class BrokerOperationBundle {
 
             case MSAL_GENERATE_SHR:
                 return BrokerContentProvider.GENERATE_SHR_PATH;
+
+            case CALCULATION:
+                return BrokerContentProvider.CALCULATION_PATH;
 
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
