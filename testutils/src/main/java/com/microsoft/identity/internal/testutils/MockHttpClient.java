@@ -187,4 +187,11 @@ public class MockHttpClient {
             }
         }, method, urlRegex);
     }
+
+    /**
+     * Clears the existing interceptors
+     */
+    public static void reset() {
+        MockHttpClient.interceptors.clear();
+    }
 }
