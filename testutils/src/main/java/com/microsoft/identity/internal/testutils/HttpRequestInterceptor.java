@@ -27,15 +27,32 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.net.HttpClient;
 import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.internal.testutils.shadows.ShadowHttpClient;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 
-public interface MockHttpRequestInterceptor {
+/**
+ * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link ShadowHttpClient}.
+ *
+ * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
+ * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
+ * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpClient.HttpMethod)
+ * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpClient.HttpMethod, String)
+ */
+public interface HttpRequestInterceptor {
 
-    HttpResponse method(@NonNull HttpClient.HttpMethod httpMethod,
-                        @NonNull URL requestUrl,
-                        @NonNull Map<String, String> requestHeaders,
-                        @Nullable byte[] requestContent) throws IOException;
+    /**
+     * @param httpMethod     - the http method
+     * @param requestUrl     - the request url
+     * @param requestHeaders - the request headers
+     * @param requestContent - the request content
+     * @return - the http response object
+     * @throws IOException - throws an exception when something went wrong during the http request
+     */
+    HttpResponse intercept(@NonNull HttpClient.HttpMethod httpMethod,
+                           @NonNull URL requestUrl,
+                           @NonNull Map<String, String> requestHeaders,
+                           @Nullable byte[] requestContent) throws IOException;
 }
