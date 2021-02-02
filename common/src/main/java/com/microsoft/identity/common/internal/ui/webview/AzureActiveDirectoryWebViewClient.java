@@ -38,7 +38,6 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -53,14 +52,13 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
@@ -167,18 +165,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         } else if (isWebCpUrl(formattedURL)) {
             Logger.info(TAG, "It is a request from WebCP");
             processWebCpRequest(view, url);
-        } else if (isPlayStoreUrl(formattedURL)){
+        } else if (isPlayStoreUrl(formattedURL)) {
             Logger.info(TAG, "Request to open PlayStore.");
             return processPlayStoreURL(view, url);
-        } else if (isAuthAppMFAUrl(formattedURL)){
+        } else if (isAuthAppMFAUrl(formattedURL)) {
             Logger.info(TAG, "Request to link account with Authenticator.");
             processAuthAppMFAUrl(url);
-        } else if (isInvalidRedirectUri(url)){
+        } else if (isInvalidRedirectUri(url)) {
             Logger.info(TAG, "Check for Redirect Uri.");
             processInvalidRedirectUri(view, url);
-        } else if (isBlankPageRequest(formattedURL)){
+        } else if (isBlankPageRequest(formattedURL)) {
             Logger.info(TAG, "It is an blank page request");
-        } else if (isUriSSLProtected(formattedURL)){
+        } else if (isUriSSLProtected(formattedURL)) {
             Logger.info(TAG, "Check for SSL protection");
             processSSLProtectionCheck(view, url);
         } else {
@@ -293,7 +291,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             //       Until that comes, we'll only handle this in ipphone.
             if (packageHelper.isPackageInstalledAndEnabled(applicationContext, IPPHONE_APP_PACKAGE_NAME) &&
                     IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
-                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_PROD_APP_PACKAGE_NAME)) {
+                    packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
                     launchCompanyPortal();
                     return;
@@ -320,13 +318,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         final String methodName = "#processPlayStoreURL";
 
         view.stopLoading();
-        if (!(url.startsWith(PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_PROD_APP_PACKAGE_NAME))
+        if (!(url.startsWith(PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME))
                 && !(url.startsWith(PLAY_STORE_INSTALL_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
             Logger.info(TAG + methodName, "The URI is either trying to open an unknown application or contains unknown query parameters");
             return false;
         }
-        final String appPackageName = (url.contains(COMPANY_PORTAL_PROD_APP_PACKAGE_NAME) ?
-                COMPANY_PORTAL_PROD_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        final String appPackageName = (url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME) ?
+                COMPANY_PORTAL_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
         Logger.info(TAG + methodName, "Request to open PlayStore to install package : '" + appPackageName + "'");
 
         try {
@@ -353,13 +351,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    private void launchCompanyPortal(){
+    private void launchCompanyPortal() {
         final String methodName = "#launchCompanyPortal";
 
         Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
         final Intent intent = new Intent();
         intent.setComponent(new ComponentName(
-                COMPANY_PORTAL_PROD_APP_PACKAGE_NAME,
+                COMPANY_PORTAL_APP_PACKAGE_NAME,
                 AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         getActivity().startActivity(intent);
@@ -386,7 +384,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private void processWebCpRequest(@NonNull final WebView view, @NonNull final String url) {
 
         view.stopLoading();
-        
+
         if (url.equalsIgnoreCase(AuthenticationConstants.Broker.WEBCP_LAUNCH_COMPANY_PORTAL_URL)) {
             launchCompanyPortal();
             return;

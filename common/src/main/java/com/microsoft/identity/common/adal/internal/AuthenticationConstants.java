@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import com.microsoft.identity.common.BuildConfig;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -1095,7 +1093,7 @@ public final class AuthenticationConstants {
         /**
          * Activity name to launch company portal.
          */
-        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME + ".views.SplashActivity";
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
 
         /**
          * Redirect URI parameter key to get link to install broker
