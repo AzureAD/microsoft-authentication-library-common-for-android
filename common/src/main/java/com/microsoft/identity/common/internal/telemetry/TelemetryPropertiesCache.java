@@ -38,16 +38,12 @@ class TelemetryPropertiesCache {
 
     private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
 
+    // region Cached Properties
     /**
-     * Cached properties.
+     * The randomly generated identifier for this device.
      */
-    private static class Properties {
-
-        /**
-         * The randomly generated identifier for this device.
-         */
-        private static final String DEVICE_ID_GUID = "device_id_guid";
-    }
+    private static final String DEVICE_ID_GUID = "device_id_guid";
+    // endregion
 
     private final SharedPreferencesFileManager mSharedPrefs;
 
@@ -61,11 +57,11 @@ class TelemetryPropertiesCache {
      * @return The String ID used to refer to this device.
      */
     synchronized String getOrCreateRandomStableDeviceId() {
-        String deviceId = mSharedPrefs.getString(Properties.DEVICE_ID_GUID);
+        String deviceId = mSharedPrefs.getString(DEVICE_ID_GUID);
 
         if (TextUtils.isEmpty(deviceId)) {
             deviceId = UUID.randomUUID().toString();
-            mSharedPrefs.putString(Properties.DEVICE_ID_GUID, deviceId);
+            mSharedPrefs.putString(DEVICE_ID_GUID, deviceId);
         }
 
         return deviceId;
