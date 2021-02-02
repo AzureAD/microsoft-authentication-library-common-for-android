@@ -27,7 +27,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
-import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
@@ -72,6 +72,9 @@ public class RulesHelper {
                     new BrokerHost(), new AzureSampleApp()
             ));
         }
+
+        Log.i(TAG, "Adding FactoryResetChromeRule");
+        ruleChain = ruleChain.around(new FactoryResetChromeRule());
 
         Log.i(TAG, "Adding RemoveBrokersBeforeTestRule");
         ruleChain = ruleChain.around(new RemoveBrokersBeforeTestRule());

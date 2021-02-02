@@ -1,6 +1,10 @@
-vNext
+V.Next
 ----------
+- Add refresh_on to access tokens(#1190)
 - Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
+
+Version 3.0.9
+----------
 - Sends CP version to ESTS and handle WebCP uri. (#1137)
 - Check for eligible for caching when putting command in executing command map
 - Expose IAccountCredentialCache for accessing lower-level cache functions.
@@ -15,6 +19,7 @@ vNext
 - Changes to Broker Validation to allow setting whether to trust debug brokers (prod brokers are always trusted).
 - (MSALCPP) Validate ATs before persisting to the cache (#1192)
 - Adds API23 WebViewClient#onReceivedError overload (#1197)
+- Fixes for MFA setup using Authenticator app.
 
 Version 3.0.8
 ----------

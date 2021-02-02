@@ -1078,6 +1078,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_WEB_CP = "companyportal://";
 
         /**
+         * Prefix for the Authenticator MFA linking.
+         */
+        public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
+
+        /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
         public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
@@ -1167,6 +1172,11 @@ public final class AuthenticationConstants {
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";
+
+        /**
+         * Prefix in the redirect for PlayStore.
+         */
+        public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";
 
         /**
          * String for expiration buffer.

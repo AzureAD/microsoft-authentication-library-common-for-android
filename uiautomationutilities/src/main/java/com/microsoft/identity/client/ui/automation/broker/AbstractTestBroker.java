@@ -23,7 +23,6 @@
 package com.microsoft.identity.client.ui.automation.broker;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,6 +40,7 @@ import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -65,11 +65,11 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
             // The broker app will still be installed on the device if it is enabled
             // as a device admin. In this case, we need to disable the admin and then
             // uninstall.
-            Log.w(TAG, "Unable to uninstall broker " + getAppName() + " from device..." +
+            Logger.w(TAG, "Unable to uninstall broker " + getAppName() + " from device..." +
                     "the broker is potentially enabled as an active device admin.");
-            Log.i(TAG, "Disabling admin for " + getAppName());
+            Logger.i(TAG, "Disabling admin for " + getAppName());
             TestContext.getTestContext().getTestDevice().getSettings().disableAdmin(getAdminName());
-            Log.i(TAG, "Reattempting uninstall for " + getAppName());
+            Logger.i(TAG, "Reattempting uninstall for " + getAppName());
             super.uninstall();
         }
     }
@@ -89,6 +89,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     @Override
     public void handleAccountPicker(@Nullable final String username) {
+        Logger.i(TAG, "Pick account associated with given username, otherwise choose \"Use Another account\"..");
         final UiDevice device = UiDevice.getInstance(getInstrumentation());
 
         // find the object associated to this username in account picker.
@@ -112,6 +113,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     @Override
     public void performJoinViaJoinActivity(@NonNull final String username,
                                            @NonNull final String password) {
+        Logger.i(TAG, "Perform Join Via Join Activity for the given account..");
         // Enter username
         UiAutomatorUtils.handleInput(
                 CommonUtils.getResourceId(
@@ -136,12 +138,14 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
+        Logger.i(TAG, "Handle prompt in AAD login page for Join Via Join Activity..");
         // Handle prompt in AAD login page
         aadPromptHandler.handlePrompt(username, password);
     }
 
     @Override
     public void confirmJoinInJoinActivity(@NonNull final String username) {
+        Logger.i(TAG, "Confirm Join Via Join Activity for the given account..");
         final UiObject joinConfirmation = UiAutomatorUtils.obtainUiObjectWithText(
                 "Workplace Joined to " + username
         );
