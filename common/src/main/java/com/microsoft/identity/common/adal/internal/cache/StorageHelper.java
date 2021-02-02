@@ -539,7 +539,7 @@ public class StorageHelper implements IStorageHelper {
         if (!LAST_KNOWN_THUMBPRINT.get().equals(keyThumbPrint)) {
             LAST_KNOWN_THUMBPRINT.set(keyThumbPrint);
             if(!FIRST_TIME.compareAndSet(false, true)) {
-                Logger.info(TAG + ":decryptWithSecretKey", "Using key with thumbprint that has changed " + keyThumbPrint);
+                Logger.info(TAG + ":logIfKeyHasChanged", "Using key with thumbprint that has changed " + keyThumbPrint);
                 return true;
             }
         }
