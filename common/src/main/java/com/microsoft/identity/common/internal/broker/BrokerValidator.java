@@ -81,7 +81,6 @@ public class BrokerValidator {
     }
 
     private final Context mContext;
-    private final String mCompanyPortalSignature;
 
     /**
      * Constructs a new BrokerValidator.
@@ -90,7 +89,6 @@ public class BrokerValidator {
      */
     public BrokerValidator(final Context context) {
         mContext = context;
-        mCompanyPortalSignature = AuthenticationSettings.INSTANCE.getBrokerSignature();
     }
 
     /**
