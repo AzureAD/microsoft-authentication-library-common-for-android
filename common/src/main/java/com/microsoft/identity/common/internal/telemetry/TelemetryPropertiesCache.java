@@ -46,7 +46,7 @@ class TelemetryPropertiesCache {
         /**
          * The randomly generated identifier for this device.
          */
-        static final String DEVICE_ID_GUID = "device_id_guid";
+        private static final String DEVICE_ID_GUID = "device_id_guid";
     }
 
     private final SharedPreferencesFileManager mSharedPrefs;
