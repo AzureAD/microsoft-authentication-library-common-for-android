@@ -49,8 +49,7 @@ public class AdbShellUtils {
         try {
             return device.executeShellCommand(command);
         } catch (final IOException e) {
-            Assert.fail(e.getMessage());
-            return null;
+            throw new AssertionError(e);
         }
     }
 
@@ -62,8 +61,7 @@ public class AdbShellUtils {
             final String completeCmd = "run-as " + pkg + " " + command;
             return device.executeShellCommand(completeCmd);
         } catch (final IOException e) {
-            Assert.fail(e.getMessage());
-            return null;
+            throw new AssertionError(e);
         }
     }
 

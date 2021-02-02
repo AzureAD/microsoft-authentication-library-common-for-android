@@ -81,7 +81,7 @@ public class BrowserEdge extends App implements IBrowser {
             // enter the URL
             inputField.setText(url);
         } catch (final UiObjectNotFoundException e) {
-            fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
         final UiDevice device =
@@ -95,7 +95,7 @@ public class BrowserEdge extends App implements IBrowser {
         Logger.i(TAG, "Put Browser on Sleep for 3 sec..");
         try {
             Thread.sleep(3000);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             throw new AssertionError(e);
         }
     }

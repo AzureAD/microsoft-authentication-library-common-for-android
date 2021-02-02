@@ -125,7 +125,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
 
-        MockitoAnnotations.openMocks(this);
+        MockitoAnnotations.initMocks(this);
 
         // Our test context
         final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();

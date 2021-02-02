@@ -18,6 +18,7 @@ Version 3.0.9
 - Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
 - (MSALCPP) Validate ATs before persisting to the cache (#1192)
 - Adds API23 WebViewClient#onReceivedError overload (#1197)
+- Fixes for MFA setup using Authenticator app.
 
 Version 3.0.8
 ----------
