@@ -191,9 +191,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
     public void testKeyThumbprint() throws GeneralSecurityException, IOException {
         Context context = getInstrumentation().getTargetContext();
         final StorageHelper storageHelper = new StorageHelper(context);
-        for (int i = 0; i < 1000; i++) {
-            Assert.assertEquals(storageHelper.testThumbprint(), storageHelper.testThumbprint());
-        }
+        Assert.assertEquals(storageHelper.testThumbprint(), storageHelper.testThumbprint());
     }
 
     @Test
