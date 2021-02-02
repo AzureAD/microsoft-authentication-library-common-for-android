@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -185,6 +186,31 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         assertEquals("Same as initial text", decrypted, decrypted3);
         Log.d(TAG, "Finished testEncryptSameText");
     }
+
+    @Test
+    public void testKeyThumbprint() throws GeneralSecurityException, IOException {
+        Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+        for (int i = 0; i < 1000; i++) {
+            Assert.assertEquals(storageHelper.testThumbprint(), storageHelper.testThumbprint());
+        }
+    }
+
+    @Test
+    public void testKeyChange() throws GeneralSecurityException, IOException {
+        Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+        Assert.assertFalse(storageHelper.testKeyChange());
+        for (int i = 0; i < 500; i++) {
+            Assert.assertFalse(storageHelper.testKeyChange());
+        }
+        StorageHelper.LAST_KNOWN_THUMBPRINT.set("");
+        Assert.assertTrue(storageHelper.testKeyChange());
+        for (int i = 0; i < 500; i++) {
+            Assert.assertFalse(storageHelper.testKeyChange());
+        }
+    }
+
 
     @Test
     public void testTampering() throws GeneralSecurityException, IOException {
