@@ -62,6 +62,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import static com.microsoft.identity.common.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
+
 public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
@@ -159,21 +161,23 @@ public class BrokerValidator {
     }
 
     /**
-     * Determines if the supplied package name and signature correspond to a valid Broker app.
+     * Determines if the supplied package name correspond to a valid Broker app.
      *
-     * @param pkgName   the package name of the broker app to validate
-     * @param signature the signature of the broker app to validate
+     * @param packageName the package name of the broker app to validate
      * @return a boolean indicating if the app is a valid broker
      */
-    public boolean isBrokerValid(final String pkgName, final String signature) {
+    public boolean isValidBrokerPackage(@NonNull final String packageName) {
         final Set<BrokerData> validBrokers = getValidBrokers();
 
         for (final BrokerData brokerData : validBrokers) {
-            if (brokerData.packageName.equalsIgnoreCase(pkgName) && brokerData.signatureHash.equals(signature)) {
-                return true;
+            if (brokerData.packageName.equals(packageName)) {
+                if (verifySignature(packageName)) {
+                    return true;
+                }
             }
         }
 
+        // package name and/or signature not matched so this is not a valid broker.
         return false;
     }
 
@@ -199,7 +203,7 @@ public class BrokerValidator {
             }
         }
 
-        throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     @SuppressLint("PackageManagerGetSignatures")
@@ -218,7 +222,7 @@ public class BrokerValidator {
 
         //.signatures has been deprecated
         if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
-            throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
         }
 
@@ -235,7 +239,7 @@ public class BrokerValidator {
                         certStream);
                 certificates.add(x509Certificate);
             } catch (final CertificateException e) {
-                throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED);
+                throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
             }
         }
 
@@ -270,7 +274,7 @@ public class BrokerValidator {
         }
 
         if (count > 1 || selfSignedCert == null) {
-            throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "Multiple self signed certs found or no self signed cert existed.");
         }
 
