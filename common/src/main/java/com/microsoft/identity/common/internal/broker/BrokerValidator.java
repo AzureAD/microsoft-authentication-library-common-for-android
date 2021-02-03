@@ -38,7 +38,6 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -146,12 +145,36 @@ public class BrokerValidator {
         return false;
     }
 
+    /**
+     * Provides a Set of valid Broker apps based on whether debug broker should be trusted or not.
+     *
+     * @return a Set of {@link BrokerData}
+     */
     public Set<BrokerData> getValidBrokers() {
         final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
                 ? BrokerData.getAllBrokers()
                 : BrokerData.getProdBrokers();
 
         return validBrokers;
+    }
+
+    /**
+     * Determines if the supplied package name and signature correspond to a valid Broker app.
+     *
+     * @param pkgName   the package name of the broker app to validate
+     * @param signature the signature of the broker app to validate
+     * @return a boolean indicating if the app is a valid broker
+     */
+    public boolean isBrokerValid(final String pkgName, final String signature) {
+        final Set<BrokerData> validBrokers = getValidBrokers();
+
+        for (final BrokerData brokerData : validBrokers) {
+            if (brokerData.packageName.equalsIgnoreCase(pkgName) && brokerData.signatureHash.equals(signature)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private String verifySignatureHash(final List<X509Certificate> certs) throws NoSuchAlgorithmException,
