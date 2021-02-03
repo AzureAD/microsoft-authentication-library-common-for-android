@@ -170,10 +170,8 @@ public class BrokerValidator {
         final Set<BrokerData> validBrokers = getValidBrokers();
 
         for (final BrokerData brokerData : validBrokers) {
-            if (brokerData.packageName.equals(packageName)) {
-                if (verifySignature(packageName)) {
-                    return true;
-                }
+            if (brokerData.packageName.equals(packageName) && verifySignature(packageName)) {
+                return true;
             }
         }
 
