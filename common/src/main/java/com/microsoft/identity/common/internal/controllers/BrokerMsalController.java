@@ -332,7 +332,9 @@ public class BrokerMsalController extends BaseController {
                             throw mResultAdapter.getExceptionForEmptyResultBundle();
                         }
 
-                        final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(resultBundle);
+                        final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(
+                                resultBundle,
+                                negotiatedBrokerProtocolVersion);
                         intent.putExtras(
                                 mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
                         );

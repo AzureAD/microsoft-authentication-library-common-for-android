@@ -30,6 +30,8 @@ import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
 import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientConnectionFailed;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithLegacyBroker;
+import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithCurrentBroker;
 import com.microsoft.identity.common.internal.ipc.mock.ShadowBoundServiceClientWithSuccessResult;
 
 import org.junit.Test;
@@ -113,5 +115,21 @@ public class AccountManagerBoundServiceTests extends IpcStrategyTests {
     @Config(shadows = {ShadowBoundServiceClientConnectionFailed.class})
     public void testIpcFailed() {
         testIpcConnectionFailed(getMockRequestBundle(MSAL_HELLO));
+    }
+
+    @Test
+    @Config(shadows = {ShadowBoundServiceClientWithLegacyBroker.class})
+    public void testInteractiveFlowBackCompatWithLegacyBroker() {
+        testOperationSucceeds(
+                getMockRequestBundle(MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST),
+                getMockInteractiveRequestResultBundle());
+    }
+
+    @Test
+    @Config(shadows = {ShadowBoundServiceClientWithCurrentBroker.class})
+    public void testInteractiveFlowWithNewBroker() {
+        testOperationSucceeds(
+                getMockRequestBundle(MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST),
+                getMockInteractiveRequestResultBundle());
     }
 }

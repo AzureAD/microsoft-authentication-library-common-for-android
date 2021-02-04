@@ -89,11 +89,11 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
                 final Bundle bundle = intent.getExtras();
 
                 //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.
-                final String packageName = intent.getPackage();
-                final String className = intent.getComponent().getClassName();
-                if (!TextUtils.isEmpty(packageName) && !TextUtils.isEmpty(className)){
-                    bundle.putString(BROKER_PACKAGE_NAME, packageName);
-                    bundle.putString(BROKER_ACTIVITY_NAME, className);
+                if (intent.getComponent() != null &&
+                        !TextUtils.isEmpty(intent.getPackage()) &&
+                        !TextUtils.isEmpty(intent.getComponent().getClassName())){
+                    bundle.putString(BROKER_PACKAGE_NAME, intent.getPackage());
+                    bundle.putString(BROKER_ACTIVITY_NAME, intent.getComponent().getClassName());
                 }
 
                 return bundle;
