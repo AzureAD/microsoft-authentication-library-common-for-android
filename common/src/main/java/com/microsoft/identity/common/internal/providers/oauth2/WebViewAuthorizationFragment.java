@@ -103,7 +103,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
         outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
         outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
-        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
     }
