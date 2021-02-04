@@ -82,7 +82,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private HashMap<String, String> mRequestHeaders;
 
     // For MSAL CPP test cases only
-    private String mPostPageLoadedUrl;
+    private String mPostPageLoadedJavascript;
 
     private boolean webViewZoomControlsEnabled;
 
