@@ -1499,7 +1499,7 @@ public final class AuthenticationConstants {
 
         public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
-        public static final String POST_PAGE_LOADED_JAVASCRIPT = "com.microsoft.identity.post.page.loaded.javascript";
+        public static final String POST_PAGE_LOADED_URL = "com.microsoft.identity.post.page.loaded.url";
 
         public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
 
