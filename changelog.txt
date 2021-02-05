@@ -1,6 +1,7 @@
 V.Next
 ----------
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
+
 Version 3.1.0
 ----------
 - [PATCH] Discontinue using Settings.Secure.ANDROID_ID in telemetry. Instead, generate & cache a random GUID. (#1214)
