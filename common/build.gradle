@@ -292,14 +292,14 @@ afterEvaluate {
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
-                version = '3.0.10-RC2'
+                version = '3.1.0-RC1'
             }
             debug(MavenPublication) {
                 from components.debug
                 groupId 'com.microsoft.identity'
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
-                version = '3.0.10-RC2'
+                version = '3.1.0-RC1'
             }
         }
 
