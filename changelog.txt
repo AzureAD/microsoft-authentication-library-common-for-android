@@ -2,11 +2,11 @@ V.Next
 ----------
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
 
-Version 3.0.10
+Version 3.1.0
 ----------
-- Discontinue using Settings.Secure.ANDROID_ID in telemetry. Instead, generate & cache a random GUID. (#1214)
-- Add refresh_on to access tokens(#1190)
-- Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
+- [PATCH] Discontinue using Settings.Secure.ANDROID_ID in telemetry. Instead, generate & cache a random GUID. (#1214)
+- [MINOR] Add refresh_on to access tokens(#1190)
+- [MINOR] Add requested_claims to access tokens, and allow credentials to be filtered by RC (#1187)
 
 Version 3.0.9
 ----------
