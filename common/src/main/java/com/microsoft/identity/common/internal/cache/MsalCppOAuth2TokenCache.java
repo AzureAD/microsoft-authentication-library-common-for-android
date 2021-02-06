@@ -32,6 +32,7 @@ import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -45,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
 /**
@@ -127,7 +129,16 @@ public class MsalCppOAuth2TokenCache
             if (credential instanceof RefreshTokenRecord) {
                 refreshTokenRecord = (RefreshTokenRecord) credential;
             }
+
+            if (credential instanceof AccessTokenRecord
+                    && !isAccessTokenSchemaCompliant((AccessTokenRecord) credential)) {
+                throw new ClientException(
+                        CREDENTIAL_IS_SCHEMA_NONCOMPLIANT,
+                        "AT is missing a required property."
+                );
+            }
         }
+
         if (accountRecord != null && refreshTokenRecord != null) {
             // MSAL C++ writes credentials first and then the account.
             // For a new account, this will not be true as the accountRecord will be null.

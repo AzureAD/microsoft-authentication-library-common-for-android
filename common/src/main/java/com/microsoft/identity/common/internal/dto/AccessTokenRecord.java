@@ -37,9 +37,11 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
 @EqualsAndHashCode(callSuper = true)
@@ -81,7 +83,23 @@ public class AccessTokenRecord extends Credential {
          * String of kid. A thumbprint to an RSA keypair.
          */
         public static final String KID = "kid";
+
+        /**
+         * The claims string (if present) that was sent to server to produce this AT.
+         */
+        public static final String REQUESTED_CLAIMS = "requested_claims";
+
+        /**
+         * String of refresh_in.
+         */
+        public static final String REFRESH_ON = "refresh_on";
     }
+
+    /**
+     * The JSON claims string sent to the server that produced this token. Used by MSAL C++
+     */
+    @SerializedName(REQUESTED_CLAIMS)
+    private String mRequestedClaims;
 
     /**
      * A key id associating this credential to a public/private keypair.
@@ -135,6 +153,15 @@ public class AccessTokenRecord extends Credential {
     private String mExpiresOn;
 
     /**
+     * Token recommended refresh time. This value should be calculated based on the current UTC time
+     * measured locally and the value refresh_in returned from the service. Measured in milliseconds from
+     * epoch (1970). Note that this value will not always be present, and is only a recommendation to
+     * kick off an async token refresh. The token is still valid until the expires_on value.
+     */
+    @SerializedName(REFRESH_ON)
+    private String mRefreshOn;
+
+    /**
      * Gets the kid.
      * <p>
      * Refer to {@link IDevicePopManager#getAsymmetricKeyThumbprint()}.
@@ -155,6 +182,24 @@ public class AccessTokenRecord extends Credential {
      */
     public void setKid(@Nullable final String kid) {
         mKid = kid;
+    }
+
+    /**
+     * Gets the requested_claims string.
+     *
+     * @return The requested_claims string.
+     */
+    public String getRequestedClaims() {
+        return mRequestedClaims;
+    }
+
+    /**
+     * Sets the requested_claims string
+     *
+     * @param requestedClaims The claims string to set.
+     */
+    public void setRequestedClaims(final String requestedClaims) {
+        mRequestedClaims = requestedClaims;
     }
 
     /**
@@ -265,6 +310,24 @@ public class AccessTokenRecord extends Credential {
         mExpiresOn = expiresOn;
     }
 
+    /**
+     * Gets the refresh_on timestamp.
+     *
+     * @return The refresh_on to get.
+     */
+    public String getRefreshOn() {
+        return mRefreshOn;
+    }
+
+    /**
+     * Sets the refresh_on timestamp.
+     *
+     * @param refreshOn The refresh_on to set.
+     */
+    public void setRefreshOn(final String refreshOn) {
+        mRefreshOn = refreshOn;
+    }
+
     private boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date
         final Calendar calendar = Calendar.getInstance();
@@ -280,5 +343,27 @@ public class AccessTokenRecord extends Credential {
     @Override
     public boolean isExpired() {
         return isExpired(getExpiresOn());
+    }
+
+    /**
+     * If the AT has a refresh_on timestamp (typically used for LLT's),
+     * this function will return true after the server recommended refresh
+     * interval has elapsed, prompting the library to kick off a background refresh operation.
+     *
+     * If the AT does NOT have a refresh_on timestamp, this function will always
+     * return false. Fallback to standard token expiration/refresh logic.
+     *
+     * @return Should the library kick off a background token refresh operation for this token
+     * after returning the token to the caller.
+     */
+    public boolean shouldRefresh() {
+        final String refreshOn = getRefreshOn();
+        if (refreshOn != null && !refreshOn.isEmpty()) {
+            return isExpired(refreshOn);
+        }
+        else if(getRefreshOn() != null) {
+            return isExpired();
+        }
+        return true;
     }
 }

@@ -31,7 +31,7 @@ android {
     def final installSourceLocalApk = "LocalApk"
 
     // defaults to LocalApkFile - the file must be pushed to the device before tests
-    def brokerInstallationSource = installSourceLocalApk
+    def brokerInstallationSource = installSourcePlayStore
 
     if (project.hasProperty("brokerSource")) {
         if (brokerSource.equalsIgnoreCase(installSourcePlayStore)) {

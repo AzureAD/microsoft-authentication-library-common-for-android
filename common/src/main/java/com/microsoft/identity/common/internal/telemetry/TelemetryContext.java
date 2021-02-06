@@ -26,16 +26,12 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
-import java.io.UnsupportedEncodingException;
-import java.security.NoSuchAlgorithmException;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -51,8 +47,12 @@ import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStr
 public class TelemetryContext extends Properties {
     private static final String TAG = TelemetryContext.class.getSimpleName();
 
-    TelemetryContext(final ConcurrentHashMap<String, String> delegate) {
+    private TelemetryPropertiesCache mTelemetryPropsCache;
+
+    private TelemetryContext(final ConcurrentHashMap<String, String> delegate,
+                             @NonNull final Context context) {
         super(delegate);
+        mTelemetryPropsCache = new TelemetryPropertiesCache(context);
     }
 
     /**
@@ -60,8 +60,11 @@ public class TelemetryContext extends Properties {
      * Context}. The {@link Telemetry} client can be called from anywhere, so the returned instances
      * is thread safe.
      */
-    static synchronized TelemetryContext create(final Context context) {
-        final TelemetryContext telemetryContext = new TelemetryContext(new ConcurrentHashMap<String, String>());
+    static synchronized TelemetryContext create(@NonNull final Context context) {
+        final TelemetryContext telemetryContext = new TelemetryContext(
+                new ConcurrentHashMap<String, String>(),
+                context
+        );
         telemetryContext.addApplicationInfo(context);
         telemetryContext.addDeviceInfo(context);
         telemetryContext.addOsInfo();
@@ -92,19 +95,7 @@ public class TelemetryContext extends Properties {
         put(Device.MANUFACTURER, Build.MANUFACTURER);
         put(Device.MODEL, Build.MODEL);
         put(Device.NAME, Build.DEVICE);
-        try {
-            put(
-                    Device.ID,
-                    StringExtensions.createHash(
-                            Settings.Secure.getString(
-                                    context.getContentResolver(),
-                                    Settings.Secure.ANDROID_ID
-                            )
-                    )
-            );
-        } catch (final NoSuchAlgorithmException | UnsupportedEncodingException exception) {
-            Logger.warn(TAG, "Unable to get the device id.");
-        }
+        put(Device.ID, mTelemetryPropsCache.getOrCreateRandomStableDeviceId());
     }
 
     void addOsInfo() {

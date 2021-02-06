@@ -1771,7 +1771,7 @@ public class MsalOAuth2TokenCache
         return isSchemaCompliant(account.getClass(), params);
     }
 
-    private boolean isAccessTokenSchemaCompliant(@NonNull final AccessTokenRecord accessToken) {
+    boolean isAccessTokenSchemaCompliant(@NonNull final AccessTokenRecord accessToken) {
         // Required fields...
         final String[][] params = new String[][]{
                 {Credential.SerializedNames.CREDENTIAL_TYPE, accessToken.getCredentialType()},
