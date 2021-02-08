@@ -50,7 +50,7 @@ public class MockHttpClient {
     /**
      * Will set the interceptor for all methods and request urls
      *
-     * @param interceptor - the http request interceptor
+     * @param interceptor  the http request interceptor
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod, String)
@@ -62,8 +62,8 @@ public class MockHttpClient {
     /**
      * Will set the request interceptor for the specified url regex and all http methods.
      *
-     * @param interceptor - the http interceptor
-     * @param urlRegex    - the url pattern in regex
+     * @param interceptor  the http interceptor
+     * @param urlRegex     the url pattern in regex
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod, String)
@@ -76,8 +76,8 @@ public class MockHttpClient {
     /**
      * Will set the request interceptor for the specified http method and all urls .
      *
-     * @param interceptor - the http interceptor
-     * @param method      - the request method
+     * @param interceptor  the http interceptor
+     * @param method       the request method
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod, String)
@@ -90,9 +90,9 @@ public class MockHttpClient {
     /**
      * Will set the request interceptor for the specified http method and url regex pattern
      *
-     * @param interceptor - the http interceptor
-     * @param method      - the request method
-     * @param urlRegex    - the url regex pattern.
+     * @param interceptor  the http interceptor
+     * @param method       the request method
+     * @param urlRegex     the url regex pattern.
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
      * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod)
@@ -107,14 +107,14 @@ public class MockHttpClient {
      * Will return the http request interceptor that is configured to intercept the HttpMethod and
      * request url specified
      *
-     * @param method - the http method
-     * @param url    - the request url to intercept
-     * @return - the http request interceptor configured for the http method and request url
+     * @param method  the http method
+     * @param url     the request url to intercept
+     * @return  the http request interceptor configured for the http method and request url
      */
     public static HttpRequestInterceptor intercept(@NonNull final HttpMethod method, @NonNull final URL url) {
         // for each pair of HttpMethod and url regex
         for (Pair<HttpMethod, String> pair : interceptors.keySet()) {
-            // if url matches and the HttpMethod matches (or is null) - the interceptor has been found.
+            // if url matches and the HttpMethod matches (or is null)  the interceptor has been found.
             if ((pair.first == null || pair.first.compareTo(method) == 0) && url.toString().matches(pair.second)) {
                 // return the http interceptor
                 return interceptors.get(pair);
@@ -126,7 +126,7 @@ public class MockHttpClient {
     /**
      * A shorthand for intercepting http request by giving the response for all outgoing requests.
      *
-     * @param httpResponse - the http response
+     * @param httpResponse  the http response
      * @see MockHttpClient#setHttpResponse(HttpResponse, String)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod, String)
@@ -139,8 +139,8 @@ public class MockHttpClient {
      * A shorthand for intercepting http requests by giving the response for all outgoing
      * requests with the specified http method
      *
-     * @param httpResponse - the http response
-     * @param method       - the method that will be returning the response
+     * @param httpResponse  the http response
+     * @param method        the method that will be returning the response
      * @see MockHttpClient#setHttpResponse(HttpResponse)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod, String)
@@ -153,8 +153,8 @@ public class MockHttpClient {
      * A shorthand for intercepting http requests by giving the response for all outgoing
      * requests that match the specified url regex.
      *
-     * @param httpResponse - the http response
-     * @param urlRegex     - the url regex to match requests
+     * @param httpResponse  the http response
+     * @param urlRegex      the url regex to match requests
      * @see MockHttpClient#setHttpResponse(HttpResponse)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod, String)
@@ -167,9 +167,9 @@ public class MockHttpClient {
      * A shorthand for intercepting requests by giving the response for all outgoing requests that
      * match the specified url regex and http method
      *
-     * @param httpResponse - the http response
-     * @param method       - the request method
-     * @param urlRegex     - the url regex pattern to match
+     * @param httpResponse  the http response
+     * @param method        the request method
+     * @param urlRegex      the url regex pattern to match
      * @see MockHttpClient#setHttpResponse(HttpResponse)
      * @see MockHttpClient#setHttpResponse(HttpResponse, String)
      * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
