@@ -62,6 +62,56 @@ public class MockServerResponse {
         return response;
     }
 
+    public static HttpResponse getMockCloudDiscoveryResponse() {
+        final String mockResponse = "{\n" +
+                "   \"tenant_discovery_endpoint\": \"https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration\",\n" +
+                "   \"api-version\": \"1.1\",\n" +
+                "   \"metadata\": [\n" +
+                "      {\n" +
+                "         \"preferred_network\": \"login.microsoftonline.com\",\n" +
+                "         \"preferred_cache\": \"login.windows.net\",\n" +
+                "         \"aliases\": [\n" +
+                "            \"login.microsoftonline.com\",\n" +
+                "            \"login.windows.net\",\n" +
+                "            \"login.microsoft.com\",\n" +
+                "            \"sts.windows.net\"\n" +
+                "         ]\n" +
+                "      },\n" +
+                "      {\n" +
+                "         \"preferred_network\": \"login.partner.microsoftonline.cn\",\n" +
+                "         \"preferred_cache\": \"login.partner.microsoftonline.cn\",\n" +
+                "         \"aliases\": [\n" +
+                "            \"login.partner.microsoftonline.cn\",\n" +
+                "            \"login.chinacloudapi.cn\"\n" +
+                "         ]\n" +
+                "      },\n" +
+                "      {\n" +
+                "         \"preferred_network\": \"login.microsoftonline.de\",\n" +
+                "         \"preferred_cache\": \"login.microsoftonline.de\",\n" +
+                "         \"aliases\": [\n" +
+                "            \"login.microsoftonline.de\"\n" +
+                "         ]\n" +
+                "      },\n" +
+                "      {\n" +
+                "         \"preferred_network\": \"login.microsoftonline.us\",\n" +
+                "         \"preferred_cache\": \"login.microsoftonline.us\",\n" +
+                "         \"aliases\": [\n" +
+                "            \"login.microsoftonline.us\",\n" +
+                "            \"login.usgovcloudapi.net\"\n" +
+                "         ]\n" +
+                "      },\n" +
+                "      {\n" +
+                "         \"preferred_network\": \"login-us.microsoftonline.com\",\n" +
+                "         \"preferred_cache\": \"login-us.microsoftonline.com\",\n" +
+                "         \"aliases\": [\n" +
+                "            \"login-us.microsoftonline.com\"\n" +
+                "         ]\n" +
+                "      }\n" +
+                "   ]\n" +
+                "}";
+        return new HttpResponse(200, mockResponse, new HashMap<String, List<String>>());
+    }
+
     public static HttpResponse getMockTokenFailureInvalidScopeResponse() {
         final String mockResponse = "{\n" +
                 "\t\"error\": \"invalid_scope\",\n" +
