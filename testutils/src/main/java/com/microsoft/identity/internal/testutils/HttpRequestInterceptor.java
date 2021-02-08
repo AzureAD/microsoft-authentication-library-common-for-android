@@ -44,12 +44,12 @@ import java.util.Map;
 public interface HttpRequestInterceptor {
 
     /**
-     * @param httpMethod     - the http method
-     * @param requestUrl     - the request url
-     * @param requestHeaders - the request headers
-     * @param requestContent - the request content
-     * @return - the http response object
-     * @throws IOException - throws an exception when something went wrong during the http request
+     * @param httpMethod     the http method
+     * @param requestUrl     the request url
+     * @param requestHeaders the request headers
+     * @param requestContent the request content
+     * @return the http response object
+     * @throws IOException throws an exception when something went wrong during the http request
      */
     HttpResponse intercept(@NonNull HttpClient.HttpMethod httpMethod,
                            @NonNull URL requestUrl,
