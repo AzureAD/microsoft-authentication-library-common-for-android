@@ -1649,6 +1649,8 @@ public final class AuthenticationConstants {
          * Header used to track SPE Ring for telemetry.
          */
         public static final String X_MS_CLITELEM = "x-ms-clitelem";
+
+        public static final String RETRY_AFTER = "Retry-After";
     }
 
     /**

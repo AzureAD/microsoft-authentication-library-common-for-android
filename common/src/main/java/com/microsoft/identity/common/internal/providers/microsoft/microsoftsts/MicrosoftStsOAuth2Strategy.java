@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -61,6 +62,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorRespons
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.internal.throttling.ThrottlingManager;
+import com.microsoft.identity.common.internal.throttling.ThrottlingInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
@@ -78,6 +81,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.RETRY_AFTER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
@@ -539,6 +543,9 @@ public class MicrosoftStsOAuth2Strategy
 
         logResult(TAG, result);
 
+        final int httpStatusCode = response.getStatusCode();
+        String retryAfterValue = null;
+
         if (null != response.getHeaders()) {
             final Map<String, List<String>> responseHeaders = response.getHeaders();
 
@@ -560,6 +567,21 @@ public class MicrosoftStsOAuth2Strategy
                     tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
                 }
             }
+
+            final List<String> retryAfterValues = responseHeaders.get(RETRY_AFTER);
+
+            if (retryAfterValues != null && !retryAfterValues.isEmpty()) {
+                retryAfterValue = retryAfterValues.get(0);
+            }
+        }
+
+        // throttle next time
+        if (httpStatusCode == 429 || httpStatusCode >= 500 || !TextUtils.isEmpty(retryAfterValue)) {
+            final long retryValue = !TextUtils.isEmpty(retryAfterValue)
+                    ? Integer.parseInt(retryAfterValue)
+                    : ThrottlingManager.DEFAULT_THROTTLING;
+            final ThrottlingInfo throttlingInfo = new ThrottlingInfo(httpStatusCode, retryValue);
+            result.setThrottlingInfo(throttlingInfo);
         }
 
         return result;

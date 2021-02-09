@@ -300,6 +300,7 @@ public class LocalMSALController extends BaseController {
         final AbstractAuthenticationScheme authScheme = parametersWithScopes.getAuthenticationScheme();
         final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
         strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
+        strategyParameters.setHomeAccountId(targetAccount.getHomeAccountId());
 
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 

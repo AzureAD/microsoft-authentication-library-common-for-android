@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.internal.throttling.ThrottlingInfo;
 
 /**
  * Holds the request of a token request.  The request will either contain the success result or the error result.
@@ -33,6 +34,7 @@ public class TokenResult implements IResult {
     private TokenErrorResponse mTokenErrorResponse;
     private CliTelemInfo mCliTelemInfo;
     private boolean mSuccess = false;
+    private ThrottlingInfo mThrottlingInfo;
 
     public TokenResult() {
         // Intentionally blank
@@ -81,7 +83,9 @@ public class TokenResult implements IResult {
         return mTokenResponse;
     }
 
-    public TokenResponse getSuccessResponse() { return mTokenResponse; }
+    public TokenResponse getSuccessResponse() {
+        return mTokenResponse;
+    }
 
     /**
      * Returns the TokenErrorResponse associated with the request.
@@ -108,6 +112,14 @@ public class TokenResult implements IResult {
      */
     public void setCliTelemInfo(final CliTelemInfo cliTelemInfo) {
         mCliTelemInfo = cliTelemInfo;
+    }
+
+    public ThrottlingInfo getThrottlingInfo() {
+        return mThrottlingInfo;
+    }
+
+    public void setThrottlingInfo(final ThrottlingInfo throttlingInfo) {
+        mThrottlingInfo = throttlingInfo;
     }
 
     /**

@@ -182,6 +182,7 @@ public class TokenCacheItemMigrationAdapter {
 
         // Create the strategy
         final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        strategyParameters.setHomeAccountId(accountRecord.getHomeAccountId());
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();

@@ -33,6 +33,8 @@ public class OAuth2StrategyParameters {
 
     private transient Context mContext;
 
+    private String mHomeAccountId;
+
     @Nullable
     public Context getContext() {
         return mContext;
@@ -42,4 +44,12 @@ public class OAuth2StrategyParameters {
         mContext = context;
     }
 
+    @Nullable
+    public String getHomeAccountId() {
+        return mHomeAccountId;
+    }
+
+    public void setHomeAccountId(@Nullable final String homeAccountId) {
+        mHomeAccountId = homeAccountId;
+    }
 }

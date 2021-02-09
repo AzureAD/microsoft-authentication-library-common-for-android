@@ -52,14 +52,18 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.internal.throttling.Request;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.Future;
 
@@ -162,6 +166,20 @@ public abstract class OAuth2Strategy
         if (result.getSuccess()) {
             validateTokenResponse(request, result);
         }
+
+        final String clientId = request.getClientId();
+        final Set<String> scopes = new HashSet<>();
+        Collections.addAll(scopes, request.getScope().split(" "));
+        final String authority = getAuthorityFromTokenEndpoint();
+        final String homeAccountId = mStrategyParameters.getHomeAccountId();
+
+        final Request requestToThrottle = new Request(
+                clientId,
+                authority,
+                scopes,
+                homeAccountId
+        );
+
         return result;
     }
 
