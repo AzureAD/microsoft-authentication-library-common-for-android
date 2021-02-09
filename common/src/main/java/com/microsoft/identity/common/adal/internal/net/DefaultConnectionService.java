@@ -25,8 +25,14 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.Build;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.adal.internal.UsageStatsManagerWrapper;
@@ -44,6 +50,8 @@ import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
 public class DefaultConnectionService implements IConnectionService {
 
     private final Context mConnectionContext;
+    private static boolean connectionAvailable = false;
+    private ConnectivityManager.NetworkCallback networkCallback;
 
     /**
      * Constructor of DefaultConnectionService.
@@ -52,6 +60,48 @@ public class DefaultConnectionService implements IConnectionService {
      */
     public DefaultConnectionService(Context ctx) {
         mConnectionContext = ctx;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            this.registerNetworkCallback();
+        }
+    }
+
+    /**
+     * Registers a new network callback
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void registerNetworkCallback() {
+        if (null == networkCallback) {
+            final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+            final NetworkRequest.Builder builder = new NetworkRequest.Builder()
+                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+
+
+            connectivityManager.registerNetworkCallback(
+                    builder.build(),
+                    networkCallback = new ConnectivityManager.NetworkCallback() {
+                        @Override
+                        public void onAvailable(@NonNull Network network) {
+                            DefaultConnectionService.connectionAvailable = true;
+                        }
+
+                        @Override
+                        public void onLost(@NonNull Network network) {
+                            DefaultConnectionService.connectionAvailable = false;
+                        }
+                    });
+        }
+    }
+
+    /**
+     * De-registers the existing network callback.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void unregisterNetworkCallback() {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        connectivityManager.unregisterNetworkCallback(networkCallback);
     }
 
     /**
@@ -60,13 +110,17 @@ public class DefaultConnectionService implements IConnectionService {
      * @return True if network connection available, false otherwise.
      */
     public boolean isConnectionAvailable() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-        @SuppressWarnings("deprecation")
-        final boolean isConnectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-        Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(isConnectionAvailable)));
-        return isConnectionAvailable;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+
+            DefaultConnectionService.connectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+        }
+        Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(DefaultConnectionService.connectionAvailable)));
+
+        return DefaultConnectionService.connectionAvailable;
     }
 
     /**
