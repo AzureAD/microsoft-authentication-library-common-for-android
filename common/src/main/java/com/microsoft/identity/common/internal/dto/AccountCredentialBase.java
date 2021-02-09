@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.JsonElement;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,7 +35,7 @@ import java.util.Map;
  */
 public abstract class AccountCredentialBase {
 
-    private transient Map<String, JsonElement> mAdditionalFields = new HashMap<>();
+    private transient Map<String, JsonElement> mAdditionalFields = Collections.synchronizedMap(new HashMap<String, JsonElement>());
 
     /**
      * Getter of additional fields.
@@ -50,8 +51,8 @@ public abstract class AccountCredentialBase {
      *
      * @param additionalFields Map<String, JsonElement>
      */
-    public void setAdditionalFields(Map<String, JsonElement> additionalFields) {
-        mAdditionalFields = additionalFields;
+    public void setAdditionalFields(@NonNull final Map<String, JsonElement> additionalFields) {
+        mAdditionalFields = Collections.synchronizedMap(additionalFields);
     }
 
     /**
@@ -61,10 +62,11 @@ public abstract class AccountCredentialBase {
      */
     public void mergeAdditionalFields(@NonNull final AccountCredentialBase other) {
         if (null == mAdditionalFields) {
-            mAdditionalFields = new HashMap<>();
+            mAdditionalFields = Collections.synchronizedMap(new HashMap<String, JsonElement>());
         }
 
         if (null != other.getAdditionalFields()) {
+            // TODO Ensure merging preserves the property we intend to write, and doesn't overwrite with a existing, possibly conflicting value
             mAdditionalFields.putAll(other.getAdditionalFields());
         }
     }
