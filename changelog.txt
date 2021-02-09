@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Use requested claims as a cache key when overwriting an AT
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
 
 Version 3.1.0
