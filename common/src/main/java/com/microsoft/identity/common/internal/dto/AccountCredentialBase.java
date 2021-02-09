@@ -66,8 +66,15 @@ public abstract class AccountCredentialBase {
         }
 
         if (null != other.getAdditionalFields()) {
-            // TODO Ensure merging preserves the property we intend to write, and doesn't overwrite with a existing, possibly conflicting value
-            mAdditionalFields.putAll(other.getAdditionalFields());
+            for (Map.Entry<String, JsonElement> entry : other.getAdditionalFields().entrySet()) {
+                // Only add elements not present in the existing collection, so that old data
+                // does not overwrite new data...
+                if (mAdditionalFields.containsKey(entry.getKey())) {
+                    continue;
+                }
+
+                mAdditionalFields.put(entry.getKey(), entry.getValue());
+            }
         }
     }
 
