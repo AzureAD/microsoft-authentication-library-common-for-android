@@ -2151,4 +2151,57 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
         assertEquals(additionalValue, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
         assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey2).getAsString());
     }
+
+    @Test
+    public void testLatestMergedPropertyWins() {
+        final RefreshTokenRecord refreshTokenFirst = new RefreshTokenRecord();
+        refreshTokenFirst.setCredentialType(CredentialType.RefreshToken.name());
+        refreshTokenFirst.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshTokenFirst.setEnvironment(ENVIRONMENT);
+        refreshTokenFirst.setClientId(CLIENT_ID);
+        refreshTokenFirst.setCachedAt(CACHED_AT);
+        refreshTokenFirst.setSecret(SECRET);
+
+        // Create and set some additional field data...
+        final String additionalKey = "extra-prop-1";
+        final String additionalValue = "extra-value-1";
+        final JsonElement additionalValueElement = new JsonPrimitive(additionalValue);
+
+        final Map<String, JsonElement> additionalFields = new HashMap<>();
+        additionalFields.put(additionalKey, additionalValueElement);
+
+        refreshTokenFirst.setAdditionalFields(additionalFields);
+
+        // Save the Credential
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshTokenFirst);
+
+        final RefreshTokenRecord refreshTokenSecond = new RefreshTokenRecord();
+        refreshTokenSecond.setCredentialType(CredentialType.RefreshToken.name());
+        refreshTokenSecond.setHomeAccountId(HOME_ACCOUNT_ID);
+        refreshTokenSecond.setEnvironment(ENVIRONMENT);
+        refreshTokenSecond.setClientId(CLIENT_ID);
+        refreshTokenSecond.setCachedAt(CACHED_AT);
+        refreshTokenSecond.setSecret(SECRET);
+
+        // Create and set some additional field data...
+        final String additionalKey2 = "extra-prop-1";
+        final String additionalValue2 = "extra-value-2";
+        final JsonElement additionalValueElement2 = new JsonPrimitive(additionalValue2);
+
+        final Map<String, JsonElement> additionalFields2 = new HashMap<>();
+        additionalFields2.put(additionalKey2, additionalValueElement2);
+
+        refreshTokenSecond.setAdditionalFields(additionalFields2);
+
+        // Save the Credential
+        mSharedPreferencesAccountCredentialCache.saveCredential(refreshTokenSecond);
+
+        // Synthesize a cache key for it
+        final String credentialCacheKey = mDelegate.generateCacheKey(refreshTokenFirst);
+
+        // Resurrect the Credential
+        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        assertTrue(refreshTokenFirst.equals(restoredIdToken));
+        assertEquals(additionalValue2, restoredIdToken.getAdditionalFields().get(additionalKey).getAsString());
+    }
 }
