@@ -29,7 +29,15 @@ import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
+import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.Map;
 import java.util.Random;
@@ -74,8 +82,10 @@ public class CacheUtils {
      * @param editor         Functional interface to have any number of token editing method.
      */
     public void editAllTokenInCache(@NonNull final String sharedPrefName, @NonNull final Predicate<String> predicate,
-                                    @NonNull final Function<String, String> editor) {
-        final SharedPreferences sharedPref = TestUtils.getSharedPreferences(sharedPrefName);
+                                    @NonNull Function<String, Class<? extends Credential>> classFunction, @NonNull final Function<String, String> editor,
+                                             final boolean encrypted) {
+        final SharedPreferences sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+                TestUtils.getSharedPreferences(sharedPrefName);
         final SharedPreferences.Editor prefEditor = sharedPref.edit();
         final Map<String, ?> cacheEntries = sharedPref.getAll();
 
@@ -84,7 +94,10 @@ public class CacheUtils {
             final String keyToEdit = cacheEntry.getKey();
             if (predicate.test(keyToEdit)) {
                 final String cacheValue = (String) cacheEntries.get(keyToEdit);
-                final Credential credential = CACHE_KEY_VALUE_DELEGATE.fromCacheValue(cacheValue, Credential.class);
+                final Class<? extends Credential> credClass = classFunction.apply(keyToEdit);
+                if (credClass == null) { continue; }
+                final Credential credential = CACHE_KEY_VALUE_DELEGATE.fromCacheValue(cacheValue, credClass);
+                if (credential == null) { Logger.warn("CacheUtils:editAllTokenInCache", "Value did not deserialize"); continue; }
                 credential.setSecret(editor.apply(credential.getSecret()));
                 prefEditor.putString(keyToEdit, CACHE_KEY_VALUE_DELEGATE.generateCacheValue(credential));
                 prefEditor.apply();
@@ -92,13 +105,45 @@ public class CacheUtils {
         }
     }
 
+
+    public static Function<String, Class<? extends Credential>> CLASS_DETERMNING_FUNCTION =
+            new Function<String, Class<? extends Credential>>() {
+                @Override
+                public Class<? extends Credential> apply(String k) {
+                    final CredentialType credentialTypeForCredentialCacheKey = SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(k);
+                    if (credentialTypeForCredentialCacheKey == null) {
+                        return null;
+                    }
+                    switch(credentialTypeForCredentialCacheKey) {
+                        case AccessToken:
+                            return AccessTokenRecord.class;
+                        case IdToken:
+                            return IdTokenRecord.class;
+                        case V1IdToken:
+                            return null;
+                        case AccessToken_With_AuthScheme:
+                            return null;
+                        case RefreshToken:
+                            return RefreshTokenRecord.class;
+                        case Certificate:
+                            return null;
+                        case Cookie:
+                            return null;
+                        case Password:
+                            return null;
+                        default:
+                            return null;
+                    }
+                }
+            };
+
     /**
      * utility function to edit Access Token.
      *
      * @param sharedPrefName Name of the shared preference.
      * @param editor         Functional interface for token editing method.
      */
-    public void editAllAccessTokenInCache(@NonNull final String sharedPrefName, @NonNull final Function<String, String> editor) {
+    public void editAllAccessTokenInCache(@NonNull final String sharedPrefName, @NonNull final Function<String, String> editor, boolean encrypted) {
         final Predicate<String> predicate = new Predicate<String>() {
             @Override
             public boolean test(String cacheKey) {
@@ -106,7 +151,7 @@ public class CacheUtils {
             }
         };
 
-        editAllTokenInCache(sharedPrefName, predicate, editor);
+        editAllTokenInCache(sharedPrefName, predicate, new Function<String, Class<? extends Credential>>(){ public Class<? extends Credential> apply(String k) { return AccessTokenRecord.class; } }, editor, encrypted);
     }
 
     /**
@@ -115,7 +160,7 @@ public class CacheUtils {
      * @param sharedPrefName Name of the shared preference.
      * @param editor         Functional interface for token editing method.
      */
-    public void editAllRefreshTokenInCache(@NonNull final String sharedPrefName, @NonNull final Function<String, String> editor) {
+    public void editAllRefreshTokenInCache(@NonNull final String sharedPrefName, @NonNull final Function<String, String> editor, boolean encrypted) {
         final Predicate<String> predicate = new Predicate<String>() {
             @Override
             public boolean test(String cacheKey) {
@@ -123,7 +168,7 @@ public class CacheUtils {
             }
         };
 
-        editAllTokenInCache(sharedPrefName, predicate, editor);
+        editAllTokenInCache(sharedPrefName, predicate, new Function<String, Class<? extends Credential>>(){ public Class<? extends Credential> apply(String k) { return RefreshTokenRecord.class; } }, editor, encrypted);
     }
 
     /**
@@ -134,7 +179,7 @@ public class CacheUtils {
      * @return edited string.
      */
     private static String randomizeCharacterInTokenSignature(String string) {
-        final String[] segments = string.split(".");
+        final String[] segments = string.split("\\.");
         if (segments.length != 3) {
             throw new AssertionError("not JWT");
         }

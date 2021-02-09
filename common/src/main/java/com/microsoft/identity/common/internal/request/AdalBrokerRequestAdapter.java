@@ -159,6 +159,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .activity(callingActivity)
                 .androidApplicationContext(callingActivity.getApplicationContext())
                 .sdkType(SdkType.ADAL)
+                .sdkVersion(intent.getStringExtra(AuthenticationConstants.Broker.ADAL_VERSION_KEY))
                 .callerUid(callingAppUid)
                 .callerPackageName(getPackageNameFromBundle(
                         intent.getExtras(), callingActivity.getApplicationContext()

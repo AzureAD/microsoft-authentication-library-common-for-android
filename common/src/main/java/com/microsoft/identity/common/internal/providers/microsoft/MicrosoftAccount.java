@@ -43,6 +43,9 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode
 public abstract class MicrosoftAccount extends BaseAccount {
 
     public static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
@@ -150,14 +153,14 @@ public abstract class MicrosoftAccount extends BaseAccount {
     /**
      * @param givenName given name of the Microsoft account.
      */
-    public void setFirstName(final String givenName) {
+    public synchronized void setFirstName(final String givenName) {
         mGivenName = givenName;
     }
 
     /**
      * @param familyName family name of the Microsoft account.
      */
-    public void setFamilyName(final String familyName) {
+    public synchronized void setFamilyName(final String familyName) {
         mFamilyName = familyName;
     }
 
@@ -165,7 +168,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      * @return The displayable value in the UserPrincipleName(UPN) format. Can be null if not
      * returned from the service.
      */
-    public String getDisplayableId() {
+    public synchronized String getDisplayableId() {
         return mDisplayableId;
     }
 
@@ -174,7 +177,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @param displayableId displayable ID.
      */
-    public void setDisplayableId(final String displayableId) {
+    public synchronized void setDisplayableId(final String displayableId) {
         mDisplayableId = displayableId;
     }
 
@@ -183,7 +186,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      * <p>
      * For v2, the OID claim in the ID token.
      */
-    public String getUserId() {
+    public synchronized String getUserId() {
         return mUniqueId;
     }
 
@@ -192,7 +195,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @return The uid to get.
      */
-    public String getUid() {
+    public synchronized String getUid() {
         return mUid;
     }
 
@@ -201,7 +204,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @param uid The uid to set.
      */
-    public void setUid(final String uid) {
+    public synchronized void setUid(final String uid) {
         mUid = uid;
     }
 
@@ -210,7 +213,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @param uTid The utid to set.
      */
-    public void setUtid(final String uTid) {
+    public synchronized void setUtid(final String uTid) {
         mUtid = uTid;
     }
 
@@ -219,7 +222,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @param name The name to set.
      */
-    public void setName(final String name) {
+    public synchronized void setName(final String name) {
         mName = name;
     }
 
@@ -228,11 +231,11 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @return The utid to get.
      */
-    public String getUtid() {
+    public synchronized String getUtid() {
         return mUtid;
     }
 
-    void setUserId(final String userid) {
+    synchronized void setUserId(final String userid) {
         mUniqueId = userid;
     }
 
@@ -242,12 +245,12 @@ public abstract class MicrosoftAccount extends BaseAccount {
      * @return unique identifier string.
      */
     @Override
-    public String getUniqueIdentifier() {
+    public synchronized String getUniqueIdentifier() {
         return StringExtensions.base64UrlEncodeToString(mUid) + "." + StringExtensions.base64UrlEncodeToString(mUtid);
     }
 
     @Override
-    public List<String> getCacheIdentifiers() {
+    public synchronized List<String> getCacheIdentifiers() {
         List<String> cacheIdentifiers = new ArrayList<>();
 
         if (mDisplayableId != null) {
@@ -270,7 +273,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @return the password change uri.
      */
-    public Uri getPasswordChangeUrl() {
+    public synchronized Uri getPasswordChangeUrl() {
         return mPasswordChangeUrl;
     }
 
@@ -279,19 +282,19 @@ public abstract class MicrosoftAccount extends BaseAccount {
      *
      * @return the time when the password will expire.
      */
-    public Date getPasswordExpiresOn() {
+    public synchronized Date getPasswordExpiresOn() {
         return DateExtensions.createCopy(mPasswordExpiresOn);
     }
 
     /**
      * @return mIDToken of the Microsoft account.
      */
-    public IDToken getIDToken() {
+    public synchronized IDToken getIDToken() {
         return mIDToken;
     }
 
     @Override
-    public String getHomeAccountId() {
+    public synchronized String getHomeAccountId() {
         // TODO -- This method's functionality is duplicative of
         // Account#getUniqueIdentifier except that that implementation
         // was coded for the refactored ADAL cache which expects
@@ -299,42 +302,42 @@ public abstract class MicrosoftAccount extends BaseAccount {
         return getUid() + "." + getUtid();
     }
 
-    public void setEnvironment(final String environment) {
+    public synchronized void setEnvironment(final String environment) {
         mEnvironment = environment;
     }
 
     @Override
-    public String getEnvironment() {
+    public synchronized String getEnvironment() {
         return mEnvironment;
     }
 
     @Override
-    public String getRealm() {
+    public synchronized String getRealm() {
         return mTenantId;
     }
 
     @Override
-    public String getLocalAccountId() {
+    public synchronized String getLocalAccountId() {
         return getUserId();
     }
 
     @Override
-    public String getUsername() {
+    public synchronized String getUsername() {
         return getDisplayableId();
     }
 
     @Override
-    public String getAlternativeAccountId() {
+    public synchronized String getAlternativeAccountId() {
         return SchemaUtil.getAlternativeAccountId(mIDToken);
     }
 
     @Override
-    public String getFirstName() {
+    public synchronized String getFirstName() {
         return mGivenName;
     }
 
     @Override
-    public String getFamilyName() {
+    public synchronized String getFamilyName() {
         return mFamilyName;
     }
 
@@ -342,28 +345,28 @@ public abstract class MicrosoftAccount extends BaseAccount {
      * @return The given name of the user. Can be null if not returned from the service.
      */
     @Override
-    public String getName() {
+    public synchronized String getName() {
         return mName;
     }
 
     @Override
-    public String getMiddleName() {
+    public synchronized String getMiddleName() {
         return mMiddleName;
     }
 
     @Override
-    public String getAvatarUrl() {
+    public synchronized String getAvatarUrl() {
         return SchemaUtil.getAvatarUrl(mIDToken);
     }
 
     @Override
-    public String getClientInfo() {
+    public synchronized String getClientInfo() {
         return mRawClientInfo;
     }
 
     //CHECKSTYLE:OFF
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return "MicrosoftAccount{" +
                 "mDisplayableId='" + mDisplayableId + '\'' +
                 ", mUniqueId='" + mUniqueId + '\'' +

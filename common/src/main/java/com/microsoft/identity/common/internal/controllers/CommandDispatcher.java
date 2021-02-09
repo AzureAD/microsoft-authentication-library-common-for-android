@@ -31,30 +31,38 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -73,14 +81,57 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
-    private static final ConcurrentMap<BaseCommand, ResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
+
+    private static final Object mapAccessLock = new Object();
+    @GuardedBy("mapAccessLock")
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
+    private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
     /**
-     * submitSilent - Run a command using the silent thread pool
+     * Remove all keys that are the command reference from the executing command map.  Since if they key has
+     * been changed, remove will not work, construct a new map and add all keys that are not identically
+     * that key into the new map.  <strong>MUST</strong> only be used under the mapAccessLock.
+     *
+     * @param command the command whose identity to use to cleanse the map.
+     */
+    // Suppressing rawtype warnings due to the generic type BaseCommand
+    @SuppressWarnings(WarningType.rawtype_warning)
+    private static void cleanMap(BaseCommand command) {
+        ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
+        for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
+            if (command != e.getKey()) {
+                newMap.put(e.getKey(), e.getValue());
+            }
+        }
+        sExecutingCommandMap = newMap;
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static int outstandingCommands() {
+        synchronized (mapAccessLock) {
+            return sExecutingCommandMap.size();
+        }
+    }
+
+
+    /**
+     * submitSilent - Run a command using the silent thread pool.
      *
      * @param command
      */
-    public static void submitSilent(@NonNull final BaseCommand command) {
+    public static void submitSilent(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+        submitSilentReturningFuture(command);
+    }
+
+    /**
+     * submitSilent - Run a command using the silent thread pool, and return the future governing it.
+     *
+     * @param command
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+
         final String methodName = ":submitSilent";
         Logger.verbose(
                 TAG + methodName,
@@ -88,73 +139,97 @@ public class CommandDispatcher {
         );
 
         final Handler handler = new Handler(Looper.getMainLooper());
-        ResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
+        synchronized (mapAccessLock) {
+            FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
 
-        if (null == future) {
-            future = new ResultFuture<>();
-            final ResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
+            if (null == future) {
+                future = new FinalizableResultFuture<>();
+                final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
 
-            if (null == putValue) {
-                // our value was inserted.
-                future.whenComplete(getCommandResultConsumer(command, handler));
-            } else {
-                // Our value was not inserted, grab the one that was and hang a new listener off it
-                putValue.whenComplete(getCommandResultConsumer(command, handler));
-                return;
-            }
-        } else {
-            future.whenComplete(getCommandResultConsumer(command, handler));
-            return;
-        }
-
-        sSilentExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                final String correlationId = initializeDiagnosticContext(command.getParameters().getCorrelationId());
-
-                // set correlation id on parameters as it may not already be set
-                command.getParameters().setCorrelationId(correlationId);
-
-                EstsTelemetry.getInstance().initTelemetryForCommand(command);
-
-                EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
-                CommandResult commandResult = null;
-
-                //Log operation parameters
-                if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                    logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
-                    EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
-                }
-
-                //Check cache to see if the same command completed in the last 30 seconds
-                commandResult = sCommandResultCache.get(command);
-
-                //If nothing in cache, execute the command and cache the result
-                if (commandResult == null) {
-                    commandResult = executeCommand(command);
-                    cacheCommandResult(command, commandResult);
+                if (null == putValue) {
+                    // our value was inserted.
+                    future.whenComplete(getCommandResultConsumer(command, handler));
                 } else {
-                    Logger.info(
-                            TAG + methodName,
-                            "Silent command result returned from cache."
-                    );
+                    // Our value was not inserted, grab the one that was and hang a new listener off it
+                    putValue.whenComplete(getCommandResultConsumer(command, handler));
+                    return putValue;
                 }
-
-                // set correlation id on Local Authentication Result
-                setCorrelationIdOnResult(commandResult, correlationId);
-
-                Telemetry.getInstance().flush(correlationId);
-                EstsTelemetry.getInstance().flush(command, commandResult);
-
-                //Return the result via the callback
-                sExecutingCommandMap.remove(command).setResult(commandResult);
+            } else {
+                future.whenComplete(getCommandResultConsumer(command, handler));
+                return future;
             }
-        });
+
+            final FinalizableResultFuture<CommandResult> finalFuture = future;
+
+            sSilentExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+
+                        // set correlation id on parameters as it may not already be set
+                        commandParameters.setCorrelationId(correlationId);
+
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
+                        CommandResult commandResult = null;
+
+                        //Log operation parameters
+                        if (command.getParameters() instanceof SilentTokenCommandParameters) {
+                            logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
+                            EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
+                        }
+
+                        //Check cache to see if the same command completed in the last 30 seconds
+                        commandResult = sCommandResultCache.get(command);
+
+                        //If nothing in cache, execute the command and cache the result
+                        if (commandResult == null) {
+                            commandResult = executeCommand(command);
+                            cacheCommandResult(command, commandResult);
+                        } else {
+                            Logger.info(
+                                    TAG + methodName,
+                                    "Silent command result returned from cache."
+                            );
+                        }
+
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+
+                        Telemetry.getInstance().flush(correlationId);
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        finalFuture.setResult(commandResult);
+                        //Return the result via the callback
+                    } catch (final Throwable t) {
+                        finalFuture.setException(new ExecutionException(t));
+                    } finally {
+                        synchronized (mapAccessLock) {
+                            final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                            if (mapFuture == null) {
+                                // If this has happened, the command that we started with has mutated.  We will
+                                // examine every entry in the map, find the one with the same object identity
+                                // and remove it.
+                                // ADO:TODO:1153495 - Rekey this map with stable string keys.
+                                Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
+                                        + " the calling application was " + command.getParameters().getApplicationName(), null);
+                                cleanMap(command);
+                            }
+                            finalFuture.setCleanedUp();
+                        }
+                        DiagnosticContext.clear();
+                    }
+                }
+            });
+            return finalFuture;
+        }
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
-            @NonNull final BaseCommand command,
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
             @NonNull final Handler handler) {
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
@@ -163,15 +238,22 @@ public class CommandDispatcher {
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
-                            command.getCallback().onError(throwable);
+                            commandCallBackOnError(command, throwable);
                         }
                     });
+                    return;
                 }
 
                 // Return command result will post() result for us.
                 returnCommandResult(command, result, handler);
             }
         };
+    }
+
+    // Suppressing unchecked warnings due to casting of Throwable to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallBackOnError(@SuppressWarnings(WarningType.rawtype_warning) @NonNull BaseCommand command, Throwable throwable) {
+        command.getCallback().onError(ExceptionAdapter.baseExceptionFromException(throwable));
     }
 
     static void clearCommandCache() {
@@ -186,7 +268,7 @@ public class CommandDispatcher {
      * @param command
      * @return
      */
-    private static CommandResult executeCommand(BaseCommand command) {
+    private static CommandResult executeCommand(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command) {
 
         Object result = null;
         BaseException baseException = null;
@@ -231,24 +313,37 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(final BaseCommand command, final CommandResult result, Handler handler) {
+    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command, final CommandResult result, Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
                 switch (result.getStatus()) {
                     case ERROR:
-                        command.getCallback().onError(result.getResult());
+                        commandCallbackOnError(command, result);
                         break;
                     case COMPLETED:
-                        command.getCallback().onTaskCompleted(result.getResult());
+                        commandCallbackOnTaskCompleted(command, result);
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
+                        break;
                     default:
 
                 }
             }
         });
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onError(ExceptionAdapter.baseExceptionFromException((Throwable) result.getResult()));
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        command.getCallback().onTaskCompleted(result.getResult());
     }
 
     /**
@@ -258,7 +353,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
-    private static void cacheCommandResult(BaseCommand command, CommandResult commandResult) {
+    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command, CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
             sCommandResultCache.put(command, commandResult);
         }
@@ -336,48 +431,55 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final String correlationId = initializeDiagnosticContext(
-                            command.getParameters().getCorrelationId()
-                    );
+                    try {
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(
+                                commandParameters.getCorrelationId(),
+                                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion()
+                        );
 
-                    // set correlation id on parameters as it may not already be set
-                    command.getParameters().setCorrelationId(correlationId);
+                        // set correlation id on parameters as it may not already be set
+                        commandParameters.setCorrelationId(correlationId);
 
-                    EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
-                    EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                    if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
-                        logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
-                    }
-
-                    final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
-                        @Override
-                        public void onReceive(Context context, Intent intent) {
-                            completeInteractive(intent);
+                        if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
+                            logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
                         }
-                    };
 
-                    CommandResult commandResult;
-                    Handler handler = new Handler(Looper.getMainLooper());
+                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                            @Override
+                            public void onReceive(Context context, Intent intent) {
+                                completeInteractive(intent);
+                            }
+                        };
 
-                    localBroadcastManager.registerReceiver(
-                            resultReceiver,
-                            new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                        CommandResult commandResult;
+                        Handler handler = new Handler(Looper.getMainLooper());
 
-                    sCommand = command;
+                        localBroadcastManager.registerReceiver(
+                                resultReceiver,
+                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
 
-                    //Try executing request
-                    commandResult = executeCommand(command);
-                    sCommand = null;
-                    localBroadcastManager.unregisterReceiver(resultReceiver);
+                        sCommand = command;
 
-                    // set correlation id on Local Authentication Result
-                    setCorrelationIdOnResult(commandResult, correlationId);
+                        //Try executing request
+                        commandResult = executeCommand(command);
+                        sCommand = null;
+                        localBroadcastManager.unregisterReceiver(resultReceiver);
 
-                    EstsTelemetry.getInstance().flush(command, commandResult);
-                    Telemetry.getInstance().flush(correlationId);
-                    returnCommandResult(command, commandResult, handler);
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        Telemetry.getInstance().flush(correlationId);
+                        returnCommandResult(command, commandResult, handler);
+                    } finally {
+                        DiagnosticContext.clear();
+                    }
                 }
             });
         }
@@ -506,7 +608,7 @@ public class CommandDispatcher {
         }
     }
 
-    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId) {
+    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
         final String methodName = ":initializeDiagnosticContext";
 
         final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
@@ -516,6 +618,8 @@ public class CommandDispatcher {
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+        rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
+        rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,

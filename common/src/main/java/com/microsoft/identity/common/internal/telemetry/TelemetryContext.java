@@ -30,6 +30,7 @@ import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -74,7 +75,13 @@ public class TelemetryContext extends Properties {
             final PackageInfo packageInfo = packageManager.getPackageInfo(context.getPackageName(), 0);
             put(App.NAME, packageInfo.applicationInfo.packageName);
             put(App.VERSION, packageInfo.versionName);
-            put(App.BUILD, String.valueOf(packageInfo.versionCode));
+
+            // Suppressing deprecation warnings due to deprecated property versionCode. There is already an existing issue for this: https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/863
+            @SuppressWarnings(WarningType.deprecation_warning)
+            int versionCode = packageInfo.versionCode;
+
+            put(App.BUILD, String.valueOf(versionCode));
+
         } catch (final PackageManager.NameNotFoundException e) {
             //Not throw the exception to break the auth request when getting the app's telemetry
             Logger.warn(TAG, "Unable to find the app's package name from PackageManager.");

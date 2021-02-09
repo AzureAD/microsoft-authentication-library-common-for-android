@@ -27,6 +27,8 @@ package com.microsoft.identity.common.internal.net;
  * the scope of exceptions that it can handle.
  */
 class RetryFailedException extends RuntimeException {
+    private static final long serialVersionUID = 3344864538063263545L;
+
     /**
      * Constructor.
      * @param e the causing exception.

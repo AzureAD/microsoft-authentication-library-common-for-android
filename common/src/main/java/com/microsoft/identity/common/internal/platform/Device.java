@@ -23,8 +23,11 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
+import android.text.TextUtils;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -42,6 +45,11 @@ public final class Device {
     private static IDevicePopManager sDevicePoPManager;
 
     /**
+     * The String representing the sdk platform version.
+     */
+    public static final String PRODUCT_VERSION = "2.0.2";
+
+    /**
      * Private constructor to prevent a help class from being initiated.
      */
     private Device() {
@@ -50,9 +58,6 @@ public final class Device {
     @SuppressWarnings("deprecation")
     public static Map<String, String> getPlatformIdParameters() {
         final Map<String, String> platformParameters = new HashMap<>();
-
-        platformParameters.put(PlatformIdParameters.PRODUCT, PlatformIdParameters.PRODUCT_NAME);
-        platformParameters.put(PlatformIdParameters.VERSION, PlatformIdParameters.PRODUCT_VERSION);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             //CPU_ABI has been deprecated
@@ -71,27 +76,16 @@ public final class Device {
         return Collections.unmodifiableMap(platformParameters);
     }
 
+    public static String getProductVersion() {
+        final String version = DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
+        if (TextUtils.isEmpty(version)) {
+            return PRODUCT_VERSION;
+        } else {
+            return version;
+        }
+    }
+
     public static final class PlatformIdParameters {
-        /**
-         * The String representing the sdk platform.
-         */
-        public static final String PRODUCT = "x-client-SKU";
-
-        /**
-         * The String representing the sdk platform name.
-         */
-        public static final String PRODUCT_NAME = "MSAL.Android";
-
-        /**
-         * The String representing the sdk platform version.
-         */
-        public static final String PRODUCT_VERSION = "2.0.0";
-
-        /**
-         * The String representing the sdk version.
-         */
-        public static final String VERSION = "x-client-Ver";
-
         /**
          * The String representing the CPU for the device.
          */

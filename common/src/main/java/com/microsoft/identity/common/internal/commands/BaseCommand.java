@@ -24,38 +24,41 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
+// Suppressing rawtype warnings due to the generic types CommandCallback, BaseController
+@SuppressWarnings(WarningType.rawtype_warning)
 @Getter
 @EqualsAndHashCode
 public abstract class BaseCommand<T> implements Command<T> {
 
-    private CommandParameters parameters;
+    private final CommandParameters parameters;
 
     @EqualsAndHashCode.Exclude
-    private CommandCallback callback;
+    private final CommandCallback callback;
 
-    private List<BaseController> controllers;
+    private final List<BaseController> controllers;
 
     @EqualsAndHashCode.Exclude
-    private String publicApiId;
+    private final String publicApiId;
 
     public BaseCommand(@NonNull final CommandParameters parameters,
                        @NonNull final BaseController controller,
                        @NonNull final CommandCallback callback,
                        @NonNull final String publicApiId) {
         this.parameters = parameters;
-        this.controllers = new ArrayList<>();
         this.callback = callback;
-
-        controllers.add(controller);
+        controllers = Collections.unmodifiableList(Arrays.asList(controller));
         this.publicApiId = publicApiId;
     }
 
@@ -64,7 +67,7 @@ public abstract class BaseCommand<T> implements Command<T> {
                        @NonNull final CommandCallback callback,
                        @NonNull final String publicApiId) {
         this.parameters = parameters;
-        this.controllers = controllers;
+        this.controllers = Collections.unmodifiableList(new ArrayList<BaseController>(controllers));
         this.callback = callback;
         this.publicApiId = publicApiId;
     }

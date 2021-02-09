@@ -44,22 +44,22 @@ public class TokenCommandParameters extends CommandParameters {
 
     private static final String TAG = TokenCommandParameters.class.getSimpleName();
 
-    private IAccountRecord account;
+    private final IAccountRecord account;
 
     @Expose()
-    private Set<String> scopes;
+    private final Set<String> scopes;
 
     @Expose()
-    private Authority authority;
+    private final Authority authority;
 
     @Expose()
-    private String claimsRequestJson;
+    private final String claimsRequestJson;
 
     @Expose()
-    private AbstractAuthenticationScheme authenticationScheme;
+    private final AbstractAuthenticationScheme authenticationScheme;
 
     @Expose()
-    private boolean forceRefresh;
+    private final boolean forceRefresh;
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);

@@ -30,6 +30,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
@@ -199,6 +200,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         final String methodName = "fromCacheValue";
 
         try {
+            @SuppressWarnings(WarningType.unchecked_warning)
             final T resultObject = (T) mGson.fromJson(string, t);
 
             if (!StringExtensions.isNullOrBlank(string)) {

@@ -38,6 +38,7 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -94,6 +95,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * @param url  The url to be loaded.
      * @return return true means the host application handles the url, while return false means the current WebView handles the url.
      */
+    // Suppressing deprecation warnings due to deprecated method shouldOverrideUrlLoading. There is already an existing issue for this: https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/866
+    @SuppressWarnings(WarningType.deprecation_warning)
     @Override
     public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
         if (StringUtil.isEmpty(url)) {
@@ -207,7 +210,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             }
 
             //If user clicked the "Back" button in the webview
-            if (!StringUtil.equalsIgnoreCase(parameters.get(ERROR_SUBCODE), SUB_ERROR_UI_CANCEL)) {
+            if (StringUtil.equalsIgnoreCase(parameters.get(ERROR_SUBCODE), SUB_ERROR_UI_CANCEL)) {
                 getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
             } else {
                 getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);

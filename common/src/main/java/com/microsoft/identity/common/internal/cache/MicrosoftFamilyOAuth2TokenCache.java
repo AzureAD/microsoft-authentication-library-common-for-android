@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
@@ -47,6 +48,8 @@ import java.util.List;
 
 import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
 
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public class MicrosoftFamilyOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
                 GenericAuthorizationRequest extends AuthorizationRequest,

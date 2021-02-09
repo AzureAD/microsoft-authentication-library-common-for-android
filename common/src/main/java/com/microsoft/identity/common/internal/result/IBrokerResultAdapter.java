@@ -33,19 +33,21 @@ public interface IBrokerResultAdapter {
 
     /**
      * Returns a success bundle with properties from Authenticator Result.
+     *
      * @param authenticationResult
-     * @return Bundle
+     * @return {@link Bundle}
      */
-    Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
-                                          @Nullable final String negotiatedBrokerProtocolVersion);
+    @NonNull Bundle bundleFromAuthenticationResult(@NonNull final ILocalAuthenticationResult authenticationResult,
+                                                   @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
      * Returns an error bundle with properties from Exception.
+     *
      * @param exception
-     * @return
+     * @return {@link Bundle}
      */
-    Bundle bundleFromBaseException(@NonNull BaseException exception,
-                                   @Nullable final String negotiatedBrokerProtocolVersion);
+    @NonNull Bundle bundleFromBaseException(@NonNull BaseException exception,
+                                            @Nullable final String negotiatedBrokerProtocolVersion);
 
     /**
      * Returns authentication result from Broker result bundle
@@ -53,14 +55,14 @@ public interface IBrokerResultAdapter {
      * @param resultBundle
      * @return {@link ILocalAuthenticationResult}
      */
-    ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle);
+    @NonNull ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) throws BaseException;
 
     /**
      * Returns a BaseException from Broker result bundle.The exception
      * returned in the callback could also be sub class of {@link BaseException}
+     *
      * @param resultBundle
-     * @return
+     * @return {@link BaseException}
      */
-    BaseException getBaseExceptionFromBundle(Bundle resultBundle);
-
+    @NonNull BaseException getBaseExceptionFromBundle(Bundle resultBundle);
 }

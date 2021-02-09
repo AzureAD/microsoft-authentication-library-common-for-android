@@ -46,34 +46,34 @@ import lombok.experimental.SuperBuilder;
 public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     @EqualsAndHashCode.Exclude
-    private transient Activity activity;
+    private final transient Activity activity;
 
     @EqualsAndHashCode.Exclude
-    private transient Fragment fragment;
+    private final transient Fragment fragment;
 
-    private transient List<BrowserDescriptor> browserSafeList;
+    private final transient List<BrowserDescriptor> browserSafeList;
 
-    private transient HashMap<String, String> requestHeaders;
+    private final transient HashMap<String, String> requestHeaders;
 
-    private boolean brokerBrowserSupportEnabled;
+    private final boolean brokerBrowserSupportEnabled;
 
-    private String loginHint;
-
-    @Expose()
-    private OpenIdConnectPromptParameter prompt;
+    private final String loginHint;
 
     @Expose()
-    private AuthorizationAgent authorizationAgent;
+    private final OpenIdConnectPromptParameter prompt;
 
     @Expose()
-    private boolean isWebViewZoomEnabled;
+    private final AuthorizationAgent authorizationAgent;
 
     @Expose()
-    private boolean isWebViewZoomControlsEnabled;
+    private final boolean isWebViewZoomEnabled;
 
-    private List<Pair<String, String>> extraQueryStringParameters;
+    @Expose()
+    private final boolean isWebViewZoomControlsEnabled;
 
-    private List<String> extraScopesToConsent;
+    private final List<Pair<String, String>> extraQueryStringParameters;
+
+    private final List<String> extraScopesToConsent;
 
     public List<Pair<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);

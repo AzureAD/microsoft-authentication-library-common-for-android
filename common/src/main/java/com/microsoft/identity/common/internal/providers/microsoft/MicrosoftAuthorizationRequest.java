@@ -27,6 +27,7 @@ import android.util.Base64;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -115,7 +116,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
      * Constructor of MicrosoftAuthorizationRequest.
      */
     @SuppressWarnings("deprecation")
-    protected MicrosoftAuthorizationRequest(final Builder builder) {
+    protected MicrosoftAuthorizationRequest(@SuppressWarnings(WarningType.rawtype_warning) final Builder builder) {
         super(builder);
         mAuthority = builder.mAuthority;
         mLoginHint = builder.mLoginHint;
@@ -129,7 +130,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         if (builder.mSlice != null) {
             mSlice = builder.mSlice;
         }
-        mFlightParameters = builder.mFlightParameters;
+
+        // Suppressing unchecked warning of casting Map to Map<String,String>. This warning is raised as the generic type was not provided during constructing builder object.
+        @SuppressWarnings(WarningType.unchecked_warning)
+        Map<String, String> flightParameters = builder.mFlightParameters;
+
+        mFlightParameters = flightParameters;
 
         mMultipleCloudAware = builder.mMultipleCloudAware;
 

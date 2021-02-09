@@ -10,6 +10,8 @@
 
 # VSCode project file.
 .project
+.classpath
+.settings
 
 # Generated files
 bin/

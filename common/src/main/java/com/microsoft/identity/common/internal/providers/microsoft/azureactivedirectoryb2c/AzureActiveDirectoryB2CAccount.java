@@ -26,10 +26,13 @@ import com.microsoft.identity.common.BaseAccount;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * Represents the Azure AD B2C Account.
  */
 @SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
+@EqualsAndHashCode
 public class AzureActiveDirectoryB2CAccount extends BaseAccount {
 
     @Override

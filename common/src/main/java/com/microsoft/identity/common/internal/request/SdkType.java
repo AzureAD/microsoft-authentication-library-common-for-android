@@ -22,10 +22,43 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+
 /**
  * Enum to indicate if the request came from an app hosting Adal or Msal Sdk
  */
 public enum SdkType {
     ADAL,
-    MSAL
+    MSAL,
+    MSAL_CPP,
+    UNKNOWN;
+
+    /**
+     * Method for mapping the SdkType to appropriate String
+     * for the purpose of sending it to the telemetry.
+     *
+     * @return MSAL.Android for case of ADAL and MSAL,
+     * MSAL.xplat.Android for case of MSAL_CPP,
+     * empty string otherwise(UNKNOWN).
+     */
+    public String getProductName() {
+        if ((SdkType.ADAL == this) || (SdkType.MSAL == this)) {
+            return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL;
+        } else if ((SdkType.MSAL_CPP == this)) {
+            return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_CPP;
+        } else {
+            // value(SdkType.UNKNOWN) is intended for test-cases, eg. CommandDispatcherTest.java.
+            return "";
+        }
+
+    }
+
+    /**
+     * Determines if the Sdk supports Microsoft Personal Accounts.
+     *
+     * @return True if Sdk supports Microsoft Personal Accounts, false otherwise.
+     */
+    public boolean isCapableOfMSA() {
+        return (this == SdkType.MSAL) || (this == SdkType.MSAL_CPP);
+    }
 }

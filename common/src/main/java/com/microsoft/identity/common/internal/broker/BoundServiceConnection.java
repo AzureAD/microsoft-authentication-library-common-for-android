@@ -23,52 +23,49 @@
 
 package com.microsoft.identity.common.internal.broker;
 
+import android.content.ComponentName;
+import android.os.IBinder;
+import android.os.IInterface;
+
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.client.IMicrosoftAuthService;
+import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.result.ResultFuture;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+/**
+ * A bound service connection.
+ */
+public class BoundServiceConnection implements android.content.ServiceConnection {
+    private static final String TAG = BoundServiceConnection.class.getSimpleName();
+    private final ResultFuture<IBinder> mFuture;
 
-public class MicrosoftAuthServiceFuture implements Future<IMicrosoftAuthService> {
-
-    private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
-    private IMicrosoftAuthService mMicrosoftAuthService;
-
-    @Override
-    public boolean cancel(boolean b) {
-        return false;
+    public BoundServiceConnection(@NonNull final ResultFuture<IBinder> future) {
+        mFuture = future;
     }
 
     @Override
-    public boolean isCancelled() {
-        return false;
+    public void onServiceConnected(ComponentName name, IBinder service) {
+        Logger.info(TAG, name.getClassName() + " is connected.");
+        mFuture.setResult(service);
     }
+
+    /*
+    //Needed for API level 26 and above
+    @Override
+    public void onBindingDied(ComponentName name){
+
+    }
+
+    //Needed for API level 28 and above
+    @Override
+    public void onNullBinding(ComponentName name){
+
+    }
+    */
 
     @Override
-    public boolean isDone() {
-        return mCountDownLatch.getCount() == 0;
-    }
-
-    @Override
-    public IMicrosoftAuthService get() throws InterruptedException, ExecutionException {
-        mCountDownLatch.await();
-        return mMicrosoftAuthService;
-    }
-
-    @Override
-    public IMicrosoftAuthService get(long l, TimeUnit timeUnit) throws InterruptedException, ExecutionException, TimeoutException {
-        if (mCountDownLatch.await(l, timeUnit)) {
-            return mMicrosoftAuthService;
-        } else {
-            throw new TimeoutException();
-        }
-
-    }
-
-    public void setMicrosoftAuthService(IMicrosoftAuthService result) {
-        mMicrosoftAuthService = result;
-        mCountDownLatch.countDown();
+    public void onServiceDisconnected(@NonNull final ComponentName name) {
+        Logger.info(TAG, name.getClassName() + " is disconnected.");
     }
 }

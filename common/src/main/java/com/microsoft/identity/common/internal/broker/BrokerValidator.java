@@ -236,10 +236,14 @@ public class BrokerValidator {
      * Returns the package that is currently active relative to the Work Account custom account type
      * Note: either the company portal or the authenticator
      *
+     * There may be multiple packages containing the android authenticator implementation (custom account)
+     * but there is only one entry for custom account type currently registered by the AccountManager.
+     * If another app tries to install same authenticator (custom account type) type, it will
+     * queue up and will be active after first one is uninstalled.
+     *
      * @return String current active broker package name, null if no broker is available
      */
-    @Nullable
-    public String getCurrentActiveBrokerPackageName() {
+    @Nullable public String getCurrentActiveBrokerPackageName() {
         AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
@@ -250,13 +254,11 @@ public class BrokerValidator {
         return null;
     }
 
-
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
                                                 @NonNull final String packageName) {
         return StringUtil.equalsIgnoreCase(redirectUri, getBrokerRedirectUri(context, packageName));
     }
-
 
     /**
      * Helper method to get Broker Redirect Uri

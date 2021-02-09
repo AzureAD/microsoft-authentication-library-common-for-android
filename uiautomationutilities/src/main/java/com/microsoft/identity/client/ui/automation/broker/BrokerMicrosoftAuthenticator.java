@@ -36,6 +36,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
@@ -233,6 +234,11 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
+    }
+
+    @Override
+    public DeviceAdmin getAdminName() {
+        return DeviceAdmin.MICROSOFT_AUTHENTICATOR;
     }
 
     /**

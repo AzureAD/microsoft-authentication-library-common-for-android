@@ -69,7 +69,7 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
 @Builder
 @ThreadSafe
 @Immutable
-public class UrlConnectionHttpClient implements HttpClient {
+public class UrlConnectionHttpClient extends AbstractHttpClient {
     /**
      * A functional interface modeled off of java.util.function.Supplier for providing
      * values to callers.
@@ -163,24 +163,6 @@ public class UrlConnectionHttpClient implements HttpClient {
      * @return HttpResponse      The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
-    public HttpResponse method(@NonNull final String httpMethod,
-                                      @NonNull final URL requestUrl,
-                                      @NonNull final Map<String, String> requestHeaders,
-                                      @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpMethod.validateAndNormalizeMethod(httpMethod), requestUrl, requestHeaders, requestContent);
-    }
-
-    /**
-     * Sends an HTTP request of the specified method; applies appropriate provided arguments where
-     * applicable.
-     *
-     * @param httpMethod         One of: GET, POST, HEAD, PUT, DELETE, TRACE, OPTIONS, PATCH.
-     * @param requestUrl         The recipient {@link URL}.
-     * @param requestHeaders     Headers used to send the http request.
-     * @param requestContent     Optional request body, if applicable.
-     * @return HttpResponse      The response for this request.
-     * @throws IOException If an error is encountered while servicing this request.
-     */
     @Override
     public HttpResponse method(@NonNull final HttpMethod httpMethod,
                                @NonNull final URL requestUrl,
@@ -223,58 +205,6 @@ public class UrlConnectionHttpClient implements HttpClient {
                 requestContent,
                 null
         );
-    }
-
-    @Override
-    public HttpResponse put(@NonNull final URL requestUrl,
-                            @NonNull final Map<String, String> requestHeaders,
-                            @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpMethod.PUT.name(), requestUrl, requestHeaders, requestContent);
-    }
-
-    @Override
-    public HttpResponse patch(@NonNull final URL requestUrl,
-                              @NonNull final Map<String, String> requestHeaders,
-                              @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpMethod.PATCH.name(), requestUrl, requestHeaders, requestContent);
-    }
-
-    @Override
-    public HttpResponse options(@NonNull final URL requestUrl,
-                                @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.OPTIONS.name(), requestUrl, requestHeaders, null);
-    }
-
-    @Override
-    public HttpResponse post(@NonNull final URL requestUrl,
-                             @NonNull final Map<String, String> requestHeaders,
-                             @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpMethod.POST.name(), requestUrl, requestHeaders, requestContent);
-    }
-
-    @Override
-    public HttpResponse delete(@NonNull final URL requestUrl,
-                               @NonNull final Map<String, String> requestHeaders,
-                               @Nullable final byte[] requestContent) throws IOException {
-        return method(HttpMethod.POST.name(), requestUrl, requestHeaders, requestContent);
-    }
-
-    @Override
-    public HttpResponse get(@NonNull final URL requestUrl,
-                            @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.GET.name(), requestUrl, requestHeaders, null);
-    }
-
-    @Override
-    public HttpResponse head(@NonNull final URL requestUrl,
-                             @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.HEAD.name(), requestUrl, requestHeaders, null);
-    }
-
-    @Override
-    public HttpResponse trace(@NonNull final URL requestUrl,
-                              @NonNull final Map<String, String> requestHeaders) throws IOException {
-        return method(HttpMethod.TRACE.name(), requestUrl, requestHeaders, null);
     }
 
     /**

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.util.Collections;
@@ -203,7 +204,7 @@ public enum AuthenticationSettings {
      *
      * @param clazz class for workplace join
      */
-    public void setDeviceCertificateProxyClass(Class clazz) {
+    public void setDeviceCertificateProxyClass(@SuppressWarnings(WarningType.rawtype_warning) Class clazz) {
         if (IDeviceCertificate.class.isAssignableFrom(clazz)) {
             mClazzDeviceCertProxy = clazz;
         } else {

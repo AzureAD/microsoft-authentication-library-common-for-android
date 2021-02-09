@@ -28,6 +28,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
@@ -35,6 +36,7 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -79,6 +81,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
 
+// Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public class MicrosoftStsOAuth2Strategy
         extends OAuth2Strategy
         <MicrosoftStsAccessToken,
@@ -268,14 +272,9 @@ public class MicrosoftStsOAuth2Strategy
             builder.setSlice(mConfig.getSlice());
         }
 
-        final Map<String, String> platformParameters = Device.getPlatformIdParameters();
-        builder.setLibraryName(platformParameters.get(
-                Device.PlatformIdParameters.PRODUCT)
-        );
-        builder.setLibraryVersion(platformParameters.get(
-                Device.PlatformIdParameters.VERSION)
-        );
 
+        builder.setLibraryName(DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        builder.setLibraryVersion(Device.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
 
@@ -466,6 +465,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
 
         headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());
@@ -483,6 +484,8 @@ public class MicrosoftStsOAuth2Strategy
             );
             headers.putAll(PKeyAuthChallengeHandler.getChallengeHeader(pkeyAuthChallenge));
 
+            // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendPost(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1037
+            @SuppressWarnings(WarningType.deprecation_warning)
             final HttpResponse pkeyAuthResponse = HttpRequest.sendPost(
                     authority,
                     headers,

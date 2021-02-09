@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.net;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -125,7 +126,12 @@ public final class ObjectMapper {
      */
     public static Map<String, Object> serializeObjectHashMap(final Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
-        return new Gson().fromJson(json, Map.class);
+
+        // Suppressing unchecked warnings due to casting of type Map to Map<String, Object>
+        @SuppressWarnings(WarningType.unchecked_warning)
+        Map<String, Object> objectHashMap = new Gson().fromJson(json, Map.class);
+
+        return objectHashMap;
     }
 
 

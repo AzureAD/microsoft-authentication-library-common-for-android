@@ -33,6 +33,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
@@ -57,6 +58,12 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         super(packageName, appName, BuildConfig.INSTALL_SOURCE_LOCAL_APK
                 .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
                 ? new LocalApkInstaller() : new PlayStore());
+    }
+
+    public AbstractTestBroker(@NonNull final String packageName,
+                              @NonNull final String appName,
+                              @NonNull final IAppInstaller appInstaller) {
+        super(packageName, appName, appInstaller);
     }
 
     @Override

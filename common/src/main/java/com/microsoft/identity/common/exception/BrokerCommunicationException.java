@@ -23,17 +23,62 @@
 
 package com.microsoft.identity.common.exception;
 
+import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+
+import lombok.Getter;
+
 /**
  * An exception that represents an error where MSAL cannot reach Broker (i.e. through Bind Service or AccountManager).
  */
 public class BrokerCommunicationException extends BaseException {
+    private static final long serialVersionUID = 4959278068787428329L;
+
+    public enum Category {
+        // The operation is not supported on the client (calling) side of IPC connection.
+        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE("ipc_operation_not_supported_on_client_side"),
+
+        // The operation is not supported on the server (target) side of IPC connection.
+        OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE("ipc_operation_not_supported_on_server_side"),
+
+        // IPC connection failed due to an error.
+        CONNECTION_ERROR("ipc_connection_error");
+
+        final String name;
+
+        Category(@NonNull final String name) {
+            this.name = name;
+        }
+
+        @Override
+        public @NonNull String toString(){
+            return this.name;
+        }
+    }
+
+    @Getter
+    private final Category category;
+
+    @Getter
+    private final IIpcStrategy.Type strategyType;
+
     /**
      * Initiates the {@link BrokerCommunicationException} with error message and throwable.
      *
      * @param errorMessage The error message contained in the exception.
      * @param throwable    The {@link Throwable} contains the cause for the exception.
      */
-    public BrokerCommunicationException(final String errorMessage, final Throwable throwable) {
-        super(ErrorStrings.IO_ERROR, errorMessage, throwable);
+    public BrokerCommunicationException(final Category category,
+                                        final IIpcStrategy.Type strategyType,
+                                        final String errorMessage, final Throwable throwable) {
+        super(category.toString(), errorMessage, throwable);
+        this.category = category;
+        this.strategyType = strategyType;
+    }
+
+    @Override
+    public String getMessage() {
+        return "[" + category.toString() +"] [" +  strategyType.toString() +"] :" + super.getMessage();
     }
 }

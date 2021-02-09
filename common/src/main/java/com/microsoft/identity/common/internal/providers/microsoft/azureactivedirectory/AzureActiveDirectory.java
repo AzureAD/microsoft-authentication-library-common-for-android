@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.net.HttpRequest;
@@ -180,6 +181,8 @@ public class AzureActiveDirectory
 
         Map<String, String> headers = new HashMap<>();
 
+        // Suppressing deprecation warnings due to the deprecated method HttpRequest.sendGet(). Raised issue https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/1038
+        @SuppressWarnings(WarningType.deprecation_warning)
         HttpResponse response = HttpRequest.sendGet(
                 new URL(instanceDiscoveryRequestUri.toString()),
                 headers

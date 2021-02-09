@@ -6,7 +6,8 @@ package com.microsoft.identity.client.ui.automation.constants;
 public enum DeviceAdmin {
 
     COMPANY_PORTAL("Company Portal"),
-    MICROSOFT_AUTHENTICATOR("Authenticator");
+    MICROSOFT_AUTHENTICATOR("Authenticator"),
+    BROKER_HOST("userapp");
 
     private String adminName;
 

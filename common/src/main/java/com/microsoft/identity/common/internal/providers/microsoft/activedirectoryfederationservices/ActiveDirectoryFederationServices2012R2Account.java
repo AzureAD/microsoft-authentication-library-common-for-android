@@ -26,6 +26,8 @@ import com.microsoft.identity.common.BaseAccount;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * The Active Directory Federation Services 2012 R2 Account Object
  * NOTE: Since ADFS 2012 R2 does not support OIDC there is no id token
@@ -34,6 +36,7 @@ import java.util.List;
  * OR for the caller to provide a unique identifier prior to initiating the request
  */
 @SuppressWarnings("PMD") // Suppressing PMD warning for multiple usages of the String "Method stub!"
+@EqualsAndHashCode(callSuper = true)
 public class ActiveDirectoryFederationServices2012R2Account extends BaseAccount {
 
     @Override

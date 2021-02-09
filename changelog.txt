@@ -1,3 +1,44 @@
+Version 3.0.8
+----------
+- Hardcode Teams Agent clientID/scope for FoCi call (#1140)
+- (Make changes to) persist refresh token in joined flow. (#1130)
+
+Version 3.0.7
+----------
+- Fix exception casting issue in CommandDispatcher (#1121)
+
+Version 3.0.6
+----------
+- Expose expiresIn in MSAL Device Code flow callback (#1064)
+- Removed constructor param for TokenShareUtility: MSA RefreshToken ingestion always queries WW /consumers.
+- Added support for exporting public keys in the following formats:
+    * X.509 SubjectPublicKeyInfo
+    * JWK (RFC-7517)
+- Added support for signing and verifying arbitrary String data with select RSA algorithms.
+- Added support for multiple software/hardware backed RSA keys using AsymmetricKey, AsymmetricKeyFactory.
+- Bugfix: Added a workaround for keypair generation on API < 23 devices using locales with non-Gregorian calendars. (#1075)
+- Reordered Credential writing into the cache such that the old RT is cleaned up *after* the new RT is written.
+- Fixed following Android 11 issues (#1095):
+    * Unable to query package manager for and launch browsers that support custom tabs.
+    * Unable to query package manager for and launch regular browsers that don’t support custom tabs.
+    * Unable to query package manager for Broker apps installed on the device.
+- Refactor IPC strategies
+    - [Part 1] Separate communication logic from business logic (#1088)
+    - [Part 2] Refactor Content Provider strategy (#1090)
+    - [Part 3] Refactor AccountManager Strategy[IPC part 4] test cases for IPC strategies (#1092)
+    - [Part 4] test cases for IPC strategies (#1093)
+    - [Part 5.5] make changes to support the Broker API work (#1101)
+- Make change to support Broker API's updateBrokerRT() functionality (#1107).
+- Introduce a cache for Hello() protocol (#1108)
+
+Version 3.0.4
+----------
+- Fix for duplicate_command caching bug due to Command permutation (#1055)
+
+Version 3.0.3
+----------
+- Cut down logs (#1046)
+
 Version 3.0.2
 ----------
 - Added a check for UNSET OpenIdConnectPromptParameter value (#1042)

@@ -33,6 +33,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
@@ -64,6 +65,8 @@ import java.util.Set;
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
  * work with any IDP; however ADAL only currently supports ADFS and AAD hence this class reflects that
  */
+// Suppressing rawtype warnings due to the generic type IShareSingleSignOnState
+@SuppressWarnings(WarningType.rawtype_warning)
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {

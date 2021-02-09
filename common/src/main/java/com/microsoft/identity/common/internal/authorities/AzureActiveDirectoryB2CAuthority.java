@@ -26,6 +26,7 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -84,6 +85,8 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
         return config;
     }
 
+    // Suppressing rawtype warnings due to the generic type OAuth2Strategy
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2StrategyParameters parameters)
             throws ClientException {

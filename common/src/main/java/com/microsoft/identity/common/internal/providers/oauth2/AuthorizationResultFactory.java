@@ -24,10 +24,14 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Intent;
 
+import com.microsoft.identity.common.WarningType;
+
 /**
  * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.
  */
 
+// Suppressing rawtype warnings due to the generic types AuthorizationResult and AuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AuthorizationResultFactory<
         GenericAuthorizationResult extends AuthorizationResult,
         GenericAuthorizationRequest extends AuthorizationRequest

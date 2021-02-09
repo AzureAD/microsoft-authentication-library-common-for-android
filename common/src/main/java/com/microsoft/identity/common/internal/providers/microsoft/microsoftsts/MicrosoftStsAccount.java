@@ -32,6 +32,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 
 import java.util.Map;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode
 public class MicrosoftStsAccount extends MicrosoftAccount {
 
     private static final String TAG = MicrosoftStsAccount.class.getSimpleName();

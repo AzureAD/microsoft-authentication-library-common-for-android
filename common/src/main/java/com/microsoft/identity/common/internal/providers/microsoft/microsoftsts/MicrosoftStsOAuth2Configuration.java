@@ -25,22 +25,16 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfiguration;
-import com.microsoft.identity.common.internal.providers.oauth2.OpenIdProviderConfigurationClient;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 
 public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2Configuration {
 
     private static final String TAG = MicrosoftStsOAuth2Configuration.class.getSimpleName();
 
-    private static final String ENDPOINT_VERSION = "v2.0";
     private static final String ENDPOINT_SUFFIX = "/oAuth2/v2.0";
     private static final String AUTHORIZE_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/authorize";
     private static final String TOKEN_ENDPOINT_SUFFIX = ENDPOINT_SUFFIX + "/token";
@@ -97,36 +91,5 @@ public class MicrosoftStsOAuth2Configuration extends AzureActiveDirectoryOAuth2C
         }
 
         return null;
-    }
-
-    /**
-     * Get the Open Id Provider Configuration based on the host and audience.
-     * This operation must NOT be called from the main thread.
-     * This method can return null if errors are encountered and the caller should check the result
-     * before using it.
-     *
-     * @param host     the host of authority url
-     * @param audience the audience (path) of the authority url
-     * @return OpenIdProviderConfiguration if available or null
-     */
-    @Nullable
-    OpenIdProviderConfiguration getOpenIdWellKnownConfig(@NonNull final String host, @NonNull final String audience) {
-        final String methodName = ":getOpenIdWellKnownConfig";
-        final OpenIdProviderConfigurationClient configurationClient = new OpenIdProviderConfigurationClient(
-                host,
-                audience,
-                ENDPOINT_VERSION);
-
-        OpenIdProviderConfiguration openIdConfig = null;
-
-        try {
-            openIdConfig = configurationClient.loadOpenIdProviderConfiguration();
-        } catch (ServiceException e) {
-            Logger.error(TAG + methodName,
-                    e.getMessage(),
-                    e);
-        }
-
-        return openIdConfig;
     }
 }

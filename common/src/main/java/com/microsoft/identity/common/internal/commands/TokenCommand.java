@@ -26,6 +26,7 @@ import android.content.Intent;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -39,14 +40,14 @@ public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
 
     public TokenCommand(@NonNull TokenCommandParameters parameters,
                         @NonNull BaseController controller,
-                        @NonNull CommandCallback callback,
+                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                         @NonNull String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
     public TokenCommand(@NonNull TokenCommandParameters parameters,
                         @NonNull List<BaseController> controllers,
-                        @NonNull CommandCallback callback,
+                        @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                         @NonNull String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }

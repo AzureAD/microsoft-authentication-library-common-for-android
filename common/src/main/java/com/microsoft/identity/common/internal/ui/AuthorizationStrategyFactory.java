@@ -26,6 +26,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
@@ -33,9 +34,14 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
+import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
 
+import java.util.List;
+
+// Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationStrategyFactory, EmbeddedWebViewAuthorizationStrategy and BrowserAuthorizationStrategy
+@SuppressWarnings(WarningType.rawtype_warning)
 public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends AuthorizationStrategy> {
     private static final String TAG = AuthorizationStrategyFactory.class.getSimpleName();
 
@@ -57,15 +63,12 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                 parameters.getAuthorizationAgent(),
                 context
         );
+
         boolean isBrokerRequest = (parameters instanceof BrokerInteractiveTokenCommandParameters);
 
         if (validatedAuthorizationAgent == AuthorizationAgent.WEBVIEW) {
             Logger.info(TAG, "Use webView for authorization.");
-            return (GenericAuthorizationStrategy) (
-                    new EmbeddedWebViewAuthorizationStrategy(
-                            context,
-                            parameters.getActivity(),
-                            parameters.getFragment()));
+            return getGenericAuthorizationStrategy(parameters, context);
         } else if (validatedAuthorizationAgent == AuthorizationAgent.DEFAULT) {
             // When the authorization agent is set to DEFAULT,
             // Use device browser auth flow as default.
@@ -75,11 +78,7 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
             } catch (final ClientException exception) {
                 Logger.info(TAG, "No supported browser available found. Fallback to the webView authorization agent.");
                 if (ErrorStrings.NO_AVAILABLE_BROWSER_FOUND.equalsIgnoreCase(exception.getErrorCode())) {
-                    return (GenericAuthorizationStrategy) (
-                            new EmbeddedWebViewAuthorizationStrategy(
-                                    context,
-                                    parameters.getActivity(),
-                                    parameters.getFragment()));
+                    return getGenericAuthorizationStrategy(parameters, context);
                 }
             }
             Logger.info(TAG, "Use browser for authorization.");
@@ -89,8 +88,18 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     parameters.getFragment(),
                     isBrokerRequest
             );
-            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
-            return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+
+            // Suppressing unchecked warnings due to generic type not provided for parameters
+            @SuppressWarnings(WarningType.unchecked_warning)
+            List<BrowserDescriptor > browserSafeList = parameters.getBrowserSafeList();
+
+            browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, browserSafeList);
+
+            // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
+            @SuppressWarnings(WarningType.unchecked_warning)
+            GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+
+            return genericAuthorizationStrategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
             final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
@@ -99,9 +108,31 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     parameters.getFragment(),
                     isBrokerRequest
             );
-            browserAuthorizationStrategy.setBrowserSafeList(parameters.getBrowserSafeList());
-            return (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+
+            browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, parameters.getBrowserSafeList());
+
+            // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
+            @SuppressWarnings(WarningType.unchecked_warning)
+            GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+
+            return genericAuthorizationStrategy;
         }
+    }
+
+    // Suppressing unchecked warnings due to casting browserSafeList generic type List<BrowserDescriptor> as generic type was not provided for browserAuthorizationStrategy.
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void browserAuthorizationStrategySetBrowserSafeList(BrowserAuthorizationStrategy browserAuthorizationStrategy, List<BrowserDescriptor> browserSafeList) {
+        browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+    }
+
+    // Suppressing unchecked warnings due to casting of EmbeddedWebViewAuthorizationStrategy to GenericAuthorizationStrategy
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private GenericAuthorizationStrategy getGenericAuthorizationStrategy(@NonNull InteractiveTokenCommandParameters parameters, Context context) {
+        return (GenericAuthorizationStrategy) (
+                new EmbeddedWebViewAuthorizationStrategy(
+                        context,
+                        parameters.getActivity(),
+                        parameters.getFragment()));
     }
 
     private AuthorizationAgent validAuthorizationAgent(final AuthorizationAgent agent, final Context context) {

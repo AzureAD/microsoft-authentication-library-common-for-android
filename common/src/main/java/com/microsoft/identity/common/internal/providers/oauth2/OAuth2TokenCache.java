@@ -27,6 +27,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
@@ -42,6 +43,8 @@ import java.util.Set;
 /**
  * Class for managing the tokens saved locally on a device.
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public abstract class OAuth2TokenCache
         <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
 

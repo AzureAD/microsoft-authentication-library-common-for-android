@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
@@ -34,6 +35,8 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 /**
  * Provides Adapters to the MsalOAuth2TokenCache.
  */
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
+@SuppressWarnings(WarningType.rawtype_warning)
 public interface IAccountCredentialAdapter
         <T extends OAuth2Strategy,
                 U extends AuthorizationRequest,

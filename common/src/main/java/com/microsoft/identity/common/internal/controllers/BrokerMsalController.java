@@ -22,36 +22,35 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ProviderInfo;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.RemoteException;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
+import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.internal.broker.BrokerAccountManagerStrategy;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
-import com.microsoft.identity.common.internal.broker.BrokerAuthServiceStrategy;
-import com.microsoft.identity.common.internal.broker.BrokerBaseStrategy;
-import com.microsoft.identity.common.internal.broker.BrokerContentProviderStrategy;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.broker.BrokerResultFuture;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
+import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -65,6 +64,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -74,31 +74,151 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import lombok.EqualsAndHashCode;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_DEVICE_MODE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
+import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
+
 /**
- * The implementation of MSAL Controller for Broker
+ * The implementation of MSAL Controller for Broker.
  */
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public class BrokerMsalController extends BaseController {
 
     private static final String TAG = BrokerMsalController.class.getSimpleName();
 
+    protected final MsalBrokerRequestAdapter mRequestAdapter = new MsalBrokerRequestAdapter();
+    protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
+
     private BrokerResultFuture mBrokerResultFuture;
-    private Context mApplicationContext;
+    private final Context mApplicationContext;
+    private final String mActiveBrokerPackageName;
+    private final BrokerOperationExecutor mBrokerOperationExecutor;
+    private final HelloCache mHelloCache;
 
     public BrokerMsalController(final Context applicationContext) {
         mApplicationContext = applicationContext;
+        mActiveBrokerPackageName = getActiveBrokerPackageName();
+        if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
+            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
+        }
+
+        mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
+        mHelloCache = getHelloCache();
     }
 
+    @VisibleForTesting
+    public HelloCache getHelloCache() {
+        return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName);
+    }
+
+    @VisibleForTesting
+    public String getActiveBrokerPackageName() {
+        return new BrokerValidator(mApplicationContext).getCurrentActiveBrokerPackageName();
+    }
+
+    /**
+     * Gets a list of communication strategies.
+     * Order of objects in the list will reflects the order of strategies that will be used.
+     */
+    private static @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+                                                                final String activeBrokerPackageName) {
+        final List<IIpcStrategy> strategies = new ArrayList<>();
+        final StringBuilder sb = new StringBuilder(100);
+        sb.append("Broker Strategies added : ");
+
+        final ContentProviderStrategy contentProviderStrategy = new ContentProviderStrategy(applicationContext);
+        if (contentProviderStrategy.isBrokerContentProviderAvailable(activeBrokerPackageName)) {
+            sb.append("ContentProviderStrategy, ");
+            strategies.add(contentProviderStrategy);
+        }
+
+        final MicrosoftAuthClient client = new MicrosoftAuthClient(applicationContext);
+        if (client.isBoundServiceSupported(activeBrokerPackageName)) {
+            sb.append("BoundServiceStrategy, ");
+            strategies.add(new BoundServiceStrategy<>(client));
+        }
+
+        if (AccountManagerUtil.canUseAccountManagerOperation(applicationContext)) {
+            sb.append("AccountManagerStrategy.");
+            strategies.add(new AccountManagerAddAccountStrategy(applicationContext));
+        }
+
+        Logger.info(TAG, sb.toString());
+
+        return strategies;
+    }
+
+    /**
+     * MSAL-Broker handshake operation.
+     *
+     * @param strategy   an {@link IIpcStrategy}
+     * @param parameters a {@link CommandParameters}
+     * @return a protocol version negotiated by MSAL and Broker.
+     */
+    @VisibleForTesting
+    public @NonNull String hello(final @NonNull IIpcStrategy strategy,
+                                 final @NonNull CommandParameters parameters) throws BaseException {
+
+        final Bundle bundle = mRequestAdapter.getRequestBundleForHello(parameters);
+        final String minimumProtocolVersion = bundle.getString(CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY);
+        final String maximumProtocolVersion = bundle.getString(CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY);
+
+        // This should be part of the bundle.
+        // If we're hitting this, it means that the hello protocol changed. see getRequestBundleForHello().
+        if (StringUtil.isEmpty(maximumProtocolVersion)){
+            throw new ClientException(ClientException.MISSING_PARAMETER,
+                    "maximum protocol version should never be null or empty");
+        }
+
+        final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
+                minimumProtocolVersion,
+                maximumProtocolVersion);
+
+        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
+            return cachedProtocolVersion;
+        }
+
+        final BrokerOperationBundle helloBundle = new BrokerOperationBundle(
+                BrokerOperationBundle.Operation.MSAL_HELLO,
+                mActiveBrokerPackageName,
+                mRequestAdapter.getRequestBundleForHello(parameters));
+
+        final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
+                strategy.communicateToBroker(helloBundle)
+        );
+
+        mHelloCache.saveNegotiatedProtocolVersion(
+                minimumProtocolVersion,
+                maximumProtocolVersion,
+                negotiatedProtocolVersion);
+
+        return negotiatedProtocolVersion;
+    }
+
+    /**
+     * Performs interactive acquire token with Broker.
+     *
+     * @param parameters a {@link InteractiveTokenCommandParameters}
+     * @return an {@link AcquireTokenResult}.
+     */
     @Override
-    public AcquireTokenResult acquireToken(InteractiveTokenCommandParameters parameters) throws Exception {
+    public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
+            throws BaseException, InterruptedException {
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
@@ -120,7 +240,6 @@ public class BrokerMsalController extends BaseController {
         mBrokerResultFuture = new BrokerResultFuture();
 
         //Start the BrokerActivity
-        // TODO add fragment support to AccountChooserActivity.
         parameters.getActivity().startActivity(brokerActivityIntent);
 
         //Wait to be notified of the result being returned... we could add a timeout here if we want to
@@ -156,189 +275,10 @@ public class BrokerMsalController extends BaseController {
     }
 
     /**
-     * Info of a broker operation to be performed with available strategies.
-     */
-    private interface BrokerOperationInfo<T extends CommandParameters, U> {
-        /**
-         * Performs this broker operation in this method with the given IMicrosoftAuthService.
-         */
-        @Nullable
-        U perform(BrokerBaseStrategy strategy, T parameters, String negotiatedBrokerProtocolVersion) throws Exception;
-
-        /**
-         * Name of the task (for logging purposes).
-         */
-        String getMethodName();
-
-        /**
-         * ID of the telemetry API event associated to this strategy task.
-         * If this value returns null, no telemetry event will be emitted.
-         */
-        @Nullable
-        String getTelemetryApiId();
-
-        /**
-         * A method that will be invoked before the success event is emitted.
-         * If the calling operation wants to put any value in the success event, put it here.
-         */
-        void putValueInSuccessEvent(ApiEndEvent event, U result);
-    }
-
-    /**
-     * A generic method that would initialize and iterate through available strategies.
-     * It will return a result immediately if any of the strategy succeeds, or throw an exception if all of the strategies fails.
-     */
-    private <T extends CommandParameters, U> U invokeBrokerOperation(@NonNull final T parameters,
-                                                                     @NonNull final BrokerOperationInfo<T, U> strategyTask)
-            throws Exception {
-
-        if (strategyTask.getTelemetryApiId() != null) {
-            Telemetry.emit(
-                    new ApiStartEvent()
-                            .putProperties(parameters)
-                            .putApiId(strategyTask.getTelemetryApiId())
-            );
-        }
-
-        final List<BrokerBaseStrategy> strategies = getStrategies();
-
-        U result = null;
-        Exception lastCaughtException = null;
-        for (int ii = 0; ii < strategies.size(); ii++) {
-            final BrokerBaseStrategy strategy = strategies.get(ii);
-            try {
-                com.microsoft.identity.common.internal.logging.Logger.info(
-                        TAG + strategyTask.getMethodName(),
-                        "Executing with broker strategy: "
-                                + strategy.getClass().getSimpleName()
-                );
-
-                final String negotiatedBrokerProtocolVersion = strategy.hello(parameters);
-                result = strategyTask.perform(strategy, parameters, negotiatedBrokerProtocolVersion);
-                if (result != null) {
-                    break;
-                }
-            } catch (final BrokerCommunicationException communicationException) {
-                // These are known MSAL-Broker communication exception. Continue.
-                lastCaughtException = communicationException;
-            } catch (final BaseException exception) {
-                // MSAL is aware of these exceptions. throw.
-                if (strategyTask.getTelemetryApiId() != null) {
-                    Telemetry.emit(
-                            new ApiEndEvent()
-                                    .putException(exception)
-                                    .putApiId(strategyTask.getTelemetryApiId())
-                    );
-                }
-                throw exception;
-            } catch (final Exception exception) {
-                // We know for a fact that in some OEM, bind service might throw a runtime exception.
-                // Given that the type of exception here could be unpredictable,
-                // it is better to catch 'every' exception so that we could try the next strategy - which could work.
-                lastCaughtException = exception;
-            }
-        }
-
-        // This means that we've tried every strategies...
-        if (result == null) {
-            final ClientException exception = new ClientException(
-                    ErrorStrings.BROKER_BIND_SERVICE_FAILED,
-                    "Unable to connect to the broker",
-                    lastCaughtException);
-
-            if (strategyTask.getTelemetryApiId() != null) {
-                Telemetry.emit(
-                        new ApiEndEvent()
-                                .putException(exception)
-                                .putApiId(strategyTask.getTelemetryApiId())
-                );
-            }
-
-            throw exception;
-        }
-
-        if (strategyTask.getTelemetryApiId() != null) {
-            final ApiEndEvent successEvent = new ApiEndEvent()
-                    .putApiId(strategyTask.getTelemetryApiId())
-                    .isApiCallSuccessful(Boolean.TRUE);
-            strategyTask.putValueInSuccessEvent(successEvent, result);
-            Telemetry.emit(successEvent);
-        }
-
-        return result;
-    }
-
-
-    // The order matters.
-    private List<BrokerBaseStrategy> getStrategies() {
-        final List<BrokerBaseStrategy> strategies = new ArrayList<>();
-        final StringBuilder sb = new StringBuilder(100);
-        sb.append("Broker Strategies added : ");
-
-        if (isBrokerContentProviderAvailable()) {
-            sb.append("ContentProviderStrategy, ");
-            strategies.add(new BrokerContentProviderStrategy());
-        }
-
-        if (isMicrosoftAuthServiceSupported()) {
-            sb.append("AuthServiceStrategy, ");
-            strategies.add(new BrokerAuthServiceStrategy());
-        }
-
-        if (AccountManagerUtil.canUseAccountManagerOperation(mApplicationContext)) {
-            sb.append("AccountManagerStrategy.");
-            strategies.add(new BrokerAccountManagerStrategy());
-        }
-
-        Logger.info(TAG, sb.toString());
-
-        return strategies;
-    }
-
-    /**
-     * Get the intent for the broker interactive request
-     *
-     * @param parameters
-     * @return
-     */
-    private Intent getBrokerAuthorizationIntent(@NonNull final InteractiveTokenCommandParameters parameters) throws Exception {
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<InteractiveTokenCommandParameters, Intent>() {
-                    @Nullable
-                    @Override
-                    public Intent perform(@NonNull BrokerBaseStrategy strategy,
-                                          @NonNull InteractiveTokenCommandParameters parameters,
-                                          @Nullable String negotiatedBrokerProtocolVersion)
-                            throws BaseException, InterruptedException, ExecutionException, RemoteException {
-                        return strategy.getBrokerAuthorizationIntent(parameters, negotiatedBrokerProtocolVersion);
-                    }
-
-                    @Override
-                    public String getMethodName() {
-                        return ":getBrokerAuthorizationIntent";
-                    }
-
-                    @Nullable
-                    @Override
-                    public String getTelemetryApiId() {
-                        return null;
-                    }
-
-                    @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, Intent result) {
-                    }
-                });
-    }
-
-    /**
      * Get the response from the Broker captured by BrokerActivity.
      * BrokerActivity will pass along the response to the broker controller
      * The Broker controller will map th response into the broker result
      * And signal the future with the broker result to unblock the request.
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param data
      */
     @Override
     public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
@@ -357,137 +297,287 @@ public class BrokerMsalController extends BaseController {
         );
     }
 
-    @Override
-    public AcquireTokenResult acquireTokenSilent(SilentTokenCommandParameters parameters) throws Exception {
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<SilentTokenCommandParameters, AcquireTokenResult>() {
-                    @Nullable
+    /**
+     * Get the intent for the broker interactive request
+     *
+     * @param parameters a {@link InteractiveTokenCommandParameters}
+     * @return an {@link Intent} for initiating Broker interactive activity.
+     */
+    private @NonNull Intent getBrokerAuthorizationIntent(
+            final @NonNull InteractiveTokenCommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<Intent>() {
+                    private String negotiatedBrokerProtocolVersion;
+
                     @Override
-                    public AcquireTokenResult perform(@NonNull BrokerBaseStrategy strategy,
-                                                      @NonNull SilentTokenCommandParameters parameters,
-                                                      @Nullable String negotiatedBrokerProtocolVersion) throws BaseException, InterruptedException, ExecutionException, RemoteException {
-                        return strategy.acquireTokenSilent(parameters, negotiatedBrokerProtocolVersion);
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
                     }
 
                     @Override
-                    public String getMethodName() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST,
+                                mActiveBrokerPackageName,
+                                null);
+                    }
+
+                    @Override
+                    public @NonNull Intent extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+
+                        final Intent intent = mResultAdapter.getIntentForInteractiveRequestFromResultBundle(resultBundle);
+                        intent.putExtras(
+                                mRequestAdapter.getRequestBundleForAcquireTokenInteractive(parameters, negotiatedBrokerProtocolVersion)
+                        );
+                        return intent;
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":getBrokerAuthorizationIntent";
+                    }
+
+                    @Override
+                    public @Nullable
+                    String getTelemetryApiId() {
+                        return null;
+                    }
+
+                    @Override
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Intent result) {
+                    }
+                });
+    }
+
+    /**
+     * Performs acquire token silent with Broker.
+     *
+     * @param parameters a {@link SilentTokenCommandParameters}
+     * @return an {@link AcquireTokenResult}.
+     */
+    @Override
+    public @NonNull AcquireTokenResult acquireTokenSilent(final @NonNull SilentTokenCommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<AcquireTokenResult>() {
+                    private String negotiatedBrokerProtocolVersion;
+
+                    @Override
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                    }
+
+                    @Override
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_SILENT,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForAcquireTokenSilent(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                ));
+                    }
+
+                    @Override
+                    public @NonNull AcquireTokenResult extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getAcquireTokenResultFromResultBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
                         return ":acquireTokenSilent";
                     }
 
-                    @Nullable
                     @Override
-                    public String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_ACQUIRE_TOKEN_SILENT;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, AcquireTokenResult result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull AcquireTokenResult result) {
                         event.putResult(result);
                     }
                 });
     }
 
     /**
-     * Returns list of accounts that has previously been used to acquire token with broker through the calling app.
+     * Returns account(s) that has previously been used to acquire token with broker through the calling app.
      * This only works when getBrokerAccountMode() is BROKER_ACCOUNT_MODE_MULTIPLE_ACCOUNT.
-     * <p>
-     * This method might be called on an UI thread, since we connect to broker,
-     * this needs to be called on background thread.
+     *
+     * @param parameters a {@link CommandParameters}
+     * @return a list of {@link ICacheRecord}.
      */
     @Override
-    public List<ICacheRecord> getAccounts(@NonNull final CommandParameters parameters) throws Exception {
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<CommandParameters, List<ICacheRecord>>() {
-                    @Nullable
+    public @NonNull List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<List<ICacheRecord>>() {
+                    private String negotiatedBrokerProtocolVersion;
+
                     @Override
-                    public List<ICacheRecord> perform(@NonNull BrokerBaseStrategy strategy,
-                                                      @NonNull CommandParameters parameters,
-                                                      @Nullable String negotiatedBrokerProtocolVersion) throws RemoteException, InterruptedException, ExecutionException, AuthenticatorException, IOException, OperationCanceledException, BaseException {
-                        return strategy.getBrokerAccounts(parameters, negotiatedBrokerProtocolVersion);
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
                     }
 
                     @Override
-                    public String getMethodName() {
-                        return ":getBrokerAccounts";
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_GET_ACCOUNTS,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForGetAccounts(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                ));
                     }
 
-                    @Nullable
                     @Override
-                    public String getTelemetryApiId() {
+                    public @NonNull List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getAccountsFromResultBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
+                        return ":getAccounts";
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_GET_ACCOUNTS;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, List<ICacheRecord> result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull List<ICacheRecord> result) {
                         event.put(TelemetryEventStrings.Key.ACCOUNTS_NUMBER, Integer.toString(result.size()));
                     }
                 });
     }
 
+    /**
+     * Remove a given account from broker.
+     *
+     * @param parameters a {@link RemoveAccountCommandParameters}
+     * @return true if the account is successfully removed.
+     */
     @Override
-    @WorkerThread
-    public boolean removeAccount(@NonNull final RemoveAccountCommandParameters parameters) throws Exception {
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<RemoveAccountCommandParameters, Boolean>() {
-                    @Nullable
+    public boolean removeAccount(final @NonNull RemoveAccountCommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<Boolean>() {
+                    private String negotiatedBrokerProtocolVersion;
+
                     @Override
-                    public Boolean perform(@NonNull BrokerBaseStrategy strategy,
-                                           @NonNull RemoveAccountCommandParameters parameters,
-                                           @Nullable String negotiatedBrokerProtocolVersion) throws InterruptedException, ExecutionException, BaseException, RemoteException {
-                        strategy.removeBrokerAccount(parameters, negotiatedBrokerProtocolVersion);
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                    }
+
+                    @Override
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_REMOVE_ACCOUNT,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForRemoveAccount(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                ));
+                    }
+
+                    @Override
+                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         return true;
                     }
 
                     @Override
-                    public String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return ":removeAccount";
                     }
 
-                    @Nullable
                     @Override
-                    public String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_REMOVE_ACCOUNT;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, Boolean result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
                     }
                 });
     }
 
+    /**
+     * Get device mode from broker.
+     *
+     * @param parameters a {@link CommandParameters}
+     * @return true if the device is in as shared mode. False otherwise.
+     */
     @Override
-    @WorkerThread
-    public boolean getDeviceMode(@NonNull final CommandParameters parameters) throws Exception {
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<CommandParameters, Boolean>() {
-                    @Nullable
+    public boolean getDeviceMode(final @NonNull CommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<Boolean>() {
                     @Override
-                    public Boolean perform(@NonNull BrokerBaseStrategy strategy,
-                                           @NonNull CommandParameters parameters,
-                                           @Nullable String negotiatedBrokerProtocolVersion) throws Exception {
-                        return strategy.getDeviceMode(parameters, negotiatedBrokerProtocolVersion);
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) {
                     }
 
                     @Override
-                    public String getMethodName() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_GET_DEVICE_MODE,
+                                mActiveBrokerPackageName,
+                                null);
+                    }
+
+                    @Override
+                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getDeviceModeFromResultBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
                         return ":getDeviceMode";
                     }
 
-                    @Nullable
                     @Override
-                    public String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.GET_BROKER_DEVICE_MODE;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, Boolean result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
                         event.put(TelemetryEventStrings.Key.IS_DEVICE_SHARED, Boolean.toString(result));
                     }
                 });
     }
 
+    /**
+     * If the device is in shared mode, returns the account that is currently signed into the device.
+     * Otherwise, this will be the same as getAccounts().
+     *
+     * @param parameters a {@link CommandParameters}
+     * @return a list of {@link ICacheRecord}.
+     */
     @Override
-    public List<ICacheRecord> getCurrentAccount(CommandParameters parameters) throws Exception {
+    public @NonNull List<ICacheRecord> getCurrentAccount(final @NonNull CommandParameters parameters) throws BaseException {
         final String methodName = ":getCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
@@ -495,36 +585,63 @@ public class BrokerMsalController extends BaseController {
             return getAccounts(parameters);
         }
 
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<CommandParameters, List<ICacheRecord>>() {
-                    @Nullable
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<List<ICacheRecord>>() {
+                    private String negotiatedBrokerProtocolVersion;
+
                     @Override
-                    public List<ICacheRecord> perform(@NonNull BrokerBaseStrategy strategy,
-                                                      @NonNull CommandParameters parameters,
-                                                      @Nullable String negotiatedBrokerProtocolVersion) throws Exception {
-                        return strategy.getCurrentAccountInSharedDevice(parameters, negotiatedBrokerProtocolVersion);
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
                     }
 
                     @Override
-                    public String getMethodName() {
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForGetAccounts(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                ));
+                    }
+
+                    @Override
+                    public @NonNull List<ICacheRecord> extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        if (resultBundle == null) {
+                            throw mResultAdapter.getExceptionForEmptyResultBundle();
+                        }
+                        return mResultAdapter.getAccountsFromResultBundle(resultBundle);
+                    }
+
+                    @Override
+                    public @NonNull
+                    String getMethodName() {
                         return methodName;
                     }
 
-                    @Nullable
                     @Override
-                    public String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_GET_CURRENT_ACCOUNT;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, List<ICacheRecord> result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull List<ICacheRecord> result) {
                         event.put(TelemetryEventStrings.Key.ACCOUNTS_NUMBER, Integer.toString(result.size()));
                     }
                 });
     }
 
+    /**
+     * If the device is in shared mode, remove the account that is currently signed into the device.
+     * Otherwise, this will be the same as removeAccount().
+     *
+     * @param parameters a {@link RemoveAccountCommandParameters}
+     * @return a list of {@link ICacheRecord}.
+     */
     @Override
-    public boolean removeCurrentAccount(RemoveAccountCommandParameters parameters) throws Exception {
+    public boolean removeCurrentAccount(final @NonNull RemoveAccountCommandParameters parameters) throws BaseException {
         final String methodName = ":removeCurrentAccount";
 
         if (!parameters.isSharedDevice()) {
@@ -532,7 +649,7 @@ public class BrokerMsalController extends BaseController {
             return removeAccount(parameters);
         }
 
-        /**
+        /*
          * Given an account, perform a global sign-out from this shared device (End my shift capability).
          * This will invoke Broker and
          * 1. Remove account from token cache.
@@ -542,32 +659,48 @@ public class BrokerMsalController extends BaseController {
          * If everything succeeds on the broker side, it will then
          * 4. Sign out from default browser.
          */
-        return invokeBrokerOperation(parameters,
-                new BrokerOperationInfo<RemoveAccountCommandParameters, Boolean>() {
-                    @Nullable
+        return mBrokerOperationExecutor.execute(parameters,
+                new BrokerOperation<Boolean>() {
+                    private String negotiatedBrokerProtocolVersion;
+
                     @Override
-                    public Boolean perform(@NonNull BrokerBaseStrategy strategy,
-                                           @NonNull RemoveAccountCommandParameters parameters,
-                                           @Nullable String negotiatedBrokerProtocolVersion)
-                            throws InterruptedException, ExecutionException, BaseException, RemoteException {
-                        strategy.signOutFromSharedDevice(parameters, negotiatedBrokerProtocolVersion);
+                    public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                    }
+
+                    @Override
+                    public @NonNull
+                    BrokerOperationBundle getBundle() {
+                        return new BrokerOperationBundle(
+                                MSAL_SIGN_OUT_FROM_SHARED_DEVICE,
+                                mActiveBrokerPackageName,
+                                mRequestAdapter.getRequestBundleForRemoveAccountFromSharedDevice(
+                                        parameters,
+                                        negotiatedBrokerProtocolVersion
+                                ));
+                    }
+
+                    @Override
+                    public @NonNull Boolean extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException {
+                        mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
                         logOutFromBrowser(mApplicationContext, parameters);
                         return true;
                     }
 
                     @Override
-                    public String getMethodName() {
+                    public @NonNull
+                    String getMethodName() {
                         return methodName;
                     }
 
-                    @Nullable
                     @Override
-                    public String getTelemetryApiId() {
+                    public @NonNull
+                    String getTelemetryApiId() {
                         return TelemetryEventStrings.Api.BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE;
                     }
 
                     @Override
-                    public void putValueInSuccessEvent(ApiEndEvent event, Boolean result) {
+                    public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
                     }
                 });
     }
@@ -578,10 +711,10 @@ public class BrokerMsalController extends BaseController {
      * (Alternatively, we could pass the optional sessionID as one of the query string parameter, but we're not storing that at the moment).
      *
      * @param context    {@link Context} application context.
-     * @param parameters {@link RemoveAccountCommandParameters} parameters of the remove command call.
+     * @param parameters a {@link RemoveAccountCommandParameters}.
      */
-    private void logOutFromBrowser(@NonNull final Context context,
-                                   @NonNull final RemoveAccountCommandParameters parameters) {
+    private void logOutFromBrowser(final @NonNull Context context,
+                                   final @NonNull RemoveAccountCommandParameters parameters) {
         final String methodName = ":logOutFromBrowser";
 
         String browserPackageName = null;
@@ -608,32 +741,35 @@ public class BrokerMsalController extends BaseController {
         }
     }
 
+    // Suppressing rawtype warnings due to the generic type AuthorizationResult
+    @SuppressWarnings(WarningType.rawtype_warning)
     @Override
     public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws ClientException {
         throw new ClientException("deviceCodeFlowAuthRequest() not supported in BrokerMsalController");
     }
 
     @Override
-    public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
+    public AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters commandParameters) throws ClientException {
         throw new ClientException("acquireDeviceCodeFlowToken() not supported in BrokerMsalController");
     }
 
     /**
      * Checks if the account returns is a MSA Account and sets single on state in cache
-     *
-     * @param resultBundle
-     * @param msalOAuth2TokenCache
      */
-    private void saveMsaAccountToCache(@NonNull final Bundle resultBundle,
-                                       @NonNull final MsalOAuth2TokenCache msalOAuth2TokenCache) throws ClientException {
+    private void saveMsaAccountToCache(final @NonNull Bundle resultBundle,
+                                       @SuppressWarnings(WarningType.rawtype_warning) final @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache) throws BaseException {
         final String methodName = ":saveMsaAccountToCache";
 
         final BrokerResult brokerResult = new MsalBrokerResultAdapter().brokerResultFromBundle(resultBundle);
 
-        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS)
-                && brokerResult != null &&
+        if (resultBundle.getBoolean(AuthenticationConstants.Broker.BROKER_REQUEST_V2_SUCCESS) &&
                 AzureActiveDirectoryAudience.MSA_MEGA_TENANT_ID.equalsIgnoreCase(brokerResult.getTenantId())) {
             Logger.info(TAG + methodName, "Result returned for MSA Account, saving to cache");
+
+            if (StringUtil.isEmpty(brokerResult.getClientInfo())) {
+                Logger.error(TAG + methodName, "ClientInfo is empty.", null);
+                throw new ClientException(ErrorStrings.UNKNOWN_ERROR, "ClientInfo is empty.");
+            }
 
             try {
                 final ClientInfo clientInfo = new ClientInfo(brokerResult.getClientInfo());
@@ -652,7 +788,7 @@ public class BrokerMsalController extends BaseController {
                         brokerResult.getFamilyId()
                 );
 
-                msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
+                msalOAuth2TokenCacheSetSingleSignOnState(msalOAuth2TokenCache, microsoftStsAccount, microsoftRefreshToken);
             } catch (ServiceException e) {
                 Logger.errorPII(TAG + methodName, "Exception while creating Idtoken or ClientInfo," +
                         " cannot save MSA account tokens", e
@@ -663,27 +799,9 @@ public class BrokerMsalController extends BaseController {
 
     }
 
-    private boolean isMicrosoftAuthServiceSupported() {
-        final MicrosoftAuthClient client = new MicrosoftAuthClient(mApplicationContext);
-        final Intent microsoftAuthServiceIntent = client.getIntentForAuthService(mApplicationContext);
-        return null != microsoftAuthServiceIntent;
-    }
-
-    private boolean isBrokerContentProviderAvailable() {
-        final String activeBrokerPackageName = new BrokerValidator(mApplicationContext)
-                .getCurrentActiveBrokerPackageName();
-        final String brokerContentProviderAuthority = activeBrokerPackageName + "." +
-                AuthenticationConstants.BrokerContentProvider.AUTHORITY;
-
-        final List<ProviderInfo> providers = mApplicationContext.getPackageManager()
-                .queryContentProviders(null, 0, 0);
-
-        for (final ProviderInfo providerInfo : providers) {
-            if (providerInfo.authority != null && providerInfo.authority.equals(brokerContentProviderAuthority)) {
-                return true;
-            }
-        }
-        return false;
-
+    // Suppressing unchecked warnings due to casting of MicrosoftStsAccount to GenericAccount and MicrosoftRefreshToken to GenericRefreshToken in the call to setSingleSignOnState method
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private void msalOAuth2TokenCacheSetSingleSignOnState(@SuppressWarnings(WarningType.rawtype_warning) @NonNull MsalOAuth2TokenCache msalOAuth2TokenCache, MicrosoftStsAccount microsoftStsAccount, MicrosoftRefreshToken microsoftRefreshToken) throws ClientException {
+        msalOAuth2TokenCache.setSingleSignOnState(microsoftStsAccount, microsoftRefreshToken);
     }
 }

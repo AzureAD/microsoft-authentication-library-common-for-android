@@ -30,6 +30,12 @@ import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
+import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
+import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
+import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -115,5 +121,13 @@ public class CommonUtils {
         }
 
         return false;
+    }
+
+    public static List<ITestBroker> getAllPossibleTestBrokers() {
+        final List<ITestBroker> brokerList = new ArrayList<>();
+        brokerList.add(new BrokerCompanyPortal());
+        brokerList.add(new BrokerMicrosoftAuthenticator());
+        brokerList.add(new BrokerHost());
+        return brokerList;
     }
 }

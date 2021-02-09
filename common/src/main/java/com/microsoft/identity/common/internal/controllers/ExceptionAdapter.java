@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -48,6 +49,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public class ExceptionAdapter {
 
@@ -56,6 +58,8 @@ public class ExceptionAdapter {
     @Nullable
     public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
         final String methodName = ":exceptionFromAcquireTokenResult";
+
+        @SuppressWarnings(WarningType.rawtype_warning)
         final AuthorizationResult authorizationResult = result.getAuthorizationResult();
 
         if (null != authorizationResult) {
@@ -236,7 +240,12 @@ public class ExceptionAdapter {
         return null;
     }
 
-    public static BaseException baseExceptionFromException(final Exception e) {
+    public static BaseException baseExceptionFromException(final Throwable exception) {
+        Throwable e = exception;
+        if (exception instanceof ExecutionException){
+            e = exception.getCause();
+        }
+
         if (e instanceof IOException) {
             return new ClientException(
                     ClientException.IO_ERROR,

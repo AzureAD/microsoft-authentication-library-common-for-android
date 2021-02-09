@@ -39,16 +39,16 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
 
-    private String callerPackageName;
-    private int callerUid;
-    private String callerAppVersion;
-    private String brokerVersion;
+    private final String callerPackageName;
+    private final int callerUid;
+    private final String callerAppVersion;
+    private final String brokerVersion;
 
-    private boolean shouldResolveInterrupt;
-    private BrokerRequestType requestType;
-    private String negotiatedBrokerProtocolVersion;
+    private final boolean shouldResolveInterrupt;
+    private final BrokerRequestType requestType;
+    private final String negotiatedBrokerProtocolVersion;
 
-    private String enrollmentId;
+    private final String enrollmentId;
 
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.
@@ -105,7 +105,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
                 );
             }
-            if (SdkType.MSAL == getSdkType() &&
+            if (getSdkType().isCapableOfMSA() &&
                     !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
