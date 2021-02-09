@@ -1849,8 +1849,36 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
         assertEquals(additionalValue, refreshToken.getAdditionalFields().get(additionalKey).getAsString());
     }
 
+    @Test
     public void persistAndRestoreExtraClaimsIdToken() {
-        // TODO
+        final IdTokenRecord idToken = new IdTokenRecord();
+        idToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        idToken.setEnvironment(ENVIRONMENT);
+        idToken.setRealm(REALM);
+        idToken.setCredentialType(CredentialType.IdToken.name());
+        idToken.setClientId(CLIENT_ID);
+        idToken.setSecret(SECRET);
+
+        // Create and set some additional field data...
+        final String additionalKey = "extra-prop-1";
+        final String additionalValue = "extra-value-1";
+        final JsonElement additionalValueElement = new JsonPrimitive(additionalValue);
+
+        final Map<String, JsonElement> additionalFields = new HashMap<>();
+        additionalFields.put(additionalKey, additionalValueElement);
+
+        idToken.setAdditionalFields(additionalFields);
+
+        // Save the Credential
+        mSharedPreferencesAccountCredentialCache.saveCredential(idToken);
+
+        // Synthesize a cache key for it
+        final String credentialCacheKey = mDelegate.generateCacheKey(idToken);
+
+        // Resurrect the Credential
+        final Credential restoredIdToken = mSharedPreferencesAccountCredentialCache.getCredential(credentialCacheKey);
+        assertTrue(idToken.equals(restoredIdToken));
+        assertEquals(additionalValue, idToken.getAdditionalFields().get(additionalKey).getAsString());
     }
 
 }
