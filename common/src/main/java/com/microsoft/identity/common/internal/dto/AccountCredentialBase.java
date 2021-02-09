@@ -66,7 +66,7 @@ public abstract class AccountCredentialBase {
         }
 
         if (null != other.getAdditionalFields()) {
-            for (Map.Entry<String, JsonElement> entry : other.getAdditionalFields().entrySet()) {
+            for (final Map.Entry<String, JsonElement> entry : other.getAdditionalFields().entrySet()) {
                 // Only add elements not present in the existing collection, so that old data
                 // does not overwrite new data...
                 if (mAdditionalFields.containsKey(entry.getKey())) {
