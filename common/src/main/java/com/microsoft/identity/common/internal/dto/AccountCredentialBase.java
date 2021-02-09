@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.JsonElement;
 
 import java.util.HashMap;
@@ -50,6 +52,21 @@ public abstract class AccountCredentialBase {
      */
     public void setAdditionalFields(Map<String, JsonElement> additionalFields) {
         mAdditionalFields = additionalFields;
+    }
+
+    /**
+     * Adds the additionalFields of the input AccountCredentialBase to this instance.
+     *
+     * @param other The input AccountCredentialBase to merge with this instance.
+     */
+    public void mergeAdditionalFields(@NonNull final AccountCredentialBase other) {
+        if (null == mAdditionalFields) {
+            mAdditionalFields = new HashMap<>();
+        }
+
+        if (null != other.getAdditionalFields()) {
+            mAdditionalFields.putAll(other.getAdditionalFields());
+        }
     }
 
     //CHECKSTYLE:OFF
