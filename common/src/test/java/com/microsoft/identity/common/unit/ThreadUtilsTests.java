@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class ThreadUtilsTests {
     @Test
     public void basicPoolTest() throws Exception {
-        ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
         final Future<String> result = s.submit(new Callable<String>() {
             @Override
             public String call() {
