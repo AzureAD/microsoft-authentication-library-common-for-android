@@ -223,13 +223,25 @@ public final class StringUtil {
     }
 
     /**
-     * Utility to null-safe-compare string in a case-insensitive manner, trimming the second input.
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming the second input.
      *
      * @param one The first string to compare.
      * @param two The second string to compare.
-     * @return
+     * @return true if the inputs are equal, false otherwise.
      */
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
+    }
+
+    /**
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming both inputs.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return true if the inputs are equal, false otherwise.
+     */
+    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
+                                                   @Nullable final String two) {
+        return equalsIgnoreCaseTrim(null != one ? one.trim() : one, two);
     }
 }
