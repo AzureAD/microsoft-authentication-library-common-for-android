@@ -41,7 +41,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
-import static com.microsoft.identity.common.internal.util.StringUtil.equalsIgnoreCaseTrim;
+import static com.microsoft.identity.common.internal.util.StringUtil.equalsIgnoreCaseTrimBoth;
 
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
@@ -98,15 +98,15 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = equalsIgnoreCaseTrim(homeAccountId, account.getHomeAccountId());
+                matches = equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && equalsIgnoreCaseTrim(environment, account.getEnvironment());
+                matches = matches && equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
             }
 
             if (mustMatchOnRealm) {
-                matches = matches && equalsIgnoreCaseTrim(realm, account.getRealm());
+                matches = matches && equalsIgnoreCaseTrimBoth(realm, account.getRealm());
             }
 
             if (matches) {
@@ -165,29 +165,29 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = equalsIgnoreCaseTrim(homeAccountId, credential.getHomeAccountId());
+                matches = equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && equalsIgnoreCaseTrim(environment, credential.getEnvironment());
+                matches = matches && equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment());
             }
 
             if (mustMatchOnCredentialType) {
-                matches = matches && equalsIgnoreCaseTrim(credentialType.name(), credential.getCredentialType());
+                matches = matches && equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
             }
 
             if (mustMatchOnClientId) {
-                matches = matches && equalsIgnoreCaseTrim(clientId, credential.getClientId());
+                matches = matches && equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && equalsIgnoreCaseTrim(realm, accessToken.getRealm());
+                matches = matches && equalsIgnoreCaseTrimBoth(realm, accessToken.getRealm());
             }
 
             if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
                 final IdTokenRecord idToken = (IdTokenRecord) credential;
-                matches = matches && equalsIgnoreCaseTrim(realm, idToken.getRealm());
+                matches = matches && equalsIgnoreCaseTrimBoth(realm, idToken.getRealm());
             }
 
             if (mustMatchOnTarget) {
@@ -216,7 +216,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnRequestedClaims) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && equalsIgnoreCaseTrim(requestedClaims, accessToken.getRequestedClaims());
+                    matches = matches && equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
                 } else {
                     Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
                 }
