@@ -4,6 +4,7 @@ V.Next
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
 - [MINOR] Adds support for cache property merging (#1224)
 - [PATCH] Trim() Cache Lookup Input Parameters (#1228)
+- [MINOR] Adds workaround for Mockito.openMocks() desugaring issue (#1229)
 
 Version 3.1.0
 ----------
