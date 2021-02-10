@@ -61,7 +61,7 @@ public class ThreadUtils {
     }
 
     /**
-     * Construct a thread pool with specified name and bounded size.
+     * Construct a thread pool with specified name and optionally bounded size.
      * @param corePool The smallest number of threads to keep alive in the pool.
      * @param maxPool The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
      * @param queueSize The number of items to keep in the queue.  If this is < 0, the queue is unbounded.
