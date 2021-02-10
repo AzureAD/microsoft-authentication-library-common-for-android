@@ -2,7 +2,8 @@ V.Next
 ----------
 - [PATCH] Use requested claims as a cache key when overwriting an AT (#1225)
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
-- [Minor] Adds support for cache property merging (#1224)
+- [MINOR] Adds support for cache property merging (#1224)
+- [PATCH] Trim() Cache Lookup Input Parameters (#1228)
 
 Version 3.1.0
 ----------
