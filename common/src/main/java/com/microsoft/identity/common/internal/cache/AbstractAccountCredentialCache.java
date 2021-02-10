@@ -49,8 +49,8 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
     private static final String NEW_LINE = "\n";
 
     @Nullable
-    protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable String cacheKey,
-                                                                          @NonNull CredentialType targetType) {
+    protected Class<? extends Credential> getTargetClassForCredentialType(@Nullable final String cacheKey,
+                                                                          @NonNull final CredentialType targetType) {
         Class<? extends Credential> credentialClass = null;
 
         switch (targetType) {
@@ -77,10 +77,10 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
     }
 
     @NonNull
-    protected List<AccountRecord> getAccountsFilteredByInternal(@Nullable String homeAccountId,
-                                                                @Nullable String environment,
-                                                                @Nullable String realm,
-                                                                @NonNull List<AccountRecord> allAccounts) {
+    protected List<AccountRecord> getAccountsFilteredByInternal(@Nullable final String homeAccountId,
+                                                                @Nullable final String environment,
+                                                                @Nullable final String realm,
+                                                                @NonNull final List<AccountRecord> allAccounts) {
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
@@ -122,15 +122,15 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
         return matchingAccounts;
     }
 
-    protected List<Credential> getCredentialsFilteredByInternal(@Nullable String homeAccountId,
-                                                                @Nullable String environment,
-                                                                @Nullable CredentialType credentialType,
-                                                                @Nullable String clientId,
-                                                                @Nullable String realm,
-                                                                @Nullable String target,
-                                                                @Nullable String authScheme,
-                                                                @Nullable String requestedClaims,
-                                                                @NonNull List<Credential> allCredentials) {
+    protected List<Credential> getCredentialsFilteredByInternal(@Nullable final String homeAccountId,
+                                                                @Nullable final String environment,
+                                                                @Nullable final CredentialType credentialType,
+                                                                @Nullable final String clientId,
+                                                                @Nullable final String realm,
+                                                                @Nullable final String target,
+                                                                @Nullable final String authScheme,
+                                                                @Nullable final String requestedClaims,
+                                                                @NonNull final List<Credential> allCredentials) {
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
         final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
         final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
@@ -242,7 +242,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
      */
     static boolean targetsIntersect(@NonNull final String targetToMatch,
                                     @NonNull final String credentialTarget,
-                                    boolean omitDefaultScopes) {
+                                    final boolean omitDefaultScopes) {
         // The credentialTarget must contain all of the scopes in the targetToMatch
         // It may contain more, but it must contain minimally those
         // Matching is case-insensitive
