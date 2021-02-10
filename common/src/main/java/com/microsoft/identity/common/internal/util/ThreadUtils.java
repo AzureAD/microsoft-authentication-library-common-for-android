@@ -92,7 +92,7 @@ public class ThreadUtils {
 
             @Override
             public Thread newThread(Runnable r) {
-                Thread thread = new Thread(group, r, poolPrefix + threadNumber.getAndIncrement(), 0);
+                final Thread thread = new Thread(group, r, poolPrefix + threadNumber.getAndIncrement(), 0);
                 thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                     @Override
                     public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
