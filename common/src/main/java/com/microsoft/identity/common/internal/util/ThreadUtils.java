@@ -26,6 +26,13 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * A set of utility classes for thread operations to avoid repetition of common patterns.  The idea here is that the barrier
  * to entry to this class should be high, and the pattern should be in use in multiple locations.  Some
@@ -49,5 +56,45 @@ public class ThreadUtils {
                 Thread.currentThread().interrupt();
             }
         }
+    }
+
+    /**
+     * Construct a thread pool with specified name and bounded size.
+     * @param corePool The smallest number of threads to keep alive in the pool.
+     * @param maxPool The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
+     * @param keepAlive The amount of time to keep excess (greater than corePool size) threads alive before terminating them.
+     * @param keepAliveUnit The time unit on that time.
+     * @param poolName The name of the thread pool in use.
+     * @return An executor service with the specified properties.
+     */
+    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool, final int keepAlive, @NonNull final TimeUnit keepAliveUnit,  @NonNull final String poolName) {
+        return new ThreadPoolExecutor(corePool, maxPool, keepAlive, keepAliveUnit,
+                new ArrayBlockingQueue<Runnable>(10), new ThreadFactory() {
+            private final String poolPrefix = poolName + "-";
+            private final AtomicLong threadNumber = new AtomicLong(1);
+
+            private final ThreadGroup getThreadGroup() {
+                SecurityManager s = System.getSecurityManager();
+                return s == null ? Thread.currentThread().getThreadGroup() : s.getThreadGroup();
+            }
+
+            private final ThreadGroup group = getThreadGroup();
+
+            @Override
+            public Thread newThread(Runnable r) {
+                Thread thread = new Thread(group, r, poolPrefix + threadNumber.getAndIncrement(), 0);
+                thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+                    @Override
+                    public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
+                        if (e instanceof ThreadDeath) {
+                            Logger.info("ThreadPool[" + poolName + "]", null, "Thread Death Exception in thread pool " + poolName);
+                        } else {
+                            Logger.error("ThreadPool[" + poolName + "]", null, "Uncaught Exception in thread pool " + poolName, e);
+                        }
+                    }
+                });
+                return thread;
+            }
+        });
     }
 }
