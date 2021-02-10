@@ -55,11 +55,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,16 +89,12 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     private static final int TEST_APP_UID = 1337;
 
-    @Mock
     MicrosoftStsOAuth2Strategy mockStrategy;
 
-    @Mock
     MicrosoftStsAuthorizationRequest mockRequest;
 
-    @Mock
     MicrosoftStsTokenResponse mockResponse;
 
-    @Mock
     IAccountCredentialAdapter mMockCredentialAdapter;
 
     private MicrosoftFamilyOAuth2TokenCache mFociCache;
@@ -125,7 +119,12 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
 
-        MockitoAnnotations.initMocks(this);
+        //MockitoAnnotations.openMocks(this);
+        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
+        mMockCredentialAdapter = Mockito.mock(IAccountCredentialAdapter.class);
+
 
         // Our test context
         final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -224,11 +223,13 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mFociCredentialCache.clearAll();
         }
 
-        for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
-            cache.clearAll();
-        }
+        if (null != mOtherAppCredentialCaches)
+            for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
+                cache.clearAll();
+            }
 
-        mApplicationMetadataCache.clear();
+        if (null != mApplicationMetadataCache)
+            mApplicationMetadataCache.clear();
     }
 
 
