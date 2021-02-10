@@ -119,7 +119,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
 
-        //MockitoAnnotations.openMocks(this);
         mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
         mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
         mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
