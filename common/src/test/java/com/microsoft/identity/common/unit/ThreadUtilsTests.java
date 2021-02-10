@@ -36,7 +36,7 @@ public class ThreadUtilsTests {
     @Test
     public void basicPoolTest() throws Exception {
         ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
-        Future<String> result = s.submit(new Callable<String>() {
+        final Future<String> result = s.submit(new Callable<String>() {
             @Override
             public String call() {
                 return Thread.currentThread().getName();
