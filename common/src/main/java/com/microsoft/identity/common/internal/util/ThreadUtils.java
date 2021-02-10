@@ -62,23 +62,31 @@ public class ThreadUtils {
 
     /**
      * Construct a thread pool with specified name and optionally bounded size.
-     * @param corePool The smallest number of threads to keep alive in the pool.
-     * @param maxPool The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
-     * @param queueSize The number of items to keep in the queue.  If this is < 0, the queue is unbounded.
+     *
+     * @param corePool      The smallest number of threads to keep alive in the pool.
+     * @param maxPool       The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
+     * @param queueSize     The number of items to keep in the queue.  If this is < 0, the queue is unbounded.
      * @param keepAliveTime The amount of time to keep excess (greater than corePool size) threads alive before terminating them.
      * @param keepAliveUnit The time unit on that time.
-     * @param poolName The name of the thread pool in use.
+     * @param poolName      The name of the thread pool in use.
      * @return An executor service with the specified properties.
      */
-    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool, final int queueSize, final long keepAliveTime, @NonNull final TimeUnit keepAliveUnit, @NonNull final String poolName) {
-        final SecurityManager securityManager = System.getSecurityManager();
+    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool,
+                                                             final int queueSize, final long keepAliveTime,
+                                                             @NonNull final TimeUnit keepAliveUnit,
+                                                             @NonNull final String poolName) {
         if (queueSize > 0) {
             return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                    new ArrayBlockingQueue<Runnable>(queueSize), getNamedThreadFactory(poolName, securityManager));
+                                          new ArrayBlockingQueue<Runnable>(queueSize),
+                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
         } else if (queueSize == 0) {
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit, new SynchronousQueue<Runnable>(), getNamedThreadFactory(poolName, securityManager));
+            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
+                                          new SynchronousQueue<Runnable>(),
+                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
         } else { // (queueSize < 0)
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit, new LinkedBlockingQueue<Runnable>(), getNamedThreadFactory(poolName, securityManager));
+            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
+                                          new LinkedBlockingQueue<Runnable>(),
+                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
         }
     }
 
@@ -88,7 +96,8 @@ public class ThreadUtils {
         return new ThreadFactory() {
             private final String poolPrefix = poolName + "-";
             private final AtomicLong threadNumber = new AtomicLong(1);
-            private final ThreadGroup group = securityManager == null ? Thread.currentThread().getThreadGroup() : securityManager.getThreadGroup();
+            private final ThreadGroup group = securityManager == null ? Thread.currentThread().getThreadGroup()
+                                                                      : securityManager.getThreadGroup();
 
             @Override
             public Thread newThread(Runnable r) {
@@ -97,9 +106,11 @@ public class ThreadUtils {
                     @Override
                     public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
                         if (e instanceof ThreadDeath) {
-                            Logger.info("ThreadPool[" + poolName + "]", null, "Thread Death Exception in thread pool " + poolName);
+                            Logger.info("ThreadPool[" + poolName + "]", null,
+                                    "Thread Death Exception in thread pool " + poolName);
                         } else {
-                            Logger.error("ThreadPool[" + poolName + "]", null, "Uncaught Exception in thread pool " + poolName, e);
+                            Logger.error("ThreadPool[" + poolName + "]", null,
+                                    "Uncaught Exception in thread pool " + poolName, e);
                         }
                     }
                 });
