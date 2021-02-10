@@ -3,6 +3,7 @@ V.Next
 - [PATCH] Use requested claims as a cache key when overwriting an AT (#1225)
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
 - [Minor] Adds support for cache property merging (#1224)
+- [Minor] Adds workaround for Mockito.openMocks() desugaring issue (#1229)
 
 Version 3.1.0
 ----------
