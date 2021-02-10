@@ -223,13 +223,11 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mFociCredentialCache.clearAll();
         }
 
-        if (null != mOtherAppCredentialCaches)
-            for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
-                cache.clearAll();
-            }
+        for (final IAccountCredentialCache cache : mOtherAppCredentialCaches) {
+            cache.clearAll();
+        }
 
-        if (null != mApplicationMetadataCache)
-            mApplicationMetadataCache.clear();
+        mApplicationMetadataCache.clear();
     }
 
 
