@@ -28,6 +28,8 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -62,23 +64,29 @@ public class ThreadUtils {
      * Construct a thread pool with specified name and bounded size.
      * @param corePool The smallest number of threads to keep alive in the pool.
      * @param maxPool The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
-     * @param keepAlive The amount of time to keep excess (greater than corePool size) threads alive before terminating them.
+     * @param queueSize The number of items to keep in the queue.  If this is < 0, the queue is unbounded.
+     * @param keepAliveTime The amount of time to keep excess (greater than corePool size) threads alive before terminating them.
      * @param keepAliveUnit The time unit on that time.
      * @param poolName The name of the thread pool in use.
      * @return An executor service with the specified properties.
      */
-    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool, final int keepAlive, @NonNull final TimeUnit keepAliveUnit,  @NonNull final String poolName) {
-        return new ThreadPoolExecutor(corePool, maxPool, keepAlive, keepAliveUnit,
-                new ArrayBlockingQueue<Runnable>(10), new ThreadFactory() {
+    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool, final int queueSize, final long keepAliveTime, @NonNull final TimeUnit keepAliveUnit, @NonNull final String poolName) {
+        final SecurityManager securityManager = System.getSecurityManager();
+        if (queueSize > 0) {
+            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
+                    new ArrayBlockingQueue<Runnable>(queueSize), getNamedThreadFactory(poolName, securityManager));
+        } else if (queueSize == 0) {
+            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit, new SynchronousQueue<Runnable>(), getNamedThreadFactory(poolName, securityManager));
+        } else { // (queueSize < 0)
+            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit, new LinkedBlockingQueue<Runnable>(), getNamedThreadFactory(poolName, securityManager));
+        }
+    }
+
+    private static ThreadFactory getNamedThreadFactory(@NonNull final String poolName, final SecurityManager securityManager) {
+        return new ThreadFactory() {
             private final String poolPrefix = poolName + "-";
             private final AtomicLong threadNumber = new AtomicLong(1);
-
-            private final ThreadGroup getThreadGroup() {
-                SecurityManager s = System.getSecurityManager();
-                return s == null ? Thread.currentThread().getThreadGroup() : s.getThreadGroup();
-            }
-
-            private final ThreadGroup group = getThreadGroup();
+            private final ThreadGroup group = securityManager == null ? Thread.currentThread().getThreadGroup() : securityManager.getThreadGroup();
 
             @Override
             public Thread newThread(Runnable r) {
@@ -95,6 +103,6 @@ public class ThreadUtils {
                 });
                 return thread;
             }
-        });
+        };
     }
 }
