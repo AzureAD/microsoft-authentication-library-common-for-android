@@ -82,6 +82,8 @@ public class ThreadUtils {
         }
     }
 
+    //Nice thought, but if you're using executors, you're using ThreadGroup whether you want to or not.
+    @SuppressWarnings("PMD.AvoidThreadGroup")
     private static ThreadFactory getNamedThreadFactory(@NonNull final String poolName, final SecurityManager securityManager) {
         return new ThreadFactory() {
             private final String poolPrefix = poolName + "-";
