@@ -29,6 +29,8 @@ import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
 
+import junit.framework.TestCase;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -183,6 +185,37 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
                 0,
                 mMetadataCache.getAll().size()
         );
+    }
+
+    @Test
+    public void testDuplicateDataCannotExist() {
+        // Create a random app
+        final BrokerApplicationMetadata metadata = generateRandomMetadata();
+
+        // Mark that app as non-foci
+        metadata.setFoci(null);
+
+        // Insert that record into the cache...
+        final boolean inserted = mMetadataCache.insert(metadata);
+
+        // Assert it was correctly inserted
+        assertTrue(inserted);
+
+        // Take the original app, and make it now foci
+        metadata.setFoci("1");
+
+        // Insert that record into the cache...
+        final boolean insertedAgain = mMetadataCache.insert(metadata);
+
+        // Assert it was correctly inserted
+        assertTrue(insertedAgain);
+
+        // Because those were the 'same app', assert that our cache only contains 1 entry
+        // AND that that entry contains the updated foci state...
+        assertEquals(1, mMetadataCache.getAll().size());
+
+        assertTrue(mMetadataCache.getAllNonFociClientIds().isEmpty());
+        TestCase.assertEquals(1, mMetadataCache.getAllFociClientIds().size());
     }
 
     private static BrokerApplicationMetadata generateRandomMetadata() {
