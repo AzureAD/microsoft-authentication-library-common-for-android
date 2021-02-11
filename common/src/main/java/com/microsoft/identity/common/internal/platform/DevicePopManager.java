@@ -558,12 +558,13 @@ class DevicePopManager implements IDevicePopManager {
     public byte[] sign(@NonNull SigningAlgorithm alg, byte[] inputBytesToSign) throws ClientException {
         Exception exception;
         String errCode;
+        final String methodName = ":sign";
         try {
             final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + ":sign",
+                        TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
                 );
                 throw new ClientException(INVALID_KEY_MISSING);
@@ -597,7 +598,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + ":sign",
+                TAG + methodName,
                 clientException.getMessage(),
                 clientException
         );
@@ -705,6 +706,7 @@ class DevicePopManager implements IDevicePopManager {
     public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
         String errCode;
         Exception exception;
+        final String methodName = ":encrypt";
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
@@ -765,7 +767,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + ":encrypt",
+                TAG + methodName,
                 errCode,
                 exception
         );
@@ -817,6 +819,7 @@ class DevicePopManager implements IDevicePopManager {
     public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
         String errCode;
         Exception exception;
+        final String methodName = ":decrypt";
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
@@ -888,7 +891,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + ":decrypt",
+                TAG + methodName,
                 errCode,
                 exception
         );
