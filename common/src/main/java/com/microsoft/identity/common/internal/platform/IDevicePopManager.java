@@ -220,7 +220,15 @@ public interface IDevicePopManager {
      */
     String sign(SigningAlgorithm alg, String input) throws ClientException;
 
-    byte[] sign(@NonNull SigningAlgorithm alg, byte[] inputBytesToSign) throws ClientException;
+    /**
+     * Signs an arbitrary piece of byte data.
+     *
+     * @param alg   The RSA signing algorithm to use.
+     * @param input The input to sign.
+     * @return The input data, signed by our private key.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
+     */
+    byte[] sign(@NonNull SigningAlgorithm alg, byte[] input) throws ClientException;
 
     /**
      * Verify a signature previously made by our Private Key.
@@ -233,7 +241,16 @@ public interface IDevicePopManager {
      */
     boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
 
-    boolean verify(@NonNull SigningAlgorithm alg, byte[] inputBytesToVerify, byte[] signatureBytes);
+    /**
+     * Verify a signature previously made by our Private Key.
+     *
+     * @param alg            The RSA signing algorithm to use.
+     * @param plainText      The input to verify.
+     * @param signatureBytes The signature against which the plainText should be evaluated.
+     * @return True if the input was signed by our private key. False otherwise.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
+     */
+    boolean verify(@NonNull SigningAlgorithm alg, byte[] plainText, byte[] signatureBytes);
 
     /**
      * Encrypts the supplied String with the provided cipher.

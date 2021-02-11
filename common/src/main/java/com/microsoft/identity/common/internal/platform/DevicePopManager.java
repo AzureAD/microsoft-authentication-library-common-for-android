@@ -159,7 +159,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * A background worker to service async tasks.
      */
-    private static final ExecutorService sThreadExecutor = Executors.newCachedThreadPool();
+    private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
 
     /**
      * Properties used by the self-signed certificate.
