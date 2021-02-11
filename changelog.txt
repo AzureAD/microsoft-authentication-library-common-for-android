@@ -5,6 +5,7 @@ V.Next
 - [MINOR] Adds support for cache property merging (#1224)
 - [PATCH] Trim() Cache Lookup Input Parameters (#1228)
 - [MINOR] Adds workaround for Mockito.openMocks() desugaring issue (#1229)
+- [PATCH] Fix bug where duplicate BrokerApplicationMetadata entries could be created for a single app (#1232)
 
 Version 3.1.0
 ----------
