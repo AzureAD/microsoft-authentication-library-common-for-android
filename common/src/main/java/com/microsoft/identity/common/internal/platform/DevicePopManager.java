@@ -41,6 +41,7 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -89,6 +90,7 @@ import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
@@ -531,13 +533,37 @@ class DevicePopManager implements IDevicePopManager {
         final Exception exception;
         final String errCode;
 
+        final byte[] inputBytesToSign;
         try {
-            final byte[] inputBytesToSign = input.getBytes(ENCODING_UTF8);
+            inputBytesToSign = input.getBytes(ENCODING_UTF8);
+            return Base64.encodeToString(sign(alg, inputBytesToSign), Base64.NO_WRAP);
+        }  catch (final UnsupportedEncodingException e) {
+            final ClientException clientException = new ClientException(
+                    UNSUPPORTED_ENCODING,
+                    e.getMessage(),
+                    e
+            );
+
+            Logger.error(
+                    TAG + methodName,
+                    clientException.getMessage(),
+                    clientException
+            );
+            throw clientException;
+        }
+
+    }
+
+    @Override
+    public byte[] sign(@NonNull SigningAlgorithm alg, byte[] inputBytesToSign) throws ClientException {
+        Exception exception;
+        String errCode;
+        try {
             final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
-                        TAG + methodName,
+                        TAG + ":sign",
                         PRIVATE_KEY_NOT_FOUND
                 );
                 throw new ClientException(INVALID_KEY_MISSING);
@@ -546,8 +572,7 @@ class DevicePopManager implements IDevicePopManager {
             final Signature signature = Signature.getInstance(alg.toString());
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
-            final byte[] signedBytes = signature.sign();
-            return Base64.encodeToString(signedBytes, Base64.NO_WRAP);
+            return signature.sign();
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -563,9 +588,6 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final SignatureException e) {
             exception = e;
             errCode = SIGNING_FAILURE;
-        } catch (final UnsupportedEncodingException e) {
-            exception = e;
-            errCode = UNSUPPORTED_ENCODING;
         }
 
         final ClientException clientException = new ClientException(
@@ -575,7 +597,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG,
+                TAG + ":sign",
                 clientException.getMessage(),
                 clientException
         );
@@ -590,9 +612,29 @@ class DevicePopManager implements IDevicePopManager {
         final String methodName = ":verify";
         final String errCode;
         final Exception exception;
-
+        final byte[] inputBytesToVerify;
+        final byte[] signatureBytes;
         try {
-            final byte[] inputBytesToVerify = plainText.getBytes(ENCODING_UTF8);
+            inputBytesToVerify = plainText.getBytes(ENCODING_UTF8);
+            signatureBytes = Base64.decode(signatureStr, Base64.NO_WRAP);
+        } catch (UnsupportedEncodingException e) {
+            Logger.error(
+                    TAG + methodName,
+                    UNSUPPORTED_ENCODING,
+                    e
+            );
+            return false;
+        }
+
+        return verify(alg, inputBytesToVerify, signatureBytes);
+    }
+
+    @Override
+    public boolean verify(@NonNull SigningAlgorithm alg, byte[] inputBytesToVerify, byte[] signatureBytes) {
+        String methodName = ":verify";
+        String errCode;
+        Exception exception;
+        try {
             final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
@@ -606,11 +648,7 @@ class DevicePopManager implements IDevicePopManager {
             final Signature signature = Signature.getInstance(alg.toString());
             signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
             signature.update(inputBytesToVerify);
-            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.NO_WRAP);
             return signature.verify(signatureBytes);
-        } catch (final UnsupportedEncodingException e) {
-            errCode = UNSUPPORTED_ENCODING;
-            exception = e;
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -629,7 +667,7 @@ class DevicePopManager implements IDevicePopManager {
         }
 
         Logger.error(
-                TAG + ":verify",
+                TAG + methodName,
                 errCode,
                 exception
         );
@@ -643,7 +681,30 @@ class DevicePopManager implements IDevicePopManager {
         final String methodName = ":encrypt";
         final String errCode;
         final Exception exception;
+        final byte[] bytes;
+        try {
+            bytes = plaintext.getBytes(ENCODING_UTF8);
+            return new String(encrypt(cipher, bytes), ENCODING_UTF8);
+        } catch (final UnsupportedEncodingException e) {
+            final ClientException clientException = new ClientException(
+                    UNSUPPORTED_ENCODING,
+                    e.getMessage(),
+                    e
+            );
+            Logger.error(
+                    TAG + methodName,
+                    UNSUPPORTED_ENCODING,
+                    e
+            );
 
+            throw clientException;
+        }
+    }
+
+    @Override
+    public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
+        String errCode;
+        Exception exception;
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
@@ -670,16 +731,13 @@ class DevicePopManager implements IDevicePopManager {
 
             try { // TODO convert to try-with-resources once API >19
                 cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
-                cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
+                cipherOutputStream.write(plaintext);
             } finally {
                 closeStream(cipherOutputStream);
             }
 
             // Flatten our OutputStream to an array
-            byte[] encryptedBase64Data = byteArrayOutputStream.toByteArray();
-
-            // Base64 encode to stringify
-            return new String(encryptedBase64Data, ENCODING_UTF8);
+            return byteArrayOutputStream.toByteArray();
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
@@ -695,9 +753,6 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (final UnsupportedEncodingException e) {
-            errCode = UNSUPPORTED_ENCODING;
-            exception = e;
         } catch (final IOException e) {
             errCode = IO_ERROR;
             exception = e;
@@ -710,7 +765,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                TAG + ":encrypt",
                 errCode,
                 exception
         );
@@ -738,7 +793,30 @@ class DevicePopManager implements IDevicePopManager {
         final String methodName = ":decrypt";
         final String errCode;
         final Exception exception;
+        final byte[] bytes;
+        try {
+            bytes = ciphertext.getBytes(ENCODING_UTF8);
+            return new String(decrypt(cipher, bytes), ENCODING_UTF8);
+        } catch (UnsupportedEncodingException e) {
+            final ClientException clientException = new ClientException(
+                    UNSUPPORTED_ENCODING,
+                    e.getMessage(),
+                    e
+            );
+            Logger.error(
+                    TAG + methodName,
+                    UNSUPPORTED_ENCODING,
+                    e
+            );
 
+            throw clientException;
+        }
+    }
+
+    @Override
+    public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
+        String errCode;
+        Exception exception;
         try {
             // Load our key material
             final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
@@ -754,7 +832,7 @@ class DevicePopManager implements IDevicePopManager {
             outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
 
             final Base64InputStream b64InputStream = new Base64InputStream(
-                    new ByteArrayInputStream(ciphertext.getBytes()),
+                    new ByteArrayInputStream(ciphertext),
                     Base64.DEFAULT
             );
 
@@ -767,16 +845,16 @@ class DevicePopManager implements IDevicePopManager {
                 );
 
                 final int bufferSize = 1024;
-                final char[] buffer = new char[bufferSize];
-                final StringBuilder outputBuilder = new StringBuilder();
-                final Reader in = new InputStreamReader(cipherInputStream, ENCODING_UTF8);
+                final byte[] buffer = new byte[bufferSize];
+                final ByteArrayOutputStream outputBuilder = new ByteArrayOutputStream();
+                final Reader in = new InputStreamReader(cipherInputStream);
 
                 int chars;
-                while ((chars = in.read(buffer, 0, buffer.length)) > 0) {
-                    outputBuilder.append(buffer, 0, chars);
+                while ((chars = cipherInputStream.read(buffer, 0, buffer.length)) > 0) {
+                    outputBuilder.write(buffer, 0, chars);
                 }
 
-                return outputBuilder.toString();
+                return outputBuilder.toByteArray();
             } finally {
                 closeStream(cipherInputStream);
             }
@@ -810,7 +888,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG + methodName,
+                TAG + ":decrypt",
                 errCode,
                 exception
         );

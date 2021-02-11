@@ -220,6 +220,8 @@ public interface IDevicePopManager {
      */
     String sign(SigningAlgorithm alg, String input) throws ClientException;
 
+    byte[] sign(@NonNull SigningAlgorithm alg, byte[] inputBytesToSign) throws ClientException;
+
     /**
      * Verify a signature previously made by our Private Key.
      *
@@ -230,6 +232,8 @@ public interface IDevicePopManager {
      * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
      */
     boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
+
+    boolean verify(@NonNull SigningAlgorithm alg, byte[] inputBytesToVerify, byte[] signatureBytes);
 
     /**
      * Encrypts the supplied String with the provided cipher.
@@ -242,6 +246,16 @@ public interface IDevicePopManager {
     String encrypt(Cipher cipher, String plaintext) throws ClientException;
 
     /**
+     * Encrypts the supplied byte array with the provided cipher.
+     *
+     * @param cipher    The cipher to use.
+     * @param plaintext The data to encrypt.
+     * @return The encrypted plaintext.
+     * @throws ClientException If encryption fails.
+     */
+    byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException;
+
+    /**
      * Decrypts the supplied String with the provided cipher.
      *
      * @param cipher     The cipher used to derive the provided ciphertext.
@@ -250,6 +264,16 @@ public interface IDevicePopManager {
      * @throws ClientException If decryption fails.
      */
     String decrypt(Cipher cipher, String ciphertext) throws ClientException;
+
+    /**
+     * Decrypts the supplied String with the provided cipher.
+     *
+     * @param cipher     The cipher used to derive the provided ciphertext.
+     * @param ciphertext The text to decrypt.
+     * @return The decrypted text.
+     * @throws ClientException If decryption fails.
+     */
+    byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException;
 
     /**
      * Gets the {@link SecureHardwareState} of this DevicePopManager.
