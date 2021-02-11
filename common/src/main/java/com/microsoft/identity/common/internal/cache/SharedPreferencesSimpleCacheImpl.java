@@ -86,6 +86,9 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
                         + "] elements."
         );
 
+        // Because BrokerApplicationMetadata intentionally does not consider foci state part of
+        // its 'equality', remove any existing entry of this metadata, before adding a new one
+        allMetadata.remove(t);
         allMetadata.add(t);
 
         Logger.verbose(

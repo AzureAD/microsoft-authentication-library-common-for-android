@@ -52,32 +52,6 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     }
 
     @Override
-    public boolean insert(@NonNull final BrokerApplicationMetadata brokerApplicationMetadata) {
-        // Before we insert a record, if we have a existing entry with the same client id, env, and
-        // processUid, we should remove that entry...
-        disposeOfDuplicateRecords(
-                brokerApplicationMetadata.getClientId(),
-                brokerApplicationMetadata.getEnvironment(),
-                brokerApplicationMetadata.getUid()
-        );
-        return super.insert(brokerApplicationMetadata);
-    }
-
-    private void disposeOfDuplicateRecords(@NonNull final String clientId,
-                                           @NonNull final String environment,
-                                           final int uid) {
-        final List<BrokerApplicationMetadata> allMetadata = getAll();
-
-        for (final BrokerApplicationMetadata metadata : allMetadata) {
-            if (clientId.equalsIgnoreCase(metadata.getClientId())
-                    && environment.equalsIgnoreCase(metadata.getEnvironment())
-                    && uid == metadata.getUid()) {
-                remove(metadata);
-            }
-        }
-    }
-
-    @Override
     public Set<String> getAllClientIds() {
         final String methodName = ":getAllClientIds";
 

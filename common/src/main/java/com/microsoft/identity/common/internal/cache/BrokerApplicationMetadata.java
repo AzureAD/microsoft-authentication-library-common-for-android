@@ -40,34 +40,4 @@ public class BrokerApplicationMetadata extends AbstractApplicationMetadata {
     public void setFoci(final String mFoci) {
         this.mFoci = mFoci;
     }
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @SuppressWarnings("PMD")
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        BrokerApplicationMetadata metadata = (BrokerApplicationMetadata) o;
-
-        return mFoci != null ? mFoci.equals(metadata.mFoci) : metadata.mFoci == null;
-    }
-    //CHECKSTYLE:ON
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @SuppressWarnings("PMD")
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + (mFoci != null ? mFoci.hashCode() : 0);
-        return result;
-    }
-    //CHECKSTYLE:ON
 }
