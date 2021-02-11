@@ -48,9 +48,9 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityOneTest() throws Exception {
-        ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 1, 5, TimeUnit.SECONDS, "testPool");
-        Future<?> result = s.submit(hangThread());
-        Future<?> result2 = s.submit(hangThread());
+        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 1, 5, TimeUnit.SECONDS, "testPool");
+        final Future<?> result = s.submit(hangThread());
+        final Future<?> result2 = s.submit(hangThread());
         boolean caught = false;
         try {
             s.submit(new Runnable() {
@@ -69,8 +69,8 @@ public class ThreadUtilsTests {
     }
     @Test
     public void capacityZeroTest() throws Exception {
-        ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 0, 5, TimeUnit.SECONDS, "testPool");
-        Future<?> result = s.submit(hangThread());
+        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 0, 5, TimeUnit.SECONDS, "testPool");
+        final Future<?> result = s.submit(hangThread());
         boolean caught = false;
         try {
             s.submit(new Runnable() {

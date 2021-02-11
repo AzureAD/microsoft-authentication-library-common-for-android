@@ -104,7 +104,7 @@ public class ThreadUtils {
                 final Thread thread = new Thread(group, r, poolPrefix + threadNumber.getAndIncrement(), 0);
                 thread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
                     @Override
-                    public void uncaughtException(@NonNull Thread t, @NonNull Throwable e) {
+                    public void uncaughtException(@NonNull final Thread t, @NonNull final Throwable e) {
                         if (e instanceof ThreadDeath) {
                             Logger.info("ThreadPool[" + poolName + "]", null,
                                     "Thread Death Exception in thread pool " + poolName);
