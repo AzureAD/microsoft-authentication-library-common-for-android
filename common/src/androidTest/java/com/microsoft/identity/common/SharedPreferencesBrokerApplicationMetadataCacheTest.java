@@ -29,8 +29,6 @@ import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
 
-import junit.framework.TestCase;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -215,7 +213,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
         assertEquals(1, mMetadataCache.getAll().size());
 
         assertTrue(mMetadataCache.getAllNonFociClientIds().isEmpty());
-        TestCase.assertEquals(1, mMetadataCache.getAllFociClientIds().size());
+        assertEquals(1, mMetadataCache.getAllFociClientIds().size());
     }
 
     private static BrokerApplicationMetadata generateRandomMetadata() {
