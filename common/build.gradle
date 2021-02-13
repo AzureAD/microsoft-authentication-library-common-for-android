@@ -293,6 +293,35 @@ afterEvaluate {
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
+
+                pom {
+                    name = 'common'
+                    description = 'This library contains code shared between the Active Directory ' +
+                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
+                                    'Authentication Library (MSAL) for Android. This library ' +
+                                    'includes only internal classes and is NOT part of the ' +
+                                    'public API'
+                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
+                    developers {
+                        developer {
+                            id = 'microsoft'
+                            name = 'Microsoft'
+                        }
+                    }
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                        }
+                    }
+                    inceptionYear = '2017'
+                    scm {
+                        url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
+                    }
+                    properties = [
+                            branch: 'master',
+                            version: project.version
+                    ]
+                }
             }
             debug(MavenPublication) {
                 from components.debug

@@ -145,6 +145,10 @@ public class AccountRecord extends AccountCredentialBase implements IAccountReco
         setMiddleName(copy.getMiddleName());
         setName(copy.getName());
         setAvatarUrl(copy.getAvatarUrl());
+
+        if (copy instanceof AccountCredentialBase) {
+            setAdditionalFields(((AccountCredentialBase) copy).getAdditionalFields());
+        }
     }
 
     /**
