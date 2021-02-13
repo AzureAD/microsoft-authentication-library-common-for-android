@@ -30,7 +30,7 @@ import java.util.Date;
  * Represents an asymmetric key. Underlying storage and algorithm is unspecified at this interface
  * but may be extended or implemented by subclasses/subinterfaces defining ECC, RSA, DSA, or other.
  */
-public interface AsymmetricKey {
+public interface AsymmetricKey extends Key {
 
     /**
      * Gets the alias which refers to this key at its originating keystore.

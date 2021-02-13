@@ -69,4 +69,7 @@ public class KeyStoreAccessor {
         return getKeyAccessor(cipher, popManager);
     }
 
+    public static KeyAccessor softwareInstance(String rsa) {
+        return null;
+    }
 }
