@@ -61,7 +61,7 @@ public class DefaultConnectionService implements IConnectionService {
     public DefaultConnectionService(Context ctx) {
         mConnectionContext = ctx;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            this.registerNetworkCallback();
+            registerNetworkCallback();
         }
     }
 
@@ -116,9 +116,14 @@ public class DefaultConnectionService implements IConnectionService {
 
             NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
 
-            DefaultConnectionService.connectionAvailable = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+            DefaultConnectionService.connectionAvailable =
+                    activeNetwork != null &&
+                            activeNetwork.isConnectedOrConnecting();
         }
-        Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.NETWORK_CONNECTION, String.valueOf(DefaultConnectionService.connectionAvailable)));
+        Telemetry.emit((BaseEvent) new BaseEvent().put(
+                TelemetryEventStrings.Key.NETWORK_CONNECTION,
+                String.valueOf(DefaultConnectionService.connectionAvailable)
+        ));
 
         return DefaultConnectionService.connectionAvailable;
     }
@@ -133,12 +138,17 @@ public class DefaultConnectionService implements IConnectionService {
     public boolean isNetworkDisabledFromOptimizations() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             final PowerManagerWrapper powerManagerWrapper = PowerManagerWrapper.getInstance();
-            if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) && !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
-                Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(true)));
+            if (powerManagerWrapper.isDeviceIdleMode(mConnectionContext) &&
+                    !powerManagerWrapper.isIgnoringBatteryOptimizations(mConnectionContext)) {
+                Telemetry.emit((BaseEvent) new BaseEvent().put(
+                        TelemetryEventStrings.Key.POWER_OPTIMIZATION,
+                        String.valueOf(true)));
                 return true;
             }
         }
-        Telemetry.emit((BaseEvent) new BaseEvent().put(TelemetryEventStrings.Key.POWER_OPTIMIZATION, String.valueOf(false)));
+        Telemetry.emit((BaseEvent) new BaseEvent().put(
+                TelemetryEventStrings.Key.POWER_OPTIMIZATION,
+                String.valueOf(false)));
         return false;
     }
 }
