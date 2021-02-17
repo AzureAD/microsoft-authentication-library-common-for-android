@@ -236,14 +236,22 @@ public class BrokerMsalController extends BaseController {
         //Get the broker interactive parameters intent
         final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
 
+        // To support calling from OneAuth-MSAL, which may be initialized without an Activity
+        // add Flags to start as a NEW_TASK if we are launching from an application Context
+        final boolean startAsNewTask = null == parameters.getActivity();
+
         //Pass this intent to the BrokerActivity which will be used to start this activity
         final Intent brokerActivityIntent = new Intent(parameters.getAndroidApplicationContext(), BrokerActivity.class);
         brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveRequestIntent);
 
-        mBrokerResultFuture = new BrokerResultFuture();
-
-        //Start the BrokerActivity
-        parameters.getActivity().startActivity(brokerActivityIntent);
+        if (startAsNewTask) {
+            // Start this Activity as a new task, as there is no existing Activity Context
+            brokerActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mApplicationContext.startActivity(brokerActivityIntent);
+        } else {
+            // Start the BrokerActivity using our existing Activity
+            parameters.getActivity().startActivity(brokerActivityIntent);
+        }
 
         //Wait to be notified of the result being returned... we could add a timeout here if we want to
         final Bundle resultBundle = mBrokerResultFuture.get();
