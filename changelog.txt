@@ -6,6 +6,7 @@ V.Next
 - [PATCH] Trim() Cache Lookup Input Parameters (#1228)
 - [MINOR] Adds workaround for Mockito.openMocks() desugaring issue (#1229)
 - [PATCH] Fix bug where duplicate BrokerApplicationMetadata entries could be created for a single app (#1232)
+- [MINOR] Adds support for launching Broker auth Activity without an Activity Context from OneAuth-MSAL by setting FLAG_ACTIVITY_NEW_TASK
 
 Version 3.1.0
 ----------
