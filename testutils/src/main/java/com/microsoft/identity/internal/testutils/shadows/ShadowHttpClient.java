@@ -45,7 +45,7 @@ import java.util.Map;
  * @see MockHttpClient for setting up interceptors and mock responses
  * @see HttpRequestInterceptor an implementation for intercepting http requests.
  */
-@Implements(AbstractHttpClient.class)
+@Implements(UrlConnectionHttpClient.class)
 public class ShadowHttpClient {
 
     /**
@@ -64,7 +64,7 @@ public class ShadowHttpClient {
                                @NonNull URL requestUrl,
                                @NonNull Map<String, String> requestHeaders,
                                @Nullable byte[] requestContent) throws IOException {
-        HttpRequestInterceptor interceptor = MockHttpClient.intercept(httpMethod, requestUrl);
+        HttpRequestInterceptor interceptor = MockHttpClient.intercept(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
             return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent);
         } else {

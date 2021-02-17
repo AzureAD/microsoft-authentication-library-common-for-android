@@ -29,15 +29,28 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.net.HttpClient.HttpMethod;
 import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.internal.testutils.CacheUtils.Predicate;
 
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Builder;
+
 /**
  * Class to set a mock request interceptor at runtime.
  */
 public class MockHttpClient {
+    @Builder
+    public static class HttpRequestMatcher {
+        private Predicate<Map<String, String>> header = m -> true;
+        private Predicate<byte[]> body = s -> true;
+        private Predicate<URL> url = s -> true;
+        private Predicate<HttpMethod> method = m -> true;
+        boolean matches(final HttpMethod httpMethod, @NonNull final URL aUrl, Map<String, String> requestHeaders, byte[] requestContent) {
+            return header.test(requestHeaders) & url.test(aUrl) && method.test(httpMethod) && body.test(requestContent);
+        }
+    }
 
     /**
      * Store a map with Pair<HttpMethod, urlRegex>  as the key. This allows us to have different
@@ -45,7 +58,7 @@ public class MockHttpClient {
      * When the HttpMethod in the Pair is null, we will match all requests specified by the urlRegex
      * regardless of the http method.
      */
-    private static final Map<Pair<HttpMethod, String>, HttpRequestInterceptor> interceptors = new HashMap<>();
+    private static final Map<HttpRequestMatcher, HttpRequestInterceptor> interceptors = new HashMap<>();
 
     /**
      * Will set the interceptor for all methods and request urls
@@ -100,7 +113,8 @@ public class MockHttpClient {
     public static void setInterceptor(@NonNull final HttpRequestInterceptor interceptor,
                                       @Nullable final HttpMethod method,
                                       @NonNull final String urlRegex) {
-        interceptors.put(new Pair<>(method, urlRegex), interceptor);
+        interceptors.put(HttpRequestMatcher.builder().url(u -> u.toString().matches(urlRegex))
+                                                     .method(m -> m == method).build(), interceptor);
     }
 
     /**
@@ -109,15 +123,17 @@ public class MockHttpClient {
      *
      * @param method  the http method
      * @param url     the request url to intercept
+     * @param requestHeaders
+     * @param requestContent
      * @return  the http request interceptor configured for the http method and request url
      */
-    public static HttpRequestInterceptor intercept(@NonNull final HttpMethod method, @NonNull final URL url) {
+    public static HttpRequestInterceptor intercept(@NonNull final HttpMethod method, @NonNull final URL url, Map<String, String> requestHeaders, byte[] requestContent) {
         // for each pair of HttpMethod and url regex
-        for (Pair<HttpMethod, String> pair : interceptors.keySet()) {
-            // if url matches and the HttpMethod matches (or is null)  the interceptor has been found.
-            if ((pair.first == null || pair.first.compareTo(method) == 0) && url.toString().matches(pair.second)) {
+        for (Map.Entry<HttpRequestMatcher, HttpRequestInterceptor> e : interceptors.entrySet()) {
+            // if url matches and the HttpMethod matches (or is null) the interceptor has been found.
+            if (e.getKey().matches(method, url, requestHeaders, requestContent)) {
                 // return the http interceptor
-                return interceptors.get(pair);
+                return e.getValue();
             }
         }
         return null;
