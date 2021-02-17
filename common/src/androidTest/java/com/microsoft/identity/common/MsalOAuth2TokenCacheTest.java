@@ -56,8 +56,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -102,16 +101,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             MicrosoftRefreshToken> mOauth2TokenCache;
     private ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
-    @Mock
     MicrosoftStsOAuth2Strategy mockStrategy;
 
-    @Mock
     MicrosoftStsAuthorizationRequest mockRequest;
 
-    @Mock
     MicrosoftStsTokenResponse mockResponse;
-
-    @Mock
+    
     IAccountCredentialAdapter<
             MicrosoftStsOAuth2Strategy,
             MicrosoftStsAuthorizationRequest,
@@ -196,7 +191,10 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        MockitoAnnotations.initMocks(this);
+        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
+        mockCredentialAdapter = Mockito.mock(IAccountCredentialAdapter.class);
 
         // Used by mocks
         defaultTestBundleV1 = new AccountCredentialTestBundle(
