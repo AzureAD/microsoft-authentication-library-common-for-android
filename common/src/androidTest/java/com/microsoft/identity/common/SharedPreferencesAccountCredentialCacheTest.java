@@ -1491,7 +1491,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 null, /* client id */
                 null,
                 null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
+                null
         );
         assertEquals(1, credentials.size());
     }
@@ -1514,7 +1514,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 CLIENT_ID,
                 null,
                 null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
+                null
         );
         assertEquals(1, credentials.size());
     }
@@ -1537,7 +1537,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
                 "another-client-id",
                 null,
                 null,
-                BEARER_AUTHENTICATION_SCHEME.getName()
+                null
         );
         assertTrue(credentials.isEmpty());
     }
