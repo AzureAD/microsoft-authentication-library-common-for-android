@@ -6,6 +6,7 @@ V.Next
 - [PATCH] Trim() Cache Lookup Input Parameters (#1228)
 - [MINOR] Adds workaround for Mockito.openMocks() desugaring issue (#1229)
 - [PATCH] Fix bug where duplicate BrokerApplicationMetadata entries could be created for a single app (#1232)
+- [MINOR] Changes to Broker Validation to allow setting whether to trust debug brokers (prod brokers are always trusted).
 
 Version 3.1.0
 ----------
@@ -26,7 +27,6 @@ Version 3.0.9
 - Remove connection close from http request to AUTHORIZATION_CODE_NOT_EXCHANGED_FOR_TOKEN issue on emulators.
 - Replace deprecated HttpRequest.sendGet usage with HttpClient.get (#1038)
 - Replace deprecated HttpRequest.sendPost usage with HttpClient.post (#1037)
-- Changes to Broker Validation to allow setting whether to trust debug brokers (prod brokers are always trusted).
 - (MSALCPP) Validate ATs before persisting to the cache (#1192)
 - Adds API23 WebViewClient#onReceivedError overload (#1197)
 - Fixes for MFA setup using Authenticator app.
