@@ -9,13 +9,11 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 
 public class SharedPreferencesThrottlingCache implements IThrottlingCache {
 
     private final static String TAG = SharedPreferencesThrottlingCache.class.getSimpleName();
-    private final static String THROTTLING_INFO_CACHE_KEY_PREFIX = "_throttling-info";
-    private final static String ERROR_RESPONSE_CACHE_KEY_PREFIX = "_error-response";
+    private final static String THROTTLING_INFO_CACHE_KEY_SUFFIX = "_throttling-info";
 
     private final Gson mGson;
 
@@ -27,29 +25,28 @@ public class SharedPreferencesThrottlingCache implements IThrottlingCache {
         this.mSharedPreferencesFileManager = mSharedPreferencesFileManager;
     }
 
+    private String getThrottlingCacheKeyForRequest(@NonNull final Request request) {
+        return serializeToJson(request) + THROTTLING_INFO_CACHE_KEY_SUFFIX;
+    }
+
     @Override
     public void saveThrottlingInfoForRequest(@NonNull final Request request, @NonNull final ThrottlingInfo throttlingInfo) {
-        final String cacheKey = serializeToJson(request);
+        final String cacheKey = getThrottlingCacheKeyForRequest(request);
         final String cacheValue = serializeToJson(throttlingInfo);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
-    public void saveErrorResponseForRequest(Request request, TokenErrorResponse tokenErrorResponse) {
-
-    }
-
-    @Override
     @Nullable
-    public ThrottlingInfo loadThrottlingForRequest(@NonNull final Request request) {
+    public ThrottlingInfo loadThrottlingInfoForRequest(@NonNull final Request request) {
         final String methodName = ":loadThrottlingInfoFromCache";
-        final String cacheKey = serializeToJson(request);
+        final String cacheKey = getThrottlingCacheKeyForRequest(request);
 
         try {
             final String cacheValue = mSharedPreferencesFileManager.getString(cacheKey);
 
             if (cacheValue == null) {
-                Logger.info(TAG + methodName, "There is no last request telemetry saved in " +
+                Logger.info(TAG + methodName, "There is no throttling info saved in " +
                         "the cache. Returning NULL");
 
                 return null;
@@ -66,12 +63,6 @@ public class SharedPreferencesThrottlingCache implements IThrottlingCache {
             Logger.error(TAG + methodName, "Throttling info deserialization failed.", e);
             return null;
         }
-    }
-
-    @Nullable
-    @Override
-    public TokenErrorResponse loadErrorResponseForRequest(Request request) {
-        return null;
     }
 
     private String serializeToJson(final Object o) {

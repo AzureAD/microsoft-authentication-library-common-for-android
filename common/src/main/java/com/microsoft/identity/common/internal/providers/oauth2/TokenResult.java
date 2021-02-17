@@ -34,7 +34,6 @@ public class TokenResult implements IResult {
     private TokenErrorResponse mTokenErrorResponse;
     private CliTelemInfo mCliTelemInfo;
     private boolean mSuccess = false;
-    private ThrottlingInfo mThrottlingInfo;
 
     public TokenResult() {
         // Intentionally blank
@@ -112,14 +111,6 @@ public class TokenResult implements IResult {
      */
     public void setCliTelemInfo(final CliTelemInfo cliTelemInfo) {
         mCliTelemInfo = cliTelemInfo;
-    }
-
-    public ThrottlingInfo getThrottlingInfo() {
-        return mThrottlingInfo;
-    }
-
-    public void setThrottlingInfo(final ThrottlingInfo throttlingInfo) {
-        mThrottlingInfo = throttlingInfo;
     }
 
     /**

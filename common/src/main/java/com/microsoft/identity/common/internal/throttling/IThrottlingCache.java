@@ -8,11 +8,6 @@ public interface IThrottlingCache {
 
     void saveThrottlingInfoForRequest(final Request request, final ThrottlingInfo throttlingInfo);
 
-    void saveErrorResponseForRequest(final Request request, final TokenErrorResponse tokenErrorResponse);
-
     @Nullable
-    ThrottlingInfo loadThrottlingForRequest(final Request request);
-
-    @Nullable
-    TokenErrorResponse loadErrorResponseForRequest(final Request request);
+    ThrottlingInfo loadThrottlingInfoForRequest(final Request request);
 }

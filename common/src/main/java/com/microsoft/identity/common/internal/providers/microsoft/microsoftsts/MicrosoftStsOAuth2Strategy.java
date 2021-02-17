@@ -543,9 +543,6 @@ public class MicrosoftStsOAuth2Strategy
 
         logResult(TAG, result);
 
-        final int httpStatusCode = response.getStatusCode();
-        String retryAfterValue = null;
-
         if (null != response.getHeaders()) {
             final Map<String, List<String>> responseHeaders = response.getHeaders();
 
@@ -567,21 +564,6 @@ public class MicrosoftStsOAuth2Strategy
                     tokenResponse.setCliTelemSubErrorCode(cliTelemInfo.getServerSubErrorCode());
                 }
             }
-
-            final List<String> retryAfterValues = responseHeaders.get(RETRY_AFTER);
-
-            if (retryAfterValues != null && !retryAfterValues.isEmpty()) {
-                retryAfterValue = retryAfterValues.get(0);
-            }
-        }
-
-        // throttle next time
-        if (httpStatusCode == 429 || httpStatusCode >= 500 || !TextUtils.isEmpty(retryAfterValue)) {
-            final long retryValue = !TextUtils.isEmpty(retryAfterValue)
-                    ? Integer.parseInt(retryAfterValue)
-                    : ThrottlingManager.DEFAULT_THROTTLING;
-            final ThrottlingInfo throttlingInfo = new ThrottlingInfo(httpStatusCode, retryValue);
-            result.setThrottlingInfo(throttlingInfo);
         }
 
         return result;
