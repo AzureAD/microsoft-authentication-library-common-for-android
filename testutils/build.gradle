@@ -12,6 +12,18 @@ android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
 
+    testOptions {
+        compileOptions {
+            // Flag to enable support for the new language APIs
+            coreLibraryDesugaringEnabled true
+            // Sets Java compatibility to Java 8
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+        dependencies {
+            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+        }
+    }
     /*
     //Commenting out until the next major version of common/msal/etc...
     compileOptions {
@@ -185,7 +197,12 @@ dependencies {
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation "junit:junit:$rootProject.ext.junitVersion"
-    implementation ("org.robolectric:robolectric:$rootProject.ext.robolectricVersion")
+    implementation ("org.robolectric:robolectric:$rootProject.ext.robolectricVersion") {
+        exclude group: "org.apache.maven"
+        exclude group: "org.apache.maven.wagon"
+        exclude group: "xmlpull"
+        exclude group: "xpp3"
+    }
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 }
