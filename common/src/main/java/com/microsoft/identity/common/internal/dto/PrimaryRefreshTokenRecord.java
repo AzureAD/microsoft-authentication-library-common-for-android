@@ -65,7 +65,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
     /**
      * PRT expiry time. This value is returned from the server as refresh_token_expires_in that
-     * should be added to local time.
+     * should be added to local time. Measured in milliseconds from epoch (1970).
      */
     @SerializedName(EXPIRES_ON)
     private String mExpiresOn;
@@ -84,7 +84,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
     /**
      * Session key expiry time. This value is determined by the client and set to 60 days after the
-     * session key was initally issued
+     * session key was initally issued. Measured in milliseconds from epoch (1970).
      */
     @SerializedName(SESSION_KEY_ROLLING_DATE)
     private String mSessionKeyRollingDate;
@@ -117,7 +117,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * Gets the expires_on.
+     * Gets the expires_on. Measured in milliseconds from epoch (1970).
+     *
      * @return The expires_on to get.
      */
     public String getExpiresOn() {
@@ -125,7 +126,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * Sets the expires_on.
+     * Sets the expires_on. Measured in milliseconds from epoch (1970).
+     *
      * @param expiresOn The expires_on to set.
      */
     public void setExpiresOn(String expiresOn) {
@@ -134,6 +136,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
     /**
      * Gets the session_key.
+     *
      * @return The session_key to get.
      */
     public String getSessionKey() {
@@ -168,7 +171,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * Gets the session_key_rolling_date.
+     * Gets the session_key_rolling_date. Measured in milliseconds from epoch (1970).
      *
      * @return The session_key_rolling_date to get.
      */
@@ -177,7 +180,8 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * Sets the session_key_rolling_date.
+     * Sets the session_key_rolling_date. Measured in milliseconds from epoch (1970).
+     *
      * @param sessionKeyRollingDate The session_key_rolling_date to set.
      */
     public void setSessionKeyRollingDate(String sessionKeyRollingDate) {
