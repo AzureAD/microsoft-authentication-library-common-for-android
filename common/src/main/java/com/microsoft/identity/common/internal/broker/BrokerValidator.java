@@ -36,8 +36,8 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -60,13 +60,28 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
+import static com.microsoft.identity.common.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
 
+    private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
+
+    public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
+        if (!BuildConfig.DEBUG && shouldTrustDebugBrokers) {
+            Logger.warn(TAG, "You are forcing to trust debug brokers in non-debug builds.");
+        }
+        BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
+    }
+
+    public static boolean getShouldTrustDebugBrokers() {
+        return sShouldTrustDebugBrokers;
+    }
+
     private final Context mContext;
-    private final String mCompanyPortalSignature;
 
     /**
      * Constructs a new BrokerValidator.
@@ -75,7 +90,6 @@ public class BrokerValidator {
      */
     public BrokerValidator(final Context context) {
         mContext = context;
-        mCompanyPortalSignature = AuthenticationSettings.INSTANCE.getBrokerSignature();
     }
 
     /**
@@ -133,6 +147,38 @@ public class BrokerValidator {
         return false;
     }
 
+    /**
+     * Provides a Set of valid Broker apps based on whether debug broker should be trusted or not.
+     *
+     * @return a Set of {@link BrokerData}
+     */
+    public Set<BrokerData> getValidBrokers() {
+        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
+                ? BrokerData.getAllBrokers()
+                : BrokerData.getProdBrokers();
+
+        return validBrokers;
+    }
+
+    /**
+     * Determines if the supplied package name correspond to a valid Broker app.
+     *
+     * @param packageName the package name of the broker app to validate
+     * @return a boolean indicating if the app is a valid broker
+     */
+    public boolean isValidBrokerPackage(@NonNull final String packageName) {
+        final Set<BrokerData> validBrokers = getValidBrokers();
+
+        for (final BrokerData brokerData : validBrokers) {
+            if (brokerData.packageName.equals(packageName) && verifySignature(packageName)) {
+                return true;
+            }
+        }
+
+        // package name and/or signature not matched so this is not a valid broker.
+        return false;
+    }
+
     private String verifySignatureHash(final List<X509Certificate> certs) throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
 
@@ -148,17 +194,14 @@ public class BrokerValidator {
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
-            final String alternateSignatureCp = AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_SIGNATURE;
-            final String alternateSignatureAuthApp = AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
-            if (mCompanyPortalSignature.equals(signatureHash)
-                    || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)
-                    || (!TextUtils.isEmpty(alternateSignatureCp) && alternateSignatureCp.equals(signatureHash))
-                    || (!TextUtils.isEmpty(alternateSignatureAuthApp) && alternateSignatureAuthApp.equals(signatureHash))) {
-                return signatureHash;
+            for (final BrokerData brokerData : getValidBrokers()) {
+                if (!TextUtils.isEmpty(brokerData.signatureHash) && brokerData.signatureHash.equals(signatureHash)) {
+                    return signatureHash;
+                }
             }
         }
 
-        throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     @SuppressLint("PackageManagerGetSignatures")
@@ -177,7 +220,7 @@ public class BrokerValidator {
 
         //.signatures has been deprecated
         if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
-            throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
         }
 
@@ -194,7 +237,7 @@ public class BrokerValidator {
                         certStream);
                 certificates.add(x509Certificate);
             } catch (final CertificateException e) {
-                throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED);
+                throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
             }
         }
 
@@ -229,7 +272,7 @@ public class BrokerValidator {
         }
 
         if (count > 1 || selfSignedCert == null) {
-            throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "Multiple self signed certs found or no self signed cert existed.");
         }
 
@@ -247,7 +290,8 @@ public class BrokerValidator {
      *
      * @return String current active broker package name, null if no broker is available
      */
-    @Nullable public String getCurrentActiveBrokerPackageName() {
+    @Nullable
+    public String getCurrentActiveBrokerPackageName() {
         AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
