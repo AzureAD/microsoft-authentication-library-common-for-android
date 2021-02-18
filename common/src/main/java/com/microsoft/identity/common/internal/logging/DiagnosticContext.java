@@ -30,8 +30,8 @@ public final class DiagnosticContext {
     private DiagnosticContext() {
     }
 
-    private static final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
-            new ThreadLocal<IRequestContext>() {
+    private static final InheritableThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
+            new InheritableThreadLocal<IRequestContext>() {
                 @Override // This is the default value for the RequestContext if it's unset
                 protected RequestContext initialValue() {
                     final RequestContext defaultRequestContext = new RequestContext();
