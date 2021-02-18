@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.logging;
 public final class DiagnosticContext {
 
     public static final String CORRELATION_ID = "correlation_id";
-    private static final String THREAD_ID = "thread_id";
+    public static final String THREAD_ID = "thread_id";
 
     private DiagnosticContext() {
     }

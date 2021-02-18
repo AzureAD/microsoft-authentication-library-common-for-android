@@ -315,7 +315,8 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.INFO,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                DiagnosticContext.THREAD_ID + " : " + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.THREAD_ID, "UNSET") + ", " +
+                        DiagnosticContext.CORRELATION_ID + " : " + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.CORRELATION_ID, "UNSET"),
                 message,
                 null,
                 false
@@ -347,7 +348,8 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.INFO,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                DiagnosticContext.THREAD_ID + " : " + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.THREAD_ID, "UNSET") + ", " +
+                        DiagnosticContext.CORRELATION_ID + " : " + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.CORRELATION_ID, "UNSET"),
                 message,
                 null,
                 true
