@@ -26,6 +26,7 @@ import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -138,7 +139,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
-                        if (mAuthResultSent == false && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
+                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                                 mWebView.evaluateJavascript(mPostPageLoadedJavascript, null);
                             } else {
