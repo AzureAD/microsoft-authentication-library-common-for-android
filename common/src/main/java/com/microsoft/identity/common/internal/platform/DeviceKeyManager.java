@@ -15,6 +15,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+/**
+ * A manager class for providing access to a particular entry in a KeyStore.
+ * @param <K> the type of KeyStore.Entry being managed.
+ */
 @Builder
 @Accessors(prefix = "m")
 public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K> {
