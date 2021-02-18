@@ -2,6 +2,12 @@ package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+/**
+ * An interface for interacting with a particular cipher instance.  This is suitable
+ * for any particular mechanism, as it assumes that all the key management and other
+ * implementation details are being handled by the underlying implementations.  It exposes
+ * basically only the standard cryptographic operations, encrypt, decrypt, sign, and verify.
+ */
 public interface Key {
     /**
      * Encrypt a plaintext blob, returning an encrypted byte array.
