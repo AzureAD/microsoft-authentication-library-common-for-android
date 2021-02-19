@@ -28,6 +28,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.pm.PackageInfoCompat;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -79,9 +80,7 @@ public class TelemetryContext extends Properties {
             put(App.NAME, packageInfo.applicationInfo.packageName);
             put(App.VERSION, packageInfo.versionName);
 
-            // Suppressing deprecation warnings due to deprecated property versionCode. There is already an existing issue for this: https://github.com/AzureAD/microsoft-authentication-library-common-for-android/issues/863
-            @SuppressWarnings(WarningType.deprecation_warning)
-            int versionCode = packageInfo.versionCode;
+            long versionCode = PackageInfoCompat.getLongVersionCode(packageInfo);
 
             put(App.BUILD, String.valueOf(versionCode));
 
