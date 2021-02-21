@@ -34,6 +34,7 @@ import androidx.test.uiautomator.UiSelector;
 import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.TestContext;
 import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
@@ -41,6 +42,7 @@ import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerPara
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.runner.IdentityRunnerArgs;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -76,8 +78,8 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     public AbstractTestBroker(@NonNull final String packageName,
                               @NonNull final String appName) {
-        super(packageName, appName, BuildConfig.INSTALL_SOURCE_LOCAL_APK
-                .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
+        super(packageName, appName, AppInstallSource.LocalApk.getName()
+                .equalsIgnoreCase(IdentityRunnerArgs.brokerSource)
                 ? new LocalApkInstaller() : new PlayStore());
     }
 
