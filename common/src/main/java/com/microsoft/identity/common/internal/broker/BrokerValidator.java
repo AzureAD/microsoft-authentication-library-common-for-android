@@ -36,8 +36,8 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -60,13 +60,28 @@ import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
+import static com.microsoft.identity.common.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
     private static final String TAG = "BrokerValidator";
 
+    private static boolean sShouldTrustDebugBrokers = BuildConfig.DEBUG;
+
+    public static void setShouldTrustDebugBrokers(final boolean shouldTrustDebugBrokers) {
+        if (!BuildConfig.DEBUG && shouldTrustDebugBrokers) {
+            Logger.warn(TAG, "You are forcing to trust debug brokers in non-debug builds.");
+        }
+        BrokerValidator.sShouldTrustDebugBrokers = shouldTrustDebugBrokers;
+    }
+
+    public static boolean getShouldTrustDebugBrokers() {
+        return sShouldTrustDebugBrokers;
+    }
+
     private final Context mContext;
-    private final String mCompanyPortalSignature;
 
     /**
      * Constructs a new BrokerValidator.
@@ -75,13 +90,12 @@ public class BrokerValidator {
      */
     public BrokerValidator(final Context context) {
         mContext = context;
-        mCompanyPortalSignature = AuthenticationSettings.INSTANCE.getBrokerSignature();
     }
 
     /**
      * Verifies that the installed broker package's signing certificate hash matches the known
      * release certificate hash.
-     *
+     * <p>
      * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
      *
      * @param brokerPackageName The broker package to inspect.
@@ -126,10 +140,42 @@ public class BrokerValidator {
         final String methodName = ":verifySignature";
         try {
             return verifySignatureAndThrow(brokerPackageName) != null;
-        } catch (final ClientException e){
+        } catch (final ClientException e) {
             Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
         }
 
+        return false;
+    }
+
+    /**
+     * Provides a Set of valid Broker apps based on whether debug broker should be trusted or not.
+     *
+     * @return a Set of {@link BrokerData}
+     */
+    public Set<BrokerData> getValidBrokers() {
+        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
+                ? BrokerData.getAllBrokers()
+                : BrokerData.getProdBrokers();
+
+        return validBrokers;
+    }
+
+    /**
+     * Determines if the supplied package name correspond to a valid Broker app.
+     *
+     * @param packageName the package name of the broker app to validate
+     * @return a boolean indicating if the app is a valid broker
+     */
+    public boolean isValidBrokerPackage(@NonNull final String packageName) {
+        final Set<BrokerData> validBrokers = getValidBrokers();
+
+        for (final BrokerData brokerData : validBrokers) {
+            if (brokerData.packageName.equals(packageName) && verifySignature(packageName)) {
+                return true;
+            }
+        }
+
+        // package name and/or signature not matched so this is not a valid broker.
         return false;
     }
 
@@ -148,13 +194,14 @@ public class BrokerValidator {
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
-            if (mCompanyPortalSignature.equals(signatureHash)
-                    || AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE.equals(signatureHash)) {
-                return signatureHash;
+            for (final BrokerData brokerData : getValidBrokers()) {
+                if (!TextUtils.isEmpty(brokerData.signatureHash) && brokerData.signatureHash.equals(signatureHash)) {
+                    return signatureHash;
+                }
             }
         }
 
-        throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
     }
 
     @SuppressLint("PackageManagerGetSignatures")
@@ -173,7 +220,7 @@ public class BrokerValidator {
 
         //.signatures has been deprecated
         if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
-            throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
         }
 
@@ -190,7 +237,7 @@ public class BrokerValidator {
                         certStream);
                 certificates.add(x509Certificate);
             } catch (final CertificateException e) {
-                throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED);
+                throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
             }
         }
 
@@ -225,7 +272,7 @@ public class BrokerValidator {
         }
 
         if (count > 1 || selfSignedCert == null) {
-            throw new ClientException(ErrorStrings.BROKER_APP_VERIFICATION_FAILED,
+            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "Multiple self signed certs found or no self signed cert existed.");
         }
 
@@ -235,7 +282,7 @@ public class BrokerValidator {
     /**
      * Returns the package that is currently active relative to the Work Account custom account type
      * Note: either the company portal or the authenticator
-     *
+     * <p>
      * There may be multiple packages containing the android authenticator implementation (custom account)
      * but there is only one entry for custom account type currently registered by the AccountManager.
      * If another app tries to install same authenticator (custom account type) type, it will
@@ -243,7 +290,8 @@ public class BrokerValidator {
      *
      * @return String current active broker package name, null if no broker is available
      */
-    @Nullable public String getCurrentActiveBrokerPackageName() {
+    @Nullable
+    public String getCurrentActiveBrokerPackageName() {
         AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
             if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
@@ -257,7 +305,23 @@ public class BrokerValidator {
     public static boolean isValidBrokerRedirect(@Nullable final String redirectUri,
                                                 @NonNull final Context context,
                                                 @NonNull final String packageName) {
-        return StringUtil.equalsIgnoreCase(redirectUri, getBrokerRedirectUri(context, packageName));
+        final String methodName = ":isValidBrokerRedirect";
+        final String expectedBrokerRedirectUri = getBrokerRedirectUri(context, packageName);
+        final boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+
+        if (!isValidBrokerRedirect) {
+            Logger.error(
+                    TAG + methodName,
+                    "Broker redirect uri is invalid. Expected: "
+                            + expectedBrokerRedirectUri
+                            + " Actual: "
+                            + redirectUri
+                    ,
+                    null
+            );
+        }
+
+        return isValidBrokerRedirect;
     }
 
     /**

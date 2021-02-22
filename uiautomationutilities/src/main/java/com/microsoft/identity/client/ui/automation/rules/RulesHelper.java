@@ -27,11 +27,12 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.client.ui.automation.app.AzureSampleApp;
-import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.runner.IdentityRunnerArgs;
 
 import org.junit.rules.RuleChain;
 
@@ -62,13 +63,19 @@ public class RulesHelper {
         Log.i(TAG, "Adding ResetAutomaticTimeZoneTestRule");
         ruleChain = ruleChain.around(new ResetAutomaticTimeZoneTestRule());
 
-        if (com.microsoft.identity.client.ui.automation.BuildConfig.PREFER_PRE_INSTALLED_APKS) {
+        Log.i(TAG, "Adding DeviceLockSetRule");
+        ruleChain = ruleChain.around(new DevicePinSetupRule(broker));
+
+        if (IdentityRunnerArgs.shouldPreferPreInstalledApks()) {
             Log.i(TAG, "Adding CopyPreInstalledApkRule");
             ruleChain = ruleChain.around(new CopyPreInstalledApkRule(
                     new BrokerMicrosoftAuthenticator(), new BrokerCompanyPortal(),
                     new BrokerHost(), new AzureSampleApp()
             ));
         }
+
+        Log.i(TAG, "Adding FactoryResetChromeRule");
+        ruleChain = ruleChain.around(new FactoryResetChromeRule());
 
         Log.i(TAG, "Adding RemoveBrokersBeforeTestRule");
         ruleChain = ruleChain.around(new RemoveBrokersBeforeTestRule());

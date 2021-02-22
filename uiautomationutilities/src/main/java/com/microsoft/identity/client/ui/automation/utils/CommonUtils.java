@@ -26,6 +26,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,6 +37,7 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import java.io.File;
 import java.util.Arrays;
@@ -43,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 public class CommonUtils {
 
+    private final static String TAG = CommonUtils.class.getSimpleName();
     public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     private final static String SD_CARD = "/sdcard";
@@ -53,6 +57,7 @@ public class CommonUtils {
      * @param packageName the package name to launch
      */
     public static void launchApp(@NonNull final String packageName) {
+        Logger.i(TAG, "Launch/Open " + packageName + " App..");
         final Context context = ApplicationProvider.getApplicationContext();
         final Intent intent = context.getPackageManager().getLaunchIntentForPackage(packageName);  //sets the intent to start your app
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);  //clear out any previous task, i.e., make sure it starts on the initial screen
@@ -68,7 +73,12 @@ public class CommonUtils {
      * just responds to that by accepting that permission.
      */
     public static void grantPackagePermission() {
-        UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
+        Logger.i(TAG, "Granting the requested permission to the package by handling allow permission dialog..");
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            UiAutomatorUtils.handleButtonClick("com.android.packageinstaller:id/permission_allow_button");
+        } else {
+            UiAutomatorUtils.handleButtonClick("com.android.permissioncontroller:id/permission_allow_button");
+        }
     }
 
     /**
@@ -79,6 +89,7 @@ public class CommonUtils {
      * @return a boolean indicating whether permission was already granted or not
      */
     public static boolean hasPermission(@NonNull final String packageName, @NonNull final String permission) {
+        Logger.i(TAG, "Check if given permission:" + permission + " for " + packageName + " has been granted or not..");
         final Context context = ApplicationProvider.getApplicationContext();
         final PackageManager packageManager = context.getPackageManager();
         return PackageManager.PERMISSION_GRANTED == packageManager.checkPermission(
@@ -115,6 +126,7 @@ public class CommonUtils {
      * @return a boolean indicating if the package is installed
      */
     public static boolean isPackageInstalled(@NonNull final String packageName) {
+        Logger.i(TAG, "Checks if the " + packageName + " is installed on the device..");
         final Context context = ApplicationProvider.getApplicationContext();
         final PackageManager packageManager = context.getPackageManager();
         final List<ApplicationInfo> packages = packageManager.getInstalledApplications(0);
@@ -134,6 +146,7 @@ public class CommonUtils {
      * @return a {@link List} of {@link ITestBroker} objects
      */
     public static List<ITestBroker> getAllPossibleTestBrokers() {
+        Logger.i(TAG, "Get the List of all Possible Test Brokers..");
         return Arrays.asList(
                 new ITestBroker[]{
                         new BrokerCompanyPortal(),
@@ -151,6 +164,7 @@ public class CommonUtils {
      * @param folder the folder inside sdcard where to copy the file
      */
     public static void copyFileToFolderInSdCard(final File file, @Nullable final String folder) {
+        Logger.i(TAG, "Copy the provided file object to " + folder + " inside sdcard directory on the device..");
         final String filePath = file.getAbsolutePath();
         final String destinationPath = SD_CARD + ((folder == null) ? "" : ("/" + folder));
         final File dir = new File(destinationPath);
@@ -158,5 +172,32 @@ public class CommonUtils {
         final String destFilePath = destFile.getAbsolutePath();
         AdbShellUtils.executeShellCommand("mkdir -p " + destinationPath);
         AdbShellUtils.executeShellCommandAsCurrentPackage("cp " + filePath + " " + destFilePath);
+    }
+
+    /**
+     * Launches an activity specified by the action.
+     *
+     * @param action action is which operation to be performed.
+     */
+    public static void launchIntent(@NonNull final String action) {
+        Logger.i(TAG, "Launching an activity specified by the action: " + action);
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(action);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        context.startActivity(intent);
+    }
+
+    /**
+     * Launches an activity specified by the action and data.
+     *
+     * @param action action is which operation to be performed
+     * @param data   the data to pass to the intent
+     */
+    public static void launchIntent(@NonNull final String action, @NonNull final Uri data) {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final Intent intent = new Intent(action);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        intent.setData(data);
+        context.startActivity(intent);
     }
 }

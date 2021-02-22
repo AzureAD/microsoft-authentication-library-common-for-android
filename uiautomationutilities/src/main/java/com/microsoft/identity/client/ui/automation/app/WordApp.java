@@ -32,6 +32,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
 import com.microsoft.identity.client.ui.automation.interaction.FirstPartyAppPromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -42,6 +43,7 @@ import org.junit.Assert;
  */
 public class WordApp extends App implements IFirstPartyApp {
 
+    private final static String TAG = WordApp.class.getSimpleName();
     public static final String WORD_PACKAGE_NAME = "com.microsoft.office.word";
     public static final String WORD_APP_NAME = "Microsoft Word";
 
@@ -58,10 +60,13 @@ public class WordApp extends App implements IFirstPartyApp {
     public void addFirstAccount(@NonNull final String username,
                                 @NonNull final String password,
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Adding First Account..");
         // Enter email
         UiAutomatorUtils.handleInput("com.microsoft.office.word:id/OfcEditText", username);
         // Click continue
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/OfcActionButton2");
+
+        Logger.i(TAG, "Handle First Account Sign-In Prompt on the APP..");
         // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
@@ -71,6 +76,7 @@ public class WordApp extends App implements IFirstPartyApp {
     public void addAnotherAccount(@NonNull final String username,
                                   @NonNull final String password,
                                   @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Adding Another Account..");
         // Click account drawer
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
         // Click add account
@@ -87,6 +93,7 @@ public class WordApp extends App implements IFirstPartyApp {
     private void signIn(@NonNull final String username,
                         @NonNull final String password,
                         @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Sign-In on the APP..");
         try {
             // Word has very interesting sign in UI. They show a custom WebView to accept email
             // No resource id available on anything :(
@@ -102,9 +109,10 @@ public class WordApp extends App implements IFirstPartyApp {
 
             nextBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
 
+        Logger.i(TAG, "Handle Sign-In Prompt on the APP..");
         // handle prompt
         final MicrosoftStsPromptHandler microsoftStsPromptHandler = new MicrosoftStsPromptHandler(promptHandlerParameters);
         microsoftStsPromptHandler.handlePrompt(username, password);
@@ -112,6 +120,7 @@ public class WordApp extends App implements IFirstPartyApp {
 
     @Override
     public void confirmAccount(@NonNull final String username) {
+        Logger.i(TAG, "Confirming account with supplied username is signed in..");
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.word:id/docsui_me_image");
 
         final UiObject testAccountLabelWord = UiAutomatorUtils.obtainUiObjectWithText(username);

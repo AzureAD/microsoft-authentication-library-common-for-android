@@ -87,4 +87,26 @@ public interface ISettings {
      * UI appears on the device. It will activate the admin for whichever admin requested the activation.
      */
     void activateAdmin();
+
+    /**
+     * Adds screen lock to the device.
+     */
+    void setPinOnDevice(final String pin);
+
+    /**
+     * Remove screen lock from the device.
+     */
+    void removePinFromDevice(final String pin);
+
+    /**
+     * Launches the security page in Settings app.
+     */
+    void launchScreenLockPage();
+
+    /**
+     * Launch the app info page for the supplied package name.
+     *
+     * @param packageName the package for which to open app info page
+     */
+    void launchAppInfoPage(String packageName);
 }

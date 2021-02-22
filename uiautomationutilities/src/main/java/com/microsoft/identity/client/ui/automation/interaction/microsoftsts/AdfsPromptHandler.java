@@ -25,13 +25,17 @@ package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 /**
  * A Prompt Handler for ADFS login flows.
  */
 public class AdfsPromptHandler extends MicrosoftStsPromptHandler {
 
+    private final static String TAG = AdfsPromptHandler.class.getSimpleName();
+
     public AdfsPromptHandler(@NonNull final PromptHandlerParameters parameters) {
         super(new AdfsLoginComponentHandler(), parameters);
+        Logger.i(TAG, "Initializing Adfs Prompt Handler..");
     }
 }

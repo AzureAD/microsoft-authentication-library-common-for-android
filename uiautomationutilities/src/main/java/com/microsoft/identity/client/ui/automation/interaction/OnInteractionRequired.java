@@ -20,16 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.app;
+package com.microsoft.identity.client.ui.automation.interaction;
 
 /**
- * A model representing an app that supports creating PowerLift incidents.
+ * Interface for handling user interaction in an interactive acquire token request.
  */
-public interface IPowerLiftIntegratedApp {
+public interface OnInteractionRequired {
 
     /**
-     * Create a PowerLift Incident using this app.
+     * A callback that will be invoked after calling an interactive acquire token method.
+     * This method is supposed to implement behaviour for handling user interaction.
      */
-    void createPowerLiftIncident();
-
+    void handleUserInteraction();
 }

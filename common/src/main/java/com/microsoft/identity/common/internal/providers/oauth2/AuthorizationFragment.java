@@ -64,7 +64,7 @@ public abstract class AuthorizationFragment extends Fragment {
     /**
      * Determines if authentication result has been sent.
      */
-    private boolean mAuthResultSent = false;
+    protected boolean mAuthResultSent = false;
 
     /**
      * Listens to an operation cancellation event.

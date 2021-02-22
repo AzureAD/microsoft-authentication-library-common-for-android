@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
@@ -58,6 +59,7 @@ import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
@@ -90,6 +92,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String CLIENT_ID = "<client_id>";
         static final String TARGET = "<target>";
         static final String AUTH_SCHEME = "<auth_scheme>";
+        static final String REQUESTED_CLAIMS = "<requested_claims>";
     }
 
     private static String sanitizeNull(final String input) {
@@ -175,6 +178,13 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
             }
 
+            if (!StringExtensions.isNullOrBlank(accessToken.getRequestedClaims())) {
+                // The Requested Claims string has no guarantee it doesn't contain a delimiter, so we hash it
+                cacheKey += CACHE_VALUE_SEPARATOR + REQUESTED_CLAIMS;
+                String reqClaimsHash = String.valueOf(sanitizeNull(accessToken.getRequestedClaims()).hashCode());
+                cacheKey = cacheKey.replace(REQUESTED_CLAIMS, sanitizeNull(reqClaimsHash));
+            }
+
         } else if (credential instanceof RefreshTokenRecord) {
             final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");
@@ -182,6 +192,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         } else if (credential instanceof IdTokenRecord) {
             final IdTokenRecord idToken = (IdTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, "");
+        } else if (credential instanceof PrimaryRefreshTokenRecord) {
+            cacheKey = cacheKey.replace(REALM, "");
             cacheKey = cacheKey.replace(TARGET, "");
         }
 
