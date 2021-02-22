@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import android.os.Build;
+
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,7 +57,7 @@ public enum AuthenticationSettings {
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_SIGNATURE;
+    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
 
     private Class<?> mClazzDeviceCertProxy;
 
@@ -103,8 +106,18 @@ public enum AuthenticationSettings {
     }
 
     /**
-     * set raw bytes to derive secretKey to use in encrypt/decrypt. KeySpec
+     * Set raw bytes to derive secretKey to use in encrypt/decrypt. KeySpec
      * algorithm is AES.
+     * <p>
+     * Please note: If a device with an existing installation of the ADAL/MSAL host-app is upgraded
+     * from API 17 -> API 18+ then the previously-used secret key data must continue to be supplied
+     * in order to not lose SSO state when reading cache entries written prior to upgrade.
+     * <p>
+     * For apps which may wish to transition away from this API long-term, they may do so
+     * opportunistically by clearing SharedPreferences and recreating their AuthenticationContext
+     * (or PublicClientApplication) after signing all users out or before requiring an interactive
+     * authentication prompt from the current user. Be advised that changing the keystore/secret
+     * keys will render all cache entries unreadable if they were written by another key.
      *
      * @param rawKey App related key to use in encrypt/decrypt
      */
@@ -112,7 +125,11 @@ public enum AuthenticationSettings {
         if (rawKey == null || rawKey.length != SECRET_RAW_KEY_LENGTH) {
             throw new IllegalArgumentException("rawKey");
         }
-
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            Logger.warn(":setSecretKey", "You're using setSecretKey in a version of android " +
+                    "that supports keyStore functionality.  Consider not doing this, as it only exists " +
+                    "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
+        }
         mSecretKeyData.set(rawKey);
     }
 
@@ -143,15 +160,15 @@ public enum AuthenticationSettings {
     /**
      * Clear broker secret keys.
      * Introduced as a temporary workaround to make sure Broker code clears up Broker keys in common before it's used by ADAL/MSAL.
-     * */
-    public void clearBrokerSecretKeys(){
+     */
+    public void clearBrokerSecretKeys() {
         mBrokerSecretKeys.clear();
     }
 
     /**
      * For test cases only.
-     * */
-    public void clearSecretKeysForTestCases(){
+     */
+    public void clearSecretKeysForTestCases() {
         mBrokerSecretKeys.clear();
         mSecretKeyData.set(null);
     }
@@ -392,4 +409,3 @@ public enum AuthenticationSettings {
         return mEnableHardwareAcceleration;
     }
 }
-

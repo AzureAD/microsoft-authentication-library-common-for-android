@@ -20,16 +20,44 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.client.ui.automation.app;
+package com.microsoft.identity.client.ui.automation.logging;
 
 /**
- * A model representing an app that supports creating PowerLift incidents.
+ * Logging Levels supported by {@link Logger}.
  */
-public interface IPowerLiftIntegratedApp {
+public enum LogLevel {
 
     /**
-     * Create a PowerLift Incident using this app.
+     * Error level logging.
      */
-    void createPowerLiftIncident();
+    ERROR('E'),
 
+    /**
+     * Warn level logging.
+     */
+    WARN('W'),
+    /**
+     * Info level logging.
+     */
+    INFO('I'),
+
+    /**
+     * Verbose level logging.
+     */
+    VERBOSE('V');
+
+    private final char label;
+
+    LogLevel(char label) {
+        this.label = label;
+    }
+
+    /**
+     * Get the label used to represent this log level.
+     *
+     * @return the character representing this log leve.
+     */
+    public char getLabel() {
+        return this.label;
+    }
 }

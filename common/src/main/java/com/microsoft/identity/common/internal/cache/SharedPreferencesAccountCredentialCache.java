@@ -103,21 +103,37 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
-    public synchronized void saveAccount(@NonNull final AccountRecord account) {
+    public synchronized void saveAccount(@NonNull final AccountRecord accountToSave) {
         Logger.verbose(TAG, "Saving Account...");
-        Logger.verbose(TAG, "Account type: [" + account.getClass().getSimpleName() + "]");
-        final String cacheKey = mCacheValueDelegate.generateCacheKey(account);
+        Logger.verbose(TAG, "Account type: [" + accountToSave.getClass().getSimpleName() + "]");
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(accountToSave);
         Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
-        final String cacheValue = mCacheValueDelegate.generateCacheValue(account);
+
+        // Perform any necessary field merging on the Account to save...
+        final AccountRecord existingAccount = getAccount(cacheKey);
+
+        if (null != existingAccount) {
+            accountToSave.mergeAdditionalFields(existingAccount);
+        }
+
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
-    public synchronized void saveCredential(@NonNull Credential credential) {
+    public synchronized void saveCredential(@NonNull Credential credentialToSave) {
         Logger.verbose(TAG, "Saving credential...");
-        final String cacheKey = mCacheValueDelegate.generateCacheKey(credential);
+        final String cacheKey = mCacheValueDelegate.generateCacheKey(credentialToSave);
         Logger.verbosePII(TAG, "Generated cache key: [" + cacheKey + "]");
-        final String cacheValue = mCacheValueDelegate.generateCacheValue(credential);
+
+        // Perform any necessary field merging on the Credential to save...
+        final Credential existingCredential = getCredential(cacheKey);
+
+        if (null != existingCredential) {
+            credentialToSave.mergeAdditionalFields(existingCredential);
+        }
+
+        final String cacheValue = mCacheValueDelegate.generateCacheValue(credentialToSave);
         mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
@@ -311,6 +327,39 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 realm,
                 target,
                 authScheme,
+                null,
+                allCredentials
+        );
+
+        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
+        return matchingCredentials;
+    }
+
+    @Override
+    @NonNull
+    public List<Credential> getCredentialsFilteredBy(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @Nullable final String requestedClaims) {
+        Logger.verbose(TAG, "getCredentialsFilteredBy()");
+
+        final List<Credential> allCredentials = getCredentials();
+
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                homeAccountId,
+                environment,
+                credentialType,
+                clientId,
+                realm,
+                target,
+                authScheme,
+                requestedClaims,
                 allCredentials
         );
 
@@ -430,7 +479,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 } else if (CredentialType.V1IdToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.V1IdToken;
                     break;
-                } else {
+                } else if (CredentialType.PrimaryRefreshToken.name().equalsIgnoreCase(credentialTypeStr)) {
+                    type = CredentialType.PrimaryRefreshToken;
+                    break;
+                }else {
                     // TODO Log a warning and skip this value?
                     Logger.warn(TAG, "Unexpected credential type.");
                 }

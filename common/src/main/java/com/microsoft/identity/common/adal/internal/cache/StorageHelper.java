@@ -32,6 +32,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
@@ -70,6 +71,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -83,12 +86,16 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.security.auth.x500.X500Principal;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
 public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static final AtomicReference<String> LAST_KNOWN_THUMBPRINT = new AtomicReference<>("");
+    private static final AtomicBoolean FIRST_TIME = new AtomicBoolean(false);
 
     /**
      * A flag to turn on/off keystore encryption on Broker apps.
@@ -126,6 +133,13 @@ public class StorageHelper implements IStorageHelper {
      * probably doing PKCS7. We decide to go with Java default string.
      */
     private static final String CIPHER_ALGORITHM = "AES/CBC/PKCS5Padding";
+
+    /**
+     * We are going to attempt to track key changes when performing encryption/decryption.
+     * To do this, we're actually going to run this in ECB mode on a fixed input, and that
+     * should be OK only because we're going to further hash that value.
+     */
+    private static final String CIPHER_ALGORITHM_FOR_KEY_TRACKING = "AES/ECB/PKCS5Padding";
 
     private static final String HMAC_ALGORITHM = "HmacSHA256";
 
@@ -242,8 +256,7 @@ public class StorageHelper implements IStorageHelper {
         // load key for encryption if not loaded
         mEncryptionKey = loadSecretKeyForEncryption();
         mEncryptionHMACKey = getHMacKey(mEncryptionKey);
-        Logger.info(TAG + methodName, "Using key with thumbprint " + getKeyThumbPrint(mEncryptionKey, mEncryptionHMACKey));
-
+        logIfKeyHasChanged(mEncryptionKey, mEncryptionHMACKey);
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
         final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
@@ -288,11 +301,22 @@ public class StorageHelper implements IStorageHelper {
         return getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
     }
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public String testThumbprint() throws IOException, GeneralSecurityException {
+        final SecretKey secretKey = loadSecretKeyForEncryption();
+        return getKeyThumbPrint(secretKey, getHMacKey(secretKey));
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public boolean testKeyChange() throws IOException, GeneralSecurityException {
+        final SecretKey secretKey = loadSecretKeyForEncryption();
+        return logIfKeyHasChanged(secretKey, getHMacKey(secretKey));
+    }
     private String getKeyThumbPrint(final @NonNull SecretKey secretKey, final @NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
-        final Cipher thumbPrintCipher = Cipher.getInstance(CIPHER_ALGORITHM);
+        final Cipher thumbPrintCipher = Cipher.getInstance(CIPHER_ALGORITHM_FOR_KEY_TRACKING);
         final byte[] thumbprintBytes = "012345678910111213141516".getBytes();
         thumbPrintCipher.init(Cipher.ENCRYPT_MODE, secretKey);
-        byte[] bytesOut = thumbPrintCipher.doFinal();
+        byte[] bytesOut = thumbPrintCipher.doFinal(thumbprintBytes);
         Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
         thumbprintMac.init(hmacKey);
         byte[] thumprintFinal = thumbprintMac.doFinal(bytesOut);
@@ -440,7 +464,8 @@ public class StorageHelper implements IStorageHelper {
 
         if (encryptionType == EncryptionType.USER_DEFINED) {
             if (isBrokerProcess()) {
-                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
+                        BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
                     keyTypeList.add(KeyType.LEGACY_COMPANY_PORTAL_KEY);
                     keyTypeList.add(KeyType.LEGACY_AUTHENTICATOR_APP_KEY);
                 } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
@@ -482,7 +507,8 @@ public class StorageHelper implements IStorageHelper {
         mac.init(hmacKey);
         mac.update(bytes, 0, macIndex);
         final byte[] macDigest = mac.doFinal();
-        Logger.info(TAG + ":decryptWithSecretKey", "Using key with thumbprint " + getKeyThumbPrint(secretKey, hmacKey));
+
+        logIfKeyHasChanged(secretKey, hmacKey);
 
         // Compare digest of input message and calculated digest
         assertHMac(bytes, macIndex, bytes.length, macDigest);
@@ -508,6 +534,18 @@ public class StorageHelper implements IStorageHelper {
         );
 
         return decrypted;
+    }
+
+    private boolean logIfKeyHasChanged(@NonNull SecretKey secretKey, SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+        final String keyThumbPrint = getKeyThumbPrint(secretKey, hmacKey);
+        if (!LAST_KNOWN_THUMBPRINT.get().equals(keyThumbPrint)) {
+            LAST_KNOWN_THUMBPRINT.set(keyThumbPrint);
+            if(!FIRST_TIME.compareAndSet(false, true)) {
+                Logger.info(TAG + ":logIfKeyHasChanged", "Using key with thumbprint that has changed " + keyThumbPrint);
+                return true;
+            }
+        }
+        return false;
     }
 
     private void validateEncodeVersion(String encryptedBlob, int encodeVersionLength) {

@@ -26,15 +26,19 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 /**
  * A Prompt Handler for Microsoft STS login flows.
  */
 public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
+
+    private final static String TAG = MicrosoftStsPromptHandler.class.getSimpleName();
 
     public MicrosoftStsPromptHandler(
             @NonNull MicrosoftStsPromptHandlerParameters parameters) {
@@ -42,6 +46,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 parameters.isFederated() ? new AdfsLoginComponentHandler() : new AadLoginComponentHandler(),
                 parameters
         );
+        Logger.i(TAG, "Initializing Microsoft Sts Prompt Handler..");
     }
 
     public MicrosoftStsPromptHandler(
@@ -51,6 +56,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
                 loginComponentHandler,
                 parameters
         );
+        Logger.i(TAG, "Initializing Microsoft Sts Prompt Handler..");
     }
 
     @Override

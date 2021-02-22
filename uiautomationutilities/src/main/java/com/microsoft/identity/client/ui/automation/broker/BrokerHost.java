@@ -35,6 +35,7 @@ import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.AadPromptHandler;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -44,6 +45,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND
 
 public class BrokerHost extends AbstractTestBroker {
 
+    private final static String TAG = BrokerHost.class.getSimpleName();
     public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
@@ -56,6 +58,8 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public void performDeviceRegistration(@NonNull final String username,
                                           @NonNull final String password) {
+
+        Logger.i(TAG, "Performing Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join btn
@@ -83,6 +87,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
+        Logger.i(TAG, "Handle prompt of AAD login page for Device Registration..");
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
 
@@ -91,6 +96,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void performSharedDeviceRegistration(String username, String password) {
+        Logger.i(TAG, "Performing Shared Device Registration for the given account..");
         performDeviceRegistrationHelper(username);
 
         // Click the join shared device btn
@@ -117,6 +123,7 @@ public class BrokerHost extends AbstractTestBroker {
 
         final AadPromptHandler aadPromptHandler = new AadPromptHandler(promptHandlerParameters);
 
+        Logger.i(TAG, "Handle prompt of AAD login page for Shared Device Registration..");
         // handle AAD login page
         aadPromptHandler.handlePrompt(username, password);
 
@@ -124,6 +131,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     private void performDeviceRegistrationHelper(@NonNull final String username) {
+        Logger.i(TAG, "Execution of Helper for Device Registration..");
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
@@ -138,6 +146,7 @@ public class BrokerHost extends AbstractTestBroker {
     }
 
     private void postJoinConfirmHelper(@NonNull final String expectedUpn) {
+        Logger.i(TAG, "Confirming that Shared Device Registration is successfull or not..");
         // Look for join op completion dialog
         final UiObject joinFinishDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
@@ -166,6 +175,7 @@ public class BrokerHost extends AbstractTestBroker {
     @Nullable
     @Override
     public String obtainDeviceId() {
+        Logger.i(TAG, "Obtain Device Id..");
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
@@ -200,6 +210,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Override
     public void enableBrowserAccess() {
+        Logger.i(TAG, "Enable Browser Access..");
         launch();
 
         if (shouldHandleFirstRun) {
@@ -224,9 +235,10 @@ public class BrokerHost extends AbstractTestBroker {
 
         UiAutomatorUtils.handleButtonClick("android:id/button1");
     }
-    
+
     @Override
     public DeviceAdmin getAdminName() {
+        Logger.i(TAG, "Get Admin name..");
         return DeviceAdmin.BROKER_HOST;
     }
 
@@ -237,6 +249,7 @@ public class BrokerHost extends AbstractTestBroker {
 
     @Nullable
     public String getAccountUpn() {
+        Logger.i(TAG, "Get Account Upn..");
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {

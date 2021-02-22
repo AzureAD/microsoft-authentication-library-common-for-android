@@ -31,6 +31,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -47,16 +48,16 @@ import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils
  */
 public class GoogleSettings extends BaseSettings {
 
+    private final static String TAG = GoogleSettings.class.getSimpleName();
+
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
+        Logger.i(TAG, "Disabling Admin on Google Device..");
         launchDeviceAdminSettingsPage();
 
         try {
             // scroll down the recycler view to find the list item for this admin
-            final UiObject adminAppListItem = UiAutomatorUtils.obtainChildInScrollable(
-                    "android:id/list",
-                    deviceAdmin.getAdminName()
-            );
+            final UiObject adminAppListItem = obtainDisableAdminButton(deviceAdmin);
 
             // select this admin by clicking it
             assert adminAppListItem != null;
@@ -74,20 +75,19 @@ public class GoogleSettings extends BaseSettings {
             // Click confirmation
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
     @Override
     public void removeAccount(@NonNull final String username) {
+        Logger.i(TAG, "Removing Account from Google Device..");
         launchAccountListPage();
 
         try {
             // find the list item associated to this account
-            final UiObject account = UiAutomatorUtils.obtainChildInScrollable(
-                    "com.android.settings:id/list",
-                    username
-            );
+            final UiObject account = obtainButtonInScrollable(username);
+
             // Click this account
             account.click();
 
@@ -107,7 +107,7 @@ public class GoogleSettings extends BaseSettings {
             // Click confirm in confirmation dialog
             removeAccountConfirmationDialogBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
@@ -115,14 +115,12 @@ public class GoogleSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        Logger.i(TAG, "Adding Work Account on Google Device..");
         launchAddAccountPage();
 
         try {
             // scroll down the recycler view to find the list item for this account type
-            final UiObject workAccount = UiAutomatorUtils.obtainChildInScrollable(
-                    "com.android.settings:id/list",
-                    "Work account"
-            );
+            final UiObject workAccount = obtainButtonInScrollable("Work account");
 
             // Click into this account type
             workAccount.click();
@@ -147,12 +145,13 @@ public class GoogleSettings extends BaseSettings {
             // Make sure account appears in Join Activity afterwards
             broker.confirmJoinInJoinActivity(username);
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
     @Override
     public void forwardDeviceTimeForOneDay() {
+        Logger.i(TAG, "Forwarding Time For One Day on Google Device..");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
         // Launch the date time settings page
@@ -160,7 +159,7 @@ public class GoogleSettings extends BaseSettings {
 
         try {
             // Click the set date button
-            final UiObject setDateBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
+            final UiObject setDateBtn = obtainDateButton();
             setDateBtn.click();
 
             // Make sure we see the calendar
@@ -190,12 +189,13 @@ public class GoogleSettings extends BaseSettings {
             final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
             okBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
 
     @Override
     public void activateAdmin() {
+        Logger.i(TAG, "Activating Admin on Google Device..");
         try {
             // scroll down the recycler view to find activate device admin btn
             final UiObject activeDeviceAdminBtn = UiAutomatorUtils.obtainChildInScrollable(
@@ -207,7 +207,99 @@ public class GoogleSettings extends BaseSettings {
             // click on activate device admin btn
             activeDeviceAdminBtn.click();
         } catch (final UiObjectNotFoundException e) {
-            Assert.fail(e.getMessage());
+            throw new AssertionError(e);
         }
     }
+
+    private UiObject obtainDateButton() {
+        Logger.i(TAG, "Obtain Date Button on Google Device..");
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            return UiAutomatorUtils.obtainUiObjectWithText("Set date");
+        }
+
+        return UiAutomatorUtils.obtainEnabledUiObjectWithExactText("Date");
+    }
+
+    private UiObject obtainButtonInScrollable(final String Text) {
+        Logger.i(TAG, "Obtain Button In Scrollable on Google Device..");
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            return UiAutomatorUtils.obtainChildInScrollable(
+                    "com.android.settings:id/list",
+                    Text
+            );
+        }
+
+        return UiAutomatorUtils.obtainChildInScrollable(
+                "com.android.settings:id/recycler_view",
+                Text
+        );
+    }
+
+
+    private UiObject obtainDisableAdminButton(final DeviceAdmin deviceAdmin) {
+        Logger.i(TAG, "Obtain Disable Admin Button on Google Device..");
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            return UiAutomatorUtils.obtainChildInScrollable(
+                    "android:id/list",
+                    deviceAdmin.getAdminName()
+            );
+        }
+
+        return UiAutomatorUtils.obtainChildInScrollable(
+                "com.android.settings:id/recycler_view",
+                deviceAdmin.getAdminName()
+        );
+    }
+
+    @Override
+    public void setPinOnDevice(final String pin) {
+        try {
+            Logger.i(TAG, "Set Pin on Google Device..");
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            launchScreenLockPage();
+            final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
+            Assert.assertTrue(screenLock.exists());
+            screenLock.click();
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_pin");
+            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
+            device.pressEnter();
+            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
+            device.pressEnter();
+            handleDoneButton();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    @Override
+    public void removePinFromDevice(final String pin) {
+        try {
+            Logger.i(TAG, "Remove Pin on Google Device..");
+            final UiDevice device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
+            launchScreenLockPage();
+            final UiObject screenLock = UiAutomatorUtils.obtainUiObjectWithText("Screen lock");
+            Assert.assertTrue(screenLock.exists());
+            screenLock.click();
+            UiAutomatorUtils.handleInput("com.android.settings:id/password_entry", pin);
+            device.pressEnter();
+            // Click Lock None
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/lock_none");
+            // confirm removal of screen lock
+            UiAutomatorUtils.handleButtonClick("android:id/button1");
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private void handleDoneButton() throws UiObjectNotFoundException {
+        Logger.i(TAG, "Handle Done Button on Google Device..");
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            UiAutomatorUtils.handleButtonClick("com.android.settings:id/redaction_done_button");
+        } else {
+            final UiObject doneButton = UiAutomatorUtils.obtainUiObjectWithExactText("Done");
+            doneButton.click();
+        }
+    }
+
 }
+

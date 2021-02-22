@@ -61,6 +61,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
 
 /**
@@ -128,6 +129,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      * <li>A url that starts with the same prefix as the tenant's redirect url</li>
      * <li>An explicit request to open the browser (starts with "browser://")</li>
      * <li>A request to install the auth broker (starts with "msauth://")</li>
+     * <li>A request from WebCP (starts with "companyportal://")</li>
      * <li>It is a request that has the intent of starting the broker and the url starts with "browser://"</li>
      * <li>It <strong>does not</strong> begin with "https://".</li></ul>
      *
@@ -151,20 +153,59 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 returnError(exception.getErrorCode(), exception.getMessage());
                 view.stopLoading();
             }
-            return true;
         } else if (isRedirectUrl(formattedURL)) {
             Logger.info(TAG, "Navigation starts with the redirect uri.");
-            return processRedirectUrl(view, url);
+            processRedirectUrl(view, url);
         } else if (isWebsiteRequestUrl(formattedURL)) {
             Logger.info(TAG, "It is an external website request");
-            return processWebsiteRequest(view, url);
+            processWebsiteRequest(view, url);
         } else if (isInstallRequestUrl(formattedURL)) {
             Logger.info(TAG, "It is an install request");
-            return processInstallRequest(view, url);
+            processInstallRequest(view, url);
+        } else if (isWebCpUrl(formattedURL)) {
+            Logger.info(TAG, "It is a request from WebCP");
+            processWebCpRequest(view, url);
+        } else if (isPlayStoreUrl(formattedURL)) {
+            Logger.info(TAG, "Request to open PlayStore.");
+            return processPlayStoreURL(view, url);
+        } else if (isAuthAppMFAUrl(formattedURL)) {
+            Logger.info(TAG, "Request to link account with Authenticator.");
+            processAuthAppMFAUrl(url);
+        } else if (isInvalidRedirectUri(url)) {
+            Logger.info(TAG, "Check for Redirect Uri.");
+            processInvalidRedirectUri(view, url);
+        } else if (isBlankPageRequest(formattedURL)) {
+            Logger.info(TAG, "It is an blank page request");
+        } else if (isUriSSLProtected(formattedURL)) {
+            Logger.info(TAG, "Check for SSL protection");
+            processSSLProtectionCheck(view, url);
         } else {
-            Logger.info(TAG, "It is an invalid redirect uri.");
-            return processInvalidUrl(view, url);
+            Logger.info(TAG, "This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
+            processInvalidUrl(url);
+            return false;
         }
+        return true;
+    }
+
+    private boolean isUriSSLProtected(@NonNull final String url) {
+        return !(url.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX));
+    }
+
+    private boolean isBlankPageRequest(@NonNull final String url) {
+        return "about:blank".equals(url);
+    }
+
+    private boolean isInvalidRedirectUri(@NonNull final String url) {
+        return isBrokerRequest(getActivity().getIntent())
+                && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX);
+    }
+
+    private boolean isAuthAppMFAUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX);
+    }
+
+    private boolean isPlayStoreUrl(@NonNull final String url) {
+        return url.startsWith(PLAY_STORE_INSTALL_PREFIX);
     }
 
     private boolean isPkeyAuthUrl(@NonNull final String url) {
@@ -190,9 +231,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 .getStringExtra(AuthenticationConstants.Broker.BROKER_REQUEST));
     }
 
+    private boolean isWebCpUrl(@NonNull final String url) {
+        return url.startsWith(AuthenticationConstants.Broker.BROWSER_EXT_WEB_CP);
+    }
+
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
-    protected boolean processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
+    protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
         final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
         if (!StringExtensions.isNullOrBlank(parameters.get(ERROR))) {
             Logger.info(TAG, "Sending intent to cancel authentication activity");
@@ -228,11 +273,9 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
             //the TokenTask should be processed at after the authorization process in the upper calling layer.
         }
-
-        return true;
     }
 
-    private boolean processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
+    private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
         final String methodName = "#processWebsiteRequest";
 
         view.stopLoading();
@@ -250,18 +293,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     IPPHONE_APP_SIGNATURE.equals(packageHelper.getCurrentSignatureForPackage(IPPHONE_APP_PACKAGE_NAME)) &&
                     packageHelper.isPackageInstalledAndEnabled(applicationContext, COMPANY_PORTAL_APP_PACKAGE_NAME)) {
                 try {
-                    Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
-                    final Intent intent = new Intent();
-                    intent.setComponent(new ComponentName(
-                            COMPANY_PORTAL_APP_PACKAGE_NAME,
-                            AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    getActivity().startActivity(intent);
-
-                    getCompletionCallback().onChallengeResponseReceived(
-                            AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
-                            new Intent());
-                    return true;
+                    launchCompanyPortal();
+                    return;
                 } catch (final Exception ex) {
                     Logger.warn(TAG + methodName, "Failed to launch Company Portal, falling back to browser.");
                 }
@@ -272,14 +305,66 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             getCompletionCallback().onChallengeResponseReceived(
                     AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
                     new Intent());
-            return true;
+            return;
         }
 
         openLinkInBrowser(url);
         getCompletionCallback().onChallengeResponseReceived(
                 AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL,
                 new Intent());
+    }
+
+    private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
+        final String methodName = "#processPlayStoreURL";
+
+        view.stopLoading();
+        if (!(url.startsWith(PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME))
+                && !(url.startsWith(PLAY_STORE_INSTALL_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME))) {
+            Logger.info(TAG + methodName, "The URI is either trying to open an unknown application or contains unknown query parameters");
+            return false;
+        }
+        final String appPackageName = (url.contains(COMPANY_PORTAL_APP_PACKAGE_NAME) ?
+                COMPANY_PORTAL_APP_PACKAGE_NAME : AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME);
+        Logger.info(TAG + methodName, "Request to open PlayStore to install package : '" + appPackageName + "'");
+
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_INSTALL_PREFIX + appPackageName));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            getActivity().startActivity(intent);
+        } catch (android.content.ActivityNotFoundException e) {
+            //if GooglePlay is not present on the device.
+            Logger.error(TAG + methodName, "PlayStore is not present on the device", e);
+        }
+
         return true;
+    }
+
+    private void processAuthAppMFAUrl(String url) {
+        final String methodName = "#processAuthAppMFAUrl";
+        Logger.verbose(TAG + methodName, "Linking Account in Broker for MFA.");
+        try {
+            final Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getActivity().startActivity(intent);
+        } catch (android.content.ActivityNotFoundException e) {
+            Logger.error(TAG, "Failed to open the Authenticator application.", e);
+        }
+    }
+
+    private void launchCompanyPortal() {
+        final String methodName = "#launchCompanyPortal";
+
+        Logger.verbose(TAG + methodName, "Sending intent to launch the CompanyPortal.");
+        final Intent intent = new Intent();
+        intent.setComponent(new ComponentName(
+                COMPANY_PORTAL_APP_PACKAGE_NAME,
+                AuthenticationConstants.Broker.COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        getActivity().startActivity(intent);
+
+        getCompletionCallback().onChallengeResponseReceived(
+                AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
+                new Intent());
     }
 
     private void openLinkInBrowser(final String url) {
@@ -296,7 +381,20 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    private boolean processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
+    private void processWebCpRequest(@NonNull final WebView view, @NonNull final String url) {
+
+        view.stopLoading();
+
+        if (url.equalsIgnoreCase(AuthenticationConstants.Broker.WEBCP_LAUNCH_COMPANY_PORTAL_URL)) {
+            launchCompanyPortal();
+            return;
+        }
+
+        returnError(ErrorStrings.WEBCP_URI_INVALID,
+                "Unexpected URL from WebCP: " + url);
+    }
+
+    private void processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
         final Intent resultIntent = new Intent();
         final HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
         final String installLink = parameters.get(AuthenticationConstants.Broker.INSTALL_URL_KEY);
@@ -311,7 +409,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                     resultIntent
             );
             view.stopLoading();
-            return true;
+            return;
         }
 
         Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
@@ -338,39 +436,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 view.stopLoading();
             }
         }, threadSleepForCallingActivity);
-
-        return true;
     }
 
-    private boolean processInvalidUrl(@NonNull final WebView view, @NonNull final String url) {
-        final String lowerCaseUrl = url.toLowerCase(Locale.US);
-        if (isBrokerRequest(getActivity().getIntent())
-                && url.startsWith(AuthenticationConstants.Broker.REDIRECT_PREFIX)) {
-            Logger.error(TAG, "The RedirectUri is not as expected.", null);
-            Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
-            returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
-                    String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
-                            mRedirectUrl));
-            view.stopLoading();
-            return true;
-        }
+    private void processInvalidRedirectUri(@NonNull final WebView view, @NonNull final String url) {
+        final String methodName = "#processInvalidRedirectUri";
 
-        if ("about:blank".equals(lowerCaseUrl)) {
-            Logger.verbose(TAG, "It is an blank page request");
-            return true;
-        }
+        Logger.error(TAG + methodName, "The RedirectUri is not as expected.", null);
+        Logger.errorPII(TAG, String.format("Received %s and expected %s", url, mRedirectUrl), null);
+        returnError(ErrorStrings.DEVELOPER_REDIRECTURI_INVALID,
+                String.format("The RedirectUri is not as expected. Received %s and expected %s", url,
+                        mRedirectUrl));
+        view.stopLoading();
+    }
 
-        if (!lowerCaseUrl.startsWith(AuthenticationConstants.Broker.REDIRECT_SSL_PREFIX)) {
-            final String redactedUrl = removeQueryParametersOrRedact(url);
+    private void processSSLProtectionCheck(@NonNull final WebView view, @NonNull final String url) {
+        final String redactedUrl = removeQueryParametersOrRedact(url);
 
-            Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
-            returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
-            view.stopLoading();
-            return true;
-        }
+        Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
+        returnError(ErrorStrings.WEBVIEW_REDIRECTURL_NOT_SSL_PROTECTED, "The webView was redirected to an unsafe URL.");
+        view.stopLoading();
+    }
+
+    private void processInvalidUrl(@NonNull final String url) {
+
         Logger.infoPII(TAG, "We are declining to override loading and redirect to invalid URL: '"
                 + removeQueryParametersOrRedact(url) + "' the user's url pattern is '" + mRedirectUrl + "'");
-        return false;
     }
 
     private String removeQueryParametersOrRedact(@NonNull final String url) {

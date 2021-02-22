@@ -52,6 +52,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.EXPIRES_ON;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -105,6 +106,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
+                SESSION_KEY,
                 CredentialType.IdToken
         );
 
@@ -224,6 +226,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
+                SESSION_KEY,
                 CredentialType.IdToken
         );
 
@@ -281,6 +284,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
+                SESSION_KEY,
                 CredentialType.IdToken
         );
 
@@ -401,6 +405,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
+                SESSION_KEY,
                 CredentialType.IdToken
         );
 
@@ -458,6 +463,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
+                SESSION_KEY,
                 CredentialType.V1IdToken
         );
 

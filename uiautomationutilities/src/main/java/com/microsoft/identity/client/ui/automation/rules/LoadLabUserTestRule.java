@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.internal.testutils.labutils.LabUserHelper;
 import com.microsoft.identity.internal.testutils.labutils.LabUserQuery;
 
@@ -34,6 +35,8 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * A Test Rule to load lab user for the provided query prior to executing the test case.
  */
@@ -41,7 +44,7 @@ public class LoadLabUserTestRule implements TestRule {
 
     private final static String TAG = LoadLabUserTestRule.class.getSimpleName();
 
-    public static final int TEMP_USER_WAIT_TIME = 15000;
+    public static final long TEMP_USER_WAIT_TIME = TimeUnit.SECONDS.toMillis(20);
 
     private LabUserQuery query;
     private String tempUserType;
@@ -61,17 +64,19 @@ public class LoadLabUserTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 if (query != null) {
+                    Logger.i(TAG, "Loading Existing User for Test..");
                     upn = LabUserHelper.loadUserForTest(query);
                 } else if (tempUserType != null) {
+                    Logger.i(TAG, "Loading Temp User for Test....");
                     upn = LabUserHelper.loadTempUser(tempUserType);
                     try {
                         // temp user takes some time to actually being created even though it may be
                         // returned by the LAB API. Adding a wait here before we proceed with the test.
                         Thread.sleep(TEMP_USER_WAIT_TIME);
                     } catch (final InterruptedException e) {
-                        Assert.fail(e.getMessage());
+                        throw new AssertionError(e);
                     }
                 } else {
                     throw new IllegalArgumentException("Both Lab User query and temp user type were null.");

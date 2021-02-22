@@ -24,7 +24,9 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Debug;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -82,7 +84,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     private HashMap<String, String> mRequestHeaders;
 
     // For MSAL CPP test cases only
-    private String mPostPageLoadedUrl;
+    private String mPostPageLoadedJavascript;
 
     private boolean webViewZoomControlsEnabled;
 
@@ -102,8 +104,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         outState.putString(REDIRECT_URI, mRedirectUri);
         outState.putString(REQUEST_URL, mAuthorizationRequestUrl);
         outState.putSerializable(REQUEST_HEADERS, mRequestHeaders);
-        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
-        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedUrl);
+        outState.putSerializable(POST_PAGE_LOADED_URL, mPostPageLoadedJavascript);
         outState.putBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
         outState.putBoolean(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
     }
@@ -116,7 +117,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mAuthorizationRequestUrl = state.getString(REQUEST_URL);
         mRedirectUri = state.getString(REDIRECT_URI);
         mRequestHeaders = getRequestHeaders(state);
-        mPostPageLoadedUrl = state.getString(POST_PAGE_LOADED_URL);
+        mPostPageLoadedJavascript = state.getString(POST_PAGE_LOADED_URL);
         webViewZoomEnabled = state.getBoolean(WEB_VIEW_ZOOM_ENABLED, true);
         webViewZoomControlsEnabled = state.getBoolean(WEB_VIEW_ZOOM_CONTROLS_ENABLED, true);
     }
@@ -136,9 +137,17 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public void onPageLoaded() {
                         mProgressBar.setVisibility(View.INVISIBLE);
 
-                        // Inject string from test suites.
-                        if (!StringExtensions.isNullOrBlank(mPostPageLoadedUrl)) {
-                            mWebView.loadUrl(mPostPageLoadedUrl);
+                        // Inject the javascript string from testing. This should only be evaluated if we haven't sent
+                        // an auth result already.
+                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                                mWebView.evaluateJavascript(mPostPageLoadedJavascript, null);
+                            } else {
+                                // On earlier versions of Android, javascript has to be loaded with a custom scheme.
+                                // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
+                                // our javascript may contain the '%' character, so we escape it again, to undo that.
+                                mWebView.loadUrl("javascript:" + mPostPageLoadedJavascript.replace("%", "%25"));
+                            }
                         }
                     }
                 },
@@ -148,8 +157,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
-                // load blank first to avoid error for not loading webView
-                mWebView.loadUrl("about:blank");
                 Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
                 mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
@@ -171,18 +178,14 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public boolean onBackPressed() {
         Logger.info(TAG, "Back button is pressed");
-        if (null != mWebView && mWebView.canGoBack()) {
-            // User should be able to click back button to cancel. Counting blank page as well.
-            final int BACK_PRESSED_STEPS = -2;
-            if (!mWebView.canGoBackOrForward(BACK_PRESSED_STEPS)) {
-                cancelAuthorization(true);
-            } else {
-                mWebView.goBack();
-            }
-            return true;
+
+        if (mWebView.canGoBack()) {
+            mWebView.goBack();
+        } else {
+            cancelAuthorization(true);
         }
 
-        return false;
+        return true;
     }
 
     /**

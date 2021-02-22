@@ -56,6 +56,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 
@@ -91,6 +92,7 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
+                SESSION_KEY,
                 CredentialType.V1IdToken
         );
     }
@@ -288,6 +290,43 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void saveCredentialsWithAccountForPRTTest() throws ClientException {
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        mCppCache.saveAccountRecord(generatedAccount);
+
+        mCppCache.saveCredentials(
+                generatedAccount,
+                mTestBundle.mGeneratedAccessToken,
+                mTestBundle.mGeneratedIdToken,
+                mTestBundle.mGeneratedRefreshToken,
+                mTestBundle.mGeneratedPrimaryRefreshToken
+        );
+
+        // Restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        Assert.assertNotNull(restoredAccount);
+        Assert.assertEquals(generatedAccount, restoredAccount);
+
+        final ICacheRecord cacheRecord = mCppCache.load(
+                mTestBundle.mGeneratedIdToken.getClientId(),
+                mTestBundle.mGeneratedAccessToken.getTarget(),
+                generatedAccount,
+                new BearerAuthenticationSchemeInternal()
+        );
+
+        Assert.assertEquals(
+                mTestBundle.mGeneratedAccessToken,
+                cacheRecord.getAccessToken()
+        );
+    }
+
+    @Test
     public void saveCredentialsWithoutAccountTest() throws ClientException {
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
 
@@ -313,5 +352,44 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedAccessToken));
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedIdToken));
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedRefreshToken));
+    }
+
+    @Test
+    public void saveCredentialsWithoutAccountForPRTTest() throws ClientException {
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        mCppCache.saveCredentials(
+                null,
+                mTestBundle.mGeneratedAccessToken,
+                mTestBundle.mGeneratedIdToken,
+                mTestBundle.mGeneratedPrimaryRefreshToken
+        );
+
+        // Restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Account doesn't exist
+        Assert.assertNull(restoredAccount);
+
+        // Inspect the contents of the cache
+        final List<Credential> credentials = mCppCache.getCredentials();
+        Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedAccessToken));
+        Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedIdToken));
+        Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedPrimaryRefreshToken));
+    }
+
+    @Test(expected = ClientException.class)
+    public void saveATSansTargetThrowsException() throws ClientException {
+        mTestBundle.mGeneratedAccessToken.setTarget(null);
+        mCppCache.saveCredentials(
+                null,
+                mTestBundle.mGeneratedAccessToken,
+                mTestBundle.mGeneratedIdToken,
+                mTestBundle.mGeneratedRefreshToken
+        );
     }
 }

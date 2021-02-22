@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -177,11 +178,12 @@ public class BrokerOAuth2TokenCache
      * @return The {@link ICacheRecord} result of this save action.
      * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
      */
-    public ICacheRecord save(@NonNull AccountRecord accountRecord,
-                             @NonNull IdTokenRecord idTokenRecord,
-                             @NonNull AccessTokenRecord accessTokenRecord,
-                             @Nullable String familyId) throws ClientException {
-        final String methodName = ":save";
+    @Deprecated
+    public ICacheRecord save(final @NonNull AccountRecord accountRecord,
+                             final @NonNull IdTokenRecord idTokenRecord,
+                             final @NonNull AccessTokenRecord accessTokenRecord,
+                             final @Nullable String familyId) throws ClientException {
+        final String methodName = ":save (4 args)";
 
         final ICacheRecord result;
 
@@ -238,7 +240,82 @@ public class BrokerOAuth2TokenCache
         return result;
     }
 
-    @SuppressWarnings("unchecked")
+    /**
+     * Broker-only API to persist WPJ's Accounts & their associated credentials.
+     *
+     * @param accountRecord      The {@link AccountRecord} to store.
+     * @param idTokenRecord      The {@link IdTokenRecord} to store.
+     * @param accessTokenRecord  The {@link AccessTokenRecord} to store.
+     * @param refreshTokenRecord The {@link RefreshTokenRecord} to store.
+     * @param familyId           The family_id or null, if not applicable.
+     * @return The {@link ICacheRecord} result of this save action.
+     * @throws ClientException If the supplied Accounts or Credentials are schema invalid.
+     */
+    public ICacheRecord save(@NonNull AccountRecord accountRecord,
+                             @NonNull IdTokenRecord idTokenRecord,
+                             @NonNull AccessTokenRecord accessTokenRecord,
+                             @NonNull RefreshTokenRecord refreshTokenRecord,
+                             @Nullable String familyId) throws ClientException {
+        final String methodName = ":save (5 args)";
+
+        final ICacheRecord result;
+
+        final boolean isFoci = !StringExtensions.isNullOrBlank(familyId);
+
+        Logger.info(
+                TAG + methodName,
+                "Saving to FOCI cache? ["
+                        + isFoci
+                        + "]"
+        );
+
+        if (isFoci) {
+            // Save to the foci cache....
+            result = mFociCache.save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord
+            );
+        } else {
+            // Save to the processUid cache... or create a new one
+            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
+                    idTokenRecord.getClientId(),
+                    idTokenRecord.getEnvironment(),
+                    mCallingProcessUid
+            );
+
+            if (null == targetCache) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Existing cache not found. A new one will be created."
+                );
+
+                targetCache = initializeProcessUidCache(
+                        getContext(),
+                        mCallingProcessUid
+                );
+            }
+
+            result = targetCache.save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord
+            );
+        }
+
+        updateApplicationMetadataCache(
+                result.getAccessToken().getClientId(),
+                result.getAccessToken().getEnvironment(),
+                familyId,
+                mCallingProcessUid
+        );
+
+        return result;
+    }
+
+    @Deprecated
     public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
             @NonNull final AccountRecord accountRecord,
             @NonNull final IdTokenRecord idTokenRecord,
@@ -253,24 +330,49 @@ public class BrokerOAuth2TokenCache
                     familyId
             );
 
-            final String clientId = cacheRecord.getAccessToken().getClientId();
-            final String target = cacheRecord.getAccessToken().getTarget();
-            final String environment = cacheRecord.getAccessToken().getEnvironment();
-
-            // Now get the cache we just saved to....
-            final MsalOAuth2TokenCache cache = getTokenCacheForClient(
-                    clientId,
-                    environment,
-                    mCallingProcessUid
-            );
-
-            return (List<ICacheRecord>) cache.loadWithAggregatedAccountData(
-                    clientId,
-                    target,
-                    cacheRecord.getAccount(),
-                    authScheme
-            );
+            return loadAggregatedAccountData(authScheme, cacheRecord);
         }
+    }
+
+    public synchronized List<ICacheRecord> saveAndLoadAggregatedAccountData(
+            final @NonNull AccountRecord accountRecord,
+            final @NonNull IdTokenRecord idTokenRecord,
+            final @NonNull AccessTokenRecord accessTokenRecord,
+            final @NonNull RefreshTokenRecord refreshTokenRecord,
+            final @Nullable String familyId,
+            final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
+        synchronized (this) {
+            final ICacheRecord cacheRecord = save(
+                    accountRecord,
+                    idTokenRecord,
+                    accessTokenRecord,
+                    refreshTokenRecord,
+                    familyId
+            );
+
+            return loadAggregatedAccountData(authScheme, cacheRecord);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
+                                                         final @NonNull ICacheRecord cacheRecord) {
+        final String clientId = cacheRecord.getAccessToken().getClientId();
+        final String target = cacheRecord.getAccessToken().getTarget();
+        final String environment = cacheRecord.getAccessToken().getEnvironment();
+
+        final MsalOAuth2TokenCache cache = getTokenCacheForClient(
+                clientId,
+                environment,
+                mCallingProcessUid
+        );
+
+        return cache.loadWithAggregatedAccountData(
+                clientId,
+                target,
+                cacheRecord.getAccount(),
+                authScheme
+        );
     }
 
     @Override
@@ -304,8 +406,7 @@ public class BrokerOAuth2TokenCache
         } else {
 
             // Suppressing unchecked warning as the generic type was not provided for oAuth2Strategy and request of type GenericAuthorizationRequest
-            @SuppressWarnings(WarningType.unchecked_warning)
-            final String environment = oAuth2Strategy.getIssuerCacheIdentifier(request);
+            @SuppressWarnings(WarningType.unchecked_warning) final String environment = oAuth2Strategy.getIssuerCacheIdentifier(request);
 
             // Try to find an existing cache for this application
             targetCache = getTokenCacheForClient(
@@ -327,8 +428,7 @@ public class BrokerOAuth2TokenCache
         }
 
         // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method save
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final ICacheRecord result = targetCache.save(
+        @SuppressWarnings(WarningType.unchecked_warning) final ICacheRecord result = targetCache.save(
                 oAuth2Strategy,
                 request,
                 response
@@ -788,9 +888,9 @@ public class BrokerOAuth2TokenCache
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
                 List<ICacheRecord> accountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(
-                    environment,
-                    clientId,
-                    homeAccountId
+                        environment,
+                        clientId,
+                        homeAccountId
                 );
 
                 result.addAll(
@@ -1049,7 +1149,7 @@ public class BrokerOAuth2TokenCache
 
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
-                List<ICacheRecord> cacheAccountsWithAggregatedAccountData= cache.getAccountsWithAggregatedAccountData(environment, clientId);
+                List<ICacheRecord> cacheAccountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(environment, clientId);
 
                 result.addAll(cacheAccountsWithAggregatedAccountData);
             }
@@ -1334,9 +1434,9 @@ public class BrokerOAuth2TokenCache
 
                 // Construct the ICacheRecord
                 if (!refreshTokens.isEmpty()) {
-                    final CacheRecord cacheRecord = new CacheRecord();
-                    cacheRecord.setAccount(account);
-                    cacheRecord.setRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+                    final CacheRecord.CacheRecordBuilder cacheRecord = CacheRecord.builder();
+                    cacheRecord.mAccount(account);
+                    cacheRecord.mRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
 
                     // Add the V1IdToken (if exists, should have 1 if ADAL used)
                     if (!v1IdTokens.isEmpty()) {
@@ -1347,7 +1447,7 @@ public class BrokerOAuth2TokenCache
                                         + "] V1IdTokens"
                         );
 
-                        cacheRecord.setV1IdToken((IdTokenRecord) v1IdTokens.get(0));
+                        cacheRecord.mV1IdToken((IdTokenRecord) v1IdTokens.get(0));
                     } else {
                         Logger.warn(
                                 TAG + methodName,
@@ -1364,7 +1464,7 @@ public class BrokerOAuth2TokenCache
                                         + "] IdTokens"
                         );
 
-                        cacheRecord.setIdToken((IdTokenRecord) idTokens.get(0));
+                        cacheRecord.mIdToken((IdTokenRecord) idTokens.get(0));
                     } else {
                         Logger.warn(
                                 TAG + methodName,
@@ -1373,7 +1473,7 @@ public class BrokerOAuth2TokenCache
                     }
 
                     // Add it to the result
-                    result.add(cacheRecord);
+                    result.add(cacheRecord.build());
                 }
             }
         }

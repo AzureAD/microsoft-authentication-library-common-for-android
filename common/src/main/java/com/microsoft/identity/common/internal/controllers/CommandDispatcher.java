@@ -58,6 +58,7 @@ import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,6 +66,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
@@ -100,7 +102,7 @@ public class CommandDispatcher {
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
-            if (command != e.getKey()) {
+            if (! (command == e.getKey())) {
                 newMap.put(e.getKey(), e.getValue());
             }
         }
@@ -112,6 +114,37 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             return sExecutingCommandMap.size();
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static boolean isCommandOutstanding(BaseCommand c) {
+        synchronized (mapAccessLock) {
+            for (Map.Entry<BaseCommand, ?> e : sExecutingCommandMap.entrySet()) {
+                if (e.getKey() == c) {
+                    System.out.println("Command out there " + c);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static void clearState() throws Exception {
+        synchronized (mapAccessLock) {
+            sExecutingCommandMap.clear();
+        }
+        sSilentExecutor.shutdownNow();
+        sInteractiveExecutor.shutdownNow();
+        Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
+        f.setAccessible(true);
+        f.set(null, Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+        f.setAccessible(false);
+
+        f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
+        f.setAccessible(true);
+        f.set(null, Executors.newSingleThreadExecutor());
+        f.setAccessible(false);
     }
 
 
@@ -140,26 +173,32 @@ public class CommandDispatcher {
 
         final Handler handler = new Handler(Looper.getMainLooper());
         synchronized (mapAccessLock) {
-            FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
+            final FinalizableResultFuture<CommandResult> finalFuture;
+            if (command.isEligibleForCaching()) {
+                FinalizableResultFuture<CommandResult> future = sExecutingCommandMap.get(command);
 
-            if (null == future) {
-                future = new FinalizableResultFuture<>();
-                final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
+                if (null == future) {
+                    future = new FinalizableResultFuture<>();
+                    final FinalizableResultFuture<CommandResult> putValue = sExecutingCommandMap.putIfAbsent(command, future);
 
-                if (null == putValue) {
-                    // our value was inserted.
-                    future.whenComplete(getCommandResultConsumer(command, handler));
+                    if (null == putValue) {
+                        // our value was inserted.
+                        future.whenComplete(getCommandResultConsumer(command, handler));
+                    } else {
+                        // Our value was not inserted, grab the one that was and hang a new listener off it
+                        putValue.whenComplete(getCommandResultConsumer(command, handler));
+                        return putValue;
+                    }
                 } else {
-                    // Our value was not inserted, grab the one that was and hang a new listener off it
-                    putValue.whenComplete(getCommandResultConsumer(command, handler));
-                    return putValue;
+                    future.whenComplete(getCommandResultConsumer(command, handler));
+                    return future;
                 }
-            } else {
-                future.whenComplete(getCommandResultConsumer(command, handler));
-                return future;
-            }
 
-            final FinalizableResultFuture<CommandResult> finalFuture = future;
+                finalFuture = future;
+            } else {
+                finalFuture = new FinalizableResultFuture<>();
+                finalFuture.whenComplete(getCommandResultConsumer(command, handler));
+            }
 
             sSilentExecutor.execute(new Runnable() {
                 @Override
@@ -208,15 +247,17 @@ public class CommandDispatcher {
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
                         synchronized (mapAccessLock) {
-                            final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
-                            if (mapFuture == null) {
-                                // If this has happened, the command that we started with has mutated.  We will
-                                // examine every entry in the map, find the one with the same object identity
-                                // and remove it.
-                                // ADO:TODO:1153495 - Rekey this map with stable string keys.
-                                Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
-                                        + " the calling application was " + command.getParameters().getApplicationName(), null);
-                                cleanMap(command);
+                            if (command.isEligibleForCaching()) {
+                                final FinalizableResultFuture mapFuture = sExecutingCommandMap.remove(command);
+                                if (mapFuture == null) {
+                                    // If this has happened, the command that we started with has mutated.  We will
+                                    // examine every entry in the map, find the one with the same object identity
+                                    // and remove it.
+                                    // ADO:TODO:1153495 - Rekey this map with stable string keys.
+                                    Logger.error(TAG, "The command in the map has mutated " + command.getClass().getCanonicalName()
+                                            + " the calling application was " + command.getParameters().getApplicationName(), null);
+                                    cleanMap(command);
+                                }
                             }
                             finalFuture.setCleanedUp();
                         }
@@ -292,7 +333,7 @@ public class CommandDispatcher {
                 //Post On Error
                 commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
             }
-        } else {
+        } else /* baseException == null */ {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
                 commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result);

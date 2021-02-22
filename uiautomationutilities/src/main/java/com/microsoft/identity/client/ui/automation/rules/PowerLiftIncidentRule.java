@@ -1,8 +1,11 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.util.Log;
+import android.text.TextUtils;
 
-import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.app.App;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.powerlift.ThrowableWithPowerLiftIncident;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
@@ -26,25 +29,35 @@ public class PowerLiftIncidentRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 try {
                     base.evaluate();
                 } catch (final Throwable originalThrowable) {
+                    String powerLiftIncidentDetails = null;
                     try {
-                        Log.e(
+                        Logger.e(
                                 TAG,
                                 "Encountered error during test....creating PowerLift incident.",
                                 originalThrowable
                         );
-                        powerLiftIntegratedApp.createPowerLiftIncident();
+                        powerLiftIncidentDetails = powerLiftIntegratedApp.createPowerLiftIncident();
                     } catch (final Throwable powerLiftError) {
-                        Log.e(
+                        Logger.e(
                                 TAG,
                                 "Oops...something went wrong...unable to create PowerLift incident.",
                                 powerLiftError
                         );
                     }
-                    throw originalThrowable;
+                    if (TextUtils.isEmpty(powerLiftIncidentDetails)) {
+                        throw originalThrowable;
+                    } else {
+                        assert powerLiftIncidentDetails != null;
+                        throw new ThrowableWithPowerLiftIncident(
+                                powerLiftIntegratedApp,
+                                powerLiftIncidentDetails,
+                                originalThrowable
+                        );
+                    }
                 }
             }
         };

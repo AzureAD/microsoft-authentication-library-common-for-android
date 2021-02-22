@@ -36,14 +36,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 public class LabUserHelper {
 
     private static final Map<LabUserQuery, LabConfig> sLabConfigCache = new HashMap<>();
+    private volatile static ConfidentialClientHelper instance = LabAuthenticationHelper.getInstance();
+
+    private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
+
+    /**
+     * Reset the secret in use by the lab authentication helper.  This will rewrite the instance
+     * in use to use a specified version of the key vault secret.
+     * @param secret the key vault secret to use for access to the lab API.
+     */
+    public static void resetWithSecret(final String secret) {
+        instance = LabAuthenticationHelper.getInstance(secret);
+        instance.setupApiClientWithAccessToken();
+    }
 
     static List<ConfigInfo> getConfigInfos(LabUserQuery query) {
-
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
 
@@ -57,6 +70,7 @@ public class LabUserHelper {
                     query.homeUpn,
                     query.b2cProvider,
                     query.federationProvider,
+
                     query.azureEnvironment,
                     query.appType,
                     query.publicClient,
@@ -168,7 +182,7 @@ public class LabUserHelper {
     }
 
     public static ConfigInfo getConfigInfoFromUpn(final String upn) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         ConfigApi api = new ConfigApi();
         List<ConfigInfo> configInfos;
 
@@ -188,6 +202,7 @@ public class LabUserHelper {
     }
 
     static List<LabConfig> loadUsersForTest(LabUserQuery query) {
+        instance.setupApiClientWithAccessToken();
         List<LabConfig> labConfigs = new ArrayList<>();
         final List<ConfigInfo> configInfos = getConfigInfos(query);
         for (ConfigInfo configInfo : configInfos) {
@@ -199,6 +214,7 @@ public class LabUserHelper {
     }
 
     public static String loadUserForTest(LabUserQuery query) {
+        instance.setupApiClientWithAccessToken();
         LabConfig labConfig;
         labConfig = sLabConfigCache.get(query);
 
@@ -213,8 +229,9 @@ public class LabUserHelper {
     }
 
     public static String loadTempUser(final String userType) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         TempUser tempUser;
 
@@ -231,8 +248,9 @@ public class LabUserHelper {
     }
 
     public static TempUser loadTempUserForTest(final String userType) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         CreateTempUserApi createTempUserApi = new CreateTempUserApi();
+        createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         try {
             return createTempUserApi.post(userType);
@@ -271,13 +289,14 @@ public class LabUserHelper {
     }
 
     public static AppInfo getDefaultAppInfo() {
+        instance.setupApiClientWithAccessToken();
         return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
                 IsAdminConsented.YES, PublicClient.YES);
     }
 
     public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
                                      IsAdminConsented isAdminConsented, PublicClient publicClient) {
-        LabAuthenticationHelper.getInstance().setupApiClientWithAccessToken();
+        instance.setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
             return api.getAppByParam(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
@@ -288,8 +307,8 @@ public class LabUserHelper {
     }
 
     public static void resetPassword(final String upn) {
+        instance.setupApiClientWithAccessToken();
         ResetApi resetApi = new ResetApi();
-
         try {
             resetApi.putResetInfo(upn, "Password");
         } catch (ApiException e) {

@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.rules;
 
 import android.util.Log;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 
 import org.junit.rules.TestRule;
@@ -42,7 +43,7 @@ public class ResetAutomaticTimeZoneTestRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 AdbShellUtils.enableAutomaticTimeZone();
                 base.evaluate();
             }

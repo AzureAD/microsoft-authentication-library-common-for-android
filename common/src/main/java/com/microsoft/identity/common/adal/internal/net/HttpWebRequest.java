@@ -109,8 +109,6 @@ public class HttpWebRequest {
         HttpURLConnection.setFollowRedirects(true);
         final HttpURLConnection connection = HttpUrlConnectionFactory.createHttpUrlConnection(mUrl);
         connection.setConnectTimeout(CONNECT_TIME_OUT);
-        connection.setRequestProperty("Connection", "close");
-
 
         // Apply the request headers
         final Set<Map.Entry<String, String>> headerEntries = mRequestHeaders.entrySet();
