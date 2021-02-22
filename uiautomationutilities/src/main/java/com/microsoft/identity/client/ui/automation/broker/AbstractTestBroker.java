@@ -79,7 +79,7 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
     public AbstractTestBroker(@NonNull final String packageName,
                               @NonNull final String appName) {
         super(packageName, appName, AppInstallSource.LocalApk.getName()
-                .equalsIgnoreCase(IdentityRunnerArgs.brokerSource)
+                .equalsIgnoreCase(IdentityRunnerArgs.getBrokerSource())
                 ? new LocalApkInstaller() : new PlayStore());
     }
 

@@ -39,12 +39,12 @@ public class IdentityTestRunner extends AndroidJUnitRunner {
 
     @Override
     public void onCreate(Bundle arguments) {
-        IdentityRunnerArgs.brokerSource = arguments.getString(
+        IdentityRunnerArgs.setBrokerSource(arguments.getString(
                 BROKER_SOURCE, AppInstallSource.PlayStore.getName()
-        );
-        IdentityRunnerArgs.preferPreInstalledApks = Boolean.parseBoolean(
+        ));
+        IdentityRunnerArgs.setPreferPreInstalledApks(Boolean.parseBoolean(
                 arguments.getString(PREFER_PRE_INSTALLED_APKS, "false")
-        );
+        ));
         super.onCreate(arguments);
     }
 }

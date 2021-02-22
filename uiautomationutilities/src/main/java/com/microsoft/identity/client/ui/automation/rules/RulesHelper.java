@@ -66,7 +66,7 @@ public class RulesHelper {
         Log.i(TAG, "Adding DeviceLockSetRule");
         ruleChain = ruleChain.around(new DevicePinSetupRule(broker));
 
-        if (IdentityRunnerArgs.preferPreInstalledApks) {
+        if (IdentityRunnerArgs.shouldPreferPreInstalledApks()) {
             Log.i(TAG, "Adding CopyPreInstalledApkRule");
             ruleChain = ruleChain.around(new CopyPreInstalledApkRule(
                     new BrokerMicrosoftAuthenticator(), new BrokerCompanyPortal(),

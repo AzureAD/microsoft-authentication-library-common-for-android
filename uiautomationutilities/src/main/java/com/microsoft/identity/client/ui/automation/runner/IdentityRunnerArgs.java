@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.runner;
 
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 
 /**
@@ -29,7 +33,50 @@ import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
  */
 public class IdentityRunnerArgs {
 
-    public static boolean preferPreInstalledApks = false;
-    public static String brokerSource = AppInstallSource.PlayStore.getName();
+    private final static String TAG = IdentityRunnerArgs.class.getSimpleName();
+
+    private static boolean sPreferPreInstalledApks = false;
+    private static String sBrokerSource = AppInstallSource.PlayStore.getName();
+
+    /**
+     * Set whether the test runner should prefer pre installed apks when installing broker apps etc.
+     *
+     * @param preferPreInstalledApks a boolean representing whether to prefer pre installed apks
+     */
+    public static void setPreferPreInstalledApks(final boolean preferPreInstalledApks) {
+        Log.i(TAG, "Setting value for prefer pre-installed apks. " +
+                "Old Value: " + sPreferPreInstalledApks + " , New Value: " + preferPreInstalledApks);
+        sPreferPreInstalledApks = preferPreInstalledApks;
+    }
+
+    /**
+     * Set the broker installation source to be used by the test runner when installing broker apps
+     * such as Microsoft Authenticator or Company Portal
+     *
+     * @param brokerSource a value for Broker Install source
+     */
+    public static void setBrokerSource(@NonNull final String brokerSource) {
+        Log.i(TAG, "Setting value for broker source. " +
+                "Old Value: " + sBrokerSource + " , New Value: " + brokerSource);
+        sBrokerSource = brokerSource;
+    }
+
+    /**
+     * Get whether to prefer pre installed apks during automation.
+     *
+     * @return a boolean representing whether to prefer pre installed apks
+     */
+    public static boolean shouldPreferPreInstalledApks() {
+        return sPreferPreInstalledApks;
+    }
+
+    /**
+     * Get the broker install source to be used when installing broker apps during automation.
+     *
+     * @return a String representing the broker installation source
+     */
+    public static String getBrokerSource() {
+        return sBrokerSource;
+    }
 
 }
