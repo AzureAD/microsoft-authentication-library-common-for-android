@@ -570,6 +570,7 @@ public class MicrosoftStsOAuth2Strategy
                                          @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
         validateAuthScheme(request, response);
+        validateTokensAreInResponse(response);
     }
 
     /**
@@ -594,6 +595,40 @@ public class MicrosoftStsOAuth2Strategy
                             + "Actual: [" + responseAuthScheme + "]"
             );
         }
+    }
+
+    /**
+     * Validates that the token response contains an access token, id_token and refresh token
+     *
+     * @param response The idp response.
+     * @throws ClientException
+     */
+    private void validateTokensAreInResponse(@NonNull final MicrosoftStsTokenResponse response)
+            throws ClientException {
+
+        String clientException = null;
+        String tokens = "";
+        final String tokensMissingMessage = "Missing required tokens of type: {0}";
+
+        if (StringUtil.isEmpty(response.getIdToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat("id_token");
+        }
+
+        if (StringUtil.isEmpty(response.getAccessToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat(" access_token");
+        }
+
+        if (StringUtil.isEmpty(response.getRefreshToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat(" refresh_token");
+        }
+
+        if (clientException != null) {
+            throw new ClientException(clientException, String.format(tokensMissingMessage, tokens));
+        }
+
     }
 
     private String buildCloudSpecificTokenEndpoint(

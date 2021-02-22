@@ -266,6 +266,11 @@ public class ClientException extends BaseException {
     public static final String ACCESS_DENIED = "access_denied";
 
     /**
+     * Tokens missing
+     */
+    public static final String TOKENS_MISSING = "tokens_missing";
+
+    /**
      * Constructor of ClientException.
      *
      * @param errorCode String
