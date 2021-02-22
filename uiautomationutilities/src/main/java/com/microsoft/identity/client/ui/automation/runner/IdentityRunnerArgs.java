@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.runner;
 
 import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 
+/**
+ * Test runner args to be used with {@link IdentityTestRunner}.
+ */
 public class IdentityRunnerArgs {
 
     public static boolean preferPreInstalledApks = false;

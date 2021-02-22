@@ -24,6 +24,9 @@ package com.microsoft.identity.client.ui.automation.installer;
 
 import lombok.Getter;
 
+/**
+ * An enum listing names of app install sources.
+ */
 public enum AppInstallSource {
 
     PlayStore("PlayStore"),

@@ -28,6 +28,10 @@ import androidx.test.runner.AndroidJUnitRunner;
 
 import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 
+/**
+ * A custom test runner that accepts additional test parameters to facilitate automation. These test
+ * parameters are located in {@link IdentityRunnerArgs}.
+ */
 public class IdentityTestRunner extends AndroidJUnitRunner {
 
     public static final String PREFER_PRE_INSTALLED_APKS = "prefer_pre_installed_apks";
