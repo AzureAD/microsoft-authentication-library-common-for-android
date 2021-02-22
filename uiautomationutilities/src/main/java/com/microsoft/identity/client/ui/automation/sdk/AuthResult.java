@@ -25,6 +25,9 @@ package com.microsoft.identity.client.ui.automation.sdk;
 import android.text.TextUtils;
 import org.junit.Assert;
 import androidx.annotation.NonNull;
+
+import com.microsoft.identity.client.ui.automation.logging.Logger;
+
 import lombok.Getter;
 
 /**
@@ -35,6 +38,8 @@ import lombok.Getter;
 @Getter
 public abstract class AuthResult {
 
+    private final static String TAG = AuthResult.class.getSimpleName();
+
     private String accessToken;
     private String idToken;
     private String userId;
@@ -43,6 +48,7 @@ public abstract class AuthResult {
     private Exception exception;
 
     public AuthResult(@NonNull final String accessToken, @NonNull final String idToken, @NonNull final String userId, @NonNull final String username, @NonNull final String authority) {
+        Logger.i(TAG, "Initializing the Result Object..");
         this.accessToken = accessToken;
         this.idToken = idToken;
         this.userId = userId;
@@ -55,6 +61,7 @@ public abstract class AuthResult {
     }
 
     public void assertSuccess() {
+        Logger.i(TAG, "Assert Success if Result Parameters are empty or not..");
         if (exception != null) {
             throw new AssertionError(exception);
         }
@@ -65,6 +72,7 @@ public abstract class AuthResult {
     }
 
     public void assertFailure() {
+        Logger.i(TAG, "Assert Failure if there is exception being set..");
         Assert.assertNotNull(exception);
     }
 }

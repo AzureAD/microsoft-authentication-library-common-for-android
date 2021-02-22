@@ -23,6 +23,20 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 
 android {
 
+    testOptions {
+        compileOptions {
+            // Flag to enable support for the new language APIs
+            coreLibraryDesugaringEnabled true
+            // Sets Java compatibility to Java 8
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+        dependencies {
+            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+        }
+    }  
+    /*
+    //Commenting out until the next major version of common/msal/etc...
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
@@ -30,6 +44,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    */
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
@@ -60,20 +75,8 @@ android {
     buildTypes {
         debug {
             //testCoverageEnabled true
-            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
-            buildConfigField("String", "AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.identity.testuserapp\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
         }
         release {
-            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
-            buildConfigField("String", "AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE", "\"\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_SIGNATURE", "\"\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_PACKAGE_NAME", "\"\"")
             minifyEnabled false
             debuggable false
             //testCoverageEnabled true
@@ -124,8 +127,9 @@ android {
 }
 
 dependencies {
+    //Commenting out until the next major version of common/msal/etc...
     //Java 8 - Desugaring
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+    //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
@@ -210,7 +214,7 @@ dependencies {
 // Create tasks to generate javadoc
 android.libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
-        source = variant.javaCompiler.source
+        source = variant.javaCompileProvider.get().source
 
         title = "Microsoft Identity Android Common"
 
@@ -238,7 +242,7 @@ android.libraryVariants.all { variant ->
 task sourcesJar(type: Jar) {
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
-    destinationDir = reporting.file("$project.buildDir/outputs/jar/")
+    destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
 def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
@@ -289,6 +293,35 @@ afterEvaluate {
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
                 version = project.version
+
+                pom {
+                    name = 'common'
+                    description = 'This library contains code shared between the Active Directory ' +
+                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
+                                    'Authentication Library (MSAL) for Android. This library ' +
+                                    'includes only internal classes and is NOT part of the ' +
+                                    'public API'
+                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
+                    developers {
+                        developer {
+                            id = 'microsoft'
+                            name = 'Microsoft'
+                        }
+                    }
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                        }
+                    }
+                    inceptionYear = '2017'
+                    scm {
+                        url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
+                    }
+                    properties = [
+                            branch: 'master',
+                            version: project.version
+                    ]
+                }
             }
             debug(MavenPublication) {
                 from components.debug

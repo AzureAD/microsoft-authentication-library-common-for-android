@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
@@ -56,8 +57,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,10 +75,12 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM2;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 import static com.microsoft.identity.common.internal.dto.CredentialType.AccessToken;
 import static com.microsoft.identity.common.internal.dto.CredentialType.IdToken;
+import static com.microsoft.identity.common.internal.dto.CredentialType.PrimaryRefreshToken;
 import static com.microsoft.identity.common.internal.dto.CredentialType.RefreshToken;
 import static com.microsoft.identity.common.internal.dto.CredentialType.V1IdToken;
 import static org.junit.Assert.assertEquals;
@@ -102,16 +104,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             MicrosoftRefreshToken> mOauth2TokenCache;
     private ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
-    @Mock
     MicrosoftStsOAuth2Strategy mockStrategy;
 
-    @Mock
     MicrosoftStsAuthorizationRequest mockRequest;
 
-    @Mock
     MicrosoftStsTokenResponse mockResponse;
-
-    @Mock
+    
     IAccountCredentialAdapter<
             MicrosoftStsOAuth2Strategy,
             MicrosoftStsAuthorizationRequest,
@@ -137,6 +135,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final AccessTokenRecord mGeneratedAccessToken;
         final RefreshTokenRecord mGeneratedRefreshToken;
         final IdTokenRecord mGeneratedIdToken;
+        final PrimaryRefreshTokenRecord mGeneratedPrimaryRefreshToken;
 
         AccountCredentialTestBundle(final String authorityType,
                                     final String localAccountId, //guid
@@ -152,6 +151,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                                     final String rtSecret,
                                     final String idTokenSecret,
                                     final String familyId,
+                                    final String prtSessionKey,
                                     final CredentialType idTokenType) {
             mGeneratedAccount = new AccountRecord();
             mGeneratedAccount.setAuthorityType(authorityType);
@@ -189,6 +189,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
             mGeneratedIdToken.setClientId(clientId);
             mGeneratedIdToken.setSecret(idTokenSecret);
             mGeneratedIdToken.setAuthority("https://sts.windows.net/0287f963-2d72-4363-9e3a-5705c5b0f031/");
+
+            mGeneratedPrimaryRefreshToken = new PrimaryRefreshTokenRecord();
+            mGeneratedPrimaryRefreshToken.setSecret(rtSecret);
+            mGeneratedPrimaryRefreshToken.setHomeAccountId(homeAccountId);
+            mGeneratedPrimaryRefreshToken.setEnvironment(environment);
+            mGeneratedPrimaryRefreshToken.setCredentialType(PrimaryRefreshToken.name());
+            mGeneratedPrimaryRefreshToken.setClientId(clientId);
+            mGeneratedPrimaryRefreshToken.setFamilyId(familyId);
+            mGeneratedPrimaryRefreshToken.setExpiresOn(expiresOn);
+            mGeneratedPrimaryRefreshToken.setCachedAt(cacheAt);
+            mGeneratedPrimaryRefreshToken.setSessionKey(prtSessionKey);
+            mGeneratedPrimaryRefreshToken.setPrtProtocolVersion("3.0");
         }
     }
 
@@ -196,7 +208,10 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-        MockitoAnnotations.initMocks(this);
+        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
+        mockCredentialAdapter = Mockito.mock(IAccountCredentialAdapter.class);
 
         // Used by mocks
         defaultTestBundleV1 = new AccountCredentialTestBundle(
@@ -214,6 +229,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
+                SESSION_KEY,
                 V1IdToken
         );
 
@@ -232,6 +248,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
+                SESSION_KEY,
                 IdToken
         );
 
@@ -768,6 +785,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
+                            SESSION_KEY,
                             IdToken
                     )
             );
@@ -938,6 +956,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
+                            SESSION_KEY,
                             idTokenType
                     )
             );
@@ -991,6 +1010,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
+                            SESSION_KEY,
                             idTokenType
                     )
             );

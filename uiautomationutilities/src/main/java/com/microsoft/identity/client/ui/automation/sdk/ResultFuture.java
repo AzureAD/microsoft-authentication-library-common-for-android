@@ -25,6 +25,8 @@ package com.microsoft.identity.client.ui.automation.sdk;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -36,6 +38,7 @@ import java.util.concurrent.TimeoutException;
  */
 public class ResultFuture<T, E extends Exception> {
 
+    private final static String TAG = ResultFuture.class.getSimpleName();
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
     private T mResult = null;
     private E mException = null;
@@ -53,6 +56,7 @@ public class ResultFuture<T, E extends Exception> {
     }
 
     public T get() throws Exception {
+        Logger.i(TAG, "Gets the Result from ResultFuture object untill its set..");
         mCountDownLatch.await();
 
         if (null != mException) {
@@ -63,6 +67,7 @@ public class ResultFuture<T, E extends Exception> {
     }
 
     public T get(final long l, @NonNull final TimeUnit timeUnit) throws Throwable {
+        Logger.i(TAG, "Gets the Result from ResultFuture object after a particular Time Unit..");
         if (mCountDownLatch.await(l, timeUnit)) {
             if (null != mException) {
                 throw mException;
@@ -84,6 +89,7 @@ public class ResultFuture<T, E extends Exception> {
      * @param exception The Exception to set.
      */
     public synchronized void setException(@NonNull final E exception) {
+        Logger.i(TAG, "Sets the Exception on the ResultFuture object..");
         mException = exception;
         mCountDownLatch.countDown();
     }
@@ -94,6 +100,7 @@ public class ResultFuture<T, E extends Exception> {
      * @param result The Result to set.
      */
     public synchronized void setResult(@Nullable final T result) {
+        Logger.i(TAG, "Sets the Auth Result on the ResultFuture object..");
         mResult = result;
         mCountDownLatch.countDown();
     }

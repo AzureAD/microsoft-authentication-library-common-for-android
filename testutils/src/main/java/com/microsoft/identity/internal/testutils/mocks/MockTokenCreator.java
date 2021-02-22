@@ -61,6 +61,8 @@ public class MockTokenCreator {
     public static final String MOCK_ENCODING_UTF8_VALUE = "UTF-8";
     public static final String MOCK_ISSUER_PREFIX_VALUE = "https://test.authority/";
     public static final String MOCK_ISSUER_SUFFIX_VALUE = "/v2.0";
+    public static final String CLOUD_DISCOVERY_ENDPOINT_REGEX = "^https:\\/\\/login.microsoftonline.com\\/common\\/discovery\\/instance\\?api-version=1.1\\&authorization_endpoint=https%3A%2F%2Flogin.microsoftonline.com%2Fcommon%2Foauth2%2Fv2.0%2Fauthorize$";
+    public static final String MOCK_TOKEN_URL_REGEX = "https:\\/\\/login.microsoftonline.com\\/.*";
 
     private static String createMockToken(final String issuer,
                                           final String subject,

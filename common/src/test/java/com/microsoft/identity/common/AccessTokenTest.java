@@ -24,11 +24,12 @@ package com.microsoft.identity.common;
 
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 
-import junit.framework.Assert;
-
 import org.junit.Test;
 
 import java.util.Calendar;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class AccessTokenTest {
 
@@ -36,7 +37,27 @@ public class AccessTokenTest {
     public void testExpiry() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
         accessToken.setExpiresOn(getCurrentTimeStr());
-        Assert.assertTrue(accessToken.isExpired());
+        assertTrue(accessToken.isExpired());
+    }
+
+    @Test
+    public void testShouldRefreshAfterExpiration() {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setRefreshOn(getCurrentTimeStr());
+        assertTrue(accessToken.shouldRefresh());
+    }
+
+    @Test
+    public void testShouldRefreshWhileStillValid() {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        accessToken.setRefreshOn("2524608000"); // 1/1/2050
+        assertFalse(accessToken.shouldRefresh());
+    }
+
+    @Test
+    public void testShouldRefreshWhenNoPropertiesAreSet() {
+        final AccessTokenRecord accessToken = new AccessTokenRecord();
+        assertTrue(accessToken.shouldRefresh());
     }
 
     private String getCurrentTimeStr() {

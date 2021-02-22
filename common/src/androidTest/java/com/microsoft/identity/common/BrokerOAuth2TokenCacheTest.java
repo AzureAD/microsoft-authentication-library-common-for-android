@@ -55,11 +55,9 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +72,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
@@ -91,16 +90,12 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
     private static final int TEST_APP_UID = 1337;
 
-    @Mock
     MicrosoftStsOAuth2Strategy mockStrategy;
 
-    @Mock
     MicrosoftStsAuthorizationRequest mockRequest;
 
-    @Mock
     MicrosoftStsTokenResponse mockResponse;
 
-    @Mock
     IAccountCredentialAdapter mMockCredentialAdapter;
 
     private MicrosoftFamilyOAuth2TokenCache mFociCache;
@@ -125,7 +120,11 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     public void setUp() throws Exception {
         super.setUp();
 
-        MockitoAnnotations.openMocks(this);
+        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
+        mMockCredentialAdapter = Mockito.mock(IAccountCredentialAdapter.class);
+
 
         // Our test context
         final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
@@ -165,6 +164,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
+                SESSION_KEY,
                 CredentialType.IdToken
         );
 
@@ -183,6 +183,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
+                SESSION_KEY,
                 CredentialType.IdToken
         );
 
@@ -205,6 +206,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
+                            SESSION_KEY,
                             CredentialType.IdToken
                     )
             );

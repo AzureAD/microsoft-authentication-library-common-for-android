@@ -31,6 +31,7 @@ import com.microsoft.identity.client.ui.automation.browser.IBrowser;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.microsoftsts.MicrosoftStsPromptHandlerParameters;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
@@ -42,6 +43,7 @@ import org.junit.Assert;
  */
 public class AzureSampleApp extends App {
 
+    private final static String TAG = AzureSampleApp.class.getSimpleName();
     private static final String AZURE_SAMPLE_PACKAGE_NAME = "com.azuresamples.msalandroidapp";
     private static final String AZURE_SAMPLE_APP_NAME = "Azure Sample";
     public final static String AZURE_SAMPLE_APK = "AzureSample.apk";
@@ -71,6 +73,7 @@ public class AzureSampleApp extends App {
                                                 @Nullable final IBrowser browser,
                                                 final boolean shouldHandleBrowserFirstRun,
                                                 @NonNull final MicrosoftStsPromptHandlerParameters promptHandlerParameters) {
+        Logger.i(TAG, "Signing in into Azure Sample App with Single Account Mode Fragment..");
         // Click Sign In in Single Account Fragment
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_signIn");
 
@@ -79,6 +82,7 @@ public class AzureSampleApp extends App {
             ((IApp) browser).handleFirstRun();
         }
 
+        Logger.i(TAG, "Handle AAD Login page prompt..");
         // handle prompt in AAD login page
         final MicrosoftStsPromptHandler microsoftStsPromptHandler =
                 new MicrosoftStsPromptHandler(promptHandlerParameters);
@@ -91,6 +95,7 @@ public class AzureSampleApp extends App {
      * Single Account mode fragment in the Azure Sample App.
      */
     public void signOutFromSingleAccountFragment() {
+        Logger.i(TAG, "Signing out of Azure Sample App from Single Account Mode Fragment..");
         UiAutomatorUtils.handleButtonClick("com.azuresamples.msalandroidapp:id/btn_removeAccount");
     }
 
@@ -100,6 +105,7 @@ public class AzureSampleApp extends App {
      * @param username the username of the account for which to confirm sign in
      */
     public void confirmSignedIn(@NonNull final String username) {
+        Logger.i(TAG, "Confirming account with supplied username is signed in..");
         final UiObject signedInUser = UiAutomatorUtils.obtainUiObjectWithResourceId("com.azuresamples.msalandroidapp:id/current_user");
         try {
             Assert.assertEquals("User is signed into Azure Sample App", signedInUser.getText(), username);

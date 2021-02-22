@@ -24,12 +24,15 @@ package com.microsoft.identity.client.ui.automation.interaction.b2c;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 /**
  * A login component handler for B2C Local IdP.
  */
 public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponentHandler {
+
+    private final static String TAG = B2CIdLabLocalLoginComponentHandler.class.getSimpleName();
 
     @Override
     protected String getHandlerName() {
@@ -43,6 +46,7 @@ public class B2CIdLabLocalLoginComponentHandler extends AbstractB2CLoginComponen
 
     @Override
     public void handlePasswordField(@NonNull final String password) {
+        Logger.i(TAG, "Handle B2C IdLab Local Login Password UI..");
         UiAutomatorUtils.handleInput("password", password);
         handleNextButton();
     }

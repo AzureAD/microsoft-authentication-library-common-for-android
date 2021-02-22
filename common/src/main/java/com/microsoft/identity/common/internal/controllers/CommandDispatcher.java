@@ -58,6 +58,7 @@ import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 
+import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,6 +66,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
@@ -100,7 +102,7 @@ public class CommandDispatcher {
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
-            if (command != e.getKey()) {
+            if (! (command == e.getKey())) {
                 newMap.put(e.getKey(), e.getValue());
             }
         }
@@ -112,6 +114,37 @@ public class CommandDispatcher {
         synchronized (mapAccessLock) {
             return sExecutingCommandMap.size();
         }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static boolean isCommandOutstanding(BaseCommand c) {
+        synchronized (mapAccessLock) {
+            for (Map.Entry<BaseCommand, ?> e : sExecutingCommandMap.entrySet()) {
+                if (e.getKey() == c) {
+                    System.out.println("Command out there " + c);
+                    return true;
+                }
+            }
+            return false;
+        }
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public static void clearState() throws Exception {
+        synchronized (mapAccessLock) {
+            sExecutingCommandMap.clear();
+        }
+        sSilentExecutor.shutdownNow();
+        sInteractiveExecutor.shutdownNow();
+        Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
+        f.setAccessible(true);
+        f.set(null, Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+        f.setAccessible(false);
+
+        f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
+        f.setAccessible(true);
+        f.set(null, Executors.newSingleThreadExecutor());
+        f.setAccessible(false);
     }
 
 
@@ -163,7 +196,7 @@ public class CommandDispatcher {
 
                 finalFuture = future;
             } else {
-                finalFuture = new FinalizableResultFuture<>();;
+                finalFuture = new FinalizableResultFuture<>();
                 finalFuture.whenComplete(getCommandResultConsumer(command, handler));
             }
 

@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import com.microsoft.identity.common.BuildConfig;
-
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -976,45 +974,44 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_REQUEST_CERT_AUTH_DELIMETER = ";";
 
         /**
-         * Apk packagename that will install AD-Authenticator. It is used to
-         * query if this app installed or not from package manager.
+         * Broker Host app package name.
          */
-        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
+        public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
-         * Signature info for Intune Company portal app that installs authenticator
-         * component.
-         */
-        public static final String COMPANY_PORTAL_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
-
-        /**
-         * Apk packagename that will install AD-Authenticator. It is used to
-         * query if this app installed or not from package manager.
-         */
-        public static final String COMPANY_PORTAL_PROD_APP_PACKAGE_NAME = BuildConfig.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;//"com.microsoft.windowsintune.companyportal";
-
-        /**
-         * Signature info for Intune Company portal app that installs authenticator
-         * component.
-         */
-        public static final String COMPANY_PORTAL_PROD_APP_SIGNATURE = BuildConfig.COMPANY_PORTAL_PROD_APP_SIGNATURE;//"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
-
-        /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
-         */
-        public static final String AZURE_AUTHENTICATOR_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_APP_SIGNATURE;
-
-        /**
-         * Signature info for Azure authenticator app that installs authenticator
-         * component.
-         */
-        public static final String AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE = BuildConfig.AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE;
-
-        /**
-         * Azure Authenticator app signature hash.
+         * Azure Authenticator app package name.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
+
+        /**
+         * Intune Company Portal app package name.
+         */
+        public static final String COMPANY_PORTAL_APP_PACKAGE_NAME = "com.microsoft.windowsintune.companyportal";
+
+        /**
+         * Signature info for Intune Company portal app that installs authenticator
+         * component.
+         */
+        public static final String COMPANY_PORTAL_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE = "ho040S3ffZkmxqtQrSwpTVOn9r0=";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE = "N1jdcbbnKDr0LaFZlqdhXgm2luE=";
+
+        /**
+         * Signature info for Broker Host app that installs authenticator
+         * component.
+         */
+        public static final String BROKER_HOST_APP_SIGNATURE = "1wIqXSqBj7w+h11ZifsnqwgyKrY=";
+
 
         /**
          * Teams IP Phones (Sakurai devices) is supported by Intune, but does not have a back button nor browser.
@@ -1079,6 +1076,11 @@ public final class AuthenticationConstants {
         public static final String BROWSER_EXT_WEB_CP = "companyportal://";
 
         /**
+         * Prefix for the Authenticator MFA linking.
+         */
+        public static final String AUTHENTICATOR_MFA_LINKING_PREFIX = "microsoft-authenticator://activatemfa";
+
+        /**
          * Redirect URL from WebCP that should launch the Intune Company Portal app.
          */
         public static final String WEBCP_LAUNCH_COMPANY_PORTAL_URL = BROWSER_EXT_WEB_CP + "enrollment";
@@ -1091,7 +1093,7 @@ public final class AuthenticationConstants {
         /**
          * Activity name to launch company portal.
          */
-        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME + ".views.SplashActivity";
+        public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
 
         /**
          * Redirect URI parameter key to get link to install broker
@@ -1168,6 +1170,11 @@ public final class AuthenticationConstants {
          * String for ssl prefix.
          */
         public static final String REDIRECT_SSL_PREFIX = "https://";
+
+        /**
+         * Prefix in the redirect for PlayStore.
+         */
+        public static final String PLAY_STORE_INSTALL_PREFIX = "market://details?id=";
 
         /**
          * String for expiration buffer.
@@ -1489,7 +1496,7 @@ public final class AuthenticationConstants {
 
         public static final String REQUEST_HEADERS = "com.microsoft.identity.request.headers";
 
-        public static final String POST_PAGE_LOADED_JAVASCRIPT = "com.microsoft.identity.post.page.loaded.javascript";
+        public static final String POST_PAGE_LOADED_URL = "com.microsoft.identity.post.page.loaded.url";
 
         public static final String AUTHORIZATION_AGENT = "com.microsoft.identity.client.authorization.agent";
 
