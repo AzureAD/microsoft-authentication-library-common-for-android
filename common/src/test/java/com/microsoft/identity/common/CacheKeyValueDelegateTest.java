@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import org.json.JSONArray;
@@ -60,12 +61,14 @@ public class CacheKeyValueDelegateTest {
     private static final String CREDENTIAL_TYPE_ACCESS_TOKEN = CredentialType.AccessToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_REFRESH_TOKEN = CredentialType.RefreshToken.name().toLowerCase(Locale.US);
     private static final String CREDENTIAL_TYPE_ID_TOKEN = CredentialType.IdToken.name().toLowerCase(Locale.US);
+    private static final String CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN = CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US);
     private static final String LOCAL_ACCOUNT_ID = "90bc88e6-7c76-45e8-a4e3-a0b1dc0a8ce1";
     private static final String AUTHORITY_TYPE = "AAD";
     private static final String ALTERNATIVE_ACCOUNT_ID = "32000000000003bde810";
     private static final String FIRST_NAME = "Jane";
     private static final String FAMILY_NAME = "Doe";
     private static final String AVATAR_URL = "https://fake.cdn.microsoft.com/avatars/1";
+    private static final String SESSION_KEY = "b2h3b2gzYWluYW9MOFZhaQo=";
     public static final String ESCAPE_SEQ_CHARS = "\r\f\n\t";
 
     private ICacheKeyValueDelegate mDelegate;
@@ -788,6 +791,46 @@ public class CacheKeyValueDelegateTest {
         assertEquals(numbers.toString(), deserializedValue.getAdditionalFields().get("numbers").toString());
     }
     // End RefreshTokens
+
+    // PrimaryRefreshTokens
+    @Test
+    public void primaryRefreshTokenCacheKeyComplete() {
+        final PrimaryRefreshTokenRecord primaryRefreshTokenRecord = new PrimaryRefreshTokenRecord();
+        primaryRefreshTokenRecord.setHomeAccountId(HOME_ACCOUNT_ID);
+        primaryRefreshTokenRecord.setEnvironment(ENVIRONMENT);
+        primaryRefreshTokenRecord.setCredentialType(CredentialType.PrimaryRefreshToken.name());
+        // Client_id, target and realm not in cache key.
+        primaryRefreshTokenRecord.setClientId(CLIENT_ID);
+
+        final String expectedKey = "" // just for formatting
+                + HOME_ACCOUNT_ID + CACHE_VALUE_SEPARATOR
+                + ENVIRONMENT + CACHE_VALUE_SEPARATOR
+                + CREDENTIAL_TYPE_PRIMARY_REFRESH_TOKEN + CACHE_VALUE_SEPARATOR
+                + CLIENT_ID + CACHE_VALUE_SEPARATOR
+                + CACHE_VALUE_SEPARATOR;
+        assertEquals(expectedKey, mDelegate.generateCacheKey(primaryRefreshTokenRecord));
+    }
+
+    @Test
+    public void primaryRefreshTokenCreateCacheValue() throws JSONException {
+        final PrimaryRefreshTokenRecord primaryRefreshToken = new PrimaryRefreshTokenRecord();
+        primaryRefreshToken.setHomeAccountId(HOME_ACCOUNT_ID);
+        primaryRefreshToken.setEnvironment(ENVIRONMENT);
+        primaryRefreshToken.setCredentialType(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US));
+        primaryRefreshToken.setClientId(CLIENT_ID);
+        primaryRefreshToken.setSessionKey(SESSION_KEY);
+
+        final String serializedValue = mDelegate.generateCacheValue(primaryRefreshToken);
+
+        // Turn the serialized value into a JSONObject and start testing field equality.
+        final JSONObject jsonObject = new JSONObject(serializedValue);
+        assertEquals(HOME_ACCOUNT_ID, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.HOME_ACCOUNT_ID));
+        assertEquals(ENVIRONMENT, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.ENVIRONMENT));
+        assertEquals(CredentialType.PrimaryRefreshToken.name().toLowerCase(Locale.US), jsonObject.getString("credential_type"));
+        assertEquals(CLIENT_ID, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.CLIENT_ID));
+        assertEquals(SESSION_KEY, jsonObject.getString(PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY));
+    }
+    // End PrimaryRefreshTokens
 
     // IdTokens
     @Test

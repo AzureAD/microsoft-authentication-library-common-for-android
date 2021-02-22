@@ -57,7 +57,7 @@ public enum AuthenticationSettings {
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_SIGNATURE;
+    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
 
     private Class<?> mClazzDeviceCertProxy;
 

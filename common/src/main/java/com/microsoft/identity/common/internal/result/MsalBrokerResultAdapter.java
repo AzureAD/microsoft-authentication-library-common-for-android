@@ -34,6 +34,7 @@ import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
@@ -63,7 +64,13 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_VERSION;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_SERVER_SIDE;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_BROKER_BUNDLE;
+import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
@@ -498,7 +505,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
 
-    public @NonNull Intent getIntentForInteractiveRequestFromResultBundle( @NonNull final Bundle resultBundle) throws ClientException {
+    public @NonNull Intent getIntentForInteractiveRequestFromResultBundle(@NonNull final Bundle resultBundle,
+                                                                          @NonNull final String negotiatedBrokerProtocolVersion) throws ClientException {
         final Bundle interactiveRequestBundle = extractInteractiveRequestBundleFromResultBundle(resultBundle);
 
         final String packageName = interactiveRequestBundle.getString(BROKER_PACKAGE_NAME);
@@ -515,6 +523,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 className
         );
         intent.putExtras(interactiveRequestBundle);
+        intent.putExtra(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         return intent;
     }
 
@@ -527,6 +536,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (interactiveRequestIntent != null) {
             return interactiveRequestIntent.getExtras();
         }
+
         return resultBundle;
     }
 

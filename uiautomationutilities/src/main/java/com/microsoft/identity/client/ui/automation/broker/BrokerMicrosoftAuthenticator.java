@@ -35,7 +35,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
-import com.microsoft.identity.client.ui.automation.app.IPowerLiftIntegratedApp;
+import com.microsoft.identity.client.ui.automation.powerlift.IPowerLiftIntegratedApp;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
@@ -220,7 +220,7 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
     }
 
     @Override
-    public void createPowerLiftIncident() {
+    public String createPowerLiftIncident() {
         Logger.i(TAG, "Creating Power Lift Incident..");
         launch();
         if (shouldHandleFirstRun) {
@@ -228,13 +228,13 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
         }
 
         if (isInSharedDeviceMode) {
-            createPowerLiftIncidentInSharedDeviceMode();
+            return createPowerLiftIncidentInSharedDeviceMode();
         } else {
-            createPowerLiftIncidentInNonSharedMode();
+            return createPowerLiftIncidentInNonSharedMode();
         }
     }
 
-    private void createPowerLiftIncidentInNonSharedMode() {
+    private String createPowerLiftIncidentInNonSharedMode() {
         // click the 3 dot menu icon in top right
         UiAutomatorUtils.handleButtonClick("com.azure.authenticator:id/menu_overflow");
 
@@ -280,12 +280,14 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
 
             // This will post the incident id in text logs
             Logger.w(TAG, incidentIdText);
+
+            return incidentIdText;
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
     }
 
-    private void createPowerLiftIncidentInSharedDeviceMode() {
+    private String createPowerLiftIncidentInSharedDeviceMode() {
         try {
             final UiObject settingsBtn = UiAutomatorUtils.obtainUiObjectWithClassAndDescription(
                     Button.class,
@@ -308,6 +310,8 @@ public class BrokerMicrosoftAuthenticator extends AbstractTestBroker implements 
             final String incidentIdText = postLogSubmissionText.getText();
             // This will post the incident id in text logs
             Logger.w(TAG, incidentIdText);
+
+            return incidentIdText;
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }

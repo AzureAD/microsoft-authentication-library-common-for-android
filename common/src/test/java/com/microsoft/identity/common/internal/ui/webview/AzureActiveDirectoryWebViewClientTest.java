@@ -39,7 +39,7 @@ import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -57,7 +57,7 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_PLAY_STORE_INSTALL_AUTH_APP_URL =
             PLAY_STORE_INSTALL_PREFIX + AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
     private static final String TEST_PLAY_STORE_INSTALL_CP_URL =
-            PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_PROD_APP_PACKAGE_NAME;
+            PLAY_STORE_INSTALL_PREFIX + COMPANY_PORTAL_APP_PACKAGE_NAME;
     private static final String TEST_PLAY_STORE_INSTALL_INVALID_APP =
             PLAY_STORE_INSTALL_PREFIX + "com.azure.xyz";
     private static final String AUTHENTICATOR_MFA_LINKING_INVALID_URI =

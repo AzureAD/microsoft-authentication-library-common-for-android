@@ -25,21 +25,17 @@ package com.microsoft.identity.common.internal.util;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
 
 import java.util.List;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import java.util.Set;
 
 /**
  * Utility class for anything relating to process.
@@ -55,17 +51,24 @@ public class ProcessUtil {
     public static boolean isBrokerProcess(@NonNull final Context context) {
         final String processName = getProcessName(context);
 
-        final String authAppAuthProcess = AZURE_AUTHENTICATOR_APP_PACKAGE_NAME + ":auth";
-        final String cpAuthProcess = COMPANY_PORTAL_APP_PACKAGE_NAME + ":auth";
+        final BrokerValidator brokerValidator = new BrokerValidator(context);
+        final Set<BrokerData> validBrokers = brokerValidator.getValidBrokers();
 
-        return authAppAuthProcess.equalsIgnoreCase(processName) ||
-                cpAuthProcess.equalsIgnoreCase(processName);
+        for (final BrokerData brokerData : validBrokers) {
+            final String authProcess = brokerData.packageName + ":auth";
+            if (authProcess.equalsIgnoreCase(processName)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
      * Returns the running process name.
      */
-    private static @Nullable String getProcessName(@NonNull final Context context) {
+    private static @Nullable
+    String getProcessName(@NonNull final Context context) {
         final int pid = android.os.Process.myPid();
         final ActivityManager am = (ActivityManager) context.getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
         final List<ActivityManager.RunningAppProcessInfo> runningProcesses = am.getRunningAppProcesses();
@@ -83,7 +86,8 @@ public class ProcessUtil {
     /**
      * Returns a handler based on the current looper.
      */
-    public static @NonNull Handler getPreferredHandler() {
+    public static @NonNull
+    Handler getPreferredHandler() {
         if (null != Looper.myLooper()) {
             return new Handler(Looper.myLooper());
         } else {
