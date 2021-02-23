@@ -41,10 +41,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
@@ -55,6 +57,8 @@ import javax.crypto.spec.SecretKeySpec;
 public class DefaultSharedPrefsFileManagerReencrypterTest {
 
     private static final String TEST_CACHE_FILENAME = "com.msft.test-sharedprefs";
+    private static final int MAX_WAIT = 5;
+    private static final TimeUnit MAX_WAIT_UNIT = TimeUnit.SECONDS;
 
     private Context mContext;
 
@@ -178,7 +182,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 }
         );
 
-        latch.await();
+        latch.await(MAX_WAIT, MAX_WAIT_UNIT);
     }
 
     @Test
@@ -227,9 +231,138 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     }
                 });
 
-        latch.await();
+        latch.await(MAX_WAIT, MAX_WAIT_UNIT);
 
         Assert.assertEquals(10, mTestCacheFile.getAll().size());
+    }
+
+    @Test
+    public void testAbortOnError() throws InterruptedException {
+        final String sampleKey = "sample_key";
+        final String sampleValue = "plaintext_value";
+        mTestCacheFile.putString(sampleKey, sampleValue);
+
+        // Try to decrypt the unencrypted data, it will fail
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
+                    @Override
+                    public String decrypt(String input) throws Exception {
+                        throw new IOException();
+                    }
+                },
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                ),
+                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                    @Override
+                    public void onError(@NonNull final Exception e) {
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        Assert.fail();
+                        latch.countDown();
+                    }
+                }
+        );
+
+        latch.await(MAX_WAIT, MAX_WAIT_UNIT);
+        Assert.assertEquals(1, mTestCacheFile.getAll().size());
+        Assert.assertEquals(sampleValue, mTestCacheFile.getString(sampleKey));
+    }
+
+    @Test
+    public void testEraseEntryOnError() throws InterruptedException {
+        final String sampleKey = "sample_key";
+        final String sampleValue = "plaintext_value";
+        mTestCacheFile.putString(sampleKey, sampleValue);
+
+        // Try to decrypt the unencrypted data, it will fail
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
+                    @Override
+                    public String decrypt(String input) throws Exception {
+                        throw new IOException();
+                    }
+                },
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        false,
+                        true,
+                        false
+                ),
+                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                    @Override
+                    public void onError(@NonNull final Exception e) {
+                        Assert.fail();
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        latch.countDown();
+                    }
+                }
+        );
+
+        latch.await(MAX_WAIT, MAX_WAIT_UNIT);
+        Assert.assertEquals(0, mTestCacheFile.getAll().size());
+    }
+
+    @Test
+    public void testEraseAllOnError() throws InterruptedException {
+        final String sampleKey1 = "sample_key_1";
+        final String sampleValue1 = "plaintext_value_1";
+
+        final String sampleKey2 = "sample_key_2";
+        final String sampleValue2 = "plaintext_value_2";
+
+        mTestCacheFile.putString(sampleKey1, sampleValue1);
+        mTestCacheFile.putString(sampleKey2, sampleValue2);
+
+        // Try to decrypt the unencrypted data, it will fail
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
+                    @Override
+                    public String decrypt(String input) throws Exception {
+                        throw new IOException();
+                    }
+                },
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        false,
+                        true,
+                        false
+                ),
+                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                    @Override
+                    public void onError(@NonNull final Exception e) {
+                        Assert.fail();
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        latch.countDown();
+                    }
+                }
+        );
+
+        latch.await(MAX_WAIT, MAX_WAIT_UNIT);
+        Assert.assertEquals(0, mTestCacheFile.getAll().size());
     }
 
 }
