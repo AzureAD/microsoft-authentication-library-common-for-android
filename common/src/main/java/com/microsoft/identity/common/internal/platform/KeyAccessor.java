@@ -36,4 +36,9 @@ public interface KeyAccessor {
      * @return
      */
     public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException;
+
+    /**
+     * @return a thumbprint for this key.
+     */
+    public byte[] getThumprint() throws ClientException;
 }

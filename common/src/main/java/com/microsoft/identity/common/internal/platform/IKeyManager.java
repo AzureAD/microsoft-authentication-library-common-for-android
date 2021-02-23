@@ -56,4 +56,17 @@ public interface IKeyManager<K extends KeyStore.Entry> {
      * @throws KeyStoreException if the underlying KeyStore has not been initialized/
      */
     K getEntry() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
+
+    /**
+     * Import a key.
+     * @param jwk the jwk to import.
+     * @param algorithm the algortihm in use.
+     * @throws ClientException if something goes wrong.
+     */
+    void importKey(byte[] jwk, String algorithm) throws ClientException;
+
+    /**
+     * @return a byte array key thumpbrint.
+     */
+    byte[] getThumbprint();
 }

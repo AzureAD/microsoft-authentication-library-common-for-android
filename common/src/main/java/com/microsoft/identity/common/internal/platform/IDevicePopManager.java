@@ -32,6 +32,11 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.UnrecoverableEntryException;
 import java.util.Date;
 
 /**
@@ -119,8 +124,7 @@ public interface IDevicePopManager {
      * Note: Some ciphers are [in]conspicuously absent. Any cipher that requires use of a SHA-1
      * digest or uses NO_PADDING will not be supported.
      */
-    enum Cipher {
-
+    enum Cipher implements CryptoSuite {
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
 
@@ -143,6 +147,35 @@ public interface IDevicePopManager {
         @NonNull
         public String toString() {
             return mValue;
+        }
+
+        @Override
+        public String cipherName() {
+            return mValue;
+        }
+
+        @Override
+        public String macName() {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                return SigningAlgorithm.SHA_256_WITH_RSA.name();
+            } else {
+                return "HmacSHA256";
+            }
+        }
+
+        @Override
+        public boolean isAsymmetric() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends KeyStore.Entry> keyClass() {
+            return KeyStore.PrivateKeyEntry.class;
+        }
+
+        @Override
+        public int keySize() {
+            return 2048;
         }
     }
 
@@ -308,6 +341,13 @@ public interface IDevicePopManager {
      * @return A String of the public key.
      */
     String getPublicKey(PublicKeyFormat format) throws ClientException;
+
+    /**
+     * Gets the public key associated with this DevicePoPManager.
+     *
+     * @return A PublicKey instance.
+     */
+    PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
 
     /**
      * Api to create the signed PoP access token.

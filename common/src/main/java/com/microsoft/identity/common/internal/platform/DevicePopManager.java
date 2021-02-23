@@ -245,11 +245,8 @@ class DevicePopManager implements IDevicePopManager {
 
     DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        KeyStore mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
-        mKeyStore.load(null);
         String mKeyAlias = alias;
         mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(mKeyAlias)
-                                                .keyStore(mKeyStore)
                                                 .thumbprintSupplier(new Supplier<byte[]>() {
                                                     @SneakyThrows(ClientException.class)
                                                     @Override
@@ -1312,6 +1309,17 @@ class DevicePopManager implements IDevicePopManager {
         final PrivateKey privateKey = entry.getPrivateKey();
         final PublicKey publicKey = entry.getCertificate().getPublicKey();
         return new KeyPair(publicKey, privateKey);
+    }
+
+    /**
+     * @return the public key for this particular keyStore entry.
+     * @throws UnrecoverableEntryException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     */
+    public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
+        final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
+        return keyEntry.getCertificate().getPublicKey();
     }
 
     /**
