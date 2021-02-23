@@ -1,0 +1,235 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+package com.microsoft.identity.common;
+
+import android.content.Context;
+
+import androidx.annotation.NonNull;
+import androidx.test.InstrumentationRegistry;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.cache.DefaultSharedPrefsFileManagerReencrypter;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.ISharedPrefsFileManagerReencrypter;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+import java.util.concurrent.CountDownLatch;
+
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
+
+@RunWith(AndroidJUnit4.class)
+public class DefaultSharedPrefsFileManagerReencrypterTest {
+
+    private static final String TEST_CACHE_FILENAME = "com.msft.test-sharedprefs";
+
+    private Context mContext;
+
+    private ISharedPreferencesFileManager mTestCacheFile;
+
+    private ISharedPrefsFileManagerReencrypter mFileManagerReencrypter;
+    private TestEncrypterDecrypter mTestEncrypterDecrypter;
+    private ISharedPrefsFileManagerReencrypter.IStringEncrypter mStringEncrypter;
+    private ISharedPrefsFileManagerReencrypter.IStringDecrypter mStringDecrypter;
+
+    private class TestEncrypterDecrypter implements
+            ISharedPrefsFileManagerReencrypter.IStringEncrypter,
+            ISharedPrefsFileManagerReencrypter.IStringDecrypter {
+
+        private final Context mContext;
+
+        // Decryption will use the legacy key
+        private final byte[] mMockLegacyKey;
+
+        TestEncrypterDecrypter(@NonNull final Context context,
+                               @NonNull final byte[] secretKeyData) {
+            mContext = context;
+            mMockLegacyKey = secretKeyData;
+        }
+
+        @Override
+        public String encrypt(@NonNull final String input) throws Exception {
+            // Ensure the global keys are cleared, so we don't use them...
+            AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
+            final StorageHelper storageHelper = new StorageHelper(mContext);
+            return storageHelper.encrypt(input);
+        }
+
+        public String encryptWithLegacyKey(@NonNull final String input) throws Exception {
+            try {
+                AuthenticationSettings.INSTANCE.setSecretKey(mMockLegacyKey);
+                final StorageHelper storageHelper = new StorageHelper(mContext);
+                return storageHelper.encrypt(input);
+            } finally {
+                AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
+            }
+        }
+
+        @Override
+        public String decrypt(@NonNull final String input) throws Exception {
+            try {
+                // This is a workaround for some really clunky global state management
+                AuthenticationSettings.INSTANCE.setSecretKey(mMockLegacyKey);
+                final StorageHelper storageHelper = new StorageHelper(mContext);
+                return storageHelper.decrypt(input);
+            } finally {
+                // TODO You may need to rename this API! Not just tests anymore!
+                AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
+            }
+        }
+    }
+
+    @Before
+    public void setUp() {
+        mContext = InstrumentationRegistry.getTargetContext();
+        mTestCacheFile = new SharedPreferencesFileManager(
+                mContext,
+                TEST_CACHE_FILENAME
+        );
+        mFileManagerReencrypter = new DefaultSharedPrefsFileManagerReencrypter();
+        try {
+            final byte[] mockKey = generateLegacyFormatKey();
+            mTestEncrypterDecrypter = new TestEncrypterDecrypter(mContext, mockKey);
+            mStringEncrypter = mTestEncrypterDecrypter;
+            mStringDecrypter = mTestEncrypterDecrypter;
+        } catch (NoSuchAlgorithmException
+                | UnsupportedEncodingException
+                | InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private byte[] generateLegacyFormatKey()
+            throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {
+        SecretKeyFactory keyFactory = SecretKeyFactory
+                .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
+        final int iterations = 100;
+        final int keySize = 256;
+        final SecretKey tempkey = keyFactory.generateSecret(new PBEKeySpec("test".toCharArray(),
+                "abcdedfdfd".getBytes("UTF-8"), iterations, keySize));
+        final SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
+        return secretKey.getEncoded();
+    }
+
+    @After
+    public void tearDown() {
+        mTestCacheFile.clear();
+        AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
+    }
+
+    @Test
+    public void testEmptyCacheReturnsSuccess() throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                mStringDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                ),
+                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                    @Override
+                    public void onError(@NonNull final Exception e) {
+                        e.printStackTrace();
+                        Assert.fail();
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        latch.countDown();
+                    }
+                }
+        );
+
+        latch.await();
+    }
+
+    @Test
+    public void testReencryptionSimple() throws Exception {
+        // Add the numbers 0-9 to the cache, encrypted format...
+        for (int ii = 0; ii < 10; ii++) {
+            try {
+                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                mTestCacheFile.putString(String.valueOf(ii), encryptedIntStr);
+            } catch (Exception e) {
+                // wont happen
+            }
+        }
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+
+        // Ensure that the 'legacy' and new keys do not create the same value...
+        final String legacyEncryptedZero = mTestCacheFile.getString("0");
+        final String newEncryptedZero = mTestEncrypterDecrypter.encrypt("0");
+
+        Assert.assertNotEquals(legacyEncryptedZero, newEncryptedZero);
+
+        // Reencrypt the cache
+        final CountDownLatch latch = new CountDownLatch(1);
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                mStringDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                ),
+                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                    @Override
+                    public void onError(@NonNull final Exception e) {
+                        e.printStackTrace();
+                        Assert.fail();
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        latch.countDown();
+                    }
+                });
+
+        latch.await();
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+    }
+
+}
