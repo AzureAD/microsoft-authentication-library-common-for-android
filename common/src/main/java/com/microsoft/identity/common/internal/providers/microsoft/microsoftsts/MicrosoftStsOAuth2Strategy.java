@@ -81,6 +81,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
+import static com.microsoft.identity.common.internal.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -570,7 +571,7 @@ public class MicrosoftStsOAuth2Strategy
                                          @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
         validateAuthScheme(request, response);
-        validateTokensAreInResponse(response);
+        validateTokensAreInResponse(request, response);
     }
 
     /**
@@ -603,24 +604,27 @@ public class MicrosoftStsOAuth2Strategy
      * @param response The idp response.
      * @throws ClientException
      */
-    private void validateTokensAreInResponse(@NonNull final MicrosoftStsTokenResponse response)
+    private void validateTokensAreInResponse(@NonNull final MicrosoftStsTokenRequest request,
+                                             @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
 
         String clientException = null;
         String tokens = "";
         final String tokensMissingMessage = "Missing required tokens of type: {0}";
 
-        if (StringUtil.isEmpty(response.getIdToken())) {
-            clientException = ClientException.TOKENS_MISSING;
-            tokens.concat("id_token");
-        }
-
         if (StringUtil.isEmpty(response.getAccessToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens.concat(" access_token");
+            tokens.concat("access_token");
         }
 
-        if (StringUtil.isEmpty(response.getRefreshToken())) {
+        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
+                StringUtil.isEmpty(response.getIdToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens.concat(" id_token");
+        }
+
+        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
+                StringUtil.isEmpty(response.getRefreshToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens.concat(" refresh_token");
         }
