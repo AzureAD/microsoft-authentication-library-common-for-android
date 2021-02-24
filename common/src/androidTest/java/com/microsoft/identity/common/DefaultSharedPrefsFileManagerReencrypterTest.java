@@ -159,7 +159,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     public void testEmptyCacheReturnsSuccess() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
 
-        mFileManagerReencrypter.reencrypt(
+        mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
@@ -209,7 +209,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Reencrypt the cache
         final CountDownLatch latch = new CountDownLatch(1);
 
-        mFileManagerReencrypter.reencrypt(
+        mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
@@ -247,7 +247,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Try to decrypt the unencrypted data, it will fail
         final CountDownLatch latch = new CountDownLatch(1);
 
-        mFileManagerReencrypter.reencrypt(
+        mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
                 new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
@@ -289,7 +289,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Try to decrypt the unencrypted data, it will fail
         final CountDownLatch latch = new CountDownLatch(1);
 
-        mFileManagerReencrypter.reencrypt(
+        mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
                 new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
@@ -335,7 +335,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Try to decrypt the unencrypted data, it will fail
         final CountDownLatch latch = new CountDownLatch(1);
 
-        mFileManagerReencrypter.reencrypt(
+        mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
                 new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {

@@ -107,12 +107,28 @@ public interface ISharedPrefsFileManagerReencrypter {
      * @param encrypter   The delegate object to handle reencryption.
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
-     * @param callback    Callback to receive any error/completion callbacks.
      */
     void reencrypt(ISharedPreferencesFileManager fileManager,
                    IStringEncrypter encrypter,
                    IStringDecrypter decrypter,
-                   ReencryptionParams params,
-                   TaskCompletedCallbackWithError<Void, Exception> callback
+                   ReencryptionParams params
+    ) throws Exception;
+
+    /**
+     * Performs reencryption of the provided {@link ISharedPreferencesFileManager} asynchronously,
+     * delegating to the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform
+     * content transformations.
+     *
+     * @param fileManager The {@link ISharedPreferencesFileManager} to reencrypt.
+     * @param encrypter   The delegate object to handle reencryption.
+     * @param decrypter   The delegate object to handle decryption of the existing data.
+     * @param params      Params to control error handling behavior.
+     * @param callback    Callback to receive any error/completion callbacks.
+     */
+    void reencryptAsync(ISharedPreferencesFileManager fileManager,
+                        IStringEncrypter encrypter,
+                        IStringDecrypter decrypter,
+                        ReencryptionParams params,
+                        TaskCompletedCallbackWithError<Void, Exception> callback
     );
 }

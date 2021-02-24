@@ -28,57 +28,68 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Default implementation of {@link ISharedPrefsFileManagerReencrypter}.
+ */
 public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
 
     @Override
     public void reencrypt(@NonNull final ISharedPreferencesFileManager fileManager,
                           @NonNull final IStringEncrypter encrypter,
                           @NonNull final IStringDecrypter decrypter,
-                          @NonNull final ReencryptionParams params,
-                          @NonNull final TaskCompletedCallbackWithError<Void, Exception> callback) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
+                          @NonNull final ReencryptionParams params) throws Exception {
+        final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
 
-                for (final Map.Entry<String, String> entry : cacheEntries.entrySet()) {
-                    final String clearTextKey = entry.getKey();
-                    final String encryptedTextValye = entry.getValue();
+        for (final Map.Entry<String, String> entry : cacheEntries.entrySet()) {
+            final String clearTextKey = entry.getKey();
+            final String encryptedTextValye = entry.getValue();
 
-                    try {
-                        // Decrypt the current entry
-                        final String decryptedTextValue = decrypter.decrypt(encryptedTextValye);
+            try {
+                // Decrypt the current entry
+                final String decryptedTextValue = decrypter.decrypt(encryptedTextValye);
 
-                        // Reencrypt the entry
-                        final String reencryptedTextValue = encrypter.encrypt(decryptedTextValue);
+                // Reencrypt the entry
+                final String reencryptedTextValue = encrypter.encrypt(decryptedTextValue);
 
-                        // Overwrite the existing value in-place
-                        fileManager.putString(clearTextKey, reencryptedTextValue);
-                    } catch (final Exception e) {
-                        if (params.eraseEntryOnError()) {
-                            fileManager.remove(clearTextKey);
-                        }
+                // Overwrite the existing value in-place
+                fileManager.putString(clearTextKey, reencryptedTextValue);
+            } catch (final Exception e) {
+                if (params.eraseEntryOnError()) {
+                    fileManager.remove(clearTextKey);
+                }
 
-                        if (params.eraseAllOnError()) {
-                            fileManager.clear();
+                if (params.eraseAllOnError()) {
+                    fileManager.clear();
 
-                            if (params.abortOnError()) {
-                                callback.onError(e);
-                                return;
-                            } else {
-                                break;
-                            }
-                        }
-
-                        if (params.abortOnError()) {
-                            callback.onError(e);
-                            return;
-                        }
+                    if (params.abortOnError()) {
+                        throw e;
+                    } else {
+                        break;
                     }
                 }
 
-                // We are done, invoke the callback
-                callback.onTaskCompleted(null);
+                if (params.abortOnError()) {
+                    throw e;
+                }
+            }
+        }
+    }
+
+    @Override
+    public void reencryptAsync(@NonNull final ISharedPreferencesFileManager fileManager,
+                               @NonNull final IStringEncrypter encrypter,
+                               @NonNull final IStringDecrypter decrypter,
+                               @NonNull final ReencryptionParams params,
+                               @NonNull final TaskCompletedCallbackWithError<Void, Exception> callback) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    reencrypt(fileManager, encrypter, decrypter, params);
+                    callback.onTaskCompleted(null);
+                } catch (final Exception e) {
+                    callback.onError(e);
+                }
             }
         }).start();
     }
