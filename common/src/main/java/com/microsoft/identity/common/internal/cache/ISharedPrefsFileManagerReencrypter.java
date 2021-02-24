@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
+
+/**
+ * Interface describing an object that can reencrypt instances of
+ * {@link ISharedPreferencesFileManager}.
+ */
 public interface ISharedPrefsFileManagerReencrypter {
-
-    interface IReencrypterCallback {
-        void onError(Exception e);
-
-        void onSuccess();
-    }
 
     interface IStringEncrypter {
         String encrypt(String input) throws Exception;
@@ -69,6 +69,6 @@ public interface ISharedPrefsFileManagerReencrypter {
                    IStringEncrypter encrypter,
                    IStringDecrypter decrypter,
                    ReencryptionParams params,
-                   IReencrypterCallback callback
+                   TaskCompletedCallbackWithError<Void, Exception> callback
     );
 }

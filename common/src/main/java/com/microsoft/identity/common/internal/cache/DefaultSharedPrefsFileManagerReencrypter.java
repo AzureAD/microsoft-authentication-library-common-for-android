@@ -23,6 +23,8 @@ package com.microsoft.identity.common.internal.cache;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +35,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
                           @NonNull final IStringEncrypter encrypter,
                           @NonNull final IStringDecrypter decrypter,
                           @NonNull final ReencryptionParams params,
-                          @NonNull final IReencrypterCallback callback) {
+                          @NonNull final TaskCompletedCallbackWithError<Void, Exception> callback) {
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -76,7 +78,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
                 }
 
                 // We are done, invoke the callback
-                callback.onSuccess();
+                callback.onTaskCompleted(null);
             }
         }).start();
     }

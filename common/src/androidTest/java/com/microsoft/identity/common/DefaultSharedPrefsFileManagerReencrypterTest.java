@@ -34,6 +34,7 @@ import com.microsoft.identity.common.internal.cache.DefaultSharedPrefsFileManage
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.ISharedPrefsFileManagerReencrypter;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -167,16 +168,16 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false,
                         false
                 ),
-                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                new TaskCompletedCallbackWithError<Void, Exception>() {
                     @Override
-                    public void onError(@NonNull final Exception e) {
+                    public void onError(Exception e) {
                         e.printStackTrace();
                         Assert.fail();
                         latch.countDown();
                     }
 
                     @Override
-                    public void onSuccess() {
+                    public void onTaskCompleted(Void aVoid) {
                         latch.countDown();
                     }
                 }
@@ -217,19 +218,20 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false,
                         false
                 ),
-                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                new TaskCompletedCallbackWithError<Void, Exception>() {
                     @Override
-                    public void onError(@NonNull final Exception e) {
+                    public void onError(Exception e) {
                         e.printStackTrace();
                         Assert.fail();
                         latch.countDown();
                     }
 
                     @Override
-                    public void onSuccess() {
+                    public void onTaskCompleted(Void aVoid) {
                         latch.countDown();
                     }
-                });
+                }
+        );
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
 
@@ -259,14 +261,14 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false,
                         false
                 ),
-                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                new TaskCompletedCallbackWithError<Void, Exception>() {
                     @Override
-                    public void onError(@NonNull final Exception e) {
+                    public void onError(Exception error) {
                         latch.countDown();
                     }
 
                     @Override
-                    public void onSuccess() {
+                    public void onTaskCompleted(Void aVoid) {
                         Assert.fail();
                         latch.countDown();
                     }
@@ -301,15 +303,15 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         true,
                         false
                 ),
-                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                new TaskCompletedCallbackWithError<Void, Exception>() {
                     @Override
-                    public void onError(@NonNull final Exception e) {
+                    public void onError(Exception error) {
                         Assert.fail();
                         latch.countDown();
                     }
 
                     @Override
-                    public void onSuccess() {
+                    public void onTaskCompleted(Void aVoid) {
                         latch.countDown();
                     }
                 }
@@ -347,15 +349,15 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         true,
                         false
                 ),
-                new ISharedPrefsFileManagerReencrypter.IReencrypterCallback() {
+                new TaskCompletedCallbackWithError<Void, Exception>() {
                     @Override
-                    public void onError(@NonNull final Exception e) {
+                    public void onError(Exception error) {
                         Assert.fail();
                         latch.countDown();
                     }
 
                     @Override
-                    public void onSuccess() {
+                    public void onTaskCompleted(Void aVoid) {
                         latch.countDown();
                     }
                 }
