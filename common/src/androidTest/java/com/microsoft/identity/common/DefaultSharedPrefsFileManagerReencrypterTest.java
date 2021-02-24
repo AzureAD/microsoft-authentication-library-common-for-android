@@ -156,7 +156,21 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     }
 
     @Test
-    public void testEmptyCacheReturnsSuccess() throws InterruptedException {
+    public void testEmptyCacheReturnsSuccess() throws Exception {
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                mStringDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                )
+        );
+    }
+
+    @Test
+    public void testEmptyCacheReturnsSuccessAsync() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
 
         mFileManagerReencrypter.reencryptAsync(
@@ -207,6 +221,42 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         Assert.assertNotEquals(legacyEncryptedZero, newEncryptedZero);
 
         // Reencrypt the cache
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                mStringDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                )
+        );
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+    }
+
+    @Test
+    public void testReencryptionSimpleAsync() throws Exception {
+        // Add the numbers 0-9 to the cache, encrypted format...
+        for (int ii = 0; ii < 10; ii++) {
+            try {
+                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                mTestCacheFile.putString(String.valueOf(ii), encryptedIntStr);
+            } catch (Exception e) {
+                // wont happen
+            }
+        }
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+
+        // Ensure that the 'legacy' and new keys do not create the same value...
+        final String legacyEncryptedZero = mTestCacheFile.getString("0");
+        final String newEncryptedZero = mTestEncrypterDecrypter.encrypt("0");
+
+        Assert.assertNotEquals(legacyEncryptedZero, newEncryptedZero);
+
+        // Reencrypt the cache
         final CountDownLatch latch = new CountDownLatch(1);
 
         mFileManagerReencrypter.reencryptAsync(
@@ -238,8 +288,34 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         Assert.assertEquals(10, mTestCacheFile.getAll().size());
     }
 
+    @Test(expected = IOException.class)
+    public void testAbortOnError() throws Exception {
+        final String sampleKey = "sample_key";
+        final String sampleValue = "plaintext_value";
+        mTestCacheFile.putString(sampleKey, sampleValue);
+
+        // Try to decrypt the unencrypted data, it will fail
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
+                    @Override
+                    public String decrypt(String input) throws Exception {
+                        Assert.assertEquals(1, mTestCacheFile.getAll().size());
+                        Assert.assertEquals(sampleValue, mTestCacheFile.getString(sampleKey));
+                        throw new IOException();
+                    }
+                },
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                )
+        );
+    }
+
     @Test
-    public void testAbortOnError() throws InterruptedException {
+    public void testAbortOnErrorAsync() throws InterruptedException {
         final String sampleKey = "sample_key";
         final String sampleValue = "plaintext_value";
         mTestCacheFile.putString(sampleKey, sampleValue);
@@ -281,7 +357,32 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     }
 
     @Test
-    public void testEraseEntryOnError() throws InterruptedException {
+    public void testEraseEntryOnError() throws Exception {
+        final String sampleKey = "sample_key";
+        final String sampleValue = "plaintext_value";
+        mTestCacheFile.putString(sampleKey, sampleValue);
+
+        // Try to decrypt the unencrypted data, it will fail
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
+                    @Override
+                    public String decrypt(String input) throws Exception {
+                        throw new IOException();
+                    }
+                },
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        false,
+                        true,
+                        false
+                )
+        );
+        Assert.assertEquals(0, mTestCacheFile.getAll().size());
+    }
+
+    @Test
+    public void testEraseEntryOnErrorAsync() throws InterruptedException {
         final String sampleKey = "sample_key";
         final String sampleValue = "plaintext_value";
         mTestCacheFile.putString(sampleKey, sampleValue);
@@ -322,7 +423,38 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     }
 
     @Test
-    public void testEraseAllOnError() throws InterruptedException {
+    public void testEraseAllOnError() throws Exception {
+        final String sampleKey1 = "sample_key_1";
+        final String sampleValue1 = "plaintext_value_1";
+
+        final String sampleKey2 = "sample_key_2";
+        final String sampleValue2 = "plaintext_value_2";
+
+        mTestCacheFile.putString(sampleKey1, sampleValue1);
+        mTestCacheFile.putString(sampleKey2, sampleValue2);
+
+        // Try to decrypt the unencrypted data, it will fail
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
+                    @Override
+                    public String decrypt(String input) throws Exception {
+                        throw new IOException();
+                    }
+                },
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        false,
+                        true,
+                        false
+                )
+        );
+
+        Assert.assertEquals(0, mTestCacheFile.getAll().size());
+    }
+
+    @Test
+    public void testEraseAllOnErrorAsync() throws InterruptedException {
         final String sampleKey1 = "sample_key_1";
         final String sampleValue1 = "plaintext_value_1";
 
