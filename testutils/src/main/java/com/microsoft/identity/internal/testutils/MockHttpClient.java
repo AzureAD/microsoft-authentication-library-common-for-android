@@ -22,16 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.util.Pair;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.net.HttpClient.HttpMethod;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 
+import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,159 +40,148 @@ import java.util.Map;
  */
 public class MockHttpClient {
 
-    /**
-     * Store a map with Pair<HttpMethod, urlRegex>  as the key. This allows us to have different
-     * interceptors for methods with a particular url pattern.
-     * When the HttpMethod in the Pair is null, we will match all requests specified by the urlRegex
-     * regardless of the http method.
-     */
-    private static final Map<Pair<HttpMethod, String>, HttpRequestInterceptor> interceptors = new HashMap<>();
 
     /**
-     * Will set the interceptor for all methods and request urls
-     *
-     * @param interceptor  the http request interceptor
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod, String)
+     * Store a map with HttpRequestMatcher as the key. This allows us to have different
+     * interceptors for matching different request patterns.
      */
-    public static void setInterceptor(@NonNull final HttpRequestInterceptor interceptor) {
-        MockHttpClient.setInterceptor(interceptor, null, ".*");
+    private static final Map<HttpRequestMatcher, HttpRequestInterceptor> interceptors = new HashMap<>();
+
+
+    /**
+     * Installs a mock http client instance to use in providing the request interceptors.
+     * <p>
+     * Invoke the uninstall() method to remove all the set interceptors
+     *
+     * @return the mock http client object
+     * @see MockHttpClient#uninstall()
+     */
+    public static MockHttpClient install() {
+        return new MockHttpClient();
     }
 
-    /**
-     * Will set the request interceptor for the specified url regex and all http methods.
-     *
-     * @param interceptor  the http interceptor
-     * @param urlRegex     the url pattern in regex
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod, String)
-     */
-    public static void setInterceptor(@NonNull final HttpRequestInterceptor interceptor,
-                                      @NonNull String urlRegex) {
-        MockHttpClient.setInterceptor(interceptor, null, urlRegex);
-    }
 
     /**
-     * Will set the request interceptor for the specified http method and all urls .
+     * Will return the http request interceptor that is configured to intercept the request
      *
-     * @param interceptor  the http interceptor
-     * @param method       the request method
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod, String)
+     * @param method the http method
+     * @param url    the request url to intercept
+     * @return the http request interceptor configured for the http method and request url
      */
-    public static void setInterceptor(@NonNull final HttpRequestInterceptor interceptor,
-                                      @NonNull HttpMethod method) {
-        MockHttpClient.setInterceptor(interceptor, method, ".*");
-    }
-
-    /**
-     * Will set the request interceptor for the specified http method and url regex pattern
-     *
-     * @param interceptor  the http interceptor
-     * @param method       the request method
-     * @param urlRegex     the url regex pattern.
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
-     * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpMethod)
-     */
-    public static void setInterceptor(@NonNull final HttpRequestInterceptor interceptor,
-                                      @Nullable final HttpMethod method,
-                                      @NonNull final String urlRegex) {
-        interceptors.put(new Pair<>(method, urlRegex), interceptor);
-    }
-
-    /**
-     * Will return the http request interceptor that is configured to intercept the HttpMethod and
-     * request url specified
-     *
-     * @param method  the http method
-     * @param url     the request url to intercept
-     * @return  the http request interceptor configured for the http method and request url
-     */
-    public static HttpRequestInterceptor intercept(@NonNull final HttpMethod method, @NonNull final URL url) {
+    public static HttpRequestInterceptor intercept(
+            @NonNull final HttpMethod method,
+            @NonNull final URL url,
+            final Map<String, String> requestHeaders,
+            final byte[] requestContent
+    ) {
         // for each pair of HttpMethod and url regex
-        for (Pair<HttpMethod, String> pair : interceptors.keySet()) {
-            // if url matches and the HttpMethod matches (or is null)  the interceptor has been found.
-            if ((pair.first == null || pair.first.compareTo(method) == 0) && url.toString().matches(pair.second)) {
+        for (HttpRequestMatcher matcher : interceptors.keySet()) {
+            if (matcher.matches(method, url, requestHeaders, requestContent)) {
                 // return the http interceptor
-                return interceptors.get(pair);
+                return interceptors.get(matcher);
             }
         }
         return null;
     }
 
+    private final List<HttpRequestMatcher> matchers = new ArrayList<>(); // store a list of matchers for a single MockHttpClient object instance
+
+
     /**
-     * A shorthand for intercepting http request by giving the response for all outgoing requests.
+     * Quickly match all the http requests with the specified interceptor
      *
-     * @param httpResponse  the http response
-     * @see MockHttpClient#setHttpResponse(HttpResponse, String)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod, String)
+     * @param interceptor the http request interceptor
      */
-    public static void setHttpResponse(@NonNull final HttpResponse httpResponse) {
-        MockHttpClient.setHttpResponse(httpResponse, null, ".*");
+    public void intercept(@NonNull final HttpRequestInterceptor interceptor) {
+        intercept(HttpRequestMatcher.builder().build(), interceptor);
+    }
+
+
+    /**
+     * Quickly match all the http requests that match the url specified
+     *
+     * @param url         the URL to match
+     * @param interceptor the http interceptor
+     */
+    public void intercept(@NonNull final URL url, @NonNull final HttpRequestInterceptor interceptor) {
+        intercept(
+                HttpRequestMatcher.builder()
+                        .url(u -> u.toString().equals(url.toString()))
+                        .build(),
+                interceptor
+        );
     }
 
     /**
-     * A shorthand for intercepting http requests by giving the response for all outgoing
-     * requests with the specified http method
+     * Quickly match all the http requests that match the url and the http method specified
      *
-     * @param httpResponse  the http response
-     * @param method        the method that will be returning the response
-     * @see MockHttpClient#setHttpResponse(HttpResponse)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod, String)
+     * @param method      the http method
+     * @param url         the request url
+     * @param interceptor the request interceptor
      */
-    public static void setHttpResponse(@NonNull final HttpResponse httpResponse, @NonNull HttpMethod method) {
-        MockHttpClient.setHttpResponse(httpResponse, method, ".*");
+    public void intercept(
+            @NonNull final HttpMethod method,
+            @NonNull final URL url,
+            @NonNull final HttpRequestInterceptor interceptor) {
+        intercept(
+                HttpRequestMatcher.builder()
+                        .url(u -> u.toString().equals(url.toString()))
+                        .method(m -> m.compareTo(method) == 0).build(),
+                interceptor
+        );
     }
 
     /**
-     * A shorthand for intercepting http requests by giving the response for all outgoing
-     * requests that match the specified url regex.
+     * Match all the http requests to match the http method specified.
      *
-     * @param httpResponse  the http response
-     * @param urlRegex      the url regex to match requests
-     * @see MockHttpClient#setHttpResponse(HttpResponse)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod, String)
+     * @param method      the http method
+     * @param interceptor the request interceptor
      */
-    public static void setHttpResponse(@NonNull final HttpResponse httpResponse, @NonNull final String urlRegex) {
-        MockHttpClient.setHttpResponse(httpResponse, null, urlRegex);
+    public void intercept(
+            @NonNull final HttpMethod method,
+            @NonNull final HttpRequestInterceptor interceptor
+    ) {
+        intercept(
+                HttpRequestMatcher.builder()
+                        .method(m -> m.compareTo(method) == 0)
+                        .build(),
+                interceptor
+        );
     }
 
     /**
-     * A shorthand for intercepting requests by giving the response for all outgoing requests that
-     * match the specified url regex and http method
+     * Intercept a request and respond with the specified http response
      *
-     * @param httpResponse  the http response
-     * @param method        the request method
-     * @param urlRegex      the url regex pattern to match
-     * @see MockHttpClient#setHttpResponse(HttpResponse)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, String)
-     * @see MockHttpClient#setHttpResponse(HttpResponse, HttpMethod)
+     * @param matcher      the request matcher
+     * @param httpResponse the http response
      */
-    public static void setHttpResponse(@NonNull final HttpResponse httpResponse,
-                                       @Nullable final HttpMethod method,
-                                       @NonNull final String urlRegex) {
-        MockHttpClient.setInterceptor(new HttpRequestInterceptor() {
-            @Override
-            public HttpResponse intercept(@NonNull HttpMethod httpMethod,
-                                          @NonNull URL requestUrl,
-                                          @NonNull Map<String, String> requestHeaders,
-                                          @Nullable byte[] requestContent) {
-                return httpResponse;
-            }
-        }, method, urlRegex);
+    public void intercept(HttpRequestMatcher matcher, HttpResponse httpResponse) {
+        intercept(
+                matcher,
+                (httpMethod, requestUrl, requestHeaders, requestContent) -> httpResponse
+        );
     }
 
     /**
-     * Clears the existing interceptors
+     * Adds the matcher and interceptor to the MockHttpClient
+     *
+     * @param matcher     the request matcher
+     * @param interceptor the request interceptor
      */
-    public static void reset() {
-        MockHttpClient.interceptors.clear();
+    public void intercept(HttpRequestMatcher matcher, HttpRequestInterceptor interceptor) {
+        if (!matchers.contains(matcher)) {
+            matchers.add(matcher);
+        }
+        MockHttpClient.interceptors.put(matcher, interceptor);
+    }
+
+
+    /**
+     * Removes all the set http request interceptors for this mock instance
+     */
+    public void uninstall() {
+        for (HttpRequestMatcher matcher : matchers) {
+            MockHttpClient.interceptors.remove(matcher);
+        }
     }
 }

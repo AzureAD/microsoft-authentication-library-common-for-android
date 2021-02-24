@@ -22,33 +22,45 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.internal.testutils.shadows.ShadowHttpClient;
 
-import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
+import java.util.function.Predicate;
+
+import lombok.Builder;
+import lombok.NonNull;
 
 /**
- * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link ShadowHttpClient}.
+ * Used to match http request based on headers, body, url and method. A request is considered as matched
+ * if all these 4 parameters are matched.
  */
-public interface HttpRequestInterceptor {
+@Builder
+public class HttpRequestMatcher {
+
+    private Predicate<Map<String, String>> headers = header -> true;
+    private Predicate<byte[]> body = content -> true;
+    private Predicate<URL> url = s -> true;
+    private Predicate<HttpClient.HttpMethod> method = s -> true;
+
 
     /**
-     * @param httpMethod     the http method
-     * @param requestUrl     the request url
+     * Checks whether the request matches the predicates defined in this request matcher.
+     *
+     * @param method         the request method
+     * @param url            the request URL
      * @param requestHeaders the request headers
-     * @param requestContent the request content
-     * @return the http response object
-     * @throws IOException throws an exception when something went wrong during the http request
+     * @param requestContent the request body/content
+     * @return true if the predicates matched this request
      */
-    HttpResponse intercept(@NonNull HttpClient.HttpMethod httpMethod,
-                           @NonNull URL requestUrl,
-                           @NonNull Map<String, String> requestHeaders,
-                           @Nullable byte[] requestContent) throws IOException;
-
+    public boolean matches(
+            final HttpClient.HttpMethod method,
+            @NonNull final URL url,
+            final Map<String, String> requestHeaders,
+            final byte[] requestContent) {
+        return (null == this.method || this.method.test(method))
+                && (null == this.url || this.url.test(url))
+                && (null == this.headers || this.headers.test(requestHeaders))
+                && (null == this.body || this.body.test(requestContent));
+    }
 }
