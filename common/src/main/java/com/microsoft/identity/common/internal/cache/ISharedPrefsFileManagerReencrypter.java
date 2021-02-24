@@ -102,6 +102,10 @@ public interface ISharedPrefsFileManagerReencrypter {
      * Performs reencryption of the provided {@link ISharedPreferencesFileManager}, delegating to
      * the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform content
      * transformations.
+     * <p>
+     * Please note: this method does not lock the underlying store during reencryption. Users of
+     * this API are advised to ensure the designated store is not mutated during the reencryption
+     * process otherwise undefined behavior/results may occur.
      *
      * @param fileManager The {@link ISharedPreferencesFileManager} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
@@ -118,6 +122,10 @@ public interface ISharedPrefsFileManagerReencrypter {
      * Performs reencryption of the provided {@link ISharedPreferencesFileManager} asynchronously,
      * delegating to the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform
      * content transformations.
+     * <p>
+     * Please note: this method does not lock the underlying store during reencryption. Users of
+     * this API are advised to ensure the designated store is not mutated during the reencryption
+     * process otherwise undefined behavior/results may occur.
      *
      * @param fileManager The {@link ISharedPreferencesFileManager} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
