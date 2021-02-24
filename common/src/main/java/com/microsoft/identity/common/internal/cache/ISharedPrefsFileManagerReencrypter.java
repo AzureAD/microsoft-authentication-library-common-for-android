@@ -30,20 +30,38 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
  */
 public interface ISharedPrefsFileManagerReencrypter {
 
+    /**
+     * The object to which this class delegates reencryption of the
+     * {@link ISharedPreferencesFileManager}.
+     */
     interface IStringEncrypter {
         String encrypt(String input) throws Exception;
     }
 
+    /**
+     * The object to which this class delegates decryption of the input
+     * {@link ISharedPreferencesFileManager}.
+     */
     interface IStringDecrypter {
         String decrypt(String input) throws Exception;
     }
 
+    /**
+     * Encapsulates error handling switches for controlling reencryption.
+     */
     class ReencryptionParams {
 
         private final boolean mAbortOnError;
         private final boolean mEraseEntryOnError;
         private final boolean mEraseAllOnError;
 
+        /**
+         * Constructs a new {@link ReencryptionParams}.
+         *
+         * @param abortOnError      True if the operation should abort upon errors.
+         * @param eraseEntryOnError True, if the operation should delete the entry that caused the error.
+         * @param eraseAllOnError   True, if the operation should delete all entries if an error occurs.
+         */
         public ReencryptionParams(final boolean abortOnError,
                                   final boolean eraseEntryOnError,
                                   final boolean eraseAllOnError) {
@@ -52,19 +70,45 @@ public interface ISharedPrefsFileManagerReencrypter {
             mEraseAllOnError = eraseAllOnError;
         }
 
+        /**
+         * Gets the abortOnError value.
+         *
+         * @return True, if the operation should abort upon error.
+         */
         boolean abortOnError() {
             return mAbortOnError;
         }
 
+        /**
+         * Gets the eraseEntryOnError value.
+         *
+         * @return True, if the operation should erase the problematic entry upon error.
+         */
         boolean eraseEntryOnError() {
             return mEraseEntryOnError;
         }
 
+        /**
+         * Gets the eraseAllOnError value.
+         *
+         * @return True, if the operation should erase all entries upon error.
+         */
         boolean eraseAllOnError() {
             return mEraseAllOnError;
         }
     }
 
+    /**
+     * Performs reencryption of the provided {@link ISharedPreferencesFileManager}, delegating to
+     * the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform content
+     * transformations.
+     *
+     * @param fileManager The {@link ISharedPreferencesFileManager} to reencrypt.
+     * @param encrypter   The delegate object to handle reencryption.
+     * @param decrypter   The delegate object to handle decryption of the existing data.
+     * @param params      Params to control error handling behavior.
+     * @param callback    Callback to receive any error/completion callbacks.
+     */
     void reencrypt(ISharedPreferencesFileManager fileManager,
                    IStringEncrypter encrypter,
                    IStringDecrypter decrypter,
