@@ -14,7 +14,7 @@ import java.security.KeyStore;
 public enum SymmetricCipher implements CryptoSuite {
 
     @RequiresApi(Build.VERSION_CODES.M)
-    AES_GCM_NONE_HMACSHA256("AES/GCM/PKCS7Padding", "HmacSHA256", 256);
+    AES_GCM_NONE_HMACSHA256("AES/GCM/NoPadding", "HmacSHA256", 256);
 
     String mValue;
     String mMacString;

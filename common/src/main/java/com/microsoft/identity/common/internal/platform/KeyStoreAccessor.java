@@ -3,13 +3,19 @@ package com.microsoft.identity.common.internal.platform;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.util.Base64;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.util.Supplier;
+import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jwt.EncryptedJWT;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -18,6 +24,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.text.ParseException;
 import java.util.UUID;
 
 import javax.crypto.BadPaddingException;
@@ -38,7 +45,7 @@ public class KeyStoreAccessor {
      */
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     public static final Charset UTF8 = Charset.forName("UTF-8");
-    private static final int KEY_PURPOSES =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT;// |KeyProperties.PURPOSE_SIGN | KeyProperties.PURPOSE_VERIFY;
+    private static final int KEY_PURPOSES =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_SIGN ;
     private static final SecureRandom RANDOM = new SecureRandom();
 
     /**
@@ -156,13 +163,14 @@ public class KeyStoreAccessor {
         //	at javax.crypto.Cipher.chooseProvider(Cipher.java:773)
         //	at javax.crypto.Cipher.init(Cipher.java:1143)
         //	at javax.crypto.Cipher.init(Cipher.java:1084)
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.R) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
             KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE);
             KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(256)
                     .build();
             generator.init(spec);
             generator.generateKey();
@@ -193,8 +201,69 @@ public class KeyStoreAccessor {
         }
     }
 
-    //TODO: Fill this in.
-    public static KeyAccessor importSymmetricKey(SymmetricCipher cipher, String key_jwe, KeyAccessor stk_accessor) {
+    /**
+     * Construct an accessor for a KeyStore backed entry using a random alias.
+     * @param cipher The cipher type of this key.
+     * @return a key accessor for the use of that particular key.
+     * @throws CertificateException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     * @throws IOException
+     */
+    public static KeyAccessor newInstance(AsymmetricCipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
+        String alias = UUID.randomUUID().toString();
+        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.M) {
+            final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
+            instance.load(null);
+            KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE);
+            KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                    .setKeySize(256)
+                    .build();
+            generator.init(spec);
+            generator.generateKey();
+
+            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, new Supplier<byte[]>() {
+                @Override
+                public byte[] get() {
+                    try {
+                        KeyStore.Entry entry = instance.getEntry(alias, null);
+                        if (entry instanceof KeyStore.SecretKeyEntry) {
+                            SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
+                            Cipher cipher = Cipher.getInstance(key.getAlgorithm());
+                            return cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8));
+                        } else {
+                            return null;
+                        }
+                    } catch (KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
+                        //TODO: logging
+                        return null;
+                    }
+                }
+            });
+            return new SecretKeyAccessor(keyManager, cipher);
+        } else {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(cipher.cipherName());
+            generator.initialize(2048);
+            KeyPair pair = generator.generateKeyPair();
+            pair.getPrivate().getEncoded();
+            pair.getPublic().getEncoded();
+            return new KeyPairAccessor(cipher, pair);
+        }
+    }
+
+
+    public static KeyAccessor importSymmetricKey(SymmetricCipher cipher, String keyAlias, String key_jwe, KeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+        EncryptedJWT jwt = EncryptedJWT.parse(key_jwe);
+        byte[] encryptedKey = jwt.getEncryptedKey().decode();
+        //JWEHeader header = jwt.getHeader();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            //TODO: add code to interpret the header algorithm.
+            KeyAccessor accessor = KeyStoreAccessor.forAlias(keyAlias, IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
+            byte[] rawKey = accessor.decrypt(encryptedKey);
+            return new RawKeyAccessor(cipher, rawKey);
+        }
         throw new UnsupportedOperationException("This operation is not yet supported");
     }
 }

@@ -1,9 +1,14 @@
 package com.microsoft.identity.common.internal.platform;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -18,11 +23,14 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 
 import lombok.Builder;
 import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
@@ -37,6 +45,7 @@ public class SecretKeyAccessor implements KeyAccessor {
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private final DeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
     private final CryptoSuite suite;
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public byte[] encrypt(byte[] plaintext) throws ClientException {
         final String errCode;
@@ -44,9 +53,14 @@ public class SecretKeyAccessor implements KeyAccessor {
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             SecretKey key = entry.getSecretKey();
-            Cipher c = Cipher.getInstance(key.getAlgorithm());
+            Cipher c = Cipher.getInstance(suite.cipherName());
             c.init(Cipher.ENCRYPT_MODE, key);
-            return c.doFinal(plaintext);
+            byte[] iv = c.getIV();
+            byte[] enc = c.doFinal(plaintext);
+            byte[] out = new byte[iv.length + enc.length];
+            System.arraycopy(iv, 0, out, 0, iv.length);
+            System.arraycopy(enc, 0, out, iv.length, enc.length);
+            return out;
         } catch (final UnrecoverableEntryException e) {
             errCode = INVALID_PROTECTION_PARAMS;
             exception = e;
@@ -68,10 +82,14 @@ public class SecretKeyAccessor implements KeyAccessor {
         } catch (InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
-        }
+        } /* catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
+        }*/
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public byte[] decrypt(byte[] ciphertext) throws ClientException {
         final String errCode;
@@ -79,9 +97,11 @@ public class SecretKeyAccessor implements KeyAccessor {
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             SecretKey key = entry.getSecretKey();
-            Cipher c = Cipher.getInstance(key.getAlgorithm());
-            c.init(Cipher.DECRYPT_MODE, key);
-            return c.doFinal(ciphertext);
+            Cipher c = Cipher.getInstance(suite.cipherName());
+            final GCMParameterSpec ivSpec = new GCMParameterSpec(128, ciphertext, 0, 12);
+            c.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
+            return c.doFinal(out);
         } catch (final UnrecoverableEntryException e) {
             errCode = INVALID_PROTECTION_PARAMS;
             exception = e;
@@ -103,8 +123,11 @@ public class SecretKeyAccessor implements KeyAccessor {
         } catch (InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
+        } catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
         }
-        throw new ClientException(errCode, exception.getMessage());
+        throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
     @Override
@@ -130,7 +153,7 @@ public class SecretKeyAccessor implements KeyAccessor {
             errCode = INVALID_KEY;
             exception = e;
         }
-        throw new ClientException(errCode, exception.getMessage());
+        throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
     @Override
