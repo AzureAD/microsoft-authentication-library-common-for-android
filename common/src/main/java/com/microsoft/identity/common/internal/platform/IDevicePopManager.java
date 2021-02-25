@@ -32,6 +32,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
+import java.security.cert.Certificate;
 import java.util.Date;
 
 /**
@@ -267,6 +268,16 @@ public interface IDevicePopManager {
      * @return A String of the public key.
      */
     String getPublicKey(PublicKeyFormat format) throws ClientException;
+
+    /**
+     * Returns the certificate chain associated with the given alias.
+     *
+     * @return The certificate chain (with the device pop key certificate first, following by zero
+     * or more certificate authorities), or null if the current key does not contain a certificate
+     * chain.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    Certificate[] getCertificateChain() throws ClientException;
 
     /**
      * Api to create the signed PoP access token.
