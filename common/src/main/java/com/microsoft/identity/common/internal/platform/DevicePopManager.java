@@ -121,6 +121,7 @@ import static com.microsoft.identity.common.internal.util.DateUtilities.isLocale
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
