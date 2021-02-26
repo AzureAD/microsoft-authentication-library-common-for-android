@@ -270,7 +270,7 @@ public interface IDevicePopManager {
     String getPublicKey(PublicKeyFormat format) throws ClientException;
 
     /**
-     * Returns the certificate chain associated with the given alias.
+     * Returns the certificate chain associated with the underlying key material.
      *
      * @return The certificate chain (with the device pop key certificate first, following by zero
      * or more certificate authorities), or null if the current key does not contain a certificate
