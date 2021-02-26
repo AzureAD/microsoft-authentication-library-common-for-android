@@ -26,6 +26,7 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Base64;
 
+import androidx.annotation.RequiresApi;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -453,20 +454,19 @@ public class DevicePoPManagerTests {
     }
 
     @Test
+    @RequiresApi(Build.VERSION_CODES.N)
     public void testHasCertificateChain24() throws ClientException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-            mDevicePopManager.generateAsymmetricKey(mContext);
-            Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
+        Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
+        mDevicePopManager.generateAsymmetricKey(mContext);
+        Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
 
-            // At least 1 certificate should exist, though likely there is an additional
-            // endorsement key (EK) root if testing on a real, Play Services compatible device.
-            final Certificate[] chain = mDevicePopManager.getCertificateChain();
-            Assert.assertNotEquals(0, chain.length);
-            Assert.assertEquals(
-                    "X.509",
-                    mDevicePopManager.getCertificateChain()[0].getType()
-            );
-        }
+        // At least 1 certificate should exist, though likely there is an additional
+        // endorsement key (EK) root if testing on a real, Play Services compatible device.
+        final Certificate[] chain = mDevicePopManager.getCertificateChain();
+        Assert.assertNotEquals(0, chain.length);
+        Assert.assertEquals(
+                "X.509",
+                mDevicePopManager.getCertificateChain()[0].getType()
+        );
     }
 }
