@@ -1269,6 +1269,12 @@ public class MsalOAuth2TokenCache
                     accountRecord
             );
 
+            if(idTokensForAccount == null || idTokensForAccount.size() == 0)
+            {
+                // Skip returning account record if there is no corresponding idToken record in the cache for the given clientId
+                continue;
+            }
+
             // Construct the cache record....
             final CacheRecord.CacheRecordBuilder cacheRecordBuilder = CacheRecord.builder();
             cacheRecordBuilder.mAccount(accountRecord);
@@ -1299,7 +1305,7 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Evaluates the supplied list of Credentials. Returns true if he provided Account
+     * Evaluates the supplied list of Credentials. Returns true if the provided Account
      * 'owns' any one of these tokens.
      *
      * @param account        The Account whose credential ownership should be evaluated.
@@ -1341,7 +1347,7 @@ public class MsalOAuth2TokenCache
      * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
      * restricted to only those AccountRecords and Credentials in that realm (tenant).
      * <p>
-     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * clientId, and home_account_id are nullable parameters. However, it should be
      * noted that if these params are null, this method will have no effect.
      *
      * @param environment   The environment to which the targeted Account is associated.
@@ -1375,7 +1381,7 @@ public class MsalOAuth2TokenCache
      * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
      * restricted to only those AccountRecords and Credentials in that realm (tenant).
      * <p>
-     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * clientId, and home_account_id are nullable parameters. However, it should be
      * noted that if these params are null, this method will have no effect.
      *
      * @param environment   The environment to which the targeted Account is associated.
@@ -1407,8 +1413,7 @@ public class MsalOAuth2TokenCache
         );
 
         final AccountRecord targetAccount;
-        if (null == environment
-                || null == clientId
+        if (null == clientId
                 || null == homeAccountId
                 || null == (targetAccount =
                 getAccount(

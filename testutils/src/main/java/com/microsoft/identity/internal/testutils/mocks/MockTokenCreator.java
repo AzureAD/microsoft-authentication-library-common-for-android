@@ -161,6 +161,23 @@ public class MockTokenCreator {
         );
     }
 
+    public static String createMockIdTokenWithObjectIdTenantIdAndIssuer(final String objectId, final String tenantId, final String issuer) {
+        long exp = getExpirationTimeAfterSpecifiedTime(3600);
+        return createMockIdToken(
+                issuer,
+                MOCK_SUBJECT_VALUE,
+                MOCK_AUDIENCE_VALUE,
+                MOCK_NAME_VALUE,
+                MOCK_PREFERRED_USERNAME_VALUE,
+                objectId,
+                tenantId,
+                MOCK_VERSION_VALUE,
+                new Date(),
+                new Date(),
+                new Date(exp)
+        );
+    }
+
     private static String createMockRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
 

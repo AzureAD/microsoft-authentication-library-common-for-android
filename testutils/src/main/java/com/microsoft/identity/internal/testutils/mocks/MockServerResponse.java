@@ -43,6 +43,20 @@ public class MockServerResponse {
         return new HttpResponse(200, mockResponse, new HashMap<String, List<String>>());
     }
 
+    public static HttpResponse getMockTokenSuccessResponse(final String localAccountId, final String tenant, final String issuer, final String rawClientInfo, final String accessToken) {
+        final String mockResponse = "{\n" +
+                "\t\"token_type\": \"Bearer\",\n" +
+                "\t\"scope\": \"User.Read\",\n" +
+                "\t\"expires_in\": 3599,\n" +
+                "\t\"ext_expires_in\": 3599,\n" +
+                "\t\"access_token\": \"" + accessToken + "\",\n" +
+                "\t\"refresh_token\": \"6b80f5b5-d53c-4c46-992d-66c5dcd4cfb1\",\n" +
+                "\t\"id_token\": \"" + MockTokenCreator.createMockIdTokenWithObjectIdTenantIdAndIssuer(localAccountId, tenant, issuer) + "\",\n" +
+                "\t\"client_info\": \"" + rawClientInfo + "\"\n" +
+                "}";
+        return new HttpResponse(200, mockResponse, new HashMap<String, List<String>>());
+    }
+
     public static HttpResponse getMockTokenFailureInvalidGrantResponse() {
         final String mockResponse = "{\n" +
                 "\t\"error\": \"invalid_grant\",\n" +
