@@ -469,4 +469,12 @@ public class DevicePoPManagerTests {
                 mDevicePopManager.getCertificateChain()[0].getType()
         );
     }
+
+    @Test
+    @RequiresApi(Build.VERSION_CODES.N)
+    public void testNullWhenQueryingNonexistentChain24() throws ClientException {
+        Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
+        // Returns null for nonexistent key
+        Assert.assertNull(mDevicePopManager.getCertificateChain());
+    }
 }
