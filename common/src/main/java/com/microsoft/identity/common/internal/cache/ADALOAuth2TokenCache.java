@@ -75,7 +75,7 @@ public class ADALOAuth2TokenCache
     static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
-    public static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
+    private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
 
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
@@ -398,5 +398,13 @@ public class ADALOAuth2TokenCache
         Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;
         return refreshToken;
+    }
+
+    public static String getAdalCacheFilename() {
+        Logger.info(
+                TAG + ":getAdalCacheFilename",
+                "Getting ADAL cache file name..."
+        );
+        return SHARED_PREFERENCES_FILENAME;
     }
 }
