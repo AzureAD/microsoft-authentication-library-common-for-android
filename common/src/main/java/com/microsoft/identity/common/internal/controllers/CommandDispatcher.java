@@ -59,6 +59,7 @@ import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -169,6 +170,15 @@ public class CommandDispatcher {
 
         final String methodName = ":submitSilent";
 
+        final CommandParameters commandParameters = command.getParameters();
+        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
+                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+
+        // set correlation id on parameters as it may not already be set
+        commandParameters.setCorrelationId(correlationId);
+
+        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+
         final Handler handler = new Handler(Looper.getMainLooper());
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture;
@@ -201,14 +211,10 @@ public class CommandDispatcher {
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final CommandParameters commandParameters = command.getParameters();
-                    final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                     try {
-                        // set correlation id on parameters as it may not already be set
-                        commandParameters.setCorrelationId(correlationId);
-
-                        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+                        //initializing again since the request is transferred to a different thread pool
+                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
@@ -223,27 +229,28 @@ public class CommandDispatcher {
 
                         //Check cache to see if the same command completed in the last 30 seconds
                         commandResult = sCommandResultCache.get(command);
-
+                        CommandResult newCommandResult = null;
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
                             commandResult = executeCommand(command);
                             cacheCommandResult(command, commandResult);
+                            Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **" + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus() + " is cacheable : " + command.isEligibleForCaching());
                         } else {
                             Logger.info(
                                     TAG + methodName,
-                                    "",
-                                    "Silent command result returned from cache for correlation id : " + correlationId + " having status : " + commandResult.getStatus()
+                                    "Silent command result returned from cache for correlation id : " + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
                             );
+                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
+                            commandResult = new CommandResult(commandResult.getStatus(), commandResult.getResult(), commandResult.getCorrelationId());
                         }
-
+                        // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
-                        Logger.info(TAG + methodName, "", "Completed request for correlation id : ##" + correlationId + ", with the status : " + commandResult.getStatus());
                         Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
                     } catch (final Throwable t) {
-                        Logger.info(TAG + methodName, "", "Request encountered an exception with correlation id : ##" + correlationId);
+                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
                         synchronized (mapAccessLock) {
@@ -273,7 +280,7 @@ public class CommandDispatcher {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO - conversion of PublicApiId in readable form.
-        Logger.info(TAG, DiagnosticContext.getRequestContext().toJsonString(), "Starting request for correlation id : ####" + correlationId + ", with PublicApiId : " + publicApiId);
+        Logger.info(TAG, DiagnosticContext.getRequestContext().toJsonString(), "Starting request for correlation id : ##" + correlationId + ", with PublicApiId : " + publicApiId);
 
         if (Logger.getAllowPii()) {
             Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
@@ -285,10 +292,15 @@ public class CommandDispatcher {
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
             @NonNull final Handler handler) {
+
+        final String methodName = ":getCommandResultConsumer";
+
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
             public void accept(CommandResult result, final Throwable throwable) {
                 if (null != throwable) {
+                    Logger.info(TAG + methodName, "Request encountered an exception " +
+                            "(this maybe a duplicate request which caries the exception encountered by the original request)");
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -297,7 +309,12 @@ public class CommandDispatcher {
                     });
                     return;
                 }
-
+                if (!StringUtil.isEmpty(result.getCorrelationId()) && !command.getParameters().getCorrelationId().equals(result.getCorrelationId())) {
+                    Logger.info(TAG + methodName,
+                            "Completed duplicate request with correlation id : **" + command.getParameters().getCorrelationId() + ", having the same result as : "
+                                    + result.getCorrelationId() + ", with the status : "
+                                    + result.getStatus().getLogStatus());
+                }
                 // Return command result will post() result for us.
                 returnCommandResult(command, result, handler);
             }
@@ -341,18 +358,18 @@ public class CommandDispatcher {
 
         if (baseException != null) {
             if (baseException instanceof UserCancelException) {
-                commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null);
+                commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null, command.getParameters().getCorrelationId());
             } else {
                 //Post On Error
-                commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+                commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException, command.getParameters().getCorrelationId());
             }
         } else /* baseException == null */ {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result);
+                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result, command.getParameters().getCorrelationId());
             } else {
                 //For commands that don't return an AcquireTokenResult
-                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result);
+                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result, command.getParameters().getCorrelationId());
             }
         }
 
@@ -450,17 +467,17 @@ public class CommandDispatcher {
      * @param baseException
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(BaseException baseException, AcquireTokenResult result) {
+    private static CommandResult getCommandResultFromTokenResult(BaseException baseException, AcquireTokenResult result, String correlationId) {
         //Token Commands
         if (result.getSucceeded()) {
-            return new CommandResult(CommandResult.ResultStatus.COMPLETED, result.getLocalAuthenticationResult());
+            return new CommandResult(CommandResult.ResultStatus.COMPLETED, result.getLocalAuthenticationResult(), correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
-                return new CommandResult(CommandResult.ResultStatus.CANCEL, null);
+                return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
-                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
             }
         }
     }
@@ -521,9 +538,9 @@ public class CommandDispatcher {
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
 
-                        Logger.info(TAG + methodName, "",
-                                "Completed request for correlation id : ##" + correlationId +
-                                        ", with the status : " + commandResult.getStatus());
+                        Logger.info(TAG + methodName,
+                                "Completed interactive request for correlation id : **" + correlationId +
+                                        ", with the status : " + commandResult.getStatus().getLogStatus());
 
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         Telemetry.getInstance().flush(correlationId);
