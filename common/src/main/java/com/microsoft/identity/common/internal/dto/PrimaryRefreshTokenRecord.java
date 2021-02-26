@@ -84,7 +84,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
 
     /**
      * Session key expiry time. This value is determined by the client and set to 60 days after the
-     * session key was initally issued. Measured in milliseconds from epoch (1970).
+     * session key was initally issued. Measured in seconds from epoch (1970).
      */
     @SerializedName(SESSION_KEY_ROLLING_DATE)
     private String mSessionKeyRollingDate;
@@ -171,7 +171,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * Gets the session_key_rolling_date. Measured in milliseconds from epoch (1970).
+     * Gets the session_key_rolling_date. Measured in seconds from epoch (1970).
      *
      * @return The session_key_rolling_date to get.
      */
@@ -180,7 +180,7 @@ public class PrimaryRefreshTokenRecord extends Credential {
     }
 
     /**
-     * Sets the session_key_rolling_date. Measured in milliseconds from epoch (1970).
+     * Sets the session_key_rolling_date. Measured in seconds from epoch (1970).
      *
      * @param sessionKeyRollingDate The session_key_rolling_date to set.
      */

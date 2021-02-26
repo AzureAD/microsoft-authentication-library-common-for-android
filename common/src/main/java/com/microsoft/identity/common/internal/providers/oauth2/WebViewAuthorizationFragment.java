@@ -45,6 +45,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
+import com.microsoft.identity.common.internal.ui.webview.OnPageCommitVisibleCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
@@ -136,7 +137,11 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     @Override
                     public void onPageLoaded() {
                         mProgressBar.setVisibility(View.INVISIBLE);
-
+                    }
+                },
+                new OnPageCommitVisibleCallback() {
+                    @Override
+                    public void onPageCommitVisible() {
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
