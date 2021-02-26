@@ -30,6 +30,7 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.security.cert.Certificate;
 import java.util.Date;
 
 /**
@@ -126,5 +127,10 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
         return mDevicePopManager.getSecureHardwareState();
+    }
+
+    @Override
+    public Certificate[] getCertificateChain() throws ClientException {
+        return mDevicePopManager.getCertificateChain();
     }
 }

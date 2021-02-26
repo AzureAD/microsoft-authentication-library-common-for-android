@@ -36,6 +36,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.WarningType;
@@ -84,7 +85,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl) {
-        super(activity, completionCallback, pageLoadedCallback);
+        this(activity, completionCallback, pageLoadedCallback, null, redirectUrl);
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback,
+                                             @NonNull final String redirectUrl) {
+        super(activity, completionCallback, pageLoadedCallback, pageCommitVisibleCallback);
         mRedirectUrl = redirectUrl;
     }
 
