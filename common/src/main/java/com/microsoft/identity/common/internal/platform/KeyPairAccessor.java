@@ -12,7 +12,7 @@ import lombok.Builder;
 import lombok.experimental.Accessors;
 
 /**
- * Accessor for asymmetric key that are not hardware backed.  This class holds a key pair and mediates
+ * Accessor for asymmetric key that are not keystore backed.  This class holds a key pair and mediates
  * access to it according the the cipher suite provided on construction.
  */
 @Builder

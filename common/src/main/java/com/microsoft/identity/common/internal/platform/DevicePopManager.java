@@ -60,7 +60,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -622,41 +624,13 @@ class DevicePopManager implements IDevicePopManager {
 
             // Init our Cipher
             final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(cipher.toString());
-            OAEPParameterSpec sp = new OAEPParameterSpec("SHA-256", "MGF1", new MGF1ParameterSpec("SHA-1"), PSource.PSpecified.DEFAULT);
-            input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey, sp);
-
-
-            /*
-            // Declare an OutputStream to hold our encrypted data
-
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            // Create a B64Stream to encode our incoming data, and write it to our ByteArrayStream
-            final Base64OutputStream base64OutputStream = new Base64OutputStream(
-                    byteArrayOutputStream,
-                    Base64.DEFAULT
-            );
-             */
-
-            return input.doFinal(plaintext);
-            /*
-            // Wrap it in our CipherOutputStream, write the contents...
-            OutputStream cipherOutputStream = null;
-
-            try { // TODO convert to try-with-resources once API >19
-                cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
-                for (int i = 0; i < plaintext.length; i+=input.getBlockSize()) {
-                    cipherOutputStream.write(plaintext, i, (Math.min(input.getBlockSize(), plaintext.length - i)));
-                }
-            } finally {
-                cipherOutputStream.flush();
-                closeStream(cipherOutputStream);
-                base64OutputStream.flush();
-                closeStream(base64OutputStream);
+            if (cipher.getParameters() != null) {
+                input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey, cipher.getParameters());
+            } else {
+                input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
             }
 
-            // Flatten our OutputStream to an array
-            return byteArrayOutputStream.toByteArray();
-             */
+            return input.doFinal(plaintext);
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
@@ -672,14 +646,14 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
+        } catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
+            exception = e;
         } catch (BadPaddingException e) {
             errCode = BAD_PADDING;
             exception = e;
         } catch (IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
-            exception = e;
-        } catch (InvalidAlgorithmParameterException e) {
-            errCode = INVALID_ALG_PARAMETER;
             exception = e;
         }
 
@@ -734,7 +708,11 @@ class DevicePopManager implements IDevicePopManager {
             // BoringSSL & AndroidOpenSSL
             // https://issuetracker.google.com/issues/37091211
             final javax.crypto.Cipher outputCipher = javax.crypto.Cipher.getInstance(cipher.toString());
-            outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
+            if (cipher.getParameters() != null) {
+                outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey, cipher.getParameters());
+            } else {
+                outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
+            }
             return outputCipher.doFinal(ciphertext);
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
@@ -756,6 +734,9 @@ class DevicePopManager implements IDevicePopManager {
             exception = e;
         } catch (IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        } catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
             exception = e;
         }
 

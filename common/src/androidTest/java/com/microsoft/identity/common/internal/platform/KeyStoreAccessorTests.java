@@ -37,6 +37,16 @@ public class KeyStoreAccessorTests {
     private static final SecureRandom RANDOM = new SecureRandom();
 
     @Test
+    public void testSymmetricBasicFunctionalitySuccessfulRawKey() throws Exception {
+        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        byte[] in = new byte[1024];
+        RANDOM.nextBytes(in);
+        byte[] out = accessor.encrypt(in);
+        byte[] around = accessor.decrypt(out);
+        Assert.assertArrayEquals(in, around);
+    }
+
+    @Test
     public void testSymmetricBasicFunctionalitySuccessful() throws Exception {
         KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         byte[] in = new byte[1024];
@@ -45,8 +55,9 @@ public class KeyStoreAccessorTests {
         byte[] around = accessor.decrypt(out);
         Assert.assertArrayEquals(in, around);
     }
+
     @Test
-    public void testAssymmetricBasicFunctionalitySuccessful() throws Exception {
+    public void testAsymmetricBasicFunctionalitySuccessful() throws Exception {
         Context context = InstrumentationRegistry.getTargetContext();
         KeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING);
         byte[] in = new byte[245];
@@ -57,6 +68,7 @@ public class KeyStoreAccessorTests {
         byte[] signed = accessor.sign(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA);
         Assert.assertTrue(accessor.verify(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA, signed));
     }
+
     @Test(expected = ClientException.class)
     public void testBasicFunctionalityDecryptDoesSomething() throws Exception {
         KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
@@ -81,6 +93,14 @@ public class KeyStoreAccessorTests {
         byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         accessor.verify(in, null, in);
+    }
+    @Test
+    public void testBasicFunctionalitySignAndVerifySupportedIfRaw() throws Exception {
+        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        byte[] in = new byte[1024];
+        RANDOM.nextBytes(in);
+        byte[] out = accessor.sign(in, null);
+        Assert.assertTrue(accessor.verify(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA, out));
     }
 
 }
