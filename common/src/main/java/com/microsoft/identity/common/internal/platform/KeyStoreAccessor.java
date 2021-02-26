@@ -205,6 +205,16 @@ public class KeyStoreAccessor {
         }
     }
 
+    /**
+     * Compute a thumbprint of a symmetric key for a given alias.  The impetus here is that the key
+     * itself is inaccessible, but we would still like to identify a particular instance.  We can
+     * encrypt a fixed value based on the cipher parameters with the key, and take a SHA256 digest
+     * of it.  This could be inspection resistant enough to identify different keys without exposing
+     * the actual key.
+     * @param alias The alias of the key to thumbprint.
+     * @param instance the KeyStore to get the key from.
+     * @return A supplier that can compute the thumbprint for the key on demand.
+     */
     public static Supplier<byte[]> symmetricThumbprint(String alias, KeyStore instance) {
         return new Supplier<byte[]>() {
             @Override
@@ -228,98 +238,18 @@ public class KeyStoreAccessor {
     }
 
     /**
-     * Construct an accessor for a KeyStore backed entry using a random alias.
-     *
-     * TODO: implement and fix this.
-     * @param cipher The cipher type of this key.
-     * @return a key accessor for the use of that particular key.
-     * @throws CertificateException
-     * @throws NoSuchAlgorithmException
-     * @throws KeyStoreException
-     * @throws IOException
+     * Import a symmetric key into the appropriate keystore.  Currently not implemented until we
+     * discover how to use this key - current protocols preclude the use of the keystore.
+     * @param context The android application context - this is only actually important for downlevel
+     *                and could be forked.
+     * @param cipher the SymmetricCipher being imported.
+     * @param keyAlias the alias under which to import the cipher
+     * @param key_jwe the JWE string containing the key.
+     * @param stk_accessor the accessor for the STK to use to decrypt the key, if required.
+     * @return A key accessor for the imported session key
+     * @throws ClientException if there is a failure while importing.
      */
-    /*
-    public static KeyAccessor newInstance(AsymmetricCipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        String alias = UUID.randomUUID().toString();
-        final KeyStore instance;
-        final PrivateKey entry;
-        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.M) {
-            instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-            instance.load(null);
-            KeyGenerator generator = KeyGenerator.getInstance(cipher.cipherName(), ANDROID_KEYSTORE);
-            KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
-                    .setKeySize(256)
-                    .build();
-            generator.init(spec);
-        } else {
-            instance = KeyStore.getInstance("PKCS12");
-            instance.load(null);
-            KeyGenerator generator = KeyGenerator.getInstance(cipher.cipherName(), "PKCS12");
-            generator.init(cipher.keySize());
-            generator.generateKey();
-        }
-        final DeviceKeyManager<KeyStore.PrivateKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, new Supplier<byte[]>() {
-                @Override
-                public byte[] get() {
-                    DevicePopManager.getRsaThumbprint(keyManager.getEntry());
-                };
-            });
-
-        return new AsymmetricKeyAccessor() {
-            @Override
-            public String getPublicKey(IDevicePopManager.PublicKeyFormat format) throws ClientException {
-                try {
-                    return keyManager.getEntry();
-                } catch (UnrecoverableEntryException | NoSuchAlgorithmException | KeyStoreException e) {
-                    throw new ClientException(ClientException.UNKNOWN_ERROR, e.getMessage(), e);
-                }
-            }
-
-            @Override
-            public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
-                return null;
-            }
-
-            @Override
-            public byte[] encrypt(byte[] plaintext) throws ClientException {
-                return new byte[0];
-            }
-
-            @Override
-            public byte[] decrypt(byte[] ciphertext) throws ClientException {
-                return new byte[0];
-            }
-
-            @Override
-            public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
-                return new byte[0];
-            }
-
-            @Override
-            public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
-                return false;
-            }
-
-            @Override
-            public byte[] getThumprint() throws ClientException {
-                return new byte[0];
-            }
-        }
-    }
-*/
-
     public static KeyAccessor importSymmetricKey(Context context, SymmetricCipher cipher, String keyAlias, String key_jwe, KeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
-        EncryptedJWT jwt = EncryptedJWT.parse(key_jwe);
-        byte[] encryptedKey = jwt.getEncryptedKey().decode();
-        //JWEHeader header = jwt.getHeader();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            //TODO: add code to interpret the header algorithm.
-            KeyAccessor accessor = KeyStoreAccessor.forAlias(context, keyAlias, IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
-            byte[] rawKey = accessor.decrypt(encryptedKey);
-            return new RawKeyAccessor(cipher, rawKey);
-        }
         throw new UnsupportedOperationException("This operation is not yet supported");
     }
 }
