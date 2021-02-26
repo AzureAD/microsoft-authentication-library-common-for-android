@@ -23,8 +23,10 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
+import android.os.Build;
 import android.util.Base64;
 
+import androidx.annotation.RequiresApi;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -49,6 +51,7 @@ import java.security.KeyFactory;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
@@ -448,5 +451,30 @@ public class DevicePoPManagerTests {
         Assert.assertEquals(nonce, jwtClaimsSet.getClaim("nonce"));
         Assert.assertNotNull(jwtClaimsSet.getClaim("cnf"));
         Assert.assertEquals(clientClaims, jwtClaimsSet.getClaim("client_claims"));
+    }
+
+    @Test
+    @RequiresApi(Build.VERSION_CODES.N)
+    public void testHasCertificateChain24() throws ClientException {
+        Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
+        mDevicePopManager.generateAsymmetricKey(mContext);
+        Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
+
+        // At least 1 certificate should exist, though likely there is an additional
+        // endorsement key (EK) root if testing on a real, Play Services compatible device.
+        final Certificate[] chain = mDevicePopManager.getCertificateChain();
+        Assert.assertNotEquals(0, chain.length);
+        Assert.assertEquals(
+                "X.509",
+                mDevicePopManager.getCertificateChain()[0].getType()
+        );
+    }
+
+    @Test
+    @RequiresApi(Build.VERSION_CODES.N)
+    public void testNullWhenQueryingNonexistentChain24() throws ClientException {
+        Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
+        // Returns null for nonexistent key
+        Assert.assertNull(mDevicePopManager.getCertificateChain());
     }
 }
