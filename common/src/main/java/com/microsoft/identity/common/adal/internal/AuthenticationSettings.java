@@ -166,11 +166,18 @@ public enum AuthenticationSettings {
     }
 
     /**
+     * Clears any secret keys set by legacy {@link #setSecretKey(byte[])} API.
+     */
+    public void clearLegacySecretKeyConfiguration() {
+        mBrokerSecretKeys.clear();
+        mSecretKeyData.set(null);
+    }
+
+    /**
      * For test cases only.
      */
     public void clearSecretKeysForTestCases() {
-        mBrokerSecretKeys.clear();
-        mSecretKeyData.set(null);
+        clearLegacySecretKeyConfiguration();
     }
 
     /**
