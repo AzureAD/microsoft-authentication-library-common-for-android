@@ -29,8 +29,24 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 
+/**
+ * An accessor for asymmetric keys.  The main differnce between this an a KeyAccessor is that
+ * this accessor allows for retrieval of the public key of the key pair.
+ */
 public interface AsymmetricKeyAccessor extends KeyAccessor {
+    /**
+     * Return a public key in the specified format.
+     * @param format a format according to {@link IDevicePopManager.PublicKeyFormat}.
+     * @return the encoded public key.
+     * @throws ClientException if there is a failure while retrieving it.
+     */
     String getPublicKey(IDevicePopManager.PublicKeyFormat format) throws ClientException;
 
+    /**
+     * @return the {@link java.security.PublicKey} portion of this key pair.
+     * @throws UnrecoverableEntryException if the entry is not recoverable from the keystore.
+     * @throws NoSuchAlgorithmException if the public key being retrieved corresponds to an algorithm that is not supported.
+     * @throws KeyStoreException if the keystore is not initialized.
+     */
     public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
 }
