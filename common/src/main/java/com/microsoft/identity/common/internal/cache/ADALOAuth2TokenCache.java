@@ -75,7 +75,7 @@ public class ADALOAuth2TokenCache
     static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
-    private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
+    public static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
 
     private Gson mGson = new GsonBuilder()
             .registerTypeAdapter(Date.class, new DateTimeAdapter())
