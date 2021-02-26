@@ -28,6 +28,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -62,7 +63,13 @@ public class AuthorizationActivity extends DualScreenActivity {
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
         } else {
-            intent = new Intent(context, AuthorizationActivity.class);
+            intent = new Intent(context, AuthorizationActivity.class) {
+
+                @Override
+                public Object clone() {
+                    return super.clone();
+                }
+            };
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);

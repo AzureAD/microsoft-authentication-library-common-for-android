@@ -22,28 +22,25 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.util.Base64;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
-import com.nimbusds.jose.JWEHeader;
-import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.EncryptedJWT;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.text.ParseException;
@@ -68,10 +65,11 @@ public class KeyStoreAccessor {
     private static final String ANDROID_KEYSTORE = "AndroidKeyStore";
     public static final Charset UTF8 = Charset.forName("UTF-8");
     private static final int KEY_PURPOSES =  KeyProperties.PURPOSE_ENCRYPT | KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_SIGN ;
-    private static final SecureRandom RANDOM = new SecureRandom();
 
     /**
      * For a given alias, construct an accessor for a KeyStore backed entry given that alias.
+     *
+     * @param context
      * @param alias The key alias.
      * @param suite The cipher type of this key.
      * @return a key accessor for the use of that particular key.
@@ -80,31 +78,27 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor forAlias(final String alias, final CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
+    public static KeyAccessor forAlias(Context context, final String alias, final CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final IDevicePopManager popManager = new DevicePopManager(alias);
         if (suite instanceof IDevicePopManager.Cipher) {
+            if (!popManager.asymmetricKeyExists()) {
+                popManager.generateAsymmetricKey(context);
+            }
             return getKeyAccessor((IDevicePopManager.Cipher) suite, popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, new Supplier<byte[]>() {
+        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+        return new SecretKeyAccessor(keyManager, suite) {
             @Override
-            public byte[] get() {
-                try {
-                    KeyStore.Entry entry = instance.getEntry(alias, null);
-                    if (entry instanceof KeyStore.SecretKeyEntry) {
-                        SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
-                        Cipher cipher = Cipher.getInstance(key.getAlgorithm());
-                        return cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8));
-                    } else {
-                        return null;
-                    }
-                } catch (KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                    //TODO: logging
-                    return null;
-                }
+            public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+                throw new UnsupportedOperationException("This key instance does not support signing");
             }
-        });
-        return new SecretKeyAccessor(keyManager, suite);
+
+            @Override
+            public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+                throw new UnsupportedOperationException("This key instance does not support verification");
+            }
+        };
     }
 
     private static final KeyAccessor getKeyAccessor(final IDevicePopManager.Cipher cipher, final IDevicePopManager popManager) {
@@ -149,6 +143,8 @@ public class KeyStoreAccessor {
 
     /**
      * Construct an accessor for a KeyStore backed entry using a random alias.
+     *
+     * @param context
      * @param cipher The cipher type of this key.
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
@@ -156,75 +152,85 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor newInstance(final IDevicePopManager.Cipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor newInstance(Context context, final IDevicePopManager.Cipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         String alias = UUID.randomUUID().toString();
         final IDevicePopManager popManager = new DevicePopManager(alias);
-        popManager.generateAsymmetricKey(null);
+        popManager.generateAsymmetricKey(context);
         return getKeyAccessor(cipher, popManager);
     }
+
     /**
      * Construct an accessor for a KeyStore backed entry using a random alias.
      * @param cipher The cipher type of this key.
+     * @param needRawAccess whether we need access to the raw key for, as an example, using it for SP800 derivation
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
      * @throws NoSuchAlgorithmException
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor newInstance(SymmetricCipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    public static KeyAccessor newInstance(SymmetricCipher cipher, boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
         String alias = UUID.randomUUID().toString();
-        //TODO: Everything here looks like it should work, but we get an exception when trying to
-        //      initialize the resulting cipher, at least on my samsung device.
-        //java.lang.NullPointerException: Attempt to get length of null array
-        //	at com.android.org.bouncycastle.crypto.params.KeyParameter.<init>(KeyParameter.java:13)
-        //	at com.android.org.bouncycastle.jcajce.provider.symmetric.util.BaseBlockCipher.engineInit(BaseBlockCipher.java:692)
-        //	at com.android.org.bouncycastle.jcajce.provider.symmetric.util.BaseBlockCipher.engineInit(BaseBlockCipher.java:1076)
-        //	at javax.crypto.Cipher.tryTransformWithProvider(Cipher.java:2984)
-        //	at javax.crypto.Cipher.tryCombinations(Cipher.java:2891)
-        //	at javax.crypto.Cipher$SpiAndProviderUpdater.updateAndGetSpiAndProvider(Cipher.java:2796)
-        //	at javax.crypto.Cipher.chooseProvider(Cipher.java:773)
-        //	at javax.crypto.Cipher.init(Cipher.java:1143)
-        //	at javax.crypto.Cipher.init(Cipher.java:1084)
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
-            KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE);
+            String[] params = cipher.cipherName().split("/");
+            KeyGenerator generator = KeyGenerator.getInstance(params[0], ANDROID_KEYSTORE);
             KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .setKeySize(256)
+                    .setKeySize(cipher.keySize())
+                    .setBlockModes(params[1])
+                    .setEncryptionPaddings(params[2])
+                    .setKeySize(cipher.keySize())
                     .build();
             generator.init(spec);
             generator.generateKey();
 
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, new Supplier<byte[]>() {
+            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+            return new SecretKeyAccessor(keyManager, cipher) {
                 @Override
-                public byte[] get() {
-                    try {
-                        KeyStore.Entry entry = instance.getEntry(alias, null);
-                        if (entry instanceof KeyStore.SecretKeyEntry) {
-                            SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
-                            Cipher cipher = Cipher.getInstance(key.getAlgorithm());
-                            return cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8));
-                        } else {
-                            return null;
-                        }
-                    } catch (KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                        //TODO: logging
-                        return null;
-                    }
+                public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+                    throw new UnsupportedOperationException("This key instance does not support signing");
                 }
-            });
-            return new SecretKeyAccessor(keyManager, cipher);
+
+                @Override
+                public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+                    throw new UnsupportedOperationException("This key instance does not support verification");
+                }
+            };
         } else {
-            byte[] key = new byte[cipher.keySize()/8];
-            RANDOM.nextBytes(key);
+            KeyGenerator generator = KeyGenerator.getInstance("AES");
+            generator.init(cipher.mKeySize);
+            byte[] key = generator.generateKey().getEncoded();
             return new RawKeyAccessor(cipher, key);
         }
     }
 
+    public static Supplier<byte[]> symmetricThumbprint(String alias, KeyStore instance) {
+        return new Supplier<byte[]>() {
+            @Override
+            public byte[] get() {
+                try {
+                    KeyStore.Entry entry = instance.getEntry(alias, null);
+                    if (entry instanceof KeyStore.SecretKeyEntry) {
+                        final SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
+                        final Cipher cipher = Cipher.getInstance(key.getAlgorithm());
+                        final MessageDigest digest = MessageDigest.getInstance("SHA256");
+                        return digest.digest(cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8)));
+                    } else {
+                        return null;
+                    }
+                } catch (KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
+                    Logger.error("KeyAccessor:newInstance", null, "Exception while getting key entry", e);
+                    return null;
+                }
+            }
+        };
+    }
+
     /**
      * Construct an accessor for a KeyStore backed entry using a random alias.
+     *
+     * TODO: implement and fix this.
      * @param cipher The cipher type of this key.
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
@@ -232,57 +238,85 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
+    /*
     public static KeyAccessor newInstance(AsymmetricCipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
         String alias = UUID.randomUUID().toString();
+        final KeyStore instance;
+        final PrivateKey entry;
         if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.M) {
-            final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
+            instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
-            KeyGenerator generator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEYSTORE);
+            KeyGenerator generator = KeyGenerator.getInstance(cipher.cipherName(), ANDROID_KEYSTORE);
             KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
                     .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
                     .setKeySize(256)
                     .build();
             generator.init(spec);
+        } else {
+            instance = KeyStore.getInstance("PKCS12");
+            instance.load(null);
+            KeyGenerator generator = KeyGenerator.getInstance(cipher.cipherName(), "PKCS12");
+            generator.init(cipher.keySize());
             generator.generateKey();
-
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, new Supplier<byte[]>() {
+        }
+        final DeviceKeyManager<KeyStore.PrivateKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, new Supplier<byte[]>() {
                 @Override
                 public byte[] get() {
-                    try {
-                        KeyStore.Entry entry = instance.getEntry(alias, null);
-                        if (entry instanceof KeyStore.SecretKeyEntry) {
-                            SecretKey key = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
-                            Cipher cipher = Cipher.getInstance(key.getAlgorithm());
-                            return cipher.doFinal((key.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8));
-                        } else {
-                            return null;
-                        }
-                    } catch (KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
-                        //TODO: logging
-                        return null;
-                    }
-                }
+                    DevicePopManager.getRsaThumbprint(keyManager.getEntry());
+                };
             });
-            return new SecretKeyAccessor(keyManager, cipher);
-        } else {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance(cipher.cipherName());
-            generator.initialize(2048);
-            KeyPair pair = generator.generateKeyPair();
-            pair.getPrivate().getEncoded();
-            pair.getPublic().getEncoded();
-            return new KeyPairAccessor(cipher, pair);
+
+        return new AsymmetricKeyAccessor() {
+            @Override
+            public String getPublicKey(IDevicePopManager.PublicKeyFormat format) throws ClientException {
+                try {
+                    return keyManager.getEntry();
+                } catch (UnrecoverableEntryException | NoSuchAlgorithmException | KeyStoreException e) {
+                    throw new ClientException(ClientException.UNKNOWN_ERROR, e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
+                return null;
+            }
+
+            @Override
+            public byte[] encrypt(byte[] plaintext) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
+            public byte[] decrypt(byte[] ciphertext) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
+            public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+                return new byte[0];
+            }
+
+            @Override
+            public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+                return false;
+            }
+
+            @Override
+            public byte[] getThumprint() throws ClientException {
+                return new byte[0];
+            }
         }
     }
+*/
 
-
-    public static KeyAccessor importSymmetricKey(SymmetricCipher cipher, String keyAlias, String key_jwe, KeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor importSymmetricKey(Context context, SymmetricCipher cipher, String keyAlias, String key_jwe, KeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         EncryptedJWT jwt = EncryptedJWT.parse(key_jwe);
         byte[] encryptedKey = jwt.getEncryptedKey().decode();
         //JWEHeader header = jwt.getHeader();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             //TODO: add code to interpret the header algorithm.
-            KeyAccessor accessor = KeyStoreAccessor.forAlias(keyAlias, IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
+            KeyAccessor accessor = KeyStoreAccessor.forAlias(context, keyAlias, IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
             byte[] rawKey = accessor.decrypt(encryptedKey);
             return new RawKeyAccessor(cipher, rawKey);
         }

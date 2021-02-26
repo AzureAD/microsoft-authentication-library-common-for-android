@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
+import android.security.keystore.KeyGenParameterSpec;
+import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
@@ -36,7 +38,13 @@ import java.security.KeyStore;
 public enum SymmetricCipher implements CryptoSuite {
 
     @RequiresApi(Build.VERSION_CODES.M)
-    AES_GCM_NONE_HMACSHA256("AES/GCM/NoPadding", "HmacSHA256", 256);
+    AES_GCM_NONE_HMACSHA256("AES/GCM/NoPadding", "HmacSHA256", 256) {
+        public  KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
+            return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
+                    .setKeySize(256);
+        }
+    };
 
     String mValue;
     String mMacString;
@@ -72,4 +80,6 @@ public enum SymmetricCipher implements CryptoSuite {
     public int keySize() {
         return mKeySize;
     }
+
+    public abstract @NonNull KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec);
 }

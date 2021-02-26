@@ -83,6 +83,7 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
+import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
@@ -91,9 +92,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.CipherInputStream;
 import javax.crypto.CipherOutputStream;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 import javax.security.auth.x500.X500Principal;
 
 import lombok.SneakyThrows;
@@ -101,8 +106,11 @@ import lombok.SneakyThrows;
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
 import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
+import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
 import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
@@ -246,14 +254,17 @@ class DevicePopManager implements IDevicePopManager {
     DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
         String mKeyAlias = alias;
+        final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
+        instance.load(null);
         mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(mKeyAlias)
-                                                .thumbprintSupplier(new Supplier<byte[]>() {
-                                                    @SneakyThrows(ClientException.class)
-                                                    @Override
-                                                    public byte[] get() {
-                                                        return getAsymmetricKeyThumbprint().getBytes(UTF8);
-                                                    }
-                                                })
+                                                   .keyStore(instance)
+                                                   .thumbprintSupplier(new Supplier<byte[]>() {
+                                                       @SneakyThrows(ClientException.class)
+                                                       @Override
+                                                       public byte[] get() {
+                                                           return getAsymmetricKeyThumbprint().getBytes(UTF8);
+                                                       }
+                                                   })
                 .build();
     }
 
@@ -273,9 +284,8 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final KeyPair rsaKeyPair = getKeyPairForEntry(mKeyManager.getEntry());
-            final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
-            return getThumbprintForRsaKey(rsaKey);
+            final KeyStore.PrivateKeyEntry entry = mKeyManager.getEntry();
+            return getRsaThumbprint(entry);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -295,6 +305,18 @@ class DevicePopManager implements IDevicePopManager {
                 exception.getMessage(),
                 exception
         );
+    }
+
+    /**
+     *
+     * @param entry
+     * @return
+     * @throws JOSEException
+     */
+    public static String getRsaThumbprint(KeyStore.PrivateKeyEntry entry) throws JOSEException {
+        final KeyPair rsaKeyPair = getKeyPairForEntry(entry);
+        final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
+        return getThumbprintForRsaKey(rsaKey);
     }
 
     @Override
@@ -583,7 +605,7 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public String encrypt(@NonNull final Cipher cipher,
                           @NonNull final String plaintext) throws ClientException {
-        return new String(encrypt(cipher, plaintext.getBytes(UTF8)), UTF8);
+        return Base64.encodeToString(encrypt(cipher, plaintext.getBytes(UTF8)), Base64.NO_PADDING | Base64.NO_WRAP);
     }
 
     @Override
@@ -600,29 +622,41 @@ class DevicePopManager implements IDevicePopManager {
 
             // Init our Cipher
             final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(cipher.toString());
-            input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
+            OAEPParameterSpec sp = new OAEPParameterSpec("SHA-256", "MGF1", new MGF1ParameterSpec("SHA-1"), PSource.PSpecified.DEFAULT);
+            input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey, sp);
 
+
+            /*
             // Declare an OutputStream to hold our encrypted data
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
+            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             // Create a B64Stream to encode our incoming data, and write it to our ByteArrayStream
             final Base64OutputStream base64OutputStream = new Base64OutputStream(
                     byteArrayOutputStream,
                     Base64.DEFAULT
             );
+             */
 
+            return input.doFinal(plaintext);
+            /*
             // Wrap it in our CipherOutputStream, write the contents...
             OutputStream cipherOutputStream = null;
 
             try { // TODO convert to try-with-resources once API >19
                 cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
-                cipherOutputStream.write(plaintext);
+                for (int i = 0; i < plaintext.length; i+=input.getBlockSize()) {
+                    cipherOutputStream.write(plaintext, i, (Math.min(input.getBlockSize(), plaintext.length - i)));
+                }
             } finally {
+                cipherOutputStream.flush();
                 closeStream(cipherOutputStream);
+                base64OutputStream.flush();
+                closeStream(base64OutputStream);
             }
 
             // Flatten our OutputStream to an array
             return byteArrayOutputStream.toByteArray();
+             */
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
@@ -638,8 +672,14 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (final IOException e) {
-            errCode = IO_ERROR;
+        } catch (BadPaddingException e) {
+            errCode = BAD_PADDING;
+            exception = e;
+        } catch (IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        } catch (InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
             exception = e;
         }
 
@@ -675,7 +715,7 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public String decrypt(@NonNull final Cipher cipher,
                           @NonNull final String ciphertext) throws ClientException {
-        return new String(decrypt(cipher, ciphertext.getBytes(UTF8)), UTF8);
+        return new String(decrypt(cipher, Base64.decode(ciphertext, Base64.NO_PADDING | Base64.NO_WRAP)), UTF8);
     }
 
     @Override
@@ -695,33 +735,7 @@ class DevicePopManager implements IDevicePopManager {
             // https://issuetracker.google.com/issues/37091211
             final javax.crypto.Cipher outputCipher = javax.crypto.Cipher.getInstance(cipher.toString());
             outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
-
-            final Base64InputStream b64InputStream = new Base64InputStream(
-                    new ByteArrayInputStream(ciphertext),
-                    Base64.DEFAULT
-            );
-
-            CipherInputStream cipherInputStream = null;
-            try {
-                // Put our ciphertext into an InputStream
-                cipherInputStream = new CipherInputStream(
-                        b64InputStream,
-                        outputCipher // Our decryption cipher
-                );
-
-                final int bufferSize = 1024;
-                final byte[] buffer = new byte[bufferSize];
-                final ByteArrayOutputStream outputBuilder = new ByteArrayOutputStream();
-
-                int chars;
-                while ((chars = cipherInputStream.read(buffer, 0, buffer.length)) > 0) {
-                    outputBuilder.write(buffer, 0, chars);
-                }
-
-                return outputBuilder.toByteArray();
-            } finally {
-                closeStream(cipherInputStream);
-            }
+            return outputCipher.doFinal(ciphertext);
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -737,11 +751,11 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final KeyStoreException e) {
             errCode = KEYSTORE_NOT_INITIALIZED;
             exception = e;
-        } catch (final UnsupportedEncodingException e) {
-            errCode = UNSUPPORTED_ENCODING;
+        } catch (BadPaddingException e) {
+            errCode = BAD_PADDING;
             exception = e;
-        } catch (final IOException e) {
-            errCode = IO_ERROR;
+        } catch (IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
             exception = e;
         }
 
