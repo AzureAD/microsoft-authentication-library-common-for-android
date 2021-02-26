@@ -399,4 +399,12 @@ public class ADALOAuth2TokenCache
         final RefreshToken refreshToken = null;
         return refreshToken;
     }
+
+    public static String getAdalCacheFilename() {
+        Logger.info(
+                TAG + ":getAdalCacheFilename",
+                "Getting ADAL cache file name..."
+        );
+        return SHARED_PREFERENCES_FILENAME;
+    }
 }
