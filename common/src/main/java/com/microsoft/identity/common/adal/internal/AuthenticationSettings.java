@@ -184,7 +184,7 @@ public enum AuthenticationSettings {
     /**
      * For test cases only.
      */
-    @VisibleForTesting
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public void clearSecretKeysForTestCases() {
         clearLegacySecretKeyConfiguration();
     }
