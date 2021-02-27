@@ -144,6 +144,7 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
     @Override
     public boolean verify(byte[] text, byte[] signature) throws ClientException {
         return mDevicePopManager.verify(SHA_256_WITH_RSA, text, signature);
+    }
 
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
