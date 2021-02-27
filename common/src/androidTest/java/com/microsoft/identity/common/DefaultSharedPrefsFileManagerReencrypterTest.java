@@ -655,4 +655,108 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         }
     }
 
+    @Test
+    public void testMultipleInvocationsAborts() throws Exception {
+        // Add the numbers 0-9 to the cache, encrypted format...
+        for (int ii = 0; ii < 10; ii++) {
+            try {
+                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                mTestCacheFile.putString(String.valueOf(ii), encryptedIntStr);
+            } catch (Exception e) {
+                // wont happen
+            }
+        }
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+
+        // Ensure that the 'legacy' and new keys do not create the same value...
+        final String legacyEncryptedZero = mTestCacheFile.getString("0");
+        final String newEncryptedZero = mTestEncrypterDecrypter.encrypt("0");
+
+        Assert.assertNotEquals(legacyEncryptedZero, newEncryptedZero);
+
+        // Reencrypt the cache
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                mStringDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                )
+        );
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+
+        // Do it again! (this is now the wrong key)
+        try {
+            mFileManagerReencrypter.reencrypt(
+                    mTestCacheFile,
+                    mStringEncrypter,
+                    mStringDecrypter,
+                    new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                            true,
+                            false,
+                            false
+                    )
+            );
+        } catch (final Exception e) {
+            Assert.assertEquals(10, mTestCacheFile.getAll().size());
+        }
+    }
+
+    @Test
+    public void testMultipleInvocationsAbortsAndClears() throws Exception {
+        // Add the numbers 0-9 to the cache, encrypted format...
+        for (int ii = 0; ii < 10; ii++) {
+            try {
+                final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
+                mTestCacheFile.putString(String.valueOf(ii), encryptedIntStr);
+            } catch (Exception e) {
+                // wont happen
+            }
+        }
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+
+        // Ensure that the 'legacy' and new keys do not create the same value...
+        final String legacyEncryptedZero = mTestCacheFile.getString("0");
+        final String newEncryptedZero = mTestEncrypterDecrypter.encrypt("0");
+
+        Assert.assertNotEquals(legacyEncryptedZero, newEncryptedZero);
+
+        // Reencrypt the cache
+
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mStringEncrypter,
+                mStringDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                )
+        );
+
+        Assert.assertEquals(10, mTestCacheFile.getAll().size());
+
+        // Do it again! (this is now the wrong key)
+        try {
+            mFileManagerReencrypter.reencrypt(
+                    mTestCacheFile,
+                    mStringEncrypter,
+                    mStringDecrypter,
+                    new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                            true,
+                            false,
+                            true
+                    )
+            );
+        } catch (final Exception e) {
+            Assert.assertEquals(0, mTestCacheFile.getAll().size());
+        }
+    }
+
 }
