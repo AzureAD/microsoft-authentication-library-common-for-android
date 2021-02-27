@@ -22,26 +22,38 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import com.microsoft.identity.common.exception.ClientException;
+import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import org.spongycastle.crypto.CipherParameters;
+import org.spongycastle.crypto.DataLengthException;
+import org.spongycastle.crypto.DerivationParameters;
+import org.spongycastle.crypto.digests.SHA256Digest;
+import org.spongycastle.crypto.generators.KDFCounterBytesGenerator;
+import org.spongycastle.crypto.macs.HMac;
+import org.spongycastle.crypto.params.KDFCounterParameters;
+
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.Random;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.ShortBufferException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import lombok.Builder;
-import lombok.NonNull;
 
 import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
@@ -163,4 +175,47 @@ public class RawKeyAccessor implements KeyAccessor {
     public byte[] getThumprint() throws ClientException {
         return new byte[0];
     }
-}
+
+    /**
+     * Generates Key based on SP800-108. K(i) := PRF( KI, [i]_2 || Label || 0x00
+     * || Context || [L]_2 ) with the counter at the very beginning of the
+     * fixedInputData. [L]_2 is generated based on required bytes. This matches
+     * to the implementation in Windows at Bcrypt library.
+     *
+     * @param label Label
+     * @param ctx   Context
+     * @return DerivedKey
+     */
+    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException {
+        final String methodName = "generateDerivedKey";
+        HMac mac;
+        mac = new HMac(new SHA256Digest());
+
+        // add Label || 0x00 || Context
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        buffer.write(label, 0, label.length);
+        buffer.write(0);
+        buffer.write(ctx, 0, ctx.length);
+
+        // Add [L]_2 in big endian order
+        int derivedKeyBitLength = mac.getMacSize() * 8;
+        final byte[] bytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(derivedKeyBitLength).array();
+        buffer.write(bytes, 0, bytes.length);
+
+        byte[] bufferBytes = buffer.toByteArray();
+
+        // Beware that, for some reason, proguard seem to have some
+        // conflict with the class below (or maybe with spongycastle in general)
+        // The side effect is that, sometimes, proguard removes the constructor
+        // of class KDFCounterParameters and, only at runtime, the code below
+        // throws a NoSuchMethodError exception.
+        final KDFCounterParameters params = new KDFCounterParameters(key, bufferBytes, 32);
+        KDFCounterBytesGenerator generator = new KDFCounterBytesGenerator(mac);
+        generator.init(params);
+        byte[] out = new byte[mac.getMacSize()];
+
+        Logger.verbose("RawKeyAccessor" + methodName, "Generating derived key");
+        generator.generateBytes(out, 0, out.length);
+        return out;
+    }
+    }

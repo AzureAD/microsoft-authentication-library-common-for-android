@@ -672,20 +672,6 @@ class DevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
-    private static void closeStream(@Nullable final Closeable stream) {
-        if (null != stream) {
-            try {
-                stream.close();
-            } catch (final IOException e) {
-                Logger.error(
-                        TAG + ":closeStream",
-                        "Exception thrown while closing stream.",
-                        e
-                );
-            }
-        }
-    }
-
     @Override
     public String decrypt(@NonNull final Cipher cipher,
                           @NonNull final String ciphertext) throws ClientException {

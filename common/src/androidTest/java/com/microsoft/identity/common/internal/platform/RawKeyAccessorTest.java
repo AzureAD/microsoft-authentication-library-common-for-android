@@ -28,37 +28,14 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
 
 public class RawKeyAccessorTest {
     @Test
     public void testEncryptDecrypt() throws Exception {
-        RawKeyAccessor a = new RawKeyAccessor(new CryptoSuite() {
-            @Override
-            public String cipherName() {
-                return "AES/GCM/NoPadding";
-            }
-
-            @Override
-            public String macName() {
-                return "HmacSHA256";
-            }
-
-            @Override
-            public boolean isAsymmetric() {
-                return false;
-            }
-
-            @Override
-            public Class<? extends KeyStore.Entry> keyClass() {
-                return null;
-            }
-
-            @Override
-            public int keySize() {
-                return 256;
-            }
-        }, "12345678123456781234567812345678".getBytes("UTF-8"));
+        RawKeyAccessor a = getAccessor();
 
         final byte[] in = "ABCDEFGHABCDEFGHABCDEFGHABCDEFGH".getBytes();
         byte[] out = a.encrypt(in);
@@ -66,9 +43,8 @@ public class RawKeyAccessorTest {
         Assert.assertArrayEquals(in, around);
     }
 
-    @Test
-    public void testSignAndVerify() throws Exception {
-        RawKeyAccessor a = new RawKeyAccessor(new CryptoSuite() {
+    public RawKeyAccessor getAccessor() throws UnsupportedEncodingException {
+        return new RawKeyAccessor(new CryptoSuite() {
             @Override
             public String cipherName() {
                 return "AES/GCM/NoPadding";
@@ -94,9 +70,22 @@ public class RawKeyAccessorTest {
                 return 256;
             }
         }, "12345678123456781234567812345678".getBytes("UTF-8"));
+    }
+
+    @Test
+    public void testSignAndVerify() throws Exception {
+        RawKeyAccessor a = getAccessor();
 
         final byte[] in = "ABCDEFGHABCDEFGHABCDEFGHABCDEFGH".getBytes();
         byte[] out = a.sign(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA);
         Assert.assertTrue(a.verify(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA, out));
+    }
+
+    @Test
+    public void testDeriveKey() throws Exception {
+        RawKeyAccessor a = getAccessor();
+        byte[] label = "testLabel".getBytes(StandardCharsets.UTF_8);
+        byte[] ctx = "1234".getBytes(StandardCharsets.UTF_8);
+        Assert.assertNotNull(a.generateDerivedKey(label, ctx));
     }
 }
