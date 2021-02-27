@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
 - [PATCH] Use requested claims as a cache key when overwriting an AT (#1225)
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
 - [MINOR] Adds support for cache property merging (#1224)
