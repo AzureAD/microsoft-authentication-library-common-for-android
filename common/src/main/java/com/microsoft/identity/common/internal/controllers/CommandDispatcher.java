@@ -229,7 +229,6 @@ public class CommandDispatcher {
 
                         //Check cache to see if the same command completed in the last 30 seconds
                         commandResult = sCommandResultCache.get(command);
-                        CommandResult newCommandResult = null;
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
                             commandResult = executeCommand(command);
