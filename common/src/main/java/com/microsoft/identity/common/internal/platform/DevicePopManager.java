@@ -81,6 +81,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
@@ -132,6 +133,7 @@ import static com.microsoft.identity.common.internal.util.DateUtilities.isLocale
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
@@ -802,6 +804,33 @@ class DevicePopManager implements IDevicePopManager {
         }
     }
 
+    @Override
+    public Certificate[] getCertificateChain() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            return mKeyStore.getCertificateChain(mKeyAlias);
+        } catch (@NonNull final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
+    }
+
     private @NonNull
     String getJwkPublicKey() throws ClientException {
         final Exception exception;
@@ -1216,6 +1245,10 @@ class DevicePopManager implements IDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder = setAttestationChallenge(builder);
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
             Logger.verbose(
                     TAG,
@@ -1226,6 +1259,14 @@ class DevicePopManager implements IDevicePopManager {
 
         final AlgorithmParameterSpec spec = builder.build();
         keyPairGenerator.initialize(spec);
+    }
+
+    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.N)
+    @NonNull
+    private KeyGenParameterSpec.Builder setAttestationChallenge(
+            @NonNull final KeyGenParameterSpec.Builder builder) {
+        return builder.setAttestationChallenge(new byte[]{});
     }
 
     /**

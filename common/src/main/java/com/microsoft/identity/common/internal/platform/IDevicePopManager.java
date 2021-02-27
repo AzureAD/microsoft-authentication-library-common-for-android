@@ -40,6 +40,7 @@ import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.MGF1ParameterSpec;
+import java.security.cert.Certificate;
 import java.util.Date;
 
 import javax.crypto.spec.OAEPParameterSpec;
@@ -380,11 +381,21 @@ public interface IDevicePopManager {
     String getPublicKey(PublicKeyFormat format) throws ClientException;
 
     /**
-     * Gets the public key associated with this DevicePoPManager.
+     * Gets the public key associated with this underlying key in the pop manager..
      *
      * @return A PublicKey instance.
      */
     PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
+    
+    /*
+     * Returns the certificate chain associated with the underlying key material.
+     *
+     * @return The certificate chain (with the device pop key certificate first, following by zero
+     * or more certificate authorities), or null if the current key does not contain a certificate
+     * chain.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    Certificate[] getCertificateChain() throws ClientException;
 
     /**
      * Api to create the signed PoP access token.

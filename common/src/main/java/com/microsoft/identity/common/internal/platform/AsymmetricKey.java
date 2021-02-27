@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.security.cert.Certificate;
 import java.util.Date;
 
 /**
@@ -100,4 +101,14 @@ public interface AsymmetricKey extends Key {
      * @throws ClientException If the underlying key material cannot be inspected.
      */
     SecureHardwareState getSecureHardwareState() throws ClientException;
+
+    /**
+     * Returns the certificate chain associated with the given alias.
+     *
+     * @return The certificate chain (with the device pop key certificate first, following by zero
+     * or more certificate authorities), or null if the current key does not contain a certificate
+     * chain.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    Certificate[] getCertificateChain() throws ClientException;
 }

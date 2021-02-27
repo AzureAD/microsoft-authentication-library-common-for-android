@@ -37,6 +37,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
@@ -59,7 +60,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
-    private final OnPageLoadedCallback mPageLoadedCallback;
+    @NonNull private final OnPageLoadedCallback mPageLoadedCallback;
+    @Nullable private final OnPageCommitVisibleCallback mPageCommitVisibleCallback;
     private final Activity mActivity;
 
     @VisibleForTesting
@@ -89,10 +91,26 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final IAuthorizationCompletionCallback completionCallback,
                         @NonNull final OnPageLoadedCallback pageLoadedCallback) {
+        this(activity, completionCallback, pageLoadedCallback, null);
+    }
+
+    /**
+     * Constructor for the OAuth2 basic web view client.
+     *
+     * @param activity           app Context
+     * @param completionCallback Challenge completion callback
+     * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
+     * @param pageCommitVisibleCallback callback to be triggered on page commit visible, For UI purposes.
+     */
+    OAuth2WebViewClient(@NonNull final Activity activity,
+                        @NonNull final IAuthorizationCompletionCallback completionCallback,
+                        @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                        @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
+        mPageCommitVisibleCallback = pageCommitVisibleCallback;
     }
 
     @Override
@@ -163,6 +181,14 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         // Send the result back to the calling activity
         mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
+    }
+
+    @Override
+    public void onPageCommitVisible(final WebView view, final String url) {
+        super.onPageCommitVisible(view, url);
+        if (mPageCommitVisibleCallback != null) {
+            mPageCommitVisibleCallback.onPageCommitVisible();
+        }
     }
 
     @Override
