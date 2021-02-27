@@ -806,30 +806,8 @@ class DevicePopManager implements IDevicePopManager {
 
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
-        final Exception exception;
-        final String errCode;
-
-        try {
-            return mKeyStore.getCertificateChain(mKeyAlias);
-        } catch (@NonNull final KeyStoreException e) {
-            exception = e;
-            errCode = KEYSTORE_NOT_INITIALIZED;
-        }
-
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-
-        Logger.error(
-                TAG,
-                clientException.getMessage(),
-                clientException
-        );
-
-        throw clientException;
-    }
+        return mKeyManager.getCertificateChain();
+   }
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {

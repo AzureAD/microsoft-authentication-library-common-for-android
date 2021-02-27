@@ -28,6 +28,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.util.Date;
 
 /**
@@ -91,4 +92,7 @@ public interface IKeyManager<K extends KeyStore.Entry> {
      * @return a byte array key thumpbrint.
      */
     byte[] getThumbprint();
+
+
+    Certificate[] getCertificateChain() throws ClientException;
 }

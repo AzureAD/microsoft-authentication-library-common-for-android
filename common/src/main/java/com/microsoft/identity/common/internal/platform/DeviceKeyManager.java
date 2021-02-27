@@ -26,6 +26,8 @@ import android.os.Build;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.KeyProtection;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
@@ -34,6 +36,7 @@ import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -42,6 +45,8 @@ import javax.crypto.spec.SecretKeySpec;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+
+import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 
 /**
  * A manager class for providing access to a particular entry in a KeyStore.
@@ -157,5 +162,33 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
     @Override
     public byte[] getThumbprint() {
         return mThumbprintSupplier.get();
+    }
+
+    @Override
+    public Certificate[] getCertificateChain() throws ClientException {
+        final Exception exception;
+        final String errCode;
+
+        try {
+            return mKeyStore.getCertificateChain(mKeyAlias);
+        } catch (@NonNull final KeyStoreException e) {
+            exception = e;
+            errCode = KEYSTORE_NOT_INITIALIZED;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG,
+                clientException.getMessage(),
+                clientException
+        );
+
+        throw clientException;
+
     }
 }
