@@ -94,5 +94,8 @@ public interface IKeyManager<K extends KeyStore.Entry> {
     byte[] getThumbprint();
 
 
+   /**
+     * @return a certificate chain associated with this key, or null if no chain is tied to it.
+     */
     Certificate[] getCertificateChain() throws ClientException;
 }
