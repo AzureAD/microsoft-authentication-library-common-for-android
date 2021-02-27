@@ -126,7 +126,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         );
         mFileManagerReencrypter = new DefaultSharedPrefsFileManagerReencrypter();
         try {
-            final byte[] mockKey = generateLegacyFormatKey();
+            final byte[] mockKey = generateLegacyFormatKey("abcdedfdfd");
             mTestEncrypterDecrypter = new TestEncrypterDecrypter(mContext, mockKey);
             mStringEncrypter = mTestEncrypterDecrypter;
             mStringDecrypter = mTestEncrypterDecrypter;
@@ -137,14 +137,14 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         }
     }
 
-    private byte[] generateLegacyFormatKey()
+    private byte[] generateLegacyFormatKey(@NonNull final String salt)
             throws NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeySpecException {
         SecretKeyFactory keyFactory = SecretKeyFactory
                 .getInstance("PBEWithSHA256And256BitAES-CBC-BC");
         final int iterations = 100;
         final int keySize = 256;
         final SecretKey tempkey = keyFactory.generateSecret(new PBEKeySpec("test".toCharArray(),
-                "abcdedfdfd".getBytes("UTF-8"), iterations, keySize));
+                salt.getBytes("UTF-8"), iterations, keySize));
         final SecretKey secretKey = new SecretKeySpec(tempkey.getEncoded(), "AES");
         return secretKey.getEncoded();
     }
@@ -497,6 +497,162 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
 
         latch.await(MAX_WAIT, MAX_WAIT_UNIT);
         Assert.assertEquals(0, mTestCacheFile.getAll().size());
+    }
+
+    @Test
+    public void testIncorrectKeyProvidedSkips() throws Exception {
+        final byte[] mockKey = generateLegacyFormatKey("abcdefabcd");
+        final TestEncrypterDecrypter origDelegate = new TestEncrypterDecrypter(mContext, mockKey);
+
+        final String plaintextValue = "a_cool_value";
+
+        final String key = "key";
+        final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plaintextValue);
+
+        mTestCacheFile.putString(key, legacyEncryptedValue);
+
+        // Attempt to reencrypt the cache, but provide the wrong key intentionally
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mTestEncrypterDecrypter,
+                mTestEncrypterDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        false,
+                        false,
+                        false
+                )
+        );
+
+        // Assert nothing was done
+        Assert.assertEquals(legacyEncryptedValue, mTestCacheFile.getString(key));
+    }
+
+    @Test(expected = Exception.class)
+    public void testIncorrectKeyProvidedThrows() throws Exception {
+        final byte[] mockKey = generateLegacyFormatKey("abcdefabcd");
+        final TestEncrypterDecrypter origDelegate = new TestEncrypterDecrypter(mContext, mockKey);
+
+        final String plaintextValue = "a_cool_value";
+
+        final String key = "key";
+        final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plaintextValue);
+
+        mTestCacheFile.putString(key, legacyEncryptedValue);
+
+        // Attempt to reencrypt the cache, but provide the wrong key intentionally
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mTestEncrypterDecrypter,
+                mTestEncrypterDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        false,
+                        false
+                )
+        );
+    }
+
+    @Test
+    public void testIncorrectKeyProvidedClearsEntryMultiple() throws Exception {
+        final byte[] mockKey = generateLegacyFormatKey("abcdefabcd");
+        final TestEncrypterDecrypter origDelegate = new TestEncrypterDecrypter(mContext, mockKey);
+
+        final String plainTextValue = "a_cool_value";
+        final String anotherPlaintextValue = "a_cold_value";
+
+        final String keyOne = "key_one";
+        final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plainTextValue);
+
+        final String keyTwo = "key_two";
+        final String anotherLegacyEncryptedValue = origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
+
+        mTestCacheFile.putString(keyOne, legacyEncryptedValue);
+        mTestCacheFile.putString(keyTwo, anotherLegacyEncryptedValue);
+
+        // Attempt to reencrypt the cache, but provide the wrong key intentionally
+        mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mTestEncrypterDecrypter,
+                mTestEncrypterDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        false,
+                        true,
+                        false
+                )
+        );
+
+        // Assert nothing was done
+        Assert.assertNull(mTestCacheFile.getString(keyOne));
+        Assert.assertNull(mTestCacheFile.getString(keyTwo));
+    }
+
+    @Test
+    public void testIncorrectKeyProvidedClearsEntryAndAbortsMultiple() throws Exception {
+        final byte[] mockKey = generateLegacyFormatKey("abcdefabcd");
+        final TestEncrypterDecrypter origDelegate = new TestEncrypterDecrypter(mContext, mockKey);
+
+        final String plainTextValue = "a_cool_value";
+        final String anotherPlaintextValue = "a_cold_value";
+
+        final String keyOne = "key_one";
+        final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plainTextValue);
+
+        final String keyTwo = "key_two";
+        final String anotherLegacyEncryptedValue = origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
+
+        mTestCacheFile.putString(keyOne, legacyEncryptedValue);
+        mTestCacheFile.putString(keyTwo, anotherLegacyEncryptedValue);
+
+        // Attempt to reencrypt the cache, but provide the wrong key intentionally
+        try {
+            mFileManagerReencrypter.reencrypt(
+                    mTestCacheFile,
+                    mTestEncrypterDecrypter,
+                    mTestEncrypterDecrypter,
+                    new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                            true,
+                            true,
+                            false
+                    )
+            );
+        } catch (final Exception e) {
+            Assert.assertNull(mTestCacheFile.getString(keyOne));
+            Assert.assertEquals(anotherLegacyEncryptedValue, mTestCacheFile.getString(keyTwo));
+        }
+    }
+
+    @Test
+    public void testIncorrectKeyProvidedClearsAllEntries() throws Exception {
+        final byte[] mockKey = generateLegacyFormatKey("abcdefabcd");
+        final TestEncrypterDecrypter origDelegate = new TestEncrypterDecrypter(mContext, mockKey);
+
+        final String plainTextValue = "a_cool_value";
+        final String anotherPlaintextValue = "a_cold_value";
+
+        final String keyOne = "key_one";
+        final String legacyEncryptedValue = origDelegate.encryptWithLegacyKey(plainTextValue);
+
+        final String keyTwo = "key_two";
+        final String anotherLegacyEncryptedValue = origDelegate.encryptWithLegacyKey(anotherPlaintextValue);
+
+        mTestCacheFile.putString(keyOne, legacyEncryptedValue);
+        mTestCacheFile.putString(keyTwo, anotherLegacyEncryptedValue);
+
+        // Attempt to reencrypt the cache, but provide the wrong key intentionally
+        try {
+            mFileManagerReencrypter.reencrypt(
+                    mTestCacheFile,
+                    mTestEncrypterDecrypter,
+                    mTestEncrypterDecrypter,
+                    new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                            true,
+                            false,
+                            true
+                    )
+            );
+        } catch (final Exception e) {
+            Assert.assertEquals(0, mTestCacheFile.getAll().size());
+        }
     }
 
 }
