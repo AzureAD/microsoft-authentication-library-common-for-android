@@ -137,9 +137,6 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
         return (K) mKeyStore.getEntry(mKeyAlias, null);
     }
 
-    /**
-     *
-     */
     @Override
     public void importKey(byte[] jwk, String algorithm) throws ClientException {
         final SecretKeySpec key = new SecretKeySpec(jwk, algorithm);
