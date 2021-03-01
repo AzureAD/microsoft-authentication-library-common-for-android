@@ -49,6 +49,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
 import lombok.Builder;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
@@ -69,7 +70,7 @@ public class SecretKeyAccessor implements KeyAccessor {
     private final CryptoSuite suite;
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    public byte[] encrypt(byte[] plaintext) throws ClientException {
+    public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -104,16 +105,13 @@ public class SecretKeyAccessor implements KeyAccessor {
         } catch (InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
-        } /* catch (InvalidAlgorithmParameterException e) {
-            errCode = INVALID_ALG_PARAMETER;
-            exception = e;
-        }*/
+        }
         throw new ClientException(errCode, exception.getMessage(), exception);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
-    public byte[] decrypt(byte[] ciphertext) throws ClientException {
+    public byte[] decrypt(@NonNull final byte[] ciphertext) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -153,7 +151,7 @@ public class SecretKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+    public byte[] sign(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -179,7 +177,7 @@ public class SecretKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+    public boolean verify(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg, @NonNull final byte[] signature) throws ClientException {
         return Arrays.equals(signature, sign(text, alg));
     }
 

@@ -312,12 +312,12 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     /**
-     *
-     * @param entry
-     * @return
-     * @throws JOSEException
+     * Given an RSA private key entry, get the RSA thumbprint.
+     * @param entry the entry to compute the thumbprint for.
+     * @return A String that would be identicative of this specific key.
+     * @throws JOSEException If there is a computation problem.
      */
-    public static String getRsaThumbprint(KeyStore.PrivateKeyEntry entry) throws JOSEException {
+    public static String getRsaThumbprint(@NonNull final KeyStore.PrivateKeyEntry entry) throws JOSEException {
         final KeyPair rsaKeyPair = getKeyPairForEntry(entry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         return getThumbprintForRsaKey(rsaKey);
@@ -501,7 +501,8 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public byte[] sign(@NonNull SigningAlgorithm alg, byte[] inputBytesToSign) throws ClientException {
+    public byte[] sign(@NonNull SigningAlgorithm alg,
+                       @NonNull final byte[] inputBytesToSign) throws ClientException {
         Exception exception;
         String errCode;
         final String methodName = ":sign";
@@ -561,7 +562,9 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public boolean verify(@NonNull SigningAlgorithm alg, byte[] inputBytesToVerify, byte[] signatureBytes) {
+    public boolean verify(@NonNull final SigningAlgorithm alg,
+                          @NonNull final byte[] inputBytesToVerify,
+                          @NonNull final byte[] signatureBytes) {
         String methodName = ":verify";
         String errCode;
         Exception exception;
@@ -648,13 +651,13 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (InvalidAlgorithmParameterException e) {
+        } catch (final InvalidAlgorithmParameterException e) {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
-        } catch (BadPaddingException e) {
+        } catch (final BadPaddingException e) {
             errCode = BAD_PADDING;
             exception = e;
-        } catch (IllegalBlockSizeException e) {
+        } catch (final IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
             exception = e;
         }
@@ -717,13 +720,13 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final KeyStoreException e) {
             errCode = KEYSTORE_NOT_INITIALIZED;
             exception = e;
-        } catch (BadPaddingException e) {
+        } catch (final BadPaddingException e) {
             errCode = BAD_PADDING;
             exception = e;
-        } catch (IllegalBlockSizeException e) {
+        } catch (final IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
             exception = e;
-        } catch (InvalidAlgorithmParameterException e) {
+        } catch (final InvalidAlgorithmParameterException e) {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
         }

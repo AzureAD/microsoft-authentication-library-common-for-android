@@ -27,6 +27,8 @@ import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
@@ -78,7 +80,7 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor forAlias(Context context, final String alias, final CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final IDevicePopManager popManager = new DevicePopManager(alias);
         if (suite instanceof IDevicePopManager.Cipher) {
             if (!popManager.asymmetricKeyExists()) {
@@ -101,7 +103,7 @@ public class KeyStoreAccessor {
         };
     }
 
-    private static final KeyAccessor getKeyAccessor(final IDevicePopManager.Cipher cipher, final IDevicePopManager popManager) {
+    private static final KeyAccessor getKeyAccessor(@NonNull final IDevicePopManager.Cipher cipher, @NonNull final IDevicePopManager popManager) {
         return new AsymmetricKeyAccessor() {
 
             @Override
@@ -152,7 +154,7 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor newInstance(Context context, final IDevicePopManager.Cipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor newInstance(@NonNull final Context context, @NonNull final IDevicePopManager.Cipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         String alias = UUID.randomUUID().toString();
         final IDevicePopManager popManager = new DevicePopManager(alias);
         popManager.generateAsymmetricKey(context);
@@ -169,7 +171,7 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor newInstance(SymmetricCipher cipher, boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    public static KeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
         String alias = UUID.randomUUID().toString();
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
@@ -215,7 +217,7 @@ public class KeyStoreAccessor {
      * @param instance the KeyStore to get the key from.
      * @return A supplier that can compute the thumbprint for the key on demand.
      */
-    public static Supplier<byte[]> symmetricThumbprint(String alias, KeyStore instance) {
+    public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
         return new Supplier<byte[]>() {
             @Override
             public byte[] get() {

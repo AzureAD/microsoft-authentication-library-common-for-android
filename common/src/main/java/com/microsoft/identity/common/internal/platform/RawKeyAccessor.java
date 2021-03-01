@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import androidx.annotation.NonNull;
-
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 
@@ -54,6 +52,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import lombok.Builder;
+import lombok.NonNull;
 
 import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
@@ -76,7 +75,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] encrypt(byte[] plaintext) throws ClientException {
+    public byte[] encrypt(@NonNull final byte[] plaintext) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -115,7 +114,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] decrypt(byte[] ciphertext) throws ClientException {
+    public byte[] decrypt(@NonNull final byte[] ciphertext) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -148,7 +147,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+    public byte[] sign(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -167,7 +166,8 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+    public boolean verify(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg,
+                          @NonNull final byte[] signature) throws ClientException {
         return Arrays.equals(signature, sign(text, alg));
     }
 

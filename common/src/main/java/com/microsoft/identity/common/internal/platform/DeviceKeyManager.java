@@ -26,8 +26,6 @@ import android.os.Build;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.KeyProtection;
 
-import androidx.annotation.NonNull;
-
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
@@ -44,6 +42,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
@@ -59,7 +58,8 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
     private final KeyStore mKeyStore;
 
     @Builder
-    public DeviceKeyManager(KeyStore keyStore, String keyAlias, Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
+    public DeviceKeyManager(@NonNull final KeyStore keyStore, @NonNull final String keyAlias,
+                            @NonNull final Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
         this.mKeyAlias = keyAlias;
         this.mThumbprintSupplier = thumbprintSupplier;
         this.mKeyStore = keyStore;
@@ -88,7 +88,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
     }
 
     @Override
-    public boolean hasThumbprint(byte[] thumbprint) {
+    public boolean hasThumbprint(@NonNull final byte[] thumbprint) {
         return Arrays.equals(thumbprint, mThumbprintSupplier.get());
     }
 
@@ -138,22 +138,8 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
     }
 
     @Override
-    public void importKey(byte[] jwk, String algorithm) throws ClientException {
-        final SecretKeySpec key = new SecretKeySpec(jwk, algorithm);
-        final String errCode;
-        final Exception exception;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                mKeyStore.setEntry(mKeyAlias, new KeyStore.SecretKeyEntry(key),
-                        new KeyProtection.Builder(KeyProperties.PURPOSE_DECRYPT | KeyProperties.PURPOSE_ENCRYPT |
-                                KeyProperties.PURPOSE_SIGN).build());
-                return;
-            } catch (KeyStoreException e) {
-              errCode = ClientException.KEYSTORE_NOT_INITIALIZED;
-              exception = e;
-            }
-            throw new ClientException(errCode, exception.getMessage());
-        }
+    public void importKey(@NonNull final byte[] jwk, @NonNull final String algorithm) throws ClientException {
+        throw new UnsupportedOperationException("This is not currently supported")
     }
 
     @Override
