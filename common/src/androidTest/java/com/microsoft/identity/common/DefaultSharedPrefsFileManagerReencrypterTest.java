@@ -581,7 +581,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 )
         );
 
-        // Assert nothing was done
+        // Assert entries removed
         Assert.assertNull(mTestCacheFile.getString(keyOne));
         Assert.assertNull(mTestCacheFile.getString(keyTwo));
     }
