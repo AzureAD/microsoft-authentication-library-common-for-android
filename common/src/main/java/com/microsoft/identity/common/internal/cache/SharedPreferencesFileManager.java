@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.annotation.SuppressLint;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
@@ -38,8 +39,11 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Convenience class for accessing {@link SharedPreferences}.
@@ -53,6 +57,33 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     private final String mSharedPreferencesFileName;
     private final SharedPreferences mSharedPreferences;
     private final IStorageHelper mStorageHelper;
+    // This is making a huge assumption - that we don't need to separate this cache by context.
+    private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
+            new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f , 1);
+
+    /**
+     * Constructs an instance of SharedPreferencesFileManager.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param name    The desired {@link android.content.SharedPreferences} file. It will be created
+     *                if it does not exist.
+     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param operatingMode the mode in which to operate this
+     */
+    public static SharedPreferencesFileManager getSharedPreferences(final Context context,
+                                                                    final String name,
+                                                                    final int operatingMode,
+                                                                    final IStorageHelper storageHelper) {
+        String key = name + "/" + context.getPackageName() + "/" + operatingMode;
+        SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
+        if(cachedFileManager == null) {
+            cachedFileManager = objectCache.putIfAbsent(key, new SharedPreferencesFileManager(context, name, operatingMode, storageHelper));
+            if (cachedFileManager == null) {
+                cachedFileManager = objectCache.get(key);
+            }
+        }
+        return cachedFileManager;
+    }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.

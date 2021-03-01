@@ -116,9 +116,10 @@ public class ADALOAuth2TokenCache
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
         mISharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         getContext(),
                         fileName,
+                        -1,
                         new StorageHelper(getContext())
                 );
     }

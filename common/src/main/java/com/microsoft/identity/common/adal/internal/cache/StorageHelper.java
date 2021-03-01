@@ -312,6 +312,7 @@ public class StorageHelper implements IStorageHelper {
         final SecretKey secretKey = loadSecretKeyForEncryption();
         return logIfKeyHasChanged(secretKey, getHMacKey(secretKey));
     }
+
     private String getKeyThumbPrint(final @NonNull SecretKey secretKey, final @NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         final Cipher thumbPrintCipher = Cipher.getInstance(CIPHER_ALGORITHM_FOR_KEY_TRACKING);
         final byte[] thumbprintBytes = "012345678910111213141516".getBytes();

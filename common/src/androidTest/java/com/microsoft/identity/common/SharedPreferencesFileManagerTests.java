@@ -53,13 +53,15 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     @Parameterized.Parameters
     public static Iterable<ISharedPreferencesFileManager> testParams() {
         return Arrays.asList(new ISharedPreferencesFileManager[]{
-                new SharedPreferencesFileManager(
-                        InstrumentationRegistry.getTargetContext(),
-                        sTEST_SHARED_PREFS_NAME
-                ),
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         InstrumentationRegistry.getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
+                        -1, null
+                ),
+                SharedPreferencesFileManager.getSharedPreferences(
+                        InstrumentationRegistry.getTargetContext(),
+                        sTEST_SHARED_PREFS_NAME,
+                        -1,
                         new StorageHelper(InstrumentationRegistry.getTargetContext())
                 )
         });

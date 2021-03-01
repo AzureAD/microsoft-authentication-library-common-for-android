@@ -48,7 +48,7 @@ class TelemetryPropertiesCache {
     private final SharedPreferencesFileManager mSharedPrefs;
 
     TelemetryPropertiesCache(@NonNull final Context context) {
-        mSharedPrefs = new SharedPreferencesFileManager(context, SHARED_PREFS_NAME);
+        mSharedPrefs = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFS_NAME, -1, null);
     }
 
     /**
