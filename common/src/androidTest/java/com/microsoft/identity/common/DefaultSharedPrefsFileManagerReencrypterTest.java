@@ -208,7 +208,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
                 mTestCacheFile.putString(String.valueOf(ii), encryptedIntStr);
             } catch (Exception e) {
-                // wont happen
+                Assert.assertNull("Should not throw", e);
             }
         }
 
@@ -244,7 +244,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 final String encryptedIntStr = mTestEncrypterDecrypter.encryptWithLegacyKey(String.valueOf(ii));
                 mTestCacheFile.putString(String.valueOf(ii), encryptedIntStr);
             } catch (Exception e) {
-                // wont happen
+                Assert.assertNull("Should not throw", e);
             }
         }
 
