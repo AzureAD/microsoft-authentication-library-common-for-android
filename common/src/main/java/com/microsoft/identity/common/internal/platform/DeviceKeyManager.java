@@ -139,7 +139,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
 
     @Override
     public void importKey(@NonNull final byte[] jwk, @NonNull final String algorithm) throws ClientException {
-        throw new UnsupportedOperationException("This is not currently supported")
+        throw new UnsupportedOperationException("This is not currently supported");
     }
 
     @Override
