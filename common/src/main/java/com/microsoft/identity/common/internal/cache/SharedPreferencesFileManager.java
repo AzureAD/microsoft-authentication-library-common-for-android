@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.annotation.SuppressLint;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.LruCache;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -39,7 +38,6 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -53,8 +51,10 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
     private final Object cacheLock = new Object();
+    @GuardedBy("cacheLock")
     private final LruCache<String, String> fileCache = new LruCache<>(256);
     private final String mSharedPreferencesFileName;
+    @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final IStorageHelper mStorageHelper;
     // This is making a huge assumption - that we don't need to separate this cache by context.
@@ -249,28 +249,23 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final Map<String, String> getAll() {
-
+        // We're not synchronizing this access, since we're not modifying it here.
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+        @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
             final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
 
             while (iterator.hasNext()) {
                 final Map.Entry<String, String> entry = iterator.next();
-                final String decryptedValue = decrypt(entry.getValue());
-
-                if (TextUtils.isEmpty(decryptedValue)) {
-                    logWarningAndRemoveKey(entry.getKey());
-                    iterator.remove();
-                    continue;
+                //This is slightly wasteful, but we have no better key iterator and decryption
+                //is probably more painful than the additional file read when we miss in the cache.
+                String decryptedValue = getString(entry.getKey());
+                if (!TextUtils.isEmpty(decryptedValue)) {
+                    entry.setValue(decryptedValue);
                 }
-
-                entry.setValue(decryptedValue);
             }
         }
-
         return entries;
     }
 
@@ -281,10 +276,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final void clear() {
-        final SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.clear();
-        fileCache.evictAll();
-        editor.apply();
+        synchronized (cacheLock) {
+            final SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.clear();
+            fileCache.evictAll();
+            editor.apply();
+        }
     }
 
     @Override
@@ -293,10 +290,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 TAG,
                 "Removing cache key"
         );
-        fileCache.remove(key);
-        final SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.remove(key);
-        editor.apply();
+        synchronized (cacheLock) {
+            fileCache.remove(key);
+            final SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.remove(key);
+            editor.apply();
+        }
 
         Logger.infoPII(
                 TAG,
