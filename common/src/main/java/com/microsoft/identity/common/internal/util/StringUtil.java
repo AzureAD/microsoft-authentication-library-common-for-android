@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -53,6 +54,16 @@ public final class StringUtil {
         return message == null || message.trim().length() == 0; //NOPMD  Suppressing PMD warning for new String creation on trim()"
     }
 
+    /**
+     * Returns true if the string contains the given substring.
+     */
+    public static boolean containsSubString(final String str, final String substr) {
+        if (TextUtils.isEmpty(str)){
+            return false;
+        }
+
+        return str.contains(substr);
+    }
     /**
      * Convert the given set of scopes into the string with the provided delimiter.
      *

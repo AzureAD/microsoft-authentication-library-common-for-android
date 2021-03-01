@@ -47,6 +47,10 @@ public class BaseException extends Exception {
 
     private String mCorrelationId;
 
+    // The username of the account that owns the flow.
+    @Nullable
+    private String mUsername;
+
     /**
      * Default constructor.
      */
@@ -148,6 +152,14 @@ public class BaseException extends Exception {
 
     public void setCorrelationId(@Nullable final String correlationId){
         mCorrelationId = correlationId;
+    }
+
+    public String getUsername() {
+        return mUsername;
+    }
+
+    public void setUsername(String username) {
+        this.mUsername = username;
     }
 
     public String getExceptionName(){
