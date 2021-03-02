@@ -26,10 +26,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ClientException;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -54,6 +51,7 @@ import static com.microsoft.identity.common.exception.ClientException.BAD_PADDIN
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
 import static com.microsoft.identity.common.internal.platform.KeyStoreAccessor.UTF8;
@@ -204,69 +202,25 @@ public class RawKeyAccessor implements KeyAccessor {
         return SecureHardwareState.FALSE;
     }
 
-    private static byte[] deriveKey(byte[] keyDerivationKey, byte[] fixedInput)
-            throws IOException, NoSuchAlgorithmException, InvalidKeyException {
-        byte ctr;
-        byte[] cHMAC;
-        byte[] keyDerivated;
-        byte[] dataInput;
 
-        int len;
-        int numCurrentElements;
-        int numCurrentElementsBytes;
-        int outputSizeBit = 256;
-
-        numCurrentElements = 0;
-        ctr = 1;
-        keyDerivated = new byte[outputSizeBit / 8];
-        final SecretKeySpec keySpec = new SecretKeySpec(keyDerivationKey, "HmacSHA256");
-        final Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
-
-        do {
-            dataInput = updateDataInput(ctr, fixedInput);
-            hmacSHA256.reset();
-            hmacSHA256.init(keySpec);
-            hmacSHA256.update(dataInput);
-            cHMAC = hmacSHA256.doFinal();
-            if (256 >= outputSizeBit) {
-                len = outputSizeBit;
-            } else {
-                len = Math.min(256, outputSizeBit - numCurrentElements);
-            }
-
-            numCurrentElementsBytes = numCurrentElements / 8;
-            System.arraycopy(cHMAC, 0, keyDerivated, numCurrentElementsBytes, 32);
-            numCurrentElements = numCurrentElements + len;
-            ctr++;
-        } while (numCurrentElements < outputSizeBit);
-        return keyDerivated;
-    }
-
-    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx)
-            throws IOException, InvalidKeyException, NoSuchAlgorithmException {
-        if (ctx == null) {
-            return null;
+    /**
+     * Given this raw key, generate a derived key from it.  If we close on a KDF for hardware keys,
+     * this can get promoted to the symmetric key interface.
+     * @param label the label for the generated key.
+     * @param ctx the context bytes for the generated key.
+     * @return a new key, generated from the previous one.
+     * @throws ClientException if something goes wrong during generation.
+     */
+    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException{
+        try {
+            return SP800108KeyGen.generateDerivedKey(key, label, ctx);
+        } catch (IOException e) {
+            throw new ClientException(IO_ERROR, e.getMessage(), e);
+        } catch (InvalidKeyException e) {
+            throw new ClientException(INVALID_KEY, e.getMessage(), e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
         }
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        stream.write(label);
-        stream.write(0x0);
-        stream.write(ctx);
-
-        ByteBuffer bigEndianInt = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256);
-        stream.write(bigEndianInt.array());
-
-        byte[] pbDerivedKey = deriveKey(key, stream.toByteArray());
-        return Arrays.copyOf(pbDerivedKey, 32);
     }
 
-    private static byte[] updateDataInput(final byte ctr, @NonNull final byte[] fixedInput) throws IOException {
-        final ByteArrayOutputStream tmpFixedInput = new ByteArrayOutputStream(fixedInput.length + 4);
-        tmpFixedInput.write(ctr >>> 24);
-        tmpFixedInput.write(ctr >>> 16);
-        tmpFixedInput.write(ctr >>> 8);
-        tmpFixedInput.write(ctr);
-
-        tmpFixedInput.write(fixedInput);
-        return tmpFixedInput.toByteArray();
-    }
 }
