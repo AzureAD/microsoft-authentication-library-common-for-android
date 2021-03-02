@@ -120,9 +120,11 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getTargetContext();
-        mTestCacheFile = new SharedPreferencesFileManager(
+        mTestCacheFile = SharedPreferencesFileManager.getSharedPreferences(
                 mContext,
-                TEST_CACHE_FILENAME
+                TEST_CACHE_FILENAME,
+                -1,
+                null
         );
         mFileManagerReencrypter = new DefaultSharedPrefsFileManagerReencrypter();
         try {
