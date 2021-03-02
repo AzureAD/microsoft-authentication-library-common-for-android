@@ -96,13 +96,13 @@ public class SecretKeyAccessor implements KeyAccessor {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (IllegalBlockSizeException e) {
+        } catch (final IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
             exception = e;
-        } catch (BadPaddingException e) {
+        } catch (final BadPaddingException e) {
             errCode = BAD_PADDING;
             exception = e;
-        } catch (InvalidKeyException e) {
+        } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
         }
@@ -137,13 +137,13 @@ public class SecretKeyAccessor implements KeyAccessor {
         } catch (IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
             exception = e;
-        } catch (BadPaddingException e) {
+        } catch (final BadPaddingException e) {
             errCode = BAD_PADDING;
             exception = e;
-        } catch (InvalidKeyException e) {
+        } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
-        } catch (InvalidAlgorithmParameterException e) {
+        } catch (final InvalidAlgorithmParameterException e) {
             errCode = INVALID_ALG_PARAMETER;
             exception = e;
         }
@@ -169,7 +169,7 @@ public class SecretKeyAccessor implements KeyAccessor {
         } catch (final KeyStoreException e) {
             errCode = KEYSTORE_NOT_INITIALIZED;
             exception = e;
-        } catch (InvalidKeyException e) {
+        } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
         }
