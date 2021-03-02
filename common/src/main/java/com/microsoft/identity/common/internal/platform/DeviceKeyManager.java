@@ -96,7 +96,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
     public Date getCreationDate() throws ClientException {
         try {
             return mKeyStore.getCreationDate(mKeyAlias);
-        } catch (KeyStoreException e) {
+        } catch (final KeyStoreException e) {
             Logger.error(
                     TAG,
                     "Error while getting creation date for alias " + mKeyAlias,
