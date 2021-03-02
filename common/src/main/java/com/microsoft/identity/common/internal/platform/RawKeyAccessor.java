@@ -22,24 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import androidx.annotation.Nullable;
 
-import org.spongycastle.crypto.CipherParameters;
-import org.spongycastle.crypto.DataLengthException;
-import org.spongycastle.crypto.DerivationParameters;
-import org.spongycastle.crypto.digests.SHA256Digest;
-import org.spongycastle.crypto.generators.KDFCounterBytesGenerator;
-import org.spongycastle.crypto.macs.HMac;
-import org.spongycastle.crypto.params.KDFCounterParameters;
+import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -147,7 +140,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] sign(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+    public byte[] sign(@NonNull final byte[] text, @Nullable final IDevicePopManager.SigningAlgorithm alg) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -166,7 +159,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public boolean verify(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg,
+    public boolean verify(@NonNull final byte[] text, @Nullable final IDevicePopManager.SigningAlgorithm alg,
                           @NonNull final byte[] signature) throws ClientException {
         return Arrays.equals(signature, sign(text, alg));
     }
@@ -176,46 +169,69 @@ public class RawKeyAccessor implements KeyAccessor {
         return new byte[0];
     }
 
-    /**
-     * Generates Key based on SP800-108. K(i) := PRF( KI, [i]_2 || Label || 0x00
-     * || Context || [L]_2 ) with the counter at the very beginning of the
-     * fixedInputData. [L]_2 is generated based on required bytes. This matches
-     * to the implementation in Windows at Bcrypt library.
-     *
-     * @param label Label
-     * @param ctx   Context
-     * @return DerivedKey
-     */
-    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException {
-        final String methodName = "generateDerivedKey";
-        HMac mac;
-        mac = new HMac(new SHA256Digest());
+    private static byte[] deriveKey(byte[] keyDerivationKey, byte[] fixedInput)
+            throws IOException, NoSuchAlgorithmException, InvalidKeyException {
+        byte ctr;
+        byte[] cHMAC;
+        byte[] keyDerivated;
+        byte[] dataInput;
 
-        // add Label || 0x00 || Context
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        buffer.write(label, 0, label.length);
-        buffer.write(0);
-        buffer.write(ctx, 0, ctx.length);
+        int len;
+        int numCurrentElements;
+        int numCurrentElementsBytes;
+        int outputSizeBit = 256;
 
-        // Add [L]_2 in big endian order
-        int derivedKeyBitLength = mac.getMacSize() * 8;
-        final byte[] bytes = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(derivedKeyBitLength).array();
-        buffer.write(bytes, 0, bytes.length);
+        numCurrentElements = 0;
+        ctr = 1;
+        keyDerivated = new byte[outputSizeBit / 8];
+        final SecretKeySpec keySpec = new SecretKeySpec(keyDerivationKey, "HmacSHA256");
+        final Mac hmacSHA256 = Mac.getInstance("HmacSHA256");
 
-        byte[] bufferBytes = buffer.toByteArray();
+        do {
+            dataInput = updateDataInput(ctr, fixedInput);
+            hmacSHA256.reset();
+            hmacSHA256.init(keySpec);
+            hmacSHA256.update(dataInput);
+            cHMAC = hmacSHA256.doFinal();
+            if (256 >= outputSizeBit) {
+                len = outputSizeBit;
+            } else {
+                len = Math.min(256, outputSizeBit - numCurrentElements);
+            }
 
-        // Beware that, for some reason, proguard seem to have some
-        // conflict with the class below (or maybe with spongycastle in general)
-        // The side effect is that, sometimes, proguard removes the constructor
-        // of class KDFCounterParameters and, only at runtime, the code below
-        // throws a NoSuchMethodError exception.
-        final KDFCounterParameters params = new KDFCounterParameters(key, bufferBytes, 32);
-        KDFCounterBytesGenerator generator = new KDFCounterBytesGenerator(mac);
-        generator.init(params);
-        byte[] out = new byte[mac.getMacSize()];
-
-        Logger.verbose("RawKeyAccessor" + methodName, "Generating derived key");
-        generator.generateBytes(out, 0, out.length);
-        return out;
+            numCurrentElementsBytes = numCurrentElements / 8;
+            System.arraycopy(cHMAC, 0, keyDerivated, numCurrentElementsBytes, 32);
+            numCurrentElements = numCurrentElements + len;
+            ctr++;
+        } while (numCurrentElements < outputSizeBit);
+        return keyDerivated;
     }
+
+    public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx)
+            throws IOException, InvalidKeyException, NoSuchAlgorithmException {
+        if (ctx == null) {
+            return null;
+        }
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        stream.write(label);
+        stream.write(0x0);
+        stream.write(ctx);
+
+        ByteBuffer bigEndianInt = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256);
+        stream.write(bigEndianInt.array());
+
+        byte[] pbDerivedKey = deriveKey(key, stream.toByteArray());
+        return Arrays.copyOf(pbDerivedKey, 32);
     }
+
+    private static byte[] updateDataInput(final byte ctr, @NonNull final byte[] fixedInput) throws IOException {
+        ByteArrayOutputStream tmpFixedInput = new ByteArrayOutputStream(fixedInput.length + 4);
+        tmpFixedInput.write(ctr >>> 24);
+        tmpFixedInput.write(ctr >>> 16);
+        tmpFixedInput.write(ctr >>> 8);
+        tmpFixedInput.write(ctr);
+
+        tmpFixedInput.write(fixedInput);
+        return tmpFixedInput.toByteArray();
+    }
+}
