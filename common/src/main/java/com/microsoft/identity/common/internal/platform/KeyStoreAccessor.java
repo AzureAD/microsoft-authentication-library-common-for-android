@@ -190,7 +190,7 @@ public class KeyStoreAccessor {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
             String[] params = cipher.cipherName().split("/");
-            KeyGenerator generator = KeyGenerator.getInstance(params[0], ANDROID_KEYSTORE);
+            final KeyGenerator generator = KeyGenerator.getInstance(params[0], ANDROID_KEYSTORE);
             KeyGenParameterSpec spec = null;
             try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
