@@ -260,7 +260,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     private static byte[] updateDataInput(final byte ctr, @NonNull final byte[] fixedInput) throws IOException {
-        ByteArrayOutputStream tmpFixedInput = new ByteArrayOutputStream(fixedInput.length + 4);
+        final ByteArrayOutputStream tmpFixedInput = new ByteArrayOutputStream(fixedInput.length + 4);
         tmpFixedInput.write(ctr >>> 24);
         tmpFixedInput.write(ctr >>> 16);
         tmpFixedInput.write(ctr >>> 8);
