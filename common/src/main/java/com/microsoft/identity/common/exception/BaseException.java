@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -154,11 +155,12 @@ public class BaseException extends Exception {
         mCorrelationId = correlationId;
     }
 
+    @Nullable
     public String getUsername() {
         return mUsername;
     }
 
-    public void setUsername(String username) {
+    public void setUsername(@NonNull final String username) {
         this.mUsername = username;
     }
 

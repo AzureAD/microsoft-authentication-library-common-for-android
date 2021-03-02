@@ -56,14 +56,19 @@ public final class StringUtil {
 
     /**
      * Returns true if the string contains the given substring.
+     *
+     * @param str    the string to search for a substring in
+     * @param substr the substring to search for
+     * @return true if the string contains the given substring, false if it does not or if it is null
      */
     public static boolean containsSubString(final String str, final String substr) {
-        if (TextUtils.isEmpty(str)){
+        if (TextUtils.isEmpty(str)) {
             return false;
         }
 
         return str.contains(substr);
     }
+
     /**
      * Convert the given set of scopes into the string with the provided delimiter.
      *
