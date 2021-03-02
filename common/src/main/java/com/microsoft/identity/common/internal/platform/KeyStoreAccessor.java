@@ -185,7 +185,7 @@ public class KeyStoreAccessor {
      * @throws IOException
      */
     public static KeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
-        String alias = UUID.randomUUID().toString();
+        final String alias = UUID.randomUUID().toString();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
