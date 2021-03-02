@@ -612,21 +612,23 @@ public class MicrosoftStsOAuth2Strategy
         String tokens = "";
         final String tokensMissingMessage = "Missing required tokens of type: {0}";
 
-        if (StringUtil.isEmpty(response.getAccessToken())) {
+        // PRT interrupt flow do not return AT.
+        if (!StringUtil.containsSubString(request.getScope(), AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE) &&
+                StringUtil.isEmpty(response.getAccessToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens.concat("access_token");
+            tokens = tokens.concat("access_token");
         }
 
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens.concat(" id_token");
+            tokens =  tokens.concat(" id_token");
         }
 
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
                 StringUtil.isEmpty(response.getRefreshToken())) {
             clientException = ClientException.TOKENS_MISSING;
-            tokens.concat(" refresh_token");
+            tokens =  tokens.concat(" refresh_token");
         }
 
         if (clientException != null) {
