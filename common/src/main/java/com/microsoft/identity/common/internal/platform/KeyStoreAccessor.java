@@ -168,7 +168,7 @@ public class KeyStoreAccessor {
      * @throws IOException
      */
     public static KeyAccessor newInstance(@NonNull final Context context, @NonNull final IDevicePopManager.Cipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
-        String alias = UUID.randomUUID().toString();
+        final String alias = UUID.randomUUID().toString();
         final IDevicePopManager popManager = new DevicePopManager(alias);
         popManager.generateAsymmetricKey(context);
         return getKeyAccessor(cipher, popManager);
