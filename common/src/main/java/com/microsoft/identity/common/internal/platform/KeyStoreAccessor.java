@@ -231,7 +231,7 @@ public class KeyStoreAccessor {
                     } else {
                         return null;
                     }
-                } catch (KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
+                } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
                     Logger.error("KeyAccessor:newInstance", null, "Exception while getting key entry", e);
                     return null;
                 }
