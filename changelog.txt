@@ -16,6 +16,7 @@ V.Next
 - [MINOR] Device PoP keys are now generated with attestation flags and expose a certificate chain getter (#1247)
 - [PATCH] Fixes deprecated NetworkInfo class (#847)
 - [MINOR] Implement an in-memory cache to avoid multiple decryptions of shared preferences
+- [MINOR] Expand functionality for key storea access.
 
 Version 3.1.0
 ----------
