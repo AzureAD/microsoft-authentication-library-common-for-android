@@ -93,6 +93,12 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
         final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
                 (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
 
+         if (parameters instanceof MicrosoftStsPromptHandlerParameters &&
+                ((MicrosoftStsPromptHandlerParameters) parameters).isUseSignInWithADifferentAccount() &&
+                !((MicrosoftStsPromptHandlerParameters) parameters).isFederated()) {
+             ((AadLoginComponentHandler) aadLoginComponentHandler).handleSignInWithDifferentAccount(username, password);
+        }
+
         if (parameters.isSpeedBumpExpected()) {
             aadLoginComponentHandler.handleSpeedBump();
         }

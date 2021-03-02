@@ -43,4 +43,9 @@ public class MicrosoftStsPromptHandlerParameters extends PromptHandlerParameters
      * Denotes whether the account being used for this request is a federated account.
      */
     private boolean isFederated;
+
+    /**
+     * Instructs the system to use a different account when prompted.
+     */
+    private boolean useSignInWithADifferentAccount;
 }

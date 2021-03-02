@@ -157,4 +157,9 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
         handleNextButton();
     }
+
+    public void handleSignInWithDifferentAccount(String username, String password) {
+        Logger.i(TAG, "Activating sign in with another account");
+        UiAutomatorUtils.handleButtonClick("i0118");
+    }
 }
