@@ -81,7 +81,8 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite)
+            throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final IDevicePopManager popManager = new DevicePopManager(alias);
         if (suite.cipher() instanceof IDevicePopManager.Cipher) {
             if (!popManager.asymmetricKeyExists()) {
@@ -188,7 +189,9 @@ public class KeyStoreAccessor {
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
+    public static KeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess)
+            throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException,
+                   NoSuchProviderException, InvalidAlgorithmParameterException {
         final String alias = UUID.randomUUID().toString();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
@@ -270,7 +273,8 @@ public class KeyStoreAccessor {
                     } else {
                         return null;
                     }
-                } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
+                } catch (final KeyStoreException | BadPaddingException | NoSuchAlgorithmException
+                        | IllegalBlockSizeException | UnrecoverableEntryException | NoSuchPaddingException e) {
                     Logger.error("KeyAccessor:newInstance", null, "Exception while getting key entry", e);
                     return null;
                 }
@@ -290,7 +294,12 @@ public class KeyStoreAccessor {
      * @return A key accessor for the imported session key
      * @throws ClientException if there is a failure while importing.
      */
-    public static KeyAccessor importSymmetricKey(Context context, SymmetricCipher cipher, String keyAlias, String key_jwe, KeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor importSymmetricKey(@NonNull final Context context,
+                                                 @NonNull final SymmetricCipher cipher,
+                                                 @NonNull final String keyAlias,
+                                                 @NonNull final String key_jwe,
+                                                 @NonNull final KeyAccessor stk_accessor)
+            throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         throw new UnsupportedOperationException("This operation is not yet supported");
     }
 }
