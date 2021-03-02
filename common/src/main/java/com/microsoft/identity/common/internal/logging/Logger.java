@@ -466,11 +466,12 @@ public final class Logger {
                      @Nullable final String message,
                      @Nullable final Throwable throwable,
                      final boolean containsPII) {
+
+        final String dateTimeStamp = getUTCDateTimeAsString();
+
         sLogExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                final String dateTimeStamp = getUTCDateTimeAsString();
-
                 if (logLevel.compareTo(mLogLevel) > 0) {
                     return;
                 }

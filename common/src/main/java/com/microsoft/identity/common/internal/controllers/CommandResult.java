@@ -48,12 +48,16 @@ public class CommandResult {
 
     private ResultStatus mStatus;
     private Object mResult;
-    private String mCorrelationId;
+    private final String mCorrelationId;
+
+    public CommandResult(ResultStatus status, Object result) {
+        this(status, result, null);
+    }
 
     public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
         mStatus = status;
         mResult = result;
-        mCorrelationId = correlationId;
+        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
     }
 
     public ResultStatus getStatus() {
