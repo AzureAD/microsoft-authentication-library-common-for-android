@@ -38,26 +38,27 @@ import java.security.KeyStore;
 public enum SymmetricCipher implements CryptoSuite {
 
     @RequiresApi(Build.VERSION_CODES.M)
-    AES_GCM_NONE_HMACSHA256("AES/GCM/NoPadding", "HmacSHA256", 256) {
+    AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
+
         public  KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
             return spec.setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                     .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .setKeySize(256);
+                    .setKeySize(keySize());
         }
     };
 
-    String mValue;
+    SymmetricAlgorithm mValue;
     String mMacString;
     int mKeySize;
 
-    SymmetricCipher(@NonNull final String value, @NonNull String macValue, int keySize) {
+    SymmetricCipher(@NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
         mValue = value;
         mMacString = macValue;
         mKeySize = keySize;
     }
 
     @Override
-    public java.lang.String cipherName() {
+    public Algorithm cipher() {
         return mValue;
     }
 
@@ -79,6 +80,11 @@ public enum SymmetricCipher implements CryptoSuite {
     @Override
     public int keySize() {
         return mKeySize;
+    }
+
+    @Override
+    public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
+        return null;
     }
 
     public abstract @NonNull KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec);

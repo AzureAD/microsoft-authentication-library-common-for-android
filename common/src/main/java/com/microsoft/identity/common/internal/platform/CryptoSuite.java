@@ -31,12 +31,12 @@ import java.security.KeyStore;
  */
 public interface CryptoSuite {
     /**
-     * @return the name of the cipher used for this cryto suite.  Should be suitable for use in Cipher.getInstance();
+     * @return the name of the cipher used for this crypto suite.  Should be suitable for use in Cipher.getInstance();
      */
-    String cipherName();
+    Algorithm cipher();
 
     /**
-     * @return the name of the MAC used for this cryto suite.  Should be suitable for use in Mac.getInstance();
+     * @return the name of the MAC used for this crypto suite.  Should be suitable for use in Mac.getInstance();
      */
     String macName();
 
@@ -54,4 +54,9 @@ public interface CryptoSuite {
      * @return the key size for this instance.
      */
     int keySize();
+
+    /**
+     * @return the signing algorithm desired by this suite.
+     */
+    IDevicePopManager.SigningAlgorithm signingAlgorithm();
 }

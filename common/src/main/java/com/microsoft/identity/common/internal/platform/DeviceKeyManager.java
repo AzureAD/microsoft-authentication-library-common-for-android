@@ -37,7 +37,6 @@ import java.security.PrivateKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Date;
 
@@ -67,16 +66,13 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
     @Getter
     private final String mKeyAlias;
     private final Supplier<byte[]> mThumbprintSupplier;
-    private final CryptoSuite mSuite;
 
     @Builder
     public DeviceKeyManager(@NonNull final KeyStore keyStore, @NonNull final String keyAlias,
-                            @NonNull final Supplier<byte[]> thumbprintSupplier,
-                            @NonNull final CryptoSuite suite) throws KeyStoreException {
+                            @NonNull final Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
         this.mKeyAlias = keyAlias;
         this.mThumbprintSupplier = thumbprintSupplier;
         this.mKeyStore = keyStore;
-        this.mSuite = suite;
     }
 
 
@@ -144,6 +140,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
      * @throws NoSuchAlgorithmException
      * @throws KeyStoreException
      */
+    @SuppressWarnings("unchecked")
     @Override
     public K getEntry() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         return (K) mKeyStore.getEntry(mKeyAlias, null);
@@ -205,7 +202,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
                     try {
                         final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
                         final KeyFactory factory = KeyFactory.getInstance(
-                                mSuite.cipherName(), mKeyStore.getProvider()
+                                privateKey.getAlgorithm(), mKeyStore.getProvider()
                         );
                         final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
                         final boolean isInsideSecureHardware = info.isInsideSecureHardware();

@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.IOException;
@@ -74,7 +72,7 @@ public class RawKeyAccessor implements KeyAccessor {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec keySpec = new SecretKeySpec(key, suite.cipherName());
+            final SecretKeySpec keySpec = new SecretKeySpec(key, suite.cipher().name());
             final Cipher c = Cipher.getInstance(keySpec.getAlgorithm());
             final byte[] iv = new byte[12];
             mRandom.nextBytes(iv);
@@ -113,7 +111,7 @@ public class RawKeyAccessor implements KeyAccessor {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipherName());
+            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipher().name());
             final Cipher c = Cipher.getInstance(key.getAlgorithm());
             final IvParameterSpec ivSpec = new IvParameterSpec(ciphertext, 0, 12);
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
@@ -142,11 +140,11 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] sign(@NonNull final byte[] text, @Nullable final IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+    public byte[] sign(@NonNull final byte[] text) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipherName());
+            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipher().name());
             Mac mac = Mac.getInstance(suite.macName());
             mac.init(key);
             return mac.doFinal(text);
@@ -161,14 +159,14 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public boolean verify(@NonNull final byte[] text, @Nullable final IDevicePopManager.SigningAlgorithm alg,
+    public boolean verify(@NonNull final byte[] text,
                           @NonNull final byte[] signature) throws ClientException {
-        return Arrays.equals(signature, sign(text, alg));
+        return Arrays.equals(signature, sign(text));
     }
 
     @Override
     public byte[] getThumprint() throws ClientException {
-        final SecretKey keySpec = new SecretKeySpec(key, suite.cipherName());
+        final SecretKey keySpec = new SecretKeySpec(key, suite.cipher().name());
         final Cipher cipher;
         final String errCode;
         final Exception exception;

@@ -26,10 +26,8 @@ import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
-import android.security.keystore.StrongBoxUnavailableException;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -85,28 +83,30 @@ public class KeyStoreAccessor {
      */
     public static KeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final IDevicePopManager popManager = new DevicePopManager(alias);
-        if (suite instanceof IDevicePopManager.Cipher) {
+        if (suite.cipher() instanceof IDevicePopManager.Cipher) {
             if (!popManager.asymmetricKeyExists()) {
                 popManager.generateAsymmetricKey(context);
             }
-            return getKeyAccessor((IDevicePopManager.Cipher) suite, popManager);
+            return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance), suite);
+        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
         return new SecretKeyAccessor(keyManager, suite) {
             @Override
-            public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+            public byte[] sign(byte[] text) throws ClientException {
                 throw new UnsupportedOperationException("This key instance does not support signing");
             }
 
             @Override
-            public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+            public boolean verify(byte[] text, byte[] signature) throws ClientException {
                 throw new UnsupportedOperationException("This key instance does not support verification");
             }
         };
     }
 
-    private static final KeyAccessor getKeyAccessor(@NonNull final IDevicePopManager.Cipher cipher, @NonNull final IDevicePopManager popManager) {
+    private static final KeyAccessor getKeyAccessor(@NonNull final IDevicePopManager.Cipher cipher,
+                                                    @NonNull final IDevicePopManager.SigningAlgorithm signingAlg,
+                                                    @NonNull final IDevicePopManager popManager) {
         return new AsymmetricKeyAccessor() {
 
             @Override
@@ -130,13 +130,13 @@ public class KeyStoreAccessor {
             }
 
             @Override
-            public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
-                return popManager.sign(alg, text);
+            public byte[] sign(byte[] text) throws ClientException {
+                return popManager.sign(signingAlg, text);
             }
 
             @Override
-            public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
-                return popManager.verify(alg, text, signature);
+            public boolean verify(byte[] text, byte[] signature) throws ClientException {
+                return popManager.verify(signingAlg, text, signature);
             }
 
             @Override
@@ -161,17 +161,21 @@ public class KeyStoreAccessor {
      *
      * @param context
      * @param cipher The cipher type of this key.
+     * @param signingAlg
      * @return a key accessor for the use of that particular key.
      * @throws CertificateException
      * @throws NoSuchAlgorithmException
      * @throws KeyStoreException
      * @throws IOException
      */
-    public static KeyAccessor newInstance(@NonNull final Context context, @NonNull final IDevicePopManager.Cipher cipher) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+    public static KeyAccessor newInstance(@NonNull final Context context,
+                                          @NonNull final IDevicePopManager.Cipher cipher,
+                                          @NonNull final IDevicePopManager.SigningAlgorithm signingAlg)
+            throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final String alias = UUID.randomUUID().toString();
         final IDevicePopManager popManager = new DevicePopManager(alias);
         popManager.generateAsymmetricKey(context);
-        return getKeyAccessor(cipher, popManager);
+        return getKeyAccessor(cipher, signingAlg, popManager);
     }
 
     /**
@@ -189,7 +193,7 @@ public class KeyStoreAccessor {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
-            final String[] params = cipher.cipherName().split("/");
+            final String[] params = cipher.cipher().name().split("/");
             final KeyGenerator generator = KeyGenerator.getInstance(params[0], ANDROID_KEYSTORE);
             KeyGenParameterSpec spec = null;
             try {
@@ -222,15 +226,15 @@ public class KeyStoreAccessor {
                 generator.generateKey();
             }
 
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance), cipher);
+            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
             return new SecretKeyAccessor(keyManager, cipher) {
                 @Override
-                public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+                public byte[] sign(byte[] text) throws ClientException {
                     throw new UnsupportedOperationException("This key instance does not support signing");
                 }
 
                 @Override
-                public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException {
+                public boolean verify(byte[] text, byte[] signature) throws ClientException {
                     throw new UnsupportedOperationException("This key instance does not support verification");
                 }
             };

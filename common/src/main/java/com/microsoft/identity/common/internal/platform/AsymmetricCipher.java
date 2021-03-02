@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.microsoft.identity.common.internal.platform.CryptoSuite;
 
 import java.security.KeyStore;
@@ -32,8 +36,8 @@ import java.security.KeyStore;
 public enum AsymmetricCipher implements CryptoSuite {
     RSA_ECB_PKCS1_PADDING_HMACSHA256 {
         @Override
-        public String cipherName() {
-            return "RSA/ECB/PKCS1Padding";
+        public AsymmetricAlgorithm cipher() {
+            return AsymmetricAlgorithm.of("RSA/ECB/PKCS1Padding");
         }
 
         @Override
@@ -54,6 +58,12 @@ public enum AsymmetricCipher implements CryptoSuite {
         @Override
         public int keySize() {
             return 2048;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+        @Override
+        public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
+            return IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
         }
     };
 }

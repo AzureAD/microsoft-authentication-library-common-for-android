@@ -22,11 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import androidx.test.runner.AndroidJUnitRunner;
-
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
@@ -46,8 +43,8 @@ public class RawKeyAccessorTest {
     public RawKeyAccessor getAccessor() throws UnsupportedEncodingException {
         return new RawKeyAccessor(new CryptoSuite() {
             @Override
-            public String cipherName() {
-                return "AES/GCM/NoPadding";
+            public SymmetricAlgorithm cipher() {
+                return SymmetricAlgorithm.of("AES/GCM/NoPadding");
             }
 
             @Override
@@ -69,6 +66,11 @@ public class RawKeyAccessorTest {
             public int keySize() {
                 return 256;
             }
+
+            @Override
+            public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
+                return null;
+            }
         }, "12345678123456781234567812345678".getBytes("UTF-8"));
     }
 
@@ -77,8 +79,8 @@ public class RawKeyAccessorTest {
         RawKeyAccessor a = getAccessor();
 
         final byte[] in = "ABCDEFGHABCDEFGHABCDEFGHABCDEFGH".getBytes();
-        byte[] out = a.sign(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA);
-        Assert.assertTrue(a.verify(in, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA, out));
+        byte[] out = a.sign(in);
+        Assert.assertTrue(a.verify(in, out));
     }
 
     @Test

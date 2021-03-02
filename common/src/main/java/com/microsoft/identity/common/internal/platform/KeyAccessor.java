@@ -47,19 +47,17 @@ public interface KeyAccessor {
     /**
      * Sign a block of data, returning the signature.
      * @param text the data to sign.
-     * @param alg the algorithm to use for signing.
      * @return the signature, as a byte array.
      */
-    byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException;
+    byte[] sign(byte[] text) throws ClientException;
 
     /**
      * Verify a signature, returning the
      * @param text
-     * @param alg
      * @param signature
      * @return
      */
-    boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException;
+    boolean verify(byte[] text, byte[] signature) throws ClientException;
 
     /**
      * @return a thumbprint for this key.

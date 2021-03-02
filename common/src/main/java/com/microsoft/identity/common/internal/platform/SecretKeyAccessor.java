@@ -28,14 +28,12 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.util.Arrays;
@@ -47,7 +45,6 @@ import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
-import javax.crypto.spec.IvParameterSpec;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -58,7 +55,6 @@ import static com.microsoft.identity.common.exception.ClientException.INVALID_AL
 import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
@@ -77,7 +73,7 @@ public class SecretKeyAccessor implements KeyAccessor {
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             SecretKey key = entry.getSecretKey();
-            Cipher c = Cipher.getInstance(suite.cipherName());
+            Cipher c = Cipher.getInstance(suite.cipher().name());
             c.init(Cipher.ENCRYPT_MODE, key);
             byte[] iv = c.getIV();
             byte[] enc = c.doFinal(plaintext);
@@ -118,7 +114,7 @@ public class SecretKeyAccessor implements KeyAccessor {
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             SecretKey key = entry.getSecretKey();
-            Cipher c = Cipher.getInstance(suite.cipherName());
+            Cipher c = Cipher.getInstance(suite.cipher().name());
             final GCMParameterSpec ivSpec = new GCMParameterSpec(128, ciphertext, 0, 12);
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
             byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
@@ -152,7 +148,7 @@ public class SecretKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] sign(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg) throws ClientException {
+    public byte[] sign(@NonNull final byte[] text) throws ClientException {
         final String errCode;
         final Exception exception;
         try {
@@ -178,8 +174,8 @@ public class SecretKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public boolean verify(@NonNull final byte[] text, @NonNull final IDevicePopManager.SigningAlgorithm alg, @NonNull final byte[] signature) throws ClientException {
-        return Arrays.equals(signature, sign(text, alg));
+    public boolean verify(@NonNull final byte[] text, @NonNull final byte[] signature) throws ClientException {
+        return Arrays.equals(signature, sign(text));
     }
 
     @Override

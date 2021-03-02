@@ -51,6 +51,9 @@ import javax.crypto.spec.PSource;
  */
 public interface IDevicePopManager {
 
+    String MGF_1 = "MGF1";
+    String SHA_1 = "SHA-1";
+
     /**
      * The desired export format of our PoP public key.
      */
@@ -94,6 +97,8 @@ public interface IDevicePopManager {
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         NONE_WITH_RSA("NONEwithRSA"),
 
+        SHA_1_WITH_RSA("SHA1withRSA"),
+
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         SHA_256_WITH_RSA("SHA256withRSA"),
 
@@ -131,9 +136,20 @@ public interface IDevicePopManager {
      * Note: Some ciphers are [in]conspicuously absent. Any cipher that requires use of a SHA-1
      * digest or uses NO_PADDING will not be supported.
      */
-    enum Cipher implements CryptoSuite {
+    enum Cipher implements AsymmetricAlgorithm {
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding") {
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec(SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        },
 
         @RequiresApi(Build.VERSION_CODES.M)
         RSA_ECB_OAEPWithSHA_256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding") {
@@ -142,18 +158,19 @@ public interface IDevicePopManager {
                 // We're going to be forcing defaults in this cipher to correct a deficiency in certain
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-256", "MGF1", new MGF1ParameterSpec("SHA-1"), PSource.PSpecified.DEFAULT);
+                return new OAEPParameterSpec("SHA-256", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         },
 
         @RequiresApi(Build.VERSION_CODES.M)
         RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding") {
+
             @Override
             public AlgorithmParameterSpec getParameters() {
                 // We're going to be forcing defaults in this cipher to correct a deficiency in certain
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-384", "MGF1", new MGF1ParameterSpec("SHA-1"), PSource.PSpecified.DEFAULT);
+                return new OAEPParameterSpec("SHA-384", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         },
 
@@ -164,7 +181,7 @@ public interface IDevicePopManager {
                 // We're going to be forcing defaults in this cipher to correct a deficiency in certain
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-512", "MGF1", new MGF1ParameterSpec("SHA-1"), PSource.PSpecified.DEFAULT);
+                return new OAEPParameterSpec("SHA-512", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         };
 
@@ -180,33 +197,8 @@ public interface IDevicePopManager {
             return mValue;
         }
 
-        @Override
-        public String cipherName() {
-            return mValue;
-        }
-
-        @Override
-        public String macName() {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                return SigningAlgorithm.SHA_256_WITH_RSA.name();
-            } else {
-                return "HmacSHA256";
-            }
-        }
-
-        @Override
-        public boolean isAsymmetric() {
-            return true;
-        }
-
-        @Override
-        public Class<? extends KeyStore.Entry> keyClass() {
-            return KeyStore.PrivateKeyEntry.class;
-        }
-
-        @Override
-        public int keySize() {
-            return 2048;
+        public Algorithm cipherName() {
+            return AsymmetricAlgorithm.of(mValue);
         }
 
         /**
