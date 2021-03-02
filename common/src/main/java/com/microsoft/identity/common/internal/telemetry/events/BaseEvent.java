@@ -37,6 +37,7 @@ public class BaseEvent extends Properties {
         correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
     }
 
+    @Override
     public Properties put(String key, String value) {
         return super.put(key, value);
     }
