@@ -68,6 +68,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
@@ -1042,19 +1043,37 @@ class DevicePopManager implements IDevicePopManager {
         final int MAX_RETRIES = 4;
 
         for (int ii = 0; ii < MAX_RETRIES; ii++) {
-            KeyPair kp;
-
-            try {
-                kp = generateNewKeyPair(context, true);
-            } catch (final StrongBoxUnavailableException e) {
-                Logger.error(
-                        TAG,
-                        "StrongBox unsupported - skipping hardware flags.",
-                        e
-                );
-
-                // Retry, but don't request StrongBox
-                kp = generateNewKeyPair(context, false);
+            KeyPair kp = null;
+            boolean tryStrongBox = true;
+            boolean tryImport = true;
+            boolean generated = false;
+            while (!generated) {
+                try {
+                    kp = generateNewKeyPair(context, tryStrongBox, tryImport);
+                    generated = true;
+                } catch (final ProviderException e) {
+                    // This mechanism is terrible.  But there are stern warnings that even attempting to
+                    // mention these classes in a catch clause might cause failures. So we're going to look
+                    // at the exception names.
+                    if (tryStrongBox && e.getClass().getSimpleName().equals("StrongBoxUnavailableException")) {
+                        Logger.error(
+                                TAG,
+                                "StrongBox unsupported - skipping hardware flags.",
+                                e
+                        );
+                        tryStrongBox = false;
+                        continue;
+                    } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
+                        Logger.error(
+                                TAG,
+                                "Import unsupported - skipping import flags.",
+                                e
+                        );
+                        tryImport = false;
+                        continue;
+                    }
+                    throw e;
+                }
             }
 
             // Due to a bug in some versions of Android, keySizes may not be exactly as specified
@@ -1119,7 +1138,8 @@ class DevicePopManager implements IDevicePopManager {
      * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
+    private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox,
+                                       final boolean enableImport)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
@@ -1131,8 +1151,8 @@ class DevicePopManager implements IDevicePopManager {
                 final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
                         context,
                         RSA_KEY_SIZE,
-                        useStrongbox
-                );
+                        useStrongbox,
+                        enableImport);
                 final KeyPair keyPair = kpg.generateKeyPair();
 
                 return keyPair;
@@ -1146,7 +1166,8 @@ class DevicePopManager implements IDevicePopManager {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPairGenerator getInitializedRsaKeyPairGenerator(@NonNull final Context context,
                                                                final int keySize,
-                                                               final boolean useStrongbox)
+                                                               final boolean useStrongbox,
+                                                               final boolean enableImport)
             throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
         // Create the KeyPairGenerator
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -1155,7 +1176,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         // Initialize it!
-        initialize(context, keyPairGenerator, keySize, useStrongbox);
+        initialize(context, keyPairGenerator, keySize, useStrongbox, enableImport);
 
         return keyPairGenerator;
     }
@@ -1168,17 +1189,20 @@ class DevicePopManager implements IDevicePopManager {
      * @param keySize          The RSA keysize.
      * @param useStrongbox     True if StrongBox should be used, false otherwise. Please note that
      *                         StrongBox may not be supported on all devices.
+     * @param enableImport
      * @throws InvalidAlgorithmParameterException
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void initialize(@NonNull final Context context,
                             @NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
-                            final boolean useStrongbox) throws InvalidAlgorithmParameterException {
+                            final boolean useStrongbox, boolean enableImport) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else {
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
             initialize23(keyPairGenerator, keySize, useStrongbox);
+        } else {
+            initialize28(keyPairGenerator, keySize, useStrongbox, enableImport);
         }
     }
 
@@ -1187,7 +1211,8 @@ class DevicePopManager implements IDevicePopManager {
     private void initialize23(@NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
                               final boolean useStrongbox) throws InvalidAlgorithmParameterException {
-        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
+        KeyGenParameterSpec.Builder builder;
+        builder = new KeyGenParameterSpec.Builder(
                 mKeyManager.getKeyAlias(),
                 KeyProperties.PURPOSE_SIGN
                         | KeyProperties.PURPOSE_VERIFY
@@ -1202,6 +1227,7 @@ class DevicePopManager implements IDevicePopManager {
                 .setDigests(
                         KeyProperties.DIGEST_MD5,
                         KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256,
                         KeyProperties.DIGEST_SHA384,
                         KeyProperties.DIGEST_SHA512
@@ -1247,6 +1273,55 @@ class DevicePopManager implements IDevicePopManager {
             @NonNull final KeyGenParameterSpec.Builder builder) {
         return builder.setIsStrongBoxBacked(true);
     }
+
+    @SuppressLint("InlinedApi")
+    @RequiresApi(api = Build.VERSION_CODES.P)
+    private void initialize28(@NonNull final KeyPairGenerator keyPairGenerator,
+                              final int keySize,
+                              final boolean useStrongbox,
+                              final boolean enableImport) throws InvalidAlgorithmParameterException {
+        int purposes = KeyProperties.PURPOSE_SIGN
+                | KeyProperties.PURPOSE_VERIFY
+                | KeyProperties.PURPOSE_ENCRYPT
+                | KeyProperties.PURPOSE_DECRYPT;
+        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+        }
+        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
+                mKeyManager.getKeyAlias(), purposes)
+                .setKeySize(keySize)
+                .setSignaturePaddings(
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
+                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                )
+                .setDigests(
+                        KeyProperties.DIGEST_MD5,
+                        KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_SHA1,
+                        KeyProperties.DIGEST_SHA256,
+                        KeyProperties.DIGEST_SHA384,
+                        KeyProperties.DIGEST_SHA512
+                ).setEncryptionPaddings(
+                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
+                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+                );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder = setAttestationChallenge(builder);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
+            Logger.verbose(
+                    TAG,
+                    "Attempting to apply StrongBox isolation."
+            );
+            builder = applyHardwareIsolation(builder);
+        }
+
+        final AlgorithmParameterSpec spec = builder.build();
+        keyPairGenerator.initialize(spec);
+    }
+
 
     @SuppressLint("NewApi")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)

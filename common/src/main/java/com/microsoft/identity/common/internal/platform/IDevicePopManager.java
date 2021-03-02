@@ -133,12 +133,24 @@ public interface IDevicePopManager {
     /**
      * Ciphers supported by our underlying keystore. Asymmetric ciphers shown only.
      * <p>
-     * Note: Some ciphers are [in]conspicuously absent. Any cipher that requires use of a SHA-1
-     * digest or uses NO_PADDING will not be supported.
+     * Note: Some ciphers <strong>should not</strong> be used to generate an SHR. Any cipher that
+     * requires use of a SHA-1 digest or uses NO_PADDING should not be supported.
      */
     enum Cipher implements AsymmetricAlgorithm {
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
+
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_NONE_OAEPWithSHA_1AndMGF1Padding("RSA/NONE/OAEPWithSHA-1AndMGF1Padding") {
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec(SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        },
 
         @RequiresApi(Build.VERSION_CODES.M)
         RSA_ECB_OAEPWithSHA_1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding") {
@@ -207,6 +219,11 @@ public interface IDevicePopManager {
         public AlgorithmParameterSpec getParameters() {
             return null;
         }
+
+        /**
+         * @return true if this cipher can be used for SHR generation.
+         */
+        public boolean supportsShr() { return true; }
     }
 
     /**

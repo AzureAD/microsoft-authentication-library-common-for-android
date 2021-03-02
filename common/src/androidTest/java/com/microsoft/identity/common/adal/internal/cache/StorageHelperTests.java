@@ -144,7 +144,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         // try different block sizes
         final int sizeRange = 1000;
         StringBuilder buf = new StringBuilder(sizeRange);
-        for (int i = 0; i < sizeRange; i++) {
+        for (int i = 0; i < sizeRange; i+=20) {
             encryptDecrypt(buf.append("a").toString());
         }
         Log.d(TAG, "Finished testEncryptDecrypt_differentSizes");

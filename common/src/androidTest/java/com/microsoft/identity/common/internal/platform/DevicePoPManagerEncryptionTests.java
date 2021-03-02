@@ -43,10 +43,12 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_384AndMGF1Padding;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_512AndMGF1Padding;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
+import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
@@ -70,6 +72,8 @@ public class DevicePoPManagerEncryptionTests {
         //https://stackoverflow.com/questions/36015194/android-keystoreexception-unknown-error -
         //https://issuetracker.google.com/issues/37075898
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            ciphers.add(RSA_NONE_OAEPWithSHA_1AndMGF1Padding);
+            ciphers.add(RSA_ECB_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
