@@ -154,7 +154,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
 
         try {
             return mKeyStore.getCertificateChain(mKeyAlias);
-        } catch (@NonNull final KeyStoreException e) {
+        } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
         }
