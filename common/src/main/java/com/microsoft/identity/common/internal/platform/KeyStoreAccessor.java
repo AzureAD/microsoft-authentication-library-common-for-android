@@ -26,13 +26,14 @@ import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
+import android.security.keystore.StrongBoxUnavailableException;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
-import com.nimbusds.jwt.EncryptedJWT;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -42,8 +43,10 @@ import java.security.KeyStoreException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.text.ParseException;
 import java.util.UUID;
@@ -89,7 +92,7 @@ public class KeyStoreAccessor {
             return getKeyAccessor((IDevicePopManager.Cipher) suite, popManager);
         }
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
-        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+        final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance), suite);
         return new SecretKeyAccessor(keyManager, suite) {
             @Override
             public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {
@@ -140,6 +143,16 @@ public class KeyStoreAccessor {
             public byte[] getThumprint() throws ClientException {
                 return popManager.getAsymmetricKeyThumbprint().getBytes(UTF8);
             }
+
+            @Override
+            public Certificate[] getCertificateChain() throws ClientException {
+                return popManager.getCertificateChain();
+            }
+
+            @Override
+            public SecureHardwareState getSecureHardwareState() throws ClientException {
+                return popManager.getSecureHardwareState();
+            }
         };
     }
 
@@ -173,21 +186,43 @@ public class KeyStoreAccessor {
      */
     public static KeyAccessor newInstance(@NonNull final SymmetricCipher cipher, @NonNull final boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
         String alias = UUID.randomUUID().toString();
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M && !needRawAccess) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !needRawAccess) {
             final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
             instance.load(null);
             String[] params = cipher.cipherName().split("/");
             KeyGenerator generator = KeyGenerator.getInstance(params[0], ANDROID_KEYSTORE);
-            KeyGenParameterSpec spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
-                    .setKeySize(cipher.keySize())
-                    .setBlockModes(params[1])
-                    .setEncryptionPaddings(params[2])
-                    .setKeySize(cipher.keySize())
-                    .build();
-            generator.init(spec);
-            generator.generateKey();
+            KeyGenParameterSpec spec = null;
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
+                            .setIsStrongBoxBacked(true)
+                            .setKeySize(cipher.keySize())
+                            .setBlockModes(params[1])
+                            .setEncryptionPaddings(params[2])
+                            .setKeySize(cipher.keySize())
+                            .build();
+                }
+                generator.init(spec);
+                generator.generateKey();
+            } catch (final ProviderException e) {
+                if (e.getClass().getSimpleName().equals("StrongBoxUnavailableException")) {
+                    spec = null;
+                } else {
+                    throw e;
+                }
+            }
+            if (spec == null) {
+                spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
+                        .setKeySize(cipher.keySize())
+                        .setBlockModes(params[1])
+                        .setEncryptionPaddings(params[2])
+                        .setKeySize(cipher.keySize())
+                        .build();
+                generator.init(spec);
+                generator.generateKey();
+            }
 
-            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance));
+            final DeviceKeyManager<KeyStore.SecretKeyEntry> keyManager = new DeviceKeyManager<>(instance, alias, symmetricThumbprint(alias, instance), cipher);
             return new SecretKeyAccessor(keyManager, cipher) {
                 @Override
                 public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException {

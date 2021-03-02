@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.security.cert.Certificate;
+
 /**
  * Interface for utilizing keys.
  */
@@ -33,14 +35,14 @@ public interface KeyAccessor {
      * @param plaintext the plaintext to encrypt.
      * @return the encrypted byte array.
      */
-    public byte[] encrypt(byte[] plaintext) throws ClientException;
+    byte[] encrypt(byte[] plaintext) throws ClientException;
 
     /**
      * Decrypt a blob of ciphertext, returning the decrypted values.
      * @param ciphertext the blob of ciphertext to decrypt.
      * @return the decrypted byte array.
      */
-    public byte[] decrypt(byte[] ciphertext) throws ClientException;
+    byte[] decrypt(byte[] ciphertext) throws ClientException;
 
     /**
      * Sign a block of data, returning the signature.
@@ -48,7 +50,7 @@ public interface KeyAccessor {
      * @param alg the algorithm to use for signing.
      * @return the signature, as a byte array.
      */
-    public byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException;
+    byte[] sign(byte[] text, IDevicePopManager.SigningAlgorithm alg) throws ClientException;
 
     /**
      * Verify a signature, returning the
@@ -57,10 +59,21 @@ public interface KeyAccessor {
      * @param signature
      * @return
      */
-    public boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException;
+    boolean verify(byte[] text, IDevicePopManager.SigningAlgorithm alg, byte[] signature) throws ClientException;
 
     /**
      * @return a thumbprint for this key.
      */
-    public byte[] getThumprint() throws ClientException;
-}
+    byte[] getThumprint() throws ClientException;
+
+
+    /**
+     * @return the certificate chain for this key, if it exists.
+     */
+    Certificate[] getCertificateChain() throws ClientException;
+
+    /**
+     * @return a {@link SecureHardwareState} object representing the status of this key.
+     */
+    SecureHardwareState getSecureHardwareState() throws ClientException;
+ }

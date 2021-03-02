@@ -31,8 +31,6 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Base64InputStream;
-import android.util.Base64OutputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -56,14 +54,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PipedInputStream;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -86,7 +77,6 @@ import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.MGF1ParameterSpec;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
@@ -96,12 +86,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.OAEPParameterSpec;
-import javax.crypto.spec.PSource;
 import javax.security.auth.x500.X500Principal;
 
 import lombok.SneakyThrows;
@@ -117,7 +103,6 @@ import static com.microsoft.identity.common.exception.ClientException.INVALID_BL
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
@@ -126,7 +111,6 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PA
 import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
-import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 

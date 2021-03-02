@@ -23,32 +23,40 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
-import android.security.keystore.KeyProperties;
-import android.security.keystore.KeyProtection;
+import android.security.keystore.KeyInfo;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
 
+import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.Arrays;
 import java.util.Date;
 
-import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.SecretKey;
+import javax.crypto.SecretKeyFactory;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
+import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_ERROR;
 
 /**
  * A manager class for providing access to a particular entry in a KeyStore.
+ *
  * @param <K> the type of KeyStore.Entry being managed.
  */
 @Accessors(prefix = "m")
@@ -56,18 +64,21 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
 
     private static final String TAG = DeviceKeyManager.class.getSimpleName();
     private final KeyStore mKeyStore;
-
-    @Builder
-    public DeviceKeyManager(@NonNull final KeyStore keyStore, @NonNull final String keyAlias,
-                            @NonNull final Supplier<byte[]> thumbprintSupplier) throws KeyStoreException {
-        this.mKeyAlias = keyAlias;
-        this.mThumbprintSupplier = thumbprintSupplier;
-        this.mKeyStore = keyStore;
-    }
-
     @Getter
     private final String mKeyAlias;
     private final Supplier<byte[]> mThumbprintSupplier;
+    private final CryptoSuite mSuite;
+
+    @Builder
+    public DeviceKeyManager(@NonNull final KeyStore keyStore, @NonNull final String keyAlias,
+                            @NonNull final Supplier<byte[]> thumbprintSupplier,
+                            @NonNull final CryptoSuite suite) throws KeyStoreException {
+        this.mKeyAlias = keyAlias;
+        this.mThumbprintSupplier = thumbprintSupplier;
+        this.mKeyStore = keyStore;
+        this.mSuite = suite;
+    }
+
 
     @Override
     public boolean exists() {
@@ -127,6 +138,7 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
 
     /**
      * Retrieve the entry stored in this particular alias.
+     *
      * @return the Entry in question, or null if the entry does not exist.
      * @throws UnrecoverableEntryException
      * @throws NoSuchAlgorithmException
@@ -174,4 +186,90 @@ public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K
         throw clientException;
 
     }
+
+    /**
+     * Gets the {@link SecureHardwareState} of this key.
+     *
+     * @return The SecureHardwareState.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    @Override
+    public SecureHardwareState getSecureHardwareState() throws ClientException {
+        final String errCode;
+        final Exception exception;
+
+        try {
+            KeyStore.Entry entry = getEntry();
+            if (entry instanceof KeyStore.PrivateKeyEntry) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    try {
+                        final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
+                        final KeyFactory factory = KeyFactory.getInstance(
+                                mSuite.cipherName(), mKeyStore.getProvider()
+                        );
+                        final KeyInfo info = factory.getKeySpec(privateKey, KeyInfo.class);
+                        final boolean isInsideSecureHardware = info.isInsideSecureHardware();
+                        Logger.info(TAG, "PrivateKey is secure hardware backed? " + isInsideSecureHardware);
+                        return isInsideSecureHardware
+                                ? SecureHardwareState.TRUE_UNATTESTED
+                                : SecureHardwareState.FALSE;
+                    } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        Logger.error(TAG, "Failed to query secure hardware state.", e);
+                        return SecureHardwareState.UNKNOWN_QUERY_ERROR;
+                    }
+                } else {
+                    Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+                }
+
+                return SecureHardwareState.UNKNOWN_DOWNLEVEL;
+            } else if (entry instanceof KeyStore.SecretKeyEntry) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    try {
+                        final SecretKey privateKey = ((KeyStore.SecretKeyEntry) entry).getSecretKey();
+                        final SecretKeyFactory factory = SecretKeyFactory.getInstance(
+                                privateKey.getAlgorithm(), mKeyStore.getProvider()
+                        );
+                        final KeyInfo info = (KeyInfo) factory.getKeySpec(privateKey, KeyInfo.class);
+                        final boolean isInsideSecureHardware = info.isInsideSecureHardware();
+                        Logger.info(TAG, "SecretKey is secure hardware backed? " + isInsideSecureHardware);
+                        return isInsideSecureHardware
+                                ? SecureHardwareState.TRUE_UNATTESTED
+                                : SecureHardwareState.FALSE;
+                    } catch (final NoSuchAlgorithmException | InvalidKeySpecException e) {
+                        Logger.error(TAG, "Failed to query secure hardware state.", e);
+                        return SecureHardwareState.UNKNOWN_QUERY_ERROR;
+                    }
+                } else {
+                    Logger.info(TAG, "Cannot query secure hardware state (API unavailable <23)");
+                }
+                return SecureHardwareState.UNKNOWN_DOWNLEVEL;
+            } else {
+                throw new ClientException(UNKNOWN_ERROR, "Cannot handle entries of type " + entry.getClass().getCanonicalName());
+            }
+        } catch (final KeyStoreException e) {
+            errCode = KEYSTORE_NOT_INITIALIZED;
+            exception = e;
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final UnrecoverableEntryException e) {
+            errCode = INVALID_PROTECTION_PARAMS;
+            exception = e;
+        }
+
+        final ClientException clientException = new ClientException(
+                errCode,
+                exception.getMessage(),
+                exception
+        );
+
+        Logger.error(
+                TAG + ":getSecureHardwareState",
+                errCode,
+                exception
+        );
+
+        throw clientException;
+    }
+
 }

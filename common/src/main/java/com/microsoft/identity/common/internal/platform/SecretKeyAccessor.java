@@ -37,6 +37,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Signature;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -184,5 +185,15 @@ public class SecretKeyAccessor implements KeyAccessor {
     @Override
     public byte[] getThumprint() throws ClientException {
         return mKeyManager.getThumbprint();
+    }
+
+    @Override
+    public Certificate[] getCertificateChain() throws ClientException {
+        return mKeyManager.getCertificateChain();
+    }
+
+    @Override
+    public SecureHardwareState getSecureHardwareState() throws ClientException {
+        return mKeyManager.getSecureHardwareState();
     }
 }

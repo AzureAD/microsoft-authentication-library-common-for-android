@@ -98,4 +98,13 @@ public interface IKeyManager<K extends KeyStore.Entry> {
      * @return a certificate chain associated with this key, or null if no chain is tied to it.
      */
     Certificate[] getCertificateChain() throws ClientException;
+
+    /**
+     * Gets the {@link SecureHardwareState} of this key.
+     *
+     * @return The SecureHardwareState.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    SecureHardwareState getSecureHardwareState() throws ClientException;
+
 }

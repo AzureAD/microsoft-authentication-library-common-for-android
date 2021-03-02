@@ -32,8 +32,10 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -41,6 +43,7 @@ import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.Mac;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -53,6 +56,7 @@ import static com.microsoft.identity.common.exception.ClientException.INVALID_BL
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.internal.platform.KeyStoreAccessor.UTF8;
 
 /**
  * Key accessor for using a raw symmetric key.
@@ -72,12 +76,12 @@ public class RawKeyAccessor implements KeyAccessor {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipherName());
-            final Cipher c = Cipher.getInstance(key.getAlgorithm());
+            final SecretKeySpec keySpec = new SecretKeySpec(key, suite.cipherName());
+            final Cipher c = Cipher.getInstance(keySpec.getAlgorithm());
             final byte[] iv = new byte[12];
             mRandom.nextBytes(iv);
             final IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            c.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+            c.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
             c.update(plaintext);
             byte[] tmp = c.doFinal();
             final byte[] output = new byte[iv.length + tmp.length];
@@ -166,7 +170,38 @@ public class RawKeyAccessor implements KeyAccessor {
 
     @Override
     public byte[] getThumprint() throws ClientException {
-        return new byte[0];
+        final SecretKey keySpec = new SecretKeySpec(key, suite.cipherName());
+        final Cipher cipher;
+        final String errCode;
+        final Exception exception;
+        try {
+            cipher = Cipher.getInstance(keySpec.getAlgorithm());
+            final MessageDigest digest = MessageDigest.getInstance("SHA256");
+            return digest.digest(cipher.doFinal((keySpec.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8)));
+        } catch (final NoSuchAlgorithmException e) {
+            errCode = NO_SUCH_ALGORITHM;
+            exception = e;
+        } catch (final NoSuchPaddingException e) {
+            errCode = NO_SUCH_PADDING;
+            exception = e;
+        } catch (final BadPaddingException e) {
+            errCode = BAD_PADDING;
+            exception = e;
+        } catch (final IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        }
+        throw new ClientException(errCode, exception.getMessage(), exception);
+    }
+
+    @Override
+    public Certificate[] getCertificateChain() {
+        return null;
+    }
+
+    @Override
+    public SecureHardwareState getSecureHardwareState() {
+        return SecureHardwareState.FALSE;
     }
 
     private static byte[] deriveKey(byte[] keyDerivationKey, byte[] fixedInput)

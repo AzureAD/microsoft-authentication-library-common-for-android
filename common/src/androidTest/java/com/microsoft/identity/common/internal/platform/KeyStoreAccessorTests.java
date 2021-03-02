@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
+import android.os.Build;
 
 import androidx.test.InstrumentationRegistry;
 
@@ -32,6 +33,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.security.SecureRandom;
+import java.security.cert.Certificate;
 
 public class KeyStoreAccessorTests {
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -44,6 +46,8 @@ public class KeyStoreAccessorTests {
         byte[] out = accessor.encrypt(in);
         byte[] around = accessor.decrypt(out);
         Assert.assertArrayEquals(in, around);
+        Assert.assertNull(accessor.getCertificateChain());
+        Assert.assertEquals(SecureHardwareState.FALSE, accessor.getSecureHardwareState());
     }
 
     @Test
@@ -54,6 +58,8 @@ public class KeyStoreAccessorTests {
         byte[] out = accessor.encrypt(in);
         byte[] around = accessor.decrypt(out);
         Assert.assertArrayEquals(in, around);
+        Assert.assertNull(accessor.getCertificateChain());
+        Assert.assertTrue(accessor.getSecureHardwareState() instanceof SecureHardwareState);
     }
 
     @Test
