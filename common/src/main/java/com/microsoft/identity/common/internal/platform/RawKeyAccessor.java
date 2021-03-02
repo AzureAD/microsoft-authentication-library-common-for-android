@@ -90,7 +90,7 @@ public class RawKeyAccessor implements KeyAccessor {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (IllegalBlockSizeException e) {
+        } catch (final IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
             exception = e;
         } catch (BadPaddingException e) {
