@@ -97,9 +97,10 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
         super.setUp();
         final Context testContext = InstrumentationRegistry.getTargetContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = new SharedPreferencesFileManager(
+        mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 testContext,
                 sAccountCredentialSharedPreferences,
+                -1,
                 new StorageHelper(testContext) // Use encrypted storage for tests...
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(

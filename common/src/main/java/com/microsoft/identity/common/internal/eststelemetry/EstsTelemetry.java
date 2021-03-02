@@ -214,9 +214,11 @@ public class EstsTelemetry {
         );
 
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         context,
-                        LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES
+                        LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES,
+                        -1,
+                        null
                 );
 
         return new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);
