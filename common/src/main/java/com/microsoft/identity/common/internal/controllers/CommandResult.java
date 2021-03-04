@@ -46,8 +46,8 @@ public class CommandResult {
         }
     }
 
-    private ResultStatus mStatus;
-    private Object mResult;
+    private final ResultStatus mStatus;
+    private final Object mResult;
     private final String mCorrelationId;
 
     public CommandResult(ResultStatus status, Object result) {

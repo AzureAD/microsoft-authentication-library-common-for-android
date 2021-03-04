@@ -149,8 +149,10 @@ public final class Logger {
      * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
      */
     public static String getDiagnosticContextMetadata() {
-        return DiagnosticContext.THREAD_NAME + " : " + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.THREAD_NAME, "UNSET") + ", " +
-                DiagnosticContext.CORRELATION_ID + " : " + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.CORRELATION_ID, "UNSET");
+        return DiagnosticContext.THREAD_NAME + " : "
+                + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.THREAD_NAME, "UNSET") + ", "
+                + DiagnosticContext.CORRELATION_ID + " : "
+                + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.CORRELATION_ID, "UNSET");
     }
 
     /**
