@@ -36,7 +36,9 @@ public class SignUtil {
      * @return Signature[] or null
      */
     public static Signature[] getSignatures(PackageInfo packageInfo) {
-        if (packageInfo == null) return null;
+        if (packageInfo == null) {
+            return null;
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             if (packageInfo.signingInfo == null) {
