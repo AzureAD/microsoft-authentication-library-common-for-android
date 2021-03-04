@@ -253,14 +253,15 @@ public class BrowserSelectorTest {
         }
 
         public TestBrowser build() {
-            PackageInfo pi = new PackageInfo();
-            pi.packageName = mPackageName;
-            pi.versionName = mVersion;
-            pi.signatures = new Signature[mSignatures.size()];
+            Signature [] signatures = new Signature[mSignatures.size()];
 
             for (int i = 0; i < mSignatures.size(); i++) {
-                pi.signatures[i] = new Signature(mSignatures.get(i));
+                signatures[i] = new Signature(mSignatures.get(i));
             }
+
+            PackageInfo pi = Util.addSignatures(new PackageInfo(), signatures);
+            pi.packageName = mPackageName;
+            pi.versionName = mVersion;
 
             Set<String> signatureHashes = Browser.generateSignatureHashes(pi.signatures);
 

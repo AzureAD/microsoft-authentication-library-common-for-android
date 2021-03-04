@@ -41,6 +41,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.SignUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.ByteArrayInputStream;
@@ -218,14 +219,14 @@ public class BrokerValidator {
                     "No broker package existed.");
         }
 
-        //.signatures has been deprecated
-        if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
+        Signature [] signatures = SignUtil.getSignatures(packageInfo);
+        if (signatures == null || signatures.length == 0) {
             throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
         }
 
-        final List<X509Certificate> certificates = new ArrayList<>(packageInfo.signatures.length);
-        for (final Signature signature : packageInfo.signatures) {
+        final List<X509Certificate> certificates = new ArrayList<>(signatures.length);
+        for (final Signature signature : signatures) {
             final byte[] rawCert = signature.toByteArray();
             final InputStream certStream = new ByteArrayInputStream(rawCert);
 

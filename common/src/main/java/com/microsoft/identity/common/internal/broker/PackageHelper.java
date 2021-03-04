@@ -35,6 +35,7 @@ import android.util.Base64;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.SignUtil;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -71,9 +72,10 @@ public class PackageHelper {
             //GET_SIGNATURES is deprecated
             PackageInfo info = mPackageManager.getPackageInfo(packageName,
                     PackageManager.GET_SIGNATURES);
-            //.signatures is deprecated
-            if (info != null && info.signatures != null && info.signatures.length > 0) {
-                Signature signature = info.signatures[0];
+
+            Signature [] signatures = SignUtil.getSignatures(info);
+            if (signatures != null && signatures.length > 0) {
+                Signature signature = signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);

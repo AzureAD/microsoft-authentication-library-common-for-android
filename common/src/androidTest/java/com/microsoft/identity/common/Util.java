@@ -23,10 +23,18 @@
 
 package com.microsoft.identity.common;
 
+import android.content.pm.PackageInfo;
+import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
+import android.os.Build;
+
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Util class for unit test.
@@ -48,4 +56,23 @@ public final class Util {
         return new URL(Util.VALID_AUTHORITY);
     }
 
+    /**
+     * Utility for adding signatures to a passed PackageInfo in a back-compatible way
+     *
+     * @param packageInfo to add signatures to
+     * @param signatures the signatures to add
+     * @return PackageInfo with signatures added
+     */
+    public static PackageInfo addSignatures(PackageInfo packageInfo, Signature[] signatures) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            packageInfo.signatures = signatures;
+            return packageInfo;
+        }
+
+        SigningInfo signingInfo = mock(SigningInfo.class);
+        when(signingInfo.hasMultipleSigners()).thenReturn(false);
+        when(signingInfo.getSigningCertificateHistory()).thenReturn(signatures);
+        packageInfo.signingInfo = signingInfo;
+        return packageInfo;
+    }
 }

@@ -28,6 +28,8 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.internal.util.SignUtil;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
@@ -68,13 +70,13 @@ public class Browser {
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo) {
         //.signatures has been deprecated
-        this(packageInfo.packageName, generateSignatureHashes(packageInfo.signatures), packageInfo.versionName, false);
+        this(packageInfo.packageName, generateSignatureHashes(SignUtil.getSignatures(packageInfo)), packageInfo.versionName, false);
     }
 
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo, final Boolean isCustomTabsServiceSupported) {
         //.signatures has been deprecated
-        this(packageInfo.packageName, generateSignatureHashes(packageInfo.signatures), packageInfo.versionName, isCustomTabsServiceSupported);
+        this(packageInfo.packageName, generateSignatureHashes(SignUtil.getSignatures(packageInfo)), packageInfo.versionName, isCustomTabsServiceSupported);
     }
 
     /**
