@@ -408,7 +408,7 @@ public class CommandDispatcher {
      * @param handler
      */
     private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command,
-                                            final CommandResult result, Handler handler) {
+                                            final CommandResult result, @NonNull final Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
