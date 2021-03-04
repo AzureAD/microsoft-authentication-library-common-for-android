@@ -141,8 +141,9 @@ public class PackageHelper {
         if (!StringExtensions.isNullOrBlank(packageName)
                 && !StringExtensions.isNullOrBlank(signatureDigest)) {
             // If the caller is the Authenticator, then use the broker redirect URI.
-            if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME) &&
-                    signatureDigest.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_SIGNATURE)) {
+            if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
+                    && (signatureDigest.equals(BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash)
+                    || signatureDigest.equals(BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash))) {
                 return AuthenticationConstants.Broker.BROKER_REDIRECT_URI;
             }
 

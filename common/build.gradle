@@ -22,7 +22,19 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 android {
-
+//
+//    testOptions {
+//        compileOptions {
+//            // Flag to enable support for the new language APIs
+//            coreLibraryDesugaringEnabled true
+//            // Sets Java compatibility to Java 8
+//            sourceCompatibility JavaVersion.VERSION_1_8
+//            targetCompatibility JavaVersion.VERSION_1_8
+//        }
+//        dependencies {
+//            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+//        }
+//    }
     /*
     //Commenting out until the next major version of common/msal/etc...
     compileOptions {
@@ -63,20 +75,8 @@ android {
     buildTypes {
         debug {
             //testCoverageEnabled true
-            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"N1jdcbbnKDr0LaFZlqdhXgm2luE=\"")
-            buildConfigField("String", "AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1wIqXSqBj7w+h11ZifsnqwgyKrY=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.identity.testuserapp\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
         }
         release {
-            buildConfigField("String", "AZURE_AUTHENTICATOR_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
-            buildConfigField("String", "AZURE_AUTHENTICATOR_PROD_APP_SIGNATURE", "\"ho040S3ffZkmxqtQrSwpTVOn9r0=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
-            buildConfigField("String", "COMPANY_PORTAL_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_SIGNATURE", "\"1L4Z9FJCgn5c0VLhyAxC5O9LdlE=\"")
-            buildConfigField("String", "COMPANY_PORTAL_PROD_APP_PACKAGE_NAME", "\"com.microsoft.windowsintune.companyportal\"")
             minifyEnabled false
             debuggable false
             //testCoverageEnabled true

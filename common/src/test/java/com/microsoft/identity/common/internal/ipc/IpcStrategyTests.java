@@ -22,11 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
+import android.accounts.AccountManager;
+import android.content.Intent;
 import android.os.BaseBundle;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
@@ -89,11 +92,46 @@ public abstract class IpcStrategyTests {
         return bundle;
     }
 
+    // Taken from PR: https://github.com/AzureAD/ad-accounts-for-android/pull/1298/files
+    public static Intent getMockLegacyInteractiveRequestResultIntent() {
+        final Intent intent = new Intent();
+        intent.setPackage("MOCK_PACKAGE");
+        intent.setClassName("MOCK_PACKAGE", "MOCK_CLASSNAME");
+        intent.putExtra(AuthenticationConstants.Broker.BROKER_VERSION, AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION);
+        intent.putExtra(AuthenticationConstants.Broker.CALLER_INFO_UID, 0);
+        intent.putExtra(AuthenticationConstants.Broker.BROKER_DEVICE_MODE, false);
+        return intent;
+    }
+
+    public static Intent getMockInteractiveRequestResultIntent() {
+        final Intent intent = new Intent();
+        intent.setPackage("MOCK_PACKAGE");
+        intent.setClassName("MOCK_PACKAGE", "MOCK_CLASSNAME");
+        intent.putExtras(getMockInteractiveRequestResultBundle());
+        return intent;
+    }
+
+    public static Bundle getMockInteractiveRequestResultBundle() {
+        final Bundle bundle = new Bundle();
+        bundle.putString(AuthenticationConstants.Broker.BROKER_VERSION, AuthenticationConstants.Broker.BROKER_PROTOCOL_VERSION);
+        bundle.putInt(AuthenticationConstants.Broker.CALLER_INFO_UID, 0);
+        bundle.putBoolean(AuthenticationConstants.Broker.BROKER_DEVICE_MODE, false);
+        bundle.putString(AuthenticationConstants.Broker.BROKER_PACKAGE_NAME, "MOCK_PACKAGE");
+        bundle.putString(AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME, "MOCK_CLASSNAME");
+        return bundle;
+    }
+
     protected void testOperationSucceeds(@NonNull final BrokerOperationBundle bundle) {
+        testOperationSucceeds(bundle, getMockIpcResultBundle());
+    }
+
+    protected void testOperationSucceeds(@NonNull final BrokerOperationBundle bundle,
+                                         @NonNull final Bundle expectedResultBundle) {
         final IIpcStrategy strategy = getStrategy();
         try {
             final Bundle resultBundle = strategy.communicateToBroker(bundle);
-            Assert.assertTrue(isBundleEqual(resultBundle, getMockIpcResultBundle()));
+            Assert.assertNotNull(resultBundle);
+            Assert.assertTrue(isBundleEqual(resultBundle, expectedResultBundle));
         } catch (BaseException e) {
             Assert.fail("Exception is not expected.");
         }

@@ -1,6 +1,19 @@
 V.Next
 ----------
 
+Version 3.1.2
+----------
+- [PATCH] Use requested claims as a cache key when overwriting an AT (#1225)
+- [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
+- [MINOR] Adds support for cache property merging (#1224)
+- [PATCH] Trim() Cache Lookup Input Parameters (#1228)
+- [MINOR] Adds workaround for Mockito.openMocks() desugaring issue (#1229)
+- [PATCH] Fix bug where duplicate BrokerApplicationMetadata entries could be created for a single app (#1232)
+- [MINOR] Changes to Broker Validation to allow setting whether to trust debug brokers (prod brokers are always trusted).
+- [MINOR] Adds support for launching Broker auth Activity without an Activity Context from OneAuth-MSAL by setting FLAG_ACTIVITY_NEW_TASK (#1236)
+- [MINOR] Adds PRT storage support for MSALCPP(#1177)
+- [PATCH] Replaced deprecated PackageInfo.versionCode with PackageInfoCompat.getLongVersionCode(packageInfo) (#1239)
+
 Version 3.1.0
 ----------
 - [PATCH] Discontinue using Settings.Secure.ANDROID_ID in telemetry. Instead, generate & cache a random GUID. (#1214)
