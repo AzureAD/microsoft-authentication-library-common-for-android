@@ -25,11 +25,11 @@
 import lombok.NonNull;
 
 /**
- * Marker interface for Symmetric algortihm classes.
+ * Marker interface for Symmetric algorithm classes.
  */
-public interface SymmetricAlgorithm extends Algorithm {
+public abstract class SymmetricAlgorithm implements Algorithm {
     @Override
-    String name();
+    public abstract String name();
     
     static SymmetricAlgorithm of(@NonNull final String name) {
         return new SymmetricAlgorithm() {
@@ -39,5 +39,4 @@ public interface SymmetricAlgorithm extends Algorithm {
             }
         };
     }
-
 }
