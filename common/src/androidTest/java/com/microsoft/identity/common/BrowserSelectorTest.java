@@ -253,7 +253,7 @@ public class BrowserSelectorTest {
         }
 
         public TestBrowser build() {
-            Signature [] signatures = new Signature[mSignatures.size()];
+            Signature[] signatures = new Signature[mSignatures.size()];
 
             for (int i = 0; i < mSignatures.size(); i++) {
                 signatures[i] = new Signature(mSignatures.get(i));

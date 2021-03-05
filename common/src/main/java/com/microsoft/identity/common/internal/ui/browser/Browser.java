@@ -69,13 +69,11 @@ public class Browser {
      */
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo) {
-        //.signatures has been deprecated
         this(packageInfo.packageName, generateSignatureHashes(SignUtil.getSignatures(packageInfo)), packageInfo.versionName, false);
     }
 
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo, final Boolean isCustomTabsServiceSupported) {
-        //.signatures has been deprecated
         this(packageInfo.packageName, generateSignatureHashes(SignUtil.getSignatures(packageInfo)), packageInfo.versionName, isCustomTabsServiceSupported);
     }
 
