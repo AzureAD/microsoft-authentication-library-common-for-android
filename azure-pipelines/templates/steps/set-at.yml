@@ -1,9 +1,0 @@
-# File: set-at.yml
-
-steps:
-- task: CmdLine@1
-  displayName: Set MVN Access Token in Environment
-  inputs:
-    filename: echo
-    arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDADACCOUNTS_ACCESSTOKEN]$(mvnAccessToken)'
-
