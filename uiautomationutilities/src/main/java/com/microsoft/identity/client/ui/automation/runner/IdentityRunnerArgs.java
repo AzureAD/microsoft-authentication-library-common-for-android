@@ -26,6 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 
 /**
@@ -35,8 +36,8 @@ public class IdentityRunnerArgs {
 
     private final static String TAG = IdentityRunnerArgs.class.getSimpleName();
 
-    private static boolean sPreferPreInstalledApks = false;
-    private static String sBrokerSource = AppInstallSource.PlayStore.getName();
+    private static boolean sPreferPreInstalledApks = BuildConfig.PREFER_PRE_INSTALLED_APKS;
+    private static String sBrokerSource = BuildConfig.BROKER_INSTALL_SOURCE;
 
     /**
      * Set whether the test runner should prefer pre installed apks when installing broker apps etc.
