@@ -153,10 +153,10 @@ public final class Logger {
         String threadName = DiagnosticContext.getRequestContext().get(DiagnosticContext.THREAD_NAME);
         String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
 
-        if(StringUtil.isEmpty(threadName)){
+        if (StringUtil.isEmpty(threadName)) {
             threadName = "UNSET";
         }
-        if(StringUtil.isEmpty(correlationId)){
+        if (StringUtil.isEmpty(correlationId)) {
             correlationId = "UNSET";
         }
 
