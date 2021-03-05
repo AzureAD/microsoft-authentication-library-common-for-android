@@ -22,23 +22,49 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import androidx.annotation.Nullable;
+
 public class CommandResult {
 
-    public enum ResultStatus { CANCEL, COMPLETED, ERROR };
-
-    private ResultStatus mStatus;
-    private Object mResult;
-
-    public CommandResult(ResultStatus status, Object result){
-        mStatus = status;
-        mResult = result;
+    public String getCorrelationId() {
+        return mCorrelationId;
     }
 
-    public ResultStatus getStatus(){
+    public enum ResultStatus {
+        CANCEL,
+        COMPLETED,
+        ERROR;
+
+        public String getLogStatus() {
+            if (ResultStatus.COMPLETED == this) {
+                return "SUCCESS";
+            } else if (ResultStatus.ERROR == this) {
+                return "ERROR";
+            } else {
+                return "CANCEL";
+            }
+        }
+    }
+
+    private final ResultStatus mStatus;
+    private final Object mResult;
+    private final String mCorrelationId;
+
+    public CommandResult(ResultStatus status, Object result) {
+        this(status, result, null);
+    }
+
+    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
+        mStatus = status;
+        mResult = result;
+        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
+    }
+
+    public ResultStatus getStatus() {
         return mStatus;
     }
 
-    public Object getResult(){
+    public Object getResult() {
         return mResult;
     }
 

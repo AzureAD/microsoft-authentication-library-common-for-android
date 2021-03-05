@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.logging;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -140,6 +141,21 @@ public final class Logger {
     }
 
     /**
+     * Get only the required metadata from the DiagnosticContext
+     * to plug it in the log lines.
+     * Here we are considering the correlation_id and the thread_name.
+     * The need for this is because DiagnosticContext contains additional metadata which is not always required to be logged.
+     *
+     * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
+     */
+    public static String getDiagnosticContextMetadata() {
+        return DiagnosticContext.THREAD_NAME + " : "
+                + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.THREAD_NAME, "UNSET") + ", "
+                + DiagnosticContext.CORRELATION_ID + " : "
+                + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.CORRELATION_ID, "UNSET");
+    }
+
+    /**
      * Send a {@link LogLevel#ERROR} log message without PII.
      *
      * @param tag          Used to identify the source of a log message.
@@ -153,7 +169,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.ERROR,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 errorMessage,
                 exception,
                 false
@@ -196,7 +212,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.ERROR,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 errorMessage,
                 exception,
                 true
@@ -237,7 +253,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.WARN,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 message,
                 null,
                 false
@@ -276,7 +292,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.WARN,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 message,
                 null,
                 true
@@ -315,7 +331,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.INFO,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 message,
                 null,
                 false
@@ -347,7 +363,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.INFO,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 message,
                 null,
                 true
@@ -379,7 +395,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.VERBOSE,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 message,
                 null,
                 false
@@ -418,7 +434,7 @@ public final class Logger {
         getInstance().log(
                 tag,
                 LogLevel.VERBOSE,
-                DiagnosticContext.getRequestContext().toJsonString(),
+                getDiagnosticContextMetadata(),
                 message,
                 null,
                 true
@@ -452,6 +468,9 @@ public final class Logger {
                      @Nullable final String message,
                      @Nullable final Throwable throwable,
                      final boolean containsPII) {
+
+        final String dateTimeStamp = getUTCDateTimeAsString();
+
         sLogExecutor.execute(new Runnable() {
             @Override
             public void run() {
@@ -466,7 +485,7 @@ public final class Logger {
                 }
 
                 //Format the log message.
-                final String logMessage = formatMessage(correlationID, message, throwable);
+                final String logMessage = formatMessage(correlationID, message, dateTimeStamp, throwable);
 
                 // Send logs into Logcat.
                 if (sAllowLogcat) {
@@ -499,9 +518,10 @@ public final class Logger {
      */
     private String formatMessage(@Nullable final String correlationID,
                                  @Nullable final String message,
+                                 @NonNull final String dateTimeStamp,
                                  @Nullable final Throwable throwable) {
         final String logMessage = StringExtensions.isNullOrBlank(message) ? "N/A" : message;
-        return " [" + getUTCDateTimeAsString()
+        return " [" + dateTimeStamp
                 + (StringExtensions.isNullOrBlank(correlationID) ? "] " : " - " + correlationID + "] ")
                 + logMessage
                 + " Android " + Build.VERSION.SDK_INT

@@ -25,7 +25,8 @@ package com.microsoft.identity.common.internal.logging;
 public final class DiagnosticContext {
 
     public static final String CORRELATION_ID = "correlation_id";
-    private static final String THREAD_ID = "thread_id";
+    public static final String THREAD_ID = "thread_id";
+    public static final String THREAD_NAME = "thread_name";
 
     private DiagnosticContext() {
     }
@@ -52,6 +53,7 @@ public final class DiagnosticContext {
         }
 
         requestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
+        requestContext.put(THREAD_NAME, Thread.currentThread().getName());
         REQUEST_CONTEXT_THREAD_LOCAL.set(requestContext);
     }
 
@@ -61,21 +63,25 @@ public final class DiagnosticContext {
      * @return IRequestContext
      */
     public static IRequestContext getRequestContext() {
-        if (!hasThreadId()) {
-            setThreadId();
+        if (!hasThreadMetadata()) {
+            setThreadMetadata();
         }
 
         return REQUEST_CONTEXT_THREAD_LOCAL.get();
     }
 
-    private static void setThreadId() {
+    private static void setThreadMetadata() {
         REQUEST_CONTEXT_THREAD_LOCAL.get().put(
                 THREAD_ID,
                 String.valueOf(Thread.currentThread().getId())
         );
+        REQUEST_CONTEXT_THREAD_LOCAL.get().put(
+                THREAD_NAME,
+                Thread.currentThread().getName()
+        );
     }
 
-    private static boolean hasThreadId() {
+    private static boolean hasThreadMetadata() {
         return REQUEST_CONTEXT_THREAD_LOCAL.get().containsKey(THREAD_ID);
     }
 
