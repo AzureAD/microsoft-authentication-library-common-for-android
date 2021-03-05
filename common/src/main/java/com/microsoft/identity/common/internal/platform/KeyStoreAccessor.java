@@ -28,6 +28,7 @@ import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -259,9 +260,9 @@ public class KeyStoreAccessor {
      * @param instance the KeyStore to get the key from.
      * @return A supplier that can compute the thumbprint for the key on demand.
      */
-    @Nullable
     public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
         return new Supplier<byte[]>() {
+            @Nullable
             @Override
             public byte[] get() {
                 try {

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.IOException;
