@@ -38,6 +38,12 @@ import java.util.Date;
  */
 public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static final IDevicePopManager.Cipher RSA_ECB_PKCS_1_PADDING = IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    public static final IDevicePopManager.SigningAlgorithm SHA_256_WITH_RSA = DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
+
     /**
      * The {@link IDevicePopManager} to which we will delegate most cryptographic actions.
      */
@@ -90,43 +96,54 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public String sign(@NonNull final String data) throws ClientException {
-        return mDevicePopManager.sign(
-                DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA,
-                data
-        );
+        return mDevicePopManager.sign(SHA_256_WITH_RSA, data);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public boolean verify(@NonNull final String plainText, @NonNull final String signatureStr) {
-        return mDevicePopManager.verify(
-                DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA,
-                plainText,
-                signatureStr
-        );
+        return mDevicePopManager.verify(SHA_256_WITH_RSA, plainText, signatureStr);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public String encrypt(@NonNull final String plaintext) throws ClientException {
-        return mDevicePopManager.encrypt(
-                IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
-                plaintext
-        );
+        return mDevicePopManager.encrypt(RSA_ECB_PKCS_1_PADDING, plaintext);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public String decrypt(@NonNull final String ciphertext) throws ClientException {
-        return mDevicePopManager.decrypt(
-                IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING,
-                ciphertext
-        );
+        return mDevicePopManager.decrypt(RSA_ECB_PKCS_1_PADDING, ciphertext);
     }
 
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
         return mDevicePopManager.getSecureHardwareState();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public byte[] encrypt(byte[] plaintext) throws ClientException {
+        return mDevicePopManager.encrypt(RSA_ECB_PKCS_1_PADDING, plaintext);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public byte[] decrypt(byte[] ciphertext) throws ClientException {
+        return mDevicePopManager.encrypt(RSA_ECB_PKCS_1_PADDING, ciphertext);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public byte[] sign(byte[] text) throws ClientException {
+        return mDevicePopManager.sign(SHA_256_WITH_RSA, text);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Override
+    public boolean verify(byte[] text, byte[] signature) throws ClientException {
+        return mDevicePopManager.verify(SHA_256_WITH_RSA, text, signature);
     }
 
     @Override
