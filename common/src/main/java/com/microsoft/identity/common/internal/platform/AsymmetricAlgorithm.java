@@ -31,6 +31,7 @@ public interface AsymmetricAlgorithm extends Algorithm {
     /**
      * return the name of the algorithm in question.
      */
+    @Override
     String name();
 
     static AsymmetricAlgorithm of(@NonNull final String name) {
