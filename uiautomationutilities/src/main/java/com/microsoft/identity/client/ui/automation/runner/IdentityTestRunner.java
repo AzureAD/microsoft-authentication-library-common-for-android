@@ -23,9 +23,11 @@
 package com.microsoft.identity.client.ui.automation.runner;
 
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.test.runner.AndroidJUnitRunner;
 
+import com.microsoft.identity.client.ui.automation.BuildConfig;
 import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 
 /**
@@ -34,16 +36,19 @@ import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
  */
 public class IdentityTestRunner extends AndroidJUnitRunner {
 
+    private static final String TAG = IdentityTestRunner.class.getSimpleName();
+
     public static final String PREFER_PRE_INSTALLED_APKS = "prefer_pre_installed_apks";
     public static final String BROKER_SOURCE = "broker_source";
 
     @Override
     public void onCreate(Bundle arguments) {
+        Log.i(TAG, "Using the Identity Test Runner with args: " + arguments.toString());
         IdentityRunnerArgs.setBrokerSource(arguments.getString(
-                BROKER_SOURCE, AppInstallSource.PlayStore.getName()
+                BROKER_SOURCE, BuildConfig.BROKER_INSTALL_SOURCE
         ));
         IdentityRunnerArgs.setPreferPreInstalledApks(Boolean.parseBoolean(
-                arguments.getString(PREFER_PRE_INSTALLED_APKS, "false")
+                arguments.getString(PREFER_PRE_INSTALLED_APKS, String.valueOf(BuildConfig.PREFER_PRE_INSTALLED_APKS))
         ));
         super.onCreate(arguments);
     }
