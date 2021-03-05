@@ -36,21 +36,21 @@ public interface Key {
      * @param plaintext the plaintext to encrypt.
      * @return the encrypted byte array.
      */
-    public byte[] encrypt(byte[] plaintext) throws ClientException;
+   byte[] encrypt(byte[] plaintext) throws ClientException;
 
     /**
      * Decrypt a blob of ciphertext, returning the decrypted values.
      * @param ciphertext the blob of ciphertext to decrypt.
      * @return the decrypted byte array.
      */
-    public byte[] decrypt(byte[] ciphertext) throws ClientException;
+   byte[] decrypt(byte[] ciphertext) throws ClientException;
 
     /**
      * Sign a block of data, returning the signature.
      * @param text the data to sign.
      * @return the signature, as a byte array.
      */
-    public byte[] sign(byte[] text) throws ClientException;
+   byte[] sign(byte[] text) throws ClientException;
 
     /**
      * Verify a signature, returning the
@@ -58,5 +58,5 @@ public interface Key {
      * @param signature
      * @return
      */
-    public boolean verify(byte[] text, byte[] signature) throws ClientException;
+   boolean verify(byte[] text, byte[] signature) throws ClientException;
 }

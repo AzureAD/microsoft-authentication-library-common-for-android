@@ -72,7 +72,7 @@ public class SecretKeyAccessor implements KeyAccessor {
         final Exception exception;
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
-            SecretKey key = entry.getSecretKey();
+            final SecretKey key = entry.getSecretKey();
             final Cipher c = Cipher.getInstance(suite.cipher().name());
             c.init(Cipher.ENCRYPT_MODE, key);
             final byte[] iv = c.getIV();
