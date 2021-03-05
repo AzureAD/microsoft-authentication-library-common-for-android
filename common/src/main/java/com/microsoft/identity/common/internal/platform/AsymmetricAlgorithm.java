@@ -27,19 +27,21 @@ import lombok.NonNull;
 /**
  * Marker interface for asymmetric algorithms.
  */
-public abstract class AsymmetricAlgorithm implements Algorithm {
+public interface AsymmetricAlgorithm extends Algorithm {
     /**
      * return the name of the algorithm in question.
      */
     @Override
-    public abstract String name();
+    String name();
 
-    static AsymmetricAlgorithm of(@NonNull final String name) {
-        return new AsymmetricAlgorithm() {
-            @Override
-            public String name() {
-                return name;
-            }
-        };
+    class Builder {
+        static AsymmetricAlgorithm of(@NonNull final String name){
+            return new AsymmetricAlgorithm() {
+                @Override
+                public String name() {
+                    return name;
+                }
+            };
+        }
     }
 }
