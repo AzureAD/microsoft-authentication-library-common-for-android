@@ -93,7 +93,7 @@ public final class StringUtil {
         return stringBuilder.toString();
     }
 
-    public static String join(final char delimiter, @NonNull final List<String> toJoin) {
+    public static String join(final char delimiter, @NonNull final Iterable<String> toJoin) {
         StringBuilder builder = new StringBuilder();
 
         char tempDelimiter = Character.MIN_VALUE;
