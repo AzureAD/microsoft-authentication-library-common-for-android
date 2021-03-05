@@ -2,8 +2,6 @@ apply plugin: 'com.android.library'
 apply plugin: 'pmd'
 apply plugin: 'checkstyle'
 apply plugin: 'maven-publish'
-//Can enable when we determine that desugaring works for this lib.
-//apply plugin: 'de.mannodermaus.android-junit5'
 apply from: 'versioning/version_tasks.gradle'
 //apply plugin: 'jacoco'
 
@@ -155,11 +153,6 @@ dependencies {
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-    // Junit5 - we can enable it if we discover that desugaring allows it to run on API<26
-    //testImplementation "org.junit.jupiter:junit-jupiter-api:5.7.1"
-    //testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.7.1"
-    //testImplementation "org.junit.jupiter:junit-jupiter-params:5.7.1"
-    //testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.7.1"
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"

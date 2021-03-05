@@ -259,6 +259,7 @@ public class KeyStoreAccessor {
      * @param instance the KeyStore to get the key from.
      * @return A supplier that can compute the thumbprint for the key on demand.
      */
+    @Nullable
     public static Supplier<byte[]> symmetricThumbprint(@NonNull final String alias, @NonNull final KeyStore instance) {
         return new Supplier<byte[]>() {
             @Override

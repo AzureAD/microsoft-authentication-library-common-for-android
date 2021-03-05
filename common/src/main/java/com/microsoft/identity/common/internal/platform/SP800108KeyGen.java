@@ -57,7 +57,7 @@ public class SP800108KeyGen {
         if (ctx == null) {
             return null;
         }
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        final ByteArrayOutputStream stream = new ByteArrayOutputStream();
         stream.write(label);
         stream.write(0x0);
         stream.write(ctx);

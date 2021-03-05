@@ -10,8 +10,6 @@ buildscript {
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${rootProject.ext.gradleVersion}"
-        // Junit 5 plugin, can enable when we discover whether desugaring works
-        //classpath "de.mannodermaus.gradle.plugins:android-junit5:1.7.1.1"
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files

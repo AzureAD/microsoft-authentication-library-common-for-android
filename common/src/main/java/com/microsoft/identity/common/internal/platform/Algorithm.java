@@ -29,5 +29,5 @@ public interface Algorithm {
     /**
      * @return the standard algorithm name;
      */
-    public String name();
+   String name();
 }

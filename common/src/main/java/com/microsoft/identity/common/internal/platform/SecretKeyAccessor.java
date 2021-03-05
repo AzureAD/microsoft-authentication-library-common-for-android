@@ -73,11 +73,11 @@ public class SecretKeyAccessor implements KeyAccessor {
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
             SecretKey key = entry.getSecretKey();
-            Cipher c = Cipher.getInstance(suite.cipher().name());
+            final Cipher c = Cipher.getInstance(suite.cipher().name());
             c.init(Cipher.ENCRYPT_MODE, key);
-            byte[] iv = c.getIV();
-            byte[] enc = c.doFinal(plaintext);
-            byte[] out = new byte[iv.length + enc.length];
+            final byte[] iv = c.getIV();
+            final byte[] enc = c.doFinal(plaintext);
+            final byte[] out = new byte[iv.length + enc.length];
             System.arraycopy(iv, 0, out, 0, iv.length);
             System.arraycopy(enc, 0, out, iv.length, enc.length);
             return out;
@@ -113,11 +113,11 @@ public class SecretKeyAccessor implements KeyAccessor {
         final Exception exception;
         try {
             final KeyStore.SecretKeyEntry entry = mKeyManager.getEntry();
-            SecretKey key = entry.getSecretKey();
-            Cipher c = Cipher.getInstance(suite.cipher().name());
+            final SecretKey key = entry.getSecretKey();
+            final Cipher c = Cipher.getInstance(suite.cipher().name());
             final GCMParameterSpec ivSpec = new GCMParameterSpec(128, ciphertext, 0, 12);
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
-            byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
+            final byte[] out = Arrays.copyOfRange(ciphertext, 12, ciphertext.length);
             return c.doFinal(out);
         } catch (final UnrecoverableEntryException e) {
             errCode = INVALID_PROTECTION_PARAMS;

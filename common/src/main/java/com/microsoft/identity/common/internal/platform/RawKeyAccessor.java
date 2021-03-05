@@ -191,6 +191,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
+    @Nullable
     public Certificate[] getCertificateChain() {
         return null;
     }
