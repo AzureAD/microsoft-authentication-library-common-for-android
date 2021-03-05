@@ -29,11 +29,44 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.internal.platform.CryptoSuite;
 
 import java.security.KeyStore;
+import java.security.PublicKey;
 
 /**
  * Definitions for Asymmetric Crypto suites.
  */
 public enum AsymmetricCipher implements CryptoSuite {
+    RSA_NONE_OAEPWithSHA_1AndMGF1PaddingAndHmacSha256 {
+        @Override
+        public AsymmetricAlgorithm cipher() {
+            return AsymmetricAlgorithm.of("RSA/NONE/OAEPWithSHA_1AndMGF1Padding");
+        }
+
+        @Override
+        public String macName() {
+            return "HmacSHA256";
+        }
+
+        @Override
+        public boolean isAsymmetric() {
+            return true;
+        }
+
+        @Override
+        public Class<? extends KeyStore.Entry> keyClass() {
+            return KeyStore.PrivateKeyEntry.class;
+        }
+
+        @Override
+        public int keySize() {
+            return 2048;
+        }
+
+        @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+        @Override
+        public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
+            return IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
+        }
+    },
     RSA_ECB_PKCS1_PADDING_HMACSHA256 {
         @Override
         public AsymmetricAlgorithm cipher() {
@@ -52,7 +85,7 @@ public enum AsymmetricCipher implements CryptoSuite {
 
         @Override
         public Class<? extends KeyStore.Entry> keyClass() {
-            return null;
+            return KeyStore.PrivateKeyEntry.class;
         }
 
         @Override
