@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -149,10 +150,20 @@ public final class Logger {
      * @return String The concatenation of thread_name and correlation_id to serve as the required metadata in the log lines.
      */
     public static String getDiagnosticContextMetadata() {
+        String threadName = DiagnosticContext.getRequestContext().get(DiagnosticContext.THREAD_NAME);
+        String correlationId = DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
+
+        if (StringUtil.isEmpty(threadName)) {
+            threadName = "UNSET";
+        }
+        if (StringUtil.isEmpty(correlationId)) {
+            correlationId = "UNSET";
+        }
+
         return DiagnosticContext.THREAD_NAME + " : "
-                + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.THREAD_NAME, "UNSET") + ", "
+                + threadName + ", "
                 + DiagnosticContext.CORRELATION_ID + " : "
-                + DiagnosticContext.getRequestContext().getOrDefault(DiagnosticContext.CORRELATION_ID, "UNSET");
+                + correlationId;
     }
 
     /**
