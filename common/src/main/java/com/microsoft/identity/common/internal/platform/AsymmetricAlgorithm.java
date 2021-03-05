@@ -34,12 +34,14 @@ public interface AsymmetricAlgorithm extends Algorithm {
     @Override
     String name();
 
-    static AsymmetricAlgorithm of(@NonNull final String name) {
-        return new AsymmetricAlgorithm() {
-            @Override
-            public String name() {
-                return name;
-            }
-        };
+    class Builder {
+        static AsymmetricAlgorithm of(@NonNull final String name){
+            return new AsymmetricAlgorithm() {
+                @Override
+                public String name() {
+                    return name;
+                }
+            };
+        }
     }
 }
