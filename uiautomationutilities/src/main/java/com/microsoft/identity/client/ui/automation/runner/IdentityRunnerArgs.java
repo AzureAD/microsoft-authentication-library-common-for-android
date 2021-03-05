@@ -27,7 +27,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.ui.automation.BuildConfig;
-import com.microsoft.identity.client.ui.automation.installer.AppInstallSource;
 
 /**
  * Test runner args to be used with {@link IdentityTestRunner}.
