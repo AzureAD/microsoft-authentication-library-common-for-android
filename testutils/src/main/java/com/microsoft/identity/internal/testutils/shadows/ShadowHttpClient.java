@@ -41,6 +41,13 @@ import java.util.Map;
 
 /**
  * Allows us to mock http request responses by shadowing the {@link HttpClient}.
+ * <p>
+ * <p>
+ * We need to shadow the {@link AbstractHttpClient} because we are using an instance of the
+ * {@link UrlConnectionHttpClient} in the method here
+ * {@link ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])} therefore using the
+ * {@link UrlConnectionHttpClient} as the shadow would prevent us from making an actual http request
+ * when there are no interceptors defined for the request.
  *
  * @see MockHttpClient for setting up interceptors and mock responses
  * @see HttpRequestInterceptor an implementation for intercepting http requests.
@@ -57,14 +64,13 @@ public class ShadowHttpClient {
      * @param requestContent the request body
      * @return the mocked response or the actual response
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see HttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      */
     public HttpResponse method(@NonNull HttpClient.HttpMethod httpMethod,
                                @NonNull URL requestUrl,
                                @NonNull Map<String, String> requestHeaders,
                                @Nullable byte[] requestContent) throws IOException {
-        HttpRequestInterceptor interceptor = MockHttpClient.intercept(httpMethod, requestUrl);
+        HttpRequestInterceptor interceptor = MockHttpClient.intercept(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
             return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent);
         } else {
@@ -80,7 +86,6 @@ public class ShadowHttpClient {
      * @param requestContent the request body
      * @return the mocked response or the actual response
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#put(URL, Map, byte[])
      */
@@ -98,9 +103,7 @@ public class ShadowHttpClient {
      * @param requestHeaders the request headers
      * @param requestContent the request body
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#patch(URL, Map, byte[])
      */
@@ -117,9 +120,7 @@ public class ShadowHttpClient {
      * @param requestUrl     the request url
      * @param requestHeaders the request headers
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#options(URL, Map)
      */
@@ -136,9 +137,7 @@ public class ShadowHttpClient {
      * @param requestHeaders the request headers
      * @param requestContent the request body content
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#post(URL, Map, byte[])
      */
@@ -156,9 +155,7 @@ public class ShadowHttpClient {
      * @param requestHeaders the request headers
      * @param requestContent the request body content
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#delete(URL, Map, byte[])
      */
@@ -175,9 +172,7 @@ public class ShadowHttpClient {
      * @param requestUrl     the request url
      * @param requestHeaders the request headers
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#get(URL, Map)
      */
@@ -193,9 +188,7 @@ public class ShadowHttpClient {
      * @param requestUrl     the request url
      * @param requestHeaders the request headers
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#head(URL, Map)
      */
@@ -211,9 +204,7 @@ public class ShadowHttpClient {
      * @param requestUrl     the request url
      * @param requestHeaders the request headers
      * @return the mocked response or the actual response
-     *
      * @throws IOException throw an IOException when an error occurred
-     *
      * @see ShadowHttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      * @see HttpClient#trace(URL, Map)
      */
