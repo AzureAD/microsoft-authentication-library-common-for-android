@@ -38,7 +38,7 @@ public enum AsymmetricCipher implements CryptoSuite {
     RSA_NONE_OAEPWithSHA_1AndMGF1PaddingAndHmacSha256 {
         @Override
         public AsymmetricAlgorithm cipher() {
-            return AsymmetricAlgorithm.of("RSA/NONE/OAEPWithSHA_1AndMGF1Padding");
+            return AsymmetricAlgorithm.Builder.of("RSA/NONE/OAEPWithSHA_1AndMGF1Padding");
         }
 
         @Override
@@ -70,7 +70,7 @@ public enum AsymmetricCipher implements CryptoSuite {
     RSA_ECB_PKCS1_PADDING_HMACSHA256 {
         @Override
         public AsymmetricAlgorithm cipher() {
-            return AsymmetricAlgorithm.of("RSA/ECB/PKCS1Padding");
+            return AsymmetricAlgorithm.Builder.of("RSA/ECB/PKCS1Padding");
         }
 
         @Override

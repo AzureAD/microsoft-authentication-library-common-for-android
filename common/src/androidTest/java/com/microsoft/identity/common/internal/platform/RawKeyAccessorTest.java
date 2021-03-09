@@ -44,7 +44,7 @@ public class RawKeyAccessorTest {
         return new RawKeyAccessor(new CryptoSuite() {
             @Override
             public SymmetricAlgorithm cipher() {
-                return SymmetricAlgorithm.of("AES/GCM/NoPadding");
+                return SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding");
             }
 
             @Override

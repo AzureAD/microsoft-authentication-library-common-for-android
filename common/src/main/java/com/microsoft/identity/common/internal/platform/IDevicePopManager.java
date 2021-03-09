@@ -210,7 +210,7 @@ public interface IDevicePopManager {
         }
 
         public Algorithm cipherName() {
-            return AsymmetricAlgorithm.of(mValue);
+            return AsymmetricAlgorithm.Builder.of(mValue);
         }
 
         /**

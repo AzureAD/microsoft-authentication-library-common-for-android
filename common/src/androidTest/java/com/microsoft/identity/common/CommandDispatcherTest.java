@@ -78,6 +78,93 @@ public class CommandDispatcherTest {
         testLatch.await();
     }
 
+    @Test
+    public void testSubmitSilentCached() throws Exception {
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch = new CountDownLatch(1);
+        CountDownLatch submitLatch1 = new CountDownLatch(1);
+        final AtomicInteger excutionCount = new AtomicInteger(0);
+
+        final TestCommand testCommand = new LatchedTestCommand(
+                getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        testLatch.countDown();
+                        Assert.assertEquals(TEST_RESULT_STR, s);
+                    }
+                }, 1, submitLatch, submitLatch1) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+
+            @Override
+            public String execute() {
+                excutionCount.incrementAndGet();
+                return super.execute();
+            }
+        };
+        final TestCommand testCommand2 = new LatchedTestCommand(
+                getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        testLatch.countDown();
+                        Assert.assertEquals(TEST_RESULT_STR, s);
+                    }
+                }, 1, submitLatch, submitLatch1) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+
+            @Override
+            public String execute() {
+                excutionCount.incrementAndGet();
+                return super.execute();
+            }
+        };
+        FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        FinalizableResultFuture<CommandResult> f2 = CommandDispatcher.submitSilentReturningFuture(testCommand2);
+        submitLatch1.await();
+        submitLatch.countDown();
+        testLatch.await();
+        Assert.assertTrue(f.isDone());
+        Assert.assertNotNull(f2.get(1,TimeUnit.SECONDS));
+        Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
+        Assert.assertEquals(TEST_RESULT_STR, f2.get().getResult());
+        Assert.assertSame(f.get().getResult(), f2.get().getResult());
+        Assert.assertEquals(1, excutionCount.get());
+        f.isCleanedUp();
+        f2.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
+    }
+
     private TestCommand getTestCommand(final CountDownLatch testLatch) {
         return new TestCommand(
                 getEmptyTestParams(),
@@ -403,7 +490,7 @@ public class CommandDispatcherTest {
 
         @Override
         public String execute() {
-            return TEST_RESULT_STR;
+            return new String(TEST_RESULT_STR);
         }
 
         @Override
@@ -419,7 +506,7 @@ public class CommandDispatcherTest {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (o == null || (!(o instanceof TestCommand))) return false;
             if (!super.equals(o)) return false;
             TestCommand that = (TestCommand) o;
             return value == that.value;
