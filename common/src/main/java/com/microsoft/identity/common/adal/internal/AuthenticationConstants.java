@@ -1312,6 +1312,12 @@ public final class AuthenticationConstants {
          * Scope to get email claim as part of the ID Token
          */
         public static final String EMAIL = "email";
+
+        /**
+         * Used in the interrupt flow. See BrokerJoinedAccountController for more info.
+         * The BRT request made with this resourceID will contain the updated claim acquired in the interrupt flow performed before it.
+         */
+        public static final String CLAIMS_UPDATE_RESOURCE = "urn:aad:tb:update:prt/.default";
     }
 
     /**

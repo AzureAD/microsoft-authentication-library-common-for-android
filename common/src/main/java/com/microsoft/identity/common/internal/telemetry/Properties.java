@@ -38,7 +38,7 @@ public class Properties {
     }
 
     public Properties() {
-        mProperties = new ConcurrentHashMap<>();
+        mProperties = new ConcurrentHashMap<>(16, 0.75f, 1);
     }
 
     public Properties put(final String key, final String value) {

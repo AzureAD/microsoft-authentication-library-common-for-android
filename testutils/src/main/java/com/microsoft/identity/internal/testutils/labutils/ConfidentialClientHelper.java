@@ -54,9 +54,10 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.Vector;
 
+import static com.microsoft.identity.common.internal.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+
 abstract class ConfidentialClientHelper {
 
-    private final static String GRANT_TYPE = "client_credentials";
     public static final String LAB_CLIENT_SECRET_FIELD_NAME = "LAB_CLIENT_SECRET";
     private static String sClasspathSecret = null;
 
@@ -92,7 +93,7 @@ abstract class ConfidentialClientHelper {
         String accessToken = null;
 
         final TokenRequest tokenRequest = this.createTokenRequest();
-        tokenRequest.setGrantType(GRANT_TYPE);
+        tokenRequest.setGrantType(CLIENT_CREDENTIALS);
 
         final AccountsInOneOrganization aadAudience = new AccountsInOneOrganization(TENANT_ID);
         final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);

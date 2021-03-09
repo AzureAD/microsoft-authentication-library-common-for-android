@@ -137,9 +137,10 @@ public class MsalOAuth2TokenCache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        -1,
                         storageHelper
                 );
         final IAccountCredentialCache accountCredentialCache =
