@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * Class to set a mock request interceptor at runtime.
@@ -106,7 +107,12 @@ public class MockHttpClient {
     public void intercept(@NonNull final URL url, @NonNull final HttpRequestInterceptor interceptor) {
         intercept(
                 HttpRequestMatcher.builder()
-                        .url(u -> u.toString().equals(url.toString()))
+                        .url(new Predicate<URL>() {
+                            @Override
+                            public boolean test(URL u) {
+                                return u.toString().equals(url.toString());
+                            }
+                        })
                         .build(),
                 interceptor
         );
@@ -125,8 +131,18 @@ public class MockHttpClient {
             @NonNull final HttpRequestInterceptor interceptor) {
         intercept(
                 HttpRequestMatcher.builder()
-                        .url(u -> u.toString().equals(url.toString()))
-                        .method(m -> m.compareTo(method) == 0).build(),
+                        .url(new Predicate<URL>() {
+                            @Override
+                            public boolean test(URL u) {
+                                return u.toString().equals(url.toString());
+                            }
+                        })
+                        .method(new Predicate<HttpMethod>() {
+                            @Override
+                            public boolean test(HttpMethod m) {
+                                return m == method;
+                            }
+                        }).build(),
                 interceptor
         );
     }
@@ -143,7 +159,12 @@ public class MockHttpClient {
     ) {
         intercept(
                 HttpRequestMatcher.builder()
-                        .method(m -> m.compareTo(method) == 0)
+                        .method(new Predicate<HttpMethod>() {
+                            @Override
+                            public boolean test(HttpMethod m) {
+                                return m == method;
+                            }
+                        })
                         .build(),
                 interceptor
         );
@@ -158,7 +179,16 @@ public class MockHttpClient {
     public void intercept(HttpRequestMatcher matcher, HttpResponse httpResponse) {
         intercept(
                 matcher,
-                (httpMethod, requestUrl, requestHeaders, requestContent) -> httpResponse
+                new HttpRequestInterceptor() {
+                    @Override
+                    public HttpResponse intercept(
+                            @NonNull HttpMethod httpMethod,
+                            @NonNull URL requestUrl,
+                            @NonNull Map<String, String> requestHeaders,
+                            @Nullable byte[] requestContent) throws IOException {
+                        return httpResponse;
+                    }
+                }
         );
     }
 

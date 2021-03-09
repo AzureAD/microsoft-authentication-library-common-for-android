@@ -27,6 +27,7 @@ import com.microsoft.identity.common.internal.net.HttpClient;
 import java.net.URL;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 import lombok.Builder;
 import lombok.NonNull;
@@ -38,10 +39,40 @@ import lombok.NonNull;
 @Builder
 public class HttpRequestMatcher {
 
-    private Predicate<Map<String, String>> headers = header -> true;
-    private Predicate<byte[]> body = content -> true;
-    private Predicate<URL> url = s -> true;
-    private Predicate<HttpClient.HttpMethod> method = s -> true;
+    @NonNull
+    @Builder.Default
+    private Predicate<Map<String, String>> headers = new Predicate<Map<String, String>>() {
+        @Override
+        public boolean test(Map<String, String> header) {
+            return true;
+        }
+    };
+    @NonNull
+    @Builder.Default
+    private Predicate<byte[]> body = new Predicate<byte[]>() {
+        @Override
+        public boolean test(byte[] content) {
+            return true;
+        }
+    };
+
+    @NonNull
+    @Builder.Default
+    private Predicate<URL> url = new Predicate<URL>() {
+        @Override
+        public boolean test(URL s) {
+            return true;
+        }
+    };
+
+    @NonNull
+    @Builder.Default
+    private Predicate<HttpClient.HttpMethod> method = new Predicate<HttpClient.HttpMethod>() {
+        @Override
+        public boolean test(HttpClient.HttpMethod s) {
+            return true;
+        }
+    };
 
 
     /**
@@ -58,9 +89,114 @@ public class HttpRequestMatcher {
             @NonNull final URL url,
             final Map<String, String> requestHeaders,
             final byte[] requestContent) {
-        return (null == this.method || this.method.test(method))
-                && (null == this.url || this.url.test(url))
-                && (null == this.headers || this.headers.test(requestHeaders))
-                && (null == this.body || this.body.test(requestContent));
+        return this.method.test(method) && this.url.test(url)
+                && this.headers.test(requestHeaders) && this.body.test(requestContent);
+    }
+
+    public static class HttpRequestMatcherBuilder {
+
+        /**
+         * CHeck for the TRACE http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isTRACE() {
+            return methodIs(HttpClient.HttpMethod.TRACE);
+        }
+
+        /**
+         * CHeck for the OPTIONS http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isOPTIONS() {
+            return methodIs(HttpClient.HttpMethod.OPTIONS);
+        }
+
+        /**
+         * CHeck for the HEAD http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isHEAD() {
+            return methodIs(HttpClient.HttpMethod.HEAD);
+        }
+
+        /**
+         * CHeck for the DELETE http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isDELETE() {
+            return methodIs(HttpClient.HttpMethod.DELETE);
+        }
+
+        /**
+         * CHeck for the PATCH http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isPATCH() {
+            return methodIs(HttpClient.HttpMethod.PATCH);
+        }
+
+        /**
+         * CHeck for the PUT http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isPUT() {
+            return methodIs(HttpClient.HttpMethod.PUT);
+        }
+
+        /**
+         * CHeck for the GET http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isGET() {
+            return methodIs(HttpClient.HttpMethod.GET);
+        }
+
+        /**
+         * CHeck for the POST http method
+         *
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder isPOST() {
+            return methodIs(HttpClient.HttpMethod.POST);
+        }
+
+        /**
+         * Check for the Http Method
+         *
+         * @param method the Http method
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder methodIs(HttpClient.HttpMethod method) {
+            method(new Predicate<HttpClient.HttpMethod>() {
+                @Override
+                public boolean test(HttpClient.HttpMethod _method) {
+                    return _method == method;
+                }
+            });
+            return this;
+        }
+
+        /**
+         * Check for a URL pattern
+         *
+         * @param pattern the pattern
+         * @return the builder
+         */
+        public HttpRequestMatcherBuilder urlPattern(Pattern pattern) {
+            url(new Predicate<URL>() {
+                @Override
+                public boolean test(URL url) {
+                    return pattern.matcher(url.toExternalForm()).matches();
+                }
+            });
+            return this;
+        }
     }
 }
