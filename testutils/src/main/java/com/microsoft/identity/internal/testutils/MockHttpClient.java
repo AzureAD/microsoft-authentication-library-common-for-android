@@ -87,6 +87,24 @@ public class MockHttpClient {
 
     private final List<HttpRequestMatcher> matchers = new ArrayList<>(); // store a list of matchers for a single MockHttpClient object instance
 
+    /**
+     * Quickly match all the http requests and respond with the specified http response
+     *
+     * @param httpResponse the http response
+     */
+    public void intercept(@NonNull final HttpResponse httpResponse) {
+        intercept(HttpRequestMatcher.builder().build(), new HttpRequestInterceptor() {
+            @Override
+            public HttpResponse intercept(
+                    @NonNull HttpMethod httpMethod,
+                    @NonNull URL requestUrl,
+                    @NonNull Map<String, String> requestHeaders,
+                    @Nullable byte[] requestContent) throws IOException {
+                return httpResponse;
+            }
+        });
+    }
+
 
     /**
      * Quickly match all the http requests with the specified interceptor
