@@ -71,25 +71,32 @@ public class DefaultConnectionService implements IConnectionService {
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void registerNetworkCallback() {
         if (null == networkCallback) {
-            final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            final NetworkRequest.Builder builder = new NetworkRequest.Builder()
-                    .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            try {
+                final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                        .getSystemService(Context.CONNECTIVITY_SERVICE);
+                final NetworkRequest.Builder builder = new NetworkRequest.Builder()
+                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
+                // Initialize the connectionAvailable to true, before the callback is registered.
+                DefaultConnectionService.connectionAvailable = true;
 
-            connectivityManager.registerNetworkCallback(
-                    builder.build(),
-                    networkCallback = new ConnectivityManager.NetworkCallback() {
-                        @Override
-                        public void onAvailable(@NonNull Network network) {
-                            DefaultConnectionService.connectionAvailable = true;
-                        }
+                connectivityManager.registerNetworkCallback(
+                        builder.build(),
+                        networkCallback = new ConnectivityManager.NetworkCallback() {
+                            @Override
+                            public void onAvailable(@NonNull Network network) {
+                                DefaultConnectionService.connectionAvailable = true;
+                            }
 
-                        @Override
-                        public void onLost(@NonNull Network network) {
-                            DefaultConnectionService.connectionAvailable = false;
-                        }
-                    });
+                            @Override
+                            public void onLost(@NonNull Network network) {
+                                DefaultConnectionService.connectionAvailable = false;
+                            }
+                        });
+            } catch (Exception e) {
+                // The connection callback registration failed
+                DefaultConnectionService.connectionAvailable = false;
+            }
         }
     }
 
