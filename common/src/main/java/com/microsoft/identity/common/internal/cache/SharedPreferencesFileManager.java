@@ -332,7 +332,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.clear();
             fileCache.evictAll();
-            editor.apply();
+            editor.commit();
         }
     }
 
@@ -346,7 +346,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             fileCache.remove(key);
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.remove(key);
-            editor.apply();
+            editor.commit();
         }
 
         Logger.infoPII(
