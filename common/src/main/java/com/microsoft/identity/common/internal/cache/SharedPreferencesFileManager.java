@@ -333,7 +333,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.clear();
             fileCache.evictAll();
-            editor.commit();
+            editor.apply();
         }
     }
 
