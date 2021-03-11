@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
@@ -161,18 +162,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         }
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
-        mSharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                synchronized (cacheLock) {
-                    if (key == null) {
-                        fileCache.evictAll();
-                    } else {
-                        fileCache.remove(key);
-                    }
-                }
-            }
-        });
         mStorageHelper = storageHelper;
     }
 
