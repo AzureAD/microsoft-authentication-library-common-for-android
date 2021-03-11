@@ -613,11 +613,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
 
         /**
-         * Account type string.
-         */
-        public static final String MICROSOFT_ACCOUNT_TYPE = "com.microsoft.account";
-
-        /**
          * String of account initial name.
          */
         public static final String ACCOUNT_INITIAL_NAME = "aad";
