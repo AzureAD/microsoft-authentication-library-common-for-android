@@ -347,7 +347,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             fileCache.remove(key);
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.remove(key);
-            editor.commit();
+            editor.apply();
         }
 
         Logger.infoPII(
