@@ -58,8 +58,8 @@ jobs:
       SourceFolder: common\build\publications\release\
       Contents: '**/*.xml'
       TargetFolder: $(build.artifactstagingdirectory)
-  - task: PublishBuildArtifacts@1
-    name: PublishBuildArtifacts1
+  - task: PublishPipelineArtifact@1
+    name: PublishPipelineArtifacts1
     displayName: 'Publish Artifact: Build Outputs'
     inputs:
       ArtifactName: build_outputs
@@ -73,8 +73,8 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - task: DownloadBuildArtifacts@0
-    displayName: Download Build Artifacts
+  - task: DownloadPipelineArtifact@2
+    displayName: Download Pipeline Artifacts
     inputs:
       artifactName: build_outputs
   - task: DownloadSecureFile@1
@@ -115,7 +115,7 @@ jobs:
     inputs:
       secureFile: e1dca8d8-adae-49fd-a4dc-b4155affcea6
       retryCount: 5
-  - task: PublishBuildArtifacts@1
+  - task: PublishPipelineArtifact@1
     displayName: 'Publish Artifact: GPG Signing artifacts'
     inputs:
       PathtoPublish: $(System.ArtifactsDirectory)/common/$(commonVersion)
