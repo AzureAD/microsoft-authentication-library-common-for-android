@@ -31,14 +31,23 @@ import com.microsoft.identity.common.internal.request.SdkType;
 
 import java.io.Serializable;
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
 /**
  * Represents the broker request
  */
+@Builder
+@Accessors(prefix = "m")
+@Getter
 public class BrokerRequest implements Serializable {
 
-    private static final long serialVersionUID = 542024304389420837L;
+    private static final long serialVersionUID = -543392127065130474L;
+    // private static final long serialVersionUID = 542024304389420837L;
 
     private class SerializedNames {
+        final static String EXTRA_OPTIONS = "extra_options";
         final static String AUTHORITY = "authority";
         final static String SCOPE = "scopes";
         final static String REDIRECT = "redirect_uri";
@@ -117,6 +126,13 @@ public class BrokerRequest implements Serializable {
     @Nullable
     @SerializedName(SerializedNames.EXTRA_QUERY_STRING_PARAMETER)
     private String mExtraQueryStringParameter;
+
+    /**
+     * Extra options flags for the request.
+     */
+    @Nullable
+    @SerializedName(SerializedNames.EXTRA_OPTIONS)
+    private String mExtraOptions;
 
     /**
      * Correlation id for the request, it should be a unique GUID.
@@ -203,327 +219,4 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.POWER_OPT_CHECK_ENABLED)
     private boolean mPowerOptCheckEnabled;
 
-    private BrokerRequest(BrokerRequest.Builder builder) {
-        mAuthority = builder.mAuthority;
-        mScope = builder.mScope;
-        mRedirect = builder.mRedirect;
-        mClientId = builder.mClientId;
-        mHomeAccountId = builder.mHomeAccountId;
-        mLocalAccountId = builder.mLocalAccountId;
-        mUserName = builder.mUserName;
-        mExtraQueryStringParameter = builder.mExtraQueryStringParameter;
-        mCorrelationId = builder.mCorrelationId;
-        mPrompt = builder.mPrompt;
-        mClaims = builder.mClaims;
-        mForceRefresh = builder.mForceRefresh;
-        mApplicationName = builder.mApplicationName;
-        mApplicationVersion = builder.mApplicationVersion;
-        mMsalVersion = builder.mMsalVersion;
-        mSdkType = builder.mSdkType;
-        mEnvironment = builder.mEnvironment;
-        mMultipleCloudsSupported = builder.mMultipleCloudsSupported;
-        mAuthorizationAgent = builder.mAuthorizationAgent;
-        mAuthenticationScheme = builder.mAuthenticationScheme;
-        mPowerOptCheckEnabled = builder.mPowerOptCheckEnabled;
-    }
-
-    public String getAuthority() {
-        return mAuthority;
-    }
-
-    public String getScope() {
-        return mScope;
-    }
-
-    public String getRedirect() {
-        return mRedirect;
-    }
-
-    public String getClientId() {
-        return mClientId;
-    }
-
-    public String getHomeAccountId() {
-        return mHomeAccountId;
-    }
-
-    public String getLocalAccountId() {
-        return mLocalAccountId;
-    }
-
-    public String getUserName() {
-        return mUserName;
-    }
-
-    public String getExtraQueryStringParameter() {
-        return mExtraQueryStringParameter;
-    }
-
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
-
-    public String getPrompt() {
-        return mPrompt;
-    }
-
-    public String getClaims() {
-        return mClaims;
-    }
-
-    public boolean getForceRefresh() {
-        return mForceRefresh;
-    }
-
-    public String getApplicationName() {
-        return mApplicationName;
-    }
-
-    public String getApplicationVersion() {
-        return mApplicationVersion;
-    }
-
-    public String getMsalVersion() {
-        return mMsalVersion;
-    }
-
-    public SdkType getSdkType() {
-        return mSdkType;
-    }
-
-    public String getEnvironment() {
-        return mEnvironment;
-    }
-
-    public boolean getMultipleCloudsSupported() {
-        return mMultipleCloudsSupported;
-    }
-
-    public String getAuthorizationAgent() {
-        return mAuthorizationAgent;
-    }
-
-    public AbstractAuthenticationScheme getAuthenticationScheme() {
-        return mAuthenticationScheme;
-    }
-
-    public boolean isPowerOptCheckEnabled(){
-        return mPowerOptCheckEnabled;
-    }
-
-    /**
-     * Builder class for Broker Request.
-     */
-    public static class Builder {
-
-        private String mAuthority;
-
-        private String mScope;
-
-        private String mRedirect;
-
-        private String mClientId;
-
-        private String mUserName;
-
-        private String mHomeAccountId;
-
-        private String mLocalAccountId;
-
-        private String mExtraQueryStringParameter;
-
-        private String mCorrelationId;
-
-        private String mPrompt;
-
-        private String mClaims;
-
-        private boolean mForceRefresh;
-
-        private String mApplicationName;
-
-        private String mApplicationVersion;
-
-        private String mMsalVersion;
-
-        private SdkType mSdkType;
-
-        private String mEnvironment;
-
-        private boolean mMultipleCloudsSupported;
-
-        private String mAuthorizationAgent;
-
-        private AbstractAuthenticationScheme mAuthenticationScheme;
-
-        private boolean mPowerOptCheckEnabled;
-
-        /**
-         * Authority for the request
-         */
-        public BrokerRequest.Builder authority(@NonNull final String authority) {
-            this.mAuthority = authority;
-            return this;
-        }
-
-        /**
-         * Scopes for the request. This is expected to be of the format
-         * "scope 1 scope2 scope3" with space as a delimiter
-         */
-        public BrokerRequest.Builder scope(@NonNull final String scope) {
-            this.mScope = scope;
-            return this;
-        }
-
-        /**
-         * The redirect uri for the request.
-         * // TODO : See if this is needed.
-         */
-        public BrokerRequest.Builder redirect(@NonNull final String redirect) {
-            this.mRedirect = redirect;
-            return this;
-        }
-
-        /**
-         * The client id of the application.
-         */
-        public BrokerRequest.Builder clientId(@NonNull final String clientId) {
-            this.mClientId = clientId;
-            return this;
-        }
-
-        /**
-         * The username for the request.
-         */
-        public BrokerRequest.Builder username(@Nullable final String userName) {
-            this.mUserName = userName;
-            return this;
-        }
-
-        /**
-         * Home account id of the user. Needs to be set for silent request
-         */
-        public BrokerRequest.Builder homeAccountId(@Nullable final String userId) {
-            this.mHomeAccountId = userId;
-            return this;
-        }
-
-        /**
-         * Local account id of the user. Needs to be set for silent request
-         */
-        public BrokerRequest.Builder localAccountId(@Nullable final String localAccountId) {
-            this.mLocalAccountId = localAccountId;
-            return this;
-        }
-
-        /**
-         * Extra query parameters set for the request.
-         */
-        public BrokerRequest.Builder extraQueryStringParameter(@Nullable final String extraQueryStringParameter) {
-            this.mExtraQueryStringParameter = extraQueryStringParameter;
-            return this;
-        }
-
-        /**
-         * Correlation id for the request, it should ba unique GUID.
-         */
-        public BrokerRequest.Builder correlationId(@Nullable final String correlationId) {
-            this.mCorrelationId = correlationId;
-            return this;
-        }
-
-        /**
-         * Prompt for the request.
-         * {@link com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter}
-         * <p>
-         * Default value : {@link com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter#SELECT_ACCOUNT}
-         */
-        public BrokerRequest.Builder prompt(@Nullable final String prompt) {
-            this.mPrompt = prompt;
-            return this;
-        }
-
-        /**
-         * Claims for the request. This needs to be a valid json string.
-         */
-        public BrokerRequest.Builder claims(@Nullable final String claims) {
-            this.mClaims = claims;
-            return this;
-        }
-
-        /**
-         * Boolean if set, will try to refresh the token instead of using it from cache.
-         */
-        public BrokerRequest.Builder forceRefresh(final boolean forceRefresh) {
-            this.mForceRefresh = forceRefresh;
-            return this;
-        }
-
-        /**
-         * Application package name.
-         */
-        public BrokerRequest.Builder applicationName(@NonNull final String applicationName) {
-            this.mApplicationName = applicationName;
-            return this;
-        }
-
-        /**
-         * Application version.
-         */
-        public BrokerRequest.Builder applicationVersion(@NonNull final String applicationVersion) {
-            this.mApplicationVersion = applicationVersion;
-            return this;
-        }
-
-        /**
-         * Msal version.
-         */
-        @NonNull
-        public BrokerRequest.Builder msalVersion(@NonNull final String version) {
-            this.mMsalVersion = version;
-            return this;
-        }
-
-        /**
-         * Sdk Type.
-         */
-        @NonNull
-        public BrokerRequest.Builder sdkType(@NonNull final SdkType sdkType){
-            this.mSdkType = sdkType;
-            return this;
-        }
-
-
-        public BrokerRequest.Builder environment(@NonNull final String environment) {
-            this.mEnvironment = environment;
-            return this;
-        }
-
-        public BrokerRequest.Builder multipleCloudsSupported(@NonNull final boolean multipleCloudsSupported) {
-            this.mMultipleCloudsSupported = multipleCloudsSupported;
-            return this;
-        }
-
-        public BrokerRequest.Builder authorizationAgent(@NonNull final String authorizationAgent) {
-            this.mAuthorizationAgent = authorizationAgent;
-            return this;
-        }
-
-        public BrokerRequest.Builder authenticationScheme(@NonNull final AbstractAuthenticationScheme authenticationScheme) {
-            this.mAuthenticationScheme = authenticationScheme;
-            return this;
-        }
-
-        public BrokerRequest.Builder powerOptCheckEnabled(final boolean powerOptCheckEnabled) {
-            this.mPowerOptCheckEnabled = powerOptCheckEnabled;
-            return this;
-        }
-
-        /**
-         * Builds and returns a BrokerRequest
-         */
-        public BrokerRequest build() {
-            return new BrokerRequest(this);
-        }
-    }
 }
