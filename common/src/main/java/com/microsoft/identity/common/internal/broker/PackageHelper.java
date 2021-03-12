@@ -65,14 +65,9 @@ public class PackageHelper {
      * @param packageName name of the package for which signature should be returned
      * @return signature for package
      */
-    @SuppressLint("PackageManagerGetSignatures")
-    @SuppressWarnings("deprecation")
     public String getCurrentSignatureForPackage(final String packageName) {
         try {
-            //GET_SIGNATURES is deprecated
-            PackageInfo info = mPackageManager.getPackageInfo(packageName,
-                    PackageManager.GET_SIGNATURES);
-
+            PackageInfo info = SignUtil.getPackageInfo(mPackageManager, packageName);
             Signature [] signatures = SignUtil.getSignatures(info);
             if (signatures != null && signatures.length > 0) {
                 Signature signature = signatures[0];

@@ -211,9 +211,7 @@ public class BrokerValidator {
             throws NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
 
-        //GET_SIGNATURES has been deprecated
-        final PackageInfo packageInfo = mContext.getPackageManager().getPackageInfo(brokerPackageName,
-                PackageManager.GET_SIGNATURES);
+        final PackageInfo packageInfo = SignUtil.getPackageInfo(mContext, brokerPackageName);
         if (packageInfo == null) {
             throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
                     "No broker package existed.");

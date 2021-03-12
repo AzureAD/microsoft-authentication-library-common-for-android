@@ -23,16 +23,20 @@
 
 package com.microsoft.identity.common.internal.util;
 
+import android.content.Context;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Build;
+
+import androidx.annotation.NonNull;
 
 public class SignUtil {
 
     /**
      * Helper method to get signatures in a back-compatible way
      *
-     * @param packageInfo A packageInfo instance with the flag PackageManager.GET_SIGNATURES set
+     * @param packageInfo A packageInfo instance with the flag PackageManager.GET_SIGNING_CERTIFICATES/PackageManager.GET_SIGNATURES set
      * @return Signature[] or null
      */
     public static Signature[] getSignatures(PackageInfo packageInfo) {
@@ -52,5 +56,29 @@ public class SignUtil {
         }
 
         return packageInfo.signatures;
+    }
+
+    public static int getPackageManagerFlag() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return PackageManager.GET_SIGNING_CERTIFICATES;
+        }
+
+        return PackageManager.GET_SIGNATURES;
+    }
+
+    public static PackageInfo getPackageInfo(@NonNull PackageManager packageManager, @NonNull String packageName) throws PackageManager.NameNotFoundException {
+        return packageManager.getPackageInfo(packageName, getPackageManagerFlag());
+    }
+
+    public static PackageInfo getPackageInfo(@NonNull Context context, @NonNull String packageName) throws PackageManager.NameNotFoundException {
+        return getPackageInfo(context.getPackageManager(), packageName);
+    }
+
+    public static PackageInfo getPackageInfo(@NonNull Context context) throws PackageManager.NameNotFoundException {
+        return getPackageInfo(context, context.getPackageName());
+    }
+
+    public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
+        return getSignatures(getPackageInfo(context));
     }
 }
