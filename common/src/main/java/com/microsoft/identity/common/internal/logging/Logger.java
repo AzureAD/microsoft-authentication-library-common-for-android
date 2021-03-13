@@ -360,9 +360,23 @@ public final class Logger {
     public static void info(final String tag,
                             @Nullable final String correlationID,
                             @Nullable final String message) {
-        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
+        info(tag, correlationID, message, null);
     }
 
+    /**
+     * * Send a {@link LogLevel#INFO} log message without PII.
+     *
+     * @param tag           Used to identify the source of a log message. It usually identifies the
+     *                      class or activity where the log call occurs.
+     * @param correlationID Unique identifier for a request or flow used to trace program execution.
+     * @param message       The message to log.
+     */
+    public static void info(final String tag,
+                            @Nullable final String correlationID,
+                            @Nullable final String message,
+                            @Nullable final Throwable exception) {
+        getInstance().log(tag, LogLevel.INFO, correlationID, message, exception, false);
+    }
     /**
      * Send a {@link LogLevel#INFO} log message with PII.
      *
