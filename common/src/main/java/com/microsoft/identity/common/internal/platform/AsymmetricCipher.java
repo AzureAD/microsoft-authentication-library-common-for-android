@@ -38,7 +38,7 @@ public enum AsymmetricCipher implements CryptoSuite {
     RSA_NONE_OAEPWithSHA_1AndMGF1PaddingAndHmacSha256 {
         @Override
         public AsymmetricAlgorithm cipher() {
-            return AsymmetricAlgorithm.Builder.of("RSA/NONE/OAEPWithSHA_1AndMGF1Padding");
+            return IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
         }
 
         @Override
