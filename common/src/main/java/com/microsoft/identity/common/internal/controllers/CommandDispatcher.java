@@ -537,8 +537,6 @@ public class CommandDispatcher {
 
             // It is possible that the current task could be stuck irretrievably.  If that's
             // what's happened, do everything in our power to make certain that it is dead.
-            // Then regenerate the executor service running it if it won't die nicely, so that
-            // we can meaningfully submit new tasks in the expectation that they will succeed.
             if (sCurrentInteractiveTask != null && !(sCurrentInteractiveTask.isDone() || sCurrentInteractiveTask.isCancelled())) {
                 try {
                     // We'll give it 1/2 second to respond to the kill message we broadcast.
