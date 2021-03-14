@@ -88,7 +88,7 @@ public class CommandDispatcher {
     private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
     //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
     @GuardedBy("sLock")
-    private static ExecutorService sInteractiveExecutor = getInteractiveExecutor();
+    private static final ExecutorService sInteractiveExecutor = getInteractiveExecutor();
 
     @GuardedBy("sLock")
     private static ExecutorService getInteractiveExecutor() {
@@ -540,7 +540,6 @@ public class CommandDispatcher {
             // Then regenerate the executor service running it if it won't die nicely, so that
             // we can meaningfully submit new tasks in the expectation that they will succeed.
             if (sCurrentInteractiveTask != null && !(sCurrentInteractiveTask.isDone() || sCurrentInteractiveTask.isCancelled())) {
-                boolean retryGet = false;
                 try {
                     // We'll give it 1/2 second to respond to the kill message we broadcast.
                     sCurrentInteractiveTask.get(500, TimeUnit.MILLISECONDS);
@@ -551,30 +550,10 @@ public class CommandDispatcher {
                     // Nope, it's still going.  Send it a thread cancellation.
                     Logger.warn(TAG + methodName, "Execution still running, attempting to cancel.");
                     sCurrentInteractiveTask.cancel(true);
-                    retryGet = true;
                 } catch (InterruptedException e) {
                     // Something interrupted us.  Log and die.
                     Logger.error(TAG + methodName, "Interrupted while running, bailing out", e);
                     Thread.currentThread().interrupt();
-                }
-                try {
-                    if (retryGet) {
-                        // Give it 30ms to die after being interrupted.
-                        sCurrentInteractiveTask.get(30, TimeUnit.MILLISECONDS);
-                    }
-                } catch (InterruptedException e) {
-                    // Something interrupted us, log and die.
-                    Logger.error(TAG + methodName, "Interrupted while running, bailing out", e);
-                    Thread.currentThread().interrupt();
-                } catch (ExecutionException e) {
-                    // This is actually OK.  The task should be dead at this point.  We did ask for
-                    // an interrupt.
-                } catch (TimeoutException e) {
-                    // Ew.  OK, we asked for a cancel and it didn't.  Terminate the executor with
-                    // prejudice and generate a new one.
-                    List<Runnable> stoppedTasks = sInteractiveExecutor.shutdownNow();
-                    Logger.error(TAG + methodName, "Killed interactive executor with " + stoppedTasks.size() + " running tasks", null);
-                    sInteractiveExecutor = getInteractiveExecutor();
                 }
             }
             Future<?> task = sInteractiveExecutor.submit(new Runnable() {
