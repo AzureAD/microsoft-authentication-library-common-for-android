@@ -547,6 +547,9 @@ public class CommandDispatcher {
                 } catch (TimeoutException e) {
                     // Nope, it's still going.  Send it a thread cancellation.
                     Logger.warn(TAG + methodName, "Execution still running, attempting to cancel.");
+                    // This does return a value, but it doesn't tell us much that's actionable.
+                    // It's true if the task was cancelled, but false could mean that it hadn't
+                    // started yet.
                     sCurrentInteractiveTask.cancel(true);
                 } catch (InterruptedException e) {
                     // Something interrupted us.  Log and die.
