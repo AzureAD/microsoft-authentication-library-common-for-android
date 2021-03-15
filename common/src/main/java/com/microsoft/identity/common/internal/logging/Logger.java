@@ -370,6 +370,7 @@ public final class Logger {
      *                      class or activity where the log call occurs.
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
+     * @param exception      A related exception, or null.
      */
     public static void info(final String tag,
                             @Nullable final String correlationID,
