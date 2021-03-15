@@ -62,6 +62,7 @@ import com.microsoft.identity.common.internal.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
@@ -98,7 +99,7 @@ public class CommandDispatcher {
     }
 
     @GuardedBy("sLock")
-    private static Future<?> sCurrentInteractiveTask = null;
+    private static WeakReference<Future<?>> sCurrentInteractiveTask = new WeakReference<Future<?>>(null);
 
     private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
             1, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 1, TimeUnit.MINUTES, "silent"
@@ -539,17 +540,18 @@ public class CommandDispatcher {
             // what's happened, do everything in our power to make certain that it is dead.
             // Then regenerate the executor service running it if it won't die nicely, so that
             // we can meaningfully submit new tasks in the expectation that they will succeed.
-            if (sCurrentInteractiveTask != null && !(sCurrentInteractiveTask.isDone() || sCurrentInteractiveTask.isCancelled())) {
+            Future<?> currentInteractiveTask = sCurrentInteractiveTask.get();
+            if (currentInteractiveTask != null && !(currentInteractiveTask.isDone() || currentInteractiveTask.isCancelled())) {
                 try {
                     // We'll give it 1/2 second to respond to the kill message we broadcast.
-                    sCurrentInteractiveTask.get(500, TimeUnit.MILLISECONDS);
+                    currentInteractiveTask.get(500, TimeUnit.MILLISECONDS);
                 } catch (ExecutionException e) {
                     // OK, it finished with an exception during that time.  Probably OK.
                     Logger.info(TAG + methodName, null, "Previous task terminated with exception " + e.getMessage());
                 } catch (TimeoutException e) {
                     // Nope, it's still going.  Send it a thread cancellation.
                     Logger.warn(TAG + methodName, "Execution still running, attempting to cancel.");
-                    sCurrentInteractiveTask.cancel(true);
+                    currentInteractiveTask.cancel(true);
                 } catch (InterruptedException e) {
                     // Something interrupted us.  Log and die.
                     Logger.error(TAG + methodName, "Interrupted while running, bailing out", e);
@@ -612,7 +614,7 @@ public class CommandDispatcher {
                     }
                 }
             });
-            sCurrentInteractiveTask = task;
+            CommandDispatcher.sCurrentInteractiveTask = new WeakReference<Future<?>>(task);
         }
     }
 
