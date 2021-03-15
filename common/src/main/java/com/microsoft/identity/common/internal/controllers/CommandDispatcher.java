@@ -543,10 +543,10 @@ public class CommandDispatcher {
                 try {
                     // We'll give it 1/2 second to respond to the kill message we broadcast.
                     currentInteractiveTask.get(500, TimeUnit.MILLISECONDS);
-                } catch (ExecutionException e) {
+                } catch (final ExecutionException e) {
                     // OK, it finished with an exception during that time.  Probably OK.
                     Logger.info(TAG + methodName, null, "Previous task terminated with exception " + e.getMessage());
-                } catch (TimeoutException e) {
+                } catch (final TimeoutException e) {
                     // Nope, it's still going.  Send it a thread cancellation.
                     Logger.warn(TAG + methodName, "Execution still running, attempting to cancel.");
                     // This does return a value, but it doesn't tell us much that's actionable.
