@@ -50,6 +50,8 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
 
     private final String enrollmentId;
 
+    private final String issuer;
+
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.
      *
