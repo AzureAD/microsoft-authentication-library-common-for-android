@@ -538,8 +538,6 @@ public class CommandDispatcher {
 
             // It is possible that the current task could be stuck irretrievably.  If that's
             // what's happened, do everything in our power to make certain that it is dead.
-            // Then regenerate the executor service running it if it won't die nicely, so that
-            // we can meaningfully submit new tasks in the expectation that they will succeed.
             Future<?> currentInteractiveTask = sCurrentInteractiveTask.get();
             if (currentInteractiveTask != null && !(currentInteractiveTask.isDone() || currentInteractiveTask.isCancelled())) {
                 try {
@@ -551,6 +549,9 @@ public class CommandDispatcher {
                 } catch (TimeoutException e) {
                     // Nope, it's still going.  Send it a thread cancellation.
                     Logger.warn(TAG + methodName, "Execution still running, attempting to cancel.");
+                    // This does return a value, but it doesn't tell us much that's actionable.
+                    // It's true if the task was cancelled, but false could mean that it hadn't
+                    // started yet.
                     currentInteractiveTask.cancel(true);
                 } catch (InterruptedException e) {
                     // Something interrupted us.  Log and die.
