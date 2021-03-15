@@ -553,7 +553,7 @@ public class CommandDispatcher {
                     // It's true if the task was cancelled, but false could mean that it hadn't
                     // started yet.
                     currentInteractiveTask.cancel(true);
-                } catch (InterruptedException e) {
+                } catch (final InterruptedException e) {
                     // Something interrupted us.  Log and die.
                     Logger.error(TAG + methodName, "Interrupted while running, bailing out", e);
                     Thread.currentThread().interrupt();
