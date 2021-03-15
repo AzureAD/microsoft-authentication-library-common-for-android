@@ -32,7 +32,6 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerCompanyPortal;
 import com.microsoft.identity.client.ui.automation.broker.BrokerHost;
 import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthenticator;
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
-import com.microsoft.identity.client.ui.automation.runner.IdentityRunnerArgs;
 
 import org.junit.rules.RuleChain;
 
@@ -66,7 +65,7 @@ public class RulesHelper {
         Log.i(TAG, "Adding DeviceLockSetRule");
         ruleChain = ruleChain.around(new DevicePinSetupRule(broker));
 
-        if (IdentityRunnerArgs.shouldPreferPreInstalledApks()) {
+        if (com.microsoft.identity.client.ui.automation.BuildConfig.PREFER_PRE_INSTALLED_APKS) {
             Log.i(TAG, "Adding CopyPreInstalledApkRule");
             ruleChain = ruleChain.around(new CopyPreInstalledApkRule(
                     new BrokerMicrosoftAuthenticator(), new BrokerCompanyPortal(),
