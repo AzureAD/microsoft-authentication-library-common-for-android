@@ -537,29 +537,29 @@ public class CommandDispatcher {
 
                 // It is possible that the current task could be stuck irretrievably.  If that's
                 // what's happened, do everything in our power to make certain that it is dead.
-                Future<?> currentInteractiveTask = sCurrentInteractiveTask.get();
+                final Future<?> currentInteractiveTask = sCurrentInteractiveTask.get();
                 if (currentInteractiveTask != null && !(currentInteractiveTask.isDone() || currentInteractiveTask.isCancelled())) {
                     try {
                         // We'll give it 1/2 second to respond to the kill message we broadcast.
                         currentInteractiveTask.get(500, TimeUnit.MILLISECONDS);
-                    } catch (ExecutionException e) {
+                    } catch (final ExecutionException e) {
                         // OK, it finished with an exception during that time.  Probably OK.
                         Logger.info(TAG + methodName, null, "Previous task terminated with exception " + e.getMessage());
-                    } catch (TimeoutException e) {
+                    } catch (final TimeoutException e) {
                         // Nope, it's still going.  Send it a thread cancellation.
                         Logger.warn(TAG + methodName, "Execution still running, attempting to cancel.");
                         // This does return a value, but it doesn't tell us much that's actionable.
                         // It's true if the task was cancelled, but false could mean that it hadn't
                         // started yet.
                         currentInteractiveTask.cancel(true);
-                    } catch (InterruptedException e) {
+                    } catch (final InterruptedException e) {
                         // Something interrupted us.  Log and die.
                         Logger.error(TAG + methodName, "Interrupted while running, bailing out", e);
                         Thread.currentThread().interrupt();
                     }
                 }
             }
-            Future<?> task = sInteractiveExecutor.submit(new Runnable() {
+            final Future<?> task = sInteractiveExecutor.submit(new Runnable() {
                 @Override
                 public void run() {
                     final CommandParameters commandParameters = command.getParameters();
