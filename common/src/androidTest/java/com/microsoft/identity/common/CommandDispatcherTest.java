@@ -22,14 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import android.content.Context;
 import android.content.Intent;
 
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
+import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -363,6 +367,49 @@ public class CommandDispatcherTest {
         if (ex.get() != null) {
             Assert.assertNull(ex.get());
         }
+    }
+
+    @Test
+    public void testCanRecoverFromHangingTask() throws Exception {
+        final AtomicInteger integer = new AtomicInteger(0);
+        final CountDownLatch latch = new CountDownLatch(1);
+        Context context = InstrumentationRegistry.getInstrumentation().getContext();
+        CommandCallback callback = new CommandCallback() {
+
+            @Override
+            public void onTaskCompleted(Object o) {
+
+            }
+
+            @Override
+            public void onError(Object error) {
+
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        };
+
+        CommandDispatcher.beginInteractive(new InteractiveTokenCommand(BrokerInteractiveTokenCommandParameters.builder().androidApplicationContext(context).build(), (BaseController) null, callback, null) {
+            @Override
+            public AcquireTokenResult execute() throws Exception {
+                Thread.sleep(1000000);
+                return null;
+            }
+        });
+        CommandDispatcher.beginInteractive(new InteractiveTokenCommand(BrokerInteractiveTokenCommandParameters.builder().androidApplicationContext(context).build(), (BaseController) null, callback, null) {
+            @Override
+            public AcquireTokenResult execute() throws Exception {
+                integer.set(1);
+                latch.countDown();
+                return null;
+            }
+        });
+        Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
+        Assert.assertEquals(1, integer.get());
+
     }
 
     public void testSubmitSilentWithParamMutationSameCommand(final Consumer<String> c) throws Exception {
