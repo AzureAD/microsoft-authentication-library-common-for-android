@@ -409,7 +409,6 @@ public class CommandDispatcherTest {
         });
         Assert.assertTrue(latch.await(5, TimeUnit.SECONDS));
         Assert.assertEquals(1, integer.get());
-
     }
 
     public void testSubmitSilentWithParamMutationSameCommand(final Consumer<String> c) throws Exception {
