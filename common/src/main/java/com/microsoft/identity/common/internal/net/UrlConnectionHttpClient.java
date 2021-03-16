@@ -70,6 +70,8 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
 @ThreadSafe
 @Immutable
 public class UrlConnectionHttpClient extends AbstractHttpClient {
+
+    private static Map<HttpRequest, HttpResponse> requests = new HashMap<>();
     /**
      * A functional interface modeled off of java.util.function.Supplier for providing
      * values to callers.

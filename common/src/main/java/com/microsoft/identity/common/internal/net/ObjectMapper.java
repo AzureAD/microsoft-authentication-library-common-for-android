@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -100,6 +101,16 @@ public final class ObjectMapper {
         Type stringMap = new TypeToken<TreeMap<String, String>>() {
         }.getType();
         TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
+        if (object instanceof IHasExtraParameters) {
+            IHasExtraParameters params = (IHasExtraParameters) object;
+            if (params.getExtraParameters() != null) {
+                for (Map.Entry<String, String> e : params.getExtraParameters()) {
+                    if (e.getKey() != null) {
+                        fields.put(e.getKey(), e.getValue());
+                    }
+                }
+            }
+        }
 
         StringBuilder builder = new StringBuilder();
 

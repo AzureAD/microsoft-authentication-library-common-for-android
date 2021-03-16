@@ -26,11 +26,13 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
+import java.util.Map;
 import java.util.UUID;
 
-public class MicrosoftTokenRequest extends TokenRequest {
+public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
 
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";
@@ -92,6 +94,18 @@ public class MicrosoftTokenRequest extends TokenRequest {
     private String mDeviceCode;
 
     private String mTokenScope;
+
+    private transient Iterable<Map.Entry<String, String>> mExtendedParameters;
+
+    @Override
+    public Iterable<Map.Entry<String, String>> getExtraParameters() {
+        return mExtendedParameters;
+    }
+
+    @Override
+    public void setExtraParameters(Iterable<Map.Entry<String, String>> extraParams) {
+        mExtendedParameters = extraParams;
+    }
 
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;

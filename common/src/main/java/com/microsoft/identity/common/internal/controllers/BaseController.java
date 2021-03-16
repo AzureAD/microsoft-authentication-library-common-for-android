@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -90,7 +91,10 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
@@ -260,6 +264,14 @@ public abstract class BaseController {
         return builder.build();
     }
 
+    @Builder
+    @Getter
+    @AllArgsConstructor
+    public static class TokenResultContainer {
+        private final TokenResult result;
+        private final Exception exception;
+    }
+
     protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                               @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
@@ -281,6 +293,12 @@ public abstract class BaseController {
         if (tokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+        }
+
+        if (tokenRequest instanceof IHasExtraParameters) {
+            if (parameters instanceof IHasExtraParameters) {
+                ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters)parameters).getExtraParameters());
+            }
         }
 
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
