@@ -81,10 +81,11 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
             throws ClientException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
+        final Context context = getApplicationContext();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
         mAuthorizationResultFuture = new ResultFuture<>();
-        final Browser browser = BrowserSelector.select(getApplicationContext(), mBrowserSafeList);
+        final Browser browser = BrowserSelector.select(context, mBrowserSafeList);
 
         //ClientException will be thrown if no browser found.
         Intent authIntent;
@@ -94,9 +95,13 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                     "CustomTabsService is supported."
             );
             //create customTabsIntent
-            mCustomTabManager = new CustomTabsManager(getApplicationContext());
-            mCustomTabManager.bind(browser.getPackageName());
-            authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+            mCustomTabManager = new CustomTabsManager(context);
+            if (!mCustomTabManager.bind(context, browser.getPackageName())) {
+                //create browser auth intent
+                authIntent = new Intent(Intent.ACTION_VIEW);
+            } else {
+                authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+            }
         } else {
             Logger.warn(
                     TAG + methodName,
