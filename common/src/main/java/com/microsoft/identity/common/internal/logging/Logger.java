@@ -360,14 +360,7 @@ public final class Logger {
     public static void info(final String tag,
                             @Nullable final String correlationID,
                             @Nullable final String message) {
-        getInstance().log(
-                tag,
-                LogLevel.INFO,
-                correlationID,
-                message,
-                null,
-                false
-        );
+        getInstance().log(tag, LogLevel.INFO, correlationID, message, null, false);
     }
 
     /**
