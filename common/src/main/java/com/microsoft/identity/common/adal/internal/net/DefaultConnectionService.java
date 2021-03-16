@@ -77,8 +77,11 @@ public class DefaultConnectionService implements IConnectionService {
                 final NetworkRequest.Builder builder = new NetworkRequest.Builder()
                         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
-                // Initialize the connectionAvailable to true, before the callback is registered.
-                DefaultConnectionService.connectionAvailable = true;
+                NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+                // Initialize the connectionAvailable to the active network info, before the callback is registered.
+                DefaultConnectionService.connectionAvailable =
+                        null != activeNetwork &&
+                                activeNetwork.isConnectedOrConnecting();
 
                 connectivityManager.registerNetworkCallback(
                         builder.build(),
