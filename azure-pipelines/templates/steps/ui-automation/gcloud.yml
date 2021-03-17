@@ -14,7 +14,7 @@ steps:
   name: secret
   displayName: 'Azure Key Vault: Download Secret for Automation'
   inputs:
-    ConnectedServiceName: 52f0b8f0-fbe7-4c1b-8169-25886eb6bab4
+    ConnectedServiceName: 9a9308ae-59b4-475f-b49c-3e828c508d8b
     KeyVaultName: ADALTestInfo
     SecretsFilter: AndroidAutomationRunnerAppSecret
 - task: DownloadSecureFile@1
