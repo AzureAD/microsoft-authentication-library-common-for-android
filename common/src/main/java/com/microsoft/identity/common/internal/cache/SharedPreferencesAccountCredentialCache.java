@@ -287,10 +287,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
             if (null == credential) {
                 Logger.warn(TAG, CREDENTIAL_DESERIALIZATION_FAILED);
-                } else {
-                    credentials.put(cacheKey, credential);
-                }
+            } else {
+                credentials.put(cacheKey, credential);
             }
+        }
 
         Logger.verbose(TAG, "Loaded [" + credentials.size() + "] Credentials...");
 
