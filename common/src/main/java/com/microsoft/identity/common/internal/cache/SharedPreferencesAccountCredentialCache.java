@@ -283,16 +283,13 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         while (cacheValues.hasNext()) {
             Map.Entry<String, ?> cacheValue = cacheValues.next();
             final String cacheKey = cacheValue.getKey();
-                final Credential credential = mCacheValueDelegate.fromCacheValue(
-                        cacheValue.getValue().toString(),
-                        credentialClassForType(cacheKey)
-                );
+            final Credential credential = mCacheValueDelegate.fromCacheValue(
+                    cacheValue.getValue().toString(),
+                    credentialClassForType(cacheKey)
+            );
 
-                if (null == credential) {
-                    Logger.warn(
-                            TAG,
-                            CREDENTIAL_DESERIALIZATION_FAILED
-                    );
+            if (null == credential) {
+                Logger.warn(TAG, CREDENTIAL_DESERIALIZATION_FAILED);
                 } else {
                     credentials.put(cacheKey, credential);
                 }
@@ -384,9 +381,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                                                      @Nullable final String target,
                                                      @Nullable final String authScheme,
                                                      @Nullable final String requestedClaims) {
-        final List<Credential> result = new ArrayList<>();
         final List<Credential> allCredentials = getCredentials();
 
+        final List<Credential> result = new ArrayList<>();
         for (final CredentialType type : credentialTypes) {
             result.addAll(
                     getCredentialsFilteredByInternal(
@@ -402,7 +399,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                     )
             );
         }
-
 
         return result;
     }
@@ -521,7 +517,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 } else if (CredentialType.PrimaryRefreshToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.PrimaryRefreshToken;
                     break;
-                }else {
+                } else {
                     // TODO Log a warning and skip this value?
                     Logger.warn(TAG, "Unexpected credential type.");
                 }
