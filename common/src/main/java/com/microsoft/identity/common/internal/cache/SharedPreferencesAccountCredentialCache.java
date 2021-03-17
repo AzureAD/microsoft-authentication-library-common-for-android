@@ -224,10 +224,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             );
 
             if (null == account) {
-                Logger.warn(
-                        TAG,
-                        ACCOUNT_RECORD_DESERIALIZATION_FAILED
-                );
+                Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
             } else {
                 accounts.put(cacheKey, account);
             }
