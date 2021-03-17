@@ -1177,14 +1177,14 @@ public class MsalOAuth2TokenCache
         );
 
         final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
-                null,
+                null, // homeAccountId
                 environment,
                 credentialTypes,
                 clientId,
-                null,
-                null,
-                null,
-                null
+                null, // realm
+                null, // target
+                null, // authScheme
+                null // requestedClaims
         );
 
         // For each Account with an associated RT, add it to the result List...
