@@ -264,15 +264,7 @@ public abstract class BaseController {
         return builder.build();
     }
 
-    @Builder
-    @Getter
-    @AllArgsConstructor
-    public static class TokenResultContainer {
-        private final TokenResult result;
-        private final Exception exception;
-    }
-
-    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+   protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                               @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
                                               @NonNull final InteractiveTokenCommandParameters parameters)
