@@ -27,6 +27,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Account & Credential cache interface.
@@ -128,6 +129,17 @@ public interface IAccountCredentialCache {
             final String homeAccountId,
             final String environment,
             final CredentialType credentialType,
+            final String clientId,
+            final String realm,
+            final String target,
+            final String authScheme,
+            final String requestedClaims
+    );
+
+    List<Credential> getCredentialsFilteredBy(
+            final String homeAccountId,
+            final String environment,
+            final Set<CredentialType> credentialType,
             final String clientId,
             final String realm,
             final String target,
