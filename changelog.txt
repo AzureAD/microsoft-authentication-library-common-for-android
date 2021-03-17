@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 - [PATCH] Fix interrupt flow when no login hint is provided (#1490)
 - [PATCH] Use requested claims as a cache key when overwriting an AT (#1225)
 - [PATCH] Fix InteractiveRequest Bound Service backcompat (#1215)
