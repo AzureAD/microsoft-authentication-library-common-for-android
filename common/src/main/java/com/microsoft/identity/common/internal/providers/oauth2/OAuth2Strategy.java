@@ -211,20 +211,6 @@ public abstract class OAuth2Strategy
         }
 
         URL requestUrl = new URL(mTokenEndpoint);
-        /*
-        if (request instanceof ICarriesRequestParameters) {
-            Uri requestUri = Uri.parse(requestUrl.toString());
-            Uri.Builder uriBuilder = requestUri.buildUpon();
-            if (((ICarriesRequestParameters) request).getExtraParameters() != null) {
-                for (final Map.Entry<String, String> p : ((ICarriesRequestParameters) request).getExtraParameters()) {
-                    if (p != null && p.getKey() != null) {
-                        uriBuilder.appendQueryParameter(p.getKey(), p.getValue());
-                    }
-                }
-            }
-            requestUrl = new URL(uriBuilder.build().toString());
-        }
-         */
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
