@@ -136,10 +136,22 @@ public interface IAccountCredentialCache {
             final String requestedClaims
     );
 
+    /**
+     * Returns all of the Credentials matching the supplied criteria.
+     *
+     * @param homeAccountId   The homeAccountId used to match Credential cache keys.
+     * @param environment     The environment used to match Credential cache keys.
+     * @param credentialTypes  The sought CredentialTypes.
+     * @param clientId        The clientId used to match Credential cache keys.
+     * @param realm           The realm used to match Credential cache keys.
+     * @param target          The target used to match Credential cache keys.
+     * @param requestedClaims The requested claims used to match Credential cache keys.
+     * @return A mutable List of Credentials matching the supplied criteria.
+     */
     List<Credential> getCredentialsFilteredBy(
             final String homeAccountId,
             final String environment,
-            final Set<CredentialType> credentialType,
+            final Set<CredentialType> credentialTypes,
             final String clientId,
             final String realm,
             final String target,
