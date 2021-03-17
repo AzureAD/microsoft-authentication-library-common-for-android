@@ -144,7 +144,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         // try different block sizes
         final int sizeRange = 1000;
         StringBuilder buf = new StringBuilder(sizeRange);
-        for (int i = 0; i < sizeRange; i++) {
+        for (int i = 0; i < sizeRange; i+=20) {
             encryptDecrypt(buf.append("a").toString());
         }
         Log.d(TAG, "Finished testEncryptDecrypt_differentSizes");
@@ -201,12 +201,12 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final StorageHelper storageHelper = new StorageHelper(context);
         Assert.assertTrue(storageHelper.testKeyChange());
         for (int i = 0; i < 500; i++) {
-            Assert.assertFalse(storageHelper.testKeyChange());
+            Assert.assertFalse("None of these things should change the key", storageHelper.testKeyChange());
         }
-        StorageHelper.LAST_KNOWN_THUMBPRINT.set("");
-        Assert.assertTrue(storageHelper.testKeyChange());
+        StorageHelper.LAST_KNOWN_THUMBPRINT.set("foo");
+        Assert.assertTrue("We altered the key here", storageHelper.testKeyChange());
         for (int i = 0; i < 500; i++) {
-            Assert.assertFalse(storageHelper.testKeyChange());
+            Assert.assertFalse("The key should remain unchanged", storageHelper.testKeyChange());
         }
     }
 

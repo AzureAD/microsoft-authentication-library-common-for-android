@@ -49,14 +49,18 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.internal.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
+import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.lang.reflect.Field;
 import java.util.Map;
@@ -78,8 +82,14 @@ public class CommandDispatcher {
     private static final String TAG = CommandDispatcher.class.getSimpleName();
 
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
+    private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
+    //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
+    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+            1, INTERACTIVE_REQUEST_THREAD_POOL_SIZE, -1, 0, TimeUnit.MINUTES, "interactive"
+    );
+    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
+            1, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 1, TimeUnit.MINUTES, "silent"
+    );
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -163,13 +173,20 @@ public class CommandDispatcher {
      * @param command
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
+    public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
+                                                                                         @NonNull final BaseCommand command) {
 
         final String methodName = ":submitSilent";
-        Logger.verbose(
-                TAG + methodName,
-                "Beginning execution of silent command."
-        );
+
+        final CommandParameters commandParameters = command.getParameters();
+        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
+                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() :
+                        commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+
+        // set correlation id on parameters as it may not already be set
+        commandParameters.setCorrelationId(correlationId);
+
+        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
         final Handler handler = new Handler(Looper.getMainLooper());
         synchronized (mapAccessLock) {
@@ -203,12 +220,12 @@ public class CommandDispatcher {
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    try {
-                        final CommandParameters commandParameters = command.getParameters();
-                        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(), commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
 
-                        // set correlation id on parameters as it may not already be set
-                        commandParameters.setCorrelationId(correlationId);
+                    try {
+                        //initializing again since the request is transferred to a different thread pool
+                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
+                                SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion());
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
@@ -218,32 +235,36 @@ public class CommandDispatcher {
 
                         //Log operation parameters
                         if (command.getParameters() instanceof SilentTokenCommandParameters) {
-                            logSilentRequestParams(methodName, (SilentTokenCommandParameters) command.getParameters());
                             EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
                         }
 
                         //Check cache to see if the same command completed in the last 30 seconds
                         commandResult = sCommandResultCache.get(command);
-
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
                             commandResult = executeCommand(command);
                             cacheCommandResult(command, commandResult);
+                            Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
+                                    + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
+                                    + " is cacheable : " + command.isEligibleForCaching());
                         } else {
                             Logger.info(
                                     TAG + methodName,
-                                    "Silent command result returned from cache."
+                                    "Silent command result returned from cache for correlation id : "
+                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
                             );
+                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
+                            commandResult = new CommandResult(commandResult.getStatus(),
+                                    commandResult.getResult(), commandResult.getCorrelationId());
                         }
-
+                        // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
-
                         Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
-                        //Return the result via the callback
                     } catch (final Throwable t) {
+                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
                         synchronized (mapAccessLock) {
@@ -269,13 +290,34 @@ public class CommandDispatcher {
         }
     }
 
+    private static void logParameters(@NonNull String tag, @NonNull String correlationId,
+                                      @NonNull Object parameters, @Nullable String publicApiId) {
+        final String TAG = tag + ":" + parameters.getClass().getSimpleName();
+
+        //TODO:1315871 - conversion of PublicApiId in readable form.
+        Logger.info(TAG, DiagnosticContext.getRequestContext().toJsonString(),
+                "Starting request for correlation id : ##" + correlationId
+                        + ", with PublicApiId : " + publicApiId);
+
+        if (Logger.getAllowPii()) {
+            Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
+        } else {
+            Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
+        }
+    }
+
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
             @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
             @NonNull final Handler handler) {
+
+        final String methodName = ":getCommandResultConsumer";
+
         return new BiConsumer<CommandResult, Throwable>() {
             @Override
             public void accept(CommandResult result, final Throwable throwable) {
                 if (null != throwable) {
+                    Logger.info(TAG + methodName, "Request encountered an exception " +
+                            "(this maybe a duplicate request which caries the exception encountered by the original request)");
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
@@ -284,7 +326,14 @@ public class CommandDispatcher {
                     });
                     return;
                 }
-
+                if (!StringUtil.isEmpty(result.getCorrelationId())
+                        && !command.getParameters().getCorrelationId().equals(result.getCorrelationId())) {
+                    Logger.info(TAG + methodName,
+                            "Completed duplicate request with correlation id : **"
+                                    + command.getParameters().getCorrelationId() + ", having the same result as : "
+                                    + result.getCorrelationId() + ", with the status : "
+                                    + result.getStatus().getLogStatus());
+                }
                 // Return command result will post() result for us.
                 returnCommandResult(command, result, handler);
             }
@@ -328,18 +377,22 @@ public class CommandDispatcher {
 
         if (baseException != null) {
             if (baseException instanceof UserCancelException) {
-                commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null);
+                commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null,
+                        command.getParameters().getCorrelationId());
             } else {
                 //Post On Error
-                commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+                commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException,
+                        command.getParameters().getCorrelationId());
             }
         } else /* baseException == null */ {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result);
+                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
+                        command.getParameters().getCorrelationId());
             } else {
                 //For commands that don't return an AcquireTokenResult
-                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result);
+                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
+                        command.getParameters().getCorrelationId());
             }
         }
 
@@ -354,7 +407,8 @@ public class CommandDispatcher {
      * @param result
      * @param handler
      */
-    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command, final CommandResult result, Handler handler) {
+    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command,
+                                            final CommandResult result, @NonNull final Handler handler) {
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -394,7 +448,8 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
-    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command, CommandResult commandResult) {
+    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
+                                           CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
             sCommandResultCache.put(command, commandResult);
         }
@@ -437,29 +492,28 @@ public class CommandDispatcher {
      * @param baseException
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(BaseException baseException, AcquireTokenResult result) {
+    private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
+                                                                 @NonNull AcquireTokenResult result, @NonNull String correlationId) {
         //Token Commands
         if (result.getSucceeded()) {
-            return new CommandResult(CommandResult.ResultStatus.COMPLETED, result.getLocalAuthenticationResult());
+            return new CommandResult(CommandResult.ResultStatus.COMPLETED,
+                    result.getLocalAuthenticationResult(), correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
             baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
-                return new CommandResult(CommandResult.ResultStatus.CANCEL, null);
+                return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
-                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException);
+                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
             }
         }
     }
 
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
-        Logger.info(
-                TAG + methodName,
-                "Beginning interactive request"
-        );
         synchronized (sLock) {
-            final LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
+            final LocalBroadcastManager localBroadcastManager =
+                    LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
             // only send broadcast to cancel if within broker
             if (command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
@@ -472,24 +526,22 @@ public class CommandDispatcher {
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
+                    final CommandParameters commandParameters = command.getParameters();
+                    final String correlationId = initializeDiagnosticContext(
+                            commandParameters.getCorrelationId(),
+                            commandParameters.getSdkType() == null ?
+                                    SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                            commandParameters.getSdkVersion()
+                    );
                     try {
-                        final CommandParameters commandParameters = command.getParameters();
-                        final String correlationId = initializeDiagnosticContext(
-                                commandParameters.getCorrelationId(),
-                                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
-                                commandParameters.getSdkVersion()
-                        );
-
                         // set correlation id on parameters as it may not already be set
                         commandParameters.setCorrelationId(correlationId);
+
+                        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
-                        if (command.getParameters() instanceof InteractiveTokenCommandParameters) {
-                            logInteractiveRequestParameters(methodName, (InteractiveTokenCommandParameters) command.getParameters());
-                        }
 
                         final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
                             @Override
@@ -515,6 +567,10 @@ public class CommandDispatcher {
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
 
+                        Logger.info(TAG + methodName,
+                                "Completed interactive request for correlation id : **" + correlationId +
+                                        ", with the status : " + commandResult.getStatus().getLogStatus());
+
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         Telemetry.getInstance().flush(correlationId);
                         returnCommandResult(command, commandResult, handler);
@@ -524,116 +580,6 @@ public class CommandDispatcher {
                 }
             });
         }
-    }
-
-    private static void logInteractiveRequestParameters(final String methodName,
-                                                        final InteractiveTokenCommandParameters params) {
-        Logger.info(
-                TAG + methodName,
-                "Requested "
-                        + params.getScopes().size()
-                        + " scopes"
-        );
-
-        Logger.infoPII(
-                TAG + methodName,
-                "----\nRequested scopes:"
-        );
-        for (final String scope : params.getScopes()) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "\t" + scope
-            );
-        }
-        Logger.infoPII(
-                TAG + methodName,
-                "----"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + params.getClientId() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "RedirectUri: [" + params.getRedirectUri() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "Login hint: [" + params.getLoginHint() + "]"
-        );
-
-        if (null != params.getExtraQueryStringParameters()) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "Extra query params:"
-            );
-            for (final Pair<String, String> qp : params.getExtraQueryStringParameters()) {
-                Logger.infoPII(
-                        TAG + methodName,
-                        "\t\"" + qp.first + "\":\"" + qp.second + "\""
-                );
-            }
-        }
-
-        if (null != params.getExtraScopesToConsent()) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "Extra scopes to consent:"
-            );
-            for (final String extraScope : params.getExtraScopesToConsent()) {
-                Logger.infoPII(
-                        TAG + methodName,
-                        "\t" + extraScope
-                );
-            }
-        }
-
-        Logger.info(
-                TAG + methodName,
-                "Using authorization agent: " + params.getAuthorizationAgent().toString()
-        );
-
-        if (null != params.getAccount()) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "Using account: " + params.getAccount().getHomeAccountId()
-            );
-        }
-    }
-
-    private static void logSilentRequestParams(final String methodName,
-                                               final SilentTokenCommandParameters parameters) {
-        Logger.infoPII(
-                TAG + methodName,
-                "ClientId: [" + parameters.getClientId() + "]"
-        );
-        Logger.infoPII(
-                TAG + methodName,
-                "----\nRequested scopes:"
-        );
-
-        for (final String scope : parameters.getScopes()) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "\t" + scope
-            );
-        }
-        Logger.infoPII(
-                TAG + methodName,
-                "----"
-        );
-
-        if (null != parameters.getAccount()) {
-            Logger.infoPII(
-                    TAG + methodName,
-                    "Using account: " + parameters.getAccount().getHomeAccountId()
-            );
-        }
-
-        Logger.info(
-                TAG + methodName,
-                "Force refresh? [" + parameters.isForceRefresh() + "]"
-        );
     }
 
     private static void completeInteractive(final Intent resultIntent) {

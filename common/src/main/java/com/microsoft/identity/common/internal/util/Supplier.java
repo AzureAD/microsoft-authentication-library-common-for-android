@@ -20,35 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.internal.testutils.shadows.ShadowHttpClient;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Map;
+package com.microsoft.identity.common.internal.util;
 
 /**
- * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link ShadowHttpClient}.
+ * Represents an operation that returns a result, taking no arguments.
+ *
+ * @param <T> the type of argument returned.
  */
-public interface HttpRequestInterceptor {
-
+public interface Supplier<T> {
     /**
-     * @param httpMethod     the http method
-     * @param requestUrl     the request url
-     * @param requestHeaders the request headers
-     * @param requestContent the request content
-     * @return the http response object
-     * @throws IOException throws an exception when something went wrong during the http request
+     * @return a instance of a T.
      */
-    HttpResponse intercept(@NonNull HttpClient.HttpMethod httpMethod,
-                           @NonNull URL requestUrl,
-                           @NonNull Map<String, String> requestHeaders,
-                           @Nullable byte[] requestContent) throws IOException;
-
+    T get();
 }

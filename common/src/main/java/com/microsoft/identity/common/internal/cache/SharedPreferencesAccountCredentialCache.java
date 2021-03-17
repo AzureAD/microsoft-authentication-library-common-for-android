@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -207,25 +208,25 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @NonNull
     private Map<String, AccountRecord> getAccountsWithKeys() {
         Logger.verbose(TAG, "Loading Accounts + keys...");
-        final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
+        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+            @Override
+            public boolean test(String value) {
+                return isAccount(value);
+            }});
         final Map<String, AccountRecord> accounts = new HashMap<>();
 
-        for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
+        while (cacheValues.hasNext()) {
+            Map.Entry<String, ?> cacheValue = cacheValues.next();
             final String cacheKey = cacheValue.getKey();
-            if (isAccount(cacheKey)) {
-                final AccountRecord account = mCacheValueDelegate.fromCacheValue(
-                        cacheValue.getValue().toString(),
-                        AccountRecord.class
-                );
+            final AccountRecord account = mCacheValueDelegate.fromCacheValue(
+                    cacheValue.getValue().toString(),
+                    AccountRecord.class
+            );
 
-                if (null == account) {
-                    Logger.warn(
-                            TAG,
-                            ACCOUNT_RECORD_DESERIALIZATION_FAILED
-                    );
-                } else {
-                    accounts.put(cacheKey, account);
-                }
+            if (null == account) {
+                Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
+            } else {
+                accounts.put(cacheKey, account);
             }
         }
 
@@ -269,25 +270,25 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @NonNull
     private Map<String, Credential> getCredentialsWithKeys() {
         Logger.verbose(TAG, "Loading Credentials with keys...");
-        final Map<String, ?> cacheValues = mSharedPreferencesFileManager.getAll();
         final Map<String, Credential> credentials = new HashMap<>();
+        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+            @Override
+            public boolean test(String value) {
+                return isCredential(value);
+            }});
 
-        for (Map.Entry<String, ?> cacheValue : cacheValues.entrySet()) {
+        while (cacheValues.hasNext()) {
+            Map.Entry<String, ?> cacheValue = cacheValues.next();
             final String cacheKey = cacheValue.getKey();
-            if (isCredential(cacheKey)) {
-                final Credential credential = mCacheValueDelegate.fromCacheValue(
-                        cacheValue.getValue().toString(),
-                        credentialClassForType(cacheKey)
-                );
+            final Credential credential = mCacheValueDelegate.fromCacheValue(
+                    cacheValue.getValue().toString(),
+                    credentialClassForType(cacheKey)
+            );
 
-                if (null == credential) {
-                    Logger.warn(
-                            TAG,
-                            CREDENTIAL_DESERIALIZATION_FAILED
-                    );
-                } else {
-                    credentials.put(cacheKey, credential);
-                }
+            if (null == credential) {
+                Logger.warn(TAG, CREDENTIAL_DESERIALIZATION_FAILED);
+            } else {
+                credentials.put(cacheKey, credential);
             }
         }
 
@@ -366,6 +367,37 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
+    }
+
+    @Override
+    public List<Credential> getCredentialsFilteredBy(@Nullable final String homeAccountId,
+                                                     @Nullable final String environment,
+                                                     @NonNull final Set<CredentialType> credentialTypes,
+                                                     @Nullable final String clientId,
+                                                     @Nullable final String realm,
+                                                     @Nullable final String target,
+                                                     @Nullable final String authScheme,
+                                                     @Nullable final String requestedClaims) {
+        final List<Credential> allCredentials = getCredentials();
+
+        final List<Credential> result = new ArrayList<>();
+        for (final CredentialType type : credentialTypes) {
+            result.addAll(
+                    getCredentialsFilteredByInternal(
+                            homeAccountId,
+                            environment,
+                            type,
+                            clientId,
+                            realm,
+                            target,
+                            authScheme,
+                            requestedClaims,
+                            allCredentials
+                    )
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -482,7 +514,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 } else if (CredentialType.PrimaryRefreshToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.PrimaryRefreshToken;
                     break;
-                }else {
+                } else {
                     // TODO Log a warning and skip this value?
                     Logger.warn(TAG, "Unexpected credential type.");
                 }

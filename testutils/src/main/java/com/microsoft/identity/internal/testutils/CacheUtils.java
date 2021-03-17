@@ -84,9 +84,8 @@ public class CacheUtils {
     public void editAllTokenInCache(@NonNull final String sharedPrefName, @NonNull final Predicate<String> predicate,
                                     @NonNull Function<String, Class<? extends Credential>> classFunction, @NonNull final Function<String, String> editor,
                                              final boolean encrypted) {
-        final SharedPreferences sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+        final SharedPreferencesFileManager sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
                 TestUtils.getSharedPreferences(sharedPrefName);
-        final SharedPreferences.Editor prefEditor = sharedPref.edit();
         final Map<String, ?> cacheEntries = sharedPref.getAll();
 
         //get all the key from the cache entry, verify and edit it.
@@ -99,8 +98,7 @@ public class CacheUtils {
                 final Credential credential = CACHE_KEY_VALUE_DELEGATE.fromCacheValue(cacheValue, credClass);
                 if (credential == null) { Logger.warn("CacheUtils:editAllTokenInCache", "Value did not deserialize"); continue; }
                 credential.setSecret(editor.apply(credential.getSecret()));
-                prefEditor.putString(keyToEdit, CACHE_KEY_VALUE_DELEGATE.generateCacheValue(credential));
-                prefEditor.apply();
+                sharedPref.putString(keyToEdit, CACHE_KEY_VALUE_DELEGATE.generateCacheValue(credential));
             }
         }
     }
@@ -203,15 +201,8 @@ public class CacheUtils {
     }
 
     public void clear(String sharedPrefName, boolean encrypted) {
-        final SharedPreferences sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+        final SharedPreferencesFileManager sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
                 TestUtils.getSharedPreferences(sharedPrefName);
-        final SharedPreferences.Editor prefEditor = sharedPref.edit();
-        final Map<String, ?> cacheEntries = sharedPref.getAll();
-        //get all the key from the cache entry, verify and edit it.
-        for (final Map.Entry<String, ?> cacheEntry : cacheEntries.entrySet()) {
-            final String keyToEdit = cacheEntry.getKey();
-            prefEditor.remove(keyToEdit);
-        }
-        prefEditor.commit();
+        sharedPref.clear();
     }
 }

@@ -20,35 +20,43 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.common.internal.platform;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.internal.testutils.shadows.ShadowHttpClient;
-
-import java.io.IOException;
-import java.net.URL;
-import java.util.Map;
+import java.security.Key;
+import java.security.KeyStore;
 
 /**
- * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link ShadowHttpClient}.
+ * Interface for cryptoSuite definitions.  Designed to span the Cipher enum in use in DevicePopManager
+ * to allow for inclusion of symmetric cipher definitions and include the name of a MAC algorithm.
  */
-public interface HttpRequestInterceptor {
+public interface CryptoSuite {
+    /**
+     * @return the name of the cipher used for this crypto suite.  Should be suitable for use in Cipher.getInstance();
+     */
+    Algorithm cipher();
 
     /**
-     * @param httpMethod     the http method
-     * @param requestUrl     the request url
-     * @param requestHeaders the request headers
-     * @param requestContent the request content
-     * @return the http response object
-     * @throws IOException throws an exception when something went wrong during the http request
+     * @return the name of the MAC used for this crypto suite.  Should be suitable for use in Mac.getInstance();
      */
-    HttpResponse intercept(@NonNull HttpClient.HttpMethod httpMethod,
-                           @NonNull URL requestUrl,
-                           @NonNull Map<String, String> requestHeaders,
-                           @Nullable byte[] requestContent) throws IOException;
+    String macName();
 
+    /**
+     * @return true if this suite uses an asymmetric key.
+     */
+    boolean isAsymmetric();
+
+    /**
+     * @return the class of entry that is used by the a KeyStore to store this credential.
+     */
+    Class<? extends KeyStore.Entry> keyClass();
+
+    /**
+     * @return the key size for this instance.
+     */
+    int keySize();
+
+    /**
+     * @return the signing algorithm desired by this suite.
+     */
+    IDevicePopManager.SigningAlgorithm signingAlgorithm();
 }
