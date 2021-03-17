@@ -1172,10 +1172,9 @@ public class MsalOAuth2TokenCache
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
 
-        final Set<CredentialType> credentialTypes = new HashSet<>();
-        credentialTypes.add(IdToken);
-        credentialTypes.add(V1IdToken);
-        credentialTypes.add(RefreshToken);
+        final Set<CredentialType> credentialTypes = new HashSet<>(
+                Arrays.asList(IdToken, V1IdToken, RefreshToken)
+        );
 
         final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
                 null,
