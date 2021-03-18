@@ -35,6 +35,7 @@ public interface IHasExtraParameters {
      * @return a list of pairs of String, String parameters.
      */
     Iterable<Map.Entry<String, String>> getExtraParameters();
+    
     /**
      * @return a list of pairs of String, String parameters.
      */
