@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import android.util.Pair;
+import androidx.annotation.Nullable;
 
 import java.util.List;
 import java.util.Map;
