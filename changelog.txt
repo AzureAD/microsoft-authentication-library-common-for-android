@@ -12,7 +12,7 @@ V.Next
 - [PATCH] Improved performance of getAccounts() call by reducing number of cache round-trips (#1271)
 - [PATCH] Perf: Use an Iterator over SharedPreferences entries via getAllFilteredByKey() (#1262)
 - [MINOR] Fall back to browser view if we can't open custom tabs. (#1270)
-- [MINOR] Adds plumbing for new API parameters in MSAL to trigger client options (#1266)
+- [MINOR] Adds plumbing for new API parameters to reach the token endpoint (#1266)
 
 Version 3.1.2
 ----------
