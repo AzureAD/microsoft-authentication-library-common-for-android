@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -54,6 +55,21 @@ public final class StringUtil {
     }
 
     /**
+     * Returns true if the string contains the given substring.
+     *
+     * @param str    the string to search for a substring in
+     * @param substr the substring to search for
+     * @return true if the string contains the given substring, false if it does not or if it is null
+     */
+    public static boolean containsSubString(final String str, final String substr) {
+        if (TextUtils.isEmpty(str)) {
+            return false;
+        }
+
+        return str.contains(substr);
+    }
+
+    /**
      * Convert the given set of scopes into the string with the provided delimiter.
      *
      * @param inputSet  The Set of scopes to convert.
@@ -77,7 +93,7 @@ public final class StringUtil {
         return stringBuilder.toString();
     }
 
-    public static String join(final char delimiter, @NonNull final List<String> toJoin) {
+    public static String join(final char delimiter, @NonNull final Iterable<String> toJoin) {
         StringBuilder builder = new StringBuilder();
 
         char tempDelimiter = Character.MIN_VALUE;

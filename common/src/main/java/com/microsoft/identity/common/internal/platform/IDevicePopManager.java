@@ -32,12 +32,27 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
+import java.security.AlgorithmParameters;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.UnrecoverableEntryException;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.cert.Certificate;
 import java.util.Date;
+
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
 
 /**
  * Internal convenience class interface for PoP related functions.
  */
 public interface IDevicePopManager {
+
+    String MGF_1 = "MGF1";
+    String SHA_1 = "SHA-1";
 
     /**
      * The desired export format of our PoP public key.
@@ -82,6 +97,8 @@ public interface IDevicePopManager {
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         NONE_WITH_RSA("NONEwithRSA"),
 
+        SHA_1_WITH_RSA("SHA1withRSA"),
+
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         SHA_256_WITH_RSA("SHA256withRSA"),
 
@@ -116,22 +133,69 @@ public interface IDevicePopManager {
     /**
      * Ciphers supported by our underlying keystore. Asymmetric ciphers shown only.
      * <p>
-     * Note: Some ciphers are [in]conspicuously absent. Any cipher that requires use of a SHA-1
-     * digest or uses NO_PADDING will not be supported.
+     * Note: Some ciphers <strong>should not</strong> be used to generate an SHR. Any cipher that
+     * requires use of a SHA-1 digest or uses NO_PADDING should not be supported.
      */
-    enum Cipher {
-
+    enum Cipher implements AsymmetricAlgorithm {
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
 
-        @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding"),
 
         @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding"),
+        RSA_NONE_OAEPWithSHA_1AndMGF1Padding("RSA/NONE/OAEPWithSHA-1AndMGF1Padding") {
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec(SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        },
 
         @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding");
+        RSA_ECB_OAEPWithSHA_1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding") {
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec(SHA_1, MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        },
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_256AndMGF1Padding("RSA/ECB/OAEPWithSHA-256AndMGF1Padding") {
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec("SHA-256", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        },
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding") {
+
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec("SHA-384", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        },
+
+        @RequiresApi(Build.VERSION_CODES.M)
+        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding") {
+            @Override
+            public AlgorithmParameterSpec getParameters() {
+                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
+                // android platform support.  See:
+                // https://issuetracker.google.com/issues/37075898#comment7
+                return new OAEPParameterSpec("SHA-512", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
+            }
+        };
 
         private final String mValue;
 
@@ -144,6 +208,22 @@ public interface IDevicePopManager {
         public String toString() {
             return mValue;
         }
+
+        public Algorithm cipherName() {
+            return AsymmetricAlgorithm.Builder.of(mValue);
+        }
+
+        /**
+         * @return parameters to configure this cipher with, or null if none.
+         */
+        public AlgorithmParameterSpec getParameters() {
+            return null;
+        }
+
+        /**
+         * @return true if this cipher can be used for SHR generation.
+         */
+        public boolean supportsShr() { return true; }
     }
 
     /**
@@ -221,6 +301,16 @@ public interface IDevicePopManager {
     String sign(SigningAlgorithm alg, String input) throws ClientException;
 
     /**
+     * Signs an arbitrary piece of byte data.
+     *
+     * @param alg   The RSA signing algorithm to use.
+     * @param input The input to sign.
+     * @return The input data, signed by our private key.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
+     */
+    byte[] sign(@NonNull SigningAlgorithm alg, byte[] input) throws ClientException;
+
+    /**
      * Verify a signature previously made by our Private Key.
      *
      * @param alg          The RSA signing algorithm to use.
@@ -230,6 +320,17 @@ public interface IDevicePopManager {
      * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
      */
     boolean verify(SigningAlgorithm alg, String plainText, String signatureStr);
+
+    /**
+     * Verify a signature previously made by our Private Key.
+     *
+     * @param alg            The RSA signing algorithm to use.
+     * @param plainText      The input to verify.
+     * @param signatureBytes The signature against which the plainText should be evaluated.
+     * @return True if the input was signed by our private key. False otherwise.
+     * @see com.microsoft.identity.common.internal.platform.DevicePopManager.SigningAlgorithm
+     */
+    boolean verify(@NonNull SigningAlgorithm alg, byte[] plainText, byte[] signatureBytes);
 
     /**
      * Encrypts the supplied String with the provided cipher.
@@ -242,6 +343,16 @@ public interface IDevicePopManager {
     String encrypt(Cipher cipher, String plaintext) throws ClientException;
 
     /**
+     * Encrypts the supplied byte array with the provided cipher.
+     *
+     * @param cipher    The cipher to use.
+     * @param plaintext The data to encrypt.
+     * @return The encrypted plaintext.
+     * @throws ClientException If encryption fails.
+     */
+    byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException;
+
+    /**
      * Decrypts the supplied String with the provided cipher.
      *
      * @param cipher     The cipher used to derive the provided ciphertext.
@@ -250,6 +361,16 @@ public interface IDevicePopManager {
      * @throws ClientException If decryption fails.
      */
     String decrypt(Cipher cipher, String ciphertext) throws ClientException;
+
+    /**
+     * Decrypts the supplied String with the provided cipher.
+     *
+     * @param cipher     The cipher used to derive the provided ciphertext.
+     * @param ciphertext The text to decrypt.
+     * @return The decrypted text.
+     * @throws ClientException If decryption fails.
+     */
+    byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException;
 
     /**
      * Gets the {@link SecureHardwareState} of this DevicePopManager.
@@ -267,6 +388,23 @@ public interface IDevicePopManager {
      * @return A String of the public key.
      */
     String getPublicKey(PublicKeyFormat format) throws ClientException;
+
+    /**
+     * Gets the public key associated with this underlying key in the pop manager..
+     *
+     * @return A PublicKey instance.
+     */
+    PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException;
+    
+    /*
+     * Returns the certificate chain associated with the underlying key material.
+     *
+     * @return The certificate chain (with the device pop key certificate first, following by zero
+     * or more certificate authorities), or null if the current key does not contain a certificate
+     * chain.
+     * @throws ClientException If the underlying key material cannot be inspected.
+     */
+    Certificate[] getCertificateChain() throws ClientException;
 
     /**
      * Api to create the signed PoP access token.

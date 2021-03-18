@@ -116,9 +116,10 @@ public class ADALOAuth2TokenCache
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
         mISharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         getContext(),
                         fileName,
+                        -1,
                         new StorageHelper(getContext())
                 );
     }
@@ -398,5 +399,13 @@ public class ADALOAuth2TokenCache
         Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;
         return refreshToken;
+    }
+
+    public static String getAdalCacheFilename() {
+        Logger.info(
+                TAG + ":getAdalCacheFilename",
+                "Getting ADAL cache file name..."
+        );
+        return SHARED_PREFERENCES_FILENAME;
     }
 }

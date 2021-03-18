@@ -240,6 +240,7 @@ public class TokenRequest {
         public static final String REFRESH_TOKEN = "refresh_token";
         public static final String PASSWORD = "password";
         public static final String DEVICE_CODE = "urn:ietf:params:oauth:grant-type:device_code";
+        public final static String CLIENT_CREDENTIALS = "client_credentials";
     }
 
     public static class TokenType {

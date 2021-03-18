@@ -31,8 +31,6 @@ import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
 import android.util.Base64;
-import android.util.Base64InputStream;
-import android.util.Base64OutputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,6 +39,8 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -54,16 +54,10 @@ import com.nimbusds.jwt.SignedJWT;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -74,10 +68,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.PrivateKey;
+import java.security.ProviderException;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.AlgorithmParameterSpec;
@@ -88,23 +84,26 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
+import lombok.SneakyThrows;
+
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
-import static com.microsoft.identity.common.adal.internal.util.StringExtensions.ENCODING_UTF8;
 import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
+import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
 import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
 import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
@@ -113,16 +112,18 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PA
 import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
-import static com.microsoft.identity.common.exception.ClientException.UNSUPPORTED_ENCODING;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
+@SuppressWarnings("PMD.AvoidDuplicateLiterals")
 class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
+
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * The PoP alias in the designated KeyStore -- default val used by non-OneAuth Android platform.
@@ -140,14 +141,9 @@ class DevicePopManager implements IDevicePopManager {
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
 
     /**
-     * The keystore backing this implementation.
+     * Manager class for interacting with key storage mechanism.
      */
-    private final KeyStore mKeyStore;
-
-    /**
-     * The alias of this DevicePopManager's keys.
-     */
-    private final String mKeyAlias;
+    private final IKeyManager<KeyStore.PrivateKeyEntry> mKeyManager;
 
     /**
      * The name of the KeyStore to use.
@@ -157,7 +153,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * A background worker to service async tasks.
      */
-    private static final ExecutorService sThreadExecutor = Executors.newCachedThreadPool();
+    private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
 
     /**
      * Properties used by the self-signed certificate.
@@ -241,50 +237,34 @@ class DevicePopManager implements IDevicePopManager {
 
     DevicePopManager() throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
-        mKeyStore.load(null);
-        mKeyAlias = DEFAULT_KEYSTORE_ENTRY_ALIAS;
+        this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
     DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        mKeyStore = KeyStore.getInstance(ANDROID_KEYSTORE);
-        mKeyStore.load(null);
-        mKeyAlias = alias;
+        String keyAlias = alias;
+        final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
+        instance.load(null);
+        mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(keyAlias)
+                                                   .keyStore(instance)
+                                                   .thumbprintSupplier(new Supplier<byte[]>() {
+                                                       @SneakyThrows(ClientException.class)
+                                                       @Override
+                                                       public byte[] get() {
+                                                           return getAsymmetricKeyThumbprint().getBytes(UTF8);
+                                                       }
+                                                   })
+                .build();
     }
 
     @Override
     public boolean asymmetricKeyExists() {
-        boolean exists = false;
-
-        try {
-            exists = mKeyStore.containsAlias(mKeyAlias);
-        } catch (final KeyStoreException e) {
-            Logger.error(
-                    TAG,
-                    "Error while querying KeyStore",
-                    e
-            );
-        }
-
-        return exists;
+        return mKeyManager.exists();
     }
 
     @Override
     public boolean asymmetricKeyExists(@NonNull final String thumbprint) {
-        if (asymmetricKeyExists()) { // Test if keys exist at all...
-            try {
-                return getAsymmetricKeyThumbprint().equals(thumbprint);
-            } catch (final ClientException e) {
-                Logger.error(
-                        TAG,
-                        "Error while comparing thumbprints.",
-                        e
-                );
-            }
-        }
-
-        return false;
+        return mKeyManager.hasThumbprint(thumbprint.getBytes(UTF8));
     }
 
     @Override
@@ -293,10 +273,8 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
-            final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
-            final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
-            return getThumbprintForRsaKey(rsaKey);
+            final KeyStore.PrivateKeyEntry entry = mKeyManager.getEntry();
+            return getRsaThumbprint(entry);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -316,6 +294,18 @@ class DevicePopManager implements IDevicePopManager {
                 exception.getMessage(),
                 exception
         );
+    }
+
+    /**
+     * Given an RSA private key entry, get the RSA thumbprint.
+     * @param entry the entry to compute the thumbprint for.
+     * @return A String that would be identicative of this specific key.
+     * @throws JOSEException If there is a computation problem.
+     */
+    public static String getRsaThumbprint(@NonNull final KeyStore.PrivateKeyEntry entry) throws JOSEException {
+        final KeyPair rsaKeyPair = getKeyPairForEntry(entry);
+        final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
+        return getThumbprintForRsaKey(rsaKey);
     }
 
     @Override
@@ -379,47 +369,12 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     @Nullable
     public Date getAsymmetricKeyCreationDate() throws ClientException {
-        final Exception exception;
-        final String errCode;
-
-        try {
-            return mKeyStore.getCreationDate(mKeyAlias);
-        } catch (final KeyStoreException e) {
-            exception = e;
-            errCode = KEYSTORE_NOT_INITIALIZED;
-        }
-
-        final ClientException clientException = new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
-
-        Logger.error(
-                TAG,
-                clientException.getMessage(),
-                clientException
-        );
-
-        throw clientException;
+        return mKeyManager.getCreationDate();
     }
 
     @Override
     public boolean clearAsymmetricKey() {
-        boolean deleted = false;
-
-        try {
-            mKeyStore.deleteEntry(mKeyAlias);
-            deleted = true;
-        } catch (final KeyStoreException e) {
-            Logger.error(
-                    TAG,
-                    "Error while clearing KeyStore",
-                    e
-            );
-        }
-
-        return deleted;
+        return mKeyManager.clear();
     }
 
     @Override
@@ -480,7 +435,7 @@ class DevicePopManager implements IDevicePopManager {
                 final String errCode;
 
                 try {
-                    final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
+                    final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
                     final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
                     final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
                     final String base64UrlEncodedJwkJsonStr = getReqCnfForRsaKey(rsaKey);
@@ -527,13 +482,17 @@ class DevicePopManager implements IDevicePopManager {
     public @NonNull
     String sign(@NonNull final SigningAlgorithm alg,
                 @NonNull final String input) throws ClientException {
-        final String methodName = ":sign";
-        final Exception exception;
-        final String errCode;
+        return Base64.encodeToString(sign(alg, input.getBytes(UTF8)), Base64.NO_WRAP);
+    }
 
+    @Override
+    public byte[] sign(@NonNull SigningAlgorithm alg,
+                       @NonNull final byte[] inputBytesToSign) throws ClientException {
+        Exception exception;
+        String errCode;
+        final String methodName = ":sign";
         try {
-            final byte[] inputBytesToSign = input.getBytes(ENCODING_UTF8);
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
+            final KeyStore.Entry keyEntry = mKeyManager.getEntry();
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
@@ -546,8 +505,7 @@ class DevicePopManager implements IDevicePopManager {
             final Signature signature = Signature.getInstance(alg.toString());
             signature.initSign(((KeyStore.PrivateKeyEntry) keyEntry).getPrivateKey());
             signature.update(inputBytesToSign);
-            final byte[] signedBytes = signature.sign();
-            return Base64.encodeToString(signedBytes, Base64.NO_WRAP);
+            return signature.sign();
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -563,9 +521,6 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final SignatureException e) {
             exception = e;
             errCode = SIGNING_FAILURE;
-        } catch (final UnsupportedEncodingException e) {
-            exception = e;
-            errCode = UNSUPPORTED_ENCODING;
         }
 
         final ClientException clientException = new ClientException(
@@ -575,7 +530,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         Logger.error(
-                TAG,
+                TAG + methodName,
                 clientException.getMessage(),
                 clientException
         );
@@ -587,13 +542,19 @@ class DevicePopManager implements IDevicePopManager {
     public boolean verify(@NonNull final SigningAlgorithm alg,
                           @NonNull final String plainText,
                           @NonNull final String signatureStr) {
-        final String methodName = ":verify";
-        final String errCode;
-        final Exception exception;
+        // TODO: Base64.decode can throw an illegal argument.
+        return verify(alg, plainText.getBytes(UTF8), Base64.decode(signatureStr, Base64.NO_WRAP));
+    }
 
+    @Override
+    public boolean verify(@NonNull final SigningAlgorithm alg,
+                          @NonNull final byte[] inputBytesToVerify,
+                          @NonNull final byte[] signatureBytes) {
+        String methodName = ":verify";
+        String errCode;
+        Exception exception;
         try {
-            final byte[] inputBytesToVerify = plainText.getBytes(ENCODING_UTF8);
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
+            final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
 
             if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
                 Logger.warn(
@@ -604,13 +565,9 @@ class DevicePopManager implements IDevicePopManager {
             }
 
             final Signature signature = Signature.getInstance(alg.toString());
-            signature.initVerify(((KeyStore.PrivateKeyEntry) keyEntry).getCertificate());
+            signature.initVerify(keyEntry.getCertificate());
             signature.update(inputBytesToVerify);
-            final byte[] signatureBytes = Base64.decode(signatureStr, Base64.NO_WRAP);
             return signature.verify(signatureBytes);
-        } catch (final UnsupportedEncodingException e) {
-            errCode = UNSUPPORTED_ENCODING;
-            exception = e;
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -629,7 +586,7 @@ class DevicePopManager implements IDevicePopManager {
         }
 
         Logger.error(
-                TAG + ":verify",
+                TAG + methodName,
                 errCode,
                 exception
         );
@@ -640,46 +597,30 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public String encrypt(@NonNull final Cipher cipher,
                           @NonNull final String plaintext) throws ClientException {
-        final String methodName = ":encrypt";
-        final String errCode;
-        final Exception exception;
+        return Base64.encodeToString(encrypt(cipher, plaintext.getBytes(UTF8)), Base64.NO_PADDING | Base64.NO_WRAP);
+    }
 
+    @Override
+    public byte[] encrypt(@NonNull final Cipher cipher, @NonNull final byte[] plaintext) throws ClientException {
+        String errCode;
+        Exception exception;
+        final String methodName = ":encrypt";
         try {
             // Load our key material
-            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
-                    mKeyStore.getEntry(mKeyAlias, null);
+            final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
 
             // Get a ref to our public key
             final PublicKey publicKey = privateKeyEntry.getCertificate().getPublicKey();
 
             // Init our Cipher
             final javax.crypto.Cipher input = javax.crypto.Cipher.getInstance(cipher.toString());
-            input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
-
-            // Declare an OutputStream to hold our encrypted data
-            final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-            // Create a B64Stream to encode our incoming data, and write it to our ByteArrayStream
-            final Base64OutputStream base64OutputStream = new Base64OutputStream(
-                    byteArrayOutputStream,
-                    Base64.DEFAULT
-            );
-
-            // Wrap it in our CipherOutputStream, write the contents...
-            OutputStream cipherOutputStream = null;
-
-            try { // TODO convert to try-with-resources once API >19
-                cipherOutputStream = new CipherOutputStream(base64OutputStream, input);
-                cipherOutputStream.write(plaintext.getBytes(ENCODING_UTF8));
-            } finally {
-                closeStream(cipherOutputStream);
+            if (cipher.getParameters() != null) {
+                input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey, cipher.getParameters());
+            } else {
+                input.init(javax.crypto.Cipher.ENCRYPT_MODE, publicKey);
             }
 
-            // Flatten our OutputStream to an array
-            byte[] encryptedBase64Data = byteArrayOutputStream.toByteArray();
-
-            // Base64 encode to stringify
-            return new String(encryptedBase64Data, ENCODING_UTF8);
+            return input.doFinal(plaintext);
         } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
@@ -695,11 +636,14 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (final UnsupportedEncodingException e) {
-            errCode = UNSUPPORTED_ENCODING;
+        } catch (final InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
             exception = e;
-        } catch (final IOException e) {
-            errCode = IO_ERROR;
+        } catch (final BadPaddingException e) {
+            errCode = BAD_PADDING;
+            exception = e;
+        } catch (final IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
             exception = e;
         }
 
@@ -718,31 +662,20 @@ class DevicePopManager implements IDevicePopManager {
         throw clientException;
     }
 
-    private static void closeStream(@Nullable final Closeable stream) {
-        if (null != stream) {
-            try {
-                stream.close();
-            } catch (final IOException e) {
-                Logger.error(
-                        TAG + ":closeStream",
-                        "Exception thrown while closing stream.",
-                        e
-                );
-            }
-        }
-    }
-
     @Override
     public String decrypt(@NonNull final Cipher cipher,
                           @NonNull final String ciphertext) throws ClientException {
-        final String methodName = ":decrypt";
-        final String errCode;
-        final Exception exception;
+        return new String(decrypt(cipher, Base64.decode(ciphertext, Base64.NO_PADDING | Base64.NO_WRAP)), UTF8);
+    }
 
+    @Override
+    public byte[] decrypt(@NonNull Cipher cipher, byte[] ciphertext) throws ClientException {
+        String errCode;
+        Exception exception;
+        final String methodName = ":decrypt";
         try {
             // Load our key material
-            final KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)
-                    mKeyStore.getEntry(mKeyAlias, null);
+            final KeyStore.PrivateKeyEntry privateKeyEntry = mKeyManager.getEntry();
 
             // Get a reference to our private key (will not be loaded into app process)
             final PrivateKey privateKey = privateKeyEntry.getPrivateKey();
@@ -751,35 +684,12 @@ class DevicePopManager implements IDevicePopManager {
             // BoringSSL & AndroidOpenSSL
             // https://issuetracker.google.com/issues/37091211
             final javax.crypto.Cipher outputCipher = javax.crypto.Cipher.getInstance(cipher.toString());
-            outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
-
-            final Base64InputStream b64InputStream = new Base64InputStream(
-                    new ByteArrayInputStream(ciphertext.getBytes()),
-                    Base64.DEFAULT
-            );
-
-            CipherInputStream cipherInputStream = null;
-            try {
-                // Put our ciphertext into an InputStream
-                cipherInputStream = new CipherInputStream(
-                        b64InputStream,
-                        outputCipher // Our decryption cipher
-                );
-
-                final int bufferSize = 1024;
-                final char[] buffer = new char[bufferSize];
-                final StringBuilder outputBuilder = new StringBuilder();
-                final Reader in = new InputStreamReader(cipherInputStream, ENCODING_UTF8);
-
-                int chars;
-                while ((chars = in.read(buffer, 0, buffer.length)) > 0) {
-                    outputBuilder.append(buffer, 0, chars);
-                }
-
-                return outputBuilder.toString();
-            } finally {
-                closeStream(cipherInputStream);
+            if (cipher.getParameters() != null) {
+                outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey, cipher.getParameters());
+            } else {
+                outputCipher.init(javax.crypto.Cipher.DECRYPT_MODE, privateKey);
             }
+            return outputCipher.doFinal(ciphertext);
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
@@ -795,11 +705,14 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final KeyStoreException e) {
             errCode = KEYSTORE_NOT_INITIALIZED;
             exception = e;
-        } catch (final UnsupportedEncodingException e) {
-            errCode = UNSUPPORTED_ENCODING;
+        } catch (final BadPaddingException e) {
+            errCode = BAD_PADDING;
             exception = e;
-        } catch (final IOException e) {
-            errCode = IO_ERROR;
+        } catch (final IllegalBlockSizeException e) {
+            errCode = INVALID_BLOCK_SIZE;
+            exception = e;
+        } catch (final InvalidAlgorithmParameterException e) {
+            errCode = INVALID_ALG_PARAMETER;
             exception = e;
         }
 
@@ -823,10 +736,8 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
         final Exception exception;
 
-        final KeyStore.Entry keyEntry;
         try {
-            keyEntry = mKeyStore.getEntry(mKeyAlias, null);
-            final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
+            final KeyPair rsaKeyPair = getKeyPairForEntry(mKeyManager.getEntry());
             return getSecureHardwareState(rsaKeyPair);
         } catch (final KeyStoreException e) {
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -881,6 +792,11 @@ class DevicePopManager implements IDevicePopManager {
         }
     }
 
+    @Override
+    public Certificate[] getCertificateChain() throws ClientException {
+        return mKeyManager.getCertificateChain();
+   }
+
     private @NonNull
     String getJwkPublicKey() throws ClientException {
         final Exception exception;
@@ -920,7 +836,7 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
+            final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
             final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
             final PublicKey publicKey = rsaKeyPair.getPublic();
             final byte[] publicKeybytes = publicKey.getEncoded();
@@ -1066,8 +982,8 @@ class DevicePopManager implements IDevicePopManager {
 
             final JWTClaimsSet claimsSet = claimsBuilder.build();
 
-            final KeyStore.Entry entry = mKeyStore.getEntry(mKeyAlias, null);
-            final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
+            final KeyStore.PrivateKeyEntry entry = mKeyManager.getEntry();
+            final PrivateKey privateKey = entry.getPrivateKey();
             final RSASSASigner signer = new RSASSASigner(privateKey);
 
             final SignedJWT signedJWT = new SignedJWT(
@@ -1127,19 +1043,37 @@ class DevicePopManager implements IDevicePopManager {
         final int MAX_RETRIES = 4;
 
         for (int ii = 0; ii < MAX_RETRIES; ii++) {
-            KeyPair kp;
-
-            try {
-                kp = generateNewKeyPair(context, true);
-            } catch (final StrongBoxUnavailableException e) {
-                Logger.error(
-                        TAG,
-                        "StrongBox unsupported - skipping hardware flags.",
-                        e
-                );
-
-                // Retry, but don't request StrongBox
-                kp = generateNewKeyPair(context, false);
+            KeyPair kp = null;
+            boolean tryStrongBox = true;
+            boolean tryImport = true;
+            boolean generated = false;
+            while (!generated) {
+                try {
+                    kp = generateNewKeyPair(context, tryStrongBox, tryImport);
+                    generated = true;
+                } catch (final ProviderException e) {
+                    // This mechanism is terrible.  But there are stern warnings that even attempting to
+                    // mention these classes in a catch clause might cause failures. So we're going to look
+                    // at the exception names.
+                    if (tryStrongBox && e.getClass().getSimpleName().equals("StrongBoxUnavailableException")) {
+                        Logger.error(
+                                TAG,
+                                "StrongBox unsupported - skipping hardware flags.",
+                                e
+                        );
+                        tryStrongBox = false;
+                        continue;
+                    } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
+                        Logger.error(
+                                TAG,
+                                "Import unsupported - skipping import flags.",
+                                e
+                        );
+                        tryImport = false;
+                        continue;
+                    }
+                    throw e;
+                }
             }
 
             // Due to a bug in some versions of Android, keySizes may not be exactly as specified
@@ -1204,7 +1138,8 @@ class DevicePopManager implements IDevicePopManager {
      * @throws StrongBoxUnavailableException      If StrongBox is unavailable.
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox)
+    private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox,
+                                       final boolean enableImport)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
@@ -1216,8 +1151,8 @@ class DevicePopManager implements IDevicePopManager {
                 final KeyPairGenerator kpg = getInitializedRsaKeyPairGenerator(
                         context,
                         RSA_KEY_SIZE,
-                        useStrongbox
-                );
+                        useStrongbox,
+                        enableImport);
                 final KeyPair keyPair = kpg.generateKeyPair();
 
                 return keyPair;
@@ -1231,7 +1166,8 @@ class DevicePopManager implements IDevicePopManager {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPairGenerator getInitializedRsaKeyPairGenerator(@NonNull final Context context,
                                                                final int keySize,
-                                                               final boolean useStrongbox)
+                                                               final boolean useStrongbox,
+                                                               final boolean enableImport)
             throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
         // Create the KeyPairGenerator
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -1240,7 +1176,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         // Initialize it!
-        initialize(context, keyPairGenerator, keySize, useStrongbox);
+        initialize(context, keyPairGenerator, keySize, useStrongbox, enableImport);
 
         return keyPairGenerator;
     }
@@ -1253,17 +1189,20 @@ class DevicePopManager implements IDevicePopManager {
      * @param keySize          The RSA keysize.
      * @param useStrongbox     True if StrongBox should be used, false otherwise. Please note that
      *                         StrongBox may not be supported on all devices.
+     * @param enableImport
      * @throws InvalidAlgorithmParameterException
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void initialize(@NonNull final Context context,
                             @NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
-                            final boolean useStrongbox) throws InvalidAlgorithmParameterException {
+                            final boolean useStrongbox, boolean enableImport) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else {
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
             initialize23(keyPairGenerator, keySize, useStrongbox);
+        } else {
+            initialize28(keyPairGenerator, keySize, useStrongbox, enableImport);
         }
     }
 
@@ -1272,8 +1211,9 @@ class DevicePopManager implements IDevicePopManager {
     private void initialize23(@NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
                               final boolean useStrongbox) throws InvalidAlgorithmParameterException {
-        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
-                mKeyAlias,
+        KeyGenParameterSpec.Builder builder;
+        builder = new KeyGenParameterSpec.Builder(
+                mKeyManager.getKeyAlias(),
                 KeyProperties.PURPOSE_SIGN
                         | KeyProperties.PURPOSE_VERIFY
                         | KeyProperties.PURPOSE_ENCRYPT
@@ -1287,6 +1227,7 @@ class DevicePopManager implements IDevicePopManager {
                 .setDigests(
                         KeyProperties.DIGEST_MD5,
                         KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256,
                         KeyProperties.DIGEST_SHA384,
                         KeyProperties.DIGEST_SHA512
@@ -1294,6 +1235,10 @@ class DevicePopManager implements IDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder = setAttestationChallenge(builder);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
             Logger.verbose(
@@ -1305,6 +1250,14 @@ class DevicePopManager implements IDevicePopManager {
 
         final AlgorithmParameterSpec spec = builder.build();
         keyPairGenerator.initialize(spec);
+    }
+
+    @SuppressLint("NewApi")
+    @RequiresApi(Build.VERSION_CODES.N)
+    @NonNull
+    private KeyGenParameterSpec.Builder setAttestationChallenge(
+            @NonNull final KeyGenParameterSpec.Builder builder) {
+        return builder.setAttestationChallenge(new byte[]{});
     }
 
     /**
@@ -1321,6 +1274,55 @@ class DevicePopManager implements IDevicePopManager {
         return builder.setIsStrongBoxBacked(true);
     }
 
+    @SuppressLint("InlinedApi")
+    @RequiresApi(api = Build.VERSION_CODES.P)
+    private void initialize28(@NonNull final KeyPairGenerator keyPairGenerator,
+                              final int keySize,
+                              final boolean useStrongbox,
+                              final boolean enableImport) throws InvalidAlgorithmParameterException {
+        int purposes = KeyProperties.PURPOSE_SIGN
+                | KeyProperties.PURPOSE_VERIFY
+                | KeyProperties.PURPOSE_ENCRYPT
+                | KeyProperties.PURPOSE_DECRYPT;
+        if (enableImport && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            purposes |= KeyProperties.PURPOSE_WRAP_KEY;
+        }
+        KeyGenParameterSpec.Builder builder = new KeyGenParameterSpec.Builder(
+                mKeyManager.getKeyAlias(), purposes)
+                .setKeySize(keySize)
+                .setSignaturePaddings(
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
+                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                )
+                .setDigests(
+                        KeyProperties.DIGEST_MD5,
+                        KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_SHA1,
+                        KeyProperties.DIGEST_SHA256,
+                        KeyProperties.DIGEST_SHA384,
+                        KeyProperties.DIGEST_SHA512
+                ).setEncryptionPaddings(
+                        KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
+                        KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
+                );
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            builder = setAttestationChallenge(builder);
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && useStrongbox) {
+            Logger.verbose(
+                    TAG,
+                    "Attempting to apply StrongBox isolation."
+            );
+            builder = applyHardwareIsolation(builder);
+        }
+
+        final AlgorithmParameterSpec spec = builder.build();
+        keyPairGenerator.initialize(spec);
+    }
+
+
     @SuppressLint("NewApi")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressWarnings("deprecation")
@@ -1333,7 +1335,7 @@ class DevicePopManager implements IDevicePopManager {
         final Date end = calendar.getTime();
 
         final android.security.KeyPairGeneratorSpec.Builder specBuilder = new android.security.KeyPairGeneratorSpec.Builder(context)
-                .setAlias(mKeyAlias)
+                .setAlias(mKeyManager.getKeyAlias())
                 .setStartDate(start)
                 .setEndDate(end)
                 .setSerialNumber(CertificateProperties.SERIAL_NUMBER)
@@ -1365,10 +1367,21 @@ class DevicePopManager implements IDevicePopManager {
      * @param entry The Keystore.Entry to use.
      * @return The resulting KeyPair.
      */
-    private static KeyPair getKeyPairForEntry(@NonNull final KeyStore.Entry entry) {
-        final PrivateKey privateKey = ((KeyStore.PrivateKeyEntry) entry).getPrivateKey();
-        final PublicKey publicKey = ((KeyStore.PrivateKeyEntry) entry).getCertificate().getPublicKey();
+    private static KeyPair getKeyPairForEntry(@NonNull final KeyStore.PrivateKeyEntry entry) {
+        final PrivateKey privateKey = entry.getPrivateKey();
+        final PublicKey publicKey = entry.getCertificate().getPublicKey();
         return new KeyPair(publicKey, privateKey);
+    }
+
+    /**
+     * @return the public key for this particular keyStore entry.
+     * @throws UnrecoverableEntryException
+     * @throws NoSuchAlgorithmException
+     * @throws KeyStoreException
+     */
+    public PublicKey getPublicKey() throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
+        final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
+        return keyEntry.getCertificate().getPublicKey();
     }
 
     /**
@@ -1412,19 +1425,11 @@ class DevicePopManager implements IDevicePopManager {
      * @return Encoded result from input.
      */
     private static String base64UrlEncode(@NonNull final String input) {
-        String result = null;
-
-        try {
-            byte[] encodeBytes = input.getBytes(ENCODING_UTF8);
-            result = Base64.encodeToString(
-                    encodeBytes,
-                    Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE
-            );
-        } catch (final UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+        byte[] encodeBytes = input.getBytes(UTF8);
+        return Base64.encodeToString(
+                encodeBytes,
+                Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE
+        );
     }
 
     /**
@@ -1437,7 +1442,7 @@ class DevicePopManager implements IDevicePopManager {
      */
     private net.minidev.json.JSONObject getDevicePopJwkMinifiedJson()
             throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
-        final KeyStore.Entry keyEntry = mKeyStore.getEntry(mKeyAlias, null);
+        final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
         final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();

@@ -81,6 +81,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
+import static com.microsoft.identity.common.internal.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -570,6 +571,7 @@ public class MicrosoftStsOAuth2Strategy
                                          @NonNull final MicrosoftStsTokenResponse response)
             throws ClientException {
         validateAuthScheme(request, response);
+        validateTokensAreInResponse(request, response);
     }
 
     /**
@@ -594,6 +596,45 @@ public class MicrosoftStsOAuth2Strategy
                             + "Actual: [" + responseAuthScheme + "]"
             );
         }
+    }
+
+    /**
+     * Validates that the token response contains an access token, id_token and refresh token
+     *
+     * @param response The idp response.
+     * @throws ClientException
+     */
+    private void validateTokensAreInResponse(@NonNull final MicrosoftStsTokenRequest request,
+                                             @NonNull final MicrosoftStsTokenResponse response)
+            throws ClientException {
+
+        String clientException = null;
+        String tokens = "";
+        final String tokensMissingMessage = "Missing required tokens of type: {0}";
+
+        // PRT interrupt flow do not return AT.
+        if (!StringUtil.containsSubString(request.getScope(), AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE) &&
+                StringUtil.isEmpty(response.getAccessToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens = tokens.concat("access_token");
+        }
+
+        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
+                StringUtil.isEmpty(response.getIdToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens =  tokens.concat(" id_token");
+        }
+
+        if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
+                StringUtil.isEmpty(response.getRefreshToken())) {
+            clientException = ClientException.TOKENS_MISSING;
+            tokens =  tokens.concat(" refresh_token");
+        }
+
+        if (clientException != null) {
+            throw new ClientException(clientException, String.format(tokensMissingMessage, tokens));
+        }
+
     }
 
     private String buildCloudSpecificTokenEndpoint(
