@@ -44,7 +44,6 @@ import lombok.experimental.Accessors;
 public class BrokerRequest implements Serializable {
 
     private static final long serialVersionUID = -543392127065130474L;
-    // private static final long serialVersionUID = 542024304389420837L;
 
     private class SerializedNames {
         final static String EXTRA_OPTIONS = "extra_options";
