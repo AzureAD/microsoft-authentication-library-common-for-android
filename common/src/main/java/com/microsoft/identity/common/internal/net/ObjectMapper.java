@@ -102,9 +102,9 @@ public final class ObjectMapper {
         }.getType();
         TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
         if (object instanceof IHasExtraParameters) {
-            IHasExtraParameters params = (IHasExtraParameters) object;
+            final IHasExtraParameters params = (IHasExtraParameters) object;
             if (params.getExtraParameters() != null) {
-                for (Map.Entry<String, String> e : params.getExtraParameters()) {
+                for (final Map.Entry<String, String> e : params.getExtraParameters()) {
                     if (e.getKey() != null) {
                         fields.put(e.getKey(), e.getValue());
                     }
@@ -112,7 +112,7 @@ public final class ObjectMapper {
             }
         }
 
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 
         Iterator<TreeMap.Entry<String, String>> iterator = fields.entrySet().iterator();
 

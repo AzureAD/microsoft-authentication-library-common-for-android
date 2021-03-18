@@ -32,12 +32,14 @@ import java.util.Map;
  */
 public interface IHasExtraParameters {
     /**
-     * @return a list of pairs of String, String parameters.
+     Get the list of pairs of String, String parameters.
+     * @return a list of pairs of String, String parameters - this may be null.
      */
-    Iterable<Map.Entry<String, String>> getExtraParameters();
+    @Nullable Iterable<Map.Entry<String, String>> getExtraParameters();
     
     /**
-     * @return a list of pairs of String, String parameters.
+     * Set the List of String, String extra parameters.
+     * @param params a list of pairs of String, String parameters.  May be null.
      */
     void setExtraParameters(Iterable<Map.Entry<String, String>> params);
 }

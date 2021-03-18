@@ -103,7 +103,7 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     }
 
     @Override
-    public void setExtraParameters(Iterable<Map.Entry<String, String>> extraParams) {
+    public void setExtraParameters(final Iterable<Map.Entry<String, String>> extraParams) {
         mExtendedParameters = extraParams;
     }
 
