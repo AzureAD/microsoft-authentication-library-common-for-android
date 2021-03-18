@@ -43,6 +43,25 @@ public class MicrosoftTokenResponse extends TokenResponse {
     private Date mExtExpiresOn;
 
     /**
+     * If this request includes an encrypted session key, return it here.
+     */
+    @SerializedName("session_key_jwe")
+    private String mSessionKeyJwe;
+
+    /**
+     * Get the session key JWE associated with this result, or null if none.
+     * @return the session key JWE associated with this result, or null if none.
+     */
+    public String getSessionKeyJwe() { return mSessionKeyJwe; }
+
+    /**
+     * Set the session key JWE associated with this result, or null if none.
+     * @param sesionKey the session key JWE associated with this result, or null if none.
+     * @return
+     */
+    public String setSessionKeyJwe(String sesionKey) { return mSessionKeyJwe; }
+
+    /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
      */
     @SerializedName(CLIENT_INFO)
