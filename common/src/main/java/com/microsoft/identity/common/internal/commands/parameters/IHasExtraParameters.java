@@ -32,14 +32,20 @@ import java.util.Map;
  */
 public interface IHasExtraParameters {
     /**
-     * Get the list of pairs of String, String parameters.
-     * @return a list of pairs of String, String parameters - this may be null.
+     * Get the {@link Iterable} of pairs of String, String parameters.
+     * @return a list of pairs of String, String parameters - this may be null.  There are no guarantees
+     * made with regards to the mutability of this structure, but it <strong>should not</strong> be
+     * mutated by the caller, and attempts to do so <strong>may</strong>may throw
+     * {@link UnsupportedOperationException} or result in undefined behavior.
      */
     @Nullable Iterable<Map.Entry<String, String>> getExtraParameters();
     
     /**
-     * Set the List of String, String extra parameters.
-     * @param params a list of pairs of String, String parameters.  May be null.
+     * Set the {@link Iterable} of String, String extra parameters.
+     * @param params a list of pairs of String, String parameters.  May be null.  There are no
+     *               guarantees made as to the mutability of this structure, but it
+     *               <strong>should not</strong> be altered by the caller, and attempts to do so
+     *               <strong>may</strong> exhibit undefined behavior.
      */
     void setExtraParameters(Iterable<Map.Entry<String, String>> params);
 }
