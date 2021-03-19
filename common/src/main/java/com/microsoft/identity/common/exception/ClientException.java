@@ -28,11 +28,6 @@ public class ClientException extends BaseException {
     private static final long serialVersionUID = -2318746536590284648L;
 
     /**
-     * Indicates that a token request returned an unexpected authority.
-     */
-    public static final String UNEXPECTED_AUTHORITY = "unexpected_authority_token_request";
-
-    /**
      * Indicates that an invalid algorithm parameter is in use.
      */
     public static final String INVALID_ALG_PARAMETER = "invalid_algorithm_parameter";
