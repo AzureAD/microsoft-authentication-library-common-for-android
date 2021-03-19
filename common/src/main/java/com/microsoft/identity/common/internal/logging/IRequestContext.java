@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+@Deprecated
 public interface IRequestContext extends com.microsoft.identity.common.logging.IRequestContext {
     // Class exists for backcompat
 }

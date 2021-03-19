@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+@Deprecated
 public interface ILoggerCallback extends com.microsoft.identity.common.logging.ILoggerCallback {
     // Backcompat
 }

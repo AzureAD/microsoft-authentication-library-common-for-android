@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+@Deprecated
 public class RequestContext extends com.microsoft.identity.common.logging.RequestContext {
     // backcompat
 }

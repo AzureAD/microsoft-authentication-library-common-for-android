@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+@Deprecated
 public final class DiagnosticContext extends com.microsoft.identity.common.logging.DiagnosticContext {
     // Class exists for backcompat - originally internal only
 }
