@@ -20,8 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.logging;
+package com.microsoft.identity.common.logging;
 
-public interface IRequestContext extends com.microsoft.identity.common.logging.IRequestContext {
-    // Class exists for backcompat
+import java.util.Map;
+
+public interface IRequestContext extends Map<String, String> {
+
+    /**
+     * Get the JSON String for the request context.
+     *
+     * @return String
+     */
+    String toJsonString();
+
 }

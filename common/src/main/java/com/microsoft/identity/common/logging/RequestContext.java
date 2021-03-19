@@ -20,8 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.logging;
+package com.microsoft.identity.common.logging;
 
-public interface IRequestContext extends com.microsoft.identity.common.logging.IRequestContext {
-    // Class exists for backcompat
+import com.google.gson.Gson;
+import com.microsoft.identity.common.internal.logging.IRequestContext;
+
+import java.util.HashMap;
+
+public class RequestContext extends HashMap<String, String> implements IRequestContext {
+
+    private static final long serialVersionUID = -2239604897244277047L;
+    private final Gson mGson = new Gson();
+
+    @Override
+    public String toJsonString() {
+        return mGson.toJson(this);
+    }
 }
