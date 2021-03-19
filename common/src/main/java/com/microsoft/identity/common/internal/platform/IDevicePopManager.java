@@ -141,7 +141,7 @@ public interface IDevicePopManager {
         RSA_ECB_PKCS1_PADDING("RSA/ECB/PKCS1Padding"),
 
 
-        @RequiresApi(Build.VERSION_CODES.M)
+        @RequiresApi(Build.VERSION_CODES.GINGERBREAD_MR1)
         RSA_NONE_OAEPWithSHA_1AndMGF1Padding("RSA/NONE/OAEPWithSHA-1AndMGF1Padding") {
             @Override
             public AlgorithmParameterSpec getParameters() {
@@ -152,7 +152,7 @@ public interface IDevicePopManager {
             }
         },
 
-        @RequiresApi(Build.VERSION_CODES.M)
+        @RequiresApi(Build.VERSION_CODES.GINGERBREAD_MR1)
         RSA_ECB_OAEPWithSHA_1AndMGF1Padding("RSA/ECB/OAEPWithSHA-1AndMGF1Padding") {
             @Override
             public AlgorithmParameterSpec getParameters() {

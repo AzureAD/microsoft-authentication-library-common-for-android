@@ -36,6 +36,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -115,6 +119,101 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         assertEquals(expectedSize, mSharedPreferencesFileManager.getAll().size());
     }
 
+    @Test(expected = NoSuchElementException.class)
+    public void testGetAllFilteredByThrowsNoSuchElement() {
+        String[] testKeys = {"1", "2", "3"};
+        String[] testValues = {"a", "b", "c"};
+
+        for (int ii = 0; ii < testKeys.length; ii++) {
+            mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
+        }
+        Map<String, String> allMap = new HashMap<String, String>();
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+            @Override
+            public boolean test(String value) {
+                return true;
+            }
+        });
+        while (itr.hasNext()) {
+            Map.Entry<String, String> e = itr.next();
+            allMap.put(e.getKey(), e.getValue());
+        }
+
+        itr.next();
+    }
+
+    @Test
+    public void testGetAllFilteredByGetsAll() {
+        String[] testKeys = {"1", "2", "3"};
+        String[] testValues = {"a", "b", "c"};
+
+        for (int ii = 0; ii < testKeys.length; ii++) {
+            mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
+        }
+        Map<String, String> allMap = new HashMap<String, String>();
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+            @Override
+            public boolean test(String value) {
+                return true;
+            }
+        });
+        while (itr.hasNext()) {
+            Map.Entry<String, String> e = itr.next();
+            allMap.put(e.getKey(), e.getValue());
+        }
+
+        final int expectedSize = 3;
+        assertEquals(expectedSize, allMap.size());
+    }
+
+    @Test
+    public void testGetAllFilteredByGetsNone() {
+        String[] testKeys = {"1", "2", "3"};
+        String[] testValues = {"a", "b", "c"};
+
+        for (int ii = 0; ii < testKeys.length; ii++) {
+            mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
+        }
+        Map<String, String> allMap = new HashMap<String, String>();
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+            @Override
+            public boolean test(String value) {
+                return false;
+            }
+        });
+        while (itr.hasNext()) {
+            Map.Entry<String, String> e = itr.next();
+            allMap.put(e.getKey(), e.getValue());
+        }
+
+        final int expectedSize = 0;
+        assertEquals(expectedSize, allMap.size());
+    }
+
+    @Test
+    public void testGetAllFilteredByGetsSome() {
+        String[] testKeys = {"1", "2", "3"};
+        String[] testValues = {"a", "b", "c"};
+
+        for (int ii = 0; ii < testKeys.length; ii++) {
+            mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
+        }
+        Map<String, String> allMap = new HashMap<String, String>();
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+            @Override
+            public boolean test(String value) {
+                return value.equals("2");
+            }
+        });
+        while (itr.hasNext()) {
+            Map.Entry<String, String> e = itr.next();
+            allMap.put(e.getKey(), e.getValue());
+        }
+
+        final int expectedSize = 1;
+        assertEquals(expectedSize, allMap.size());
+        assertEquals("b", allMap.get("2"));
+    }
     @Test
     public void testContainsTrue() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);

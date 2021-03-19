@@ -47,7 +47,6 @@ import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftToken
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -906,6 +905,7 @@ public class BrokerOAuth2TokenCache
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
         final List<OAuth2TokenCache> result = new ArrayList<>();
         boolean containsFoci = false;
+        boolean processUidCacheInitialized = false;
 
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             if (clientId.equals(metadata.getClientId())) {
@@ -913,16 +913,13 @@ public class BrokerOAuth2TokenCache
                     // Add the foci cache, but only once...
                     result.add(mFociCache);
                     containsFoci = true;
-                } else {
+                } else if (!processUidCacheInitialized) {
                     // App is not foci, see if we can find its real cache...
-                    final OAuth2TokenCache candidateCache = getTokenCacheForClient(
-                            metadata.getClientId(),
-                            metadata.getEnvironment(),
-                            mCallingProcessUid
-                    );
+                    final OAuth2TokenCache candidateCache = initializeProcessUidCache(getContext(), mCallingProcessUid);
 
                     if (null != candidateCache) {
                         result.add(candidateCache);
+                        processUidCacheInitialized = true;
                     }
                 }
             }

@@ -171,5 +171,5 @@ dependencies {
     }
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
-    implementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
+    androidTestImplementation "androidx.test:runner:$rootProject.ext.androidxTestRunnerVersion"
 }
