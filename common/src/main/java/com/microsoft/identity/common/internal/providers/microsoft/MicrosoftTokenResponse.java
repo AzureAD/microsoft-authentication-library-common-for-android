@@ -30,11 +30,13 @@ import java.util.Date;
 
 public class MicrosoftTokenResponse extends TokenResponse {
 
+    public static final String SESSION_KEY_JWE = "session_key_jwe";
     private static final String CLIENT_INFO = "client_info";
 
     private static final String EXT_EXPIRES_IN = "ext_expires_in";
 
     private static final String FAMILY_ID = "foci";
+    public static final String REFRESH_TOKEN_EXPIRES_IN = "refresh_token_expires_in";
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
@@ -45,7 +47,13 @@ public class MicrosoftTokenResponse extends TokenResponse {
     /**
      * If this request includes an encrypted session key, return it here.
      */
-    @SerializedName("session_key_jwe")
+    @SerializedName(REFRESH_TOKEN_EXPIRES_IN)
+    private String mRefreshTokenExpiresIn;
+
+    /**
+     * If this request includes an encrypted session key, return it here.
+     */
+    @SerializedName(SESSION_KEY_JWE)
     private String mSessionKeyJwe;
 
     /**
