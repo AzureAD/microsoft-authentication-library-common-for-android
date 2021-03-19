@@ -22,7 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
@@ -39,12 +43,16 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
+    //Normally all tasks have an affinity unless configured explicitly for multi-window support to not have one
+    private boolean mHasTaskAffinity = true;
+    private int mTaskId = 0;
 
     public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
                                    @NonNull final BaseController controller,
                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
                                    @NonNull final String publicApiId) {
         super(parameters, controller, callback, publicApiId);
+        checkAndRecordTaskInformation(parameters);
     }
 
     public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
@@ -52,6 +60,22 @@ public class InteractiveTokenCommand extends TokenCommand {
                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                    @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
+        checkAndRecordTaskInformation(parameters);
+    }
+
+    private void checkAndRecordTaskInformation(InteractiveTokenCommandParameters parameters){
+        final Context applicationContext = parameters.getAndroidApplicationContext();
+        final PackageManager packageManager = applicationContext.getPackageManager();
+        try {
+            ActivityInfo startActivityInfo = packageManager.getActivityInfo(parameters.getActivity().getComponentName(), 0);
+            if(startActivityInfo == null){
+                mHasTaskAffinity = false;
+                mTaskId = parameters.getActivity().getTaskId();
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            //TODO: Log properly and then ignore
+            e.printStackTrace();
+        }
     }
 
     @Override
