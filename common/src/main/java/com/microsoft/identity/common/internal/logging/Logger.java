@@ -65,7 +65,6 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         mInstanceDelegate.setLogLevel(adapt(logLevel));
     }
 
-    // Get instance is kind of broken...
     public static Logger getInstance() {
         return INSTANCE;
     }
