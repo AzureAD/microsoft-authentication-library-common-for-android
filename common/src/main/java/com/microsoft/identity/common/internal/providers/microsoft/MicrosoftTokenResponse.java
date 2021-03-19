@@ -48,7 +48,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * Get the string representation of the remaining lifetime of the refresh token.
      * @return the string representation of the remaining lifetime of the refresh token, may be null.
      */
-    public String getmRefreshTokenExpiresIn() {
+    public String getRefreshTokenExpiresIn() {
         return mRefreshTokenExpiresIn;
     }
 
@@ -57,7 +57,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @param mRefreshTokenExpiresIn the string representation of the remaining lifetime of the refresh
      *                               token, may be null.
      */
-    public void setmRefreshTokenExpiresIn(String mRefreshTokenExpiresIn) {
+    public void setRefreshTokenExpiresIn(String mRefreshTokenExpiresIn) {
         this.mRefreshTokenExpiresIn = mRefreshTokenExpiresIn;
     }
 
