@@ -27,6 +27,11 @@ import androidx.annotation.NonNull;
 @Deprecated
 public class Logger extends com.microsoft.identity.common.logging.Logger {
 
+    private static final Logger INSTANCE = new Logger();
+
+    private final com.microsoft.identity.common.logging.Logger mInstanceDelegate
+            = com.microsoft.identity.common.logging.Logger.getInstance();
+
     /**
      * Enum class for LogLevel that the sdk recognizes.
      */
@@ -57,7 +62,39 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
      * @param logLevel The {@link LogLevel} to be enabled for the diagnostic logging.
      */
     public void setLogLevel(final LogLevel logLevel) {
-        super.setLogLevel(adapt(logLevel));
+        mInstanceDelegate.setLogLevel(adapt(logLevel));
+    }
+
+    // Get instance is kind of broken...
+    public static Logger getInstance() {
+        return INSTANCE;
+    }
+
+    public void setExternalLogger(final ILoggerCallback externalLogger) {
+        mInstanceDelegate.setExternalLogger(new com.microsoft.identity.common.logging.ILoggerCallback() {
+            @Override
+            public void log(final String tag,
+                            final com.microsoft.identity.common.logging.Logger.LogLevel logLevel,
+                            final String message,
+                            final boolean containsPII) {
+                externalLogger.log(tag, adapt(logLevel), message, containsPII);
+            }
+        });
+    }
+
+    private static LogLevel adapt(com.microsoft.identity.common.logging.Logger.LogLevel in) {
+        switch (in) {
+            case ERROR:
+                return LogLevel.ERROR;
+            case WARN:
+                return LogLevel.WARN;
+            case INFO:
+                return LogLevel.INFO;
+            case VERBOSE:
+                return LogLevel.VERBOSE;
+            default:
+                throw new RuntimeException("Unknown or invalid log level");
+        }
     }
 
     private static com.microsoft.identity.common.logging.Logger.LogLevel adapt(@NonNull final LogLevel in) {
