@@ -94,30 +94,30 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
 
-    public static Gson sRequestAdapterGsonInstance;
-
-    static {
-        sRequestAdapterGsonInstance = new GsonBuilder()
-                .registerTypeAdapter(
-                        AbstractAuthenticationScheme.class,
-                        new AuthenticationSchemeTypeAdapter()
-                ).create();
-    }
+    // TODO: provide this from a factory
+    public static Gson sRequestAdapterGsonInstance = new GsonBuilder()
+                      .registerTypeAdapter(
+                            AbstractAuthenticationScheme.class,
+                            new AuthenticationSchemeTypeAdapter()
+                      ).create();
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
-        final BrokerRequest brokerRequest = new BrokerRequest.Builder()
+        final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
+                : null;
+        final String extraOptions = parameters.getExtraOptions() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
-                .username(parameters.getLoginHint())
-                .extraQueryStringParameter(
-                        parameters.getExtraQueryStringParameters() != null ?
-                                QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
-                                : null)
+                .userName(parameters.getLoginHint())
+                .extraQueryStringParameter(extraQueryStringParameter)
+                .extraOptions(extraOptions)
                 .prompt((OpenIdConnectPromptParameter.UNSET.name().equals(parameters.getPrompt().name())) ? null : parameters.getPrompt().name())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
@@ -143,15 +143,18 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerRequest brokerRequestFromSilentOperationParameters(@NonNull final SilentTokenCommandParameters parameters) {
 
         Logger.info(TAG, "Constructing result bundle from AcquireTokenSilentOperationParameters.");
+        final String extraOptions = parameters.getExtraOptions() != null ?
+                QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
 
-        final BrokerRequest brokerRequest = new BrokerRequest.Builder()
+        final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
+                .extraOptions(extraOptions)
                 .clientId(parameters.getClientId())
                 .homeAccountId(parameters.getAccount().getHomeAccountId())
                 .localAccountId(parameters.getAccount().getLocalAccountId())
-                .username(parameters.getAccount().getUsername())
+                .userName(parameters.getAccount().getUsername())
                 .claims(parameters.getClaimsRequestJson())
                 .forceRefresh(parameters.isForceRefresh())
                 .correlationId(parameters.getCorrelationId())
@@ -206,11 +209,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
 
-        List<Pair<String, String>> extraQP = new ArrayList<>();
-
-        if (!TextUtils.isEmpty(brokerRequest.getExtraQueryStringParameter())) {
-            extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
-        }
+        List<Pair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
+        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
                 brokerRequest.getAuthority(),
@@ -218,7 +218,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         );
 
         if (authority != null) {
-            authority.setMultipleCloudsSupported(brokerRequest.getMultipleCloudsSupported());
+            authority.setMultipleCloudsSupported(brokerRequest.isMultipleCloudsSupported());
         }
 
         String correlationIdString = brokerRequest.getCorrelationId();
@@ -245,6 +245,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .callerAppVersion(brokerRequest.getApplicationVersion())
                 .extraQueryStringParameters(extraQP)
                 .authority(authority)
+                .extraOptions(extraOptions)
                 .scopes(getScopesAsSet(brokerRequest.getScope()))
                 .clientId(brokerRequest.getClientId())
                 .redirectUri(brokerRequest.getRedirect())
@@ -309,7 +310,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         if (authority instanceof AzureActiveDirectoryAuthority) {
             ((AzureActiveDirectoryAuthority) authority).setMultipleCloudsSupported(
-                    brokerRequest.getMultipleCloudsSupported()
+                    brokerRequest.isMultipleCloudsSupported()
             );
         }
 
@@ -322,6 +323,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         final String negotiatedBrokerProtocolVersion = bundle.getString(NEGOTIATED_BP_VERSION_KEY);
+        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
 
         final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
                 .builder()
@@ -339,8 +341,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .correlationId(correlationIdString)
                 .scopes(getScopesAsSet(brokerRequest.getScope()))
                 .redirectUri(brokerRequest.getRedirect())
+                .extraOptions(extraOptions)
                 .clientId(brokerRequest.getClientId())
-                .forceRefresh(brokerRequest.getForceRefresh())
+                .forceRefresh(brokerRequest.isForceRefresh())
                 .claimsRequestJson(brokerRequest.getClaims())
                 .loginHint(brokerRequest.getUserName())
                 .homeAccountId(brokerRequest.getHomeAccountId())

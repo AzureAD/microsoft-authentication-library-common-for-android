@@ -210,8 +210,9 @@ public abstract class OAuth2Strategy
             );
         }
 
+        final URL requestUrl = new URL(mTokenEndpoint);
         final HttpResponse response = httpClient.post(
-                new URL(mTokenEndpoint),
+                requestUrl,
                 headers,
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
         );
