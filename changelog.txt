@@ -1,6 +1,9 @@
 V.Next
 ----------
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
+
+Version 3.2.0
+----------
 - [PATCH] Fix interrupt flow when no login hint is provided (#1490)
 - [MINOR] Added logging functionality to track the request status (#1237)
 - [MINOR] Expand functionality for key store access (#1231)
