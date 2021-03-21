@@ -68,7 +68,7 @@ public class InteractiveTokenCommand extends TokenCommand {
         final PackageManager packageManager = applicationContext.getPackageManager();
         try {
             ActivityInfo startActivityInfo = packageManager.getActivityInfo(parameters.getActivity().getComponentName(), 0);
-            if(startActivityInfo == null){
+            if(startActivityInfo.taskAffinity == null){
                 mHasTaskAffinity = false;
                 mTaskId = parameters.getActivity().getTaskId();
             }
@@ -77,6 +77,15 @@ public class InteractiveTokenCommand extends TokenCommand {
             e.printStackTrace();
         }
     }
+
+    public boolean getHasTaskAffinity(){
+        return mHasTaskAffinity;
+    }
+
+    public int getTaskId(){
+        return mTaskId;
+    }
+
 
     @Override
     public AcquireTokenResult execute() throws Exception {
