@@ -73,7 +73,7 @@ public class InteractiveTokenCommand extends TokenCommand {
                 mHasTaskAffinity = false;
                 mTaskId = parameters.getActivity().getTaskId();
             }
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (final PackageManager.NameNotFoundException e) {
             Logger.warn(
                     TAG + methodName,
                     "Unable to get ActivityInfo for activity provided to start authorization."
