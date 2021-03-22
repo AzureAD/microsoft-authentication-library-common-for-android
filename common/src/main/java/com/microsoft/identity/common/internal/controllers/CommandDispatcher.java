@@ -437,28 +437,27 @@ public class CommandDispatcher {
      * This method optionally re-orders that task to bring the task that launched
      * the interactive activity to the foreground.  This is useful when the activity provided
      * to us does not have a taskAffinity and as a result it's possible that other apps or the home
-     * screen could be in the task stack ahead of the app that launched the interacxtive
+     * screen could be in the task stack ahead of the app that launched the interactive
      * authorization UI.
      * @param command The BaseCommand.
      */
     private static void optionallyReorderTasks(@SuppressWarnings(WarningType.rawtype_warning)final BaseCommand command){
+        final String methodName = ":optionallyReorderTasks";
         if(command instanceof InteractiveTokenCommand){
             InteractiveTokenCommand interactiveTokenCommand = (InteractiveTokenCommand)command;
             InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters)interactiveTokenCommand.getParameters();
 
-            if(interactiveTokenCommandParameters.getHandleNullTaskAffinity()) {
+            if(interactiveTokenCommandParameters.getHandleNullTaskAffinity() && !interactiveTokenCommand.getHasTaskAffinity()) {
                 //If an interactive command doesn't have a task affinity bring the
                 //task that launched the command to the foreground
                 //In order for this to work the app has to have requested the re-order tasks permission
                 //https://developer.android.com/reference/android/Manifest.permission#REORDER_TASKS
                 //if the permission has not been granted nothing will happen if you just invoke the method
-                if (!interactiveTokenCommand.getHasTaskAffinity()) {
-                    ActivityManager activityManager = (ActivityManager) command.getParameters().getAndroidApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
-                    if (activityManager != null) {
-                        activityManager.moveTaskToFront(interactiveTokenCommand.getTaskId(), 0);
-                    } else {
-                        Logger.verbose(TAG, "ActivityManager was null; Unable to bring task for the foreground.");
-                    }
+                ActivityManager activityManager = (ActivityManager) command.getParameters().getAndroidApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+                if (activityManager != null) {
+                    activityManager.moveTaskToFront(interactiveTokenCommand.getTaskId(), 0);
+                } else {
+                    Logger.warn(TAG + methodName, "ActivityManager was null; Unable to bring task for the foreground.");
                 }
             }
         }

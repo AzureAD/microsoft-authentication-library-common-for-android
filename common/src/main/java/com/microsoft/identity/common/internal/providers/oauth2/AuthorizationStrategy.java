@@ -50,7 +50,6 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
     private WeakReference<Context> mReferencedApplicationContext;
     private WeakReference<Activity> mReferencedActivity;
     private WeakReference<Fragment> mReferencedFragment;
-    protected int mTaskIdThatStartedAuthorization;
 
     /**
      * Constructor of AuthorizationStrategy.

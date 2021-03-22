@@ -64,6 +64,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     private void checkAndRecordTaskInformation(InteractiveTokenCommandParameters parameters){
+        final String methodName = ":checkAndRecordTaskInformation";
         final Context applicationContext = parameters.getAndroidApplicationContext();
         final PackageManager packageManager = applicationContext.getPackageManager();
         try {
@@ -73,8 +74,10 @@ public class InteractiveTokenCommand extends TokenCommand {
                 mTaskId = parameters.getActivity().getTaskId();
             }
         } catch (PackageManager.NameNotFoundException e) {
-            //TODO: Log properly and then ignore
-            e.printStackTrace();
+            Logger.warn(
+                    TAG + methodName,
+                    "Unable to get ActivityInfo for activity provided to start authorization."
+            );
         }
     }
 
