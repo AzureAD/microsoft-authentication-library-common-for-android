@@ -63,7 +63,7 @@ public class InteractiveTokenCommand extends TokenCommand {
         checkAndRecordTaskInformation(parameters);
     }
 
-    private void checkAndRecordTaskInformation(InteractiveTokenCommandParameters parameters){
+    private void checkAndRecordTaskInformation(@NonNull final InteractiveTokenCommandParameters parameters){
         final String methodName = ":checkAndRecordTaskInformation";
         final Context applicationContext = parameters.getAndroidApplicationContext();
         final PackageManager packageManager = applicationContext.getPackageManager();
