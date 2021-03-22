@@ -32,7 +32,9 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -167,9 +169,21 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             }
         }
 
+        List<Pair<String, String>> extraQueryParams = getExtraQueryParams();
+
+        // If login_hint is provided, block the user from switching user during login.
+        // hsu = HideSwitchUser
+        if (!TextUtils.isEmpty(getLoginHint())) {
+            if (extraQueryParams == null) {
+                extraQueryParams = new ArrayList<>();
+            }
+
+            extraQueryParams.add(new Pair<>("hsu", "1"));
+        }
+
         // Add extra qp, if present...
-        if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
-            for (final Pair<String, String> queryParam : getExtraQueryParams()) {
+        if (null != extraQueryParams && !extraQueryParams.isEmpty()) {
+            for (final Pair<String, String> queryParam : extraQueryParams) {
                 //Skip appending for duplicated extra query parameters
                 if (!qpMap.containsKey(queryParam.first)) {
                     qpMap.put(queryParam.first, queryParam.second);
