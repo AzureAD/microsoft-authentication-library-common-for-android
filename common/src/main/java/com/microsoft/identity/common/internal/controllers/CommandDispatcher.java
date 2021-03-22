@@ -434,7 +434,7 @@ public class CommandDispatcher {
 
 
     /**
-     * This method optionally re-orders that task to bring the task that launched
+     * This method optionally re-orders tasks to bring the task that launched
      * the interactive activity to the foreground.  This is useful when the activity provided
      * to us does not have a taskAffinity and as a result it's possible that other apps or the home
      * screen could be in the task stack ahead of the app that launched the interactive
