@@ -32,9 +32,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
