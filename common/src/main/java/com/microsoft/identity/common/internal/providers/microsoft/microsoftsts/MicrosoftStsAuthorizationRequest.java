@@ -85,6 +85,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         public static final String CONSENT = "consent";
     }
 
+    /**
+     * If hsu=1 is passed, eSTS will hide the option which allows user to switch login hint.
+     * This can only be passed if login_hint is provided.
+     */
+    public static final String HIDE_SWITCH_USER_QUERY_PARAMETER = "hsu";
 
     protected MicrosoftStsAuthorizationRequest(final Builder builder) {
         super(builder);
@@ -149,7 +154,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mPrompt;
     }
 
-    public String getTokenScope() {return mTokenScope;}
+    public String getTokenScope() {
+        return mTokenScope;
+    }
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() {
@@ -169,21 +176,15 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             }
         }
 
-        List<Pair<String, String>> extraQueryParams = getExtraQueryParams();
-
         // If login_hint is provided, block the user from switching user during login.
         // hsu = HideSwitchUser
         if (!TextUtils.isEmpty(getLoginHint())) {
-            if (extraQueryParams == null) {
-                extraQueryParams = new ArrayList<>();
-            }
-
-            extraQueryParams.add(new Pair<>("hsu", "1"));
+            qpMap.put(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
         }
 
         // Add extra qp, if present...
-        if (null != extraQueryParams && !extraQueryParams.isEmpty()) {
-            for (final Pair<String, String> queryParam : extraQueryParams) {
+        if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
+            for (final Pair<String, String> queryParam : getExtraQueryParams()) {
                 //Skip appending for duplicated extra query parameters
                 if (!qpMap.containsKey(queryParam.first)) {
                     qpMap.put(queryParam.first, queryParam.second);
@@ -194,7 +195,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
         for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
-            if(entry.getKey() != null && entry.getValue() != null) {
+            if (entry.getKey() != null && entry.getValue() != null) {
                 uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
             }
         }
