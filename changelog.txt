@@ -2,6 +2,7 @@ V.Next
 ----------
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
+- [PATCH] Generic Timeout Rule for tests added (#1286)
 
 Version 3.2.0
 ----------
