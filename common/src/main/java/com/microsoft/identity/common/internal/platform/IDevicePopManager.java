@@ -460,4 +460,12 @@ public interface IDevicePopManager {
                                  String nonce,
                                  String clientClaims
     ) throws ClientException;
+
+
+    /**
+     * Get the key manager that this device pop manager uses for key provisioning and
+     * management.  This is exposed mainly in order to allow uses beyond POP.
+     * @return the key manager that backs this DevicePopManager.
+     */
+    IKeyManager<KeyStore.PrivateKeyEntry> getKeyManager();
 }

@@ -112,6 +112,11 @@ public class KeyStoreAccessor {
         return new AsymmetricKeyAccessor() {
 
             @Override
+            public IKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+                return popManager.getKeyManager();
+            }
+
+            @Override
             public String getPublicKey(IDevicePopManager.PublicKeyFormat format) throws ClientException {
                 return popManager.getPublicKey(format);
             }
