@@ -68,6 +68,9 @@ import static com.microsoft.identity.common.internal.authscheme.BearerAuthentica
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
+import static com.microsoft.identity.common.internal.dto.CredentialType.IdToken;
+import static com.microsoft.identity.common.internal.dto.CredentialType.RefreshToken;
+import static com.microsoft.identity.common.internal.dto.CredentialType.V1IdToken;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
@@ -755,7 +758,7 @@ public class MsalOAuth2TokenCache
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
                 account.getEnvironment(),
-                CredentialType.IdToken,
+                IdToken,
                 clientId,
                 account.getRealm(),
                 null, // wildcard (*),
@@ -897,7 +900,7 @@ public class MsalOAuth2TokenCache
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 accountRecord.getHomeAccountId(),
                 accountRecord.getEnvironment(),
-                CredentialType.IdToken,
+                IdToken,
                 clientId, // If null, behaves as wildcard
                 accountRecord.getRealm(),
                 null, // wildcard (*),
@@ -1115,7 +1118,8 @@ public class MsalOAuth2TokenCache
     /**
      * Given a CacheRecord and IdTokenRecord, set the IdToken on the cache record in the field
      * corresponding to the IdToken's version.
-     *  @param target        The CacheRecord into which said IdToken should be placed.
+     *
+     * @param target        The CacheRecord into which said IdToken should be placed.
      * @param idTokenRecord The IdToken to associate.
      */
     private void setToCacheRecord(@NonNull final CacheRecord.CacheRecordBuilder target,
@@ -1129,7 +1133,7 @@ public class MsalOAuth2TokenCache
         if (null != type) {
             if (CredentialType.V1IdToken == type) {
                 target.mV1IdToken(idTokenRecord);
-            } else if (CredentialType.IdToken == type) {
+            } else if (IdToken == type) {
                 target.mIdToken(idTokenRecord);
             } else {
                 Logger.warn(
@@ -1168,42 +1172,19 @@ public class MsalOAuth2TokenCache
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
 
-        // Grab the Credentials for this app...start with the v2 IdTokens....
-        final List<Credential> appCredentials =
-                mAccountCredentialCache.getCredentialsFilteredBy(
-                        null, // homeAccountId
-                        environment,
-                        CredentialType.IdToken,
-                        clientId,
-                        null, // realm
-                        null, // target,
-                        null // not applicable
-                );
-
-        // And also grab any V1IdTokens....
-        appCredentials.addAll(
-                mAccountCredentialCache.getCredentialsFilteredBy(
-                        null, // homeAccountId
-                        environment,
-                        CredentialType.V1IdToken,
-                        clientId,
-                        null, // realm
-                        null, // target
-                        null // not applicable
-                )
+        final Set<CredentialType> credentialTypes = new HashSet<>(
+                Arrays.asList(IdToken, V1IdToken, RefreshToken)
         );
 
-        // And any refresh tokens...
-        appCredentials.addAll(
-                mAccountCredentialCache.getCredentialsFilteredBy(
-                        null,
-                        environment,
-                        CredentialType.RefreshToken,
-                        clientId,
-                        null,
-                        null,
-                        null
-                )
+        final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                null, // homeAccountId
+                environment,
+                credentialTypes,
+                clientId,
+                null, // realm
+                null, // target
+                null, // authScheme
+                null // requestedClaims
         );
 
         // For each Account with an associated RT, add it to the result List...
@@ -1369,7 +1350,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.AccessToken,
                 CredentialType.AccessToken_With_AuthScheme,
                 CredentialType.RefreshToken,
-                CredentialType.IdToken,
+                IdToken,
                 CredentialType.V1IdToken
         );
     }

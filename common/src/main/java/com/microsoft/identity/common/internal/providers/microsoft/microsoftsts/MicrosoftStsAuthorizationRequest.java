@@ -83,6 +83,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         public static final String CONSENT = "consent";
     }
 
+    /**
+     * If hsu=1 is passed, eSTS will hide the option which allows user to switch login hint.
+     * This can only be passed if login_hint is provided.
+     */
+    public static final String HIDE_SWITCH_USER_QUERY_PARAMETER = "hsu";
 
     protected MicrosoftStsAuthorizationRequest(final Builder builder) {
         super(builder);
@@ -147,7 +152,9 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         return mPrompt;
     }
 
-    public String getTokenScope() {return mTokenScope;}
+    public String getTokenScope() {
+        return mTokenScope;
+    }
 
     @Override
     public Uri getAuthorizationRequestAsHttpRequest() {
@@ -167,6 +174,12 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             }
         }
 
+        // If login_hint is provided, block the user from switching user during login.
+        // hsu = HideSwitchUser
+        if (!TextUtils.isEmpty(getLoginHint())) {
+            qpMap.put(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
+        }
+
         // Add extra qp, if present...
         if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
             for (final Pair<String, String> queryParam : getExtraQueryParams()) {
@@ -180,7 +193,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
 
         for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
-            if(entry.getKey() != null && entry.getValue() != null) {
+            if (entry.getKey() != null && entry.getValue() != null) {
                 uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
             }
         }

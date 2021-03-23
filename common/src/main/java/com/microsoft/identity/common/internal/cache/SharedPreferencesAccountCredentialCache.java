@@ -224,10 +224,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             );
 
             if (null == account) {
-                Logger.warn(
-                        TAG,
-                        ACCOUNT_RECORD_DESERIALIZATION_FAILED
-                );
+                Logger.warn(TAG, ACCOUNT_RECORD_DESERIALIZATION_FAILED);
             } else {
                 accounts.put(cacheKey, account);
             }
@@ -283,20 +280,17 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         while (cacheValues.hasNext()) {
             Map.Entry<String, ?> cacheValue = cacheValues.next();
             final String cacheKey = cacheValue.getKey();
-                final Credential credential = mCacheValueDelegate.fromCacheValue(
-                        cacheValue.getValue().toString(),
-                        credentialClassForType(cacheKey)
-                );
+            final Credential credential = mCacheValueDelegate.fromCacheValue(
+                    cacheValue.getValue().toString(),
+                    credentialClassForType(cacheKey)
+            );
 
-                if (null == credential) {
-                    Logger.warn(
-                            TAG,
-                            CREDENTIAL_DESERIALIZATION_FAILED
-                    );
-                } else {
-                    credentials.put(cacheKey, credential);
-                }
+            if (null == credential) {
+                Logger.warn(TAG, CREDENTIAL_DESERIALIZATION_FAILED);
+            } else {
+                credentials.put(cacheKey, credential);
             }
+        }
 
         Logger.verbose(TAG, "Loaded [" + credentials.size() + "] Credentials...");
 
@@ -373,6 +367,37 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
 
         return matchingCredentials;
+    }
+
+    @Override
+    public List<Credential> getCredentialsFilteredBy(@Nullable final String homeAccountId,
+                                                     @Nullable final String environment,
+                                                     @NonNull final Set<CredentialType> credentialTypes,
+                                                     @Nullable final String clientId,
+                                                     @Nullable final String realm,
+                                                     @Nullable final String target,
+                                                     @Nullable final String authScheme,
+                                                     @Nullable final String requestedClaims) {
+        final List<Credential> allCredentials = getCredentials();
+
+        final List<Credential> result = new ArrayList<>();
+        for (final CredentialType type : credentialTypes) {
+            result.addAll(
+                    getCredentialsFilteredByInternal(
+                            homeAccountId,
+                            environment,
+                            type,
+                            clientId,
+                            realm,
+                            target,
+                            authScheme,
+                            requestedClaims,
+                            allCredentials
+                    )
+            );
+        }
+
+        return result;
     }
 
     @Override
@@ -489,7 +514,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 } else if (CredentialType.PrimaryRefreshToken.name().equalsIgnoreCase(credentialTypeStr)) {
                     type = CredentialType.PrimaryRefreshToken;
                     break;
-                }else {
+                } else {
                     // TODO Log a warning and skip this value?
                     Logger.warn(TAG, "Unexpected credential type.");
                 }
