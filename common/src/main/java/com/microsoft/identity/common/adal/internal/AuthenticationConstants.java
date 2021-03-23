@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -46,6 +49,11 @@ public final class AuthenticationConstants {
     public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
+     * The Constant CHARSET_UTF8.
+     */
+    public static final Charset CHARSET_UTF8 = StandardCharsets.UTF_8; //Charset.forName("UTF-8");
+
+    /**
      * Bundle message.
      */
     public static final String BUNDLE_MESSAGE = "Message";
@@ -54,6 +62,11 @@ public final class AuthenticationConstants {
      * Default access token expiration time in seconds.
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
+
+    /**
+     * The constant label for SP800-108.
+     */
+    public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
 
     /**
      * Holding all the constant value involved in the webview.
