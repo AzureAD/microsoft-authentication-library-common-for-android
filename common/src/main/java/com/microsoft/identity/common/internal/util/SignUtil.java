@@ -31,6 +31,9 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Helper class with some utility methods to get PackageInfo and signatures in a back-compatible way
+ */
 public class SignUtil {
 
     /**
