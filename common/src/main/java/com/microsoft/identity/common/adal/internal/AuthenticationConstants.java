@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.adal.internal;
 
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -51,7 +50,7 @@ public final class AuthenticationConstants {
     /**
      * The Constant CHARSET_UTF8.
      */
-    public static final Charset CHARSET_UTF8 = StandardCharsets.UTF_8; //Charset.forName("UTF-8");
+    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
 
     /**
      * Bundle message.
