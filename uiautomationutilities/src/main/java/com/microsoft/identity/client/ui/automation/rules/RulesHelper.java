@@ -34,6 +34,9 @@ import com.microsoft.identity.client.ui.automation.broker.BrokerMicrosoftAuthent
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 
 import org.junit.rules.RuleChain;
+import org.junit.rules.Timeout;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * A helper class to instantiate and return a {@link RuleChain} comprised of the rules required for
@@ -55,6 +58,9 @@ public class RulesHelper {
 
         Log.i(TAG, "Adding RetryTestRule");
         ruleChain = ruleChain.around(new RetryTestRule());
+
+        Log.i(TAG, "Adding Timeout Rule");
+        ruleChain = ruleChain.around(new Timeout(10, TimeUnit.MINUTES));
 
         Log.i(TAG, "Adding UiAutomatorTestRule");
         ruleChain = ruleChain.around(new UiAutomatorTestRule());

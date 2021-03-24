@@ -99,18 +99,23 @@ public class CustomTabsManager {
      * Method to bind Browser {@link androidx.browser.customtabs.CustomTabsService}.
      * Waits until the {@link CustomTabsServiceConnection} is connected.
      */
-    public synchronized void bind(@NonNull String browserPackage) {
+    public synchronized boolean bind(final @NonNull Context context, @NonNull String browserPackage) {
         // Initiate the service-bind action
-        if (mContextRef.get() == null
-                || !CustomTabsClient.bindCustomTabsService(mContextRef.get(), browserPackage, mCustomTabsServiceConnection)) {
-            Logger.info(TAG, "Unable to bind custom tabs service");
+        if (context == null
+                || !CustomTabsClient.bindCustomTabsService(context, browserPackage, mCustomTabsServiceConnection)) {
+            Logger.info(TAG, "Unable to bind custom tabs service " +
+                    ((context == null)
+                            ? "because the context was null"
+                            : "because the bind call failed") );
             mClientLatch.countDown();
+            return false;
         }
 
         // Create the Intent used to launch the Url
         final CustomTabsIntent.Builder builder = new CustomTabsIntent.Builder(createSession(null));
         mCustomTabsIntent = builder.setShowTitle(true).build();
         mCustomTabsIntent.intent.setPackage(browserPackage);
+        return true;
     }
 
     /**

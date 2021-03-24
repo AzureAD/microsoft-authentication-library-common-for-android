@@ -34,6 +34,7 @@ import com.google.gson.annotations.SerializedName;
  * TODO: make the request object part of this response class
  *       (so that the caller does NOT have to persist the request object even after the request is made).
  */
+
 public class TokenResponse implements ISuccessResponse {
 
     /**
