@@ -67,7 +67,11 @@ public class BrokerOperationBundle {
         BROKER_API_HELLO,
         BROKER_API_GET_BROKER_ACCOUNTS,
         BROKER_API_REMOVE_BROKER_ACCOUNT,
-        BROKER_API_UPDATE_BRT
+        BROKER_API_UPDATE_BRT,
+        BROKER_SET_FLIGHTS,
+        BROKER_GET_FLIGHTS,
+        BROKER_ADD_FLIGHTS,
+        BROKER_SSO_TOKEN;
     }
 
     @Getter
@@ -180,6 +184,18 @@ public class BrokerOperationBundle {
 
             case MSAL_GENERATE_SHR:
                 return BrokerContentProvider.GENERATE_SHR_PATH;
+
+            case BROKER_ADD_FLIGHTS:
+                return BrokerContentProvider.BROKER_API_ADD_FLIGHTS_PATH;
+
+            case BROKER_GET_FLIGHTS:
+                return BrokerContentProvider.BROKER_API_GET_FLIGHTS_PATH;
+
+            case BROKER_SET_FLIGHTS:
+                return BrokerContentProvider.BROKER_API_SET_FLIGHTS_PATH;
+
+            case BROKER_SSO_TOKEN:
+                return BrokerContentProvider.GET_SSO_TOKEN_PATH;
 
             default:
                 final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";

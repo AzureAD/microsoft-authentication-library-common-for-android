@@ -26,6 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -97,6 +98,34 @@ public final class ObjectMapper {
      * @throws UnsupportedEncodingException thrown if encoding not supported
      */
     public static String serializeObjectToFormUrlEncoded(Object object) throws UnsupportedEncodingException {
+        Map<String, String> fields = constuctMapFromObject(object);
+
+        final StringBuilder builder = new StringBuilder();
+
+        Iterator<TreeMap.Entry<String, String>> iterator = fields.entrySet().iterator();
+
+        while (iterator.hasNext()) {
+            TreeMap.Entry<String, String> entry = iterator.next();
+            builder.append(URLEncoder.encode(entry.getKey(), AuthenticationConstants.ENCODING_UTF8));
+            builder.append('=');
+            builder.append(URLEncoder.encode(entry.getValue(), AuthenticationConstants.ENCODING_UTF8));
+
+            if (iterator.hasNext()) {
+                builder.append('&');
+            }
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Method for converting the contents of an object into a map.  Important to the implementation of
+     * this method is the behavior of GSON which excludes null fields from the resulting JSON.  A
+     * TreeMap was chosen to simplify testing, and the resulting map is in key order.
+     *
+     * @param object the object to convert.
+     * @return a map representation of the object.
+     */
+    public static Map<String, String> constuctMapFromObject(Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
         Type stringMap = new TypeToken<TreeMap<String, String>>() {
         }.getType();
@@ -111,22 +140,7 @@ public final class ObjectMapper {
                 }
             }
         }
-
-        final StringBuilder builder = new StringBuilder();
-
-        Iterator<TreeMap.Entry<String, String>> iterator = fields.entrySet().iterator();
-
-        while (iterator.hasNext()) {
-            TreeMap.Entry<String, String> entry = iterator.next();
-            builder.append(URLEncoder.encode(entry.getKey(), ENCODING_SCHEME));
-            builder.append('=');
-            builder.append(URLEncoder.encode(entry.getValue(), ENCODING_SCHEME));
-
-            if (iterator.hasNext()) {
-                builder.append('&');
-            }
-        }
-        return builder.toString();
+        return fields;
     }
 
     /**
