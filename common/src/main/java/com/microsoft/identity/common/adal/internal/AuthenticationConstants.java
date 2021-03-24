@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.adal.internal;
 
 import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
