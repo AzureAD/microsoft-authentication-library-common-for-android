@@ -482,8 +482,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final StorageHelper storageHelper = new StorageHelper(context);
 
         final String keyString = "ABCDEFGH";
-        final SecretKey key = new SecretKeySpec(Base64.decode(keyString.getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
-        final SecretKey anotherKey = new SecretKeySpec(Base64.decode("RANDOM".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
+        final SecretKey key = new SecretKeySpec(Base64.decode(keyString.getBytes(AuthenticationConstants.CHARSET_UTF8), Base64.DEFAULT), "AES");
+        final SecretKey anotherKey = new SecretKeySpec(Base64.decode("RANDOM".getBytes(AuthenticationConstants.CHARSET_UTF8), Base64.DEFAULT), "AES");
 
         final String serializedKey = storageHelper.serializeSecretKey(key);
         final SecretKey deserializedKey = storageHelper.deserializeSecretKey(serializedKey);

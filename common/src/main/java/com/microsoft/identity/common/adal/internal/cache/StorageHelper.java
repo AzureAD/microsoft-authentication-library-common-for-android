@@ -259,8 +259,8 @@ public class StorageHelper implements IStorageHelper {
         logIfKeyHasChanged(mEncryptionKey, mEncryptionHMACKey);
 
         Logger.verbose(TAG + methodName, "Encrypt version:" + mBlobVersion);
-        final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.ENCODING_UTF8);
-        final byte[] bytes = clearText.getBytes(AuthenticationConstants.ENCODING_UTF8);
+        final byte[] blobVersion = mBlobVersion.getBytes(AuthenticationConstants.CHARSET_UTF8);
+        final byte[] bytes = clearText.getBytes(AuthenticationConstants.CHARSET_UTF8);
 
         // IV: Initialization vector that is needed to start CBC
         final byte[] iv = new byte[DATA_KEY_LENGTH];
@@ -295,7 +295,7 @@ public class StorageHelper implements IStorageHelper {
                 + encrypted.length + iv.length, macDigest.length);
 
         final String encryptedText = new String(Base64.encode(blobVerAndEncryptedDataAndIVAndMacDigest,
-                Base64.NO_WRAP), AuthenticationConstants.ENCODING_UTF8);
+                Base64.NO_WRAP), AuthenticationConstants.CHARSET_UTF8);
         Logger.verbose(TAG + methodName, "Finished encryption");
 
         return getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
@@ -413,7 +413,6 @@ public class StorageHelper implements IStorageHelper {
      * NOTE: If it cannot verify the keyVersion, it will assume that this data is not encrypted.
      */
     public EncryptionType getEncryptionType(@NonNull final String data) throws UnsupportedEncodingException {
-        final String methodName = ":getEncryptionType";
 
         final byte[] bytes;
         try {
@@ -422,22 +421,17 @@ public class StorageHelper implements IStorageHelper {
             return EncryptionType.UNENCRYPTED;
         }
 
-        try {
-            final String keyVersion = new String(
-                    bytes,
-                    0,
-                    KEY_VERSION_BLOB_LENGTH,
-                    AuthenticationConstants.ENCODING_UTF8
-            );
+        final String keyVersion = new String(
+                bytes,
+                0,
+                KEY_VERSION_BLOB_LENGTH,
+                AuthenticationConstants.CHARSET_UTF8
+        );
 
-            if (VERSION_USER_DEFINED.equalsIgnoreCase(keyVersion)) {
-                return EncryptionType.USER_DEFINED;
-            } else if (VERSION_ANDROID_KEY_STORE.equalsIgnoreCase(keyVersion)) {
-                return EncryptionType.ANDROID_KEY_STORE;
-            }
-        } catch (UnsupportedEncodingException e) {
-            Logger.error(TAG + methodName, "Failed to extract keyVersion.", e);
-            throw e;
+        if (VERSION_USER_DEFINED.equalsIgnoreCase(keyVersion)) {
+            return EncryptionType.USER_DEFINED;
+        } else if (VERSION_ANDROID_KEY_STORE.equalsIgnoreCase(keyVersion)) {
+            return EncryptionType.ANDROID_KEY_STORE;
         }
 
         return EncryptionType.UNENCRYPTED;
@@ -531,7 +525,7 @@ public class StorageHelper implements IStorageHelper {
                         KEY_VERSION_BLOB_LENGTH,
                         encryptedLength
                 ),
-                AuthenticationConstants.ENCODING_UTF8
+                AuthenticationConstants.CHARSET_UTF8
         );
 
         return decrypted;
