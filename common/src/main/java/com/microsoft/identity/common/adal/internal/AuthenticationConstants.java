@@ -1425,7 +1425,7 @@ public final class AuthenticationConstants {
                 return mPath;
             }
             public int code() {
-                return mCode == null ? ordinal() + 1: mCode;
+                return mCode == null ? ordinal() + 1 : mCode;
             }
         }
         /**
