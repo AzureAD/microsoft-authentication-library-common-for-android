@@ -62,6 +62,17 @@ public final class ObjectMapper {
             .registerTypeAdapterFactory(new UnknownParamTypeAdapterFactory())
             .create();
 
+    /*
+     * This likely deserves a comment.  What we're doing here is hooking the underlying GSON implementation's
+     * use of JsonReader.  We KNOW that what's happening in the type adapter that we're delegating to is that if the
+     * name of the field isn't in the names that they mapped, they skip it.  What we're doing instead is to keep
+     * track of the last seen name, and then when we get called to skip a value, if it will be a string, save it in a map.
+     * This map is linked to preserve the order of the parameters for testing use.  At the end of this process, we
+     * store the resulting Iterable in the object that can accept it.
+     * 
+     * In order to do this, we're providing a completely fake reader object to a new json reader and then
+     * delegating all of its operations away.
+     */
     public static class UnknownParamTypeAdapterFactory implements TypeAdapterFactory {
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
