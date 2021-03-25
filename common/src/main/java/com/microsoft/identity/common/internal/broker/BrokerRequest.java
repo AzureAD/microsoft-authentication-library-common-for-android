@@ -102,7 +102,7 @@ public class BrokerRequest implements Serializable {
     /**
      * The username for the request.
      */
-    @NonNull
+    @Nullable
     @SerializedName(SerializedNames.USERNAME)
     private String mUserName;
 
