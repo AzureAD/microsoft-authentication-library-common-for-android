@@ -224,8 +224,7 @@ public final class ObjectMapper {
      * @return object
      */
     public static <T> T deserializeJsonStringToObject(String json, Class<T> objectClass) {
-        T value = GSON.fromJson(json, objectClass);
-        return value;
+        return GSON.fromJson(json, objectClass);
     }
 
     /**
