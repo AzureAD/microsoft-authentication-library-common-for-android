@@ -3,7 +3,7 @@ V.Next
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)
-- [MINOR] Propagate unknown parameters from the server
+- [MINOR] Propagate unknown parameters from the server (#1292)
 
 Version 3.2.0
 ----------
