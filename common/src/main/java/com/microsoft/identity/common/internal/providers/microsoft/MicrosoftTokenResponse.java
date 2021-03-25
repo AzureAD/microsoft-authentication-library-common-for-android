@@ -27,6 +27,7 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
 import java.util.Date;
+import java.util.Map;
 
 public class MicrosoftTokenResponse extends TokenResponse {
 

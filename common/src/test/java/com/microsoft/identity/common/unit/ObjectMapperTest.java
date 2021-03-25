@@ -23,15 +23,19 @@
 package com.microsoft.identity.common.unit;
 
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
+import java.util.Map;
 
 @RunWith(JUnit4.class)
 public class ObjectMapperTest {
@@ -43,7 +47,7 @@ public class ObjectMapperTest {
     public final static String CLIENT_ASSERTION = "assertion";
     public final static String SCOPES = "openid profile mail.read mail.send";
     public final static String JSON_TOKEN_REQUEST = "{" +
-            "client_id: '" + CLIENT_ID + "'}";
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 'other_value' }";
 
 
     @Test
@@ -70,4 +74,26 @@ public class ObjectMapperTest {
         Assert.assertEquals(CLIENT_ID, tr.getClientId());
     }
 
+    @Test
+    public void test_JsonToObjectMS() {
+        MicrosoftTokenRequest tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, MicrosoftTokenRequest.class);
+
+        Assert.assertEquals(CLIENT_ID, tr.getClientId());
+        Map.Entry<String, String> param = tr.getExtraParameters().iterator().next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+    }
+    @Test
+    public void test_JsonToObjectMSResponse() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+    }
 }
