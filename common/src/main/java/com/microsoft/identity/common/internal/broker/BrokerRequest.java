@@ -206,7 +206,7 @@ public class BrokerRequest implements Serializable {
     @SerializedName(SerializedNames.MULTIPLE_CLOUDS_SUPPORTED)
     private boolean mMultipleCloudsSupported;
 
-    @NonNull
+    @Nullable
     @SerializedName(SerializedNames.AUTHORIZATION_AGENT)
     private String mAuthorizationAgent;
 
