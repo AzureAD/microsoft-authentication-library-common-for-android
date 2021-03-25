@@ -225,9 +225,6 @@ public final class ObjectMapper {
      */
     public static <T> T deserializeJsonStringToObject(String json, Class<T> objectClass) {
         T value = GSON.fromJson(json, objectClass);
-        if (IHasExtraParameters.class.isAssignableFrom(objectClass)) {
-
-        }
         return value;
     }
 
