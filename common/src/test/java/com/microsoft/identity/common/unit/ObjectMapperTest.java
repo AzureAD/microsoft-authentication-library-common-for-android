@@ -53,6 +53,8 @@ public class ObjectMapperTest {
             "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 'other_value' ";
     public final static String JSON_TOKEN_REQUEST_OTHER_VALUE = "{" +
             "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 1, something_else: [ 1, 2 ] }";
+    public final static String JSON_TOKEN_REQUEST_OTHER_VALUE_DUPES = "{" +
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval1', id_token: 'idtokenval', other_param: 1, something_else: [ 1, 2 ] }";
     public final static String JSON_TOKEN_REQUEST_ARRAY = "[" +
             "'client_id', '" + CLIENT_ID + "', 'id_token', 'idtokenval', 'other_param', 'other_value' ]";
 
@@ -120,6 +122,18 @@ public class ObjectMapperTest {
     @Test
     public void test_JsonToObjectMSResponseNumbersAndStuff() {
         TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_OTHER_VALUE, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+    }
+    // Here we're leaving off everything that isn't a string, for now.  Duplicate values overwrite.
+    @Test
+    public void test_JsonToObjectMSResponseNumbersAndStuffWithDupes() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_OTHER_VALUE_DUPES, TokenResponse.class);
 
         Assert.assertEquals("idtokenval", tr.getIdToken());
         final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
