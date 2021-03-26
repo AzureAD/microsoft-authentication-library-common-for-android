@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.unit;
 
+import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
@@ -48,6 +49,12 @@ public class ObjectMapperTest {
     public final static String SCOPES = "openid profile mail.read mail.send";
     public final static String JSON_TOKEN_REQUEST = "{" +
             "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 'other_value' }";
+    public final static String JSON_TOKEN_REQUEST_MALFORMED = "{" +
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 'other_value' ";
+    public final static String JSON_TOKEN_REQUEST_OTHER_VALUE = "{" +
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 1, something_else: [ 1, 2 ] }";
+    public final static String JSON_TOKEN_REQUEST_ARRAY = "[" +
+            "'client_id', '" + CLIENT_ID + "', 'id_token', 'idtokenval', 'other_param', 'other_value' ]";
 
 
     @Test
@@ -96,4 +103,43 @@ public class ObjectMapperTest {
         Assert.assertEquals("other_param", param.getKey());
         Assert.assertEquals("other_value", param.getValue());
     }
+    @Test(expected = JsonParseException.class)
+    public void test_JsonToObjectResponseMalformed() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_MALFORMED, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+    }
+    // Here we're leaving off everything that isn't a string, for now.
+    @Test
+    public void test_JsonToObjectMSResponseNumbersAndStuff() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_OTHER_VALUE, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+    }
+    @Test(expected = JsonParseException.class)
+    public void test_JsonToObjectMSResponseArray() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_ARRAY, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+    }
+
 }
