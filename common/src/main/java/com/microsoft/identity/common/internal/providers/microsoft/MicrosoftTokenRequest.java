@@ -95,18 +95,6 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     private String mTokenScope;
 
-    private transient Iterable<Map.Entry<String, String>> mExtendedParameters;
-
-    @Override
-    public Iterable<Map.Entry<String, String>> getExtraParameters() {
-        return mExtendedParameters;
-    }
-
-    @Override
-    public void setExtraParameters(final Iterable<Map.Entry<String, String>> extraParams) {
-        mExtendedParameters = extraParams;
-    }
-
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;
 
