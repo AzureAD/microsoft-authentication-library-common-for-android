@@ -28,6 +28,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.util.Arrays;
@@ -146,6 +147,7 @@ public enum AuthenticationSettings {
                     "that supports keyStore functionality.  Consider not doing this, as it only exists " +
                     "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
         }
+        SharedPreferencesFileManager.clearAll();
         mSecretKeyVersion += 1;
         mSecretKeyData = rawKey == null ? null : Arrays.copyOf(rawKey, rawKey.length);
     }

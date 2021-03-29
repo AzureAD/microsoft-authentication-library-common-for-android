@@ -25,6 +25,7 @@ package com.microsoft.identity.common;
 import androidx.test.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -96,6 +97,17 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public void testGetString() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+    }
+
+    @Test
+    public void testGetStringWithKeyChange() {
+        mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
+        assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+        AuthenticationSettings.INSTANCE.setSecretKey(null);
+        assertFalse(sTEST_VALUE.equals(mSharedPreferencesFileManager.getString(sTEST_KEY)));
+        mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
+        assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+        AuthenticationSettings.INSTANCE.setSecretKey(new SecureRando);
     }
 
     @Test

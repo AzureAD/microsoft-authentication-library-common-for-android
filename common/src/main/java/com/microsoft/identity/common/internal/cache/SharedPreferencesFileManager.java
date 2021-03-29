@@ -50,6 +50,7 @@ import java.util.concurrent.ConcurrentMap;
  * Convenience class for accessing {@link SharedPreferences}.
  */
 public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
+
     public interface Predicate<T> {
         boolean test(T value);
     }
@@ -58,7 +59,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     private final Object cacheLock = new Object();
     @GuardedBy("cacheLock")
-    private final LruCache<String, String> fileCache = new LruCache<>(256);
+    private final LruCache<String, String> fileCache;
     private final String mSharedPreferencesFileName;
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
@@ -66,6 +67,13 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f , 1);
+
+    /**
+     * Clear all cache data from sharedPreferences.
+     */
+    public static void clearAll() {
+        objectCache.clear();
+    }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
@@ -81,7 +89,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                                                                     final int operatingMode,
                                                                     final IStorageHelper storageHelper) {
         if (storageHelper == null) {
-            return new SharedPreferencesFileManager(context, name, operatingMode, storageHelper);
+            return new SharedPreferencesFileManager(context, name, operatingMode, storageHelper, null);
         }
         String key = name + "/" + context.getPackageName() + "/" + operatingMode;
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
@@ -140,6 +148,23 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         this(context, name, -1, storageHelper);
     }
 
+    protected SharedPreferencesFileManager(Context context, String name, int operatingMode, IStorageHelper storageHelper, LruCache<String, String> lruCache) {
+
+        if (operatingMode == -1 && storageHelper == null) {
+            Logger.verbose(TAG, "Init: ");
+        } else if (storageHelper == null) {
+            Logger.verbose(TAG, "Init with operating mode: " + TAG);
+        } else if (operatingMode == -1) {
+            Logger.verbose(TAG, "Init with storage helper:  " + TAG);
+        } else {
+            Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
+        }
+        mSharedPreferencesFileName = name;
+        mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
+        mStorageHelper = storageHelper;
+        fileCache = lruCache;
+    }
+
     /**
      * Constructs an instance of SharedPreferencesFileManager.
      *
@@ -154,18 +179,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String name,
             final int operatingMode,
             final IStorageHelper storageHelper) {
-        if (operatingMode == -1 && storageHelper == null) {
-            Logger.verbose(TAG, "Init: ");
-        } else if (storageHelper == null) {
-            Logger.verbose(TAG, "Init with operating mode: " + TAG);
-        } else if (operatingMode == -1) {
-            Logger.verbose(TAG, "Init with storage helper:  " + TAG);
-        } else {
-            Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
-        }
-        mSharedPreferencesFileName = name;
-        mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
-        mStorageHelper = storageHelper;
+        this(context, name, operatingMode, null, new LruCache<String, String>(256));
     }
 
     @Override
@@ -173,10 +187,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String key,
             final String value) {
         synchronized (cacheLock) {
-            if (value != null) {
-                fileCache.put(key, value);
-            } else {
-                fileCache.remove(key);
+            if (fileCache != null) {
+                if (value != null) {
+                    fileCache.put(key, value);
+                } else {
+                    fileCache.remove(key);
+                }
             }
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
@@ -195,9 +211,11 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     @Nullable
     public final String getString(final String key) {
         synchronized (cacheLock) {
-            String memCache = fileCache.get(key);
-            if (memCache != null) {
-                return memCache;
+            if (fileCache != null) {
+                String memCache = fileCache.get(key);
+                if (memCache != null) {
+                    return memCache;
+                }
             }
             String restoredValue = mSharedPreferences.getString(key, null);
 
@@ -323,7 +341,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         synchronized (cacheLock) {
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.clear();
-            fileCache.evictAll();
+            if (fileCache != null) {
+                fileCache.evictAll();
+            }
             editor.apply();
         }
     }
@@ -335,7 +355,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 "Removing cache key"
         );
         synchronized (cacheLock) {
-            fileCache.remove(key);
+            if (fileCache != null) {
+                fileCache.remove(key);
+            }
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
             editor.remove(key);
             editor.apply();
