@@ -227,6 +227,7 @@ public abstract class OAuth2Strategy
 
     protected String getTokenEndpoint() {
         return mTokenEndpoint;
+    }
 
     protected String getRequestBody(final GenericTokenRequest request) throws UnsupportedEncodingException, ClientException {
         return ObjectMapper.serializeObjectToFormUrlEncoded(request);
