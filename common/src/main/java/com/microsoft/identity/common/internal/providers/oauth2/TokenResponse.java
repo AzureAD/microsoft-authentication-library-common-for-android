@@ -22,8 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import androidx.annotation.Nullable;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Map;
+
+import lombok.experimental.Wither;
 
 /**
  * This is the class encapsulating the details of the TokenResponse (oAuth2/OIDC).
@@ -134,6 +142,11 @@ public class TokenResponse implements ISuccessResponse {
      */
     @Expose()
     private long mResponseReceivedTime;
+
+    /**
+     * Any extra parameters that may have shown up on the response.
+     */
+    private transient Iterable<Map.Entry<String, String>> mExtraParameters;
 
     /**
      * Gets the response expires_in.
@@ -297,4 +310,15 @@ public class TokenResponse implements ISuccessResponse {
                 '}';
     }
     //CHECKSTYLE:ON
+
+    @Nullable
+    @Override
+    public synchronized Iterable<Map.Entry<String, String>> getExtraParameters() {
+        return mExtraParameters;
+    }
+
+    @Override
+    public synchronized void setExtraParameters(final Iterable<Map.Entry<String, String>> params) {
+        mExtraParameters = params;
+    }
 }
