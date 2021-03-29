@@ -34,7 +34,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -65,7 +64,7 @@ public enum AuthenticationSettings {
      * @return the version of the key state.  This will be incremented on any alteration, and is
      * an indication that the state should be reloaded.
      */
-    public long getSecretKeyVersion() {
+    public synchronized long getSecretKeyVersion() {
         return mSecretKeyVersion;
     }
 
