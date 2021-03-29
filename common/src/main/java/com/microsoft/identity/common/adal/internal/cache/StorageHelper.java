@@ -206,6 +206,7 @@ public class StorageHelper implements IStorageHelper {
      */
     private KeyPair mKeyPair;
     private String mBlobVersion;
+    private long mLastSecretKeyVersion = Long.MIN_VALUE;
     private SecretKey mEncryptionKey = null;
     private SecretKey mEncryptionHMACKey = null;
     private SecretKey mCachedKeyStoreEncryptedKey = null;
@@ -576,7 +577,8 @@ public class StorageHelper implements IStorageHelper {
 
         // Loading key only once for performance. If API is upgraded, it will
         // restart the device anyway. It will load the correct key for new API.
-        if (mEncryptionKey != null && mEncryptionHMACKey != null) {
+        if (mLastSecretKeyVersion >= AuthenticationSettings.INSTANCE.getSecretKeyVersion() &&
+                mEncryptionKey != null && mEncryptionHMACKey != null) {
             return mEncryptionKey;
         }
 

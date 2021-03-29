@@ -80,6 +80,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                                                                     final String name,
                                                                     final int operatingMode,
                                                                     final IStorageHelper storageHelper) {
+        if (storageHelper == null) {
+            return new SharedPreferencesFileManager(context, name, operatingMode, storageHelper);
+        }
         String key = name + "/" + context.getPackageName() + "/" + operatingMode;
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if(cachedFileManager == null) {

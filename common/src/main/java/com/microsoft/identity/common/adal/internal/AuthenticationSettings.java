@@ -30,9 +30,11 @@ import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -57,7 +59,17 @@ public enum AuthenticationSettings {
     // keys in the map. used by broker.
     private final Map<String, byte[]> mBrokerSecretKeys = new HashMap<String, byte[]>(2);
 
-    private AtomicReference<byte[]> mSecretKeyData = new AtomicReference<>();
+    private byte[] mSecretKeyData = null;
+
+    /**
+     * @return the version of the key state.  This will be incremented on any alteration, and is
+     * an indication that the state should be reloaded.
+     */
+    public long getSecretKeyVersion() {
+        return mSecretKeyVersion;
+    }
+
+    private long mSecretKeyVersion = 0;
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
@@ -95,8 +107,8 @@ public enum AuthenticationSettings {
      *
      * @return byte[] secret data
      */
-    public byte[] getSecretKeyData() {
-        return mSecretKeyData.get();
+    public synchronized byte[] getSecretKeyData() {
+        return mSecretKeyData == null ? null : Arrays.copyOf(mSecretKeyData, mSecretKeyData.length);
     }
 
     /**
@@ -125,7 +137,7 @@ public enum AuthenticationSettings {
      *
      * @param rawKey App related key to use in encrypt/decrypt
      */
-    public void setSecretKey(byte[] rawKey) {
+    public synchronized void setSecretKey(byte[] rawKey) {
         if (rawKey == null || rawKey.length != SECRET_RAW_KEY_LENGTH) {
             throw new IllegalArgumentException("rawKey");
         }
@@ -134,7 +146,8 @@ public enum AuthenticationSettings {
                     "that supports keyStore functionality.  Consider not doing this, as it only exists " +
                     "for devices with an SDK lower than " + Build.VERSION_CODES.JELLY_BEAN_MR2);
         }
-        mSecretKeyData.set(rawKey);
+        mSecretKeyVersion += 1;
+        mSecretKeyData = rawKey == null ? null : Arrays.copyOf(rawKey, rawKey.length);
     }
 
     /**
@@ -152,12 +165,14 @@ public enum AuthenticationSettings {
             throw new IllegalArgumentException("Expect two keys are passed in.");
         }
 
+        mSecretKeyVersion += 1;
         for (Map.Entry<String, byte[]> entry : secretKeys.entrySet()) {
-            if (entry.getValue() == null || entry.getValue().length != SECRET_RAW_KEY_LENGTH) {
+            final byte[] newKey = entry.getValue();
+            if (newKey == null || newKey.length != SECRET_RAW_KEY_LENGTH) {
                 throw new IllegalArgumentException("Passed in raw key is null or length is not as expected. ");
             }
 
-            mBrokerSecretKeys.put(entry.getKey(), entry.getValue());
+            mBrokerSecretKeys.put(entry.getKey(), Arrays.copyOf(newKey, newKey.length));
         }
     }
 
@@ -172,13 +187,14 @@ public enum AuthenticationSettings {
     /**
      * Clears any secret keys set by legacy {@link #setSecretKey(byte[])} API.
      */
-    public void clearLegacySecretKeyConfiguration() {
+    public synchronized void clearLegacySecretKeyConfiguration() {
         Logger.info(
                 TAG + ":clearLegacySecretKeyConfiguration",
                 "Clearing legacy secret key configuration."
         );
         mBrokerSecretKeys.clear();
-        mSecretKeyData.set(null);
+        mSecretKeyData = null;
+        mSecretKeyVersion += 1;
     }
 
     /**
