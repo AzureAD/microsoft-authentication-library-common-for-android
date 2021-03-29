@@ -107,7 +107,6 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         assertFalse(sTEST_VALUE.equals(mSharedPreferencesFileManager.getString(sTEST_KEY)));
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
-        AuthenticationSettings.INSTANCE.setSecretKey(new SecureRando);
     }
 
     @Test
