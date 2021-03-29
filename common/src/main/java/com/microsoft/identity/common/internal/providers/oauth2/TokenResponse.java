@@ -119,6 +119,23 @@ public class TokenResponse implements ISuccessResponse {
     @SerializedName("id_token")
     private String mIdToken;
 
+    private transient String mTokenAuthority;
+
+    /**
+     * Get the authority that issued this token.
+     * @return the authority that issued this token.
+     */
+    public String getAuthority() {
+        return mTokenAuthority;
+    }
+
+    /**
+     * Set the authority that issued this token.
+     * @param tokenAuthority the authority that issued this token.
+     */
+    public void setAuthority(final String tokenAuthority) {
+        mTokenAuthority = tokenAuthority;
+    }
 
     /**
      * A long representing the time at which the response was received in milliseconds since the Unix Epoch.

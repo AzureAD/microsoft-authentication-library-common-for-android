@@ -158,7 +158,7 @@ public abstract class OAuth2Strategy
 
         final HttpResponse response = performTokenRequest(request);
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
-
+        result.getTokenResponse().setAuthority(mTokenEndpoint);
         if (result.getSuccess()) {
             validateTokenResponse(request, result);
         }
@@ -210,7 +210,7 @@ public abstract class OAuth2Strategy
             );
         }
 
-        final URL requestUrl = new URL(mTokenEndpoint);
+        final URL requestUrl = new URL(getTokenEndpoint());
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
@@ -221,8 +221,11 @@ public abstract class OAuth2Strategy
         if (null != response.getDate()) {
             recordClockSkew(response.getDate().getTime());
         }
-
         return response;
+    }
+
+    protected String getTokenEndpoint() {
+        return mTokenEndpoint;
     }
 
     private void recordClockSkew(final long referenceTimeMillis) {
