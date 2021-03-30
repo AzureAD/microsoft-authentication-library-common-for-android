@@ -1268,7 +1268,7 @@ public final class AuthenticationConstants {
         public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
 
         /**
-         * Boolean to return when a Broker RT is successfully updated.
+         * All of the active flights.
          */
         public static final String GET_FLIGHTS_RESULT = "active_flights";
 
