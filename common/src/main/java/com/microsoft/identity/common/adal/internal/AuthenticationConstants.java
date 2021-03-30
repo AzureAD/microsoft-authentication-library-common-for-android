@@ -1409,7 +1409,8 @@ public final class AuthenticationConstants {
             BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH),
             BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH),
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH),
-            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH)
+            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH),
+            UNKNOWN(null)
                 ;
             private String mPath;
             private Integer mCode;
