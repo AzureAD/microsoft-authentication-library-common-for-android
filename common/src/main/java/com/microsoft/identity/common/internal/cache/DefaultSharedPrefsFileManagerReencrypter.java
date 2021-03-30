@@ -76,6 +76,23 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
     }
 
     @Override
+    public void reencrypt2(ISharedPreferencesFileManager fileManager,
+                           IStringEncrypter encrypter,
+                           IStringDecrypter decrypter,
+                           ReencryptionParams params) throws Exception {
+        final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
+        final Map<String, String> decryptedEntries = new HashMap<>();
+
+        for (final Map.Entry<String, String> entry : cacheEntries.entrySet()) {
+            decryptedEntries.put(entry.getKey(), decrypter.decrypt(entry.getValue()));
+        }
+
+        for (final Map.Entry<String, String> entry : decryptedEntries.entrySet()) {
+            fileManager.putString(entry.getKey(), encrypter.encrypt(entry.getValue()));
+        }
+    }
+
+    @Override
     public void reencryptAsync(@NonNull final ISharedPreferencesFileManager fileManager,
                                @NonNull final IStringEncrypter encrypter,
                                @NonNull final IStringDecrypter decrypter,

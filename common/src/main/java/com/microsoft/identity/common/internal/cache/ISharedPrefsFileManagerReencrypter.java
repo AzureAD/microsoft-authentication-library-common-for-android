@@ -118,6 +118,12 @@ public interface ISharedPrefsFileManagerReencrypter {
                    ReencryptionParams params
     ) throws Exception;
 
+    void reencrypt2(ISharedPreferencesFileManager fileManager,
+                   IStringEncrypter encrypter,
+                   IStringDecrypter decrypter,
+                   ReencryptionParams params
+    ) throws Exception;
+
     /**
      * Performs reencryption of the provided {@link ISharedPreferencesFileManager} asynchronously,
      * delegating to the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform
