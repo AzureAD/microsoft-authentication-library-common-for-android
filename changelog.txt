@@ -5,6 +5,7 @@ V.Next
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)
 - [MINOR] Propagate unknown parameters from the server (#1292)
+- [MINOR] Adds new API support for the broker - SSO token and flight support (#1290)
 
 Version 3.2.0
 ----------
