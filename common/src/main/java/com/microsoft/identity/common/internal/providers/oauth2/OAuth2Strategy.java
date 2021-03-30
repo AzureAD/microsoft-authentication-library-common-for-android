@@ -56,6 +56,7 @@ import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
@@ -182,7 +183,7 @@ public abstract class OAuth2Strategy
                 "Performing token request..."
         );
 
-        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        final String requestBody = getRequestBody(request);
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
@@ -226,6 +227,10 @@ public abstract class OAuth2Strategy
 
     protected String getTokenEndpoint() {
         return mTokenEndpoint;
+    }
+
+    protected String getRequestBody(final GenericTokenRequest request) throws UnsupportedEncodingException, ClientException {
+        return ObjectMapper.serializeObjectToFormUrlEncoded(request);
     }
 
     private void recordClockSkew(final long referenceTimeMillis) {

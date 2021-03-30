@@ -154,20 +154,20 @@ public class JWSBuilder {
             // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-27
             header.mCert = new String[1];
             header.mCert[0] = new String(Base64.encode(cert.getEncoded(), Base64.NO_WRAP),
-                    AuthenticationConstants.ENCODING_UTF8);
+                    AuthenticationConstants.CHARSET_UTF8);
 
             // redundant but current ADFS code base is looking for
             String headerJsonString = gson.toJson(header);
             String claimsJsonString = gson.toJson(claims);
             Logger.verbose(TAG + methodName, "Generate client certificate challenge response JWS Header. ");
             signingInput = StringExtensions.encodeBase64URLSafeString(headerJsonString
-                    .getBytes(AuthenticationConstants.ENCODING_UTF8))
+                    .getBytes(AuthenticationConstants.CHARSET_UTF8))
                     + "."
                     + StringExtensions.encodeBase64URLSafeString(claimsJsonString
-                    .getBytes(AuthenticationConstants.ENCODING_UTF8));
+                    .getBytes(AuthenticationConstants.CHARSET_UTF8));
 
             signature = sign(privateKey,
-                    signingInput.getBytes(AuthenticationConstants.ENCODING_UTF8));
+                    signingInput.getBytes(AuthenticationConstants.CHARSET_UTF8));
         } catch (UnsupportedEncodingException e) {
             throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,
                     "Unsupported encoding", e);
