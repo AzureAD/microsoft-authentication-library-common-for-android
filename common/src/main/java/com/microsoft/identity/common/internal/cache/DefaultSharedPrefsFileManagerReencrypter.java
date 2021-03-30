@@ -83,12 +83,16 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
         final Map<String, String> cacheEntries = new HashMap<>(fileManager.getAll());
         final Map<String, String> decryptedEntries = new HashMap<>();
 
-        for (final Map.Entry<String, String> entry : cacheEntries.entrySet()) {
-            decryptedEntries.put(entry.getKey(), decrypter.decrypt(entry.getValue()));
-        }
+        try {
+            for (final Map.Entry<String, String> entry : cacheEntries.entrySet()) {
+                decryptedEntries.put(entry.getKey(), decrypter.decrypt(entry.getValue()));
+            }
 
-        for (final Map.Entry<String, String> entry : decryptedEntries.entrySet()) {
-            fileManager.putString(entry.getKey(), encrypter.encrypt(entry.getValue()));
+            for (final Map.Entry<String, String> entry : decryptedEntries.entrySet()) {
+                fileManager.putString(entry.getKey(), encrypter.encrypt(entry.getValue()));
+            }
+        } catch (Exception e) {
+            // do nothing
         }
     }
 
