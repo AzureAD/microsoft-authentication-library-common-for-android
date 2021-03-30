@@ -88,6 +88,7 @@ public class OAuth2StrategyTest {
 
         @Override
         protected TokenResult getTokenResultFromHttpResponse(HttpResponse response) throws ClientException {
+            //This will return a null TokenResponse.
             return new TokenResult();
         }
 
@@ -96,8 +97,13 @@ public class OAuth2StrategyTest {
 
         }
     }
+
+    /**
+     * This test only verifies that if a null token response is returned from the token result,
+     * we don't create an error.
+     */
     @Test
-    public void testOauth2StrategyProduction() throws Exception {
+    public void testOauth2Strategy_NullTokenResponse() throws Exception {
         OAuth2StrategyParameters params = Mockito.mock(OAuth2StrategyParameters.class);
         when(params.getContext()).thenReturn(null);
         TestStrategy s = new TestStrategy(null, params);
