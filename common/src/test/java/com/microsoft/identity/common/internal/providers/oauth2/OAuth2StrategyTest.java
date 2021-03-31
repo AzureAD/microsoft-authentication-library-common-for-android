@@ -32,6 +32,7 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
@@ -143,6 +144,6 @@ public class OAuth2StrategyTest {
     @Test
     public void testOauth2Strategy_NullTokenResponse() throws Exception {
         TestStrategy s = new TestStrategy(null, new TestParams());
-        s.requestToken(null);
+        Assert.assertNotNull(s.requestToken(null));
     }
 }
