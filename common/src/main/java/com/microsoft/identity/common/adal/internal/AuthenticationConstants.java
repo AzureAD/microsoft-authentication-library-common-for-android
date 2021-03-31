@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import java.nio.charset.Charset;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
@@ -46,6 +48,11 @@ public final class AuthenticationConstants {
     public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
+     * The Constant CHARSET_UTF8.
+     */
+    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+
+    /**
      * Bundle message.
      */
     public static final String BUNDLE_MESSAGE = "Message";
@@ -54,6 +61,11 @@ public final class AuthenticationConstants {
      * Default access token expiration time in seconds.
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
+
+    /**
+     * The constant label for SP800-108.
+     */
+    public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
 
     /**
      * Holding all the constant value involved in the webview.
@@ -816,6 +828,11 @@ public final class AuthenticationConstants {
         /**
          * String of key for account name.
          */
+        public static final String FLIGHT_INFO = "com.microsoft.identity.broker.flights";
+
+        /**
+         * String of key for account name.
+         */
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
@@ -1246,6 +1263,16 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
+         * Boolean to return when a Broker RT is successfully updated.
+         */
+        public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
+
+        /**
+         * All of the active flights.
+         */
+        public static final String GET_FLIGHTS_RESULT = "active_flights";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -1362,6 +1389,47 @@ public final class AuthenticationConstants {
         public static final String AUTHORITY = "microsoft.identity.broker";
 
         /**
+         * Tie the API paths and codes into a single object structure to stop us from having to keep
+         * them in sync.
+         */
+        public enum API {
+            MSAL_HELLO(MSAL_HELLO_PATH, MSAL_HELLO_URI_CODE),
+            ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, MSAL_ACQUIRE_TOKEN_INTERACTIVE_CODE),
+            ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, MSAL_ACQUIRE_TOKEN_SILENT_CODE),
+            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, MSAL_GET_ACCOUNTS_CODE),
+            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, MSAL_REMOVE_ACCOUNTS_CODE),
+            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE),
+            GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, MSAL_GET_DEVICE_MODE_CODE),
+            SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, MSAL_SIGN_OUT_FROM_SHARED_DEVICE_CODE),
+            GENERATE_SHR(GENERATE_SHR_PATH, MSAL_GENERATE_SHR_CODE),
+            BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_API_HELLO_URI_CODE),
+            BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_API_GET_BROKER_ACCOUNTS_CODE),
+            BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_API_REMOVE_BROKER_ACCOUNT_CODE),
+            BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_API_UPDATE_BRT_CODE),
+            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH),
+            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH),
+            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH),
+            UNKNOWN(null)
+                ;
+            private String mPath;
+            private Integer mCode;
+            API(String path, int code) {
+                this.mPath = path;
+                this.mCode = code;
+            }
+            API(String path) {
+                this.mPath = path;
+                this.mCode = null;
+            }
+            public String path() {
+                return mPath;
+            }
+            public int code() {
+                return mCode == null ? ordinal() + 1 : mCode;
+            }
+        }
+        /**
          * URI Path constant for MSAL-to-Broker hello request using ContentProvider.
          */
         public static final String MSAL_HELLO_PATH = "/hello";
@@ -1427,6 +1495,26 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
 
         /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String BROKER_API_ADD_FLIGHTS_PATH = "/brokerApi/addFlights";
+
+        /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String BROKER_API_GET_FLIGHTS_PATH = "/brokerApi/getFlights";
+
+        /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
+
+        /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+
+        /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
         public static final int MSAL_HELLO_URI_CODE = 1;
@@ -1490,6 +1578,7 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
          */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
+
     }
 
     public static final class AuthorizationIntentKey {

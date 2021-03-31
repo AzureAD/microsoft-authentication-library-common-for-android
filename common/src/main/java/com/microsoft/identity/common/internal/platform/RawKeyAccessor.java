@@ -224,4 +224,26 @@ public class RawKeyAccessor implements KeyAccessor {
         }
     }
 
+    /**
+     * Given this raw key, generate a derived key from it.  If we close on a KDF for hardware keys,
+     * this can get promoted to the symmetric key interface.
+     * @param label the label for the generated key.
+     * @param ctx the context bytes for the generated key.
+     * @param suite the ciphersuite to use for the generated key.
+     * @return a new key, generated from the previous one.
+     * @throws ClientException if something goes wrong during generation.
+     */
+    public KeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
+                                          @NonNull final CryptoSuite suite) throws ClientException{
+        try {
+            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(key, label, ctx));
+        } catch (IOException e) {
+            throw new ClientException(IO_ERROR, e.getMessage(), e);
+        } catch (InvalidKeyException e) {
+            throw new ClientException(INVALID_KEY, e.getMessage(), e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
+        }
+    }
+
 }

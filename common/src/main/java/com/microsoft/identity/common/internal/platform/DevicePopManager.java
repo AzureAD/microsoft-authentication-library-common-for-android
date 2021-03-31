@@ -240,12 +240,16 @@ class DevicePopManager implements IDevicePopManager {
         this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
+    @Override
+    public IKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+        return mKeyManager;
+    }
+
     DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        String keyAlias = alias;
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
-        mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(keyAlias)
+        mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
                                                    .keyStore(instance)
                                                    .thumbprintSupplier(new Supplier<byte[]>() {
                                                        @SneakyThrows(ClientException.class)

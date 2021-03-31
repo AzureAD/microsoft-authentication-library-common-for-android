@@ -22,5 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-public interface ISuccessResponse {
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
+
+public interface ISuccessResponse extends IHasExtraParameters {
 }

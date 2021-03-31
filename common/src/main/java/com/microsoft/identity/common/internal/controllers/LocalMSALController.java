@@ -446,7 +446,7 @@ public class LocalMSALController extends BaseController {
         final boolean localRemoveAccountSuccess = !parameters
                 .getOAuth2TokenCache()
                 .removeAccount(
-                        parameters.getAccount() == null ? null : parameters.getAccount().getEnvironment(),
+                        null, // remove account from all environment
                         parameters.getClientId(),
                         parameters.getAccount() == null ? null : parameters.getAccount().getHomeAccountId(),
                         realm

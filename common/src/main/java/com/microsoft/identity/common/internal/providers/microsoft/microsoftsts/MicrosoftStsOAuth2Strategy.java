@@ -527,11 +527,10 @@ public class MicrosoftStsOAuth2Strategy
                         HeaderSerializationUtil.toJson(response.getHeaders())
                 );
             }
-
             tokenErrorResponse.setResponseBody(response.getBody());
         } else {
             tokenResponse = ObjectMapper.deserializeJsonStringToObject(
-                    response.getBody(),
+                    getBodyFromSuccessfulResponse(response.getBody()),
                     MicrosoftStsTokenResponse.class
             );
         }
@@ -564,6 +563,10 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         return result;
+    }
+
+    protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
+        return responseBody;
     }
 
     @Override

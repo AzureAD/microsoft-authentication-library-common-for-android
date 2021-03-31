@@ -22,7 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
+
+import java.util.Map;
 
 /**
  * This is the class encapsulating the details of the Authorization Response (OAuth2.0/OIDC).
@@ -54,6 +58,11 @@ public class AuthorizationResponse implements ISuccessResponse {
      */
     @Expose()
     private String mState;
+
+    /**
+     * Extra parameters that may be on a response.
+     */
+    private transient Iterable<Map.Entry<String, String>> mExtraParameters;
 
     /**
      * Constructor of {@link AuthorizationResponse}.
@@ -109,6 +118,17 @@ public class AuthorizationResponse implements ISuccessResponse {
      */
     public void setState(String state) {
         mState = state;
+    }
+
+    @Nullable
+    @Override
+    public Iterable<Map.Entry<String, String>> getExtraParameters() {
+        return mExtraParameters;
+    }
+
+    @Override
+    public void setExtraParameters(Iterable<Map.Entry<String, String>> params) {
+        mExtraParameters = params;
     }
 
     public static class Fields {
