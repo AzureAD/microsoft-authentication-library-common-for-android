@@ -11,10 +11,10 @@ name: $(date:yyyyMMdd)$(rev:.r)
 resources:
   repositories:
   - repository: ms-identity-android-java
-    type: github
+    type: git
     name: Azure-Samples/ms-identity-android-java
     ref: master
-    endpoint: ANDROID_GITHUB
+
 jobs:
 - job: Phase_1
   displayName: Phase 1
