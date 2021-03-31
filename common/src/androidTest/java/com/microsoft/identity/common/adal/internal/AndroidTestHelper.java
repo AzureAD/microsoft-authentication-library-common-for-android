@@ -74,7 +74,7 @@ public class AndroidTestHelper {
 
         // ADAL is set to this signature for now
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        for (Signature signature : SignUtil.getSignatures(context)) {
+        for (final Signature signature : SignUtil.getSignatures(context)) {
             mTestSignature = signature.toByteArray();
             MessageDigest md = MessageDigest.getInstance("SHA");
             md.update(mTestSignature);

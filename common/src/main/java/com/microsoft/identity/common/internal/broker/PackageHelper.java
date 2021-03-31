@@ -67,10 +67,10 @@ public class PackageHelper {
      */
     public String getCurrentSignatureForPackage(final String packageName) {
         try {
-            PackageInfo info = SignUtil.getPackageInfo(mPackageManager, packageName);
-            Signature [] signatures = SignUtil.getSignatures(info);
+            final PackageInfo info = SignUtil.getPackageInfo(mPackageManager, packageName);
+            final Signature [] signatures = SignUtil.getSignatures(info);
             if (signatures != null && signatures.length > 0) {
-                Signature signature = signatures[0];
+                final Signature signature = signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);

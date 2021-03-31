@@ -63,13 +63,13 @@ public final class Util {
      * @param signatures the signatures to add
      * @return PackageInfo with signatures added
      */
-    public static PackageInfo addSignatures(PackageInfo packageInfo, Signature[] signatures) {
+    public static PackageInfo addSignatures(final PackageInfo packageInfo, final Signature[] signatures) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             packageInfo.signatures = signatures;
             return packageInfo;
         }
 
-        SigningInfo signingInfo = mock(SigningInfo.class);
+        final SigningInfo signingInfo = mock(SigningInfo.class);
         when(signingInfo.hasMultipleSigners()).thenReturn(false);
         when(signingInfo.getSigningCertificateHistory()).thenReturn(signatures);
         packageInfo.signingInfo = signingInfo;

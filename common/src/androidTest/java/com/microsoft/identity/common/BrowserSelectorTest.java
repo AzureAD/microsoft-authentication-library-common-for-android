@@ -260,7 +260,7 @@ public class BrowserSelectorTest {
                 signatures[i] = new Signature(mSignatures.get(i));
             }
 
-            PackageInfo pi = Util.addSignatures(new PackageInfo(), signatures);
+            final PackageInfo pi = Util.addSignatures(new PackageInfo(), signatures);
             pi.packageName = mPackageName;
             pi.versionName = mVersion;
 

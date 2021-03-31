@@ -42,7 +42,7 @@ public class SignUtil {
      * @param packageInfo A packageInfo instance with the flag PackageManager.GET_SIGNING_CERTIFICATES/PackageManager.GET_SIGNATURES set
      * @return Signature[] or null
      */
-    public static Signature[] getSignatures(PackageInfo packageInfo) {
+    public static Signature[] getSignatures(final PackageInfo packageInfo) {
         if (packageInfo == null) {
             return null;
         }

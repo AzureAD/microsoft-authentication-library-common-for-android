@@ -217,7 +217,7 @@ public class BrokerValidator {
                     "No broker package existed.");
         }
 
-        Signature [] signatures = SignUtil.getSignatures(packageInfo);
+        final Signature [] signatures = SignUtil.getSignatures(packageInfo);
         if (signatures == null || signatures.length == 0) {
             throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
