@@ -22,16 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.unit;
 
+import com.google.gson.JsonParseException;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Iterator;
+import java.util.Map;
 
 @RunWith(JUnit4.class)
 public class ObjectMapperTest {
@@ -43,7 +48,15 @@ public class ObjectMapperTest {
     public final static String CLIENT_ASSERTION = "assertion";
     public final static String SCOPES = "openid profile mail.read mail.send";
     public final static String JSON_TOKEN_REQUEST = "{" +
-            "client_id: '" + CLIENT_ID + "'}";
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 'other_value' }";
+    public final static String JSON_TOKEN_REQUEST_MALFORMED = "{" +
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 'other_value' ";
+    public final static String JSON_TOKEN_REQUEST_OTHER_VALUE = "{" +
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval', other_param: 1, something_else: [ 1, 2 ] }";
+    public final static String JSON_TOKEN_REQUEST_OTHER_VALUE_DUPES = "{" +
+            "client_id: '" + CLIENT_ID + "', id_token: 'idtokenval1', id_token: 'idtokenval', other_param: 1, something_else: [ 1, 2 ] }";
+    public final static String JSON_TOKEN_REQUEST_ARRAY = "[" +
+            "'client_id', '" + CLIENT_ID + "', 'id_token', 'idtokenval', 'other_param', 'other_value' ]";
 
 
     @Test
@@ -68,6 +81,88 @@ public class ObjectMapperTest {
         TokenRequest tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, TokenRequest.class);
 
         Assert.assertEquals(CLIENT_ID, tr.getClientId());
+    }
+
+    @Test
+    public void test_JsonToObjectMS() {
+        MicrosoftTokenRequest tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, MicrosoftTokenRequest.class);
+
+        Assert.assertEquals(CLIENT_ID, tr.getClientId());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("id_token", param.getKey());
+        Assert.assertEquals("idtokenval", param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+
+    }
+    @Test
+    public void test_JsonToObjectMSResponse() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+    }
+    @Test(expected = JsonParseException.class)
+    public void test_JsonToObjectResponseMalformed() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_MALFORMED, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+    }
+    // Here we're leaving off everything that isn't a string, for now.
+    @Test
+    public void test_JsonToObjectMSResponseNumbersAndStuff() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_OTHER_VALUE, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+    }
+    // Here we're leaving off everything that isn't a string, for now.  Duplicate values overwrite.
+    @Test
+    public void test_JsonToObjectMSResponseNumbersAndStuffWithDupes() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_OTHER_VALUE_DUPES, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        Assert.assertFalse(iterator.hasNext());
+    }
+    @Test(expected = JsonParseException.class)
+    public void test_JsonToObjectMSResponseArray() {
+        TokenResponse tr = ObjectMapper.deserializeJsonStringToObject(JSON_TOKEN_REQUEST_ARRAY, TokenResponse.class);
+
+        Assert.assertEquals("idtokenval", tr.getIdToken());
+        final Iterator<Map.Entry<String, String>> iterator = tr.getExtraParameters().iterator();
+        Map.Entry<String, String> param = iterator.next();
+        Assert.assertEquals("client_id", param.getKey());
+        Assert.assertEquals(CLIENT_ID, param.getValue());
+        param = iterator.next();
+        Assert.assertEquals("other_param", param.getKey());
+        Assert.assertEquals("other_value", param.getValue());
+        Assert.assertFalse(iterator.hasNext());
     }
 
 }

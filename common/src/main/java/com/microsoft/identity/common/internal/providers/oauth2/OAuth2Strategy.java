@@ -56,6 +56,7 @@ import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
@@ -158,7 +159,9 @@ public abstract class OAuth2Strategy
 
         final HttpResponse response = performTokenRequest(request);
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
-
+        if (result.getTokenResponse() != null) {
+            result.getTokenResponse().setAuthority(mTokenEndpoint);
+        }
         if (result.getSuccess()) {
             validateTokenResponse(request, result);
         }
@@ -182,7 +185,7 @@ public abstract class OAuth2Strategy
                 "Performing token request..."
         );
 
-        final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
+        final String requestBody = getRequestBody(request);
         final Map<String, String> headers = new TreeMap<>();
         headers.put(CLIENT_REQUEST_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
 
@@ -210,7 +213,7 @@ public abstract class OAuth2Strategy
             );
         }
 
-        final URL requestUrl = new URL(mTokenEndpoint);
+        final URL requestUrl = new URL(getTokenEndpoint());
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
@@ -221,8 +224,15 @@ public abstract class OAuth2Strategy
         if (null != response.getDate()) {
             recordClockSkew(response.getDate().getTime());
         }
-
         return response;
+    }
+
+    protected String getTokenEndpoint() {
+        return mTokenEndpoint;
+    }
+
+    protected String getRequestBody(final GenericTokenRequest request) throws UnsupportedEncodingException, ClientException {
+        return ObjectMapper.serializeObjectToFormUrlEncoded(request);
     }
 
     private void recordClockSkew(final long referenceTimeMillis) {
