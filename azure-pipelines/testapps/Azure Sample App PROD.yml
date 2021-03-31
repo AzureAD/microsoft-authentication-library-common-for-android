@@ -12,7 +12,7 @@ resources:
   repositories:
   - repository: ms-identity-android-java
     type: github
-    name: AzureAD/ms-identity-android-java
+    name: Azure-Samples/ms-identity-android-java
     ref: master
     endpoint: ANDROID_GITHUB
 jobs:
