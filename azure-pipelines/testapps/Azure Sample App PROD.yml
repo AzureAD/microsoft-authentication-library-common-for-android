@@ -14,7 +14,7 @@ resources:
     type: github
     name: Azure-Samples/ms-identity-android-java
     ref: master
-    endpoint: github.com_android_service_connection
+    endpoint: ANDROID_GITHUB
 jobs:
 - job: Phase_1
   displayName: Phase 1
