@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -90,16 +89,6 @@ public class TestUtils {
         if (keyToRemove != null) {
             sharedPreferences.remove(keyToRemove);
         }
-    }
-
-    public static Activity getMockActivity(final Context context) {
-        Activity activity = new Activity() {
-            @Override
-            public Context getApplicationContext() {
-                return context;
-            }
-        };
-        return activity;
     }
 
     public static Context getContext() {
