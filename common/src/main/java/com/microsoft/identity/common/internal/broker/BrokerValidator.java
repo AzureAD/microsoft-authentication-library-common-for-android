@@ -41,7 +41,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.util.SignUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import java.io.ByteArrayInputStream;
@@ -211,13 +210,13 @@ public class BrokerValidator {
             throws NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
 
-        final PackageInfo packageInfo = SignUtil.getPackageInfo(mContext, brokerPackageName);
+        final PackageInfo packageInfo = PackageHelper.getPackageInfo(mContext, brokerPackageName);
         if (packageInfo == null) {
             throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
                     "No broker package existed.");
         }
 
-        final Signature [] signatures = SignUtil.getSignatures(packageInfo);
+        final Signature [] signatures = PackageHelper.getSignatures(packageInfo);
         if (signatures == null || signatures.length == 0) {
             throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");

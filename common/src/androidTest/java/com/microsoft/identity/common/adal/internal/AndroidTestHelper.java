@@ -34,7 +34,7 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.net.HttpUrlConnectionFactory;
-import com.microsoft.identity.common.internal.util.SignUtil;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 
 import junit.framework.Assert;
 
@@ -74,7 +74,7 @@ public class AndroidTestHelper {
 
         // ADAL is set to this signature for now
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        for (final Signature signature : SignUtil.getSignatures(context)) {
+        for (final Signature signature : PackageHelper.getSignatures(context)) {
             mTestSignature = signature.toByteArray();
             MessageDigest md = MessageDigest.getInstance("SHA");
             md.update(mTestSignature);

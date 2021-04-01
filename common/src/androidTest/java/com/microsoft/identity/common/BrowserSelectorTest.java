@@ -38,10 +38,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
-import com.microsoft.identity.common.internal.util.SignUtil;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -169,7 +169,7 @@ public class BrowserSelectorTest {
         for (TestBrowser browser : browsers) {
             when(mPackageManager.getPackageInfo(
                     eq(browser.mPackageInfo.packageName),
-                    eq(SignUtil.getPackageManagerFlag())))
+                    eq(PackageHelper.getPackageManagerFlag())))
                     .thenReturn(browser.mPackageInfo);
             resolveInfos.add(browser.mResolveInfo);
         }

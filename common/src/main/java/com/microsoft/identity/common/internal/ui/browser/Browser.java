@@ -28,7 +28,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.util.SignUtil;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -69,12 +69,12 @@ public class Browser {
      */
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo) {
-        this(packageInfo.packageName, generateSignatureHashes(SignUtil.getSignatures(packageInfo)), packageInfo.versionName, false);
+        this(packageInfo.packageName, generateSignatureHashes(PackageHelper.getSignatures(packageInfo)), packageInfo.versionName, false);
     }
 
     @SuppressWarnings("deprecation")
     public Browser(@NonNull PackageInfo packageInfo, final Boolean isCustomTabsServiceSupported) {
-        this(packageInfo.packageName, generateSignatureHashes(SignUtil.getSignatures(packageInfo)), packageInfo.versionName, isCustomTabsServiceSupported);
+        this(packageInfo.packageName, generateSignatureHashes(PackageHelper.getSignatures(packageInfo)), packageInfo.versionName, isCustomTabsServiceSupported);
     }
 
     /**
