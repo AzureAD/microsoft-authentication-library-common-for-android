@@ -159,7 +159,9 @@ public abstract class OAuth2Strategy
 
         final HttpResponse response = performTokenRequest(request);
         final GenericTokenResult result = getTokenResultFromHttpResponse(response);
-        result.getTokenResponse().setAuthority(mTokenEndpoint);
+        if (result.getTokenResponse() != null) {
+            result.getTokenResponse().setAuthority(mTokenEndpoint);
+        }
         if (result.getSuccess()) {
             validateTokenResponse(request, result);
         }
