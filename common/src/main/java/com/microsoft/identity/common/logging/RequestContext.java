@@ -30,7 +30,7 @@ import java.util.HashMap;
 public class RequestContext extends HashMap<String, String> implements IRequestContext {
 
     private static final long serialVersionUID = -2239604897244277047L;
-    private final Gson mGson = new Gson();
+    private static final Gson mGson = new Gson();
 
     @Override
     public String toJsonString() {
