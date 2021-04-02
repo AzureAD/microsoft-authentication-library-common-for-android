@@ -24,6 +24,11 @@ package com.microsoft.identity.common.internal.logging;
 
 import com.microsoft.identity.common.logging.Logger;
 
+/**
+ * This class is deprecated.
+ *
+ * @see com.microsoft.identity.common.logging.RequestContext
+ */
 @Deprecated
 public class RequestContext extends com.microsoft.identity.common.logging.RequestContext {
 
