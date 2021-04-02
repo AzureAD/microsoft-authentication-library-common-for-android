@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import com.microsoft.identity.common.internal.logging.Logger;
+
 import java.nio.charset.Charset;
 
 import lombok.AccessLevel;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
@@ -662,7 +666,32 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "6.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
+
+        /**
+         * The logging tag for this class.
+         */
+        private static final String TAG =  AuthenticationConstants.class.getSimpleName();
+
+        static {
+            float protocolVersion = 1.0f;
+            String stringVersion = "1.0";
+            for (final AuthenticationConstants.BrokerContentProvider.API api : AuthenticationConstants.BrokerContentProvider.API.values()) {
+                final String version = api.getMsalVersion();
+                if (version != null) {
+                    try {
+                        final float candVersion = Float.parseFloat(version);
+                        if (candVersion > protocolVersion) {
+                            protocolVersion = candVersion;
+                            stringVersion = version;
+                        }
+                    } catch (final NumberFormatException nfe) {
+                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
+                    }
+                }
+            }
+            MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = stringVersion;
+        }
 
         /**
          * The BrokerAPI-To-Broker protocol name.
@@ -672,8 +701,27 @@ public final class AuthenticationConstants {
         /**
          * The newest BrokerAPI-To-Broker protocol version.
          */
-        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = "1.0";
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE;
 
+        static {
+            float protocolVersion = 1.0f;
+            String stringVersion = "1.0";
+            for (final AuthenticationConstants.BrokerContentProvider.API api : AuthenticationConstants.BrokerContentProvider.API.values()) {
+                final String version = api.getBrokerVersion();
+                if (version != null) {
+                    try {
+                        final float candVersion = Float.parseFloat(version);
+                        if (candVersion > protocolVersion) {
+                            protocolVersion = candVersion;
+                            stringVersion = version;
+                        }
+                    } catch (final NumberFormatException nfe) {
+                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
+                    }
+                }
+            }
+            BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = stringVersion;
+        }
         /**
          * The key of maximum broker protocol version that client advertised.
          */
@@ -1392,35 +1440,37 @@ public final class AuthenticationConstants {
          * Tie the API paths and codes into a single object structure to stop us from having to keep
          * them in sync.
          */
+        @Getter
+        @Accessors(prefix = "m")
         public enum API {
-            MSAL_HELLO(MSAL_HELLO_PATH, MSAL_HELLO_URI_CODE),
-            ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, MSAL_ACQUIRE_TOKEN_INTERACTIVE_CODE),
-            ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, MSAL_ACQUIRE_TOKEN_SILENT_CODE),
-            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, MSAL_GET_ACCOUNTS_CODE),
-            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, MSAL_REMOVE_ACCOUNTS_CODE),
-            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE),
-            GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, MSAL_GET_DEVICE_MODE_CODE),
-            SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, MSAL_SIGN_OUT_FROM_SHARED_DEVICE_CODE),
-            GENERATE_SHR(GENERATE_SHR_PATH, MSAL_GENERATE_SHR_CODE),
-            BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_API_HELLO_URI_CODE),
-            BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_API_GET_BROKER_ACCOUNTS_CODE),
-            BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_API_REMOVE_BROKER_ACCOUNT_CODE),
-            BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_API_UPDATE_BRT_CODE),
-            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH),
-            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH),
-            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH),
-            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH),
-            UNKNOWN(null)
+            MSAL_HELLO(MSAL_HELLO_PATH, MSAL_HELLO_URI_CODE, null, "5.0"),
+            ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, MSAL_ACQUIRE_TOKEN_INTERACTIVE_CODE, null, "5.0"),
+            ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, MSAL_ACQUIRE_TOKEN_SILENT_CODE, null, "5.0"),
+            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, MSAL_GET_ACCOUNTS_CODE, null, "5.0"),
+            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, MSAL_REMOVE_ACCOUNTS_CODE, null, "5.0"),
+            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE, null, "5.0"),
+            GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, MSAL_GET_DEVICE_MODE_CODE, null, "5.0"),
+            SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, MSAL_SIGN_OUT_FROM_SHARED_DEVICE_CODE, null, "5.0"),
+            GENERATE_SHR(GENERATE_SHR_PATH, MSAL_GENERATE_SHR_CODE, null, "6.0"),
+            BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_API_HELLO_URI_CODE, "1.0", "5.0"),
+            BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_API_GET_BROKER_ACCOUNTS_CODE, "1.0", "5.0"),
+            BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_API_REMOVE_BROKER_ACCOUNT_CODE, "1.0", "5.0"),
+            BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_API_UPDATE_BRT_CODE, "1.0", "5.0"),
+            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, null, "2.0", "5.0"),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, null, "2.0", "5.0"),
+            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, null, "2.0", "5.0"),
+            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, null, "7.0"),
+            UNKNOWN(null, null, null, null)
                 ;
             private String mPath;
             private Integer mCode;
-            API(String path, int code) {
+            private String mBrokerVersion;
+            private String mMsalVersion;
+            private API(String path, Integer code, String brokerApiVersion, String msalApiVersion) {
                 this.mPath = path;
                 this.mCode = code;
-            }
-            API(String path) {
-                this.mPath = path;
-                this.mCode = null;
+                this.mBrokerVersion = brokerApiVersion;
+                this.mMsalVersion = msalApiVersion;
             }
             public String path() {
                 return mPath;

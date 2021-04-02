@@ -22,13 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
@@ -36,16 +32,8 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.logging.Logger;
 
-import org.mockito.Mockito;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-import java.util.AbstractMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class TestUtils {
 
@@ -101,13 +89,6 @@ public class TestUtils {
         if (keyToRemove != null) {
             sharedPreferences.remove(keyToRemove);
         }
-    }
-
-    public static Activity getMockActivity(final Context context) {
-        final Activity mockedActivity = Mockito.mock(Activity.class);
-        Mockito.when(mockedActivity.getApplicationContext()).thenReturn(context);
-
-        return mockedActivity;
     }
 
     public static Context getContext() {
