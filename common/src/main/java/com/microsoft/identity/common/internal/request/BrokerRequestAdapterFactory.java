@@ -26,7 +26,7 @@ package com.microsoft.identity.common.internal.request;
 import android.os.Bundle;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 public class BrokerRequestAdapterFactory {
 
