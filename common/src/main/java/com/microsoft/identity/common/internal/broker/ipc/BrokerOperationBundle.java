@@ -138,6 +138,6 @@ public class BrokerOperationBundle {
                     errorMessage,
                     null);
         }
-        return contentApi.path();
+        return contentApi.getPath();
     }
 }
