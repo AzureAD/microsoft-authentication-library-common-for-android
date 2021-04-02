@@ -22,7 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+import com.microsoft.identity.common.logging.Logger;
+
 @Deprecated
 public class RequestContext extends com.microsoft.identity.common.logging.RequestContext {
-    // backcompat
+
+    private static final String TAG = RequestContext.class.getSimpleName();
+
+    private boolean mLogDeprecationWarning = true;
+
+    @Override
+    public String toJsonString() {
+        if (mLogDeprecationWarning) {
+            // only log 1x
+            mLogDeprecationWarning = false;
+            Logger.warn(TAG, "This class is deprecated. "
+                    + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
+        }
+
+        return super.toJsonString();
+    }
 }
