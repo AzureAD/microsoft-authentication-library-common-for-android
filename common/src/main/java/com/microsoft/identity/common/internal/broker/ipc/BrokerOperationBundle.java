@@ -112,7 +112,7 @@ public class BrokerOperationBundle {
     private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
         final String methodName = ":getAccountManagerAddAccountOperationKey";
 
-        String accountManagerKey = operation.mAccountManagerOperation;
+        String accountManagerKey = operation.getAccountManagerOperation();
         if (accountManagerKey == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
             Logger.warn(TAG + methodName, errorMessage);
@@ -128,7 +128,7 @@ public class BrokerOperationBundle {
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodName = ":getContentProviderUriPath";
 
-        final API contentApi = operation.mContentApi;
+        final API contentApi = operation.getContentApi();
         if (contentApi == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
             Logger.warn(TAG + methodName, errorMessage);
