@@ -28,18 +28,18 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;

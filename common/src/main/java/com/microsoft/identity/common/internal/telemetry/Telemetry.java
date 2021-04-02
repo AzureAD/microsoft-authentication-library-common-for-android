@@ -32,7 +32,6 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
@@ -41,6 +40,7 @@ import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryDefa
 import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObserver;
 import com.microsoft.identity.common.internal.telemetry.rules.TelemetryPiiOiiRules;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;

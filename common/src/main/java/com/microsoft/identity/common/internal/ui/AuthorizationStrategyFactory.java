@@ -31,12 +31,12 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 

@@ -36,9 +36,8 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;

@@ -32,15 +32,14 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
-import java.security.AlgorithmParameters;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.MGF1ParameterSpec;
-import java.security.cert.Certificate;
 import java.util.Date;
 
 import javax.crypto.spec.OAEPParameterSpec;

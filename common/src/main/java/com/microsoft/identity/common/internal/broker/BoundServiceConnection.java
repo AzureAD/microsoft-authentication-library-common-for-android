@@ -25,13 +25,11 @@ package com.microsoft.identity.common.internal.broker;
 
 import android.content.ComponentName;
 import android.os.IBinder;
-import android.os.IInterface;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.IMicrosoftAuthService;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * A bound service connection.

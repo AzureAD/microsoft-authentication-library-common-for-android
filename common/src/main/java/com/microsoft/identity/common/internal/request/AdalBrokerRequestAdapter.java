@@ -45,7 +45,6 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -53,6 +52,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectProm
 import com.microsoft.identity.common.internal.result.AdalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;

@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AAD.CLIENT_REQUEST_ID;
 import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory.createHttpURLConnection;
 

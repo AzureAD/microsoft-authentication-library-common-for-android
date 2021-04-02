@@ -38,7 +38,6 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpClient;
 import com.microsoft.identity.common.internal.net.HttpConstants;
 import com.microsoft.identity.common.internal.net.HttpResponse;
@@ -54,6 +53,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
