@@ -110,5 +110,4 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
                 throw new RuntimeException("Unknown or invalid log level");
         }
     }
-
 }
