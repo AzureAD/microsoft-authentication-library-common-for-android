@@ -547,7 +547,7 @@ public class Logger {
     }
 
     /**
-     * Send logs to logcat as the default logging if developer doesn't turn off the logcat logging.
+     * Send logs to logcat.
      */
     private void sendLogcatLogs(final String tag, final LogLevel logLevel, final String message) {
         // Append additional message to the message part for logcat logging
