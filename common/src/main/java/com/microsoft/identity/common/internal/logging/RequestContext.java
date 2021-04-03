@@ -34,13 +34,13 @@ public class RequestContext extends com.microsoft.identity.common.logging.Reques
 
     private static final String TAG = RequestContext.class.getSimpleName();
 
-    private boolean mLogDeprecationWarning = true;
+    private static boolean sLogDeprecationWarning = true;
 
     @Override
     public String toJsonString() {
-        if (mLogDeprecationWarning) {
+        if (sLogDeprecationWarning) {
             // only log 1x
-            mLogDeprecationWarning = false;
+            sLogDeprecationWarning = false;
             Logger.warn(TAG, "This class is deprecated. "
                     + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
         }
