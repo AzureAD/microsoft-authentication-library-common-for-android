@@ -43,7 +43,7 @@ public final class DiagnosticContext extends com.microsoft.identity.common.loggi
 
     private static boolean sLogDeprecationWarning = true;
 
-    public static void setRequestContext(IRequestContext requestContext) {
+    public static void setRequestContext(final IRequestContext requestContext) {
         com.microsoft.identity.common.logging.DiagnosticContext.setRequestContext(requestContext);
         logDeprecationWarning();
     }
