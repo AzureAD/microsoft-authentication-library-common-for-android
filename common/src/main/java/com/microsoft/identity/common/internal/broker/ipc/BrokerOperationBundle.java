@@ -30,10 +30,9 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerAccountManagerOperation;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.API;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

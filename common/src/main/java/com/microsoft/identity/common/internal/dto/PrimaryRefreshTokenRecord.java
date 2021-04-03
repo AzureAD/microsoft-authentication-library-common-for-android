@@ -24,13 +24,13 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
-
 import lombok.EqualsAndHashCode;
 
-import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.*;
+import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.EXPIRES_ON;
+import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.FAMILY_ID;
+import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.PRT_PROTOCOL_VERSION;
+import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY;
+import static com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord.SerializedNames.SESSION_KEY_ROLLING_DATE;
 
 @EqualsAndHashCode(callSuper = true, doNotUseGetters = true)
 public class PrimaryRefreshTokenRecord extends Credential {

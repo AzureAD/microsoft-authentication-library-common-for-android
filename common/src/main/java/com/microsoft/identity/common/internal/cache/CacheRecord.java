@@ -30,7 +30,6 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Value;
 
 @Value

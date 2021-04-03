@@ -24,10 +24,10 @@ package com.microsoft.identity.common.internal.result;
 
 import android.os.Bundle;
 
-import com.microsoft.identity.common.exception.BaseException;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.microsoft.identity.common.exception.BaseException;
 
 public interface IBrokerResultAdapter {
 

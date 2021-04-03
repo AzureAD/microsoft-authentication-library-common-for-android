@@ -20,15 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.logging;
+package com.microsoft.identity.common.logging;
 
 /**
  * Interface for apps to configure the external logging and implement the callback to designate the
  * output of the log messages.
- *
- * This class is deprecated. Use {@link com.microsoft.identity.common.logging.ILoggerCallback}.
  */
-@Deprecated
 public interface ILoggerCallback {
     /**
      * Interface method for apps to hand off each log message as it's generated.

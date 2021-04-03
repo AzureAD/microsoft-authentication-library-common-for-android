@@ -32,7 +32,7 @@ import android.widget.EditText;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Http authorization handler for NTLM challenge on web view.
