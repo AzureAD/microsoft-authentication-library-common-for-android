@@ -47,7 +47,7 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;

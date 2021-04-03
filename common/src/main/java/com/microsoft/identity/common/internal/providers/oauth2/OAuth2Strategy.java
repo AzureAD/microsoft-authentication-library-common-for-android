@@ -37,7 +37,7 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.net.HttpClient;
 import com.microsoft.identity.common.internal.net.HttpConstants;
 import com.microsoft.identity.common.internal.net.HttpResponse;

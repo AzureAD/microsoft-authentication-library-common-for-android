@@ -31,7 +31,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryAggregationAdapter;
 import com.microsoft.identity.common.internal.telemetry.adapter.TelemetryDefaultAdapter;
 import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
