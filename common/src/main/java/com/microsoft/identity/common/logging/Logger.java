@@ -167,7 +167,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#ERROR} log message without PII.
+     * Send a {@link LogLevel#ERROR} log message without PII.
      *
      * @param tag          Used to identify the source of a log message.
      *                     It usually identifies the class or activity where the log call occurs.
@@ -188,7 +188,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#ERROR} log message without PII.
+     * Send a {@link LogLevel#ERROR} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -210,7 +210,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#ERROR} log message with PII.
+     * Send a {@link LogLevel#ERROR} log message with PII.
      *
      * @param tag          Used to identify the source of a log message. It usually identifies the
      *                     class or activity where the log call occurs.
@@ -231,7 +231,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#ERROR} log message with PII.
+     * Send a {@link LogLevel#ERROR} log message with PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -254,7 +254,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#WARN} log message without PII.
+     * Send a {@link LogLevel#WARN} log message without PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
@@ -272,7 +272,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#WARN} log message without PII.
+     * Send a {@link LogLevel#WARN} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -293,7 +293,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#WARN} log message with PII.
+     * Send a {@link LogLevel#WARN} log message with PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
@@ -311,7 +311,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#WARN} log message with PII.
+     * Send a {@link LogLevel#WARN} log message with PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -332,7 +332,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#INFO} log message without PII.
+     * Send a {@link Logger.LogLevel#INFO} log message without PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
@@ -350,7 +350,7 @@ public class Logger {
     }
 
     /**
-     * * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#INFO} log message without PII.
+     * * Send a {@link Logger.LogLevel#INFO} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -364,7 +364,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#INFO} log message with PII.
+     * Send a {@link LogLevel#INFO} log message with PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
@@ -382,7 +382,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#INFO} log message with PII.
+     * Send a {@link LogLevel#INFO} log message with PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -396,7 +396,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#VERBOSE} log message without PII.
+     * Send a {@link LogLevel#VERBOSE} log message without PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
@@ -414,7 +414,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#VERBOSE} log message without PII.
+     * Send a {@link LogLevel#VERBOSE} log message without PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -435,7 +435,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#VERBOSE} log message with PII.
+     * Send a {@link LogLevel#VERBOSE} log message with PII.
      *
      * @param tag     Used to identify the source of a log message. It usually identifies the class
      *                or activity where the log call occurs.
@@ -453,7 +453,7 @@ public class Logger {
     }
 
     /**
-     * Send a {@link com.microsoft.identity.common.internal.logging.Logger.LogLevel#VERBOSE} log message with PII.
+     * Send a {@link LogLevel#VERBOSE} log message with PII.
      *
      * @param tag           Used to identify the source of a log message. It usually identifies the
      *                      class or activity where the log call occurs.
@@ -489,7 +489,7 @@ public class Logger {
                     return;
                 }
 
-                // Developer turns off PII logging, if the log meLoggerSettingssage contains any PII,
+                // Developer turns off PII logging, if the log message contains any PII,
                 // we should not send it.
                 if (!sAllowPii && containsPII) {
                     return;
