@@ -30,6 +30,11 @@ import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParam
 
 import java.util.Map;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
 /**
  * A class holding the state of the Token Request (oAuth2).
  * OAuth2 Spec: https://tools.ietf.org/html/rfc6749#section-4.1.3
@@ -41,6 +46,9 @@ import java.util.Map;
  * https://tools.ietf.org/html/rfc7521
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-protocols-oauth-client-creds
  */
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
 public class TokenRequest implements IHasExtraParameters {
 
     @Expose()

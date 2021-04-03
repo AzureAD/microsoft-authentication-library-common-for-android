@@ -32,6 +32,12 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import java.util.Map;
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@AllArgsConstructor
 public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
 
     public static final String CODE_VERIFIER = "code_verifier";
