@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import androidx.annotation.Nullable;
+import androidx.arch.core.util.Function;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
@@ -33,6 +34,9 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -49,26 +53,131 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter
+@Getter
+@Accessors(prefix="m")
 public class TokenRequest implements IHasExtraParameters {
+
+    private static final Names[] names = Names.values();
+
+    enum Names implements Function<TokenRequest, String> {
+        grant_type {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getGrantType();
+            }
+        },
+        code {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getCode();
+            }
+        },
+        redirect_uri {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getRedirectUri();
+            }
+        },
+        client_id {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getClientId();
+            }
+        },
+        client_secret {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getClientSecret();
+            }
+        },
+        client_assertion_type {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getClientAssertionType();
+            }
+        },
+        client_assertion {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getClientAssertion();
+            }
+        },
+        scope {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getScope();
+            }
+        },
+        refresh_token {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getRefreshToken();
+            }
+        },
+        token_type {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getTokenType();
+            }
+        },
+        req_cnf {
+            @Override
+            public String apply(TokenRequest r) {
+                return r.getRequestConfirmation();
+            }
+        };
+    }
+
+    public String get(@NonNull String paramName) {
+        if (getExtraParameters() != null) {
+            for (Map.Entry<String, String> e : getExtraParameters()) {
+                if (paramName.equals(e.getKey())) {
+                    return e.getValue();
+                }
+            }
+        }
+        for (Names name: names) {
+            if (name.name().equals(paramName)) {
+                return name.apply(this);
+            }
+        }
+        return null;
+    }
 
     @Expose()
     @SerializedName("grant_type")
     private String mGrantType;
 
+    /**
+     * Auth code to use for a token request using auth code flow.
+     */
     @SerializedName("code")
     private String mCode;
 
+    /**
+     * The redirect uri of the client making the token request.
+     */
     @Expose()
     @SerializedName("redirect_uri")
     private String mRedirectUri;
 
+    /**
+     * The client id of the application on behalf of which this request is being made.
+     */
     @Expose()
     @SerializedName("client_id")
     private String mClientId;
 
+    /**
+     * The client secret to use.
+     */
     @SerializedName("client_secret")
     private String mClientSecret;
 
+    /**
+     * The client assertions.
+     */
     @Expose()
     @SerializedName("client_assertion_type")
     private String mClientAssertionType;
@@ -83,6 +192,9 @@ public class TokenRequest implements IHasExtraParameters {
     @SerializedName("refresh_token")
     private String mRefreshToken;
 
+    /**
+     * The token type.
+     */
     @Expose()
     @SerializedName("token_type")
     private String mTokenType;
@@ -98,164 +210,16 @@ public class TokenRequest implements IHasExtraParameters {
         mRequestConfirmation = requestConfirmation;
     }
 
-    private transient Iterable<Map.Entry<String, String>> mExtendedParameters;
+    private transient Iterable<Map.Entry<String, String>> mExtraParameters;
 
     @Override
     public synchronized Iterable<Map.Entry<String, String>> getExtraParameters() {
-        return mExtendedParameters;
+        return mExtraParameters;
     }
 
     @Override
     public synchronized void setExtraParameters(final Iterable<Map.Entry<String, String>> extraParams) {
-        mExtendedParameters = extraParams;
-    }
-
-    /**
-     * Gets the token_type.
-     *
-     * @return The token_type to get.
-     */
-    public String getTokenType() {
-        return mTokenType;
-    }
-
-    /**
-     * Sets the token_type.
-     *
-     * @param tokenType The token_type to set.
-     */
-    public void setTokenType(@Nullable final String tokenType) {
-        mTokenType = tokenType;
-    }
-
-    /**
-     * @return mCode of the token request.
-     */
-    public String getCode() {
-        return mCode;
-    }
-
-    /**
-     * @param code code of the token request.
-     */
-    public void setCode(final String code) {
-        mCode = code;
-    }
-
-    /**
-     * @return mRedirectUri of the token request.
-     */
-    public String getRedirectUri() {
-        return mRedirectUri;
-    }
-
-    /**
-     * @param redirectUri redirect URI of the token request.
-     */
-    public void setRedirectUri(final String redirectUri) {
-        mRedirectUri = redirectUri;
-    }
-
-    /**
-     * @return mClientId of the token request.
-     */
-    public String getClientId() {
-        return mClientId;
-    }
-
-    /**
-     * @param clientId Client ID of the token request.
-     */
-    public void setClientId(final String clientId) {
-        mClientId = clientId;
-    }
-
-    /**
-     * @return mGrantType string of the token request.
-     */
-    public String getGrantType() {
-        return mGrantType;
-    }
-
-    /**
-     * @param grantType grant type string of the token request.
-     */
-    public void setGrantType(final String grantType) {
-        mGrantType = grantType;
-    }
-
-    /**
-     * @param clientSecret client secret string of the token request.
-     */
-    public void setClientSecret(final String clientSecret) {
-        mClientSecret = clientSecret;
-    }
-
-    /**
-     * @return mClientSecret of the token request.
-     */
-    public String getClientSecret() {
-        return mClientSecret;
-    }
-
-    /**
-     * @return mClientAssertionType of the token request.
-     */
-    public String getClientAssertionType() {
-        return mClientAssertionType;
-    }
-
-    /**
-     * @param clientAssertionType client assertion type of the token request.
-     */
-    public void setClientAssertionType(final String clientAssertionType) {
-        mClientAssertionType = clientAssertionType;
-    }
-
-    /**
-     * @return mClientAssertion of the token request.
-     */
-    public String getClientAssertion() {
-        return mClientAssertion;
-    }
-
-    /**
-     * @param clientAssertion client assertion of the token request.
-     */
-    public void setClientAssertion(final String clientAssertion) {
-        mClientAssertion = clientAssertion;
-    }
-
-    /**
-     * @return String mScope of the token request.
-     */
-    public String getScope() {
-        return mScope;
-    }
-
-    /**
-     * @param scope scope parameter of the token request.
-     */
-    public void setScope(final String scope) {
-        mScope = scope;
-    }
-
-    /**
-     * Gets the refresh_token.
-     *
-     * @return The refresh_token to get.
-     */
-    public String getRefreshToken() {
-        return mRefreshToken;
-    }
-
-    /**
-     * Sets the refresh_token.
-     *
-     * @param refreshToken The refresh_token to set.
-     */
-    public void setRefreshToken(final String refreshToken) {
-        mRefreshToken = refreshToken;
+        mExtraParameters = extraParams;
     }
 
     public static class GrantTypes {
