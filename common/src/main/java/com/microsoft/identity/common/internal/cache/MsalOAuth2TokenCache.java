@@ -772,7 +772,6 @@ public class MsalOAuth2TokenCache
         );
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-
         result.account(account);
         result.accessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
         result.refreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
