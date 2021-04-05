@@ -212,13 +212,13 @@ public class MsalOAuth2TokenCache
         saveCredentialsInternal(idTokenRecord, accessTokenRecord);
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountRecord);
-        result.mAccessToken(accessTokenRecord);
+        result.account(accountRecord);
+        result.accessToken(accessTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.mV1IdToken(idTokenRecord);
+            result.v1IdToken(idTokenRecord);
         } else {
-            result.mIdToken(idTokenRecord);
+            result.idToken(idTokenRecord);
         }
 
         return result.build();
@@ -270,14 +270,14 @@ public class MsalOAuth2TokenCache
         saveCredentialsInternal(idTokenRecord, accessTokenRecord, refreshTokenRecord);
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountRecord);
-        result.mAccessToken(accessTokenRecord);
-        result.mRefreshToken(refreshTokenRecord);
+        result.account(accountRecord);
+        result.accessToken(accessTokenRecord);
+        result.refreshToken(refreshTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.mV1IdToken(idTokenRecord);
+            result.v1IdToken(idTokenRecord);
         } else {
-            result.mIdToken(idTokenRecord);
+            result.idToken(idTokenRecord);
         }
 
         return result.build();
@@ -384,8 +384,8 @@ public class MsalOAuth2TokenCache
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
         result.mAccount(accountToSave);
-        result.mAccessToken(accessTokenToSave);
-        result.mRefreshToken(refreshTokenToSave);
+        result.accessToken(accessTokenToSave);
+        result.refreshToken(refreshTokenToSave);
         setToCacheRecord(result, idTokenToSave);
 
         return result.build();
@@ -678,9 +678,9 @@ public class MsalOAuth2TokenCache
             // Set them as the result outputs
             result.mAccount(accountToSave);
             if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
-                result.mV1IdToken(idTokenToSave);
+                result.v1IdToken(idTokenToSave);
             } else {
-                result.mIdToken(idTokenToSave);
+                result.idToken(idTokenToSave);
             }
         }
 
@@ -778,10 +778,10 @@ public class MsalOAuth2TokenCache
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
         result.mAccount(account);
-        result.mAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
-        result.mRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
-        result.mIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
-        result.mV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
+        result.accessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
+        result.refreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
+        result.idToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
+        result.v1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
         Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result.build()));
         return result.build();
@@ -1132,9 +1132,9 @@ public class MsalOAuth2TokenCache
 
         if (null != type) {
             if (CredentialType.V1IdToken == type) {
-                target.mV1IdToken(idTokenRecord);
+                target.v1IdToken(idTokenRecord);
             } else if (IdToken == type) {
-                target.mIdToken(idTokenRecord);
+                target.idToken(idTokenRecord);
             } else {
                 Logger.warn(
                         TAG + methodName,
