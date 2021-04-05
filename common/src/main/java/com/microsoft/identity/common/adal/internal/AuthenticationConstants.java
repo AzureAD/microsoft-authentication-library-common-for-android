@@ -65,6 +65,11 @@ public final class AuthenticationConstants {
     public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
 
     /**
+     * The Constant CHARSET_ASCII.
+     */
+    public static final Charset CHARSET_ASCII = Charset.forName("ASCII");
+
+    /**
      * Bundle message.
      */
     public static final String BUNDLE_MESSAGE = "Message";

@@ -31,9 +31,11 @@ import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import lombok.Builder;
 import lombok.Value;
+import lombok.experimental.Accessors;
 
 @Value
 @Builder
+@Accessors(prefix = "m")
 public class CacheRecord implements ICacheRecord {
 
     private final AccountRecord mAccount;
@@ -47,7 +49,7 @@ public class CacheRecord implements ICacheRecord {
             if (account == null) {
                 throw new NullPointerException("The account record for a CacheRecord may not be null");
             }
-            this.mAccount = account;
+            this.account = account;
             return this;
         }
     }
