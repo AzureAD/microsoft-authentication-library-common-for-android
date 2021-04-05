@@ -34,17 +34,15 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.logging.Logger;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.Future;
 
