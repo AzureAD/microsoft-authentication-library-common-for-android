@@ -82,7 +82,11 @@ public final class AuthenticationConstants {
     /**
      * A constant for PMD to be happy with.
      */
-    private static final String ONE_POINT_ZERO = "1.0";
+    public static final String ONE_POINT_ZERO = "1.0";
+    public static final String TWO_POINT_ZERO = "2.0";
+    public static final String FIVE_POINT_ZERO = "5.0";
+    public static final String SEVEN_POINT_ZERO = "7.0";
+
 
     /**
      * Holding all the constant value involved in the webview.
@@ -291,7 +295,7 @@ public final class AuthenticationConstants {
         /**
          * Constsnt for v2 endpoint
          */
-        public static final String AAD_VERSION_V2 = "2.0";
+        public static final String AAD_VERSION_V2 = TWO_POINT_ZERO;
 
         /**
          * String of preferred user name.
@@ -1448,11 +1452,11 @@ public final class AuthenticationConstants {
         public static final String AUTHORITY = "microsoft.identity.broker";
 
         private static final String VERSION_1 = ONE_POINT_ZERO;
-        private static final String VERSION_5 = "5.0";
+        private static final String VERSION_5 = FIVE_POINT_ZERO;
         private static final String VERSION_6 = "6.0";
-        private static final String VERSION_7 = "7.0";
+        private static final String VERSION_7 = SEVEN_POINT_ZERO;
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
-        private static final String BROKER_VERSION_2 = "2.0";
+        private static final String BROKER_VERSION_2 = TWO_POINT_ZERO;
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep
@@ -1466,34 +1470,29 @@ public final class AuthenticationConstants {
         @Accessors(prefix = "m")
         @AllArgsConstructor
         public enum API {
-            MSAL_HELLO(MSAL_HELLO_PATH, MSAL_HELLO_URI_CODE, null, VERSION_5),
-            ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, MSAL_ACQUIRE_TOKEN_INTERACTIVE_CODE, null, VERSION_5),
-            ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, MSAL_ACQUIRE_TOKEN_SILENT_CODE, null, VERSION_5),
-            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, MSAL_GET_ACCOUNTS_CODE, null, VERSION_5),
-            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, MSAL_REMOVE_ACCOUNTS_CODE, null, VERSION_5),
-            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_CODE, null, VERSION_5),
-            GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, MSAL_GET_DEVICE_MODE_CODE, null, VERSION_5),
-            SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, MSAL_SIGN_OUT_FROM_SHARED_DEVICE_CODE, null, VERSION_5),
-            GENERATE_SHR(GENERATE_SHR_PATH, MSAL_GENERATE_SHR_CODE, null, VERSION_6),
-            BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_API_HELLO_URI_CODE, BROKER_VERSION_1, VERSION_5),
-            BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_API_GET_BROKER_ACCOUNTS_CODE, BROKER_VERSION_1, VERSION_5),
-            BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_API_REMOVE_BROKER_ACCOUNT_CODE, BROKER_VERSION_1, VERSION_5),
-            BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_API_UPDATE_BRT_CODE, BROKER_VERSION_1, VERSION_5),
-            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, null, BROKER_VERSION_2, VERSION_5),
-            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, null, BROKER_VERSION_2, VERSION_5),
-            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, null, BROKER_VERSION_2, VERSION_5),
-            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, null, VERSION_7),
-            UNKNOWN(null, null, null, null)
+            MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_5),
+            ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_5),
+            ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_5),
+            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_5),
+            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, null, VERSION_5),
+            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_5),
+            GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, null, VERSION_5),
+            SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_5),
+            GENERATE_SHR(GENERATE_SHR_PATH, null, VERSION_6),
+            BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_VERSION_1, null),
+            BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
+            BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
+            BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
+            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
+            UNKNOWN(null, null, null)
                 ;
             /**
              * The content provider path that the API exists behind.
              */
             private String mPath;
-            /**
-             * A code to use to match the path to.
-             */
-            @Deprecated
-            private Integer mCode;
             /**
              * The broker-host-to-broker protocol version that the API requires.
              */
@@ -1502,14 +1501,6 @@ public final class AuthenticationConstants {
              * The msal-to-broker version that the API requires.
              */
             private String mMsalVersion;
-            /**
-             * @return a (supplied) code to use to feed a UriMatcher.  Deprecated.  Once usage
-             * stops, we should remove it in favor or ordinal().
-             */
-            @Deprecated
-            public int code() {
-                return mCode == null ? ordinal() + 1 : mCode;
-            }
         }
         /**
          * URI Path constant for MSAL-to-Broker hello request using ContentProvider.
