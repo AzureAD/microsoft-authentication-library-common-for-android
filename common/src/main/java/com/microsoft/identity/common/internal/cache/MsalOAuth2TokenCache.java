@@ -240,26 +240,20 @@ public class MsalOAuth2TokenCache
         final String methodName = ":save (4 arg)";
 
         // Validate the supplied Accounts/Credentials
-        final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
-        final boolean isIdTokenValid = isIdTokenSchemaCompliant(idTokenRecord);
-        final boolean isAccessTokenValid = isAccessTokenSchemaCompliant(accessTokenRecord);
-
-        if (!isAccountValid) {
+        if (!isAccountSchemaCompliant(accountRecord)) {
             throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
         }
 
-        if (!isIdTokenValid) {
+        if (!isIdTokenSchemaCompliant(idTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(ID)]");
         }
 
-        if (!isAccessTokenValid) {
+        if (!isAccessTokenSchemaCompliant(accessTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
         }
 
         if (refreshTokenRecord != null) {
-            final boolean isRefreshTokenValid = isRefreshTokenSchemaCompliant(refreshTokenRecord);
-
-            if (!isRefreshTokenValid) {
+            if (!isRefreshTokenSchemaCompliant(refreshTokenRecord)) {
                 throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
             }
         }
