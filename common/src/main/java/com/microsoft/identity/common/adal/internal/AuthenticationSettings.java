@@ -24,6 +24,7 @@ package com.microsoft.identity.common.adal.internal;
 
 import android.os.Build;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.WarningType;
@@ -35,7 +36,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+
 
 /**
  * Settings to be used in AuthenticationContext.
@@ -57,8 +58,10 @@ public enum AuthenticationSettings {
     // This is used to accept two broker key. Today we have company portal and azure authenticator apps,
     // and each app is also going to send the other app's keys. They need to set package name and corresponding
     // keys in the map. used by broker.
+    @GuardedBy("this")
     private final Map<String, byte[]> mBrokerSecretKeys = new HashMap<String, byte[]>(2);
 
+    @GuardedBy("this")
     private byte[] mSecretKeyData = null;
 
     /**
@@ -69,6 +72,7 @@ public enum AuthenticationSettings {
         return mSecretKeyVersion;
     }
 
+    @GuardedBy("this")
     private long mSecretKeyVersion = 0;
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -112,7 +116,7 @@ public enum AuthenticationSettings {
     }
 
     /**
-     * Get an {@link ArrayList} of bytes to derive secret key to use in encryption/decryption. used by broker only.
+     * Set map of id to bytes to derive secret key to use in encryption/decryption. used by broker only.
      * {@link Map} contains two broker app secret key to do encryption/decryption, and it's keyed by broker package name.
      *
      * @return {@link Map} of byte[] secret key which is keyed by broker package name.
@@ -157,7 +161,7 @@ public enum AuthenticationSettings {
      *
      * @param secretKeys App related keys to use in encrypt/decrypt. Should contain two secret keys.
      */
-    public void setBrokerSecretKeys(final Map<String, byte[]> secretKeys) {
+    public synchronized void setBrokerSecretKeys(final Map<String, byte[]> secretKeys) {
         if (secretKeys == null) {
             throw new IllegalArgumentException("The passed in secret key map is null.");
         }
@@ -181,7 +185,7 @@ public enum AuthenticationSettings {
      * Clear broker secret keys.
      * Introduced as a temporary workaround to make sure Broker code clears up Broker keys in common before it's used by ADAL/MSAL.
      */
-    public void clearBrokerSecretKeys() {
+    public synchronized void clearBrokerSecretKeys() {
         mBrokerSecretKeys.clear();
     }
 

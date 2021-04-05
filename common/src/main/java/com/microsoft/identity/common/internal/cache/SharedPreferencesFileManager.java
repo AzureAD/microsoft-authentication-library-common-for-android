@@ -65,14 +65,18 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     private final SharedPreferences mSharedPreferences;
     private final IStorageHelper mStorageHelper;
     // This is making a huge assumption - that we don't need to separate this cache by context.
+    @GuardedBy("this")
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f , 1);
 
     /**
-     * Clear all cache data from sharedPreferences.
+     * Clear all cached data from sharedPreferences managers.  If this data is backed by an encrypted
+     * store, and the key changes, then it makes sense to wipe out the cached data to force a reload.
      */
     public static void clearAll() {
-        objectCache.clear();
+        for (Map.Entry<String, SharedPreferencesFileManager> e: objectCache.entrySet()) {
+            e.getValue().clear();
+        }
     }
 
     /**

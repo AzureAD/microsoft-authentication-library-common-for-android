@@ -104,7 +104,10 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
         AuthenticationSettings.INSTANCE.setSecretKey(null);
+        // If we change the secret key out from underneath the file manager, it shouldn't read
+        // something that's the same as what it wrote.
         assertFalse(sTEST_VALUE.equals(mSharedPreferencesFileManager.getString(sTEST_KEY)));
+        // When we put a new value in, we should be able to read it.
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
     }
