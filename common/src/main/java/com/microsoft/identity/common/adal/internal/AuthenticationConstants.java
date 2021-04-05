@@ -60,6 +60,11 @@ public final class AuthenticationConstants {
     public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
+     * The Constant character set for ASCII.
+     */
+    public static final Charset CHARSET_ASCII = Charset.forName("ASCII");
+
+    /**
      * The Constant CHARSET_UTF8.
      */
     public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
