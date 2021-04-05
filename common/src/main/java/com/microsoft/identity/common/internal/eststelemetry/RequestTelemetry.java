@@ -26,8 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

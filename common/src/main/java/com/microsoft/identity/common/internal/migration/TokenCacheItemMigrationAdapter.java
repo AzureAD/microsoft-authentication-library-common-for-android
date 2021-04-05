@@ -26,8 +26,10 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Pair;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -38,7 +40,6 @@ import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
@@ -54,6 +55,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.URL;
@@ -66,9 +68,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;

@@ -35,8 +35,8 @@ import com.google.gson.stream.JsonWriter;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.io.Reader;

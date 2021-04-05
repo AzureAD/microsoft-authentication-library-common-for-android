@@ -20,23 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.logging;
+package com.microsoft.identity.common.logging;
 
-/**
- * Interface for apps to configure the external logging and implement the callback to designate the
- * output of the log messages.
- *
- * This class is deprecated. Use {@link com.microsoft.identity.common.logging.ILoggerCallback}.
- */
-@Deprecated
-public interface ILoggerCallback {
+import java.util.Map;
+
+public interface IRequestContext extends Map<String, String> {
+
     /**
-     * Interface method for apps to hand off each log message as it's generated.
+     * Get the JSON String for the request context.
      *
-     * @param tag         The TAG for the log message.
-     * @param logLevel    The {@link Logger.LogLevel} for the generated message.
-     * @param message     The detailed message.
-     * @param containsPII True if the log message contains PII, false otherwise.
+     * @return String
      */
-    void log(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
+    String toJsonString();
+
 }

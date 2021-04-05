@@ -59,7 +59,6 @@ import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCom
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -77,6 +76,7 @@ import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;

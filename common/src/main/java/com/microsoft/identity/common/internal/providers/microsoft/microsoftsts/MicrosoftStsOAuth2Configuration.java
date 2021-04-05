@@ -26,8 +26,8 @@ import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URL;
 
