@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Enable optional refresh token in cache (#1294)
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)

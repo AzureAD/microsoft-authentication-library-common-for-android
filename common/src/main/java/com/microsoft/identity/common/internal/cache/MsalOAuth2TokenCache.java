@@ -236,28 +236,23 @@ public class MsalOAuth2TokenCache
     ICacheRecord save(final @NonNull AccountRecord accountRecord,
                       final @NonNull IdTokenRecord idTokenRecord,
                       final @NonNull AccessTokenRecord accessTokenRecord,
-                      final @NonNull RefreshTokenRecord refreshTokenRecord) throws ClientException {
+                      final @Nullable RefreshTokenRecord refreshTokenRecord) throws ClientException {
         final String methodName = ":save (4 arg)";
 
         // Validate the supplied Accounts/Credentials
-        final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
-        final boolean isIdTokenValid = isIdTokenSchemaCompliant(idTokenRecord);
-        final boolean isAccessTokenValid = isAccessTokenSchemaCompliant(accessTokenRecord);
-        final boolean isRefreshTokenValid = isRefreshTokenSchemaCompliant(refreshTokenRecord);
-
-        if (!isAccountValid) {
+        if (!isAccountSchemaCompliant(accountRecord)) {
             throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
         }
 
-        if (!isIdTokenValid) {
+        if (!isIdTokenSchemaCompliant(idTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(ID)]");
         }
 
-        if (!isAccessTokenValid) {
+        if (!isAccessTokenSchemaCompliant(accessTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
         }
 
-        if (!isRefreshTokenValid) {
+        if (refreshTokenRecord != null && !isRefreshTokenSchemaCompliant(refreshTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
         }
 
@@ -383,7 +378,7 @@ public class MsalOAuth2TokenCache
         removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountToSave);
+        result.account(accountToSave);
         result.accessToken(accessTokenToSave);
         result.refreshToken(refreshTokenToSave);
         setToCacheRecord(result, idTokenToSave);
@@ -537,7 +532,7 @@ public class MsalOAuth2TokenCache
         }
 
         final CacheRecord.CacheRecordBuilder associatedRecord = CacheRecord.builder();
-        associatedRecord.mAccount(acct);
+        associatedRecord.account(acct);
 
         for (final IdTokenRecord idTokenRecord : acctIdTokens) {
             setToCacheRecord(associatedRecord, idTokenRecord);
@@ -676,7 +671,7 @@ public class MsalOAuth2TokenCache
             saveCredentialsInternal(idTokenToSave);
 
             // Set them as the result outputs
-            result.mAccount(accountToSave);
+            result.account(accountToSave);
             if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
                 result.v1IdToken(idTokenToSave);
             } else {
@@ -777,7 +772,7 @@ public class MsalOAuth2TokenCache
         );
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(account);
+        result.account(account);
         result.accessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
         result.refreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
         result.idToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
@@ -1105,7 +1100,7 @@ public class MsalOAuth2TokenCache
             );
 
             result = CacheRecord.builder();
-            result.mAccount(acct);
+            result.account(acct);
             for (final IdTokenRecord idTokenRecord : acctIdTokens) {
                 setToCacheRecord(result, idTokenRecord);
             }
@@ -1258,7 +1253,7 @@ public class MsalOAuth2TokenCache
 
             // Construct the cache record....
             final CacheRecord.CacheRecordBuilder cacheRecordBuilder = CacheRecord.builder();
-            cacheRecordBuilder.mAccount(accountRecord);
+            cacheRecordBuilder.account(accountRecord);
             // Set the IdTokens...
             for (IdTokenRecord idTokenRecord : idTokensForAccount) {
                 setToCacheRecord(cacheRecordBuilder, idTokenRecord);

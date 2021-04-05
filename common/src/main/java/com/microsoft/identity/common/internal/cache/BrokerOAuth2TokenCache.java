@@ -253,7 +253,7 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord save(@NonNull AccountRecord accountRecord,
                              @NonNull IdTokenRecord idTokenRecord,
                              @NonNull AccessTokenRecord accessTokenRecord,
-                             @NonNull RefreshTokenRecord refreshTokenRecord,
+                             @Nullable RefreshTokenRecord refreshTokenRecord,
                              @Nullable String familyId) throws ClientException {
         final String methodName = ":save (5 args)";
 
@@ -337,7 +337,7 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccountRecord accountRecord,
             final @NonNull IdTokenRecord idTokenRecord,
             final @NonNull AccessTokenRecord accessTokenRecord,
-            final @NonNull RefreshTokenRecord refreshTokenRecord,
+            final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
         synchronized (this) {

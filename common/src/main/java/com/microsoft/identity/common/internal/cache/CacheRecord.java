@@ -48,6 +48,7 @@ public class CacheRecord implements ICacheRecord {
     private final IdTokenRecord mV1IdToken;
 
     public static class CacheRecordBuilder {
+        @Deprecated
         public CacheRecordBuilder mAccount(final @NonNull AccountRecord account) {
             if (account == null) {
                 throw new NullPointerException("The account record for a CacheRecord may not be null");
