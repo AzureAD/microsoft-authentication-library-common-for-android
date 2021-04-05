@@ -252,10 +252,8 @@ public class MsalOAuth2TokenCache
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
         }
 
-        if (refreshTokenRecord != null) {
-            if (!isRefreshTokenSchemaCompliant(refreshTokenRecord)) {
-                throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
-            }
+        if (refreshTokenRecord != null && !isRefreshTokenSchemaCompliant(refreshTokenRecord)) {
+            throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
         }
 
         Logger.verbose(
