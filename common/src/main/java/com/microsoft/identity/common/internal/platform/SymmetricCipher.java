@@ -37,7 +37,7 @@ import java.security.KeyStore;
  */
 public enum SymmetricCipher implements CryptoSuite {
 
-    @RequiresApi(Build.VERSION_CODES.KITKAT)
+    @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
         public KeyGenParameterSpec.Builder decorateKeyGenerator(@NonNull final KeyGenParameterSpec.Builder spec) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
