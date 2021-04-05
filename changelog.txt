@@ -7,6 +7,7 @@ V.Next
 - [MINOR] Adds new API support for the broker - SSO token and flight support (#1290)
 - [MINOR] Elevates AndroidCommon Logger out of internal package (#1279)
 - [MINOR] Automate broker protocol version computation. (#1301)
+- [PATCH] Enable storageHelper to have its keys changed. (#1293)
 
 Version 3.2.0
 ----------
