@@ -235,7 +235,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                     if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
                         cacheRecord.v1IdToken(idTokenRecord);
                     } else {
-                        cacheRecord.udToken(idTokenRecord);
+                        cacheRecord.idToken(idTokenRecord);
                     }
                 }
 
