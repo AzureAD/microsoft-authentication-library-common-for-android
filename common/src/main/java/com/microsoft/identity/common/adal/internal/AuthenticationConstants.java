@@ -683,10 +683,10 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMinMsalBrokerProtocol();
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
 
         @VisibleForTesting
-        public static String computeMinMsalBrokerProtocol() {
+        private static String computeMaxMsalBrokerProtocol() {
             String stringVersion = BrokerContentProvider.BROKER_VERSION_1;
             float protocolVersion = 1.0f;
             for (final BrokerContentProvider.API api : BrokerContentProvider.API.values()) {
@@ -714,10 +714,10 @@ public final class AuthenticationConstants {
         /**
          * The newest BrokerAPI-To-Broker protocol version.
          */
-        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = computeMinHostBrokerProtocol();
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxHostBrokerProtocol();
 
         @VisibleForTesting
-        public static String computeMinHostBrokerProtocol() {
+        private static String computeMaxHostBrokerProtocol() {
             String stringVersion = BrokerContentProvider.VERSION_1;
             float protocolVersion = 1.0f;
             for (final BrokerContentProvider.API api : BrokerContentProvider.API.values()) {
