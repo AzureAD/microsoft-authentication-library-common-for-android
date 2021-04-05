@@ -179,7 +179,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String name,
             final int operatingMode,
             final IStorageHelper storageHelper) {
-        this(context, name, operatingMode, null, new LruCache<String, String>(256));
+        this(context, name, operatingMode, storageHelper, new LruCache<String, String>(256));
     }
 
     @Override
