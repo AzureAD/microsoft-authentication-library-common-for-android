@@ -171,7 +171,7 @@ public class BrokerMsalController extends BaseController {
      * MSAL-Broker handshake operation.
      *
      * @param strategy   an {@link IIpcStrategy}
-     * @param minRequestedVersion
+     * @param minRequestedVersion the minimum allowed broker protocol version, may be null.
      * @return a protocol version negotiated by MSAL and Broker.
      */
     @VisibleForTesting
