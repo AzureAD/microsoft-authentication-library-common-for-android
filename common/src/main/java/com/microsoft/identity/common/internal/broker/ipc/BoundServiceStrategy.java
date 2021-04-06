@@ -9,7 +9,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;

@@ -34,8 +34,8 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
