@@ -29,5 +29,9 @@ steps:
     echo Dump environment variables for build agent
     echo =============================================
     env
+    echo =============================================
+    echo Docker status
+    echo =============================================
+    docker system df
   condition: always()
   displayName: 'Cleanup'
