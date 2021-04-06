@@ -169,7 +169,7 @@ public class BrowserSelectorTest {
         for (TestBrowser browser : browsers) {
             when(mPackageManager.getPackageInfo(
                     eq(browser.mPackageInfo.packageName),
-                    eq(PackageHelper.getPackageManagerFlag())))
+                    eq(PackageHelper.getPackageManagerSignaturesFlag())))
                     .thenReturn(browser.mPackageInfo);
             resolveInfos.add(browser.mResolveInfo);
         }

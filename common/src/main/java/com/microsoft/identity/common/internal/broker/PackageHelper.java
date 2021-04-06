@@ -185,7 +185,7 @@ public class PackageHelper {
         return packageInfo.signatures;
     }
 
-    public static int getPackageManagerFlag() {
+    public static int getPackageManagerSignaturesFlag() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             return PackageManager.GET_SIGNING_CERTIFICATES;
         }
@@ -194,7 +194,7 @@ public class PackageHelper {
     }
 
     public static PackageInfo getPackageInfo(@NonNull PackageManager packageManager, @NonNull String packageName) throws PackageManager.NameNotFoundException {
-        return packageManager.getPackageInfo(packageName, getPackageManagerFlag());
+        return packageManager.getPackageInfo(packageName, getPackageManagerSignaturesFlag());
     }
 
     public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
