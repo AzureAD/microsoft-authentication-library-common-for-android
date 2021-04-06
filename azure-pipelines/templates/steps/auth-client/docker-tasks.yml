@@ -1,13 +1,5 @@
-name: Instrumented Tests
-trigger:
-- main
+# File: docker-tasks.yml
 
-
-pool:
- name: DockerBuildAgents
-
-workspace:
-  clean: all
 steps:
 - script: |
     docker --version
