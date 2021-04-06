@@ -197,15 +197,7 @@ public class PackageHelper {
         return packageManager.getPackageInfo(packageName, getPackageManagerFlag());
     }
 
-    public static PackageInfo getPackageInfo(@NonNull Context context, @NonNull String packageName) throws PackageManager.NameNotFoundException {
-        return getPackageInfo(context.getPackageManager(), packageName);
-    }
-
-    public static PackageInfo getPackageInfo(@NonNull Context context) throws PackageManager.NameNotFoundException {
-        return getPackageInfo(context, context.getPackageName());
-    }
-
     public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
-        return getSignatures(getPackageInfo(context));
+        return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
     }
 }

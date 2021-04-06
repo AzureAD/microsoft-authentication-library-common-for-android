@@ -210,7 +210,7 @@ public class BrokerValidator {
             throws NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
 
-        final PackageInfo packageInfo = PackageHelper.getPackageInfo(mContext, brokerPackageName);
+        final PackageInfo packageInfo = PackageHelper.getPackageInfo(mContext.getPackageManager(), brokerPackageName);
         if (packageInfo == null) {
             throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
                     "No broker package existed.");
