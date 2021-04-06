@@ -191,19 +191,8 @@ public class BrokerMsalController extends BaseController {
             );
         }
 
-        final String minimumProtocolVersion = bundle.getString(CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY);
-        final String maximumProtocolVersion = bundle.getString(CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY);
-
-        // This should be part of the bundle.
-        // If we're hitting this, it means that the hello protocol changed. see getRequestBundleForHello().
-        if (StringUtil.isEmpty(maximumProtocolVersion)){
-            throw new ClientException(ClientException.MISSING_PARAMETER,
-                    "maximum protocol version should never be null or empty");
-        }
-
         final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
-                minimumProtocolVersion,
-                maximumProtocolVersion);
+                minRequestedVersion, MSAL_TO_BROKER_PROTOCOL_VERSION_CODE);
 
         if (!StringUtil.isEmpty(cachedProtocolVersion)) {
             return cachedProtocolVersion;
@@ -219,8 +208,8 @@ public class BrokerMsalController extends BaseController {
         );
 
         mHelloCache.saveNegotiatedProtocolVersion(
-                minimumProtocolVersion,
-                maximumProtocolVersion,
+                minRequestedVersion,
+                MSAL_TO_BROKER_PROTOCOL_VERSION_CODE,
                 negotiatedProtocolVersion);
 
         return negotiatedProtocolVersion;
