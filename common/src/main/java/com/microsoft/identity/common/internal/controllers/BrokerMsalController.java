@@ -178,6 +178,13 @@ public class BrokerMsalController extends BaseController {
     public @NonNull String hello(final @NonNull IIpcStrategy strategy,
                                  final @Nullable String minRequestedVersion) throws BaseException {
 
+        final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
+                minRequestedVersion, MSAL_TO_BROKER_PROTOCOL_VERSION_CODE);
+
+        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
+            return cachedProtocolVersion;
+        }
+
         final Bundle bundle = new Bundle();
         bundle.putString(
                 CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
@@ -189,13 +196,6 @@ public class BrokerMsalController extends BaseController {
                     CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
                     minRequestedVersion
             );
-        }
-
-        final String cachedProtocolVersion = mHelloCache.tryGetNegotiatedProtocolVersion(
-                minRequestedVersion, MSAL_TO_BROKER_PROTOCOL_VERSION_CODE);
-
-        if (!StringUtil.isEmpty(cachedProtocolVersion)) {
-            return cachedProtocolVersion;
         }
 
         final BrokerOperationBundle helloBundle = new BrokerOperationBundle(
