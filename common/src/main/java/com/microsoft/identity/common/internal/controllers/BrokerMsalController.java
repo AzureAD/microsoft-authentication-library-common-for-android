@@ -86,6 +86,7 @@ import lombok.EqualsAndHashCode;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -170,14 +171,26 @@ public class BrokerMsalController extends BaseController {
      * MSAL-Broker handshake operation.
      *
      * @param strategy   an {@link IIpcStrategy}
-     * @param parameters a {@link CommandParameters}
+     * @param minRequestedVersion
      * @return a protocol version negotiated by MSAL and Broker.
      */
     @VisibleForTesting
     public @NonNull String hello(final @NonNull IIpcStrategy strategy,
-                                 final @NonNull CommandParameters parameters) throws BaseException {
+                                 final @Nullable String minRequestedVersion) throws BaseException {
 
-        final Bundle bundle = mRequestAdapter.getRequestBundleForHello(parameters);
+        final Bundle bundle = new Bundle();
+        bundle.putString(
+                CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY,
+                MSAL_TO_BROKER_PROTOCOL_VERSION_CODE
+        );
+
+        if (!StringUtil.isEmpty(minRequestedVersion)) {
+            bundle.putString(
+                    CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY,
+                    minRequestedVersion
+            );
+        }
+
         final String minimumProtocolVersion = bundle.getString(CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY);
         final String maximumProtocolVersion = bundle.getString(CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY);
 
@@ -199,7 +212,7 @@ public class BrokerMsalController extends BaseController {
         final BrokerOperationBundle helloBundle = new BrokerOperationBundle(
                 BrokerOperationBundle.Operation.MSAL_HELLO,
                 mActiveBrokerPackageName,
-                mRequestAdapter.getRequestBundleForHello(parameters));
+                bundle);
 
         final String negotiatedProtocolVersion = mResultAdapter.verifyHelloFromResultBundle(
                 strategy.communicateToBroker(helloBundle)
@@ -319,7 +332,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -378,7 +391,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -434,7 +447,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -490,7 +503,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -601,7 +614,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -675,7 +688,7 @@ public class BrokerMsalController extends BaseController {
 
                     @Override
                     public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                        negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                        negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
                     }
 
                     @Override
@@ -771,7 +784,7 @@ public class BrokerMsalController extends BaseController {
 
             @Override
             public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                negotiatedBrokerProtocolVersion = hello(strategy, parameters);
+                negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
             }
 
             @NonNull
