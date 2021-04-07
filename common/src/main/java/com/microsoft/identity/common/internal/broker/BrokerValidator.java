@@ -143,6 +143,10 @@ public class BrokerValidator {
         return validBrokers;
     }
 
+    /**
+     * Get an iterator of access to valid broker signatures.
+     * @return an iterator of access to valid broker signatures.
+     */
     public Iterator<String> getValidBrokerSignatures() {
         final Iterator<BrokerData> itr = getValidBrokers().iterator();
         return new Iterator<String>() {
