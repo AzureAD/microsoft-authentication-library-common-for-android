@@ -79,4 +79,5 @@ public class CommandParameters {
     @EqualsAndHashCode.Exclude
     @Expose()
     private String correlationId;
+
 }

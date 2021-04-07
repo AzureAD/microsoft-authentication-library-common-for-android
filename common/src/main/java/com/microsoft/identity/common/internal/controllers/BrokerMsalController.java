@@ -32,7 +32,11 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.arch.core.util.Function;
 
+import com.microsoft.identity.broker.SsoCookieRequest;
+import com.microsoft.identity.broker.SsoCookieResult;
+import com.microsoft.identity.broker.uuid;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
@@ -55,6 +59,7 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.EnvelopeCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
@@ -78,14 +83,18 @@ import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import lombok.EqualsAndHashCode;
+import lombok.SneakyThrows;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_ACQUIRE_TOKEN_SILENT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GENERATE_SHR;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_ACCOUNTS;
@@ -653,6 +662,27 @@ public class BrokerMsalController extends BaseController {
     @Override
     public boolean removeCurrentAccount(final @NonNull RemoveAccountCommandParameters parameters) throws BaseException {
         final String methodName = ":removeCurrentAccount";
+        Function<String, BrokerOperationBundle> requestFcn = new Function<String, BrokerOperationBundle>() {
+            @Override
+            public BrokerOperationBundle apply(String protocolVersion) {
+                return new BrokerOperationBundle(
+                        MSAL_SIGN_OUT_FROM_SHARED_DEVICE,
+                        mActiveBrokerPackageName,
+                        mRequestAdapter.getRequestBundleForRemoveAccountFromSharedDevice(
+                                parameters,
+                                protocolVersion
+                        ));
+            }
+        };
+        Function<Bundle, Boolean> resultFcn = new Function<Bundle, Boolean>() {
+            @Override
+            @SneakyThrows(BaseException.class)
+            public Boolean apply(Bundle resultBundle) {
+                mResultAdapter.verifyRemoveAccountResultFromBundle(resultBundle);
+                BrokerMsalController.this.logOutFromBrowser(mApplicationContext, parameters);
+                return true;
+            }
+        };
 
         if (!parameters.isSharedDevice()) {
             Logger.verbose(TAG + methodName, "Not a shared device, invoke removeAccount() instead of removeCurrentAccount()");
@@ -713,6 +743,8 @@ public class BrokerMsalController extends BaseController {
                     public void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull Boolean result) {
                     }
                 });
+        return mBrokerOperationExecutor.execute(parameters, getBrokerOperation(requestFcn, methodName, resultFcn,
+                parameters.getRequiredBrokerProtocolVersion(), TelemetryEventStrings.Api.BROKER_REMOVE_ACCOUNT_FROM_SHARED_DEVICE));
     }
 
     /**
@@ -765,57 +797,106 @@ public class BrokerMsalController extends BaseController {
 
     @Override
     public GenerateShrResult generateSignedHttpRequest(@NonNull final GenerateShrCommandParameters parameters) throws Exception {
-        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<GenerateShrResult>() {
-
-            private String negotiatedBrokerProtocolVersion;
-
+        Function<String, BrokerOperationBundle> requestFcn = new Function<String, BrokerOperationBundle>() {
             @Override
-            public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                negotiatedBrokerProtocolVersion = hello(strategy, parameters);
-            }
-
-            @NonNull
-            @Override
-            public BrokerOperationBundle getBundle() {
+            public BrokerOperationBundle apply(String protocolVersion) {
                 return new BrokerOperationBundle(
                         MSAL_GENERATE_SHR,
                         mActiveBrokerPackageName,
                         mRequestAdapter.getRequestBundleForGenerateShr(
                                 parameters,
-                                negotiatedBrokerProtocolVersion
+                                protocolVersion
                         )
                 );
+            }
+        };
+        Function<Bundle, GenerateShrResult> resultFcn = new Function<Bundle, GenerateShrResult>() {
+            @Override
+            public GenerateShrResult apply(Bundle input) {
+                return mResultAdapter.getGenerateShrResultFromResultBundle(input);
+            }
+        };
+        return mBrokerOperationExecutor.execute(parameters, getBrokerOperation(requestFcn, ":generateSignedHttpRequest", resultFcn,
+                parameters.getRequiredBrokerProtocolVersion(), null));
+    }
+
+    /**
+     * Use the broker to request an SSO token.
+     * @param parameters the command parameters to execute.  <strong>Must</strong> contain a byte array
+     *                   that holds an {@link SsoCookieRequest}.
+     * @return a {@link SsoCookieResult}
+     * @throws BaseException if there is a problem.
+     */
+    public SsoCookieResult getSsoToken(@NonNull final EnvelopeCommandParameters parameters) throws BaseException {
+        Function<String, BrokerOperationBundle> requestFcn = new Function<String, BrokerOperationBundle>() {
+            @Override
+            public BrokerOperationBundle apply(String protocolVersion) {
+                final Bundle bundle = new Bundle();
+                bundle.putByteArray(SSO_COOKIE_REQUEST, parameters.getCommand());
+                return new BrokerOperationBundle(
+                        BrokerOperationBundle.Operation.MSAL_SSO_TOKEN,
+                        mActiveBrokerPackageName,
+                        bundle
+                );
+            }
+        };
+        Function<Bundle, SsoCookieResult> resultFcn = new Function<Bundle, SsoCookieResult>() {
+            @Override
+            public SsoCookieResult apply(Bundle input) {
+                return SsoCookieResult.getRootAsSsoCookieResult(ByteBuffer.wrap(input.getByteArray(SSO_COOKIE_RESULT)));
+            }
+        };
+        return mBrokerOperationExecutor.execute(parameters, getBrokerOperation(requestFcn, ":getSsoToken", resultFcn,
+                parameters.getRequiredBrokerProtocolVersion(), null));
+    }
+
+    private <T, U> BrokerOperation<U> getBrokerOperation(@NonNull final Function<String, BrokerOperationBundle> requestFcn,
+                                                        @NonNull final String functionName,
+                                                        @NonNull final Function<Bundle, U> resultFcn,
+                                                        @NonNull final String protocolVersion,
+                                                        @Nullable final String telemetryApiId) {
+        return new BrokerOperation<U>() {
+
+            private String negotiatedBrokerProtocolVersion;
+
+            @Override
+            public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                negotiatedBrokerProtocolVersion = hello(strategy, protocolVersion);
             }
 
             @NonNull
             @Override
-            public GenerateShrResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+            public BrokerOperationBundle getBundle() {
+                return requestFcn.apply(negotiatedBrokerProtocolVersion);
+            }
+
+            @NonNull
+            @Override
+            public U extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
                 if (null == resultBundle) {
                     throw mResultAdapter.getExceptionForEmptyResultBundle();
                 }
-
-                return mResultAdapter.getGenerateShrResultFromResultBundle(resultBundle);
+                return resultFcn.apply(resultBundle);
             }
 
             @NonNull
             @Override
             public String getMethodName() {
-                return ":generateSignedHttpRequest";
+                return functionName;
             }
 
             @Nullable
             @Override
             public String getTelemetryApiId() {
-                // TODO Needed?
-                return null;
+                return telemetryApiId;
             }
 
             @Override
             public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
-                                               @NonNull final GenerateShrResult result) {
+                                               @NonNull final U result) {
                 // TODO Needed?
             }
-        });
+        };
     }
 
     /**
@@ -854,14 +935,13 @@ public class BrokerMsalController extends BaseController {
                 );
 
                 msalOAuth2TokenCacheSetSingleSignOnState(msalOAuth2TokenCache, microsoftStsAccount, microsoftRefreshToken);
-            } catch (ServiceException e) {
+            } catch (final ServiceException e) {
                 Logger.errorPII(TAG + methodName, "Exception while creating Idtoken or ClientInfo," +
                         " cannot save MSA account tokens", e
                 );
                 throw new ClientException(ErrorStrings.INVALID_JWT, e.getMessage(), e);
             }
         }
-
     }
 
     // Suppressing unchecked warnings due to casting of MicrosoftStsAccount to GenericAccount and MicrosoftRefreshToken to GenericRefreshToken in the call to setSingleSignOnState method

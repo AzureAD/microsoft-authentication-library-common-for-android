@@ -105,10 +105,37 @@ android {
 
     }
 
+    ////TODO: package flatbuffers and write a gradle plugin for it.
+    task generateFlatbuffers(type: Exec) {
+        def flatbufferDir = file("$projectDir/src/main/flatbuffers")
+        def generatedJavaDir = file("$projectDir/src/generated/flatbuffers/java")
+        def flatbuffers = layout.files{ file(flatbufferDir).listFiles() }.filter { File f -> f.name.endsWith(".fbs") }.toList()
+        ignoreExitValue = true
+
+        standardOutput = new ByteArrayOutputStream()
+        errorOutput = new ByteArrayOutputStream()
+
+        def flatcCommand = ['flatc', '-o', generatedJavaDir, '-j']
+        flatbuffers.forEach{
+                     println("Compiling $it.path")
+                     flatcCommand.add(it.path)
+        }
+        commandLine flatcCommand
+        doFirst {
+          mkdir "$generatedJavaDir/"
+        }
+        doLast {
+          if (execResult.getExitValue() != 0) {
+              println(standardOutput.toString())
+              throw new GradleException("Flatbuffer compilation failed")
+          }
+        }
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
-            java.srcDirs = ['src/main/java']
+            java.srcDirs = ['src/main/java', 'src/generated/flatbuffers/java']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -138,6 +165,7 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+    implementation "com.google.flatbuffers:flatbuffers-java:$flatBuffersJavaVersion"
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"

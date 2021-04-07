@@ -981,6 +981,16 @@ public final class AuthenticationConstants {
         public static final String CHALLENGE_RESPONSE_CONTEXT = "Context";
 
         /**
+         * String of key for SSO_COOKIE_RESULT.
+         */
+        public static final String SSO_COOKIE_RESULT = "broker.fetch.sso.cookie.result";
+
+        /**
+         * String of key for SSO_COOKIE_REQUEST.
+         */
+        public static final String SSO_COOKIE_REQUEST = "broker.fetch.sso.cookie.request";
+
+        /**
          * String of authorization code grants via Proof Key for Code Exchange (PKCE).
          */
         public static final String PKCE_CHALLENGE = "PkceChallenge";
