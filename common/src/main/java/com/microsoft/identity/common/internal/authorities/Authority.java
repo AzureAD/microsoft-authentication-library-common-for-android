@@ -32,11 +32,11 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

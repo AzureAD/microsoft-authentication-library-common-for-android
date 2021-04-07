@@ -31,7 +31,6 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 

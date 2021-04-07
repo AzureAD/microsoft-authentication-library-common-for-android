@@ -23,14 +23,13 @@
 
 package com.microsoft.identity.common.internal.util;
 
+import androidx.annotation.NonNull;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public class GzipUtil {
 

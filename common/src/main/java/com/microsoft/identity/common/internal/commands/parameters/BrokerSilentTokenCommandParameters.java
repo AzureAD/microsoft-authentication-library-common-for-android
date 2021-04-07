@@ -28,7 +28,6 @@ import android.text.TextUtils;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.internal.request.SdkType;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
