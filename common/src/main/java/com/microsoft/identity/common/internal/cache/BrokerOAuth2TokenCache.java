@@ -40,13 +40,13 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -253,7 +253,7 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord save(@NonNull AccountRecord accountRecord,
                              @NonNull IdTokenRecord idTokenRecord,
                              @NonNull AccessTokenRecord accessTokenRecord,
-                             @NonNull RefreshTokenRecord refreshTokenRecord,
+                             @Nullable RefreshTokenRecord refreshTokenRecord,
                              @Nullable String familyId) throws ClientException {
         final String methodName = ":save (5 args)";
 
@@ -337,7 +337,7 @@ public class BrokerOAuth2TokenCache
             final @NonNull AccountRecord accountRecord,
             final @NonNull IdTokenRecord idTokenRecord,
             final @NonNull AccessTokenRecord accessTokenRecord,
-            final @NonNull RefreshTokenRecord refreshTokenRecord,
+            final @Nullable RefreshTokenRecord refreshTokenRecord,
             final @Nullable String familyId,
             final @NonNull AbstractAuthenticationScheme authScheme) throws ClientException {
         synchronized (this) {
@@ -1432,8 +1432,8 @@ public class BrokerOAuth2TokenCache
                 // Construct the ICacheRecord
                 if (!refreshTokens.isEmpty()) {
                     final CacheRecord.CacheRecordBuilder cacheRecord = CacheRecord.builder();
-                    cacheRecord.mAccount(account);
-                    cacheRecord.mRefreshToken((RefreshTokenRecord) refreshTokens.get(0));
+                    cacheRecord.account(account);
+                    cacheRecord.refreshToken((RefreshTokenRecord) refreshTokens.get(0));
 
                     // Add the V1IdToken (if exists, should have 1 if ADAL used)
                     if (!v1IdTokens.isEmpty()) {
@@ -1444,7 +1444,7 @@ public class BrokerOAuth2TokenCache
                                         + "] V1IdTokens"
                         );
 
-                        cacheRecord.mV1IdToken((IdTokenRecord) v1IdTokens.get(0));
+                        cacheRecord.v1IdToken((IdTokenRecord) v1IdTokens.get(0));
                     } else {
                         Logger.warn(
                                 TAG + methodName,
@@ -1461,7 +1461,7 @@ public class BrokerOAuth2TokenCache
                                         + "] IdTokens"
                         );
 
-                        cacheRecord.mIdToken((IdTokenRecord) idTokens.get(0));
+                        cacheRecord.idToken((IdTokenRecord) idTokens.get(0));
                     } else {
                         Logger.warn(
                                 TAG + methodName,

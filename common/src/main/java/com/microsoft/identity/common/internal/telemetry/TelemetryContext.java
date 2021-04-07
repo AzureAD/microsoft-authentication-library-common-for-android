@@ -30,8 +30,7 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.core.content.pm.PackageInfoCompat;
 
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;

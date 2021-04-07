@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Properties;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;

@@ -32,7 +32,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerAccountManagerOperation;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.API;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -112,7 +112,7 @@ public class BrokerOperationBundle {
     private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
         final String methodName = ":getAccountManagerAddAccountOperationKey";
 
-        String accountManagerKey = operation.mAccountManagerOperation;
+        String accountManagerKey = operation.getAccountManagerOperation();
         if (accountManagerKey == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
             Logger.warn(TAG + methodName, errorMessage);
@@ -128,7 +128,7 @@ public class BrokerOperationBundle {
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodName = ":getContentProviderUriPath";
 
-        final API contentApi = operation.mContentApi;
+        final API contentApi = operation.getContentApi();
         if (contentApi == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
             Logger.warn(TAG + methodName, errorMessage);
@@ -138,6 +138,6 @@ public class BrokerOperationBundle {
                     errorMessage,
                     null);
         }
-        return contentApi.path();
+        return contentApi.getPath();
     }
 }

@@ -24,8 +24,6 @@ package com.microsoft.identity.common.internal.dto;
 
 import com.google.gson.annotations.SerializedName;
 
-import lombok.EqualsAndHashCode;
-
 import static com.microsoft.identity.common.internal.dto.IdTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.IdTokenRecord.SerializedNames.REALM;
 

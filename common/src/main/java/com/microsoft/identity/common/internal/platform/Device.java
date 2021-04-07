@@ -27,7 +27,7 @@ import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 
 import java.io.IOException;
 import java.security.KeyStoreException;

@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import java.security.Key;
 import java.security.KeyStore;
 
 /**

@@ -38,9 +38,9 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
