@@ -72,7 +72,7 @@ public class BrokerOperationBundle {
         BROKER_SET_FLIGHTS(API.BROKER_SET_FLIGHTS, null),
         BROKER_GET_FLIGHTS(API.BROKER_GET_FLIGHTS, null),
         BROKER_ADD_FLIGHTS(API.BROKER_ADD_FLIGHTS, null),
-        BROKER_SSO_TOKEN(API.GET_SSO_TOKEN, null);
+        MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null);
         final API contentApi;
         final String accountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {
