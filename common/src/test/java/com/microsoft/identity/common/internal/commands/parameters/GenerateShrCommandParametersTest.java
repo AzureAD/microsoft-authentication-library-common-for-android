@@ -67,5 +67,4 @@ public class GenerateShrCommandParametersTest {
         map.put(commandTwo, true);
         Assert.assertEquals(2, map.size());
     }
-
 }
