@@ -26,12 +26,7 @@ import android.accounts.AccountManager;
 import android.accounts.AuthenticatorDescription;
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.pm.Signature;
-import android.text.TextUtils;
-import android.util.Base64;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,29 +35,17 @@ import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertPath;
-import java.security.cert.CertPathValidator;
-import java.security.cert.CertificateEncodingException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
-import java.security.cert.TrustAnchor;
 import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import static com.microsoft.identity.common.exception.ErrorStrings.BROKER_APP_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
@@ -111,12 +94,12 @@ public class BrokerValidator {
             final List<X509Certificate> certs = readCertDataForBrokerApp(brokerPackageName);
 
             // Verify the cert list contains the cert we trust.
-            final String signatureHash = verifySignatureHash(certs);
+            final String signatureHash = PackageUtils.verifySignatureHash(certs, getValidBrokerSignatures());
 
             // Perform the certificate chain validation. If there is only one cert returned,
             // no need to perform certificate chain validation.
             if (certs.size() > 1) {
-                verifyCertificateChain(certs);
+                PackageUtils.verifyCertificateChain(certs);
             }
 
             return signatureHash;
@@ -161,6 +144,30 @@ public class BrokerValidator {
     }
 
     /**
+     * Get an iterator of access to valid broker signatures.
+     * @return an iterator of access to valid broker signatures.
+     */
+    public Iterator<String> getValidBrokerSignatures() {
+        final Iterator<BrokerData> itr = getValidBrokers().iterator();
+        return new Iterator<String>() {
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Remove operations are not supported");
+            }
+
+            @Override
+            public boolean hasNext() {
+                return itr.hasNext();
+            }
+
+            @Override
+            public String next() {
+                return itr.next().signatureHash;
+            }
+        };
+    }
+
+    /**
      * Determines if the supplied package name correspond to a valid Broker app.
      *
      * @param packageName the package name of the broker app to validate
@@ -179,104 +186,12 @@ public class BrokerValidator {
         return false;
     }
 
-    private String verifySignatureHash(final List<X509Certificate> certs) throws NoSuchAlgorithmException,
-            CertificateEncodingException, ClientException {
-
-        final StringBuilder hashListStringBuilder = new StringBuilder();
-
-        for (final X509Certificate x509Certificate : certs) {
-            final MessageDigest messageDigest = MessageDigest.getInstance("SHA");
-            messageDigest.update(x509Certificate.getEncoded());
-
-            // Check the hash for signer cert is the same as what we hardcoded.
-            final String signatureHash = Base64.encodeToString(messageDigest.digest(), Base64.NO_WRAP);
-
-            hashListStringBuilder.append(signatureHash);
-            hashListStringBuilder.append(',');
-
-            for (final BrokerData brokerData : getValidBrokers()) {
-                if (!TextUtils.isEmpty(brokerData.signatureHash) && brokerData.signatureHash.equals(signatureHash)) {
-                    return signatureHash;
-                }
-            }
-        }
-
-        throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
-    }
-
     @SuppressLint("PackageManagerGetSignatures")
     @SuppressWarnings("deprecation")
     private List<X509Certificate> readCertDataForBrokerApp(final String brokerPackageName)
             throws NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
-
-        //GET_SIGNATURES has been deprecated
-        final PackageInfo packageInfo = mContext.getPackageManager().getPackageInfo(brokerPackageName,
-                PackageManager.GET_SIGNATURES);
-        if (packageInfo == null) {
-            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
-                    "No broker package existed.");
-        }
-
-        //.signatures has been deprecated
-        if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
-            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
-                    "No signature associated with the broker package.");
-        }
-
-        final List<X509Certificate> certificates = new ArrayList<>(packageInfo.signatures.length);
-        for (final Signature signature : packageInfo.signatures) {
-            final byte[] rawCert = signature.toByteArray();
-            final InputStream certStream = new ByteArrayInputStream(rawCert);
-
-            final CertificateFactory certificateFactory;
-            final X509Certificate x509Certificate;
-            try {
-                certificateFactory = CertificateFactory.getInstance("X509");
-                x509Certificate = (X509Certificate) certificateFactory.generateCertificate(
-                        certStream);
-                certificates.add(x509Certificate);
-            } catch (final CertificateException e) {
-                throw new ClientException(BROKER_APP_VERIFICATION_FAILED);
-            }
-        }
-
-        return certificates;
-    }
-
-    private void verifyCertificateChain(final List<X509Certificate> certificates)
-            throws GeneralSecurityException, ClientException {
-        // create certificate chain, find the self signed cert first and chain all the way back
-        // to the signer cert. Also perform certificate signing validation when chaining them back.
-        final X509Certificate issuerCert = getSelfSignedCert(certificates);
-        final TrustAnchor trustAnchor = new TrustAnchor(issuerCert, null);
-        final PKIXParameters pkixParameters = new PKIXParameters(Collections.singleton(trustAnchor));
-        pkixParameters.setRevocationEnabled(false);
-        final CertPath certPath = CertificateFactory.getInstance("X.509")
-                .generateCertPath(certificates);
-
-        final CertPathValidator certPathValidator = CertPathValidator.getInstance("PKIX");
-        certPathValidator.validate(certPath, pkixParameters);
-    }
-
-    // Will throw if there is more than one self-signed cert found.
-    private X509Certificate getSelfSignedCert(final List<X509Certificate> certs)
-            throws ClientException {
-        int count = 0;
-        X509Certificate selfSignedCert = null;
-        for (final X509Certificate x509Certificate : certs) {
-            if (x509Certificate.getSubjectDN().equals(x509Certificate.getIssuerDN())) {
-                selfSignedCert = x509Certificate;
-                count++;
-            }
-        }
-
-        if (count > 1 || selfSignedCert == null) {
-            throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
-                    "Multiple self signed certs found or no self signed cert existed.");
-        }
-
-        return selfSignedCert;
+        return PackageUtils.readCertDataForApp(brokerPackageName, mContext);
     }
 
     /**

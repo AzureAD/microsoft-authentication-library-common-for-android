@@ -36,6 +36,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
@@ -53,6 +54,8 @@ import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Typ
 public class BrokerOperationBundle {
     private static final String TAG = BrokerOperationBundle.class.getName();
 
+    @Getter
+    @Accessors(prefix = "m")
     public enum Operation {
         MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
         MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
@@ -72,11 +75,11 @@ public class BrokerOperationBundle {
         BROKER_GET_FLIGHTS(API.BROKER_GET_FLIGHTS, null),
         BROKER_ADD_FLIGHTS(API.BROKER_ADD_FLIGHTS, null),
         MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null);
-        final API contentApi;
-        final String accountManagerOperation;
+        final API mContentApi;
+        final String mAccountManagerOperation;
         Operation(API contentApi, String accountManagerOperation) {
-            this.contentApi = contentApi;
-            this.accountManagerOperation = accountManagerOperation;
+            this.mContentApi = contentApi;
+            this.mAccountManagerOperation = accountManagerOperation;
         }
     }
 
@@ -109,7 +112,7 @@ public class BrokerOperationBundle {
     private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
         final String methodName = ":getAccountManagerAddAccountOperationKey";
 
-        String accountManagerKey = operation.accountManagerOperation;
+        String accountManagerKey = operation.getAccountManagerOperation();
         if (accountManagerKey == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
             Logger.warn(TAG + methodName, errorMessage);
@@ -125,7 +128,7 @@ public class BrokerOperationBundle {
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodName = ":getContentProviderUriPath";
 
-        final API contentApi = operation.contentApi;
+        final API contentApi = operation.getContentApi();
         if (contentApi == null) {
             final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
             Logger.warn(TAG + methodName, errorMessage);
@@ -135,6 +138,6 @@ public class BrokerOperationBundle {
                     errorMessage,
                     null);
         }
-        return contentApi.path();
+        return contentApi.getPath();
     }
 }
