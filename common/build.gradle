@@ -8,8 +8,14 @@ plugins {
 
 apply from: 'versioning/version_tasks.gradle'
 
-buildSystem{
-    desugar = true
+def desugarCode = false
+
+if(project.hasProperty("sugar")){
+    desugarCode = sugar.toBoolean()
+}
+
+buildSystem {
+    desugar = desugarCode
 }
 
 //apply plugin: 'jacoco'
@@ -115,8 +121,7 @@ android {
 }
 
 dependencies {
-    //Commenting out until the next major version of common/msal/etc...
-    //Java 8 - Desugaring
+    //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
