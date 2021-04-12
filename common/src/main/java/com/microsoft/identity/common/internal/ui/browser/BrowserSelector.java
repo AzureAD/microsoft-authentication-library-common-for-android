@@ -108,7 +108,7 @@ public class BrowserSelector {
             }
 
             try {
-                PackageInfo packageInfo = PackageHelper.getPackageInfo(pm, info.activityInfo.packageName);
+                final PackageInfo packageInfo = PackageHelper.getPackageInfo(pm, info.activityInfo.packageName);
                 //TODO if the browser is in the block list, do not add it into the return browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
                     //if the browser has custom tab enabled, set the custom tab support as true.
