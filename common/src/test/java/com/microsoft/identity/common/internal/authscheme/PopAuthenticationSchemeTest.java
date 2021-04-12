@@ -22,32 +22,27 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
-import androidx.annotation.NonNull;
+import org.junit.Assert;
+import org.junit.Test;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
-/**
- * Internal representation of a Bearer Auth Scheme.
- */
-@Getter
-@Accessors(prefix = "m")
-public class BearerAuthenticationSchemeInternal
-        extends TokenAuthenticationScheme
-        implements ITokenAuthenticationSchemeInternal {
+public class PopAuthenticationSchemeTest {
+    @Test
+    public void testMappability() throws Exception {
+        PopAuthenticationSchemeInternal one = PopAuthenticationSchemeInternal.builder().httpMethod("GET").nonce("one")
+                .url(new URL("http://url"))
+            .build();
+        PopAuthenticationSchemeInternal two = PopAuthenticationSchemeInternal.builder().httpMethod("GET").url(new URL("http://url")).nonce("two").build();
 
-    public static final String SCHEME_BEARER = "Bearer";
-    private static final long serialVersionUID = 823164758655077118L;
+        Map<PopAuthenticationSchemeInternal, Boolean> testMap = new HashMap<>();
 
-    /**
-     * Constructs a new BearerAuthenticationSchemeInternal.
-     */
-    public BearerAuthenticationSchemeInternal() {
-        super(SCHEME_BEARER);
-    }
+        testMap.put(one, true);
 
-    @Override
-    public String getAccessTokenForScheme(@NonNull final String accessToken) {
-        return accessToken;
+        Assert.assertEquals(1, testMap.size());
+        testMap.put(two, true);
+        Assert.assertEquals(2, testMap.size());
     }
 }

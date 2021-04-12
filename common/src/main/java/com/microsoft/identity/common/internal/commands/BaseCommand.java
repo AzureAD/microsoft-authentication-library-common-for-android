@@ -33,22 +33,29 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.experimental.SuperBuilder;
 
 // Suppressing rawtype warnings due to the generic types CommandCallback, BaseController
 @SuppressWarnings(WarningType.rawtype_warning)
 @Getter
 @EqualsAndHashCode
+@SuperBuilder(toBuilder = true)
 public abstract class BaseCommand<T> implements Command<T> {
 
+    @NonNull
     private final CommandParameters parameters;
 
+    @NonNull
     @EqualsAndHashCode.Exclude
     private final CommandCallback callback;
 
+    @NonNull
     private final List<BaseController> controllers;
 
+    @NonNull
     @EqualsAndHashCode.Exclude
     private final String publicApiId;
 
