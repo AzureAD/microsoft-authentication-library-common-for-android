@@ -29,8 +29,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 

@@ -28,14 +28,12 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpRequest;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
