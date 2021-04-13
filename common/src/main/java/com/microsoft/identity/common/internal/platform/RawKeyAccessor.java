@@ -41,7 +41,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
+import androidx.annotation.Nullable;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
