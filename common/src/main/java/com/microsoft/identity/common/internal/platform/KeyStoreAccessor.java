@@ -160,6 +160,11 @@ public class KeyStoreAccessor {
             public SecureHardwareState getSecureHardwareState() throws ClientException {
                 return popManager.getSecureHardwareState();
             }
+
+            @Override
+            public KeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+                throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
+            }
         };
     }
 
