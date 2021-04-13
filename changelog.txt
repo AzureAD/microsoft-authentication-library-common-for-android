@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Enabling refresh_in feature (#1310)
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
 - [PATCH] Fix interrupt flow when no login hint is provided (#1490)
 - [MINOR] Added logging functionality to track the request status.(#1237)
