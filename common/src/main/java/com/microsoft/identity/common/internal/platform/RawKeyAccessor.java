@@ -244,7 +244,8 @@ public class RawKeyAccessor implements KeyAccessor {
 
     /**
      * Given this raw key, generate a derived key from it.  If we close on a KDF for hardware keys,
-     * this can get promoted to the symmetric key interface.  Derived keys have a null alias.
+     * this can get promoted to the symmetric key interface.  Derived keys have a null alias, since
+     * they should generally not be persisted.
      * @param label the label for the generated key.
      * @param ctx the context bytes for the generated key.
      * @param suite the ciphersuite to use for the generated key.
