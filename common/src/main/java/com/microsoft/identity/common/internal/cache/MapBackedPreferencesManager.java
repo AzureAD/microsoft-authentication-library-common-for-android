@@ -35,6 +35,10 @@ import lombok.RequiredArgsConstructor;
 @Builder
 @VisibleForTesting(otherwise = VisibleForTesting.NONE)
 @RequiredArgsConstructor
+/**
+ * A SharedPreferencesFileManager backed by a HashMap.  This is mainly for testing purposes,
+ * where it doesn't make sense to instantiate shared preferences files.
+ */
 public class MapBackedPreferencesManager implements ISharedPreferencesFileManager {
 
     private final String mName;
