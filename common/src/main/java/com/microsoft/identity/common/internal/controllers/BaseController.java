@@ -94,6 +94,7 @@ import lombok.EqualsAndHashCode;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
+import static com.microsoft.identity.common.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -298,7 +299,7 @@ public abstract class BaseController {
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                     @NonNull final ICacheRecord cacheRecord)
-            throws IOException, ClientException {
+            throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
         Logger.info(
                 TAG + methodName,
@@ -370,6 +371,14 @@ public abstract class BaseController {
                                     + isRemoved
                     );
                 }
+
+                /*
+                    Intended to cover the AAD outage scenario for the refresh_in logic.., should return existing AT without refreshing it - caller will know whether to refresh based on this exception.
+                 */
+                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
+                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
+                }
+
             } else {
                 Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
             }
@@ -553,6 +562,10 @@ public abstract class BaseController {
                 cacheRecord.getV1IdToken() : cacheRecord.getIdToken();
 
         return null == idTokenRecord;
+    }
+
+    protected boolean accessTokenNeedsRefresh(@NonNull final ICacheRecord cacheRecord){
+        return cacheRecord.getAccessToken().shouldRefresh();
     }
 
     protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {

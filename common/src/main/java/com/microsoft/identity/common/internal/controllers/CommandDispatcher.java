@@ -42,8 +42,10 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
@@ -56,6 +58,7 @@ import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
@@ -63,6 +66,7 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -385,14 +389,27 @@ public class CommandDispatcher {
                         command.getParameters().getCorrelationId());
             }
         } else /* baseException == null */ {
-            if (result != null && result instanceof AcquireTokenResult) {
+            if (result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
                 commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
                         command.getParameters().getCorrelationId());
             } else {
+
                 //For commands that don't return an AcquireTokenResult
                 commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
                         command.getParameters().getCorrelationId());
+
+                //If any record needs a refresh, those records need to be refreshed.
+                if(result instanceof List<?>
+                        && !((List<?>) result).isEmpty()
+                        && ((List<?>) result).get(0) instanceof CacheRecord){ for(CacheRecord cr: (List<CacheRecord>) result){
+                        if(cr.getAccessToken() != null && cr.getAccessToken().shouldRefresh()){
+                            commandResult = new CommandResult(CommandResult.ResultStatus.REFRESH, result,
+                                    command.getParameters().getCorrelationId());
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -417,6 +434,7 @@ public class CommandDispatcher {
                         commandCallbackOnError(command, result);
                         break;
                     case COMPLETED:
+                    case REFRESH:
                         commandCallbackOnTaskCompleted(command, result);
                         break;
                     case CANCEL:
@@ -439,6 +457,9 @@ public class CommandDispatcher {
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
         command.getCallback().onTaskCompleted(result.getResult());
+        if(CommandResult.ResultStatus.REFRESH == result.getStatus()){
+            performRefresh(command);
+        }
     }
 
     /**
@@ -494,8 +515,13 @@ public class CommandDispatcher {
      */
     private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
                                                                  @NonNull AcquireTokenResult result, @NonNull String correlationId) {
-        //Token Commands
-        if (result.getSucceeded()) {
+
+        ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
+        if(acquireTokenResult != null
+                && acquireTokenResult.getAccessTokenRecord().shouldRefresh()){
+            return new CommandResult(CommandResult.ResultStatus.REFRESH,
+                    result.getLocalAuthenticationResult(), correlationId);
+        }else if (result.getSucceeded()) {
             return new CommandResult(CommandResult.ResultStatus.COMPLETED,
                     result.getLocalAuthenticationResult(), correlationId);
         } else {
@@ -629,6 +655,15 @@ public class CommandDispatcher {
                     (LocalAuthenticationResult) commandResult.getResult();
             localAuthenticationResult.setCorrelationId(correlationId);
         }
+    }
+
+
+    private static void performRefresh( BaseCommand command){
+        SilentTokenCommandParameters parameters = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().forceRefresh(true).build();
+        SilentTokenCommand silentTokenCommand = new SilentTokenCommand(parameters,
+                command.getDefaultController(), command.getCallback(), command.getPublicApiId());
+
+        submitSilent(silentTokenCommand);
     }
 
 }

@@ -360,10 +360,8 @@ public class AccessTokenRecord extends Credential {
         final String refreshOn = getRefreshOn();
         if (refreshOn != null && !refreshOn.isEmpty()) {
             return isExpired(refreshOn);
-        }
-        else if(getRefreshOn() != null) {
+        }else {
             return isExpired();
         }
-        return true;
     }
 }

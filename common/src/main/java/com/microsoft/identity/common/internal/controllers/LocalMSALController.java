@@ -317,11 +317,11 @@ public class LocalMSALController extends BaseController {
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
 
-        if (accessTokenIsNull(fullCacheRecord)
+        if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
-                || !strategy.validateCachedResult(authScheme, fullCacheRecord)) {
+                || !strategy.validateCachedResult(authScheme, fullCacheRecord)) && !accessTokenNeedsRefresh(fullCacheRecord)) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
                 Logger.verbose(
@@ -352,7 +352,7 @@ public class LocalMSALController extends BaseController {
 
                 throw exception;
             }
-        } else if (fullCacheRecord.getAccessToken().isExpired()) {
+        } else if (fullCacheRecord.getAccessToken().isExpired() || parameters.isForceRefresh()) {
             Logger.warn(
                     TAG + methodName,
                     "Access token is expired. Removing from cache..."

@@ -33,13 +33,16 @@ public class CommandResult {
     public enum ResultStatus {
         CANCEL,
         COMPLETED,
-        ERROR;
+        ERROR,
+        REFRESH;
 
         public String getLogStatus() {
             if (ResultStatus.COMPLETED == this) {
                 return "SUCCESS";
             } else if (ResultStatus.ERROR == this) {
                 return "ERROR";
+            } else if (ResultStatus.REFRESH == this) {
+                return "REFRESH";
             } else {
                 return "CANCEL";
             }
