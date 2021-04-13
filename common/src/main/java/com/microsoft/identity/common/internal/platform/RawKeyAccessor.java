@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.io.IOException;
@@ -43,9 +41,11 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
+import androidx.annotation.Nullable;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
@@ -60,13 +60,32 @@ import static com.microsoft.identity.common.internal.platform.KeyStoreAccessor.U
  * Key accessor for using a raw symmetric key.
  */
 @Builder
+@Getter
+@Accessors(prefix = "m")
 public class RawKeyAccessor implements KeyAccessor {
-    private final CryptoSuite suite;
-    private final byte[] key;
     private static final SecureRandom mRandom = new SecureRandom();
 
+    /**
+     * The cryptoSuite to use with this RawKeyAccessor.
+     */
+    @NonNull
+    private final CryptoSuite mSuite;
+    /**
+     * The byte array that backs this key.
+     */
+    @NonNull
+    private final byte[] mKey;
+
+    /**
+     * The alias for the stored key, may be null.
+     */
+    private final String mAlias;
+
+    /**
+     * @return the raw bytes of the stored key.
+     */
     public byte[] getRawKey() {
-        return Arrays.copyOf(key, key.length);
+        return Arrays.copyOf(mKey, mKey.length);
     }
 
     @Override
@@ -74,7 +93,7 @@ public class RawKeyAccessor implements KeyAccessor {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec keySpec = new SecretKeySpec(key, suite.cipher().name());
+            final SecretKeySpec keySpec = new SecretKeySpec(mKey, mSuite.cipher().name());
             final Cipher c = Cipher.getInstance(keySpec.getAlgorithm());
             final byte[] iv = new byte[12];
             mRandom.nextBytes(iv);
@@ -113,7 +132,7 @@ public class RawKeyAccessor implements KeyAccessor {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipher().name());
+            final SecretKeySpec key = new SecretKeySpec(this.mKey, mSuite.cipher().name());
             final Cipher c = Cipher.getInstance(key.getAlgorithm());
             final IvParameterSpec ivSpec = new IvParameterSpec(ciphertext, 0, 12);
             c.init(Cipher.DECRYPT_MODE, key, ivSpec);
@@ -146,8 +165,8 @@ public class RawKeyAccessor implements KeyAccessor {
         final String errCode;
         final Exception exception;
         try {
-            final SecretKeySpec key = new SecretKeySpec(this.key, suite.cipher().name());
-            Mac mac = Mac.getInstance(suite.macName());
+            final SecretKeySpec key = new SecretKeySpec(this.mKey, mSuite.cipher().name());
+            Mac mac = Mac.getInstance(mSuite.macName());
             mac.init(key);
             return mac.doFinal(text);
         } catch (final NoSuchAlgorithmException e) {
@@ -168,7 +187,7 @@ public class RawKeyAccessor implements KeyAccessor {
 
     @Override
     public byte[] getThumprint() throws ClientException {
-        final SecretKey keySpec = new SecretKeySpec(key, suite.cipher().name());
+        final SecretKey keySpec = new SecretKeySpec(mKey, mSuite.cipher().name());
         final Cipher cipher;
         final String errCode;
         final Exception exception;
@@ -203,7 +222,6 @@ public class RawKeyAccessor implements KeyAccessor {
         return SecureHardwareState.FALSE;
     }
 
-
     /**
      * Given this raw key, generate a derived key from it.  If we close on a KDF for hardware keys,
      * this can get promoted to the symmetric key interface.
@@ -214,7 +232,7 @@ public class RawKeyAccessor implements KeyAccessor {
      */
     public byte[] generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx) throws ClientException{
         try {
-            return SP800108KeyGen.generateDerivedKey(key, label, ctx);
+            return SP800108KeyGen.generateDerivedKey(mKey, label, ctx);
         } catch (IOException e) {
             throw new ClientException(IO_ERROR, e.getMessage(), e);
         } catch (InvalidKeyException e) {
@@ -226,7 +244,8 @@ public class RawKeyAccessor implements KeyAccessor {
 
     /**
      * Given this raw key, generate a derived key from it.  If we close on a KDF for hardware keys,
-     * this can get promoted to the symmetric key interface.
+     * this can get promoted to the symmetric key interface.  Derived keys have a null alias, since
+     * they should generally not be persisted.
      * @param label the label for the generated key.
      * @param ctx the context bytes for the generated key.
      * @param suite the ciphersuite to use for the generated key.
@@ -237,7 +256,7 @@ public class RawKeyAccessor implements KeyAccessor {
     public KeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
                                           @NonNull final CryptoSuite suite) throws ClientException{
         try {
-            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(key, label, ctx));
+            return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null);
         } catch (IOException e) {
             throw new ClientException(IO_ERROR, e.getMessage(), e);
         } catch (InvalidKeyException e) {

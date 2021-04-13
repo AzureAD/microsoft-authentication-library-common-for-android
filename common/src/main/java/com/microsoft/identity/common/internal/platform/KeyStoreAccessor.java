@@ -256,7 +256,10 @@ public class KeyStoreAccessor {
             KeyGenerator generator = KeyGenerator.getInstance("AES");
             generator.init(cipher.mKeySize);
             byte[] key = generator.generateKey().getEncoded();
-            return new RawKeyAccessor(cipher, key);
+            return RawKeyAccessor.builder()
+                    .suite(cipher)
+                    .key(key)
+                    .alias(alias).build();
         }
     }
 
