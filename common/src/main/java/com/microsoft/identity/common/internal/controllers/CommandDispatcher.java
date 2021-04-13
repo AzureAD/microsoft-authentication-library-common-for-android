@@ -400,7 +400,8 @@ public class CommandDispatcher {
                         command.getParameters().getCorrelationId());
 
                 //If any record needs a refresh, those records need to be refreshed.
-                if(!((List<?>) result).isEmpty()
+                if(result instanceof List
+                        &&!((List<?>) result).isEmpty()
                         && ((List<?>) result).get(0) instanceof CacheRecord){ for(CacheRecord cr: (List<CacheRecord>) result){
                         if(cr.getAccessToken() != null && cr.getAccessToken().shouldRefresh()){
                             commandResult = new CommandResult(CommandResult.ResultStatus.REFRESH, result,
