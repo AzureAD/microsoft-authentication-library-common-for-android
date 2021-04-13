@@ -27,8 +27,8 @@ import android.util.Pair;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Map;
 import java.util.concurrent.ExecutorService;

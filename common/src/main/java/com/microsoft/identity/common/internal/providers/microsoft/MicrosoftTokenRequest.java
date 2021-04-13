@@ -29,7 +29,6 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
-import java.util.Map;
 import java.util.UUID;
 
 import lombok.AllArgsConstructor;

@@ -38,10 +38,10 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -173,10 +173,10 @@ public class MicrosoftFamilyOAuth2TokenCache
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
         result.mAccount(accountRecord);
-        result.mRefreshToken(rtToReturn);
-        result.mAccessToken(atRecordToReturn);
-        result.mV1IdToken(v1IdTokenToReturn);
-        result.mIdToken(idTokenToReturn);
+        result.refreshToken(rtToReturn);
+        result.accessToken(atRecordToReturn);
+        result.v1IdToken(v1IdTokenToReturn);
+        result.idToken(idTokenToReturn);
 
         return result.build();
     }
@@ -223,7 +223,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                 // Declare our container
                 final CacheRecord.CacheRecordBuilder cacheRecord = CacheRecord.builder();
                 cacheRecord.mAccount(accountRecord);
-                cacheRecord.mRefreshToken(result.get(0).getRefreshToken());
+                cacheRecord.refreshToken(result.get(0).getRefreshToken());
 
                 // Load all of the IdTokens and set as appropriate...
                 final List<IdTokenRecord> idTokensForAccount = getIdTokensForAccountRecord(
@@ -233,9 +233,9 @@ public class MicrosoftFamilyOAuth2TokenCache
 
                 for (final IdTokenRecord idTokenRecord : idTokensForAccount) {
                     if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-                        cacheRecord.mV1IdToken(idTokenRecord);
+                        cacheRecord.v1IdToken(idTokenRecord);
                     } else {
-                        cacheRecord.mIdToken(idTokenRecord);
+                        cacheRecord.idToken(idTokenRecord);
                     }
                 }
 
