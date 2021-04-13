@@ -9,6 +9,7 @@ V.Next
 - [MINOR] Elevates AndroidCommon Logger out of internal package (#1279)
 - [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
 - [MINOR] Automate broker protocol version computation. (#1301)
+- [MAJOR] New API on KeyAccessor (#1309)
 
 
 Version 3.2.0

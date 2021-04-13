@@ -194,6 +194,11 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     }
 
     @Override
+    public KeyAccessor generateDerivedKey(final byte[] label, final byte[] ctx, final CryptoSuite suite) throws ClientException {
+        throw new UnsupportedOperationException("This operation is not supported by inaccessible keys");
+    }
+
+    @Override
     public IKeyManager<KeyStore.SecretKeyEntry> getManager() {
         return mKeyManager;
     }
