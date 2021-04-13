@@ -50,7 +50,6 @@ public class TokenResponse implements ISuccessResponse {
     private Long mExpiresIn;
 
 
-
     /**
      * RECOMMENDED.  The refresh lifetime in seconds of the access token.  For
      * example, the value "1800" denotes that the access token will

@@ -515,12 +515,12 @@ public class CommandDispatcher {
     private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
                                                                  @NonNull AcquireTokenResult result, @NonNull String correlationId) {
 
-        ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
-        if(acquireTokenResult != null
-                && acquireTokenResult.getAccessTokenRecord().shouldRefresh()){
+        final ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
+        if (acquireTokenResult != null
+                && acquireTokenResult.getAccessTokenRecord().shouldRefresh()) {
             return new CommandResult(CommandResult.ResultStatus.REFRESH,
                     result.getLocalAuthenticationResult(), correlationId);
-        }else if (result.getSucceeded()) {
+        } else if (result.getSucceeded()) {
             return new CommandResult(CommandResult.ResultStatus.COMPLETED,
                     result.getLocalAuthenticationResult(), correlationId);
         } else {
@@ -657,7 +657,7 @@ public class CommandDispatcher {
     }
 
 
-    private static void performRefresh( BaseCommand command){
+    private static void performRefresh(BaseCommand command) {
         SilentTokenCommandParameters parameters = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().forceRefresh(true).build();
         SilentTokenCommand silentTokenCommand = new SilentTokenCommand(parameters,
                 command.getDefaultController(), command.getCallback(), command.getPublicApiId());
