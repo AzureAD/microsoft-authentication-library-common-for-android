@@ -212,7 +212,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    @CheckForNull
+    @Nullable
     public Certificate[] getCertificateChain() {
         return null;
     }
