@@ -252,6 +252,7 @@ public class RawKeyAccessor implements KeyAccessor {
      * @return a new key, generated from the previous one.
      * @throws ClientException if something goes wrong during generation.
      */
+    @Override
     public KeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
                                           @NonNull final CryptoSuite suite) throws ClientException{
         try {
