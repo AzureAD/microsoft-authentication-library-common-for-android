@@ -29,7 +29,6 @@ import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
@@ -48,10 +47,8 @@ import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.internal.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -391,7 +388,7 @@ public class CommandDispatcher {
         } else /* baseException == null */ {
             if (result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
+                commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
                         command.getParameters().getCorrelationId());
             } else {
 
@@ -514,11 +511,9 @@ public class CommandDispatcher {
     /**
      * Get Commandresult from acquiretokenresult
      *
-     * @param baseException
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
-                                                                 @NonNull AcquireTokenResult result, @NonNull String correlationId) {
+    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
 
         final ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
         if (acquireTokenResult != null
@@ -530,7 +525,7 @@ public class CommandDispatcher {
                     result.getLocalAuthenticationResult(), correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
