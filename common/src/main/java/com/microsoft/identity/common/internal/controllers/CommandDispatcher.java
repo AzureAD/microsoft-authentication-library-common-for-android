@@ -457,8 +457,12 @@ public class CommandDispatcher {
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
         command.getCallback().onTaskCompleted(result.getResult());
-        if(CommandResult.ResultStatus.REFRESH == result.getStatus()){
-            performRefresh(command);
+        if (CommandResult.ResultStatus.REFRESH == result.getStatus()) {
+            if (command instanceof SilentTokenCommand) {
+                performRefresh(command);
+            } else {
+                throw new  IllegalArgumentException("Excepted type: SilentTokenCommand. Input was instead of type: " + command.toString());
+            }
         }
     }
 
@@ -662,7 +666,6 @@ public class CommandDispatcher {
         SilentTokenCommandParameters parameters = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().forceRefresh(true).build();
         SilentTokenCommand silentTokenCommand = new SilentTokenCommand(parameters,
                 command.getDefaultController(), command.getCallback(), command.getPublicApiId());
-
         submitSilent(silentTokenCommand);
     }
 
