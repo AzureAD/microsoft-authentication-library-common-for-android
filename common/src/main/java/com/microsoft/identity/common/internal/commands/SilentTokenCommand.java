@@ -34,6 +34,7 @@ import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
@@ -67,7 +68,7 @@ public class SilentTokenCommand extends TokenCommand {
             final BaseController controller = this.getControllers().get(ii);
 
             try {
-                com.microsoft.identity.common.internal.logging.Logger.verbose(
+                Logger.verbose(
                         TAG + methodName,
                         "Executing with controller: "
                                 + controller.getClass().getSimpleName()
@@ -78,7 +79,7 @@ public class SilentTokenCommand extends TokenCommand {
                 );
 
                 if (result.getSucceeded()) {
-                    com.microsoft.identity.common.internal.logging.Logger.verbose(
+                    Logger.verbose(
                             TAG + methodName,
                             "Executing with controller: "
                                     + controller.getClass().getSimpleName()
