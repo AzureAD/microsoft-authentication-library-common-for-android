@@ -373,7 +373,9 @@ public abstract class BaseController {
                 }
 
                 /*
-                    Intended to cover the AAD outage scenario for the refresh_in logic.., should return existing AT without refreshing it - caller will know whether to refresh based on this exception.
+                    Intended to cover the AAD outage scenario for the refresh_in logic.
+                    Should return existing AT without refreshing it.
+                    This way caller will know whether to refresh based on this exception.
                  */
                 if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
                     throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
