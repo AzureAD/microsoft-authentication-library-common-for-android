@@ -32,6 +32,8 @@ import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,18 +58,66 @@ public class GenerateShrCommandTest {
         }
     };
 
+    public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
+            .homeAccountId("One")
+            .popParameters(PopAuthenticationSchemeInternal.builder()
+                    .clientClaims("claims")
+                    .httpMethod("GET")
+                    .url(makeUrl("https://url"))
+                    .nonce("one")
+                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .build())
+            .build();
+    public static final GenerateShrCommand COMMAND_ONE = GenerateShrCommand.builder()
+            .parameters(PARAMS_ONE)
+            .callback(EMPTY_CALLBACK)
+            .publicApiId("ID")
+            .controllers(Collections.<BaseController>emptyList())
+            .build();
+    public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
+            .homeAccountId("One")
+            .popParameters(PopAuthenticationSchemeInternal.builder()
+                    .clientClaims("claims")
+                    .httpMethod("GET")
+                    .url(makeUrl("https://url"))
+                    .nonce("one")
+                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .build())
+            .build();
+    public static final GenerateShrCommand COMMAND_ONE_CLONE = GenerateShrCommand.builder()
+            .parameters(PARAMS_ONE_CLONE)
+            .callback(EMPTY_CALLBACK)
+            .publicApiId("ID")
+            .controllers(Collections.<BaseController>emptyList())
+            .build();
+    public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
+            .homeAccountId("One")
+            .popParameters(PopAuthenticationSchemeInternal.builder()
+                    .clientClaims("claims")
+                    .httpMethod("GET")
+                    .url(makeUrl("https://url"))
+                    .nonce("two")
+                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .build())
+            .build();
+    public static final GenerateShrCommand COMMAND_TWO = GenerateShrCommand.builder()
+            .parameters(PARAMS_TWO)
+            .callback(EMPTY_CALLBACK)
+            .publicApiId("ID")
+            .controllers(Collections.<BaseController>emptyList())
+            .build();
+
+    static URL makeUrl(String url) {
+        try {
+            return new URL(url);
+        } catch (final MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     @Test
     public void testMappability() throws Exception {
-        GenerateShrCommandParameters paramsOne = GenerateShrCommandParameters.builder()
-                .homeAccountId("One")
-                .popParameters(PopAuthenticationSchemeInternal.builder()
-                        .clientClaims("claims")
-                        .httpMethod("GET")
-                        .url(new URL("https://url"))
-                        .nonce("one")
-                        .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
-                        .build())
-                .build();
+        GenerateShrCommandParameters paramsOne = PARAMS_ONE;
         GenerateShrCommand commandOne = GenerateShrCommand.builder()
                 .parameters(paramsOne)
                 .callback(EMPTY_CALLBACK)
@@ -80,7 +130,7 @@ public class GenerateShrCommandTest {
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(new URL("https://url"))
+                        .url(makeUrl("https://url"))
                         .nonce("two")
                         .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                         .build())
@@ -96,5 +146,32 @@ public class GenerateShrCommandTest {
         Assert.assertEquals(1, map.size());
         map.put(commandTwo, true);
         Assert.assertEquals(2, map.size());
+    }
+
+    @Test
+    public void testHashCode_equals() throws Exception {
+        Assert.assertEquals(COMMAND_ONE.hashCode(), COMMAND_ONE_CLONE.hashCode());
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        Assert.assertEquals(COMMAND_ONE.hashCode(), COMMAND_ONE_CLONE.hashCode());
+    }
+
+    @Test
+    public void testEquals_equals() throws Exception {
+        Assert.assertEquals(COMMAND_ONE, COMMAND_ONE_CLONE);
+    }
+    @Test
+    public void testEquals_notEqualNull() throws Exception {
+        Assert.assertNotEquals(COMMAND_ONE, null);
+    }
+    @Test
+    public void testEquals_equalsSame() throws Exception {
+        Assert.assertEquals(COMMAND_ONE, COMMAND_ONE);
+    }
+    @Test
+    public void testEquals_notEqualDifferenceInNonce() {
+        Assert.assertNotEquals(COMMAND_ONE, COMMAND_TWO);
     }
 }
