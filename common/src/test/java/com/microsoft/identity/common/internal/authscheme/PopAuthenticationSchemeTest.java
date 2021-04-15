@@ -58,7 +58,7 @@ public class PopAuthenticationSchemeTest {
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        Assert.assertEquals(AUTHSCHEME_ONE.hashCode(), AUTHSCHEME_ONE_CLONE.hashCode());
+        Assert.assertNotEquals(AUTHSCHEME_ONE.hashCode(), AUTHSCHEME_TWO.hashCode());
     }
 
     @Test

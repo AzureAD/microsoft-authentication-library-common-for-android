@@ -133,7 +133,7 @@ public class GenerateShrCommandTest {
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        Assert.assertEquals(COMMAND_ONE.hashCode(), COMMAND_ONE_CLONE.hashCode());
+        Assert.assertNotEquals(COMMAND_ONE.hashCode(), COMMAND_TWO.hashCode());
     }
 
     @Test

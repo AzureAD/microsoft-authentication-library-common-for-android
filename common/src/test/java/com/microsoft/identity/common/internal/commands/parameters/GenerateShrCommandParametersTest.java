@@ -115,7 +115,7 @@ public class GenerateShrCommandParametersTest {
 
     @Test
     public void testHashCode_notEquals() throws Exception {
-        Assert.assertEquals(PARAMS_ONE.hashCode(), PARAMS_ONE_CLONE.hashCode());
+        Assert.assertNotEquals(PARAMS_ONE.hashCode(), PARAMS_TWO.hashCode());
     }
 
     @Test
