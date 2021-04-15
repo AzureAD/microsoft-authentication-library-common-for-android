@@ -431,8 +431,11 @@ public class CommandDispatcher {
                         commandCallbackOnError(command, result);
                         break;
                     case COMPLETED:
-                    case REFRESH:
                         commandCallbackOnTaskCompleted(command, result);
+                        break;
+                    case REFRESH:
+                    case REFRESH_ON_ERROR:
+                        commandCallbackOnTaskRefresh(command, result);
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
@@ -454,13 +457,23 @@ public class CommandDispatcher {
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
         command.getCallback().onTaskCompleted(result.getResult());
-        if (CommandResult.ResultStatus.REFRESH == result.getStatus()) {
+    }
+
+    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private static void commandCallbackOnTaskRefresh(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result){
             if (command instanceof SilentTokenCommand) {
+                if (CommandResult.ResultStatus.REFRESH == result.getStatus()) {
+                    commandCallbackOnTaskCompleted(command, result);
+                } else if (CommandResult.ResultStatus.REFRESH_ON_ERROR == result.getStatus()) {
+                    commandCallbackOnError(command, result);
+                } else {
+                    throw new  IllegalArgumentException("Excepted type: REFRESH or REFRESH_ON_ERROR. Input was instead of type: " + result.getResult().toString());
+                }
                 performRefresh(command);
             } else {
                 throw new  IllegalArgumentException("Excepted type: SilentTokenCommand. Input was instead of type: " + command.toString());
             }
-        }
     }
 
     /**
@@ -516,22 +529,29 @@ public class CommandDispatcher {
     private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
 
         final ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
-        if (acquireTokenResult != null
-                && acquireTokenResult.getAccessTokenRecord().shouldRefresh()) {
-            return new CommandResult(CommandResult.ResultStatus.REFRESH,
-                    result.getLocalAuthenticationResult(), correlationId);
-        } else if (result.getSucceeded()) {
-            return new CommandResult(CommandResult.ResultStatus.COMPLETED,
-                    result.getLocalAuthenticationResult(), correlationId);
+        if (result.getSucceeded()) {
+            return checkRefreshStatus(acquireTokenResult, correlationId, CommandResult.ResultStatus.REFRESH, CommandResult.ResultStatus.COMPLETED);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
             BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
-                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+                return checkRefreshStatus(acquireTokenResult, correlationId, CommandResult.ResultStatus.REFRESH_ON_ERROR, CommandResult.ResultStatus.ERROR);
             }
         }
+    }
+
+    private static CommandResult checkRefreshStatus(final ILocalAuthenticationResult acquireTokenResult,
+                                                                              @NonNull String correlationId,
+                                                                              @NonNull CommandResult.ResultStatus refreshResultStatus,
+                                                                              @NonNull CommandResult.ResultStatus resultStatus) {
+        return acquireTokenResult != null
+                && acquireTokenResult.getAccessTokenRecord().shouldRefresh() ?
+                new CommandResult(refreshResultStatus,
+                        acquireTokenResult, correlationId) :
+                new CommandResult(resultStatus,
+                        acquireTokenResult, correlationId);
     }
 
     public static void beginInteractive(final InteractiveTokenCommand command) {

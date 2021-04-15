@@ -34,7 +34,8 @@ public class CommandResult {
         CANCEL,
         COMPLETED,
         ERROR,
-        REFRESH;
+        REFRESH,
+        REFRESH_ON_ERROR;
 
         public String getLogStatus() {
             if (ResultStatus.COMPLETED == this) {
@@ -43,6 +44,8 @@ public class CommandResult {
                 return "ERROR";
             } else if (ResultStatus.REFRESH == this) {
                 return "REFRESH";
+            } else if (ResultStatus.REFRESH_ON_ERROR == this) {
+                return "REFRESH_ON_ERROR";
             } else {
                 return "CANCEL";
             }
