@@ -51,7 +51,11 @@ public class DefaultConnectionService implements IConnectionService {
 
     private final Context mConnectionContext;
     private static boolean connectionAvailable = false;
-    private ConnectivityManager.NetworkCallback networkCallback;
+    // We need a single instance of the NetworkCallback to prevent multiple callbacks from being
+    // registered for each instance of DefaultConnectionService.
+    private static ConnectivityManager.NetworkCallback networkCallback;
+
+    private static final Object lock = new Object();
 
     /**
      * Constructor of DefaultConnectionService.
@@ -70,35 +74,37 @@ public class DefaultConnectionService implements IConnectionService {
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void registerNetworkCallback() {
-        if (null == networkCallback) {
-            try {
-                final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
-                        .getSystemService(Context.CONNECTIVITY_SERVICE);
-                final NetworkRequest.Builder builder = new NetworkRequest.Builder()
-                        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        synchronized (lock) {
+            if (null == networkCallback) {
+                try {
+                    final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                            .getSystemService(Context.CONNECTIVITY_SERVICE);
+                    final NetworkRequest.Builder builder = new NetworkRequest.Builder()
+                            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
 
-                NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
-                // Initialize the connectionAvailable to the active network info, before the callback is registered.
-                DefaultConnectionService.connectionAvailable =
-                        null != activeNetwork &&
-                                activeNetwork.isConnectedOrConnecting();
+                    NetworkInfo activeNetwork = connectivityManager.getActiveNetworkInfo();
+                    // Initialize the connectionAvailable to the active network info, before the callback is registered.
+                    DefaultConnectionService.connectionAvailable =
+                            null != activeNetwork &&
+                                    activeNetwork.isConnectedOrConnecting();
 
-                connectivityManager.registerNetworkCallback(
-                        builder.build(),
-                        networkCallback = new ConnectivityManager.NetworkCallback() {
-                            @Override
-                            public void onAvailable(@NonNull Network network) {
-                                DefaultConnectionService.connectionAvailable = true;
-                            }
+                    connectivityManager.registerNetworkCallback(
+                            builder.build(),
+                            networkCallback = new ConnectivityManager.NetworkCallback() {
+                                @Override
+                                public void onAvailable(@NonNull Network network) {
+                                    DefaultConnectionService.connectionAvailable = true;
+                                }
 
-                            @Override
-                            public void onLost(@NonNull Network network) {
-                                DefaultConnectionService.connectionAvailable = false;
-                            }
-                        });
-            } catch (Exception e) {
-                // The connection callback registration failed
-                DefaultConnectionService.connectionAvailable = false;
+                                @Override
+                                public void onLost(@NonNull Network network) {
+                                    DefaultConnectionService.connectionAvailable = false;
+                                }
+                            });
+                } catch (Exception e) {
+                    // The connection callback registration failed
+                    DefaultConnectionService.connectionAvailable = false;
+                }
             }
         }
     }
@@ -108,10 +114,15 @@ public class DefaultConnectionService implements IConnectionService {
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void unregisterNetworkCallback() {
-        final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
-                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        synchronized (lock) {
+            if (networkCallback != null) {
+                final ConnectivityManager connectivityManager = (ConnectivityManager) mConnectionContext
+                        .getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        connectivityManager.unregisterNetworkCallback(networkCallback);
+                connectivityManager.unregisterNetworkCallback(networkCallback);
+                networkCallback = null;
+            }
+        }
     }
 
     /**
