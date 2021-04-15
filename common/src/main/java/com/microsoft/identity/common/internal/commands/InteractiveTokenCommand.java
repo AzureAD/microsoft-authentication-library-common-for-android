@@ -68,8 +68,9 @@ public class InteractiveTokenCommand extends TokenCommand {
         final Context applicationContext = parameters.getAndroidApplicationContext();
         final PackageManager packageManager = applicationContext.getPackageManager();
         try {
-            final ActivityInfo startActivityInfo = packageManager.getActivityInfo(parameters.getActivity().getComponentName(), 0);
-            if(startActivityInfo.taskAffinity == null){
+            final ComponentName componentName = parameters.getActivity().getComponentName();
+            final ActivityInfo startActivityInfo = componentName != null ? packageManager.getActivityInfo(componentName, 0) : null;
+            if (startActivityInfo.taskAffinity == null){
                 mHasTaskAffinity = false;
                 mTaskId = parameters.getActivity().getTaskId();
             }
