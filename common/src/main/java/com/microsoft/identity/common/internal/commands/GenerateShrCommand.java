@@ -33,11 +33,18 @@ import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
 import static com.microsoft.identity.common.exception.ErrorStrings.NO_ACCOUNT_FOUND;
 
 /**
  * Command class to perform generation of AT-less SHRs on behalf of a user.
  */
+@SuperBuilder()
+@Accessors(prefix = "m")
+@EqualsAndHashCode(callSuper = true)
 public class GenerateShrCommand extends BaseCommand<GenerateShrResult> {
 
     private static final String TAG = GenerateShrCommand.class.getSimpleName();
