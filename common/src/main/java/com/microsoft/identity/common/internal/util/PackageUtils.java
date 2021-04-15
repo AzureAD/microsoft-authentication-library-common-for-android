@@ -34,6 +34,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -85,22 +86,20 @@ public final class PackageUtils {
             throws PackageManager.NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
 
-        //GET_SIGNATURES has been deprecated
-        final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName,
-                PackageManager.GET_SIGNATURES);
+        final PackageInfo packageInfo = PackageHelper.getPackageInfo(context.getPackageManager(), packageName);
         if (packageInfo == null) {
             throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
                     "No broker package existed.");
         }
 
-        //.signatures has been deprecated
-        if (packageInfo.signatures == null || packageInfo.signatures.length == 0) {
+        final Signature [] signatures = PackageHelper.getSignatures(packageInfo);
+        if (signatures == null || signatures.length == 0) {
             throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
                     "No signature associated with the broker package.");
         }
 
-        final List<X509Certificate> certificates = new ArrayList<>(packageInfo.signatures.length);
-        for (final Signature signature : packageInfo.signatures) {
+        final List<X509Certificate> certificates = new ArrayList<>(signatures.length);
+        for (final Signature signature : signatures) {
             final byte[] rawCert = signature.toByteArray();
             final InputStream certStream = new ByteArrayInputStream(rawCert);
 
