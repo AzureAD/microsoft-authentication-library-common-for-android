@@ -456,7 +456,7 @@ public class CommandDispatcher {
                 } else {
                     throw new  IllegalArgumentException("Excepted type: REFRESH or REFRESH_ON_ERROR. Input was instead of type: " + result.getResult().toString());
                 }
-                performRefresh(command);
+                performRefresh((SilentTokenCommand) command);
             } else {
                 throw new  IllegalArgumentException("Excepted type: SilentTokenCommand. Input was instead of type: " + command.toString());
             }
@@ -519,7 +519,7 @@ public class CommandDispatcher {
             return checkRefreshStatus(acquireTokenResult, correlationId, CommandResult.ResultStatus.REFRESH, CommandResult.ResultStatus.COMPLETED);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
@@ -663,7 +663,7 @@ public class CommandDispatcher {
     }
 
 
-    private static void performRefresh(BaseCommand command) {
+    private static void performRefresh(SilentTokenCommand command) {
         SilentTokenCommandParameters parameters = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().forceRefresh(true).build();
         SilentTokenCommand silentTokenCommand = new SilentTokenCommand(parameters,
                 command.getDefaultController(), command.getCallback(), command.getPublicApiId());
