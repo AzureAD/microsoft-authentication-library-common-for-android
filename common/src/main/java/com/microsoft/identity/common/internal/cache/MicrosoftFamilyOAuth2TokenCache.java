@@ -172,7 +172,7 @@ public class MicrosoftFamilyOAuth2TokenCache
         }
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountRecord);
+        result.account(accountRecord);
         result.refreshToken(rtToReturn);
         result.accessToken(atRecordToReturn);
         result.v1IdToken(v1IdTokenToReturn);
@@ -222,7 +222,7 @@ public class MicrosoftFamilyOAuth2TokenCache
             for (final AccountRecord accountRecord : accountsInOtherTenants) {
                 // Declare our container
                 final CacheRecord.CacheRecordBuilder cacheRecord = CacheRecord.builder();
-                cacheRecord.mAccount(accountRecord);
+                cacheRecord.account(accountRecord);
                 cacheRecord.refreshToken(result.get(0).getRefreshToken());
 
                 // Load all of the IdTokens and set as appropriate...
