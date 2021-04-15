@@ -25,19 +25,60 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.internal.commands.Command;
+import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.GenerateShrCommand;
+import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.internal.util.UrlUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 public class GenerateShrCommandParametersTest {
+    private static final CommandCallback EMPTY_CALLBACK = new CommandCallback() {
+        @Override public void onCancel() {  }
+        @Override public void onError(Object error) {  }
+        @Override public void onTaskCompleted(Object o) {  }
+    };
+
+    public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
+            .homeAccountId("One")
+            .popParameters(PopAuthenticationSchemeInternal.builder()
+                    .clientClaims("claims")
+                    .httpMethod("GET")
+                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .nonce("one")
+                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .build())
+            .build();
+    public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
+            .homeAccountId("One")
+            .popParameters(PopAuthenticationSchemeInternal.builder()
+                    .clientClaims("claims")
+                    .httpMethod("GET")
+                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .nonce("one")
+                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .build())
+            .build();
+    public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
+            .homeAccountId("One")
+            .popParameters(PopAuthenticationSchemeInternal.builder()
+                    .clientClaims("claims")
+                    .httpMethod("GET")
+                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .nonce("two")
+                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .build())
+            .build();
+
     @Test
     public void testMappability() throws Exception {
         GenerateShrCommandParameters commandOne = GenerateShrCommandParameters.builder()
@@ -45,7 +86,7 @@ public class GenerateShrCommandParametersTest {
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(new URL("https://url"))
+                        .url(UrlUtils.makeUrlSilent("https://url"))
                         .nonce("one")
                         .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                         .build())
@@ -55,7 +96,7 @@ public class GenerateShrCommandParametersTest {
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(new URL("https://url"))
+                        .url(UrlUtils.makeUrlSilent("https://url"))
                         .nonce("two")
                         .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                         .build())
@@ -67,4 +108,31 @@ public class GenerateShrCommandParametersTest {
         map.put(commandTwo, true);
         Assert.assertEquals(2, map.size());
     }
+    @Test
+    public void testHashCode_equals() throws Exception {
+        Assert.assertEquals(PARAMS_ONE.hashCode(), PARAMS_ONE_CLONE.hashCode());
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        Assert.assertEquals(PARAMS_ONE.hashCode(), PARAMS_ONE_CLONE.hashCode());
+    }
+
+    @Test
+    public void testEquals_equals() throws Exception {
+        Assert.assertEquals(PARAMS_ONE, PARAMS_ONE_CLONE);
+    }
+    @Test
+    public void testEquals_notEqualNull() throws Exception {
+        Assert.assertNotEquals(PARAMS_ONE, null);
+    }
+    @Test
+    public void testEquals_equalsSame() throws Exception {
+        Assert.assertEquals(PARAMS_ONE, PARAMS_ONE);
+    }
+    @Test
+    public void testEquals_notEqualDifferenceInNonce() {
+        Assert.assertNotEquals(PARAMS_ONE, PARAMS_TWO);
+    }
+
 }

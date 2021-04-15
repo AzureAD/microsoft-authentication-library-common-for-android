@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authscheme;
 
+import com.microsoft.identity.common.internal.util.UrlUtils;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -30,19 +32,50 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class PopAuthenticationSchemeTest {
+
+    public static final PopAuthenticationSchemeInternal AUTHSCHEME_ONE = PopAuthenticationSchemeInternal.builder().httpMethod("GET").nonce("one")
+            .url(UrlUtils.makeUrlSilent("http://url"))
+            .build();
+    public static final PopAuthenticationSchemeInternal AUTHSCHEME_ONE_CLONE = PopAuthenticationSchemeInternal.builder().httpMethod("GET").nonce("one")
+            .url(UrlUtils.makeUrlSilent("http://url"))
+            .build();
+    public static final PopAuthenticationSchemeInternal AUTHSCHEME_TWO = PopAuthenticationSchemeInternal.builder().httpMethod("GET").url(UrlUtils.makeUrlSilent("http://url")).nonce("two").build();
+
     @Test
     public void testMappability() throws Exception {
-        PopAuthenticationSchemeInternal one = PopAuthenticationSchemeInternal.builder().httpMethod("GET").nonce("one")
-                .url(new URL("http://url"))
-            .build();
-        PopAuthenticationSchemeInternal two = PopAuthenticationSchemeInternal.builder().httpMethod("GET").url(new URL("http://url")).nonce("two").build();
-
         Map<PopAuthenticationSchemeInternal, Boolean> testMap = new HashMap<>();
-
-        testMap.put(one, true);
-
+        
+        testMap.put(AUTHSCHEME_ONE, true);
         Assert.assertEquals(1, testMap.size());
-        testMap.put(two, true);
+        testMap.put(AUTHSCHEME_TWO, true);
         Assert.assertEquals(2, testMap.size());
     }
+    
+    @Test
+    public void testHashCode_equals() throws Exception {
+        Assert.assertEquals(AUTHSCHEME_ONE.hashCode(), AUTHSCHEME_ONE_CLONE.hashCode());
+    }
+
+    @Test
+    public void testHashCode_notEquals() throws Exception {
+        Assert.assertEquals(AUTHSCHEME_ONE.hashCode(), AUTHSCHEME_ONE_CLONE.hashCode());
+    }
+
+    @Test
+    public void testEquals_equals() throws Exception {
+        Assert.assertEquals(AUTHSCHEME_ONE, AUTHSCHEME_ONE_CLONE);
+    }
+    @Test
+    public void testEquals_notEqualNull() throws Exception {
+        Assert.assertNotEquals(AUTHSCHEME_ONE, null);
+    }
+    @Test
+    public void testEquals_equalsSame() throws Exception {
+        Assert.assertEquals(AUTHSCHEME_ONE, AUTHSCHEME_ONE);
+    }
+    @Test
+    public void testEquals_notEqualDifferenceInNonce() {
+        Assert.assertNotEquals(AUTHSCHEME_ONE, AUTHSCHEME_TWO);
+    }
+
 }

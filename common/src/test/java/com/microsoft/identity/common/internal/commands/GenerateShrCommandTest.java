@@ -24,38 +24,24 @@ package com.microsoft.identity.common.internal.commands;
 
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.MapBackedPreferencesManager;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
+import com.microsoft.identity.common.internal.util.UrlUtils;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class GenerateShrCommandTest {
 
-    public static final CommandCallback EMPTY_CALLBACK = new CommandCallback() {
-        @Override
-        public void onCancel() {
-
-        }
-
-        @Override
-        public void onError(Object error) {
-
-        }
-
-        @Override
-        public void onTaskCompleted(Object o) {
-
-        }
+    private static final CommandCallback EMPTY_CALLBACK = new CommandCallback() {
+        @Override public void onCancel() {  }
+        @Override public void onError(Object error) {  }
+        @Override public void onTaskCompleted(Object o) {  }
     };
 
     public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
@@ -63,7 +49,7 @@ public class GenerateShrCommandTest {
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(makeUrl("https://url"))
+                    .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
                     .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                     .build())
@@ -79,7 +65,7 @@ public class GenerateShrCommandTest {
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(makeUrl("https://url"))
+                    .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
                     .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                     .build())
@@ -95,7 +81,7 @@ public class GenerateShrCommandTest {
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(makeUrl("https://url"))
+                    .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("two")
                     .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                     .build())
@@ -106,14 +92,6 @@ public class GenerateShrCommandTest {
             .publicApiId("ID")
             .controllers(Collections.<BaseController>emptyList())
             .build();
-
-    static URL makeUrl(String url) {
-        try {
-            return new URL(url);
-        } catch (final MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     @Test
     public void testMappability() throws Exception {
@@ -130,7 +108,7 @@ public class GenerateShrCommandTest {
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(makeUrl("https://url"))
+                        .url(UrlUtils.makeUrlSilent("https://url"))
                         .nonce("two")
                         .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
                         .build())
