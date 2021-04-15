@@ -70,7 +70,7 @@ public class InteractiveTokenCommand extends TokenCommand {
         try {
             final ComponentName componentName = parameters.getActivity().getComponentName();
             final ActivityInfo startActivityInfo = componentName != null ? packageManager.getActivityInfo(componentName, 0) : null;
-            if (startActivityInfo.taskAffinity == null){
+            if (startActivityInfo == null || startActivityInfo.taskAffinity == null){
                 mHasTaskAffinity = false;
                 mTaskId = parameters.getActivity().getTaskId();
             }
