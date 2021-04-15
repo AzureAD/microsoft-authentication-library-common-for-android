@@ -1,10 +1,11 @@
-Version 3.3.0
+Version 3.3.1
 ----------
 - [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
 - [PATCH] Improved performance of getAccounts() call by reducing number of cache round-trips (#1271)
 - [PATCH] Perf: Use an Iterator over SharedPreferences entries via getAllFilteredByKey() (#1262)
 - [MINOR] Fall back to browser view if we can't open custom tabs. (#1270)
 - [MINOR] Adds plumbing for new API parameters to reach the token endpoint, new response data (#1266)
+- [PATCH] Ensure the default connection service has a single callback instance (#1314)
 
 Version 3.2.0
 ----------
