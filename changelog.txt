@@ -11,6 +11,7 @@ V.Next
 - [MINOR] Automate broker protocol version computation. (#1301)
 - [MAJOR] New API on KeyAccessor (#1309)
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
+- [PATCH] Ensure the default connection service has a single callback instance (#1314)
 
 
 Version 3.2.0
