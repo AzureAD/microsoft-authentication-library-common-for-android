@@ -41,7 +41,6 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
-import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
@@ -63,7 +62,6 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.lang.reflect.Field;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -395,18 +393,6 @@ public class CommandDispatcher {
                 //For commands that don't return an AcquireTokenResult
                 commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
                         command.getParameters().getCorrelationId());
-
-                //If any record needs a refresh, those records need to be refreshed.
-                if (result instanceof List
-                        &&!((List) result).isEmpty()
-                        && ((List) result).get(0) instanceof CacheRecord) { for(CacheRecord cr: (List<CacheRecord>) result) {
-                        if (cr.getAccessToken() != null && cr.getAccessToken().shouldRefresh()) {
-                            commandResult = new CommandResult(CommandResult.ResultStatus.REFRESH, result,
-                                    command.getParameters().getCorrelationId());
-                            break;
-                        }
-                    }
-                }
             }
         }
 
