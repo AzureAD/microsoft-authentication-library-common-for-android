@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCom
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
@@ -324,17 +325,13 @@ public class LocalMSALController extends BaseController {
                 || !strategy.validateCachedResult(authScheme, fullCacheRecord)) && !accessTokenNeedsRefresh(fullCacheRecord)) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
-                Logger.verbose(
-                        TAG + methodName,
-                        "No access token found, but RT is available."
-                );
-
-                renewAccessToken(
+                renewAT(
                         parametersWithScopes,
                         acquireTokenSilentResult,
                         tokenCache,
                         strategy,
-                        fullCacheRecord
+                        fullCacheRecord,
+                        TAG + methodName
                 );
             } else {
                 //TODO need the refactor, should just throw the ui required exception, rather than
@@ -352,26 +349,39 @@ public class LocalMSALController extends BaseController {
 
                 throw exception;
             }
-        } else if (fullCacheRecord.getAccessToken().isExpired() || parameters.isForceRefresh()) {
+        } else if(parameters.isForceRefresh()) { //refresh_in second call
+            renewAT(
+                    parametersWithScopes,
+                    acquireTokenSilentResult,
+                    tokenCache,
+                    strategy,
+                    fullCacheRecord,
+                    TAG + methodName
+            );
+            //Only remove AT from cache if token renewal was successful, because token is still valid, just only refresh-expired.
+            if (acquireTokenSilentResult.getSucceeded()) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Access token is expired. Removing from cache..."
+                );
+                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
+            }
+        } else if (fullCacheRecord.getAccessToken().isExpired()) {
             Logger.warn(
                     TAG + methodName,
                     "Access token is expired. Removing from cache..."
             );
             // Remove the expired token
             tokenCache.removeCredential(fullCacheRecord.getAccessToken());
-
-            Logger.verbose(
-                    TAG + methodName,
-                    "Renewing access token..."
-            );
-            // Request a new AT
-            renewAccessToken(
+            renewAT(
                     parametersWithScopes,
                     acquireTokenSilentResult,
                     tokenCache,
                     strategy,
-                    fullCacheRecord
+                    fullCacheRecord,
+                    TAG + methodName
             );
+
         } else {
             Logger.verbose(
                     TAG + methodName,
@@ -398,6 +408,25 @@ public class LocalMSALController extends BaseController {
         );
 
         return acquireTokenSilentResult;
+    }
+
+    private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,
+                            @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                            @NonNull final ICacheRecord cacheRecord,
+                            @NonNull final String tag) throws IOException, ClientException, ServiceException{
+        Logger.verbose(
+                TAG + tag,
+                "Renewing access token..."
+        );
+        renewAccessToken(
+                parametersWithScopes,
+                acquireTokenSilentResult,
+                tokenCache,
+                strategy,
+                cacheRecord
+        );
     }
 
     @Override
