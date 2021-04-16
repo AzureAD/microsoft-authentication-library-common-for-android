@@ -20,34 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.authscheme;
+package com.microsoft.identity.common.internal.util;
 
-import androidx.annotation.NonNull;
-
-import lombok.Getter;
-import lombok.experimental.Accessors;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
- * Internal representation of a Bearer Auth Scheme.
+ * A place for gathering utilities for use with URLs.
  */
-@Getter
-@Accessors(prefix = "m")
-public class BearerAuthenticationSchemeInternal
-        extends TokenAuthenticationScheme
-        implements ITokenAuthenticationSchemeInternal {
-
-    public static final String SCHEME_BEARER = "Bearer";
-    private static final long serialVersionUID = 823164758655077118L;
-
+public class UrlUtils {
     /**
-     * Constructs a new BearerAuthenticationSchemeInternal.
+     * This creates a url from a String, rewriting any malformedUrlExceptions to runtime.
+     * @param urlString the string to convert.
+     * @return the corresponding {@link URL}.
      */
-    public BearerAuthenticationSchemeInternal() {
-        super(SCHEME_BEARER);
-    }
-
-    @Override
-    public String getAccessTokenForScheme(@NonNull final String accessToken) {
-        return accessToken;
+    public static URL makeUrlSilent(String urlString) {
+        try {
+            return new URL(urlString);
+        } catch (final MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

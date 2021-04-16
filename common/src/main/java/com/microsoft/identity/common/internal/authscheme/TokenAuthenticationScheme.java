@@ -24,9 +24,17 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
 /**
  * Abstract representation of any Authentication Scheme which may be token based.
  */
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+@Accessors(prefix = "m")
 public abstract class TokenAuthenticationScheme
         extends AbstractAuthenticationScheme
         implements ITokenAuthenticationSchemeInternal {
