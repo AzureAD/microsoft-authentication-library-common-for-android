@@ -324,7 +324,29 @@ public class LocalMSALController extends BaseController {
                     "RefreshIn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if ((accessTokenIsNull(fullCacheRecord)
+        if(parameters instanceof RefreshInTokenCommandParameters) { //refresh_in second call
+            Logger.warn(
+                    TAG + methodName,
+                    "Attempting renewal of Access Token because it's refresh-expired. "
+            );
+            AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
+            renewAT(
+                    parametersWithScopes,
+                    acquireTokenSilentResult,
+                    tokenCache,
+                    strategy,
+                    fullCacheRecord,
+                    TAG + methodName
+            );
+            //Only remove AT from cache if token renewal was successful, because token is still valid, only refresh-expired.
+            if (acquireTokenSilentResult.getSucceeded()) {
+                Logger.warn(
+                        TAG + methodName,
+                        "Access token is refresh-expired. Removing from cache..."
+                );
+                tokenCache.removeCredential(accessTokenRecord);
+            }
+        } else if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
@@ -354,28 +376,6 @@ public class LocalMSALController extends BaseController {
                 );
 
                 throw exception;
-            }
-        } else if(parameters instanceof RefreshInTokenCommandParameters) { //refresh_in second call
-            Logger.warn(
-                    TAG + methodName,
-                    "Attempting renewal of Access Token because it's refresh-expired. "
-            );
-            AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
-            renewAT(
-                    parametersWithScopes,
-                    acquireTokenSilentResult,
-                    tokenCache,
-                    strategy,
-                    fullCacheRecord,
-                    TAG + methodName
-            );
-            //Only remove AT from cache if token renewal was successful, because token is still valid, only refresh-expired.
-            if (acquireTokenSilentResult.getSucceeded()) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Access token is refresh-expired. Removing from cache..."
-                );
-                tokenCache.removeCredential(accessTokenRecord);
             }
         } else if (fullCacheRecord.getAccessToken().isExpired()) {
             Logger.warn(
