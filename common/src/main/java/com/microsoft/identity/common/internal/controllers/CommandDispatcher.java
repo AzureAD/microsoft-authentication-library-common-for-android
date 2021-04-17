@@ -46,6 +46,7 @@ import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RefreshInTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
@@ -664,7 +665,7 @@ public class CommandDispatcher {
 
 
     private static void performRefresh(SilentTokenCommand command) {
-        SilentTokenCommandParameters parameters = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().forceRefresh(true).build();
+        RefreshInTokenCommandParameters parameters = ((RefreshInTokenCommandParameters) command.getParameters()).toBuilder().build();
         SilentTokenCommand silentTokenCommand = new SilentTokenCommand(parameters,
                 command.getDefaultController(), command.getCallback(), command.getPublicApiId());
         submitSilent(silentTokenCommand);
