@@ -320,6 +320,15 @@ public class AccessTokenRecord extends Credential {
     }
 
     /**
+     * Convenience method for determining if refreshIn is returned from server.
+     *
+     * @return RefreshOn is active.
+     */
+    public boolean refreshOnIsActive() {
+        return !getExpiresOn().equals(getRefreshOn());
+    }
+
+    /**
      * Sets the refresh_on timestamp.
      *
      * @param refreshOn The refresh_on to set.
