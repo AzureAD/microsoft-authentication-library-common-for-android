@@ -43,6 +43,7 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RefreshInTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -322,7 +323,7 @@ public class LocalMSALController extends BaseController {
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
-                || !strategy.validateCachedResult(authScheme, fullCacheRecord)) && !accessTokenNeedsRefresh(fullCacheRecord)) {
+                || !strategy.validateCachedResult(authScheme, fullCacheRecord))) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
                 renewAT(
@@ -349,7 +350,12 @@ public class LocalMSALController extends BaseController {
 
                 throw exception;
             }
-        } else if(parameters.isForceRefresh()) { //refresh_in second call
+        } else if(parameters instanceof RefreshInTokenCommandParameters) { //refresh_in second call
+            Logger.warn(
+                    TAG + methodName,
+                    "Attempting renewal of Access Token because it's refresh-expired. "
+            );
+            AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             renewAT(
                     parametersWithScopes,
                     acquireTokenSilentResult,
@@ -358,13 +364,13 @@ public class LocalMSALController extends BaseController {
                     fullCacheRecord,
                     TAG + methodName
             );
-            //Only remove AT from cache if token renewal was successful, because token is still valid, just only refresh-expired.
+            //Only remove AT from cache if token renewal was successful, because token is still valid, only refresh-expired.
             if (acquireTokenSilentResult.getSucceeded()) {
                 Logger.warn(
                         TAG + methodName,
-                        "Access token is expired. Removing from cache..."
+                        "Access token is refresh-expired. Removing from cache..."
                 );
-                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
+                tokenCache.removeCredential(accessTokenRecord);
             }
         } else if (fullCacheRecord.getAccessToken().isExpired()) {
             Logger.warn(
