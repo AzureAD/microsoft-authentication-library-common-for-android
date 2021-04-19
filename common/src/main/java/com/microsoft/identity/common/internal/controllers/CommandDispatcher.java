@@ -26,6 +26,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -63,6 +65,9 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -665,10 +670,42 @@ public class CommandDispatcher {
 
 
     private static void performRefresh(SilentTokenCommand command) {
-        RefreshInTokenCommandParameters parameters = ((RefreshInTokenCommandParameters) command.getParameters()).toBuilder().build();
+        SilentTokenCommandParameters params = (SilentTokenCommandParameters) command.getParameters();
+        RefreshInTokenCommandParameters parameters = RefreshInTokenCommandParameters.builder()
+                .androidApplicationContext(params.getAndroidApplicationContext())
+                .applicationName(params.getAndroidApplicationContext() != null ? params.getAndroidApplicationContext().getPackageName() : "")
+                .applicationVersion(params.getAndroidApplicationContext() != null ? getPackageVersion(params.getAndroidApplicationContext()) : "")
+                .clientId(params.getClientId())
+                .isSharedDevice(params.isSharedDevice())
+                .redirectUri(params.getRedirectUri())
+                .oAuth2TokenCache(params.getOAuth2TokenCache())
+                .requiredBrokerProtocolVersion(params.getRequiredBrokerProtocolVersion())
+                .sdkType(SdkType.MSAL)
+                .sdkVersion(params.getSdkVersion())
+                .powerOptCheckEnabled(params.isPowerOptCheckEnabled())
+                .authenticationScheme(params.getAuthenticationScheme())
+                .scopes(new HashSet<>(params.getScopes() !=null ? params.getScopes() : new HashSet<String>()))
+                .authority(params.getAuthority())
+                .correlationId(params.getCorrelationId())
+                .account(params.getAccount())
+                .claimsRequestJson(params.getClaimsRequestJson())
+                .forceRefresh(params.isForceRefresh())
+                .build();
+
         SilentTokenCommand silentTokenCommand = new SilentTokenCommand(parameters,
                 command.getDefaultController(), command.getCallback(), command.getPublicApiId());
         submitSilent(silentTokenCommand);
+    }
+
+    private static String getPackageVersion(@NonNull final Context context) {
+        final String packageName = context.getPackageName();
+        try {
+            final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(packageName, 0);
+            return packageInfo.versionName;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }
