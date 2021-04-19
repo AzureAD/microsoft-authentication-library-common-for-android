@@ -325,11 +325,11 @@ public class LocalMSALController extends BaseController {
             );
         }
         if(parameters instanceof RefreshInTokenCommandParameters) { //refresh_in second call
+            AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             Logger.warn(
                     TAG + methodName,
-                    "Attempting renewal of Access Token because it's refresh-expired. "
+                    "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + accessTokenRecord.getRefreshOn() + ". Regular expiry is at " + accessTokenRecord.getExpiresOn() + "."
             );
-            AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             renewAT(
                     parametersWithScopes,
                     acquireTokenSilentResult,
