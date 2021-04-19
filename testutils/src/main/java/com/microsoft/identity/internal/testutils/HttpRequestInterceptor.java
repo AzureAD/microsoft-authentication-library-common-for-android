@@ -35,11 +35,6 @@ import java.util.Map;
 
 /**
  * Intercepting http requests at runtime when the {@link HttpClient} is shadowed with {@link ShadowHttpClient}.
- *
- * @see MockHttpClient#setInterceptor(HttpRequestInterceptor)
- * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, String)
- * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpClient.HttpMethod)
- * @see MockHttpClient#setInterceptor(HttpRequestInterceptor, HttpClient.HttpMethod, String)
  */
 public interface HttpRequestInterceptor {
 
@@ -55,4 +50,5 @@ public interface HttpRequestInterceptor {
                            @NonNull URL requestUrl,
                            @NonNull Map<String, String> requestHeaders,
                            @Nullable byte[] requestContent) throws IOException;
+
 }

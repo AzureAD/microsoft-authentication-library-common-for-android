@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
@@ -38,8 +39,10 @@ import com.microsoft.identity.common.internal.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -47,6 +50,9 @@ import java.util.concurrent.ConcurrentMap;
  * Convenience class for accessing {@link SharedPreferences}.
  */
 public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
+    public interface Predicate<T> {
+        boolean test(T value);
+    }
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
@@ -156,18 +162,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         }
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
-        mSharedPreferences.registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-            @Override
-            public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                synchronized (cacheLock) {
-                    if (key == null) {
-                        fileCache.evictAll();
-                    } else {
-                        fileCache.remove(key);
-                    }
-                }
-            }
-        });
         mStorageHelper = storageHelper;
     }
 
@@ -268,6 +262,53 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         }
         return entries;
     }
+
+    @Override
+    public final Iterator<Map.Entry<String, String>> getAllFilteredByKey(final @NonNull Predicate<String> keyFilter) {
+        // We're not synchronizing this access, since we're not modifying it here.
+        // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
+        @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+
+        return new Iterator<Map.Entry<String, String>>() {
+            final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
+            Map.Entry<String, String> nextEntry = null;
+
+            @Override
+            public boolean hasNext() {
+                if (nextEntry != null) {
+                    return true;
+                }
+                if (!iterator.hasNext()) {
+                    return false;
+                }
+                do {
+                    Map.Entry<String, String> nextElement = iterator.next();
+                    if (keyFilter.test(nextElement.getKey())) {
+                        if (mStorageHelper != null) {
+                            String decryptedValue = getString(nextElement.getKey());
+                            if (!TextUtils.isEmpty(decryptedValue)) {
+                                nextEntry = new AbstractMap.SimpleEntry<String, String>(nextElement.getKey(), decryptedValue);
+                            }
+                        } else {
+                            nextEntry = nextElement;
+                        }
+                    }
+                } while (nextEntry == null && iterator.hasNext());
+                return nextEntry != null;
+            }
+
+            @Override
+            public Map.Entry<String, String> next() {
+                if (nextEntry == null && !hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                final Map.Entry<String, String> tmp = nextEntry;
+                nextEntry = null;
+                return tmp;
+            }
+        };
+    }
+
 
     @Override
     public final boolean contains(final String key) {

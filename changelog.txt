@@ -1,12 +1,18 @@
-V.Next
+Version 3.3.1
 ----------
+- [MINOR] Enables removeAccount api to remove account records from all environments (#1248)
+- [PATCH] Improved performance of getAccounts() call by reducing number of cache round-trips (#1271)
+- [PATCH] Perf: Use an Iterator over SharedPreferences entries via getAllFilteredByKey() (#1262)
+- [MINOR] Fall back to browser view if we can't open custom tabs. (#1270)
+- [MINOR] Adds plumbing for new API parameters to reach the token endpoint, new response data (#1266)
+- [PATCH] Ensure the default connection service has a single callback instance (#1314)
 
 Version 3.2.0
 ----------
 - [PATCH] Fix interrupt flow when no login hint is provided (#1490)
-- [MINOR] Added logging functionality to track the request status.(#1237)
-- [MINOR] Expand functionality for key store access.
-- [MINOR] Implement an in-memory cache to avoid multiple decryptions of shared preferences
+- [MINOR] Added logging functionality to track the request status (#1237)
+- [MINOR] Expand functionality for key store access (#1231)
+- [MINOR] Implement an in-memory cache to avoid multiple decryptions of shared preferences (#1254)
 - [PATCH] Fixes deprecated NetworkInfo class (#847)
 - [MINOR] Device PoP keys are now generated with attestation flags and expose a certificate chain getter (#1247)
 - [PATCH] Fix MSAL-CPP injecting javascript loop (#1238)
