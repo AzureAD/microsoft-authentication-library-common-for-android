@@ -27,9 +27,11 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
+import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -39,17 +41,22 @@ import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCom
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
+import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,6 +75,113 @@ public class CommandDispatcherTest {
 
     private static final AtomicInteger INTEGER = new AtomicInteger(1);
     private static final String TEST_RESULT_STR = "test_result_str";
+    private static final AcquireTokenResult TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT = getRefreshExpiredTokenResult();
+    private static final AcquireTokenResult TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT = getRefreshUnexpiredTokenResult();
+
+    @Test
+    public void testSubmitSilentShouldRefresh() throws Exception {
+        performRefreshInTest(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT);
+    }
+
+    @Test
+    public void testSubmitSilentShouldNOTRefresh() throws Exception {
+        performRefreshInTest(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT);
+    }
+
+
+    private class CountDownLatchWrapper{
+        CountDownLatch latch1;
+        CountDownLatch latch2;
+
+        CountDownLatchWrapper(){
+            latch1 = new CountDownLatch(1);
+            latch2 = new CountDownLatch(1);
+        }
+
+        public CountDownLatch getCurLatch(){
+            if(latch1.getCount() == 0){
+                if(latch2.getCount() == 0){
+                    return null;
+                }else{
+                    return latch2;
+                }
+            }else{
+                return latch1;
+            }
+        }
+
+        public boolean await() throws InterruptedException {
+            CountDownLatch curLatch = getCurLatch();
+            if(curLatch != null) {
+                curLatch.await();
+                return true;
+            } else{
+                return false;
+            }
+        }
+
+        public boolean countDown() {
+            CountDownLatch curLatch = getCurLatch();
+            if(curLatch!=null) {
+                curLatch.countDown();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+    }
+
+
+    private void performRefreshInTest(final AcquireTokenResult expectedAcquireTokenResult) throws Exception {
+        final CountDownLatch callbackLatch = new CountDownLatch(1);
+        CountDownLatch tryLatch = new CountDownLatch(1);
+        CountDownLatch executeMethodEntranceVerifierLatch = new CountDownLatch(1);
+        final AtomicInteger executionCount = new AtomicInteger(0);
+
+        final SilentTokenCommand silentTokenCommand = new LatchedRefreshInTestCommand(executionCount,
+                expectedAcquireTokenResult,
+                getEmptyTestParams(),
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
+                    @Override
+                    public void onTaskCompleted(final ILocalAuthenticationResult iLocalAuthenticationResult) {
+                        callbackLatch.countDown();
+                        boolean actual = iLocalAuthenticationResult.getAccessTokenRecord().shouldRefresh();
+                        boolean expected = expectedAcquireTokenResult.getLocalAuthenticationResult().getAccessTokenRecord().shouldRefresh();
+                        Assert.assertEquals(expected, actual);
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+
+        };
+
+        FinalizableResultFuture<CommandResult> silentReturningFuture = CommandDispatcher.submitSilentReturningFuture(silentTokenCommand);
+        executeMethodEntranceVerifierLatch.await();
+        tryLatch.countDown();
+        callbackLatch.await();
+        Assert.assertTrue(silentReturningFuture.isDone());
+        Assert.assertEquals(expectedAcquireTokenResult.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
+        Assert.assertEquals(2, executionCount.get());
+        silentReturningFuture.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
+    }
+
 
     @Test
     public void testCanSubmitSilently() throws InterruptedException {
@@ -205,8 +319,8 @@ public class CommandDispatcherTest {
     @Test
     public void testSubmitSilentWithParamMutation() throws Exception {
         final CountDownLatch testLatch = new CountDownLatch(1);
-        CountDownLatch submitLatch = new CountDownLatch(1);
-        CountDownLatch submitLatch1 = new CountDownLatch(1);
+        CountDownLatch testStartLatch = new CountDownLatch(1);
+        CountDownLatch exeutionStartLatch = new CountDownLatch(1);
 
         final TestCommand testCommand = new LatchedTestCommand(
                 getEmptyTestParams(),
@@ -228,20 +342,20 @@ public class CommandDispatcherTest {
                         testLatch.countDown();
                         Assert.assertEquals(TEST_RESULT_STR, s);
                     }
-                }, INTEGER.getAndIncrement(), submitLatch, submitLatch1) {
+                }, INTEGER.getAndIncrement(), testStartLatch, exeutionStartLatch) {
             @Override
             public boolean isEligibleForCaching() {
                 return true;
             }
         };
-        FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
-        submitLatch1.await();
+        FinalizableResultFuture<CommandResult> submitSilentFuture = CommandDispatcher.submitSilentReturningFuture(testCommand);
+        exeutionStartLatch.await();
         testCommand.value = INTEGER.getAndIncrement();
-        submitLatch.countDown();
+        testStartLatch.countDown();
         testLatch.await();
-        Assert.assertTrue(f.isDone());
-        Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
-        f.isCleanedUp();
+        Assert.assertTrue(submitSilentFuture.isDone());
+        Assert.assertEquals(TEST_RESULT_STR, submitSilentFuture.get().getResult());
+        submitSilentFuture.isCleanedUp();
         Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
     }
 
@@ -336,9 +450,9 @@ public class CommandDispatcherTest {
         final int nTasks = 10_000;
         final CountDownLatch latch = new CountDownLatch(nTasks);
         final ConcurrentHashMap<Integer, Future<?>> map = new ConcurrentHashMap<>();
-        for (int i = 0; i < nTasks; i++) {
-            final int j = i;
-            map.put(j, executor.submit(new Runnable() {
+        for (int task = 0; task < nTasks; task++) {
+            final int curTask = task;
+            map.put(curTask, executor.submit(new Runnable() {
             public void run() {
                 try {
                     testSubmitSilentWithParamMutation();
@@ -347,7 +461,7 @@ public class CommandDispatcherTest {
                     ex.compareAndSet(null, t);
                 } finally {
                     latch.countDown();
-                    map.remove(j);
+                    map.remove(curTask);
                 }
             }}));
         }
@@ -422,18 +536,18 @@ public class CommandDispatcherTest {
         final int nTasks = 10_000;
         final CountDownLatch latch = new CountDownLatch(nTasks);
         final ConcurrentHashMap<Integer, String> map = new ConcurrentHashMap<>();
-        for (int i = 0; i < nTasks; i++) {
-            final int j = i;
+        for (int task = 0; task < nTasks; task++) {
+            final int curTask = task;
             executor.submit(new Runnable() {
                 public void run() {
                 try {
-                    map.put(j, "foo");
+                    map.put(curTask, "foo");
                     testSubmitSilentWithParamMutationSameCommand(new Consumer<String>() {
                                                                      @Override
                                                                      public void accept(String s) {
-                                                                         map.remove(j);
+                                                                         map.remove(curTask);
                                                                          if ("FAIL".equals(s)) {
-                                                                             ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + j));
+                                                                             ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + curTask));
                                                                          }
                                                                      }
                                                                  }
@@ -545,66 +659,182 @@ public class CommandDispatcherTest {
         }
     }
 
+    public static class LatchedRefreshInTestCommand extends SilentTokenCommand {
+        final CountDownLatch tryLatch;
+        final CountDownLatch executeMethodEntranceVerifierLatch;
+        final AtomicInteger executionCount;
+        final AcquireTokenResult acquireTokenResult;
+        final int commandId;
+
+        public LatchedRefreshInTestCommand(@NonNull AtomicInteger executionCount,
+                                           @NonNull AcquireTokenResult acquireTokenResult,
+                                           @NonNull final CommandParameters parameters,
+                                  @NonNull final CommandCallback callback,
+                                  final int commandId,
+                                  @NonNull final CountDownLatch tryLatch,
+                                  @NonNull final CountDownLatch executeMethodEntranceVerifierLatch) {
+            super(getEmptySilentTokenParameters(), getTestRefreshInController(acquireTokenResult), callback, "");
+            this.tryLatch = tryLatch;
+            this.executeMethodEntranceVerifierLatch = executeMethodEntranceVerifierLatch;
+            this.executionCount = executionCount;
+            this.acquireTokenResult = acquireTokenResult;
+            this.commandId = commandId;
+        }
+
+        @Override
+        public AcquireTokenResult execute() {
+            AcquireTokenResult result;
+            executeMethodEntranceVerifierLatch.countDown();
+            executionCount.incrementAndGet();
+            try {
+                tryLatch.await();
+                result = getTestRefreshInController(acquireTokenResult).acquireTokenSilent(null);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+
+            return result;
+        }
+
+        @Override
+        public boolean isEligibleForEstsTelemetry() {
+            return false;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || (!(o instanceof TestCommand))) return false;
+            if (!super.equals(o)) return false;
+            LatchedRefreshInTestCommand other = (LatchedRefreshInTestCommand) o;
+            return this.commandId == other.commandId;
+        }
+
+    }
+
     private static BaseController getTestController() {
-        return new BaseController() {
-            @Override
-            public AcquireTokenResult acquireToken(InteractiveTokenCommandParameters request) throws Exception {
-                return null;
-            }
+        return new TestBaseController() {
+        };
+    }
 
+    private static BaseController getTestRefreshInController(final AcquireTokenResult acquireTokenResult) {
+        return new TestBaseController() {
             @Override
-            public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
-
-            }
-
-            @Override
-            public AcquireTokenResult acquireTokenSilent(SilentTokenCommandParameters parameters) throws Exception {
-                return null;
-            }
-
-            @Override
-            public List<ICacheRecord> getAccounts(CommandParameters parameters) throws Exception {
-                return null;
-            }
-
-            @Override
-            public boolean removeAccount(RemoveAccountCommandParameters parameters) throws Exception {
-                return false;
-            }
-
-            @Override
-            public boolean getDeviceMode(CommandParameters parameters) throws Exception {
-                return false;
-            }
-
-            @Override
-            public List<ICacheRecord> getCurrentAccount(CommandParameters parameters) throws Exception {
-                return null;
-            }
-
-            @Override
-            public boolean removeCurrentAccount(RemoveAccountCommandParameters parameters) throws Exception {
-                return false;
-            }
-
-            @Override
-            public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws Exception {
-                return null;
-            }
-
-            @Override
-            public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters parameters) throws Exception {
-                return null;
-            }
-
-            @Override
-            public GenerateShrResult generateSignedHttpRequest(GenerateShrCommandParameters parameters) throws Exception {
-                return null;
+            public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
+                return acquireTokenResult;
             }
         };
     }
 
+    private static AcquireTokenResult getRefreshExpiredTokenResult(){
+        final AccessTokenRecord accessTokenRecord = getRefreshExpiredAccessTokenRecord();
+        return getRefreshTokenResult(accessTokenRecord);
+    }
+
+    private static AccessTokenRecord getRefreshExpiredAccessTokenRecord(){
+        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
+        accessTokenRecord.setExpiresOn(String.valueOf(Integer.MAX_VALUE));
+        accessTokenRecord.setRefreshOn("0");
+        return accessTokenRecord;
+    }
+
+    private static AcquireTokenResult getRefreshUnexpiredTokenResult(){
+        final AccessTokenRecord accessTokenRecord = getRefreshUnexpiredAccessTokenRecord();
+        return getRefreshTokenResult(accessTokenRecord);
+    }
+
+    private static AcquireTokenResult getRefreshTokenResult(final AccessTokenRecord accessTokenRecord){
+        final CacheRecord.CacheRecordBuilder recordBuilder = CacheRecord.builder().mAccessToken(accessTokenRecord);
+        final List<ICacheRecord> cacheRecordList = new ArrayList<>();
+        final ICacheRecord cacheRecord = recordBuilder.build();
+        cacheRecordList.add(cacheRecord);
+        final ILocalAuthenticationResult localAuthenticationResult = new LocalAuthenticationResult(
+                cacheRecord,
+                cacheRecordList,
+                SdkType.MSAL,
+                false
+        );
+
+        final AcquireTokenResult tokenResult = new AcquireTokenResult();
+        tokenResult.setLocalAuthenticationResult(localAuthenticationResult);
+        return tokenResult;
+    }
+
+    private static AccessTokenRecord getRefreshUnexpiredAccessTokenRecord(){
+        final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
+        accessTokenRecord.setExpiresOn(String.valueOf(Integer.MAX_VALUE));
+        accessTokenRecord.setRefreshOn(String.valueOf(Integer.MAX_VALUE/2));
+        return accessTokenRecord;
+    }
+
+    private abstract static class TestBaseController extends BaseController {
+
+        @Override
+        public AcquireTokenResult acquireToken(InteractiveTokenCommandParameters request) throws Exception {
+            return null;
+        }
+
+        @Override
+        public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
+
+        }
+
+        @Override
+        public AcquireTokenResult acquireTokenSilent(SilentTokenCommandParameters parameters) throws Exception {
+            return null;
+        }
+
+        @Override
+        public List<ICacheRecord> getAccounts(CommandParameters parameters) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean removeAccount(RemoveAccountCommandParameters parameters) throws Exception {
+            return false;
+        }
+
+        @Override
+        public boolean getDeviceMode(CommandParameters parameters) throws Exception {
+            return false;
+        }
+
+        @Override
+        public List<ICacheRecord> getCurrentAccount(CommandParameters parameters) throws Exception {
+            return null;
+        }
+
+        @Override
+        public boolean removeCurrentAccount(RemoveAccountCommandParameters parameters) throws Exception {
+            return false;
+        }
+
+        @Override
+        public AuthorizationResult deviceCodeFlowAuthRequest(DeviceCodeFlowCommandParameters parameters) throws Exception {
+            return null;
+        }
+
+        @Override
+        public AcquireTokenResult acquireDeviceCodeFlowToken(AuthorizationResult authorizationResult, DeviceCodeFlowCommandParameters parameters) throws Exception {
+            return null;
+        }
+
+        @Override
+        public GenerateShrResult generateSignedHttpRequest(GenerateShrCommandParameters parameters) throws Exception {
+            return null;
+        }
+
+    }
+
     private static CommandParameters getEmptyTestParams() {
         return CommandParameters.builder().build();
+    }
+
+    private static SilentTokenCommandParameters getEmptySilentTokenParameters(){
+        return SilentTokenCommandParameters.builder().build();
     }
 }
