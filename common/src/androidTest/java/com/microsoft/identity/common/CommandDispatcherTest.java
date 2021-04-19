@@ -98,7 +98,7 @@ public class CommandDispatcherTest {
             latch2 = new CountDownLatch(1);
         }
 
-        public CountDownLatch getCurLatch(){
+        private CountDownLatch getCurLatch(){
             if(latch1.getCount() == 0){
                 if(latch2.getCount() == 0){
                     return null;
@@ -134,9 +134,9 @@ public class CommandDispatcherTest {
 
 
     private void performRefreshInTest(final AcquireTokenResult expectedAcquireTokenResult) throws Exception {
-        final CountDownLatch callbackLatch = new CountDownLatch(1);
-        CountDownLatch tryLatch = new CountDownLatch(1);
-        CountDownLatch executeMethodEntranceVerifierLatch = new CountDownLatch(1);
+        final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper executeMethodEntranceVerifierLatch = new CountDownLatchWrapper();
         final AtomicInteger executionCount = new AtomicInteger(0);
 
         final SilentTokenCommand silentTokenCommand = new LatchedRefreshInTestCommand(executionCount,
@@ -660,8 +660,8 @@ public class CommandDispatcherTest {
     }
 
     public static class LatchedRefreshInTestCommand extends SilentTokenCommand {
-        final CountDownLatch tryLatch;
-        final CountDownLatch executeMethodEntranceVerifierLatch;
+        final CountDownLatchWrapper tryLatch;
+        final CountDownLatchWrapper executeMethodEntranceVerifierLatch;
         final AtomicInteger executionCount;
         final AcquireTokenResult acquireTokenResult;
         final int commandId;
@@ -671,8 +671,8 @@ public class CommandDispatcherTest {
                                            @NonNull final CommandParameters parameters,
                                   @NonNull final CommandCallback callback,
                                   final int commandId,
-                                  @NonNull final CountDownLatch tryLatch,
-                                  @NonNull final CountDownLatch executeMethodEntranceVerifierLatch) {
+                                  @NonNull final CountDownLatchWrapper tryLatch,
+                                  @NonNull final CountDownLatchWrapper executeMethodEntranceVerifierLatch) {
             super(getEmptySilentTokenParameters(), getTestRefreshInController(acquireTokenResult), callback, "");
             this.tryLatch = tryLatch;
             this.executeMethodEntranceVerifierLatch = executeMethodEntranceVerifierLatch;
