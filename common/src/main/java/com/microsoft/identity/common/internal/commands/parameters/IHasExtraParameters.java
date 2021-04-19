@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import androidx.annotation.Nullable;
 
-import java.util.List;
 import java.util.Map;
 
 /**

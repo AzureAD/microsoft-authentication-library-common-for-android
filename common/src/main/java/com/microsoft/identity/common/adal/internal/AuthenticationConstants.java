@@ -22,14 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import androidx.annotation.VisibleForTesting;
+
+import com.microsoft.identity.common.internal.logging.Logger;
+
+import java.nio.charset.Charset;
+
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 /**
  * {@link AuthenticationConstants} contains all the constant value the SDK is using.
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class AuthenticationConstants {
+    /**
+     * The logging tag for this class.
+     */
+    private static final String TAG =  AuthenticationConstants.class.getSimpleName();
+
     /**
      * ADAL package name.
      */
@@ -46,6 +60,16 @@ public final class AuthenticationConstants {
     public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
+     * The Constant CHARSET_UTF8.
+     */
+    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+
+    /**
+     * The Constant CHARSET_ASCII.
+     */
+    public static final Charset CHARSET_ASCII = Charset.forName("ASCII");
+
+    /**
      * Bundle message.
      */
     public static final String BUNDLE_MESSAGE = "Message";
@@ -54,6 +78,18 @@ public final class AuthenticationConstants {
      * Default access token expiration time in seconds.
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
+
+    /**
+     * The constant label for SP800-108.
+     */
+    public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
+
+    /**
+     * A constant for PMD to be happy with.
+     */
+    public static final String ONE_POINT_ZERO = "1.0";
+    public static final String TWO_POINT_ZERO = "2.0";
+
 
     /**
      * Holding all the constant value involved in the webview.
@@ -257,12 +293,12 @@ public final class AuthenticationConstants {
         /**
          * Constant for  v1 endpoint
          */
-        public static final String AAD_VERSION_V1 = "1.0";
+        public static final String AAD_VERSION_V1 = ONE_POINT_ZERO;
 
         /**
          * Constsnt for v2 endpoint
          */
-        public static final String AAD_VERSION_V2 = "2.0";
+        public static final String AAD_VERSION_V2 = TWO_POINT_ZERO;
 
         /**
          * String of preferred user name.
@@ -650,7 +686,28 @@ public final class AuthenticationConstants {
         /**
          * The newest Msal-To-Broker protocol version.
          */
-        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = "6.0";
+        public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
+
+        @VisibleForTesting
+        public static String computeMaxMsalBrokerProtocol() {
+            String stringVersion = BrokerContentProvider.BROKER_VERSION_1;
+            float protocolVersion = 1.0f;
+            for (final BrokerContentProvider.API api : BrokerContentProvider.API.values()) {
+                final String version = api.getMsalVersion();
+                if (version != null) {
+                    try {
+                        final float candVersion = Float.parseFloat(version);
+                        if (candVersion > protocolVersion) {
+                            protocolVersion = candVersion;
+                            stringVersion = version;
+                        }
+                    } catch (final NumberFormatException nfe) {
+                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
+                    }
+                }
+            }
+            return stringVersion;
+        }
 
         /**
          * The BrokerAPI-To-Broker protocol name.
@@ -660,7 +717,28 @@ public final class AuthenticationConstants {
         /**
          * The newest BrokerAPI-To-Broker protocol version.
          */
-        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = "1.0";
+        public static final String BROKER_API_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxHostBrokerProtocol();
+
+        @VisibleForTesting
+        public static String computeMaxHostBrokerProtocol() {
+            String stringVersion = BrokerContentProvider.VERSION_1;
+            float protocolVersion = 1.0f;
+            for (final BrokerContentProvider.API api : BrokerContentProvider.API.values()) {
+                final String version = api.getBrokerVersion();
+                if (version != null) {
+                    try {
+                        final float candVersion = Float.parseFloat(version);
+                        if (candVersion > protocolVersion) {
+                            protocolVersion = candVersion;
+                            stringVersion = version;
+                        }
+                    } catch (final NumberFormatException nfe) {
+                        Logger.error(TAG + ":<static initialization>", "Invalid value for protocol version", nfe);
+                    }
+                }
+            }
+            return stringVersion;
+        }
 
         /**
          * The key of maximum broker protocol version that client advertised.
@@ -812,6 +890,11 @@ public final class AuthenticationConstants {
          * String of multi resource refresh token.
          */
         public static final String MULTI_RESOURCE_TOKEN = "account.multi.resource.token";
+
+        /**
+         * String of key for account name.
+         */
+        public static final String FLIGHT_INFO = "com.microsoft.identity.broker.flights";
 
         /**
          * String of key for account name.
@@ -1043,7 +1126,7 @@ public final class AuthenticationConstants {
         /**
          * Value of supported pkeyauth version.
          */
-        public static final String CHALLENGE_TLS_INCAPABLE_VERSION = "1.0";
+        public static final String CHALLENGE_TLS_INCAPABLE_VERSION = ONE_POINT_ZERO;
 
         /**
          * Broker redirect prefix.
@@ -1246,6 +1329,16 @@ public final class AuthenticationConstants {
         public static final String UPDATE_BROKER_RT_SUCCEEDED = "update_broker_rt_succeeded";
 
         /**
+         * Boolean to return when a Broker RT is successfully updated.
+         */
+        public static final String SET_FLIGHTS_SUCCEEDED = "set_flights_succeeded";
+
+        /**
+         * All of the active flights.
+         */
+        public static final String GET_FLIGHTS_RESULT = "active_flights";
+
+        /**
          * Time out for the AccountManager's remove account operation in broker.
          */
         public static final int ACCOUNT_MANAGER_REMOVE_ACCOUNT_TIMEOUT_IN_MILLISECONDS = 5000;
@@ -1361,6 +1454,57 @@ public final class AuthenticationConstants {
          */
         public static final String AUTHORITY = "microsoft.identity.broker";
 
+        private static final String VERSION_1 = ONE_POINT_ZERO;
+        private static final String VERSION_3 = "3.0";
+        private static final String VERSION_6 = "6.0";
+        private static final String VERSION_7 = "7.0";
+        private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
+        private static final String BROKER_VERSION_2 = TWO_POINT_ZERO;
+
+        /**
+         * Tie the API paths and codes into a single object structure to stop us from having to keep
+         * them in sync.  This is designed to pull all the parts of the API definition into a single
+         * place, so that we only need to make updates in one location, and it's clearer what we need
+         * to do when adding new APIs.
+         *
+         *
+         */
+        @Getter
+        @Accessors(prefix = "m")
+        @AllArgsConstructor
+        public enum API {
+            MSAL_HELLO(MSAL_HELLO_PATH, null, VERSION_3),
+            ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
+            ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
+            GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
+            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, null, VERSION_3),
+            GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
+            GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, null, VERSION_3),
+            SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_3),
+            GENERATE_SHR(GENERATE_SHR_PATH, null, VERSION_6),
+            BROKER_HELLO(BROKER_API_HELLO_PATH, BROKER_VERSION_1, null),
+            BROKER_GET_ACCOUNTS(BROKER_API_GET_BROKER_ACCOUNTS_PATH, BROKER_VERSION_1, null),
+            BROKER_REMOVE_ACCOUNT(BROKER_API_REMOVE_BROKER_ACCOUNT_PATH, BROKER_VERSION_1, null),
+            BROKER_UPDATE_BRT(BROKER_API_UPDATE_BRT_PATH, BROKER_VERSION_1, null),
+            BROKER_ADD_FLIGHTS(BROKER_API_ADD_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            BROKER_SET_FLIGHTS(BROKER_API_SET_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
+            GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
+            UNKNOWN(null, null, null)
+                ;
+            /**
+             * The content provider path that the API exists behind.
+             */
+            private String mPath;
+            /**
+             * The broker-host-to-broker protocol version that the API requires.
+             */
+            private String mBrokerVersion;
+            /**
+             * The msal-to-broker version that the API requires.
+             */
+            private String mMsalVersion;
+        }
         /**
          * URI Path constant for MSAL-to-Broker hello request using ContentProvider.
          */
@@ -1427,6 +1571,26 @@ public final class AuthenticationConstants {
         public static final String BROKER_API_UPDATE_BRT_PATH = "/brokerApi/updateBrt";
 
         /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String BROKER_API_ADD_FLIGHTS_PATH = "/brokerApi/addFlights";
+
+        /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String BROKER_API_GET_FLIGHTS_PATH = "/brokerApi/getFlights";
+
+        /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String BROKER_API_SET_FLIGHTS_PATH = "/brokerApi/setFlights";
+
+        /**
+         * Broker api path constant for adding flight information.
+         */
+        public static final String GET_SSO_TOKEN_PATH = "/ssoToken";
+
+        /**
          * BrokerContentProvider URI code constant for MSAL-to-Broker hello request.
          */
         public static final int MSAL_HELLO_URI_CODE = 1;
@@ -1490,6 +1654,7 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
          */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
+
     }
 
     public static final class AuthorizationIntentKey {

@@ -41,6 +41,7 @@ public class RawKeyAccessorTest {
     }
 
     public RawKeyAccessor getAccessor() throws UnsupportedEncodingException {
+
         return new RawKeyAccessor(new CryptoSuite() {
             @Override
             public SymmetricAlgorithm cipher() {
@@ -71,7 +72,7 @@ public class RawKeyAccessorTest {
             public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
                 return null;
             }
-        }, "12345678123456781234567812345678".getBytes("UTF-8"));
+        }, "12345678123456781234567812345678".getBytes("UTF-8"), null);
     }
 
     @Test

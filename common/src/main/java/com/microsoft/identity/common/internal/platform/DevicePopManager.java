@@ -38,9 +38,9 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -240,12 +240,16 @@ class DevicePopManager implements IDevicePopManager {
         this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
+    @Override
+    public IKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+        return mKeyManager;
+    }
+
     DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        String keyAlias = alias;
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
-        mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(keyAlias)
+        mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
                                                    .keyStore(instance)
                                                    .thumbprintSupplier(new Supplier<byte[]>() {
                                                        @SneakyThrows(ClientException.class)

@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
 
-import java.net.URL;
 import java.util.HashMap;
 
 /**

@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.exception.ClientException;
 
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
@@ -33,7 +34,7 @@ import java.security.UnrecoverableEntryException;
  * An accessor for asymmetric keys.  The main differnce between this an a KeyAccessor is that
  * this accessor allows for retrieval of the public key of the key pair.
  */
-public interface AsymmetricKeyAccessor extends KeyAccessor {
+public interface AsymmetricKeyAccessor extends IManagedKeyAccessor<KeyStore.PrivateKeyEntry> {
     /**
      * Return a public key in the specified format.
      * @param format a format according to {@link IDevicePopManager.PublicKeyFormat}.
