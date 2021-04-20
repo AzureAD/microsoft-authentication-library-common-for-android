@@ -20,7 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.logging;
+package com.microsoft.identity.common.java.util;
 
-public class RequestContext extends com.microsoft.identity.common.java.logging.RequestContext {
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
+public class ThrowableUtil {
+    public static synchronized String getStackTraceAsString(Throwable throwable) {
+        final StringWriter sw = new StringWriter();
+        sw.flush();
+        final PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return pw.toString();
+    }
 }

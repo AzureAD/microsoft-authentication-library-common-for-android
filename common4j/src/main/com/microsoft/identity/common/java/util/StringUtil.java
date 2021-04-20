@@ -20,7 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.logging;
+package com.microsoft.identity.common.java.util;
 
-public class RequestContext extends com.microsoft.identity.common.java.logging.RequestContext {
+public class StringUtil {
+    public static boolean isNullOrEmpty(String message) {
+        return message == null || message.trim().length() == 0;
+    }
 }
