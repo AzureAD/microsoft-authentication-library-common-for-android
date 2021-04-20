@@ -42,6 +42,9 @@ import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -907,9 +910,15 @@ public class CommandDispatcherTest {
     }
 
     private static AcquireTokenResult getRefreshTokenResult(final AccessTokenRecord accessTokenRecord) {
-        final CacheRecord.CacheRecordBuilder recordBuilder = CacheRecord.builder().mAccessToken(accessTokenRecord);
+        final CacheRecord.CacheRecordBuilder recordBuilder = CacheRecord.builder().accessToken(accessTokenRecord);
         final List<ICacheRecord> cacheRecordList = new ArrayList<>();
-        final ICacheRecord cacheRecord = recordBuilder.build();
+        final ICacheRecord cacheRecord = recordBuilder
+                .account(new AccountRecord())
+                .accessToken(accessTokenRecord)
+                .refreshToken(new RefreshTokenRecord())
+                .idToken(new IdTokenRecord())
+                .v1IdToken(new IdTokenRecord())
+                .build();
         cacheRecordList.add(cacheRecord);
         final ILocalAuthenticationResult localAuthenticationResult = new LocalAuthenticationResult(
                 cacheRecord,
