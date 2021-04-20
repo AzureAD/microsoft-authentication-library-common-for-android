@@ -880,7 +880,7 @@ public class CommandDispatcherTest {
         return new TestBaseController() {
             @Override
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
-                if (parameters.isRefreshIn()) {
+                if (parameters.isRefreshDueToRefreshIn()) {
                     return acquireTokenResultWrapper.subsequentResult;
                 } else {
                     return acquireTokenResultWrapper.initialResult;
