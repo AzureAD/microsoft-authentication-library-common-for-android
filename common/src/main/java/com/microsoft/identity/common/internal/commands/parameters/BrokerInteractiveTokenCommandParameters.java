@@ -28,7 +28,8 @@ import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.BrokerRequestType;
-import com.microsoft.identity.common.internal.request.SdkType;
+
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +38,8 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
-public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters {
+public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCommandParameters
+          implements IHasExtraParameters {
 
     private final String callerPackageName;
     private final int callerUid;
@@ -47,6 +49,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final boolean shouldResolveInterrupt;
     private final BrokerRequestType requestType;
     private final String negotiatedBrokerProtocolVersion;
+    private final Iterable<Map.Entry<String, String>> extraParameters;
 
     private final String enrollmentId;
 
@@ -114,5 +117,10 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                 );
             }
         }
+    }
+
+    @Override
+    public void setExtraParameters(Iterable<Map.Entry<String, String>> params) {
+        throw new UnsupportedOperationException();
     }
 }

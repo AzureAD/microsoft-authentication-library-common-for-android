@@ -37,11 +37,11 @@ import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.Seria
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.AUTHORITY;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.EXTENDED_EXPIRES_ON;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.KID;
-import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REALM;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
+import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REQUESTED_CLAIMS;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TARGET;
 import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.TOKEN_TYPE;
-import static com.microsoft.identity.common.internal.dto.AccessTokenRecord.SerializedNames.REFRESH_ON;
 import static com.microsoft.identity.common.internal.dto.Credential.SerializedNames.EXPIRES_ON;
 
 @EqualsAndHashCode(callSuper = true)

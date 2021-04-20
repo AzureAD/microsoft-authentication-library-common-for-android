@@ -28,7 +28,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;

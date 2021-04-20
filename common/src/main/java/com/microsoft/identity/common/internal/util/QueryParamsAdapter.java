@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import android.text.TextUtils;
 import android.util.Pair;
 
 import com.google.gson.Gson;
@@ -84,6 +85,9 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     public static List<Pair<String, String>> _fromJson(final String jsonString) {
+        if (TextUtils.isEmpty(jsonString)) {
+            return new ArrayList<>();
+        }
         final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
         return mGson.fromJson(jsonString, listType);
     }

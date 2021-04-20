@@ -32,7 +32,7 @@ import android.webkit.ClientCertRequest;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.security.Principal;
 import java.security.PrivateKey;

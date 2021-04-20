@@ -57,7 +57,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding First Account..");
         // Click start btn
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_splash_start");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_add_account");
 
         // sign in with supplied username/password
         signIn(username, password, promptHandlerParameters);

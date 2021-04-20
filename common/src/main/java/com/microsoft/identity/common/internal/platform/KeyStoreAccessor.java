@@ -31,8 +31,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -112,6 +112,11 @@ public class KeyStoreAccessor {
         return new AsymmetricKeyAccessor() {
 
             @Override
+            public IKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+                return popManager.getKeyManager();
+            }
+
+            @Override
             public String getPublicKey(IDevicePopManager.PublicKeyFormat format) throws ClientException {
                 return popManager.getPublicKey(format);
             }
@@ -154,6 +159,11 @@ public class KeyStoreAccessor {
             @Override
             public SecureHardwareState getSecureHardwareState() throws ClientException {
                 return popManager.getSecureHardwareState();
+            }
+
+            @Override
+            public KeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+                throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
             }
         };
     }
@@ -246,7 +256,10 @@ public class KeyStoreAccessor {
             KeyGenerator generator = KeyGenerator.getInstance("AES");
             generator.init(cipher.mKeySize);
             byte[] key = generator.generateKey().getEncoded();
-            return new RawKeyAccessor(cipher, key);
+            return RawKeyAccessor.builder()
+                    .suite(cipher)
+                    .key(key)
+                    .alias(alias).build();
         }
     }
 

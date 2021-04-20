@@ -32,15 +32,14 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 
 import java.net.URL;
-import java.security.AlgorithmParameters;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.MGF1ParameterSpec;
-import java.security.cert.Certificate;
 import java.util.Date;
 
 import javax.crypto.spec.OAEPParameterSpec;
@@ -460,4 +459,12 @@ public interface IDevicePopManager {
                                  String nonce,
                                  String clientClaims
     ) throws ClientException;
+
+
+    /**
+     * Get the key manager that this device pop manager uses for key provisioning and
+     * management.  This is exposed mainly in order to allow uses beyond POP.
+     * @return the key manager that backs this DevicePopManager.
+     */
+    IKeyManager<KeyStore.PrivateKeyEntry> getKeyManager();
 }
