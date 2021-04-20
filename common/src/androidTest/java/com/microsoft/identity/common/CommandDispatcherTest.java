@@ -111,7 +111,7 @@ public class CommandDispatcherTest {
                         Assert.fail();
                     }
 
-                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+                }, 3, tryLatch, executeMethodEntranceVerifierLatch) {
             @Override
             public boolean isEligibleForCaching() {
                 return true;
@@ -173,7 +173,7 @@ public class CommandDispatcherTest {
                         Assert.fail();
                     }
 
-                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+                }, 5, tryLatch, executeMethodEntranceVerifierLatch) {
             @Override
             public boolean isEligibleForCaching() {
                 return true;
@@ -231,7 +231,7 @@ public class CommandDispatcherTest {
                         }
                     }
 
-                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+                }, 7, tryLatch, executeMethodEntranceVerifierLatch) {
             @Override
             public boolean isEligibleForCaching() {
                 return true;
