@@ -223,7 +223,7 @@ public final class PackageUtils {
             throws ClientException {
         try {
             // Read all the certificates associated with the package name. In higher version of
-            // android sdk, package manager will only returned the cert that is used to sign the
+            // android sdk(>API 28), package manager will only returned the cert that is used to sign the
             // APK. Even a cert is claimed to be issued by another certificates, sdk will return
             // the signing cert. However, for the lower version of android, it will return all the
             // certs in the chain. We need to verify that the cert chain is correctly chained up.
