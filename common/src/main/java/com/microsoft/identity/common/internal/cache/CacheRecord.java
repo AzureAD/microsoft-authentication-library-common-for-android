@@ -30,13 +30,17 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.Value;
+import lombok.experimental.Accessors;
 
 @Value
 @Builder
+@Accessors(prefix = "m")
+@Getter
 public class CacheRecord implements ICacheRecord {
 
+    @lombok.NonNull
     private final AccountRecord mAccount;
     private final AccessTokenRecord mAccessToken;
     private final RefreshTokenRecord mRefreshToken;
@@ -44,37 +48,16 @@ public class CacheRecord implements ICacheRecord {
     private final IdTokenRecord mV1IdToken;
 
     public static class CacheRecordBuilder {
+        @Deprecated
         public CacheRecordBuilder mAccount(final @NonNull AccountRecord account) {
             if (account == null) {
                 throw new NullPointerException("The account record for a CacheRecord may not be null");
             }
-            this.mAccount = account;
+            this.account = account;
             return this;
         }
     }
 
-    @Override
-    public AccountRecord getAccount() { return mAccount; }
-
-    @Override
-    public AccessTokenRecord getAccessToken() {
-        return mAccessToken;
-    }
-
-    @Override
-    public RefreshTokenRecord getRefreshToken() {
-        return mRefreshToken;
-    }
-
-    @Override
-    public IdTokenRecord getIdToken() {
-        return mIdToken;
-    }
-
-    @Override
-    public IdTokenRecord getV1IdToken() {
-        return mV1IdToken;
-    }
 
     //CHECKSTYLE:OFF
     // This method is generated. Checkstyle and/or PMD has been disabled.

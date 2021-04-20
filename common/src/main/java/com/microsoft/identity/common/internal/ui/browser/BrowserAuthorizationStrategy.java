@@ -34,17 +34,15 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.logging.Logger;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -81,10 +79,11 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
             throws ClientException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
+        final Context context = getApplicationContext();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
         mAuthorizationResultFuture = new ResultFuture<>();
-        final Browser browser = BrowserSelector.select(getApplicationContext(), mBrowserSafeList);
+        final Browser browser = BrowserSelector.select(context, mBrowserSafeList);
 
         //ClientException will be thrown if no browser found.
         Intent authIntent;
@@ -94,9 +93,13 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                     "CustomTabsService is supported."
             );
             //create customTabsIntent
-            mCustomTabManager = new CustomTabsManager(getApplicationContext());
-            mCustomTabManager.bind(browser.getPackageName());
-            authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+            mCustomTabManager = new CustomTabsManager(context);
+            if (!mCustomTabManager.bind(context, browser.getPackageName())) {
+                //create browser auth intent
+                authIntent = new Intent(Intent.ACTION_VIEW);
+            } else {
+                authIntent = mCustomTabManager.getCustomTabsIntent().intent;
+            }
         } else {
             Logger.warn(
                     TAG + methodName,

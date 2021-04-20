@@ -31,7 +31,7 @@ import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.internal.ui.webview.ProcessUtil.AuthServiceProcess;
 

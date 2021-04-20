@@ -26,10 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.internal.platform.CryptoSuite;
-
 import java.security.KeyStore;
-import java.security.PublicKey;
 
 /**
  * Definitions for Asymmetric Crypto suites.

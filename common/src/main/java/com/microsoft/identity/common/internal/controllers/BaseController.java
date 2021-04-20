@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTo
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -55,8 +56,7 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
@@ -80,6 +80,7 @@ import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -260,7 +261,7 @@ public abstract class BaseController {
         return builder.build();
     }
 
-    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+   protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                               @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
                                               @NonNull final InteractiveTokenCommandParameters parameters)
@@ -281,6 +282,10 @@ public abstract class BaseController {
         if (tokenRequest instanceof MicrosoftTokenRequest) {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppName(parameters.getApplicationName());
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
+        }
+
+        if (tokenRequest instanceof IHasExtraParameters && parameters instanceof IHasExtraParameters) {
+            ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters)parameters).getExtraParameters());
         }
 
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
