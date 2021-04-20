@@ -323,7 +323,8 @@ public class LocalMSALController extends BaseController {
                     "RefreshIn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if (parameters.isRefreshDueToRefreshIn()) { //refresh_in second call
+        if (parameters.isRefreshDueToRefreshIn()) {
+            //Note that parameters.isRefreshDueToRefreshIn() == true is always the result of a subsequent silentCall, meaning after the regular/initial silentCall that is normally triggered by user
             AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             Logger.warn(
                     TAG + methodName,
