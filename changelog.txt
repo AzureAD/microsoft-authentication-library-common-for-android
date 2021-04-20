@@ -10,6 +10,7 @@ V.Next
 - [MINOR] Automate broker protocol version computation. (#1301)
 - [MAJOR] New API on KeyAccessor (#1309)
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
+- [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 
 Version 3.3.1
 ----------
