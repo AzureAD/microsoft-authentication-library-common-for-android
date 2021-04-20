@@ -708,7 +708,7 @@ public class CommandDispatcher {
                         + " resulted in a REFRESH and initiated a RefreshCommand with CorrelationId: "
                         + params.getCorrelationId()
         );
-        SilentTokenCommand refreshCommand = new SilentTokenCommand(params, command.getDefaultController(), command.getCallback(), command.getPublicApiId());
+        final SilentTokenCommand refreshCommand = new SilentTokenCommand(params, command.getDefaultController(), command.getCallback(), command.getPublicApiId());
         submitSilent(refreshCommand);
     }
 
