@@ -28,6 +28,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.util.PackageUtils;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -120,7 +121,11 @@ public class BrokerData {
 
         // Verify the signature to make sure that we're not binding to malicious apps.
         final BrokerValidator validator = new BrokerValidator(context);
-        return new BrokerData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
+        return new BrokerData(
+                brokerPackageName,
+                PackageUtils.signatureVerificationAndThrow(brokerPackageName,
+                        context,
+                        validator.getValidBrokerSignatures()));
     }
 
     public static Set<BrokerData> getProdBrokers() {

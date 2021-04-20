@@ -211,6 +211,10 @@ public final class PackageUtils {
 
     /**
      * A generalized API to perform signature validations on mentioned package.
+     * Verifies that the installed package's signing certificate hash matches the known
+     * release certificate hash.
+     * <p>
+     * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
      *
      * @param packageName   a {link List} of certificates to examine.
      * @param context   the android context to use to search.
