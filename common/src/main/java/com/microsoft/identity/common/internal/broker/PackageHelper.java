@@ -30,11 +30,14 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
+import android.os.Build;
 import android.util.Base64;
+
+import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -64,16 +67,12 @@ public class PackageHelper {
      * @param packageName name of the package for which signature should be returned
      * @return signature for package
      */
-    @SuppressLint("PackageManagerGetSignatures")
-    @SuppressWarnings("deprecation")
     public String getCurrentSignatureForPackage(final String packageName) {
         try {
-            //GET_SIGNATURES is deprecated
-            PackageInfo info = mPackageManager.getPackageInfo(packageName,
-                    PackageManager.GET_SIGNATURES);
-            //.signatures is deprecated
-            if (info != null && info.signatures != null && info.signatures.length > 0) {
-                Signature signature = info.signatures[0];
+            final PackageInfo info = getPackageInfo(mPackageManager, packageName);
+            final Signature [] signatures = getSignatures(info);
+            if (signatures != null && signatures.length > 0) {
+                final Signature signature = signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
@@ -159,5 +158,46 @@ public class PackageHelper {
             }
         }
         return "";
+    }
+
+    /**
+     * Helper method to get signatures in a back-compatible way
+     *
+     * @param packageInfo A packageInfo instance with the flag PackageManager.GET_SIGNING_CERTIFICATES/PackageManager.GET_SIGNATURES set
+     * @return Signature[] or null
+     */
+    public static Signature[] getSignatures(final PackageInfo packageInfo) {
+        if (packageInfo == null) {
+            return null;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            if (packageInfo.signingInfo == null) {
+                return null;
+            }
+            if (packageInfo.signingInfo.hasMultipleSigners()) {
+                return packageInfo.signingInfo.getApkContentsSigners();
+            } else {
+                return packageInfo.signingInfo.getSigningCertificateHistory();
+            }
+        }
+
+        return packageInfo.signatures;
+    }
+
+    public static int getPackageManagerSignaturesFlag() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            return PackageManager.GET_SIGNING_CERTIFICATES;
+        }
+
+        return PackageManager.GET_SIGNATURES;
+    }
+
+    public static PackageInfo getPackageInfo(@NonNull PackageManager packageManager, @NonNull String packageName) throws PackageManager.NameNotFoundException {
+        return packageManager.getPackageInfo(packageName, getPackageManagerSignaturesFlag());
+    }
+
+    public static Signature[] getSignatures(@NonNull Context context) throws PackageManager.NameNotFoundException {
+        return getSignatures(getPackageInfo(context.getPackageManager(), context.getPackageName()));
     }
 }

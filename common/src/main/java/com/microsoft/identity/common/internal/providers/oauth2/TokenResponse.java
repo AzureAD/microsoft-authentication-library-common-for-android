@@ -22,8 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Map;
 
 /**
  * This is the class encapsulating the details of the TokenResponse (oAuth2/OIDC).
@@ -34,6 +38,7 @@ import com.google.gson.annotations.SerializedName;
  * TODO: make the request object part of this response class
  *       (so that the caller does NOT have to persist the request object even after the request is made).
  */
+
 public class TokenResponse implements ISuccessResponse {
 
     /**
@@ -124,12 +129,34 @@ public class TokenResponse implements ISuccessResponse {
     @SerializedName("id_token")
     private String mIdToken;
 
+    private transient String mTokenAuthority;
+
+    /**
+     * Get the authority that issued this token.
+     * @return the authority that issued this token.
+     */
+    public String getAuthority() {
+        return mTokenAuthority;
+    }
+
+    /**
+     * Set the authority that issued this token.
+     * @param tokenAuthority the authority that issued this token.
+     */
+    public void setAuthority(final String tokenAuthority) {
+        mTokenAuthority = tokenAuthority;
+    }
 
     /**
      * A long representing the time at which the response was received in milliseconds since the Unix Epoch.
      */
     @Expose()
     private long mResponseReceivedTime;
+
+    /**
+     * Any extra parameters that may have shown up on the response.
+     */
+    private transient Iterable<Map.Entry<String, String>> mExtraParameters;
 
     /**
      * Gets the response expires_in.
@@ -312,4 +339,15 @@ public class TokenResponse implements ISuccessResponse {
                 '}';
     }
     //CHECKSTYLE:ON
+
+    @Nullable
+    @Override
+    public synchronized Iterable<Map.Entry<String, String>> getExtraParameters() {
+        return mExtraParameters;
+    }
+
+    @Override
+    public synchronized void setExtraParameters(final Iterable<Map.Entry<String, String>> params) {
+        mExtraParameters = params;
+    }
 }

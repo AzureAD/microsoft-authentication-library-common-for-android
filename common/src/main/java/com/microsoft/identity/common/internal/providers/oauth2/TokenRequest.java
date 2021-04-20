@@ -26,6 +26,9 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
+
+import java.util.Map;
 
 /**
  * A class holding the state of the Token Request (oAuth2).
@@ -38,7 +41,7 @@ import com.google.gson.annotations.SerializedName;
  * https://tools.ietf.org/html/rfc7521
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-v2-protocols-oauth-client-creds
  */
-public class TokenRequest {
+public class TokenRequest implements IHasExtraParameters {
 
     @Expose()
     @SerializedName("grant_type")
@@ -85,6 +88,18 @@ public class TokenRequest {
 
     public void setRequestConfirmation(@Nullable final String requestConfirmation) {
         mRequestConfirmation = requestConfirmation;
+    }
+
+    private transient Iterable<Map.Entry<String, String>> mExtendedParameters;
+
+    @Override
+    public synchronized Iterable<Map.Entry<String, String>> getExtraParameters() {
+        return mExtendedParameters;
+    }
+
+    @Override
+    public synchronized void setExtraParameters(final Iterable<Map.Entry<String, String>> extraParams) {
+        mExtendedParameters = extraParams;
     }
 
     /**

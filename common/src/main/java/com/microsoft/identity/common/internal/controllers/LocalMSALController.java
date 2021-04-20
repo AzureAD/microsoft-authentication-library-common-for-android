@@ -47,7 +47,6 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -73,6 +72,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.util.List;
@@ -486,7 +486,7 @@ public class LocalMSALController extends BaseController {
         final boolean localRemoveAccountSuccess = !parameters
                 .getOAuth2TokenCache()
                 .removeAccount(
-                        parameters.getAccount() == null ? null : parameters.getAccount().getEnvironment(),
+                        null, // remove account from all environment
                         parameters.getClientId(),
                         parameters.getAccount() == null ? null : parameters.getAccount().getHomeAccountId(),
                         realm

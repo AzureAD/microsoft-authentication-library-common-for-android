@@ -30,12 +30,13 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerAccountManagerOperation;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants.BrokerContentProvider.API;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
@@ -53,21 +54,33 @@ import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Typ
 public class BrokerOperationBundle {
     private static final String TAG = BrokerOperationBundle.class.getName();
 
+    @Getter
+    @Accessors(prefix = "m")
     public enum Operation {
-        MSAL_HELLO,
-        MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST,
-        MSAL_ACQUIRE_TOKEN_SILENT,
-        MSAL_GET_ACCOUNTS,
-        MSAL_REMOVE_ACCOUNT,
-        MSAL_GET_DEVICE_MODE,
-        MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE,
-        MSAL_SIGN_OUT_FROM_SHARED_DEVICE,
-        MSAL_GENERATE_SHR,
-        BROKER_GET_KEY_FROM_INACTIVE_BROKER,
-        BROKER_API_HELLO,
-        BROKER_API_GET_BROKER_ACCOUNTS,
-        BROKER_API_REMOVE_BROKER_ACCOUNT,
-        BROKER_API_UPDATE_BRT
+        MSAL_HELLO(API.MSAL_HELLO, BrokerAccountManagerOperation.HELLO),
+        MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST(API.ACQUIRE_TOKEN_INTERACTIVE, BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST),
+        MSAL_ACQUIRE_TOKEN_SILENT(API.ACQUIRE_TOKEN_SILENT, BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT),
+        MSAL_GET_ACCOUNTS(API.GET_ACCOUNTS, BrokerAccountManagerOperation.GET_ACCOUNTS),
+        MSAL_REMOVE_ACCOUNT(API.BROKER_REMOVE_ACCOUNT, BrokerAccountManagerOperation.REMOVE_ACCOUNT),
+        MSAL_GET_DEVICE_MODE(API.GET_DEVICE_MODE, BrokerAccountManagerOperation.GET_DEVICE_MODE),
+        MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE(API.GET_CURRENT_ACCOUNT_SHARED_DEVICE, BrokerAccountManagerOperation.GET_CURRENT_ACCOUNT),
+        MSAL_SIGN_OUT_FROM_SHARED_DEVICE(API.SIGN_OUT_FROM_SHARED_DEVICE, BrokerAccountManagerOperation.REMOVE_ACCOUNT_FROM_SHARED_DEVICE),
+        MSAL_GENERATE_SHR(API.GENERATE_SHR, BrokerAccountManagerOperation.GENERATE_SHR),
+        BROKER_GET_KEY_FROM_INACTIVE_BROKER(null, null),
+        BROKER_API_HELLO(API.BROKER_HELLO, null),
+        BROKER_API_GET_BROKER_ACCOUNTS(API.BROKER_GET_ACCOUNTS, null),
+        BROKER_API_REMOVE_BROKER_ACCOUNT(API.BROKER_REMOVE_ACCOUNT, null),
+        BROKER_API_UPDATE_BRT(API.BROKER_UPDATE_BRT, null),
+        BROKER_SET_FLIGHTS(API.BROKER_SET_FLIGHTS, null),
+        BROKER_GET_FLIGHTS(API.BROKER_GET_FLIGHTS, null),
+        BROKER_ADD_FLIGHTS(API.BROKER_ADD_FLIGHTS, null),
+        MSAL_SSO_TOKEN(API.GET_SSO_TOKEN, null);
+        final API mContentApi;
+        final String mAccountManagerOperation;
+        Operation(API contentApi, String accountManagerOperation) {
+            this.mContentApi = contentApi;
+            this.mAccountManagerOperation = accountManagerOperation;
+        }
     }
 
     @Getter
@@ -99,96 +112,32 @@ public class BrokerOperationBundle {
     private String getAccountManagerAddAccountOperationKey() throws BrokerCommunicationException{
         final String methodName = ":getAccountManagerAddAccountOperationKey";
 
-        switch (operation) {
-            case MSAL_HELLO:
-                return BrokerAccountManagerOperation.HELLO;
-
-            case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
-                return BrokerAccountManagerOperation.GET_INTENT_FOR_INTERACTIVE_REQUEST;
-
-            case MSAL_ACQUIRE_TOKEN_SILENT:
-                return BrokerAccountManagerOperation.ACQUIRE_TOKEN_SILENT;
-
-            case MSAL_GET_ACCOUNTS:
-                return BrokerAccountManagerOperation.GET_ACCOUNTS;
-
-            case MSAL_REMOVE_ACCOUNT:
-                return BrokerAccountManagerOperation.REMOVE_ACCOUNT;
-
-            case MSAL_GET_DEVICE_MODE:
-                return BrokerAccountManagerOperation.GET_DEVICE_MODE;
-
-            case MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE:
-                return BrokerAccountManagerOperation.GET_CURRENT_ACCOUNT;
-
-            case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
-                return BrokerAccountManagerOperation.REMOVE_ACCOUNT_FROM_SHARED_DEVICE;
-
-            case MSAL_GENERATE_SHR:
-                return BrokerAccountManagerOperation.GENERATE_SHR;
-
-            default:
-                final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
-                Logger.warn(TAG + methodName, errorMessage);
-                throw new BrokerCommunicationException(
-                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                        ACCOUNT_MANAGER_ADD_ACCOUNT,
-                        errorMessage,
-                        null);
+        String accountManagerKey = operation.getAccountManagerOperation();
+        if (accountManagerKey == null) {
+            final String errorMessage = "Operation " + operation.name() + " is not supported by AccountManager addAccount().";
+            Logger.warn(TAG + methodName, errorMessage);
+            throw new BrokerCommunicationException(
+                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                    ACCOUNT_MANAGER_ADD_ACCOUNT,
+                    errorMessage,
+                    null);
         }
+        return accountManagerKey;
     }
 
     public String getContentProviderPath() throws BrokerCommunicationException {
         final String methodName = ":getContentProviderUriPath";
 
-        switch (operation) {
-            case MSAL_HELLO:
-                return BrokerContentProvider.MSAL_HELLO_PATH;
-
-            case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
-                return BrokerContentProvider.MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH;
-
-            case MSAL_ACQUIRE_TOKEN_SILENT:
-                return BrokerContentProvider.MSAL_ACQUIRE_TOKEN_SILENT_PATH;
-
-            case MSAL_GET_ACCOUNTS:
-                return BrokerContentProvider.MSAL_GET_ACCOUNTS_PATH;
-
-            case MSAL_REMOVE_ACCOUNT:
-                return BrokerContentProvider.MSAL_REMOVE_ACCOUNTS_PATH;
-
-            case MSAL_GET_DEVICE_MODE:
-                return BrokerContentProvider.MSAL_GET_DEVICE_MODE_PATH;
-
-            case MSAL_GET_CURRENT_ACCOUNT_IN_SHARED_DEVICE:
-                return BrokerContentProvider.MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH;
-
-            case MSAL_SIGN_OUT_FROM_SHARED_DEVICE:
-                return BrokerContentProvider.MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH;
-
-            case BROKER_API_HELLO:
-                return BrokerContentProvider.BROKER_API_HELLO_PATH;
-
-            case BROKER_API_GET_BROKER_ACCOUNTS:
-                return BrokerContentProvider.BROKER_API_GET_BROKER_ACCOUNTS_PATH;
-
-            case BROKER_API_REMOVE_BROKER_ACCOUNT:
-                return BrokerContentProvider.BROKER_API_REMOVE_BROKER_ACCOUNT_PATH;
-
-            case BROKER_API_UPDATE_BRT:
-                return BrokerContentProvider.BROKER_API_UPDATE_BRT_PATH;
-
-            case MSAL_GENERATE_SHR:
-                return BrokerContentProvider.GENERATE_SHR_PATH;
-
-            default:
-                final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
-                Logger.warn(TAG + methodName, errorMessage);
-                throw new BrokerCommunicationException(
-                        OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
-                        CONTENT_PROVIDER,
-                        errorMessage,
-                        null);
+        final API contentApi = operation.getContentApi();
+        if (contentApi == null) {
+            final String errorMessage = "Operation " + operation.name() + " is not supported by ContentProvider.";
+            Logger.warn(TAG + methodName, errorMessage);
+            throw new BrokerCommunicationException(
+                    OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE,
+                    CONTENT_PROVIDER,
+                    errorMessage,
+                    null);
         }
+        return contentApi.getPath();
     }
 }

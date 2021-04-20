@@ -1,3 +1,4 @@
+
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -34,7 +35,6 @@ import androidx.fragment.app.FragmentTransaction;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 
-import java.io.UnsupportedEncodingException;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 

@@ -34,7 +34,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -107,11 +108,7 @@ public class BrowserSelector {
             }
 
             try {
-                @SuppressWarnings("deprecation")
-                PackageInfo packageInfo = pm.getPackageInfo(
-                        info.activityInfo.packageName,
-                        PackageManager.GET_SIGNATURES);
-
+                final PackageInfo packageInfo = PackageHelper.getPackageInfo(pm, info.activityInfo.packageName);
                 //TODO if the browser is in the block list, do not add it into the return browserList.
                 if (isCustomTabsServiceSupported(context, packageInfo)) {
                     //if the browser has custom tab enabled, set the custom tab support as true.
