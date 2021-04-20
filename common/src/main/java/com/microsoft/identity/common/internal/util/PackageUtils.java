@@ -91,13 +91,13 @@ public final class PackageUtils {
         final PackageInfo packageInfo = PackageHelper.getPackageInfo(context.getPackageManager(), packageName);
         if (packageInfo == null) {
             throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
-                    "No such package existing : " + packageName);
+                    "Did not find an installed package named : '" + packageName + "'");
         }
 
         final Signature[] signatures = PackageHelper.getSignatures(packageInfo);
         if (signatures == null || signatures.length == 0) {
             throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
-                    "No signature associated with the package : " + packageName);
+                    "No signature associated with the package : '" + packageName + "'");
         }
 
         final List<X509Certificate> certificates = new ArrayList<>(signatures.length);
@@ -148,7 +148,7 @@ public final class PackageUtils {
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
-            //The next of the iterator should be overridden to get the signatureHash.
+            //The next() functionality of the iterator should be overridden to retrieve the signatureHash of the entry.
             while (validHashes.hasNext()) {
                 final String hash = validHashes.next();
                 if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
@@ -209,6 +209,15 @@ public final class PackageUtils {
         return selfSignedCert;
     }
 
+    /**
+     * A generalized API to perform signature validations on mentioned package.
+     *
+     * @param packageName   a {link List} of certificates to examine.
+     * @param context   the android context to use to search.
+     * @param validPackageSignatures    the valid package signatures to cross check
+     * @return a valid hash, if it is found.
+     * @throws ClientException
+     */
     public static String signatureVerificationAndThrow(final String packageName, final Context context,
                                                        final Iterator<String> validPackageSignatures)
             throws ClientException {
