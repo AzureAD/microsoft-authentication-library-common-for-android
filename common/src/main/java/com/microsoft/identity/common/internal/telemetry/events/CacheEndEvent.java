@@ -24,15 +24,15 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Value;
 
-public class CacheEndEvent extends BaseEvent {
+public class CacheEndEvent extends com.microsoft.identity.common.java.internal.telemetry.events.BaseEvent {
     public CacheEndEvent() {
         super();
         names(Event.CACHE_END_EVENT);

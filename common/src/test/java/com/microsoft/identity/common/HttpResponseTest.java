@@ -23,8 +23,6 @@
 
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.net.HttpResponse;
-
 import org.junit.Assert;
 import org.junit.Test;
 

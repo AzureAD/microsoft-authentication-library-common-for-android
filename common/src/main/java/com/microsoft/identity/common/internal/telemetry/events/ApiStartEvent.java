@@ -42,12 +42,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Value;
 
-public class ApiStartEvent extends BaseEvent {
+public class ApiStartEvent extends com.microsoft.identity.common.java.internal.telemetry.events.BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
 
     public ApiStartEvent() {

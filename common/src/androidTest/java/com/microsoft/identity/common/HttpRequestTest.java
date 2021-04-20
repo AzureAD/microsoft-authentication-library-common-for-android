@@ -26,8 +26,6 @@ package com.microsoft.identity.common;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.internal.net.HttpRequest;
-import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory;
 
 import org.junit.After;

@@ -25,9 +25,6 @@ package com.microsoft.identity.internal.testutils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.net.HttpClient.HttpMethod;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;

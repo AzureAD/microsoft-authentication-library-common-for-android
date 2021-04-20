@@ -24,8 +24,8 @@ package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings;
 
 public class TelemetryUtils {
 

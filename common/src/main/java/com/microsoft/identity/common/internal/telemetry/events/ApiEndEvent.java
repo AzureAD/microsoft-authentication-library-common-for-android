@@ -29,12 +29,12 @@ import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings.Value;
 
-public class ApiEndEvent extends BaseEvent {
+public class ApiEndEvent extends com.microsoft.identity.common.java.internal.telemetry.events.BaseEvent {
     public ApiEndEvent() {
         super();
         names(Event.API_END_EVENT);

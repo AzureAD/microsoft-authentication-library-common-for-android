@@ -28,8 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryAggregatedObserver;
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryDefaultObserver;
 import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObserver;
 
 import org.junit.After;

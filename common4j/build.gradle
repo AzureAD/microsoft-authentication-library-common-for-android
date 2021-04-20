@@ -7,9 +7,19 @@
  */
 
 plugins {
-    // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
+    id 'com.microsoft.identity.buildsystem' version '0.0.1'
 }
+
+def desugarCode = false
+if(project.hasProperty("sugar")){
+    desugarCode = sugar.toBoolean()
+}
+
+buildSystem {
+    desugar = desugarCode
+}
+
 
 repositories {
     mavenCentral()
@@ -26,14 +36,14 @@ sourceSets {
 
 
 dependencies {
-    implementation 'net.jcip:jcip-annotations:1.0'
-    implementation 'net.jcip:jcip-annotations:1.0'
+    implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:2.8.5"
 
     compileOnly "org.projectlombok:lombok:1.18.12"
     annotationProcessor "org.projectlombok:lombok:1.18.12"
 
-    testImplementation 'junit:junit:4.13'
+    testImplementation "junit:junit:4.13"
+    testImplementation "org.mockito:mockito-core:3.6.28"
     testCompileOnly "org.projectlombok:lombok:1.18.12"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
 }

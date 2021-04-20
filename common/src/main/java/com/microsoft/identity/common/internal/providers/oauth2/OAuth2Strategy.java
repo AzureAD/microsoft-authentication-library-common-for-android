@@ -37,10 +37,10 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.internal.net.HttpClient;
+import com.microsoft.identity.common.java.internal.net.HttpResponse;
 import com.microsoft.identity.common.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.net.HttpClient;
 import com.microsoft.identity.common.internal.net.HttpConstants;
-import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
@@ -128,8 +128,8 @@ public abstract class OAuth2Strategy
      * @param authorizationStrategy generic authorization strategy.
      * @return GenericAuthorizationResponse
      */
-    public @NonNull
-    Future<AuthorizationResult> requestAuthorization(
+    @NonNull
+    public Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
             final GenericAuthorizationStrategy authorizationStrategy) throws ClientException {
         validateAuthorizationRequest(request);

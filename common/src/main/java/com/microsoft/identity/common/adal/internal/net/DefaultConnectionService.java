@@ -36,8 +36,8 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.internal.telemetry.events.BaseEvent;
+import com.microsoft.identity.common.java.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.internal.telemetry.events.BaseEvent;
 
 /**
  * Default connection service check network connectivity.
