@@ -6,6 +6,7 @@
 # Variable 'test_repo_branch' was defined in the Variables tab
 # Variable 'test_repo_dir' was defined in the Variables tab
 name: $(date:yyyyMMdd)$(rev:.r)
+trigger: none
 resources:
   repositories:
   - repository: self
