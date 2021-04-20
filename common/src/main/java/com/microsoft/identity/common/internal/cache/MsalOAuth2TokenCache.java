@@ -1039,7 +1039,7 @@ public class MsalOAuth2TokenCache
         );
 
         for (final AccountRecord account : accounts) {
-            if (localAccountId.equals(account.getLocalAccountId())) {
+            if (!StringUtil.isEmpty(localAccountId) && localAccountId.equals(account.getLocalAccountId())) {
                 return account;
             }
         }
