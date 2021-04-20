@@ -226,9 +226,7 @@ public class CommandDispatcherTest {
                     @Override
                     public void onError(Exception error) {
                         callbackLatch.countDown();
-                        if (acquireTokenResultWrapper.subsequentResult != null) {
-                            Assert.fail();
-                        }
+                        Assert.assertNull(acquireTokenResultWrapper.subsequentResult);
                     }
 
                 }, 7, tryLatch, executeMethodEntranceVerifierLatch) {
