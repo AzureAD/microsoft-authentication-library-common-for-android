@@ -329,7 +329,7 @@ public class LocalMSALController extends BaseController {
             Logger.warn(
                     TAG + methodName,
                     "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + accessTokenRecord.getRefreshOn() + ". Regular expiry is at " + accessTokenRecord.getExpiresOn() + "."
-                            + "Currently executing initial command, SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId() + " subsequent RefreshCommand with CorrelationId not yet available. See further in logs."
+                            + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
             );
             renewAT(
                     parametersWithScopes,
