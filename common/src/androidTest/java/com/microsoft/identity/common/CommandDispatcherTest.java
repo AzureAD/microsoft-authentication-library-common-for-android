@@ -81,6 +81,7 @@ public class CommandDispatcherTest {
         AcquireTokenResultWrapper acquireTokenResultWrapper = new AcquireTokenResultWrapper(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT, TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT);
         performSubmitSilentShouldRefresh(acquireTokenResultWrapper);
     }
+
     private void performSubmitSilentShouldRefresh(final AcquireTokenResultWrapper acquireTokenResultWrapper) throws Exception {
         final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
         CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
@@ -142,6 +143,7 @@ public class CommandDispatcherTest {
         AcquireTokenResultWrapper acquireTokenResultWrapper = new AcquireTokenResultWrapper(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT, null);
         performSubmitSilentShouldNOTRefresh(acquireTokenResultWrapper);
     }
+
     private void performSubmitSilentShouldNOTRefresh(final AcquireTokenResultWrapper acquireTokenResultWrapper) throws Exception {
         final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
         CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
@@ -197,6 +199,7 @@ public class CommandDispatcherTest {
         AcquireTokenResultWrapper acquireTokenResultWrapper = new AcquireTokenResultWrapper(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT, null);
         performSubmitSilentShouldRefreshButThrowsError(acquireTokenResultWrapper);
     }
+
     private void performSubmitSilentShouldRefreshButThrowsError(final AcquireTokenResultWrapper acquireTokenResultWrapper) throws Exception {
         final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
         CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
@@ -223,7 +226,7 @@ public class CommandDispatcherTest {
                     @Override
                     public void onError(Exception error) {
                         callbackLatch.countDown();
-                        if(acquireTokenResultWrapper.subsequentResult != null){
+                        if (acquireTokenResultWrapper.subsequentResult != null) {
                             Assert.fail();
                         }
                     }
@@ -258,40 +261,40 @@ public class CommandDispatcherTest {
     }
 
 
-    private static class CountDownLatchWrapper{
+    private static class CountDownLatchWrapper {
         CountDownLatch latch1;
         CountDownLatch latch2;
 
-        CountDownLatchWrapper(){
+        CountDownLatchWrapper() {
             latch1 = new CountDownLatch(1);
             latch2 = new CountDownLatch(1);
         }
 
-        private CountDownLatch getCurLatch(){
-            if(latch1.getCount() == 0){
-                if(latch2.getCount() == 0){
+        private CountDownLatch getCurLatch() {
+            if (latch1.getCount() == 0) {
+                if (latch2.getCount() == 0) {
                     return null;
-                }else{
+                } else {
                     return latch2;
                 }
-            }else{
+            } else {
                 return latch1;
             }
         }
 
         public boolean await() throws InterruptedException {
             CountDownLatch curLatch = getCurLatch();
-            if(curLatch != null) {
+            if (curLatch != null) {
                 curLatch.await();
                 return true;
-            } else{
+            } else {
                 return false;
             }
         }
 
         public boolean countDown() {
             CountDownLatch curLatch = getCurLatch();
-            if(curLatch!=null) {
+            if (curLatch != null) {
                 curLatch.countDown();
                 return true;
             } else {
@@ -306,28 +309,28 @@ public class CommandDispatcherTest {
         public final AcquireTokenResult initialResult;
         public final AcquireTokenResult subsequentResult;
 
-        public AcquireTokenResultWrapper(AcquireTokenResult initialResult, AcquireTokenResult completeResult){
+        public AcquireTokenResultWrapper(AcquireTokenResult initialResult, AcquireTokenResult completeResult) {
             this.initialResult = initialResult;
             this.subsequentResult = completeResult;
         }
 
-        public AcquireTokenResult getNextResult(AtomicInteger i){
+        public AcquireTokenResult getNextResult(AtomicInteger i) {
             i.getAndIncrement();
-            if (i.get() == 1){
+            if (i.get() == 1) {
                 return initialResult;
-            } else if ( i.get() == 2){
+            } else if (i.get() == 2) {
                 return subsequentResult;
-            }else {
+            } else {
                 return null;
             }
         }
 
-        public AcquireTokenResult getCurrentResult(int i){
-            if (i == 1){
+        public AcquireTokenResult getCurrentResult(int i) {
+            if (i == 1) {
                 return initialResult;
-            } else if ( i == 2){
+            } else if (i == 2) {
                 return subsequentResult;
-            }else {
+            } else {
                 return null;
             }
         }
@@ -421,7 +424,7 @@ public class CommandDispatcherTest {
         submitLatch.countDown();
         testLatch.await();
         Assert.assertTrue(f.isDone());
-        Assert.assertNotNull(f2.get(1,TimeUnit.SECONDS));
+        Assert.assertNotNull(f2.get(1, TimeUnit.SECONDS));
         Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
         Assert.assertEquals(TEST_RESULT_STR, f2.get().getResult());
         Assert.assertSame(f.get().getResult(), f2.get().getResult());
@@ -466,6 +469,7 @@ public class CommandDispatcherTest {
      * use as keys in a map.  It won't hurt, though, unless we can't get rid of them.
      * To test this, we submit a command, block before it executes, alter it, release it,
      * and then make sure it gets cleaned up.
+     *
      * @throws Exception
      */
     @Test
@@ -512,13 +516,13 @@ public class CommandDispatcherTest {
     }
 
 
-
     /**
      * This test represents the case where a command changes underneath our system
      * while we're using it as a key.  They're not immutable, so they're not safe to
      * use as keys in a map.  It won't hurt, though, unless we can't get rid of them.
      * To test this, we submit a command, block before it executes, alter it, release it,
      * and then make sure it gets cleaned up.
+     *
      * @throws Exception
      */
     @Test
@@ -592,6 +596,7 @@ public class CommandDispatcherTest {
      * This test takes a while to run.  But it should always work.  Just put it here in order
      * to save anyone else from having to write it.  Effectively all of these results are non
      * cacheable, so this does not execute the deduplication logic at all.
+     *
      * @throws Exception
      */
     @Test
@@ -605,22 +610,23 @@ public class CommandDispatcherTest {
         for (int task = 0; task < nTasks; task++) {
             final int curTask = task;
             map.put(curTask, executor.submit(new Runnable() {
-            public void run() {
-                try {
-                    testSubmitSilentWithParamMutation();
-                    testSubmitSilentWithParamMutationUncacheable();
-                } catch (Throwable t) {
-                    ex.compareAndSet(null, t);
-                } finally {
-                    latch.countDown();
-                    map.remove(curTask);
+                public void run() {
+                    try {
+                        testSubmitSilentWithParamMutation();
+                        testSubmitSilentWithParamMutationUncacheable();
+                    } catch (Throwable t) {
+                        ex.compareAndSet(null, t);
+                    } finally {
+                        latch.countDown();
+                        map.remove(curTask);
+                    }
                 }
-            }}));
+            }));
         }
         System.out.println("Waiting on latch");
         while (!latch.await(30, TimeUnit.SECONDS)) {
             System.out.println("Waiting, " + latch.getCount() + " outstanding");
-            System.out.println("Waiting keys " +  map.keySet());
+            System.out.println("Waiting keys " + map.keySet());
         }
         executor.shutdown();
         System.out.println("Waiting, on executor");
@@ -678,6 +684,7 @@ public class CommandDispatcherTest {
 
     /**
      * The other iteration test is all non-cacheable commands.  These are cachable.
+     *
      * @throws Exception
      */
     @Test
@@ -692,29 +699,30 @@ public class CommandDispatcherTest {
             final int curTask = task;
             executor.submit(new Runnable() {
                 public void run() {
-                try {
-                    map.put(curTask, "foo");
-                    testSubmitSilentWithParamMutationSameCommand(new Consumer<String>() {
-                                                                     @Override
-                                                                     public void accept(String s) {
-                                                                         map.remove(curTask);
-                                                                         if ("FAIL".equals(s)) {
-                                                                             ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + curTask));
+                    try {
+                        map.put(curTask, "foo");
+                        testSubmitSilentWithParamMutationSameCommand(new Consumer<String>() {
+                                                                         @Override
+                                                                         public void accept(String s) {
+                                                                             map.remove(curTask);
+                                                                             if ("FAIL".equals(s)) {
+                                                                                 ex.compareAndSet(null, new Exception("WE HAD AN ERROR in " + curTask));
+                                                                             }
                                                                          }
                                                                      }
-                                                                 }
-                    );
-                } catch (Throwable t) {
-                    ex.compareAndSet(null, t);
-                } finally {
-                    latch.countDown();
+                        );
+                    } catch (Throwable t) {
+                        ex.compareAndSet(null, t);
+                    } finally {
+                        latch.countDown();
+                    }
                 }
-            }});
+            });
         }
         System.out.println("Waiting on latch");
         while (!latch.await(30, TimeUnit.SECONDS)) {
             System.out.println("Waiting, " + latch.getCount() + " outstanding");
-            System.out.println("Waiting keys " +  map.keySet().size());
+            System.out.println("Waiting keys " + map.keySet().size());
         }
         executor.shutdown();
         System.out.println("Waiting, on executor");
@@ -820,10 +828,10 @@ public class CommandDispatcherTest {
 
         public LatchedRefreshInTestCommand(@NonNull AcquireTokenResultWrapper acquireTokenResultWrapper,
                                            @NonNull final SilentTokenCommandParameters parameters,
-                                  @NonNull final CommandCallback callback,
-                                  final int commandId,
-                                  @NonNull final CountDownLatchWrapper tryLatch,
-                                  @NonNull final CountDownLatchWrapper executeMethodEntranceVerifierLatch) {
+                                           @NonNull final CommandCallback callback,
+                                           final int commandId,
+                                           @NonNull final CountDownLatchWrapper tryLatch,
+                                           @NonNull final CountDownLatchWrapper executeMethodEntranceVerifierLatch) {
             super(parameters, getTestRefreshInController(acquireTokenResultWrapper), callback, "");
             this.tryLatch = tryLatch;
             this.executeMethodEntranceVerifierLatch = executeMethodEntranceVerifierLatch;
@@ -874,33 +882,33 @@ public class CommandDispatcherTest {
         return new TestBaseController() {
             @Override
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
-                if(parameters.isRefreshIn()){
+                if (parameters.isRefreshIn()) {
                     return acquireTokenResultWrapper.subsequentResult;
-                }else{
+                } else {
                     return acquireTokenResultWrapper.initialResult;
                 }
             }
         };
     }
 
-    private static AcquireTokenResult getRefreshExpiredTokenResult(){
+    private static AcquireTokenResult getRefreshExpiredTokenResult() {
         final AccessTokenRecord accessTokenRecord = getRefreshExpiredAccessTokenRecord();
         return getRefreshTokenResult(accessTokenRecord);
     }
 
-    private static AccessTokenRecord getRefreshExpiredAccessTokenRecord(){
+    private static AccessTokenRecord getRefreshExpiredAccessTokenRecord() {
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         accessTokenRecord.setExpiresOn(String.valueOf(Integer.MAX_VALUE));
         accessTokenRecord.setRefreshOn("0");
         return accessTokenRecord;
     }
 
-    private static AcquireTokenResult getRefreshUnexpiredTokenResult(){
+    private static AcquireTokenResult getRefreshUnexpiredTokenResult() {
         final AccessTokenRecord accessTokenRecord = getRefreshUnexpiredAccessTokenRecord();
         return getRefreshTokenResult(accessTokenRecord);
     }
 
-    private static AcquireTokenResult getRefreshTokenResult(final AccessTokenRecord accessTokenRecord){
+    private static AcquireTokenResult getRefreshTokenResult(final AccessTokenRecord accessTokenRecord) {
         final CacheRecord.CacheRecordBuilder recordBuilder = CacheRecord.builder().mAccessToken(accessTokenRecord);
         final List<ICacheRecord> cacheRecordList = new ArrayList<>();
         final ICacheRecord cacheRecord = recordBuilder.build();
@@ -917,10 +925,10 @@ public class CommandDispatcherTest {
         return tokenResult;
     }
 
-    private static AccessTokenRecord getRefreshUnexpiredAccessTokenRecord(){
+    private static AccessTokenRecord getRefreshUnexpiredAccessTokenRecord() {
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         accessTokenRecord.setExpiresOn(String.valueOf(Integer.MAX_VALUE));
-        accessTokenRecord.setRefreshOn(String.valueOf(Integer.MAX_VALUE-1));
+        accessTokenRecord.setRefreshOn(String.valueOf(Integer.MAX_VALUE - 1));
         return accessTokenRecord;
     }
 
@@ -987,7 +995,7 @@ public class CommandDispatcherTest {
         return CommandParameters.builder().build();
     }
 
-    private static SilentTokenCommandParameters getEmptySilentTokenParameters(){
+    private static SilentTokenCommandParameters getEmptySilentTokenParameters() {
         return SilentTokenCommandParameters.builder().build();
     }
 }

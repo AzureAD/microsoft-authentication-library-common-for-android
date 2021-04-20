@@ -317,13 +317,13 @@ public class LocalMSALController extends BaseController {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
-        if (fullCacheRecord.getAccessToken().refreshOnIsActive()){
+        if (fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
                     TAG,
                     "RefreshIn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if(parameters.isRefreshIn()) { //refresh_in second call
+        if (parameters.isRefreshIn()) { //refresh_in second call
             AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             Logger.warn(
                     TAG + methodName,
@@ -422,11 +422,11 @@ public class LocalMSALController extends BaseController {
     }
 
     private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,
-                            @NonNull final AcquireTokenResult acquireTokenSilentResult,
-                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
-                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
-                            @NonNull final ICacheRecord cacheRecord,
-                            @NonNull final String tag) throws IOException, ClientException, ServiceException{
+                         @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                         @NonNull final ICacheRecord cacheRecord,
+                         @NonNull final String tag) throws IOException, ClientException, ServiceException {
         Logger.verbose(
                 TAG + tag,
                 "Renewing access token..."

@@ -111,7 +111,7 @@ public class CommandDispatcher {
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
-            if (! (command == e.getKey())) {
+            if (!(command == e.getKey())) {
                 newMap.put(e.getKey(), e.getValue());
             }
         }
@@ -173,7 +173,7 @@ public class CommandDispatcher {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
-                                                                                         @NonNull final BaseCommand command) {
+                                                                                     @NonNull final BaseCommand command) {
 
         final String methodName = ":submitSilent";
 
@@ -223,7 +223,7 @@ public class CommandDispatcher {
                     try {
                         //initializing again since the request is transferred to a different thread pool
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
-                                SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
@@ -447,19 +447,19 @@ public class CommandDispatcher {
 
     // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
     @SuppressWarnings(WarningType.unchecked_warning)
-    private static void commandCallbackOnTaskRefresh(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result){
-            if (command instanceof SilentTokenCommand) {
-                if (CommandResult.ResultStatus.REFRESH == result.getStatus()) {
-                    commandCallbackOnTaskCompleted(command, result);
-                } else if (CommandResult.ResultStatus.REFRESH_ON_ERROR == result.getStatus()) {
-                    commandCallbackOnError(command, result);
-                } else {
-                    throw new  IllegalArgumentException("Excepted type: REFRESH or REFRESH_ON_ERROR. Input was instead of type: " + result.getResult().toString());
-                }
-                performRefresh((SilentTokenCommand) command);
+    private static void commandCallbackOnTaskRefresh(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        if (command instanceof SilentTokenCommand) {
+            if (CommandResult.ResultStatus.REFRESH == result.getStatus()) {
+                commandCallbackOnTaskCompleted(command, result);
+            } else if (CommandResult.ResultStatus.REFRESH_ON_ERROR == result.getStatus()) {
+                commandCallbackOnError(command, result);
             } else {
-                throw new  IllegalArgumentException("Excepted type: SilentTokenCommand. Input was instead of type: " + command.toString());
+                throw new IllegalArgumentException("Excepted type: REFRESH or REFRESH_ON_ERROR. Input was instead of type: " + result.getResult().toString());
             }
+            performRefresh((SilentTokenCommand) command);
+        } else {
+            throw new IllegalArgumentException("Excepted type: SilentTokenCommand. Input was instead of type: " + command.toString());
+        }
     }
 
     /**
@@ -529,9 +529,9 @@ public class CommandDispatcher {
     }
 
     private static CommandResult checkRefreshStatus(final ILocalAuthenticationResult acquireTokenResult,
-                                                                              @NonNull String correlationId,
-                                                                              @NonNull CommandResult.ResultStatus refreshResultStatus,
-                                                                              @NonNull CommandResult.ResultStatus resultStatus) {
+                                                    @NonNull String correlationId,
+                                                    @NonNull CommandResult.ResultStatus refreshResultStatus,
+                                                    @NonNull CommandResult.ResultStatus resultStatus) {
         return acquireTokenResult != null
                 && acquireTokenResult.getAccessTokenRecord().shouldRefresh() ?
                 new CommandResult(refreshResultStatus,
