@@ -325,7 +325,7 @@ public class LocalMSALController extends BaseController {
         }
         if (parameters.isRefreshDueToRefreshIn()) {
             //Note that parameters.isRefreshDueToRefreshIn() == true is always the result of a subsequent silentCall, meaning after the regular/initial silentCall that is normally triggered by user
-            AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
+            final AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             Logger.warn(
                     TAG + methodName,
                     "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + accessTokenRecord.getRefreshOn() + ". Regular expiry is at " + accessTokenRecord.getExpiresOn() + "."

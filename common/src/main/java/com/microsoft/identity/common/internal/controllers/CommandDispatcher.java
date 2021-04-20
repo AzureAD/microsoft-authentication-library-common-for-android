@@ -568,12 +568,12 @@ public class CommandDispatcher {
     private static CommandResult checkRefreshStatus(final ILocalAuthenticationResult acquireTokenResult,
                                                     @NonNull String correlationId,
                                                     @NonNull CommandResult.ResultStatus refreshResultStatus,
-                                                    @NonNull CommandResult.ResultStatus resultStatus) {
+                                                    @NonNull CommandResult.ResultStatus originalResultStatus) {
         return acquireTokenResult != null
                 && acquireTokenResult.getAccessTokenRecord().shouldRefresh() ?
                 new CommandResult(refreshResultStatus,
                         acquireTokenResult, correlationId) :
-                new CommandResult(resultStatus,
+                new CommandResult(originalResultStatus,
                         acquireTokenResult, correlationId);
     }
 
