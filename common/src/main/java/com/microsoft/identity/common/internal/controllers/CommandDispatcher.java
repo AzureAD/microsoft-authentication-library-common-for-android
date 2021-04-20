@@ -700,7 +700,7 @@ public class CommandDispatcher {
     }
 
     private static void performRefresh(final SilentTokenCommand command) {
-        SilentTokenCommandParameters params = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().refreshDueToRefreshIn(true).correlationId(UUID.randomUUID().toString()).build();
+        final SilentTokenCommandParameters params = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().refreshDueToRefreshIn(true).correlationId(UUID.randomUUID().toString()).build();
         Logger.info(
                 TAG,
                 "SilentTokenCommand with CorrelationId: "
