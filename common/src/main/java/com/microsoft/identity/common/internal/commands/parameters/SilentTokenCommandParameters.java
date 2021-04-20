@@ -33,6 +33,7 @@ import java.io.IOException;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -43,6 +44,9 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
     private static final String TAG = SilentTokenCommandParameters.class.getSimpleName();
 
     private static final Object sLock = new Object();
+
+    @Expose()
+    private final boolean refreshIn;
 
     @Override
     public void validate() throws ArgumentException {

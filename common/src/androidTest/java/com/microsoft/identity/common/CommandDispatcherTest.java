@@ -51,12 +51,10 @@ import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -80,16 +78,187 @@ public class CommandDispatcherTest {
 
     @Test
     public void testSubmitSilentShouldRefresh() throws Exception {
-        performRefreshInTest(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT);
+        AcquireTokenResultWrapper acquireTokenResultWrapper = new AcquireTokenResultWrapper(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT, TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT);
+        performSubmitSilentShouldRefresh(acquireTokenResultWrapper);
+    }
+    private void performSubmitSilentShouldRefresh(final AcquireTokenResultWrapper acquireTokenResultWrapper) throws Exception {
+        final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper executeMethodEntranceVerifierLatch = new CountDownLatchWrapper();
+        final AtomicInteger taskCompleteCount = new AtomicInteger(0);
+
+        final SilentTokenCommand silentTokenCommand = new LatchedRefreshInTestCommand(acquireTokenResultWrapper,
+                getEmptySilentTokenParameters(),
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
+                    @Override
+                    public void onTaskCompleted(final ILocalAuthenticationResult iLocalAuthenticationResult) {
+                        ILocalAuthenticationResult actual = iLocalAuthenticationResult;
+                        ILocalAuthenticationResult expected = acquireTokenResultWrapper.getNextResult(taskCompleteCount).getLocalAuthenticationResult();
+                        Assert.assertEquals(expected, actual);
+                        callbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+
+        };
+
+        FinalizableResultFuture<CommandResult> silentReturningFuture = CommandDispatcher.submitSilentReturningFuture(silentTokenCommand);
+        executeMethodEntranceVerifierLatch.await();
+        tryLatch.countDown();
+        callbackLatch.await();
+
+        ILocalAuthenticationResult expectedAuthenticationResult = acquireTokenResultWrapper.getCurrentResult(taskCompleteCount.get()).getLocalAuthenticationResult();
+        Assert.assertEquals(expectedAuthenticationResult, silentReturningFuture.get().getResult());
+        Assert.assertEquals(1, taskCompleteCount.get());
+
+        tryLatch.countDown();
+        callbackLatch.await();
+
+        Assert.assertTrue(silentReturningFuture.isDone());
+        Assert.assertEquals(2, taskCompleteCount.get());
+
+        silentReturningFuture.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
     }
 
     @Test
     public void testSubmitSilentShouldNOTRefresh() throws Exception {
-        performRefreshInTest(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT);
+        AcquireTokenResultWrapper acquireTokenResultWrapper = new AcquireTokenResultWrapper(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT, null);
+        performSubmitSilentShouldNOTRefresh(acquireTokenResultWrapper);
+    }
+    private void performSubmitSilentShouldNOTRefresh(final AcquireTokenResultWrapper acquireTokenResultWrapper) throws Exception {
+        final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper executeMethodEntranceVerifierLatch = new CountDownLatchWrapper();
+        final AtomicInteger taskCompleteCount = new AtomicInteger(0);
+
+        final SilentTokenCommand silentTokenCommand = new LatchedRefreshInTestCommand(acquireTokenResultWrapper,
+                getEmptySilentTokenParameters(),
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
+                    @Override
+                    public void onTaskCompleted(final ILocalAuthenticationResult iLocalAuthenticationResult) {
+                        ILocalAuthenticationResult actual = iLocalAuthenticationResult;
+                        ILocalAuthenticationResult expected = acquireTokenResultWrapper.getNextResult(taskCompleteCount).getLocalAuthenticationResult();
+                        Assert.assertEquals(expected, actual);
+                        callbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+
+        };
+
+        FinalizableResultFuture<CommandResult> silentReturningFuture = CommandDispatcher.submitSilentReturningFuture(silentTokenCommand);
+        executeMethodEntranceVerifierLatch.await();
+        tryLatch.countDown();
+        callbackLatch.await();
+
+        ILocalAuthenticationResult expectedAuthenticationResult = acquireTokenResultWrapper.getCurrentResult(taskCompleteCount.get()).getLocalAuthenticationResult();
+        Assert.assertEquals(expectedAuthenticationResult, silentReturningFuture.get().getResult());
+        Assert.assertEquals(1, taskCompleteCount.get());
+
+        silentReturningFuture.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
+    }
+
+    @Test
+    public void testSubmitSilentShouldRefreshButThrowsError() throws Exception {
+        AcquireTokenResultWrapper acquireTokenResultWrapper = new AcquireTokenResultWrapper(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT, null);
+        performSubmitSilentShouldRefreshButThrowsError(acquireTokenResultWrapper);
+    }
+    private void performSubmitSilentShouldRefreshButThrowsError(final AcquireTokenResultWrapper acquireTokenResultWrapper) throws Exception {
+        final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
+        CountDownLatchWrapper executeMethodEntranceVerifierLatch = new CountDownLatchWrapper();
+        final AtomicInteger taskCompleteCount = new AtomicInteger(0);
+
+        final SilentTokenCommand silentTokenCommand = new LatchedRefreshInTestCommand(acquireTokenResultWrapper,
+                getEmptySilentTokenParameters(),
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
+                    @Override
+                    public void onTaskCompleted(final ILocalAuthenticationResult iLocalAuthenticationResult) {
+                        ILocalAuthenticationResult actual = iLocalAuthenticationResult;
+                        ILocalAuthenticationResult expected = acquireTokenResultWrapper.getNextResult(taskCompleteCount).getLocalAuthenticationResult();
+                        Assert.assertEquals(expected, actual);
+                        callbackLatch.countDown();
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        callbackLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        callbackLatch.countDown();
+                        if(acquireTokenResultWrapper.subsequentResult != null){
+                            Assert.fail();
+                        }
+                    }
+
+                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
+            @Override
+            public boolean isEligibleForCaching() {
+                return true;
+            }
+
+        };
+
+        FinalizableResultFuture<CommandResult> silentReturningFuture = CommandDispatcher.submitSilentReturningFuture(silentTokenCommand);
+        executeMethodEntranceVerifierLatch.await();
+        tryLatch.countDown();
+        callbackLatch.await();
+
+        ILocalAuthenticationResult expectedAuthenticationResult = acquireTokenResultWrapper.getCurrentResult(taskCompleteCount.get()).getLocalAuthenticationResult();
+        Assert.assertEquals(expectedAuthenticationResult, silentReturningFuture.get().getResult());
+        Assert.assertEquals(1, taskCompleteCount.get());
+
+        tryLatch.countDown();
+        callbackLatch.await();
+
+        Assert.assertTrue(expectedAuthenticationResult.getAccessTokenRecord().shouldRefresh());
+        Assert.assertTrue(silentReturningFuture.isDone());
+        Assert.assertNull(acquireTokenResultWrapper.subsequentResult);
+        Assert.assertEquals(1, taskCompleteCount.get());
+
+        silentReturningFuture.isCleanedUp();
+        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
     }
 
 
-    private class CountDownLatchWrapper{
+    private static class CountDownLatchWrapper{
         CountDownLatch latch1;
         CountDownLatch latch2;
 
@@ -132,54 +301,37 @@ public class CommandDispatcherTest {
 
     }
 
+    private static class AcquireTokenResultWrapper {
 
-    private void performRefreshInTest(final AcquireTokenResult expectedAcquireTokenResult) throws Exception {
-        final CountDownLatchWrapper callbackLatch = new CountDownLatchWrapper();
-        CountDownLatchWrapper tryLatch = new CountDownLatchWrapper();
-        CountDownLatchWrapper executeMethodEntranceVerifierLatch = new CountDownLatchWrapper();
-        final AtomicInteger executionCount = new AtomicInteger(0);
+        public final AcquireTokenResult initialResult;
+        public final AcquireTokenResult subsequentResult;
 
-        final SilentTokenCommand silentTokenCommand = new LatchedRefreshInTestCommand(executionCount,
-                expectedAcquireTokenResult,
-                getEmptyTestParams(),
-                new CommandCallback<ILocalAuthenticationResult, Exception>() {
-                    @Override
-                    public void onTaskCompleted(final ILocalAuthenticationResult iLocalAuthenticationResult) {
-                        callbackLatch.countDown();
-                        boolean actual = iLocalAuthenticationResult.getAccessTokenRecord().shouldRefresh();
-                        boolean expected = expectedAcquireTokenResult.getLocalAuthenticationResult().getAccessTokenRecord().shouldRefresh();
-                        Assert.assertEquals(expected, actual);
-                    }
+        public AcquireTokenResultWrapper(AcquireTokenResult initialResult, AcquireTokenResult completeResult){
+            this.initialResult = initialResult;
+            this.subsequentResult = completeResult;
+        }
 
-                    @Override
-                    public void onCancel() {
-                        callbackLatch.countDown();
-                        Assert.fail();
-                    }
-
-                    @Override
-                    public void onError(Exception error) {
-                        callbackLatch.countDown();
-                        Assert.fail();
-                    }
-
-                }, 1, tryLatch, executeMethodEntranceVerifierLatch) {
-            @Override
-            public boolean isEligibleForCaching() {
-                return true;
+        public AcquireTokenResult getNextResult(AtomicInteger i){
+            i.getAndIncrement();
+            if (i.get() == 1){
+                return initialResult;
+            } else if ( i.get() == 2){
+                return subsequentResult;
+            }else {
+                return null;
             }
+        }
 
-        };
+        public AcquireTokenResult getCurrentResult(int i){
+            if (i == 1){
+                return initialResult;
+            } else if ( i == 2){
+                return subsequentResult;
+            }else {
+                return null;
+            }
+        }
 
-        FinalizableResultFuture<CommandResult> silentReturningFuture = CommandDispatcher.submitSilentReturningFuture(silentTokenCommand);
-        executeMethodEntranceVerifierLatch.await();
-        tryLatch.countDown();
-        callbackLatch.await();
-        Assert.assertTrue(silentReturningFuture.isDone());
-        Assert.assertEquals(expectedAcquireTokenResult.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
-        Assert.assertEquals(2, executionCount.get());
-        silentReturningFuture.isCleanedUp();
-        Assert.assertFalse(CommandDispatcher.isCommandOutstanding(silentTokenCommand));
     }
 
 
@@ -659,25 +811,23 @@ public class CommandDispatcherTest {
         }
     }
 
+
     public static class LatchedRefreshInTestCommand extends SilentTokenCommand {
         final CountDownLatchWrapper tryLatch;
         final CountDownLatchWrapper executeMethodEntranceVerifierLatch;
-        final AtomicInteger executionCount;
-        final AcquireTokenResult acquireTokenResult;
+        final AcquireTokenResultWrapper acquireTokenResultWrapper;
         final int commandId;
 
-        public LatchedRefreshInTestCommand(@NonNull AtomicInteger executionCount,
-                                           @NonNull AcquireTokenResult acquireTokenResult,
-                                           @NonNull final CommandParameters parameters,
+        public LatchedRefreshInTestCommand(@NonNull AcquireTokenResultWrapper acquireTokenResultWrapper,
+                                           @NonNull final SilentTokenCommandParameters parameters,
                                   @NonNull final CommandCallback callback,
                                   final int commandId,
                                   @NonNull final CountDownLatchWrapper tryLatch,
                                   @NonNull final CountDownLatchWrapper executeMethodEntranceVerifierLatch) {
-            super(getEmptySilentTokenParameters(), getTestRefreshInController(acquireTokenResult), callback, "");
+            super(parameters, getTestRefreshInController(acquireTokenResultWrapper), callback, "");
             this.tryLatch = tryLatch;
             this.executeMethodEntranceVerifierLatch = executeMethodEntranceVerifierLatch;
-            this.executionCount = executionCount;
-            this.acquireTokenResult = acquireTokenResult;
+            this.acquireTokenResultWrapper = acquireTokenResultWrapper;
             this.commandId = commandId;
         }
 
@@ -685,10 +835,9 @@ public class CommandDispatcherTest {
         public AcquireTokenResult execute() {
             AcquireTokenResult result;
             executeMethodEntranceVerifierLatch.countDown();
-            executionCount.incrementAndGet();
             try {
                 tryLatch.await();
-                result = getTestRefreshInController(acquireTokenResult).acquireTokenSilent(null);
+                result = getDefaultController().acquireTokenSilent((SilentTokenCommandParameters) getParameters());
             } catch (InterruptedException e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);
@@ -721,11 +870,15 @@ public class CommandDispatcherTest {
         };
     }
 
-    private static BaseController getTestRefreshInController(final AcquireTokenResult acquireTokenResult) {
+    private static BaseController getTestRefreshInController(final AcquireTokenResultWrapper acquireTokenResultWrapper) {
         return new TestBaseController() {
             @Override
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
-                return acquireTokenResult;
+                if(parameters.isRefreshIn()){
+                    return acquireTokenResultWrapper.subsequentResult;
+                }else{
+                    return acquireTokenResultWrapper.initialResult;
+                }
             }
         };
     }
@@ -767,7 +920,7 @@ public class CommandDispatcherTest {
     private static AccessTokenRecord getRefreshUnexpiredAccessTokenRecord(){
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         accessTokenRecord.setExpiresOn(String.valueOf(Integer.MAX_VALUE));
-        accessTokenRecord.setRefreshOn(String.valueOf(Integer.MAX_VALUE/2));
+        accessTokenRecord.setRefreshOn(String.valueOf(Integer.MAX_VALUE-1));
         return accessTokenRecord;
     }
 

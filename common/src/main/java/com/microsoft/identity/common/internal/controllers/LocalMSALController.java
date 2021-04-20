@@ -43,7 +43,6 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.RefreshInTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -324,11 +323,12 @@ public class LocalMSALController extends BaseController {
                     "RefreshIn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if(parameters instanceof RefreshInTokenCommandParameters) { //refresh_in second call
+        if(parameters.isRefreshIn()) { //refresh_in second call
             AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
             Logger.warn(
                     TAG + methodName,
                     "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + accessTokenRecord.getRefreshOn() + ". Regular expiry is at " + accessTokenRecord.getExpiresOn() + "."
+                            + "Currently executing initial command, SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId() + " subsequent RefreshCommand with CorrelationId not yet available. See further in logs."
             );
             renewAT(
                     parametersWithScopes,
