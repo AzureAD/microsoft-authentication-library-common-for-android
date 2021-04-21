@@ -202,8 +202,8 @@ public class HelloCacheTests {
         final CommandParameters parameters = CommandParameters.builder().requiredBrokerProtocolVersion(minimumVer).build();
 
         try {
-            final String negotiatedProtocolVersion = controller.hello(strategy, parameters);
-            final String negotiatedProtocolVersion2 = controller.hello(strategy, parameters);
+            final String negotiatedProtocolVersion = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            final String negotiatedProtocolVersion2 = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
             Assert.assertEquals(negotiatedProtocolVersion, negotiatedProtocolVersion2);
         } catch (BaseException e) {
             Assert.fail();

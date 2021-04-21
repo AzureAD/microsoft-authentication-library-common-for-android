@@ -25,7 +25,9 @@ package com.microsoft.identity.common.internal.util;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
 import java.util.Calendar;
@@ -41,12 +43,19 @@ public class ClockSkewManager implements IClockSkewManager {
         private static final String KEY_SKEW = "skew";
     }
 
-    private SharedPreferencesFileManager mClockSkewPreferences;
+    private ISharedPreferencesFileManager mClockSkewPreferences;
+
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public ClockSkewManager(@NonNull final ISharedPreferencesFileManager manager) {
+        mClockSkewPreferences = manager;
+    }
 
     public ClockSkewManager(@NonNull final Context context) {
-        mClockSkewPreferences = new SharedPreferencesFileManager(
+        mClockSkewPreferences = SharedPreferencesFileManager.getSharedPreferences(
                 context,
-                PreferencesMetadata.SKEW_PREFERENCES_FILENAME
+                PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
+                -1,
+                null
         );
     }
 

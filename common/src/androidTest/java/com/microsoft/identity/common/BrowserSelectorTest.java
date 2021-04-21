@@ -38,6 +38,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
@@ -102,7 +103,7 @@ public class BrowserSelectorTest {
 
     @Before
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        MockitoAnnotations.initMocks(this);
         when(mContext.getPackageManager()).thenReturn(mPackageManager);
     }
 
@@ -168,7 +169,7 @@ public class BrowserSelectorTest {
         for (TestBrowser browser : browsers) {
             when(mPackageManager.getPackageInfo(
                     eq(browser.mPackageInfo.packageName),
-                    eq(PackageManager.GET_SIGNATURES)))
+                    eq(PackageHelper.getPackageManagerSignaturesFlag())))
                     .thenReturn(browser.mPackageInfo);
             resolveInfos.add(browser.mResolveInfo);
         }
@@ -253,14 +254,15 @@ public class BrowserSelectorTest {
         }
 
         public TestBrowser build() {
-            PackageInfo pi = new PackageInfo();
-            pi.packageName = mPackageName;
-            pi.versionName = mVersion;
-            pi.signatures = new Signature[mSignatures.size()];
+            Signature[] signatures = new Signature[mSignatures.size()];
 
             for (int i = 0; i < mSignatures.size(); i++) {
-                pi.signatures[i] = new Signature(mSignatures.get(i));
+                signatures[i] = new Signature(mSignatures.get(i));
             }
+
+            final PackageInfo pi = Util.addSignatures(new PackageInfo(), signatures);
+            pi.packageName = mPackageName;
+            pi.versionName = mVersion;
 
             Set<String> signatureHashes = Browser.generateSignatureHashes(pi.signatures);
 

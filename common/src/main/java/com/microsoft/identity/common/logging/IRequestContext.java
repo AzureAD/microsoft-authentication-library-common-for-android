@@ -20,23 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
+package com.microsoft.identity.common.logging;
 
-import com.microsoft.identity.common.internal.net.HttpResponse;
+import java.util.Map;
 
-/**
- * Class to set a mock http response at runtime.
- */
-public class MockHttpResponse {
+public interface IRequestContext extends Map<String, String> {
 
-    private static HttpResponse sHttpResponse;
+    /**
+     * Get the JSON String for the request context.
+     *
+     * @return String
+     */
+    String toJsonString();
 
-
-    public static HttpResponse getHttpResponse() {
-        return sHttpResponse;
-    }
-
-    public static void setHttpResponse(final HttpResponse httpResponse) {
-        sHttpResponse = httpResponse;
-    }
 }

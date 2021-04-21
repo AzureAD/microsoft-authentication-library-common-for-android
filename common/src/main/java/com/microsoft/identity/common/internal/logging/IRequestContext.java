@@ -22,15 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
-import java.util.Map;
-
-public interface IRequestContext extends Map<String, String> {
-
-    /**
-     * Get the JSON String for the request context.
-     *
-     * @return String
-     */
-    String toJsonString();
-
+@Deprecated
+public interface IRequestContext extends com.microsoft.identity.common.logging.IRequestContext {
+    // Class exists for backcompat
 }

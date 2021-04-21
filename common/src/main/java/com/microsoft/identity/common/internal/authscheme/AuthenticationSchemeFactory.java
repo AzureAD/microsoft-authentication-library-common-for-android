@@ -27,9 +27,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Factory class for turning public scheme types into internal representations.

@@ -28,6 +28,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +37,8 @@ import com.microsoft.identity.client.IMicrosoftAuthService;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.OPERATION_NOT_SUPPORTED_ON_CLIENT_SIDE;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.BOUND_SERVICE;
 
@@ -83,7 +86,17 @@ public class MicrosoftAuthClient extends BoundServiceClient<IMicrosoftAuthServic
 
             case MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST:
                 final Intent intent = microsoftAuthService.getIntentForInteractiveRequest();
-                return intent.getExtras();
+                final Bundle bundle = intent.getExtras();
+
+                //older brokers (pre-ContentProvider) are ONLY sending these values in the intent itself.
+                if (intent.getComponent() != null &&
+                        !TextUtils.isEmpty(intent.getPackage()) &&
+                        !TextUtils.isEmpty(intent.getComponent().getClassName())){
+                    bundle.putString(BROKER_PACKAGE_NAME, intent.getPackage());
+                    bundle.putString(BROKER_ACTIVITY_NAME, intent.getComponent().getClassName());
+                }
+
+                return bundle;
 
             case MSAL_ACQUIRE_TOKEN_SILENT:
                 return microsoftAuthService.acquireTokenSilently(inputBundle);

@@ -40,7 +40,6 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -54,6 +53,7 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,6 +68,9 @@ import static com.microsoft.identity.common.internal.authscheme.BearerAuthentica
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 import static com.microsoft.identity.common.internal.dto.CredentialType.ID_TOKEN_TYPES;
+import static com.microsoft.identity.common.internal.dto.CredentialType.IdToken;
+import static com.microsoft.identity.common.internal.dto.CredentialType.RefreshToken;
+import static com.microsoft.identity.common.internal.dto.CredentialType.V1IdToken;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
@@ -137,9 +140,10 @@ public class MsalOAuth2TokenCache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        -1,
                         storageHelper
                 );
         final IAccountCredentialCache accountCredentialCache =
@@ -208,13 +212,13 @@ public class MsalOAuth2TokenCache
         saveCredentialsInternal(idTokenRecord, accessTokenRecord);
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountRecord);
-        result.mAccessToken(accessTokenRecord);
+        result.account(accountRecord);
+        result.accessToken(accessTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.mV1IdToken(idTokenRecord);
+            result.v1IdToken(idTokenRecord);
         } else {
-            result.mIdToken(idTokenRecord);
+            result.idToken(idTokenRecord);
         }
 
         return result.build();
@@ -232,28 +236,23 @@ public class MsalOAuth2TokenCache
     ICacheRecord save(final @NonNull AccountRecord accountRecord,
                       final @NonNull IdTokenRecord idTokenRecord,
                       final @NonNull AccessTokenRecord accessTokenRecord,
-                      final @NonNull RefreshTokenRecord refreshTokenRecord) throws ClientException {
+                      final @Nullable RefreshTokenRecord refreshTokenRecord) throws ClientException {
         final String methodName = ":save (4 arg)";
 
         // Validate the supplied Accounts/Credentials
-        final boolean isAccountValid = isAccountSchemaCompliant(accountRecord);
-        final boolean isIdTokenValid = isIdTokenSchemaCompliant(idTokenRecord);
-        final boolean isAccessTokenValid = isAccessTokenSchemaCompliant(accessTokenRecord);
-        final boolean isRefreshTokenValid = isRefreshTokenSchemaCompliant(refreshTokenRecord);
-
-        if (!isAccountValid) {
+        if (!isAccountSchemaCompliant(accountRecord)) {
             throw new ClientException(ACCOUNT_IS_SCHEMA_NONCOMPLIANT);
         }
 
-        if (!isIdTokenValid) {
+        if (!isIdTokenSchemaCompliant(idTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(ID)]");
         }
 
-        if (!isAccessTokenValid) {
+        if (!isAccessTokenSchemaCompliant(accessTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(AT)]");
         }
 
-        if (!isRefreshTokenValid) {
+        if (refreshTokenRecord != null && !isRefreshTokenSchemaCompliant(refreshTokenRecord)) {
             throw new ClientException(CREDENTIAL_IS_SCHEMA_NONCOMPLIANT, "[(RT)]");
         }
 
@@ -266,14 +265,14 @@ public class MsalOAuth2TokenCache
         saveCredentialsInternal(idTokenRecord, accessTokenRecord, refreshTokenRecord);
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountRecord);
-        result.mAccessToken(accessTokenRecord);
-        result.mRefreshToken(refreshTokenRecord);
+        result.account(accountRecord);
+        result.accessToken(accessTokenRecord);
+        result.refreshToken(refreshTokenRecord);
 
         if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenRecord.getCredentialType())) {
-            result.mV1IdToken(idTokenRecord);
+            result.v1IdToken(idTokenRecord);
         } else {
-            result.mIdToken(idTokenRecord);
+            result.idToken(idTokenRecord);
         }
 
         return result.build();
@@ -379,9 +378,9 @@ public class MsalOAuth2TokenCache
         removeAllRefreshTokensExcept(accountToSave, refreshTokenToSave);
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(accountToSave);
-        result.mAccessToken(accessTokenToSave);
-        result.mRefreshToken(refreshTokenToSave);
+        result.account(accountToSave);
+        result.accessToken(accessTokenToSave);
+        result.refreshToken(refreshTokenToSave);
         setToCacheRecord(result, idTokenToSave);
 
         return result.build();
@@ -533,7 +532,7 @@ public class MsalOAuth2TokenCache
         }
 
         final CacheRecord.CacheRecordBuilder associatedRecord = CacheRecord.builder();
-        associatedRecord.mAccount(acct);
+        associatedRecord.account(acct);
 
         for (final IdTokenRecord idTokenRecord : acctIdTokens) {
             setToCacheRecord(associatedRecord, idTokenRecord);
@@ -672,11 +671,11 @@ public class MsalOAuth2TokenCache
             saveCredentialsInternal(idTokenToSave);
 
             // Set them as the result outputs
-            result.mAccount(accountToSave);
+            result.account(accountToSave);
             if (CredentialType.V1IdToken.name().equalsIgnoreCase(idTokenToSave.getCredentialType())) {
-                result.mV1IdToken(idTokenToSave);
+                result.v1IdToken(idTokenToSave);
             } else {
-                result.mIdToken(idTokenToSave);
+                result.idToken(idTokenToSave);
             }
         }
 
@@ -754,7 +753,7 @@ public class MsalOAuth2TokenCache
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
                 account.getEnvironment(),
-                CredentialType.IdToken,
+                IdToken,
                 clientId,
                 account.getRealm(),
                 null, // wildcard (*),
@@ -773,11 +772,11 @@ public class MsalOAuth2TokenCache
         );
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
-        result.mAccount(account);
-        result.mAccessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
-        result.mRefreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
-        result.mIdToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
-        result.mV1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
+        result.account(account);
+        result.accessToken(accessTokens.isEmpty() ? null : (AccessTokenRecord) accessTokens.get(0));
+        result.refreshToken(refreshTokens.isEmpty() ? null : (RefreshTokenRecord) refreshTokens.get(0));
+        result.idToken(idTokens.isEmpty() ? null : (IdTokenRecord) idTokens.get(0));
+        result.v1IdToken(v1IdTokens.isEmpty() ? null : (IdTokenRecord) v1IdTokens.get(0));
 
         Telemetry.emit(new CacheEndEvent().putCacheRecordStatus(result.build()));
         return result.build();
@@ -896,7 +895,7 @@ public class MsalOAuth2TokenCache
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 accountRecord.getHomeAccountId(),
                 accountRecord.getEnvironment(),
-                CredentialType.IdToken,
+                IdToken,
                 clientId, // If null, behaves as wildcard
                 accountRecord.getRealm(),
                 null, // wildcard (*),
@@ -1101,7 +1100,7 @@ public class MsalOAuth2TokenCache
             );
 
             result = CacheRecord.builder();
-            result.mAccount(acct);
+            result.account(acct);
             for (final IdTokenRecord idTokenRecord : acctIdTokens) {
                 setToCacheRecord(result, idTokenRecord);
             }
@@ -1114,7 +1113,8 @@ public class MsalOAuth2TokenCache
     /**
      * Given a CacheRecord and IdTokenRecord, set the IdToken on the cache record in the field
      * corresponding to the IdToken's version.
-     *  @param target        The CacheRecord into which said IdToken should be placed.
+     *
+     * @param target        The CacheRecord into which said IdToken should be placed.
      * @param idTokenRecord The IdToken to associate.
      */
     private void setToCacheRecord(@NonNull final CacheRecord.CacheRecordBuilder target,
@@ -1127,9 +1127,9 @@ public class MsalOAuth2TokenCache
 
         if (null != type) {
             if (CredentialType.V1IdToken == type) {
-                target.mV1IdToken(idTokenRecord);
-            } else if (CredentialType.IdToken == type) {
-                target.mIdToken(idTokenRecord);
+                target.v1IdToken(idTokenRecord);
+            } else if (IdToken == type) {
+                target.idToken(idTokenRecord);
             } else {
                 Logger.warn(
                         TAG + methodName,
@@ -1167,42 +1167,19 @@ public class MsalOAuth2TokenCache
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
 
-        // Grab the Credentials for this app...start with the v2 IdTokens....
-        final List<Credential> appCredentials =
-                mAccountCredentialCache.getCredentialsFilteredBy(
-                        null, // homeAccountId
-                        environment,
-                        CredentialType.IdToken,
-                        clientId,
-                        null, // realm
-                        null, // target,
-                        null // not applicable
-                );
-
-        // And also grab any V1IdTokens....
-        appCredentials.addAll(
-                mAccountCredentialCache.getCredentialsFilteredBy(
-                        null, // homeAccountId
-                        environment,
-                        CredentialType.V1IdToken,
-                        clientId,
-                        null, // realm
-                        null, // target
-                        null // not applicable
-                )
+        final Set<CredentialType> credentialTypes = new HashSet<>(
+                Arrays.asList(IdToken, V1IdToken, RefreshToken)
         );
 
-        // And any refresh tokens...
-        appCredentials.addAll(
-                mAccountCredentialCache.getCredentialsFilteredBy(
-                        null,
-                        environment,
-                        CredentialType.RefreshToken,
-                        clientId,
-                        null,
-                        null,
-                        null
-                )
+        final List<Credential> appCredentials = mAccountCredentialCache.getCredentialsFilteredBy(
+                null, // homeAccountId
+                environment,
+                credentialTypes,
+                clientId,
+                null, // realm
+                null, // target
+                null, // authScheme
+                null // requestedClaims
         );
 
         // For each Account with an associated RT, add it to the result List...
@@ -1269,9 +1246,14 @@ public class MsalOAuth2TokenCache
                     accountRecord
             );
 
+            if (idTokensForAccount == null || idTokensForAccount.size() == 0) {
+                // Skip returning account record if there is no corresponding idToken record in the cache for the given clientId
+                continue;
+            }
+
             // Construct the cache record....
             final CacheRecord.CacheRecordBuilder cacheRecordBuilder = CacheRecord.builder();
-            cacheRecordBuilder.mAccount(accountRecord);
+            cacheRecordBuilder.account(accountRecord);
             // Set the IdTokens...
             for (IdTokenRecord idTokenRecord : idTokensForAccount) {
                 setToCacheRecord(cacheRecordBuilder, idTokenRecord);
@@ -1299,7 +1281,7 @@ public class MsalOAuth2TokenCache
     }
 
     /**
-     * Evaluates the supplied list of Credentials. Returns true if he provided Account
+     * Evaluates the supplied list of Credentials. Returns true if the provided Account
      * 'owns' any one of these tokens.
      *
      * @param account        The Account whose credential ownership should be evaluated.
@@ -1341,7 +1323,7 @@ public class MsalOAuth2TokenCache
      * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
      * restricted to only those AccountRecords and Credentials in that realm (tenant).
      * <p>
-     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * clientId, and home_account_id are nullable parameters. However, it should be
      * noted that if these params are null, this method will have no effect.
      *
      * @param environment   The environment to which the targeted Account is associated.
@@ -1363,7 +1345,7 @@ public class MsalOAuth2TokenCache
                 CredentialType.AccessToken,
                 CredentialType.AccessToken_With_AuthScheme,
                 CredentialType.RefreshToken,
-                CredentialType.IdToken,
+                IdToken,
                 CredentialType.V1IdToken
         );
     }
@@ -1375,7 +1357,7 @@ public class MsalOAuth2TokenCache
      * provided homeAccountId will be deleted. If a realm is provided, then the deletion is
      * restricted to only those AccountRecords and Credentials in that realm (tenant).
      * <p>
-     * Environment, clientId, and home_account_id are nullable parameters. However, it should be
+     * clientId, and home_account_id are nullable parameters. However, it should be
      * noted that if these params are null, this method will have no effect.
      *
      * @param environment   The environment to which the targeted Account is associated.
@@ -1407,8 +1389,7 @@ public class MsalOAuth2TokenCache
         );
 
         final AccountRecord targetAccount;
-        if (null == environment
-                || null == clientId
+        if (null == clientId
                 || null == homeAccountId
                 || null == (targetAccount =
                 getAccount(
@@ -1670,7 +1651,8 @@ public class MsalOAuth2TokenCache
                 referenceToken.getClientId(),
                 referenceToken.getRealm(),
                 null, // Wildcard (*)
-                referenceToken.getAccessTokenType()
+                referenceToken.getAccessTokenType(),
+                referenceToken.getRequestedClaims()
         );
 
         Logger.verbose(

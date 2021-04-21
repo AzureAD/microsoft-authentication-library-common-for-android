@@ -27,7 +27,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;

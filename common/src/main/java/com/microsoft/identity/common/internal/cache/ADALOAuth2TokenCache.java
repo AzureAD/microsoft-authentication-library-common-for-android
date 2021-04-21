@@ -45,7 +45,6 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
@@ -55,6 +54,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -116,9 +116,10 @@ public class ADALOAuth2TokenCache
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
         mISharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         getContext(),
                         fileName,
+                        -1,
                         new StorageHelper(getContext())
                 );
     }
@@ -398,5 +399,13 @@ public class ADALOAuth2TokenCache
         Logger.warn(TAG, "getSingleSignOnState was called, but is not implemented.");
         final RefreshToken refreshToken = null;
         return refreshToken;
+    }
+
+    public static String getAdalCacheFilename() {
+        Logger.info(
+                TAG + ":getAdalCacheFilename",
+                "Getting ADAL cache file name..."
+        );
+        return SHARED_PREFERENCES_FILENAME;
     }
 }

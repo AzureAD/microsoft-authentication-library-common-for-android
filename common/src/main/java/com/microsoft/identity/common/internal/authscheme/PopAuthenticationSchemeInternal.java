@@ -32,6 +32,10 @@ import com.microsoft.identity.common.internal.util.IClockSkewManager;
 
 import java.net.URL;
 
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
@@ -40,6 +44,9 @@ import static com.microsoft.identity.common.internal.authscheme.PopAuthenticatio
 /**
  * Internal representation of PoP Authentication Scheme.
  */
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+@Accessors(prefix = "m")
 public class PopAuthenticationSchemeInternal
         extends TokenAuthenticationScheme
         implements IPoPAuthenticationSchemeParams {

@@ -36,6 +36,7 @@ import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -143,7 +144,7 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         // try different block sizes
         final int sizeRange = 1000;
         StringBuilder buf = new StringBuilder(sizeRange);
-        for (int i = 0; i < sizeRange; i++) {
+        for (int i = 0; i < sizeRange; i+=20) {
             encryptDecrypt(buf.append("a").toString());
         }
         Log.d(TAG, "Finished testEncryptDecrypt_differentSizes");
@@ -185,6 +186,30 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         assertEquals("Same as initial text", decrypted, decrypted3);
         Log.d(TAG, "Finished testEncryptSameText");
     }
+
+    @Test
+    public void testKeyThumbprint() throws GeneralSecurityException, IOException {
+        Context context = getInstrumentation().getTargetContext();
+        final StorageHelper storageHelper = new StorageHelper(context);
+        Assert.assertEquals(storageHelper.testThumbprint(), storageHelper.testThumbprint());
+    }
+
+    @Test
+    public void testKeyChange() throws GeneralSecurityException, IOException {
+        Context context = getInstrumentation().getTargetContext();
+        StorageHelper.LAST_KNOWN_THUMBPRINT.set("");
+        final StorageHelper storageHelper = new StorageHelper(context);
+        Assert.assertTrue(storageHelper.testKeyChange());
+        for (int i = 0; i < 500; i++) {
+            Assert.assertFalse("None of these things should change the key", storageHelper.testKeyChange());
+        }
+        StorageHelper.LAST_KNOWN_THUMBPRINT.set("foo");
+        Assert.assertTrue("We altered the key here", storageHelper.testKeyChange());
+        for (int i = 0; i < 500; i++) {
+            Assert.assertFalse("The key should remain unchanged", storageHelper.testKeyChange());
+        }
+    }
+
 
     @Test
     public void testTampering() throws GeneralSecurityException, IOException {
@@ -457,8 +482,8 @@ public class StorageHelperTests extends AndroidSecretKeyEnabledHelper {
         final StorageHelper storageHelper = new StorageHelper(context);
 
         final String keyString = "ABCDEFGH";
-        final SecretKey key = new SecretKeySpec(Base64.decode(keyString.getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
-        final SecretKey anotherKey = new SecretKeySpec(Base64.decode("RANDOM".getBytes(AuthenticationConstants.ENCODING_UTF8), Base64.DEFAULT), "AES");
+        final SecretKey key = new SecretKeySpec(Base64.decode(keyString.getBytes(AuthenticationConstants.CHARSET_UTF8), Base64.DEFAULT), "AES");
+        final SecretKey anotherKey = new SecretKeySpec(Base64.decode("RANDOM".getBytes(AuthenticationConstants.CHARSET_UTF8), Base64.DEFAULT), "AES");
 
         final String serializedKey = storageHelper.serializeSecretKey(key);
         final SecretKey deserializedKey = storageHelper.deserializeSecretKey(serializedKey);
