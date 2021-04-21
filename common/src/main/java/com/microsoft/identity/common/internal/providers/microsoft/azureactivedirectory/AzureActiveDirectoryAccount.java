@@ -25,9 +25,9 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
 import java.util.Map;

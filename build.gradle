@@ -5,7 +5,7 @@ buildscript {
     
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${rootProject.ext.gradleVersion}"
@@ -43,7 +43,7 @@ allprojects {
 
         NOTE: When building in Travis packages will be pulled from here
          */
-        jcenter()
+        mavenCentral()
         /*
         Required since the DUO sdk is not published to any of the other large android
         repositories... which is odd.

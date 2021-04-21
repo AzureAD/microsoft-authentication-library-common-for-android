@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
+import android.text.TextUtils;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -30,7 +31,6 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -51,6 +51,21 @@ public final class StringUtil {
      */
     public static boolean isEmpty(final String message) {
         return message == null || message.trim().length() == 0; //NOPMD  Suppressing PMD warning for new String creation on trim()"
+    }
+
+    /**
+     * Returns true if the string contains the given substring.
+     *
+     * @param str    the string to search for a substring in
+     * @param substr the substring to search for
+     * @return true if the string contains the given substring, false if it does not or if it is null
+     */
+    public static boolean containsSubString(final String str, final String substr) {
+        if (TextUtils.isEmpty(str)) {
+            return false;
+        }
+
+        return str.contains(substr);
     }
 
     /**
@@ -77,7 +92,7 @@ public final class StringUtil {
         return stringBuilder.toString();
     }
 
-    public static String join(final char delimiter, @NonNull final List<String> toJoin) {
+    public static String join(final char delimiter, @NonNull final Iterable<String> toJoin) {
         StringBuilder builder = new StringBuilder();
 
         char tempDelimiter = Character.MIN_VALUE;
@@ -223,13 +238,25 @@ public final class StringUtil {
     }
 
     /**
-     * Utility to null-safe-compare string in a case-insensitive manner, trimming the second input.
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming the second input.
      *
      * @param one The first string to compare.
      * @param two The second string to compare.
-     * @return
+     * @return true if the inputs are equal, false otherwise.
      */
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
+    }
+
+    /**
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming both inputs.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return true if the inputs are equal, false otherwise.
+     */
+    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
+                                                   @Nullable final String two) {
+        return equalsIgnoreCaseTrim(null != one ? one.trim() : one, two);
     }
 }

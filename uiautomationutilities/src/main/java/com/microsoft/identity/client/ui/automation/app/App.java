@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.client.ui.automation.installer.IAppInstaller;
 import com.microsoft.identity.client.ui.automation.installer.LocalApkInstaller;
 import com.microsoft.identity.client.ui.automation.installer.PlayStore;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
@@ -41,6 +42,8 @@ import lombok.Setter;
  */
 @Getter
 public abstract class App implements IApp {
+
+    private final static String TAG = App.class.getSimpleName();
 
     @Setter
     private IAppInstaller appInstaller;
@@ -88,8 +91,10 @@ public abstract class App implements IApp {
         //TODO: make it build time configurable to specify the installer that should be used.
         // Ideally we can specify different installers on app basis
         if (appInstaller instanceof LocalApkInstaller && !TextUtils.isEmpty(localApkFileName)) {
+            Logger.i(TAG, "Installing the " + this.appName + " from local apk..");
             appInstaller.installApp(localApkFileName);
         } else {
+            Logger.i(TAG, "Installing the " + this.appName + " from Play Store..");
             appInstaller.installApp(packageName);
         }
 

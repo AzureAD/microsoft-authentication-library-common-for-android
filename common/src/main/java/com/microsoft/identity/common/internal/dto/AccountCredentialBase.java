@@ -22,8 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.dto;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.JsonElement;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,7 +35,7 @@ import java.util.Map;
  */
 public abstract class AccountCredentialBase {
 
-    private transient Map<String, JsonElement> mAdditionalFields = new HashMap<>();
+    private transient Map<String, JsonElement> mAdditionalFields = Collections.synchronizedMap(new HashMap<String, JsonElement>());
 
     /**
      * Getter of additional fields.
@@ -48,8 +51,31 @@ public abstract class AccountCredentialBase {
      *
      * @param additionalFields Map<String, JsonElement>
      */
-    public void setAdditionalFields(Map<String, JsonElement> additionalFields) {
-        mAdditionalFields = additionalFields;
+    public void setAdditionalFields(@NonNull final Map<String, JsonElement> additionalFields) {
+        mAdditionalFields = Collections.synchronizedMap(additionalFields);
+    }
+
+    /**
+     * Adds the additionalFields of the input AccountCredentialBase to this instance.
+     *
+     * @param other The input AccountCredentialBase to merge with this instance.
+     */
+    public void mergeAdditionalFields(@NonNull final AccountCredentialBase other) {
+        if (null == mAdditionalFields) {
+            mAdditionalFields = Collections.synchronizedMap(new HashMap<String, JsonElement>());
+        }
+
+        if (null != other.getAdditionalFields()) {
+            for (final Map.Entry<String, JsonElement> entry : other.getAdditionalFields().entrySet()) {
+                // Only add elements not present in the existing collection, so that old data
+                // does not overwrite new data...
+                if (mAdditionalFields.containsKey(entry.getKey())) {
+                    continue;
+                }
+
+                mAdditionalFields.put(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     //CHECKSTYLE:OFF

@@ -28,6 +28,11 @@ public class ClientException extends BaseException {
     private static final long serialVersionUID = -2318746536590284648L;
 
     /**
+     * Indicates that an invalid algorithm parameter is in use.
+     */
+    public static final String INVALID_ALG_PARAMETER = "invalid_algorithm_parameter";
+
+    /**
      * Indicates that a token was not found in the internal/adal/tokensharing ssostateserializer.
      */
     public static final String TOKEN_CACHE_ITEM_NOT_FOUND = "token_cache_item_not_found";
@@ -38,6 +43,11 @@ public class ClientException extends BaseException {
     public static final String TOKEN_SHARING_DESERIALIZATION_ERROR = "token_sharing_deserialization_error";
 
     public static final String TOKEN_SHARING_MSA_PERSISTENCE_ERROR = "failed_to_persist_msa_credential";
+
+    /**
+     * Experienced a failure when attempting to execute PKCE.
+     */
+    public static final String PKCE_FAILURE = "pkce_failure";
 
     /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
@@ -70,6 +80,16 @@ public class ClientException extends BaseException {
      * Emitted when a particular padding mechanism is requested but is not available in the environment.
      */
     public static final String NO_SUCH_PADDING = "no_such_padding";
+
+    /**
+     * Emitted when a the padding on a particular cipher is incorrect.
+     */
+    public static final String BAD_PADDING = "bad_padding";
+
+    /**
+     * Emitted when a the block size specified by a cipher is invalid.
+     */
+    public static final String INVALID_BLOCK_SIZE = "invalid_block_size";
 
     /**
      * The url is malformed.  Likely caused when constructing the auth request, authority, or redirect URI.
@@ -264,6 +284,11 @@ public class ClientException extends BaseException {
      * An access to perform a given operation is denied.
      */
     public static final String ACCESS_DENIED = "access_denied";
+
+    /**
+     * Tokens missing
+     */
+    public static final String TOKENS_MISSING = "tokens_missing";
 
     /**
      * Constructor of ClientException.

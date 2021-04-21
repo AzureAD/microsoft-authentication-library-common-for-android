@@ -26,11 +26,12 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
 import java.util.UUID;
 
-public class MicrosoftTokenRequest extends TokenRequest {
+public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
 
     public static final String CODE_VERIFIER = "code_verifier";
     public static final String CLIENT_INFO = "client_info";

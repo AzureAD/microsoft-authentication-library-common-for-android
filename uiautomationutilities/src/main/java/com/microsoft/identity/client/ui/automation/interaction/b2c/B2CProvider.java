@@ -25,6 +25,7 @@ package com.microsoft.identity.client.ui.automation.interaction.b2c;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.internal.testutils.labutils.LabConstants;
 
 public enum B2CProvider {
@@ -34,6 +35,7 @@ public enum B2CProvider {
     MSA(LabConstants.B2CProvider.MICROSOFT, "MicrosoftAccountExchange", "live.com"),
     Local(LabConstants.B2CProvider.LOCAL, null, null);
 
+    private final static String TAG = "B2CProvider";
     private final String providerName;
 
     @Nullable // should be null for LOCAL B2C provider
@@ -45,6 +47,7 @@ public enum B2CProvider {
     B2CProvider(@NonNull final String providerName,
                 @Nullable final String idpSelectionBtnResourceId,
                 @Nullable final String domainHint) {
+        Logger.i(TAG, "Initializing B2CProvider for " + idpSelectionBtnResourceId + " ..");
         this.providerName = providerName;
         this.idpSelectionBtnResourceId = idpSelectionBtnResourceId;
         this.domainHint = domainHint;

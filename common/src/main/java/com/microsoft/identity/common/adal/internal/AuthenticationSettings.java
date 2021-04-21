@@ -24,9 +24,11 @@ package com.microsoft.identity.common.adal.internal;
 
 import android.os.Build;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,6 +43,8 @@ public enum AuthenticationSettings {
      * Singleton setting instance.
      */
     INSTANCE;
+
+    private static final String TAG = AuthenticationSettings.class.getSimpleName();
 
     private static final int SECRET_RAW_KEY_LENGTH = 32;
 
@@ -57,7 +61,7 @@ public enum AuthenticationSettings {
 
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_SIGNATURE;
+    private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
 
     private Class<?> mClazzDeviceCertProxy;
 
@@ -166,11 +170,23 @@ public enum AuthenticationSettings {
     }
 
     /**
-     * For test cases only.
+     * Clears any secret keys set by legacy {@link #setSecretKey(byte[])} API.
      */
-    public void clearSecretKeysForTestCases() {
+    public void clearLegacySecretKeyConfiguration() {
+        Logger.info(
+                TAG + ":clearLegacySecretKeyConfiguration",
+                "Clearing legacy secret key configuration."
+        );
         mBrokerSecretKeys.clear();
         mSecretKeyData.set(null);
+    }
+
+    /**
+     * For test cases only.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public void clearSecretKeysForTestCases() {
+        clearLegacySecretKeyConfiguration();
     }
 
     /**

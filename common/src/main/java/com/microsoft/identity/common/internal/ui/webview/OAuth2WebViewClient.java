@@ -27,23 +27,28 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
+import android.os.Build;
 import android.view.View;
 import android.webkit.HttpAuthHandler;
 import android.webkit.SslErrorHandler;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE;
@@ -55,7 +60,8 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
-    private final OnPageLoadedCallback mPageLoadedCallback;
+    @NonNull private final OnPageLoadedCallback mPageLoadedCallback;
+    @Nullable private final OnPageCommitVisibleCallback mPageCommitVisibleCallback;
     private final Activity mActivity;
 
     @VisibleForTesting
@@ -85,10 +91,26 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final IAuthorizationCompletionCallback completionCallback,
                         @NonNull final OnPageLoadedCallback pageLoadedCallback) {
+        this(activity, completionCallback, pageLoadedCallback, null);
+    }
+
+    /**
+     * Constructor for the OAuth2 basic web view client.
+     *
+     * @param activity           app Context
+     * @param completionCallback Challenge completion callback
+     * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
+     * @param pageCommitVisibleCallback callback to be triggered on page commit visible, For UI purposes.
+     */
+    OAuth2WebViewClient(@NonNull final Activity activity,
+                        @NonNull final IAuthorizationCompletionCallback completionCallback,
+                        @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                        @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
+        mPageCommitVisibleCallback = pageCommitVisibleCallback;
     }
 
     @Override
@@ -115,8 +137,20 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                 final int errorCode,
                                 final String description,
                                 final String failingUrl) {
-        super.onReceivedError(view, errorCode, description, failingUrl);
+        sendErrorToCallback(view, errorCode, description);
+    }
 
+    @Override
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public void onReceivedError(@NonNull final WebView view,
+                                @NonNull final WebResourceRequest request,
+                                @NonNull final WebResourceError error) {
+        sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
+    }
+
+    private void sendErrorToCallback(@NonNull final WebView view,
+                                     final int errorCode,
+                                     @NonNull final String description) {
         view.stopLoading();
 
         // Create result intent when webView received an error.
@@ -147,6 +181,14 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         // Send the result back to the calling activity
         mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
+    }
+
+    @Override
+    public void onPageCommitVisible(final WebView view, final String url) {
+        super.onPageCommitVisible(view, url);
+        if (mPageCommitVisibleCallback != null) {
+            mPageCommitVisibleCallback.onPageCommitVisible();
+        }
     }
 
     @Override

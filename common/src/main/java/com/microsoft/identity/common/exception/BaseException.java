@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.exception;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -46,6 +47,10 @@ public class BaseException extends Exception {
     private String mErrorCode;
 
     private String mCorrelationId;
+
+    // The username of the account that owns the flow.
+    @Nullable
+    private String mUsername;
 
     /**
      * Default constructor.
@@ -148,6 +153,15 @@ public class BaseException extends Exception {
 
     public void setCorrelationId(@Nullable final String correlationId){
         mCorrelationId = correlationId;
+    }
+
+    @Nullable
+    public String getUsername() {
+        return mUsername;
+    }
+
+    public void setUsername(@NonNull final String username) {
+        this.mUsername = username;
     }
 
     public String getExceptionName(){

@@ -66,6 +66,7 @@ public class BrokerSupportRule implements TestRule {
                 SupportedBrokers supportedBrokersAnnotation = description.getAnnotation(SupportedBrokers.class);
 
                 if (supportedBrokersAnnotation == null) {
+                    Logger.i(TAG, "Does not Received any supported broker annotation..");
                     // if the test didn't have the SupportedBrokers annotation, then we see if the
                     // class had that annotation and we try to honor that
                     supportedBrokersAnnotation = description.getTestClass().getAnnotation(SupportedBrokers.class);
