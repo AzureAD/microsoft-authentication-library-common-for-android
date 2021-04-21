@@ -38,17 +38,7 @@ public class CommandResult {
         REFRESH_ON_ERROR;
 
         public String getLogStatus() {
-            if (ResultStatus.COMPLETED == this) {
-                return "SUCCESS";
-            } else if (ResultStatus.ERROR == this) {
-                return "ERROR";
-            } else if (ResultStatus.REFRESH == this) {
-                return "REFRESH";
-            } else if (ResultStatus.REFRESH_ON_ERROR == this) {
-                return "REFRESH_ON_ERROR";
-            } else {
-                return "CANCEL";
-            }
+            return this.name();
         }
     }
 
