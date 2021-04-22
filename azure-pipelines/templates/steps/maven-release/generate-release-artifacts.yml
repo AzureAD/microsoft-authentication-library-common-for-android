@@ -1,0 +1,50 @@
+# File: generate-release-artifacts.yml
+
+parameters:
+- name: gradleAssembleReleaseTask
+- name: gradleGeneratePomFiletask
+- name: aarSourceFolder
+- name: jarSourceFolder
+- name: pomSourceFolder
+
+steps:
+- task: Gradle@1
+  name: Gradle1
+  displayName: Assemble Release
+  inputs:
+    tasks: ${{ parameters.gradleAssembleReleaseTask }}
+    publishJUnitResults: false
+    jdkArchitecture: x86
+    sqAnalysisBreakBuildIfQualityGateFailed: false
+- task: Gradle@1
+  displayName: Generate Pom file
+  inputs:
+    tasks: ${{ parameters.gradleGeneratePomFiletask }}
+    publishJUnitResults: false
+    jdkArchitecture: x86
+    sqAnalysisBreakBuildIfQualityGateFailed: false
+- task: CopyFiles@2
+  name: CopyFiles1
+  displayName: Copy aar to Artifact Staging Directory
+  inputs:
+    SourceFolder: ${{ parameters.aarSourceFolder }}
+    Contents: '**/*.aar'
+    TargetFolder: $(build.artifactstagingdirectory)
+- task: CopyFiles@2
+  displayName: Copy jars to Artifact Staging Directory
+  inputs:
+    SourceFolder: ${{ parameters.jarSourceFolder }}
+    Contents: '**/*.jar'
+    TargetFolder: $(build.artifactstagingdirectory)
+- task: CopyFiles@2
+  displayName: Copy pom to Artifact Staging Directory
+  inputs:
+    SourceFolder: ${{ parameters.pomSourceFolder }}
+    Contents: '**/*.xml'
+    TargetFolder: $(build.artifactstagingdirectory)
+- task: PublishPipelineArtifact@1
+  name: PublishPipelineArtifact1
+  displayName: 'Publish Artifact: Build Outputs'
+  inputs:
+    ArtifactName: build_outputs
+    TargetPath: '\\my\share\$(Build.DefinitionName)\$(Build.BuildNumber)'
