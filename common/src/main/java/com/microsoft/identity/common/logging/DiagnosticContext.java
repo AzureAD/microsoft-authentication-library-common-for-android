@@ -45,7 +45,7 @@ public class DiagnosticContext{
      * @return IRequestContext
      */
     public static IRequestContext getRequestContext() {
-        return (IRequestContext) com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
+        return com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
     }
 
     /**

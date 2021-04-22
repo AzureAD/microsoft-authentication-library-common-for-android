@@ -45,6 +45,7 @@ public class Logger {
 
     private static final ExecutorService sLogExecutor = Executors.newSingleThreadExecutor();
     private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private static final String UNSET = "UNSET";
 
     // Turn on the VERBOSE level logging by default.
     @Setter()
@@ -109,8 +110,7 @@ public class Logger {
                                  ILoggerCallback callback) {
         sLoggersLock.writeLock().lock();
         try {
-            if (callback == null &&
-                    sLoggers.containsKey(identifier)) {
+            if (callback == null) {
                 sLoggers.remove(identifier);
                 return;
             }
@@ -133,10 +133,10 @@ public class Logger {
         String correlationId = DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID);
 
         if (StringUtil.isNullOrEmpty(threadName)) {
-            threadName = "UNSET";
+            threadName = UNSET;
         }
         if (StringUtil.isNullOrEmpty(correlationId)) {
-            correlationId = "UNSET";
+            correlationId = UNSET;
         }
 
         return DiagnosticContext.THREAD_NAME + " : "
