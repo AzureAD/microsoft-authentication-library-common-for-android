@@ -115,16 +115,23 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
 
+        // NOTE: April 19, 2021 - I think we should comment out the following code and make the behavior of handleNullTaskAffinity=true the default
+
+
         // singleTask launchMode is required for the authorization redirect is from an external browser
         // in the browser authorization flow
         // For broker request we need to clear all activities in the task and bring Authorization Activity to the
         // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
         // Authenticator's or Company Portal's active activity which would be confusing to the user.
+           /*
         if (mIsRequestFromBroker) {
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        } else {
+        }
+
+        else {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
+         */
 
         launchIntent(intent);
 

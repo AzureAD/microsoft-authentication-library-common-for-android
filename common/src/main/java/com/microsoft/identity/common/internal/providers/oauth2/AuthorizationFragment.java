@@ -148,6 +148,7 @@ public abstract class AuthorizationFragment extends Fragment {
     @Override
     public void onStop() {
         final String methodName = ":onStop";
+        /*
         if (!mAuthResultSent && getActivity().isFinishing()) {
             Logger.info(TAG + methodName,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
@@ -155,11 +156,13 @@ public abstract class AuthorizationFragment extends Fragment {
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
+        */
         super.onStop();
     }
 
     @Override
     public void onDestroy() {
+        /*
         final String methodName = "#onDestroy";
         Logger.info(TAG + methodName, "");
         if (!mAuthResultSent) {
@@ -169,8 +172,9 @@ public abstract class AuthorizationFragment extends Fragment {
             Telemetry.emit(new UiEndEvent().isUserCancelled());
             sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
         }
-
+        */
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
+
         super.onDestroy();
     }
 
