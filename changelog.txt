@@ -1,4 +1,5 @@
 Version 3.4.0
+----------
 - [MINOR] Enable optional refresh token in cache (#1294)
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)
