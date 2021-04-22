@@ -46,6 +46,7 @@ import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.logging.DiagnosticContext;
@@ -59,7 +60,6 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
-import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Field;
 import java.util.Map;
