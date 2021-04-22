@@ -32,6 +32,7 @@ import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
@@ -71,31 +72,32 @@ public final class PackageUtils {
 
     /**
      * Find all the signatures for packages with a given name.
+     *
      * @param packageName the name of the package to find.
-     * @param context the android context to use to search.
+     * @param context     the android context to use to search.
      * @return the {@link List} of {@link X509Certificate} entries for packages with the given name;
      * @throws PackageManager.NameNotFoundException if the package was not in package manager.
-     * @throws ClientException if the package could not be found or had a bad certificate.
-     * @throws IOException if there was a storage read error.
-     * @throws GeneralSecurityException if there was a problem with accessing apis.
+     * @throws ClientException                      if the package could not be found or had a bad certificate.
+     * @throws IOException                          if there was a storage read error.
+     * @throws GeneralSecurityException             if there was a problem with accessing apis.
      */
     @SuppressLint("PackageManagerGetSignatures")
     @SuppressWarnings("deprecation")
     public static final List<X509Certificate> readCertDataForApp(final String packageName,
-                                                           final Context context)
+                                                                 final Context context)
             throws PackageManager.NameNotFoundException, ClientException, IOException,
             GeneralSecurityException {
 
         final PackageInfo packageInfo = PackageHelper.getPackageInfo(context.getPackageManager(), packageName);
         if (packageInfo == null) {
             throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND,
-                    "No broker package existed.");
+                    "Did not find an installed package named : '" + packageName + "'");
         }
 
-        final Signature [] signatures = PackageHelper.getSignatures(packageInfo);
+        final Signature[] signatures = PackageHelper.getSignatures(packageInfo);
         if (signatures == null || signatures.length == 0) {
             throw new ClientException(BROKER_APP_VERIFICATION_FAILED,
-                    "No signature associated with the broker package.");
+                    "No signature associated with the package : '" + packageName + "'");
         }
 
         final List<X509Certificate> certificates = new ArrayList<>(signatures.length);
@@ -121,15 +123,16 @@ public final class PackageUtils {
     /**
      * Given a iterator of signature hashes, verify that one of them is present in the list
      * of certificates.
-     * @param certs A {@link List} of {@link X509Certificate} objects to examine
+     *
+     * @param certs       A {@link List} of {@link X509Certificate} objects to examine
      * @param validHashes an {@link Iterator<String>} of acceptable hashes.
      * @return a valid hash, if it is found.
-     * @throws NoSuchAlgorithmException if a certificate could not be examined.
+     * @throws NoSuchAlgorithmException     if a certificate could not be examined.
      * @throws CertificateEncodingException if a certificate was corrupt.
-     * @throws ClientException if no valid hash was found in the list.
+     * @throws ClientException              if no valid hash was found in the list.
      */
     public static final String verifySignatureHash(final @NonNull List<X509Certificate> certs,
-                                             final @NonNull Iterator<String> validHashes)
+                                                   final @NonNull Iterator<String> validHashes)
             throws NoSuchAlgorithmException,
             CertificateEncodingException, ClientException {
 
@@ -145,6 +148,7 @@ public final class PackageUtils {
             hashListStringBuilder.append(signatureHash);
             hashListStringBuilder.append(',');
 
+            //The next() functionality of the iterator should be overridden to retrieve the signatureHash of the entry.
             while (validHashes.hasNext()) {
                 final String hash = validHashes.next();
                 if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
@@ -158,9 +162,10 @@ public final class PackageUtils {
 
     /**
      * Validate a certificate chain.  This will search for a self
+     *
      * @param certificates a {@link List} of {@link X509Certificate} objects to validate.
      * @throws GeneralSecurityException if we aren't allowed to access certificates.
-     * @throws ClientException if any number other than 1 self signed certificate is found.
+     * @throws ClientException          if any number other than 1 self signed certificate is found.
      */
     public static final void verifyCertificateChain(final List<X509Certificate> certificates)
             throws GeneralSecurityException, ClientException {
@@ -180,6 +185,7 @@ public final class PackageUtils {
     /**
      * Find a self-signed certificate in the @{link List} of {@link X509Certificate}s.  This method
      * will throw an exception if there are less or more than preciselt one self-signed certificate.
+     *
      * @param certs a {link List} of certificates to examine.
      * @return the only self-signed {@link X509Certificate} in the {@link List}
      * @throws ClientException if any number other than 1 self signed certificate is found.
@@ -201,5 +207,46 @@ public final class PackageUtils {
         }
 
         return selfSignedCert;
+    }
+
+    /**
+     * A generalized API to perform signature validations on mentioned package.
+     * Verifies that the installed package's signing certificate hash matches the known
+     * release certificate hash.
+     * <p>
+     * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
+     *
+     * @param packageName   a {link List} of certificates to examine.
+     * @param context   the android context to use to search.
+     * @param validPackageSignatures    the valid package signatures to cross check
+     * @return a valid hash, if it is found.
+     * @throws ClientException
+     */
+    public static String signatureVerificationAndThrow(final String packageName, final Context context,
+                                                       final Iterator<String> validPackageSignatures)
+            throws ClientException {
+        try {
+            // Read all the certificates associated with the package name. In higher version of
+            // android sdk(>API 28, https://developer.android.com/reference/android/content/pm/PackageInfo#signatures),
+            // package manager will only returned the cert that is used to sign the
+            // APK. Even a cert is claimed to be issued by another certificates, sdk will return
+            // the signing cert. However, for the lower version of android, it will return all the
+            // certs in the chain. We need to verify that the cert chain is correctly chained up.
+            final List<X509Certificate> certs = readCertDataForApp(packageName, context);
+
+            final String signatureHash = PackageUtils.verifySignatureHash(certs, validPackageSignatures);
+
+            if (certs.size() > 1) {
+                PackageUtils.verifyCertificateChain(certs);
+            }
+
+            return signatureHash;
+        } catch (PackageManager.NameNotFoundException e) {
+            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
+        } catch (NoSuchAlgorithmException e) {
+            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM, e.getMessage(), e);
+        } catch (final IOException | GeneralSecurityException e) {
+            throw new ClientException(ErrorStrings.BROKER_VERIFICATION_FAILED, e.getMessage(), e);
+        }
     }
 }

@@ -28,6 +28,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.util.PackageUtils;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,6 +41,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_NGMS_AGENT_APP_DEBUG_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_NGMS_AGENT_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INTUNE_NGMS_AGENT_APP_RELEASE_SIGNATURE;
 
 /**
  * Represents packageName and SignatureHash of a broker app.
@@ -66,6 +70,16 @@ public class BrokerData {
             BROKER_HOST_APP_SIGNATURE
     );
 
+    public static final BrokerData INTUNE_NGMS_AGENT_DEBUG = new BrokerData(
+            INTUNE_NGMS_AGENT_APP_PACKAGE_NAME,
+            INTUNE_NGMS_AGENT_APP_DEBUG_SIGNATURE
+    );
+
+    public static final BrokerData INTUNE_NGMS_AGENT_PROD = new BrokerData(
+            INTUNE_NGMS_AGENT_APP_PACKAGE_NAME,
+            INTUNE_NGMS_AGENT_APP_RELEASE_SIGNATURE
+    );
+
     private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_DEBUG);
         add(BROKER_HOST);
@@ -79,6 +93,13 @@ public class BrokerData {
     private static final Set<BrokerData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         addAll(DEBUG_BROKERS);
         addAll(PROD_BROKERS);
+    }});
+
+    // This set is specific to whitelist Intune nGMS agent to access Device Token WPJ API.
+    private static final Set<BrokerData> INTUNE_NGMS_AGENT_SPECIFIC = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+        add(INTUNE_NGMS_AGENT_DEBUG);
+        add(INTUNE_NGMS_AGENT_PROD);
+        add(BROKER_HOST);
     }});
 
     public final String packageName;
@@ -100,7 +121,11 @@ public class BrokerData {
 
         // Verify the signature to make sure that we're not binding to malicious apps.
         final BrokerValidator validator = new BrokerValidator(context);
-        return new BrokerData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
+        return new BrokerData(
+                brokerPackageName,
+                PackageUtils.signatureVerificationAndThrow(brokerPackageName,
+                        context,
+                        validator.getValidBrokerSignatures()));
     }
 
     public static Set<BrokerData> getProdBrokers() {
@@ -113,5 +138,9 @@ public class BrokerData {
 
     public static Set<BrokerData> getAllBrokers() {
         return ALL_BROKERS;
+    }
+
+    public static Set<BrokerData> getIntuneNgmsAgentSpecific() {
+        return INTUNE_NGMS_AGENT_SPECIFIC;
     }
 }

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -1060,6 +1061,23 @@ public final class AuthenticationConstants {
          * Broker Host app package name.
          */
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
+
+        /**
+         * Intune nGMS agent app package name.
+         */
+        public static final String INTUNE_NGMS_AGENT_APP_PACKAGE_NAME = "com.microsoft.intune.aospagent";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String INTUNE_NGMS_AGENT_APP_RELEASE_SIGNATURE = "1L4Z9FJCgn5c0VLhyAxC5O9LdlE=";
+
+        /**
+         * Signature info for Azure authenticator app that installs authenticator
+         * component.
+         */
+        public static final String INTUNE_NGMS_AGENT_APP_DEBUG_SIGNATURE = "placeholder,correct value inserted here";
 
         /**
          * Azure Authenticator app package name.

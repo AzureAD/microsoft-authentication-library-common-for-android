@@ -78,43 +78,6 @@ public class BrokerValidator {
     /**
      * Verifies that the installed broker package's signing certificate hash matches the known
      * release certificate hash.
-     * <p>
-     * If signature hash verification fails, this will throw a Client exception containing the cause of error, which could contain a list of mismatch hashes.
-     *
-     * @param brokerPackageName The broker package to inspect.
-     * @return SignatureHash of brokerPackageName, if the verification succeeds..
-     */
-    public String verifySignatureAndThrow(final String brokerPackageName) throws ClientException {
-        try {
-            // Read all the certificates associated with the package name. In higher version of
-            // android sdk, package manager will only returned the cert that is used to sign the
-            // APK. Even a cert is claimed to be issued by another certificates, sdk will return
-            // the signing cert. However, for the lower version of android, it will return all the
-            // certs in the chain. We need to verify that the cert chain is correctly chained up.
-            final List<X509Certificate> certs = readCertDataForBrokerApp(brokerPackageName);
-
-            // Verify the cert list contains the cert we trust.
-            final String signatureHash = PackageUtils.verifySignatureHash(certs, getValidBrokerSignatures());
-
-            // Perform the certificate chain validation. If there is only one cert returned,
-            // no need to perform certificate chain validation.
-            if (certs.size() > 1) {
-                PackageUtils.verifyCertificateChain(certs);
-            }
-
-            return signatureHash;
-        } catch (NameNotFoundException e) {
-            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM, e.getMessage(), e);
-        } catch (final IOException | GeneralSecurityException e) {
-            throw new ClientException(ErrorStrings.BROKER_VERIFICATION_FAILED, e.getMessage(), e);
-        }
-    }
-
-    /**
-     * Verifies that the installed broker package's signing certificate hash matches the known
-     * release certificate hash.
      *
      * @param brokerPackageName The broker package to inspect.
      * @return True if the certificate hash is known. False otherwise.
@@ -122,7 +85,7 @@ public class BrokerValidator {
     public boolean verifySignature(final String brokerPackageName) {
         final String methodName = ":verifySignature";
         try {
-            return verifySignatureAndThrow(brokerPackageName) != null;
+            return PackageUtils.signatureVerificationAndThrow(brokerPackageName, mContext, getValidBrokerSignatures()) != null;
         } catch (final ClientException e) {
             Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
         }
