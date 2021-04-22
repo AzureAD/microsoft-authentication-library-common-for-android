@@ -44,39 +44,39 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 /**
  * Represents packageName and SignatureHash of a broker app.
  */
-public class BrokerData {
+public class AppData {
 
-    public static final BrokerData MICROSOFT_AUTHENTICATOR_DEBUG = new BrokerData(
+    public static final AppData MICROSOFT_AUTHENTICATOR_DEBUG = new AppData(
             AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
             AZURE_AUTHENTICATOR_APP_DEBUG_SIGNATURE
     );
 
-    public static final BrokerData MICROSOFT_AUTHENTICATOR_PROD = new BrokerData(
+    public static final AppData MICROSOFT_AUTHENTICATOR_PROD = new AppData(
             AZURE_AUTHENTICATOR_APP_PACKAGE_NAME,
             AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE
     );
 
-    public static final BrokerData COMPANY_PORTAL = new BrokerData(
+    public static final AppData COMPANY_PORTAL = new AppData(
             COMPANY_PORTAL_APP_PACKAGE_NAME,
             COMPANY_PORTAL_APP_RELEASE_SIGNATURE
     );
 
-    public static final BrokerData BROKER_HOST = new BrokerData(
+    public static final AppData BROKER_HOST = new AppData(
             BROKER_HOST_APP_PACKAGE_NAME,
             BROKER_HOST_APP_SIGNATURE
     );
 
-    private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+    private static final Set<AppData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<AppData>() {{
         add(MICROSOFT_AUTHENTICATOR_DEBUG);
         add(BROKER_HOST);
     }});
 
-    private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+    private static final Set<AppData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<AppData>() {{
         add(MICROSOFT_AUTHENTICATOR_PROD);
         add(COMPANY_PORTAL);
     }});
 
-    private static final Set<BrokerData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+    private static final Set<AppData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<AppData>() {{
         addAll(DEBUG_BROKERS);
         addAll(PROD_BROKERS);
     }});
@@ -84,34 +84,35 @@ public class BrokerData {
     public final String packageName;
     public final String signatureHash;
 
-    private BrokerData(@NonNull final String packageName,
-                       @NonNull final String hash) {
+    private AppData(@NonNull final String packageName,
+                    @NonNull final String hash) {
         this.packageName = packageName;
         this.signatureHash = hash;
     }
 
     /**
-     * Given a broker package name, verify its signature and return a BrokerData object.
+     * Given a broker package name, verify its signature and return a AppData object.
      *
      * @throws ClientException an exception containing mismatch signature hashes as its error message.
      */
-    public static @NonNull BrokerData getBrokerDataForBrokerApp(@NonNull final Context context,
-                                                                @NonNull final String brokerPackageName) throws ClientException {
+    public static @NonNull
+    AppData getAppDataForBrokerApp(@NonNull final Context context,
+                                      @NonNull final String brokerPackageName) throws ClientException {
 
         // Verify the signature to make sure that we're not binding to malicious apps.
         final BrokerValidator validator = new BrokerValidator(context);
-        return new BrokerData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
+        return new AppData(brokerPackageName, validator.verifySignatureAndThrow(brokerPackageName));
     }
 
-    public static Set<BrokerData> getProdBrokers() {
+    public static Set<AppData> getProdBrokers() {
         return PROD_BROKERS;
     }
 
-    public static Set<BrokerData> getDebugBrokers() {
+    public static Set<AppData> getDebugBrokers() {
         return DEBUG_BROKERS;
     }
 
-    public static Set<BrokerData> getAllBrokers() {
+    public static Set<AppData> getAllBrokers() {
         return ALL_BROKERS;
     }
 }

@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.AppData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 
 import org.junit.Assert;
@@ -51,21 +51,21 @@ public class BrokerValidatorTests {
     @Test
     public void testGetValidBrokersInDebugMode() {
         BrokerValidator.setShouldTrustDebugBrokers(true);
-        final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
-        Assert.assertEquals(4, brokerData.size());
-        Assert.assertTrue(brokerData.contains(BrokerData.BROKER_HOST));
-        Assert.assertTrue(brokerData.contains(BrokerData.COMPANY_PORTAL));
-        Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG));
-        Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
+        final Set<AppData> appData = mBrokerValidator.getValidBrokers();
+        Assert.assertEquals(4, appData.size());
+        Assert.assertTrue(appData.contains(AppData.BROKER_HOST));
+        Assert.assertTrue(appData.contains(AppData.COMPANY_PORTAL));
+        Assert.assertTrue(appData.contains(AppData.MICROSOFT_AUTHENTICATOR_DEBUG));
+        Assert.assertTrue(appData.contains(AppData.MICROSOFT_AUTHENTICATOR_PROD));
     }
 
     @Test
     public void testGetValidBrokersInReleaseMode() {
         BrokerValidator.setShouldTrustDebugBrokers(false);
-        final Set<BrokerData> brokerData = mBrokerValidator.getValidBrokers();
-        Assert.assertEquals(2, brokerData.size());
-        Assert.assertTrue(brokerData.contains(BrokerData.COMPANY_PORTAL));
-        Assert.assertTrue(brokerData.contains(BrokerData.MICROSOFT_AUTHENTICATOR_PROD));
+        final Set<AppData> appData = mBrokerValidator.getValidBrokers();
+        Assert.assertEquals(2, appData.size());
+        Assert.assertTrue(appData.contains(AppData.COMPANY_PORTAL));
+        Assert.assertTrue(appData.contains(AppData.MICROSOFT_AUTHENTICATOR_PROD));
     }
 
 }

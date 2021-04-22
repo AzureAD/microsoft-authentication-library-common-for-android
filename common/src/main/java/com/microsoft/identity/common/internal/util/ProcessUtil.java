@@ -31,7 +31,7 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.broker.BrokerData;
+import com.microsoft.identity.common.internal.broker.AppData;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 
 import java.util.List;
@@ -52,10 +52,10 @@ public class ProcessUtil {
         final String processName = getProcessName(context);
 
         final BrokerValidator brokerValidator = new BrokerValidator(context);
-        final Set<BrokerData> validBrokers = brokerValidator.getValidBrokers();
+        final Set<AppData> validBrokers = brokerValidator.getValidBrokers();
 
-        for (final BrokerData brokerData : validBrokers) {
-            final String authProcess = brokerData.packageName + ":auth";
+        for (final AppData appData : validBrokers) {
+            final String authProcess = appData.packageName + ":auth";
             if (authProcess.equalsIgnoreCase(processName)) {
                 return true;
             }
