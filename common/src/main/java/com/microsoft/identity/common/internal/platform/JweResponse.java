@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.util.Base64;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,7 +34,7 @@ import java.nio.charset.Charset;
 
 public class JweResponse {
 
-    public static final Charset UTF_8 = Charset.forName("UTF-8");
+    public static final Charset UTF_8 = AuthenticationConstants.CHARSET_UTF8;
 
     public static class JweHeader {
         public String mHeaderAlg;

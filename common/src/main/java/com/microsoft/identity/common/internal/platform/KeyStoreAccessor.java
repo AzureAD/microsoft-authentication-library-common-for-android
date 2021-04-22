@@ -160,6 +160,11 @@ public class KeyStoreAccessor {
             public SecureHardwareState getSecureHardwareState() throws ClientException {
                 return popManager.getSecureHardwareState();
             }
+
+            @Override
+            public KeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException {
+                throw new UnsupportedOperationException("This operation is not supported by asymmetric keys");
+            }
         };
     }
 
@@ -251,7 +256,10 @@ public class KeyStoreAccessor {
             KeyGenerator generator = KeyGenerator.getInstance("AES");
             generator.init(cipher.mKeySize);
             byte[] key = generator.generateKey().getEncoded();
-            return new RawKeyAccessor(cipher, key);
+            return RawKeyAccessor.builder()
+                    .suite(cipher)
+                    .key(key)
+                    .alias(alias).build();
         }
     }
 

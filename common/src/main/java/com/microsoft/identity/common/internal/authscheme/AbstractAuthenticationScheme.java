@@ -26,12 +26,19 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Abstract base class for AuthenticationSchemes.
  */
 @EqualsAndHashCode
+@SuperBuilder(toBuilder = true)
+@Accessors(prefix = "m")
+@Getter
 public abstract class AbstractAuthenticationScheme implements INameable {
 
     private static final long serialVersionUID = -2437270903389813253L;
@@ -53,15 +60,6 @@ public abstract class AbstractAuthenticationScheme implements INameable {
      */
     public AbstractAuthenticationScheme(@NonNull final String name) {
         mName = name;
-    }
-
-    /**
-     * Gets the name of this AbstractAuthenticationScheme.
-     *
-     * @return The name to get.
-     */
-    public final String getName() {
-        return mName;
     }
 
     @Override

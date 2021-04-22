@@ -24,23 +24,27 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
 /**
  * Parameter class for generating SHRs.
  */
 @Getter
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+@Accessors(prefix = "m")
 public class GenerateShrCommandParameters extends CommandParameters {
 
     /**
      * The home_account_id of the account for which we will generate the resulting SHR.
      */
-    private String homeAccountId;
+    private String mHomeAccountId;
 
     /**
      * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
      */
-    private IPoPAuthenticationSchemeParams popParameters;
+    private IPoPAuthenticationSchemeParams mPopParameters;
 }
