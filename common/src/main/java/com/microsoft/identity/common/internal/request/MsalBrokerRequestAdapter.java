@@ -54,7 +54,6 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
@@ -64,6 +63,7 @@ import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;

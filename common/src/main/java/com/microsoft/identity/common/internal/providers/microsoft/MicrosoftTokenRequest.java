@@ -29,7 +29,6 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
-import java.util.Map;
 import java.util.UUID;
 
 public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
@@ -94,18 +93,6 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     private String mDeviceCode;
 
     private String mTokenScope;
-
-    private transient Iterable<Map.Entry<String, String>> mExtendedParameters;
-
-    @Override
-    public Iterable<Map.Entry<String, String>> getExtraParameters() {
-        return mExtendedParameters;
-    }
-
-    @Override
-    public void setExtraParameters(final Iterable<Map.Entry<String, String>> extraParams) {
-        mExtendedParameters = extraParams;
-    }
 
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;

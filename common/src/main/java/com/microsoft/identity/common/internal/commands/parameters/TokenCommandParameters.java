@@ -29,7 +29,7 @@ import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
 import java.util.HashSet;

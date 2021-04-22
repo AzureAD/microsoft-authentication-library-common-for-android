@@ -27,7 +27,7 @@ import android.net.http.HttpResponseCache;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;

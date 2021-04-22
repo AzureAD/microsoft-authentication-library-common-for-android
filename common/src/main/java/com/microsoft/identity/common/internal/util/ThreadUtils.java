@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.util;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;

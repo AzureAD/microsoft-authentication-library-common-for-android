@@ -61,7 +61,7 @@ import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PA
 
 @Builder
 @Accessors(prefix = "m")
-public class SecretKeyAccessor implements KeyAccessor {
+public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKeyEntry> {
     private static final Charset UTF8 = Charset.forName("UTF-8");
     private final DeviceKeyManager<KeyStore.SecretKeyEntry> mKeyManager;
     private final CryptoSuite suite;
@@ -191,5 +191,10 @@ public class SecretKeyAccessor implements KeyAccessor {
     @Override
     public SecureHardwareState getSecureHardwareState() throws ClientException {
         return mKeyManager.getSecureHardwareState();
+    }
+
+    @Override
+    public IKeyManager<KeyStore.SecretKeyEntry> getManager() {
+        return mKeyManager;
     }
 }

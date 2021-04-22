@@ -26,10 +26,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.logging.Logger;
-
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;

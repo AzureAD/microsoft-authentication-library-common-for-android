@@ -31,8 +31,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -110,6 +110,11 @@ public class KeyStoreAccessor {
                                                     @NonNull final IDevicePopManager.SigningAlgorithm signingAlg,
                                                     @NonNull final IDevicePopManager popManager) {
         return new AsymmetricKeyAccessor() {
+
+            @Override
+            public IKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+                return popManager.getKeyManager();
+            }
 
             @Override
             public String getPublicKey(IDevicePopManager.PublicKeyFormat format) throws ClientException {
