@@ -40,6 +40,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
@@ -512,7 +514,9 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
-        if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
+        if (exception instanceof IntuneAppProtectionPolicyRequiredException
+                || (exception instanceof ClientException
+                && (ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException)exception).getErrorCode())))) {
             return false;
         }
         return true;
