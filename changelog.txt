@@ -5,6 +5,7 @@ V.Next
 - [MAJOR] New API on KeyAccessor (#1309)
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
+- [MINOR] Add common-java. Migrate Logger. (#1300)
 
 Version 3.4.0
 ----------

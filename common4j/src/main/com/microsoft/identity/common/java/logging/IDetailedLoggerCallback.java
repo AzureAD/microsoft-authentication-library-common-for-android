@@ -20,17 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.logging;
+package com.microsoft.identity.common.java.logging;
 
-import java.util.Map;
-
-public interface IRequestContext extends Map<String, String> {
-
+/**
+ * An extension of ILoggerCallback - so that it prints the discarded log.
+ * This is for testing only (to verify that logs are actually discarded).
+ */
+interface IDetailedLoggerCallback extends ILoggerCallback {
     /**
-     * Get the JSON String for the request context.
-     *
-     * @return String
+     * Messages that are discarded by the loggers.
      */
-    String toJsonString();
-
+    void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
 }

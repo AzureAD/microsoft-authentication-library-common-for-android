@@ -22,24 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.logging;
 
-public class DiagnosticContext {
+import com.microsoft.identity.common.java.logging.IRequestContext;
 
-    public static final String CORRELATION_ID = "correlation_id";
-    public static final String THREAD_ID = "thread_id";
-    public static final String THREAD_NAME = "thread_name";
+/**
+ * Class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.logging.DiagnosticContext
+ */
+// TODO @Deprecate
+public class DiagnosticContext{
 
-    protected DiagnosticContext() {
-    }
-
-    private static final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
-            new ThreadLocal<IRequestContext>() {
-                @Override // This is the default value for the RequestContext if it's unset
-                protected RequestContext initialValue() {
-                    final RequestContext defaultRequestContext = new RequestContext();
-                    defaultRequestContext.put(CORRELATION_ID, "UNSET");
-                    return defaultRequestContext;
-                }
-            };
+    public static final String CORRELATION_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
+    public static final String THREAD_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_ID;
+    public static final String THREAD_NAME = com.microsoft.identity.common.java.logging.DiagnosticContext.THREAD_NAME;
 
     /**
      * Set the request context.
@@ -47,14 +42,7 @@ public class DiagnosticContext {
      * @param requestContext IRequestContext
      */
     public static void setRequestContext(final IRequestContext requestContext) {
-        if (null == requestContext) {
-            clear();
-            return;
-        }
-
-        requestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-        requestContext.put(THREAD_NAME, Thread.currentThread().getName());
-        REQUEST_CONTEXT_THREAD_LOCAL.set(requestContext);
+        com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.setRequestContext(requestContext);
     }
 
     /**
@@ -63,33 +51,13 @@ public class DiagnosticContext {
      * @return IRequestContext
      */
     public static IRequestContext getRequestContext() {
-        if (!hasThreadMetadata()) {
-            setThreadMetadata();
-        }
-
-        return REQUEST_CONTEXT_THREAD_LOCAL.get();
-    }
-
-    private static void setThreadMetadata() {
-        REQUEST_CONTEXT_THREAD_LOCAL.get().put(
-                THREAD_ID,
-                String.valueOf(Thread.currentThread().getId())
-        );
-        REQUEST_CONTEXT_THREAD_LOCAL.get().put(
-                THREAD_NAME,
-                Thread.currentThread().getName()
-        );
-    }
-
-    private static boolean hasThreadMetadata() {
-        return REQUEST_CONTEXT_THREAD_LOCAL.get().containsKey(THREAD_ID);
+        return com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
     }
 
     /**
      * Clear the local request context thread.
      */
     public static void clear() {
-        REQUEST_CONTEXT_THREAD_LOCAL.remove();
+        com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.clear();
     }
-
 }
