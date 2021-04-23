@@ -43,6 +43,7 @@ import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
@@ -50,7 +51,6 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.internal.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.internal.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -701,15 +701,35 @@ public class CommandDispatcher {
 
     private static void performRefresh(final SilentTokenCommand command) {
         final SilentTokenCommandParameters params = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().refreshDueToRefreshIn(true).correlationId(UUID.randomUUID().toString()).build();
+        logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "REFRESH");
+
+        final SilentTokenCommand refreshCommand = new SilentTokenCommand(params, command.getDefaultController(), new CommandCallback() {
+            @Override
+            public void onCancel() {
+                logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "CANCEL");
+            }
+
+            @Override
+            public void onError(Object error) {
+                logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "ERROR");
+            }
+
+            @Override
+            public void onTaskCompleted(Object o) {
+                logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "SUCCESS");
+            }
+        }, command.getPublicApiId());
+        submitSilent(refreshCommand);
+    }
+
+    private static void logRefreshOnCallbackResult(String originalCorrelationId, String newRefreshCorrelationId, String result){
         Logger.info(
                 TAG,
                 "SilentTokenCommand with CorrelationId: "
-                        + command.getParameters().getCorrelationId()
-                        + " resulted in a REFRESH and initiated a RefreshCommand with CorrelationId: "
-                        + params.getCorrelationId()
+                        + originalCorrelationId
+                        + " resulted in an " + result + " and initiated a RefreshCommand with CorrelationId: "
+                        + newRefreshCorrelationId
         );
-        final SilentTokenCommand refreshCommand = new SilentTokenCommand(params, command.getDefaultController(), command.getCallback(), command.getPublicApiId());
-        submitSilent(refreshCommand);
     }
 
 }
