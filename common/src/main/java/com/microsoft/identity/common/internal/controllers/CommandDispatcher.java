@@ -482,8 +482,7 @@ public class CommandDispatcher {
      */
     private static boolean eligibleToCacheException(BaseException exception) {
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || (exception instanceof ClientException
-                && (ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException)exception).getErrorCode())))) {
+                || ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException)exception).getErrorCode())) {
             return false;
         }
         return true;
