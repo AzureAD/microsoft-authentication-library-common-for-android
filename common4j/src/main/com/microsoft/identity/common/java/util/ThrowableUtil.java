@@ -26,7 +26,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class ThrowableUtil {
-    public static synchronized String getStackTraceAsString(Throwable throwable) {
+    public static synchronized String getStackTraceAsString(final Throwable throwable) {
         final StringWriter sw = new StringWriter();
         sw.flush();
         final PrintWriter pw = new PrintWriter(sw);
