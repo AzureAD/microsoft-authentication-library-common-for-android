@@ -6,6 +6,7 @@ V.Next
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 - [MINOR] Add common-java. Migrate Logger. (#1300)
+- [PATCH] Adding checks to not cache certain ErrorCodes. (#1330)
 
 Version 3.4.0
 ----------
