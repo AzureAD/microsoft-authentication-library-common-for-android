@@ -1,7 +1,7 @@
 V.Next
 ----------
 - [PATCH] Port eSTS telemetry layer to common-java (#1328)
-- [PATCH] Add common-java. Migrate Logger. (#1300)=
+- [PATCH] Add common-java. Migrate Logger. (#1300)
 - [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
 - [MINOR] Automate broker protocol version computation. (#1301)
 - [MAJOR] New API on KeyAccessor (#1309)
