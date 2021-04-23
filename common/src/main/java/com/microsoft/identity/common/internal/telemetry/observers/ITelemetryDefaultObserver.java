@@ -22,13 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
-import java.util.List;
-import java.util.Map;
-
 /**
- * The default telemetry observer interface which upload raw telemetry data.
- */
-public interface ITelemetryDefaultObserver extends ITelemetryObserver<List<Map<String, String>>> {
-    @Override
-    void onReceived(List<Map<String, String>> telemetryData);
+ * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver} instead.
+ **/
+@Deprecated
+public interface ITelemetryDefaultObserver extends com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver {
 }
