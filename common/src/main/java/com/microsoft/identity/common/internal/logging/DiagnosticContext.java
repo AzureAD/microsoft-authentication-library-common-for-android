@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * Class is deprecated.
  *
- * @see com.microsoft.identity.common.logging.DiagnosticContext
+ * @see com.microsoft.identity.common.java.logging.DiagnosticContext
  */
 @Deprecated
 public final class DiagnosticContext extends com.microsoft.identity.common.logging.DiagnosticContext {

@@ -27,10 +27,10 @@ import com.microsoft.identity.common.logging.Logger;
 /**
  * This class is deprecated.
  *
- * @see com.microsoft.identity.common.logging.RequestContext
+ * @see com.microsoft.identity.common.java.logging.RequestContext
  */
 @Deprecated
-public class RequestContext extends com.microsoft.identity.common.logging.RequestContext {
+public class RequestContext extends com.microsoft.identity.common.java.logging.RequestContext {
 
     private static final String TAG = RequestContext.class.getSimpleName();
 

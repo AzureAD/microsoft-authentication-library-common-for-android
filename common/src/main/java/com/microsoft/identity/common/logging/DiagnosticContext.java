@@ -24,6 +24,12 @@ package com.microsoft.identity.common.logging;
 
 import com.microsoft.identity.common.java.logging.IRequestContext;
 
+/**
+ * Class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.logging.DiagnosticContext
+ */
+// TODO @Deprecate
 public class DiagnosticContext{
 
     public static final String CORRELATION_ID = com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
