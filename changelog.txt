@@ -1,18 +1,22 @@
 V.Next
 ----------
 - [PATCH] Port eSTS telemetry layer to common-java (#1328)
-- [PATCH] Add common-java. Migrate Logger. (#1300)
+- [PATCH] Add common-java. Migrate Logger. (#1300)=
+- [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
+- [MINOR] Automate broker protocol version computation. (#1301)
+- [MAJOR] New API on KeyAccessor (#1309)
+- [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
+- [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
+
+Version 3.4.0
+----------
 - [MINOR] Enable optional refresh token in cache (#1294)
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)
 - [MINOR] Propagate unknown parameters from the server (#1292)
 - [MINOR] Adds new API support for the broker - SSO token and flight support (#1290)
 - [MINOR] Elevates AndroidCommon Logger out of internal package (#1279)
-- [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
 - [MINOR] Automate broker protocol version computation. (#1301)
-- [MAJOR] New API on KeyAccessor (#1309)
-- [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
-- [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 
 Version 3.3.1
 ----------
