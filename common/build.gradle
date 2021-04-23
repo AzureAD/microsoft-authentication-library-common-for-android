@@ -102,7 +102,9 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
-            java.srcDirs = ['src/main/java']
+
+            // Also load source from common-java
+            java.srcDirs = ['src/main/java', '../common4j/src/main']
             res.srcDirs = ['src/main/res']
         }
     }
