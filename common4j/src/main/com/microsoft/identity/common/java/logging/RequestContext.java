@@ -20,31 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.logging;
+package com.microsoft.identity.common.java.logging;
 
-import com.microsoft.identity.common.logging.Logger;
+import com.google.gson.Gson;
 
-/**
- * This class is deprecated.
- *
- * @see com.microsoft.identity.common.java.logging.RequestContext
- */
-@Deprecated
-public class RequestContext extends com.microsoft.identity.common.java.logging.RequestContext {
+import java.util.HashMap;
 
-    private static final String TAG = RequestContext.class.getSimpleName();
+public class RequestContext extends HashMap<String, String> implements IRequestContext {
 
-    private static boolean sLogDeprecationWarning = true;
+    private static final long serialVersionUID = -2239604897244277047L;
+    private static final Gson mGson = new Gson();
 
     @Override
     public String toJsonString() {
-        if (sLogDeprecationWarning) {
-            // only log 1x
-            sLogDeprecationWarning = false;
-            Logger.warn(TAG, "This class is deprecated. "
-                    + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
-        }
-
-        return super.toJsonString();
+        return mGson.toJson(this);
     }
 }

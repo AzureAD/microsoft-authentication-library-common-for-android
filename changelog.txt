@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Add common-java. Migrate Logger. (#1300)
 - [MINOR] Enable optional refresh token in cache (#1294)
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)

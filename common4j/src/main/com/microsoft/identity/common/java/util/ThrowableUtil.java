@@ -20,31 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.logging;
+package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.logging.Logger;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-/**
- * This class is deprecated.
- *
- * @see com.microsoft.identity.common.java.logging.RequestContext
- */
-@Deprecated
-public class RequestContext extends com.microsoft.identity.common.java.logging.RequestContext {
-
-    private static final String TAG = RequestContext.class.getSimpleName();
-
-    private static boolean sLogDeprecationWarning = true;
-
-    @Override
-    public String toJsonString() {
-        if (sLogDeprecationWarning) {
-            // only log 1x
-            sLogDeprecationWarning = false;
-            Logger.warn(TAG, "This class is deprecated. "
-                    + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
-        }
-
-        return super.toJsonString();
+public class ThrowableUtil {
+    public static synchronized String getStackTraceAsString(final Throwable throwable) {
+        final StringWriter sw = new StringWriter();
+        sw.flush();
+        final PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return pw.toString();
     }
 }
