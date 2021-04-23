@@ -40,6 +40,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
@@ -516,7 +517,10 @@ public class CommandDispatcher {
     private static boolean eligibleToCacheException(BaseException exception) {
         //TODO : ADO 1373343 Add the whole transient exception category.
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException)exception).getErrorCode())) {
+                || ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException) exception).getErrorCode())
+                || BrokerCommunicationException.Category.CONNECTION_ERROR.toString().equals(((BrokerCommunicationException) exception).getCategory())
+                || ClientException.INTERRUPTED_OPERATION.equals(((ClientException) exception).getErrorCode())
+                || ClientException.IO_ERROR.equals(((ClientException) exception).getErrorCode())) {
             return false;
         }
         return true;
