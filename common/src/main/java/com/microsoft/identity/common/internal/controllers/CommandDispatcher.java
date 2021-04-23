@@ -478,6 +478,7 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
+        //TODO : ADO 1373343 Add the whole transient exception category.
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
                 || ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException)exception).getErrorCode())) {
             return false;
