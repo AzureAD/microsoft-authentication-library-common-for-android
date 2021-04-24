@@ -499,7 +499,7 @@ public class CommandDispatcher {
         }
         //TODO : ADO 1373343 Add the whole transient exception category.
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || nonCacheableErrorCodes.contains(mErrorCode)) {
+                || nonCacheableErrorCodes.contains(errorCode)) {
             return false;
         }
         return true;
