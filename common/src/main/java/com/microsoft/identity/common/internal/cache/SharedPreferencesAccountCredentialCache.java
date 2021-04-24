@@ -212,7 +212,8 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
             @Override
             public boolean test(String value) {
                 return isAccount(value);
-            }});
+            }
+        });
         final Map<String, AccountRecord> accounts = new HashMap<>();
 
         while (cacheValues.hasNext()) {
@@ -330,6 +331,35 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
                 authScheme,
                 null,
                 allCredentials
+        );
+
+        Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
+
+        return matchingCredentials;
+    }
+
+    @Override
+    public List<Credential> getCredentialsFilteredBy(
+            @Nullable final String homeAccountId,
+            @Nullable final String environment,
+            @Nullable final CredentialType credentialType,
+            @Nullable final String clientId,
+            @Nullable final String realm,
+            @Nullable final String target,
+            @Nullable final String authScheme,
+            @NonNull final List<Credential> inputCredentials) {
+        Logger.verbose(TAG, "getCredentialsFilteredBy() -- with input list");
+
+        final List<Credential> matchingCredentials = getCredentialsFilteredByInternal(
+                homeAccountId,
+                environment,
+                credentialType,
+                clientId,
+                realm,
+                target,
+                authScheme,
+                null,
+                inputCredentials
         );
 
         Logger.verbose(TAG, "Found [" + matchingCredentials.size() + "] matching Credentials...");
