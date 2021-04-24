@@ -33,7 +33,7 @@ jobs:
   - task: Gradle@2
     displayName: Run the unit tests.
     inputs:
-      tasks: common4j:testr
+      tasks: common4j:test
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
 ...
