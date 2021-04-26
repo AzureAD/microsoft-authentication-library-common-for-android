@@ -27,22 +27,66 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 
 import com.microsoft.identity.common.BuildConfig;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.List;
+
+import lombok.NonNull;
+
 /**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.Telemetry} instead.
+ * Deprecated.
+ *
+ * This is now acting as an adapter for {@link com.microsoft.identity.common.java.telemetry.Telemetry}.
  **/
 @Deprecated
 public class Telemetry extends com.microsoft.identity.common.java.telemetry.Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
 
-    /**
-     * This is for getting instance of Telemetry
-     * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.Telemetry} instead.
-     **/
+    private static final Telemetry instance = new Telemetry();
+    private static final com.microsoft.identity.common.java.telemetry.Telemetry actualInstance =
+            com.microsoft.identity.common.java.telemetry.Telemetry.getInstance();
+
     @Deprecated
     public synchronized static Telemetry getInstance() {
-        return (Telemetry) com.microsoft.identity.common.java.telemetry.Telemetry.getInstance();
+        return instance;
+    }
+
+    @Override
+    public void addObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
+        actualInstance.addObserver(observer);
+    }
+
+    @Override
+    public void removeAllObservers() {
+        actualInstance.removeAllObservers();
+    }
+
+    @Override
+    public void removeObserver(Class<?> cls) {
+        actualInstance.removeObserver(cls);
+    }
+
+    @Override
+    public void removeObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer)  {
+        actualInstance.removeObserver(observer);
+    }
+
+    @Override
+    @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
+    public List<ITelemetryObserver> getObservers() {
+        return actualInstance.getObservers();
+    }
+
+    @Override
+    public void flush() {
+        actualInstance.flush();
+    }
+
+    @Override
+    public void flush(@NonNull String correlationId) {
+        actualInstance.flush(correlationId);
     }
 
     /**
@@ -92,11 +136,14 @@ public class Telemetry extends com.microsoft.identity.common.java.telemetry.Tele
          * Create a {@link Telemetry} client.
          */
         public Telemetry build() throws IllegalArgumentException {
-            return (Telemetry) new com.microsoft.identity.common.java.telemetry.Telemetry.Builder()
+            new com.microsoft.identity.common.java.telemetry.Telemetry.Builder()
                     .defaultConfiguration(mDefaultConfiguration)
                     .isDebugging(mIsDebugging)
                     .withTelemetryContext(mTelemetryContext)
                     .build();
+
+            // Returns a shell object.
+            return instance;
         }
     }
 }
