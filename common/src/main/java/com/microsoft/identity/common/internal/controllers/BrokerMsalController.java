@@ -266,6 +266,7 @@ public class BrokerMsalController extends BaseController {
         final AcquireTokenResult result;
         try {
             result = new MsalBrokerResultAdapter().getAcquireTokenResultFromResultBundle(resultBundle);
+            result.setIsBrokerResult(true);
         } catch (BaseException e) {
             Telemetry.emit(
                     new ApiEndEvent()

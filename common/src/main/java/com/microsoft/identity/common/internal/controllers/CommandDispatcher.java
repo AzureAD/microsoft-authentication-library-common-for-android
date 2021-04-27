@@ -551,25 +551,26 @@ public class CommandDispatcher {
      */
     private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
 
-        final ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
         if (result.getSucceeded()) {
-            return checkRefreshStatus(acquireTokenResult, correlationId, CommandResult.ResultStatus.REFRESH, CommandResult.ResultStatus.COMPLETED);
+            return checkRefreshStatus(result, correlationId, CommandResult.ResultStatus.REFRESH, CommandResult.ResultStatus.COMPLETED);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
             final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
-                return checkRefreshStatus(acquireTokenResult, correlationId, CommandResult.ResultStatus.REFRESH_ON_ERROR, CommandResult.ResultStatus.ERROR);
+                return checkRefreshStatus(result, correlationId, CommandResult.ResultStatus.REFRESH_ON_ERROR, CommandResult.ResultStatus.ERROR);
             }
         }
     }
 
-    private static CommandResult checkRefreshStatus(final ILocalAuthenticationResult acquireTokenResult,
+    private static CommandResult checkRefreshStatus(final AcquireTokenResult result,
                                                     @NonNull String correlationId,
                                                     @NonNull CommandResult.ResultStatus refreshResultStatus,
                                                     @NonNull CommandResult.ResultStatus originalResultStatus) {
-        return acquireTokenResult != null
+        final ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
+        return  !result.getIsBrokerResult()
+                && acquireTokenResult != null
                 && acquireTokenResult.getAccessTokenRecord().shouldRefresh() ?
                 new CommandResult(refreshResultStatus,
                         acquireTokenResult, correlationId) :
