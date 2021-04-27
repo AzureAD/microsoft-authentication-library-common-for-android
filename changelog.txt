@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
 - [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
 - [MINOR] Automate broker protocol version computation. (#1301)
 - [MAJOR] New API on KeyAccessor (#1309)
