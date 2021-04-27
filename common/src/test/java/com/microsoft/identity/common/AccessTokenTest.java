@@ -28,6 +28,7 @@ import org.junit.Test;
 
 import java.util.Calendar;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 
@@ -55,9 +56,13 @@ public class AccessTokenTest {
     }
 
     @Test
-    public void testShouldRefreshWhenNoPropertiesAreSet() {
+    public void testShouldNotRefreshWhenNoPropertiesAreSet() {
         final AccessTokenRecord accessToken = new AccessTokenRecord();
-        assertTrue(accessToken.shouldRefresh());
+        try{
+            accessToken.shouldRefresh();
+        } catch (Exception e){
+            assertTrue(e instanceof NumberFormatException);
+        }
     }
 
     private String getCurrentTimeStr() {
