@@ -326,7 +326,7 @@ public class LocalMSALController extends BaseController {
         if (parameters.isRefreshDueToRefreshIn()) {
             //Note that parameters.isRefreshDueToRefreshIn() == true is always the result of a subsequent silentCall, meaning after the regular/initial silentCall that is normally triggered by user
             final AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
-            Logger.warn(
+            Logger.info(
                     TAG + methodName,
                     "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + accessTokenRecord.getRefreshOn() + ". Regular expiry is at " + accessTokenRecord.getExpiresOn() + "."
                             + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
@@ -341,7 +341,7 @@ public class LocalMSALController extends BaseController {
             );
             //Only remove AT from cache if token renewal was successful, because token is still valid, only refresh-expired.
             if (acquireTokenSilentResult.getSucceeded()) {
-                Logger.warn(
+                Logger.info(
                         TAG + methodName,
                         "Access token is refresh-expired. Removing from cache..."
                 );
