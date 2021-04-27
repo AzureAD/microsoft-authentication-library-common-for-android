@@ -104,7 +104,7 @@ android {
             manifest.srcFile 'src/main/AndroidManifest.xml'
 
             // Also load source from common-java
-            java.srcDirs = ['src/main/java', '../common4j/src/main']
+            java.srcDirs = ['src/main/java']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -125,6 +125,8 @@ android {
 dependencies {
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+
+    implementation(project(":common-java"))
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
