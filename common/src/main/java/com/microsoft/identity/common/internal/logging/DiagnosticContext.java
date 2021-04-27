@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * Class is deprecated.
  *
- * @see com.microsoft.identity.common.logging.DiagnosticContext
+ * @see com.microsoft.identity.common.java.logging.DiagnosticContext
  */
 @Deprecated
 public final class DiagnosticContext extends com.microsoft.identity.common.logging.DiagnosticContext {
@@ -61,8 +61,8 @@ public final class DiagnosticContext extends com.microsoft.identity.common.loggi
 
         // To maintain true backcompat, we'll new up an instance of the old interface which
         // will delegate to the object returned by the super class.
-        final com.microsoft.identity.common.logging.IRequestContext origRc =
-                com.microsoft.identity.common.logging.DiagnosticContext.getRequestContext();
+        final com.microsoft.identity.common.java.logging.IRequestContext origRc =
+                com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
         return new IRequestContext() {
             @Override
             public String toJsonString() {
