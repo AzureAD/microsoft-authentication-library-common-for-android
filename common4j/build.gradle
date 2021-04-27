@@ -9,6 +9,17 @@
 plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
+    id 'com.microsoft.identity.buildsystem' version '0.0.1'
+}
+
+def desugarCode = false
+
+if(project.hasProperty("sugar")){
+    desugarCode = sugar.toBoolean()
+}
+
+buildSystem {
+    desugar = desugarCode
 }
 
 repositories {
@@ -37,3 +48,7 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:1.18.12"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
 }
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
+
