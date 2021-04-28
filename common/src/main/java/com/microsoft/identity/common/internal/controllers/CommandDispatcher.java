@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -39,15 +40,20 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.logging.DiagnosticContext;
+import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -57,10 +63,11 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
-import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -90,6 +97,13 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+
+    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet(
+            Arrays.asList(
+                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
+                    BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
+                    ClientException.INTERRUPTED_OPERATION,
+                    ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
     @GuardedBy("mapAccessLock")
@@ -406,6 +420,9 @@ public class CommandDispatcher {
      */
     private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command,
                                             final CommandResult result, @NonNull final Handler handler) {
+
+        optionallyReorderTasks(command);
+
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -424,6 +441,37 @@ public class CommandDispatcher {
                 }
             }
         });
+    }
+
+
+    /**
+     * This method optionally re-orders tasks to bring the task that launched
+     * the interactive activity to the foreground.  This is useful when the activity provided
+     * to us does not have a taskAffinity and as a result it's possible that other apps or the home
+     * screen could be in the task stack ahead of the app that launched the interactive
+     * authorization UI.
+     * @param command The BaseCommand.
+     */
+    private static void optionallyReorderTasks(@SuppressWarnings(WarningType.rawtype_warning)final BaseCommand command){
+        final String methodName = ":optionallyReorderTasks";
+        if(command instanceof InteractiveTokenCommand){
+            InteractiveTokenCommand interactiveTokenCommand = (InteractiveTokenCommand)command;
+            InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters)interactiveTokenCommand.getParameters();
+
+            if(interactiveTokenCommandParameters.getHandleNullTaskAffinity() && !interactiveTokenCommand.getHasTaskAffinity()) {
+                //If an interactive command doesn't have a task affinity bring the
+                //task that launched the command to the foreground
+                //In order for this to work the app has to have requested the re-order tasks permission
+                //https://developer.android.com/reference/android/Manifest.permission#REORDER_TASKS
+                //if the permission has not been granted nothing will happen if you just invoke the method
+                ActivityManager activityManager = (ActivityManager) command.getParameters().getAndroidApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
+                if (activityManager != null) {
+                    activityManager.moveTaskToFront(interactiveTokenCommand.getTaskId(), 0);
+                } else {
+                    Logger.warn(TAG + methodName, "ActivityManager was null; Unable to bring task for the foreground.");
+                }
+            }
+        }
     }
 
     // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
@@ -476,7 +524,15 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
-        if (exception instanceof IntuneAppProtectionPolicyRequiredException) {
+        final String mErrorCode;
+        if (exception instanceof BrokerCommunicationException) {
+            mErrorCode = ((BrokerCommunicationException) exception).getCategory().toString();
+        } else {
+            mErrorCode = exception.getErrorCode();
+        }
+        //TODO : ADO 1373343 Add the whole transient exception category.
+        if (exception instanceof IntuneAppProtectionPolicyRequiredException
+                || nonCacheableErrorCodes.contains(mErrorCode)) {
             return false;
         }
         return true;

@@ -26,6 +26,8 @@ import com.microsoft.identity.common.exception.ClientException;
 
 import java.security.cert.Certificate;
 
+import lombok.NonNull;
+
 /**
  * Interface for utilizing keys.
  */
@@ -74,4 +76,15 @@ public interface KeyAccessor {
      * @return a {@link SecureHardwareState} object representing the status of this key.
      */
     SecureHardwareState getSecureHardwareState() throws ClientException;
+
+    /**
+     * Using the provided {@link CryptoSuite}, generate a new derived key accessor given the label and the
+     * context.  This key will expose a null alias, and generally should not be stored.
+     * @param label the "label" for the derivation.
+     * @param ctx the "context" for the derivation, typically random bytes.
+     * @param suite the {@link CryptoSuite} that the derived key should use.
+     * @return A {link KeyAccessor} that provides access to operations using the derived key.
+     * @throws ClientException if an underlying issue prevents the key generation.
+     */
+    KeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException;
  }

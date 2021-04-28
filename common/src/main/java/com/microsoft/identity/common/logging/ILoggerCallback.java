@@ -23,9 +23,11 @@
 package com.microsoft.identity.common.logging;
 
 /**
- * Interface for apps to configure the external logging and implement the callback to designate the
- * output of the log messages.
+ * Class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.logging.ILoggerCallback
  */
+// TODO @Deprecate
 public interface ILoggerCallback {
     /**
      * Interface method for apps to hand off each log message as it's generated.

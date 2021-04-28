@@ -1,8 +1,23 @@
-apply plugin: 'com.android.library'
-apply plugin: 'pmd'
-apply plugin: 'checkstyle'
-apply plugin: 'maven-publish'
+plugins {
+    id 'com.microsoft.identity.buildsystem' version '0.0.1'
+    id 'com.android.library'
+    id 'pmd'
+    id 'checkstyle'
+    id 'maven-publish'
+}
+
 apply from: 'versioning/version_tasks.gradle'
+
+def desugarCode = false
+
+if(project.hasProperty("sugar")){
+    desugarCode = sugar.toBoolean()
+}
+
+buildSystem {
+    desugar = desugarCode
+}
+
 //apply plugin: 'jacoco'
 
 //To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
@@ -21,30 +36,8 @@ def bothTestType = "BothTest"
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
+
 android {
-//
-//    testOptions {
-//        compileOptions {
-//            // Flag to enable support for the new language APIs
-//            coreLibraryDesugaringEnabled true
-//            // Sets Java compatibility to Java 8
-//            sourceCompatibility JavaVersion.VERSION_1_8
-//            targetCompatibility JavaVersion.VERSION_1_8
-//        }
-//        dependencies {
-//            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
-//        }
-//    }
-    /*
-    //Commenting out until the next major version of common/msal/etc...
-    compileOptions {
-        // Flag to enable support for the new language APIs
-        coreLibraryDesugaringEnabled true
-        // Sets Java compatibility to Java 8
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    */
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
@@ -75,6 +68,7 @@ android {
     buildTypes {
         debug {
             //testCoverageEnabled true
+            minifyEnabled false
         }
         release {
             minifyEnabled false
@@ -108,7 +102,9 @@ android {
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
-            java.srcDirs = ['src/main/java']
+
+            // Also load source from common-java
+            java.srcDirs = ['src/main/java', '../common4j/src/main']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -127,9 +123,8 @@ android {
 }
 
 dependencies {
-    //Commenting out until the next major version of common/msal/etc...
-    //Java 8 - Desugaring
-    //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+    //Java 8 - Desugaring - Enabled/Disabled via plugin
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
