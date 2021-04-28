@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
@@ -31,24 +30,22 @@ import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.ResolveInfo;
 import android.content.pm.Signature;
+import android.content.pm.SigningInfo;
 import android.net.Uri;
 import android.os.Build;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 
-import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowPackageManager;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -56,10 +53,11 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.robolectric.Shadows.shadowOf;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(RobolectricTestRunner.class)
 public class BrowserSelectorTest {
     private static final String SCHEME_HTTP = "http";
     private static final String SCHEME_HTTPS = "https";
@@ -96,26 +94,14 @@ public class BrowserSelectorTest {
                     .addSignature("DolphinSignature")
                     .build();
 
-    @Mock
-    Context mContext;
-    @Mock
-    PackageManager mPackageManager;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        when(mContext.getPackageManager()).thenReturn(mPackageManager);
-    }
 
     //Currently package manager call returns an empty list... failing this test.  Needs investigation.
     //Ignored while updating to latest Mockito version
-    @Ignore
     @Test
     public void testSelect_getAllBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
-        when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
-                .thenReturn(CHROME.mResolveInfo);
-        List<Browser> allBrowsers = BrowserSelector.getAllBrowsers(mContext);
+
+        List<Browser> allBrowsers = BrowserSelector.getAllBrowsers(ApplicationProvider.getApplicationContext());
         assert (allBrowsers.get(0).getPackageName().equals(CHROME.mPackageName));
         assert (allBrowsers.get(1).getPackageName().equals(FIREFOX.mPackageName));
     }
@@ -123,11 +109,10 @@ public class BrowserSelectorTest {
     @Test
     public void testSelect_noMatchingBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
-        when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
-                .thenReturn(CHROME.mResolveInfo);
+
         final List<BrowserDescriptor> browserSafelist = new ArrayList<>();
         try {
-            BrowserSelector.select(mContext, browserSafelist);
+            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist);
         } catch (final ClientException exception) {
             assertNotNull(exception);
             assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
@@ -137,8 +122,7 @@ public class BrowserSelectorTest {
     @Test
     public void testSelect_versionNotSupportedBrowser() throws NameNotFoundException {
         setBrowserList(CHROME, FIREFOX);
-        when(mContext.getPackageManager().resolveActivity(BROWSER_INTENT, 0))
-                .thenReturn(CHROME.mResolveInfo);
+
         List<BrowserDescriptor> browserSafelist = new ArrayList<>();
         browserSafelist.add(
                 new BrowserDescriptor(
@@ -149,7 +133,7 @@ public class BrowserSelectorTest {
         );
 
         try {
-            BrowserSelector.select(mContext, browserSafelist);
+            BrowserSelector.select(ApplicationProvider.getApplicationContext(), browserSafelist);
         } catch (final ClientException exception) {
             assertNotNull(exception);
             assert (exception.getErrorCode().equalsIgnoreCase(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND));
@@ -164,25 +148,13 @@ public class BrowserSelectorTest {
             return;
         }
 
-        final List<ResolveInfo> resolveInfos = new ArrayList<>();
+        final PackageManager packageManager = ApplicationProvider.getApplicationContext().getPackageManager();
+        final ShadowPackageManager shadowPackageManager = shadowOf(packageManager);
 
         for (TestBrowser browser : browsers) {
-            when(mPackageManager.getPackageInfo(
-                    eq(browser.mPackageInfo.packageName),
-                    eq(PackageHelper.getPackageManagerSignaturesFlag())))
-                    .thenReturn(browser.mPackageInfo);
-            resolveInfos.add(browser.mResolveInfo);
+            shadowPackageManager.installPackage(browser.mPackageInfo);
+            shadowPackageManager.addResolveInfoForIntent(BROWSER_INTENT, browser.mResolveInfo);
         }
-
-        int queryFlag = PackageManager.GET_RESOLVED_FILTER;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            queryFlag |= PackageManager.MATCH_DEFAULT_ONLY;
-        }
-
-        when(mPackageManager.queryIntentActivities(
-                BROWSER_INTENT,
-                queryFlag))
-                .thenReturn(resolveInfos);
     }
 
     private static class TestBrowser {
@@ -253,6 +225,19 @@ public class BrowserSelectorTest {
             return this;
         }
 
+        private PackageInfo addSignatures(final PackageInfo packageInfo, final Signature[] signatures) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                packageInfo.signatures = signatures;
+                return packageInfo;
+            }
+
+            final SigningInfo signingInfo = mock(SigningInfo.class);
+            when(signingInfo.hasMultipleSigners()).thenReturn(false);
+            when(signingInfo.getSigningCertificateHistory()).thenReturn(signatures);
+            packageInfo.signingInfo = signingInfo;
+            return packageInfo;
+        }
+
         public TestBrowser build() {
             Signature[] signatures = new Signature[mSignatures.size()];
 
@@ -260,7 +245,7 @@ public class BrowserSelectorTest {
                 signatures[i] = new Signature(mSignatures.get(i));
             }
 
-            final PackageInfo pi = Util.addSignatures(new PackageInfo(), signatures);
+            final PackageInfo pi = addSignatures(new PackageInfo(), signatures);
             pi.packageName = mPackageName;
             pi.versionName = mVersion;
 
