@@ -1477,7 +1477,7 @@ public final class AuthenticationConstants {
             ACQUIRE_TOKEN_INTERACTIVE(MSAL_ACQUIRE_TOKEN_INTERACTIVE_PATH, null, VERSION_3),
             ACQUIRE_TOKEN_SILENT(MSAL_ACQUIRE_TOKEN_SILENT_PATH, null, VERSION_3),
             GET_ACCOUNTS(MSAL_GET_ACCOUNTS_PATH, null, VERSION_3),
-            REMOVE_ACCOUNTS(MSAL_REMOVE_ACCOUNTS_PATH, null, VERSION_3),
+            REMOVE_ACCOUNT(MSAL_REMOVE_ACCOUNT_PATH, null, VERSION_3),
             GET_CURRENT_ACCOUNT_SHARED_DEVICE(MSAL_GET_CURRENT_ACCOUNT_SHARED_DEVICE_PATH, null, VERSION_3),
             GET_DEVICE_MODE(MSAL_GET_DEVICE_MODE_PATH, null, VERSION_3),
             SIGN_OUT_FROM_SHARED_DEVICE(MSAL_SIGN_OUT_FROM_SHARED_DEVICE_PATH, null, VERSION_3),
@@ -1528,7 +1528,7 @@ public final class AuthenticationConstants {
         /**
          * URI Path constant for MSAL-to-Broker removeAccounts request using ContentProvider.
          */
-        public static final String MSAL_REMOVE_ACCOUNTS_PATH = "/removeAccounts";
+        public static final String MSAL_REMOVE_ACCOUNT_PATH = "/removeAccounts";
 
         /**
          * URI Path constant for MSAL-to-Broker getCurrentAccountSharedDevice request using ContentProvider.
