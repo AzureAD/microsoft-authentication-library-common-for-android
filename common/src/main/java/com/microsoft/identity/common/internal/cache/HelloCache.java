@@ -32,7 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Persisted cache for the IPC hello() protocol.
@@ -77,7 +77,7 @@ public class HelloCache {
     public HelloCache(final @NonNull Context context,
                       final @NonNull String protocolName,
                       final @NonNull String targetAppPackageName) {
-        mFileManager = new SharedPreferencesFileManager(context, SHARED_PREFERENCE_NAME);
+        mFileManager = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFERENCE_NAME, -1, null);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;

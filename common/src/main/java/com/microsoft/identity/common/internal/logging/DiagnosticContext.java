@@ -22,68 +22,123 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
-public final class DiagnosticContext {
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-    public static final String CORRELATION_ID = "correlation_id";
-    private static final String THREAD_ID = "thread_id";
+import com.microsoft.identity.common.logging.Logger;
 
-    private DiagnosticContext() {
-    }
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
-    private static final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
-            new ThreadLocal<IRequestContext>() {
-                @Override // This is the default value for the RequestContext if it's unset
-                protected RequestContext initialValue() {
-                    final RequestContext defaultRequestContext = new RequestContext();
-                    defaultRequestContext.put(CORRELATION_ID, "UNSET");
-                    return defaultRequestContext;
-                }
-            };
+/**
+ * Class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.logging.DiagnosticContext
+ */
+@Deprecated
+public final class DiagnosticContext extends com.microsoft.identity.common.logging.DiagnosticContext {
 
-    /**
-     * Set the request context.
-     *
-     * @param requestContext IRequestContext
-     */
+    private static final String TAG = DiagnosticContext.class.getSimpleName();
+
+    private static boolean sLogDeprecationWarning = true;
+
     public static void setRequestContext(final IRequestContext requestContext) {
-        if (null == requestContext) {
-            clear();
-            return;
-        }
-
-        requestContext.put(THREAD_ID, String.valueOf(Thread.currentThread().getId()));
-        REQUEST_CONTEXT_THREAD_LOCAL.set(requestContext);
+        com.microsoft.identity.common.logging.DiagnosticContext.setRequestContext(requestContext);
+        logDeprecationWarning();
     }
 
-    /**
-     * Get the request context.
-     *
-     * @return IRequestContext
-     */
+    private static void logDeprecationWarning() {
+        if (sLogDeprecationWarning) {
+            sLogDeprecationWarning = false;
+            Logger.warn(TAG, "This class is deprecated. "
+                    + "Migrate usage to: com.microsoft.identity.common.logging.DiagnosticContext");
+        }
+    }
+
     public static IRequestContext getRequestContext() {
-        if (!hasThreadId()) {
-            setThreadId();
-        }
+        logDeprecationWarning();
 
-        return REQUEST_CONTEXT_THREAD_LOCAL.get();
+        // To maintain true backcompat, we'll new up an instance of the old interface which
+        // will delegate to the object returned by the super class.
+        final com.microsoft.identity.common.java.logging.IRequestContext origRc =
+                com.microsoft.identity.common.java.logging.DiagnosticContext.INSTANCE.getRequestContext();
+        return new IRequestContext() {
+            @Override
+            public String toJsonString() {
+                return origRc.toJsonString();
+            }
+
+            @Override
+            public int size() {
+                return origRc.size();
+            }
+
+            @Override
+            public boolean isEmpty() {
+                return origRc.isEmpty();
+            }
+
+            @Override
+            public boolean containsKey(@Nullable final Object key) {
+                return origRc.containsKey(key);
+            }
+
+            @Override
+            public boolean containsValue(@Nullable final Object value) {
+                return origRc.containsValue(value);
+            }
+
+            @Nullable
+            @Override
+            public String get(@Nullable final Object key) {
+                return origRc.get(key);
+            }
+
+            @Nullable
+            @Override
+            public String put(final String key, final String value) {
+                return origRc.put(key, value);
+            }
+
+            @Nullable
+            @Override
+            public String remove(@Nullable final Object key) {
+                return origRc.remove(key);
+            }
+
+            @Override
+            public void putAll(@NonNull final Map<? extends String, ? extends String> m) {
+                origRc.putAll(m);
+            }
+
+            @Override
+            public void clear() {
+                origRc.clear();
+            }
+
+            @NonNull
+            @Override
+            public Set<String> keySet() {
+                return origRc.keySet();
+            }
+
+            @NonNull
+            @Override
+            public Collection<String> values() {
+                return origRc.values();
+            }
+
+            @NonNull
+            @Override
+            public Set<Entry<String, String>> entrySet() {
+                return origRc.entrySet();
+            }
+        };
     }
 
-    private static void setThreadId() {
-        REQUEST_CONTEXT_THREAD_LOCAL.get().put(
-                THREAD_ID,
-                String.valueOf(Thread.currentThread().getId())
-        );
-    }
-
-    private static boolean hasThreadId() {
-        return REQUEST_CONTEXT_THREAD_LOCAL.get().containsKey(THREAD_ID);
-    }
-
-    /**
-     * Clear the local request context thread.
-     */
     public static void clear() {
-        REQUEST_CONTEXT_THREAD_LOCAL.remove();
+        logDeprecationWarning();
+        com.microsoft.identity.common.logging.DiagnosticContext.clear();
     }
-
 }

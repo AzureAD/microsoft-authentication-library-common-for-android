@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.telemetry.events;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Properties;
 
 import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
@@ -35,6 +35,26 @@ public class BaseEvent extends Properties {
         super();
         occurs(System.currentTimeMillis());
         correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+    }
+
+    @Override
+    public Properties put(String key, String value) {
+        return super.put(key, value);
+    }
+
+    @Override
+    public Properties remove(String key) {
+        return super.remove(key);
+    }
+
+    @Override
+    public Properties remove(String key, String value) {
+        return super.remove(key, value);
+    }
+
+    @Override
+    public Properties put(Properties appendProperties) {
+        return super.put(appendProperties);
     }
 
     /**

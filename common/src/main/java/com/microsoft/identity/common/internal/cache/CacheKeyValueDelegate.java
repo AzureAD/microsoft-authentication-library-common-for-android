@@ -37,9 +37,10 @@ import com.microsoft.identity.common.internal.dto.AccountCredentialBase;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -57,8 +58,8 @@ import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
+import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
@@ -191,6 +192,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         } else if (credential instanceof IdTokenRecord) {
             final IdTokenRecord idToken = (IdTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, "");
+        } else if (credential instanceof PrimaryRefreshTokenRecord) {
+            cacheKey = cacheKey.replace(REALM, "");
             cacheKey = cacheKey.replace(TARGET, "");
         }
 

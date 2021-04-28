@@ -23,17 +23,33 @@
 package com.microsoft.identity.common.internal.logging;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
 
-// TODO I'm not wedded to this name, but the concept may work for tracking correlationIds
+/**
+ * This class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.logging.RequestContext
+ */
+@Deprecated
 public class RequestContext extends HashMap<String, String> implements IRequestContext {
 
-    private static final long serialVersionUID = -1128593786133166935L;
-    private final Gson mGson = new Gson();
+    private static final String TAG = RequestContext.class.getSimpleName();
+
+    private static final Gson mGson = new Gson();
+
+    private static boolean sLogDeprecationWarning = true;
 
     @Override
     public String toJsonString() {
+        if (sLogDeprecationWarning) {
+            // only log 1x
+            sLogDeprecationWarning = false;
+            Logger.warn(TAG, "This class is deprecated. "
+                    + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
+        }
+
         return mGson.toJson(this);
     }
 }

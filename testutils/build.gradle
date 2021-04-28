@@ -11,6 +11,20 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
 
+    testOptions {
+        compileOptions {
+            // Flag to enable support for the new language APIs
+            coreLibraryDesugaringEnabled true
+            // Sets Java compatibility to Java 8
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+        dependencies {
+            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+        }
+    }
+    /*
+    //Commenting out until the next major version of common/msal/etc...
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
@@ -18,6 +32,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+    */
 
     def labClientSecret = "" // will be blank unless specified by developer
     def runId = "" // will be blank unless specified by developer
@@ -134,8 +149,9 @@ project.afterEvaluate{
 
 dependencies {
 
+    //Commenting out until the next major version of common/msal/etc...
     //Java 8 - Desugaring
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+    //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -174,12 +190,17 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
-    implementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation "junit:junit:$rootProject.ext.junitVersion"
+    implementation ("org.robolectric:robolectric:$rootProject.ext.robolectricVersion") {
+        exclude group: "org.apache.maven"
+        exclude group: "org.apache.maven.wagon"
+        exclude group: "xmlpull"
+        exclude group: "xpp3"
+    }
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 }

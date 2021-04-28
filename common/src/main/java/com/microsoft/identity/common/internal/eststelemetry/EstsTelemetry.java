@@ -35,10 +35,10 @@ import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.TokenCommand;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
-import com.microsoft.identity.common.internal.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -214,9 +214,11 @@ public class EstsTelemetry {
         );
 
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                new SharedPreferencesFileManager(
+                SharedPreferencesFileManager.getSharedPreferences(
                         context,
-                        LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES
+                        LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES,
+                        -1,
+                        null
                 );
 
         return new SharedPreferencesLastRequestTelemetryCache(sharedPreferencesFileManager);

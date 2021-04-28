@@ -20,23 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils;
-
-import com.microsoft.identity.common.internal.net.HttpResponse;
+package com.microsoft.identity.common.java.logging;
 
 /**
- * Class to set a mock http response at runtime.
+ * An extension of ILoggerCallback - so that it prints the discarded log.
+ * This is for testing only (to verify that logs are actually discarded).
  */
-public class MockHttpResponse {
-
-    private static HttpResponse sHttpResponse;
-
-
-    public static HttpResponse getHttpResponse() {
-        return sHttpResponse;
-    }
-
-    public static void setHttpResponse(final HttpResponse httpResponse) {
-        sHttpResponse = httpResponse;
-    }
+interface IDetailedLoggerCallback extends ILoggerCallback {
+    /**
+     * Messages that are discarded by the loggers.
+     */
+    void discardedLog(String tag, Logger.LogLevel logLevel, String message, boolean containsPII);
 }

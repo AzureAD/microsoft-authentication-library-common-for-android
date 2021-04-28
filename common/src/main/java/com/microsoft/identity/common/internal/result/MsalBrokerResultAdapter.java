@@ -44,12 +44,12 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
 
@@ -63,6 +63,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.exception.ClientException.INVALID_BROKER_BUNDLE;
 import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
@@ -498,7 +499,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
 
-    public @NonNull Intent getIntentForInteractiveRequestFromResultBundle( @NonNull final Bundle resultBundle) throws ClientException {
+    public @NonNull Intent getIntentForInteractiveRequestFromResultBundle(@NonNull final Bundle resultBundle,
+                                                                          @NonNull final String negotiatedBrokerProtocolVersion) throws ClientException {
         final Bundle interactiveRequestBundle = extractInteractiveRequestBundleFromResultBundle(resultBundle);
 
         final String packageName = interactiveRequestBundle.getString(BROKER_PACKAGE_NAME);
@@ -515,6 +517,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                 className
         );
         intent.putExtras(interactiveRequestBundle);
+        intent.putExtra(NEGOTIATED_BP_VERSION_KEY, negotiatedBrokerProtocolVersion);
         return intent;
     }
 
@@ -527,6 +530,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         if (interactiveRequestIntent != null) {
             return interactiveRequestIntent.getExtras();
         }
+
         return resultBundle;
     }
 

@@ -23,6 +23,8 @@
 
 package com.microsoft.identity.common.exception;
 
+import androidx.annotation.NonNull;
+
 /**
  *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
  */
@@ -31,21 +33,11 @@ final public class DeviceRegistrationRequiredException extends BaseException {
     public static final String sName =  DeviceRegistrationRequiredException.class.getName();
     private static final long serialVersionUID = 5804977362169696152L;
 
-    // The username for which device needs registration
-    private String mUsername;
-
-    public DeviceRegistrationRequiredException(final String errorCode, final String errorDescription,
-                                               final String userName) {
+    public DeviceRegistrationRequiredException(@NonNull final String errorCode,
+                                               @NonNull final String errorDescription,
+                                               @NonNull final String userName) {
         super(errorCode, errorDescription);
-        mUsername = userName;
-    }
-
-    public String getUsername() {
-        return mUsername;
-    }
-
-    public void setUsername(String username) {
-        this.mUsername = username;
+        super.setUsername(userName);
     }
 
     @Override

@@ -22,34 +22,73 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
+import android.util.LruCache;
 
+import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Convenience class for accessing {@link SharedPreferences}.
  */
 public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
+    public interface Predicate<T> {
+        boolean test(T value);
+    }
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
+    private final Object cacheLock = new Object();
+    @GuardedBy("cacheLock")
+    private final LruCache<String, String> fileCache = new LruCache<>(256);
     private final String mSharedPreferencesFileName;
+    @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final IStorageHelper mStorageHelper;
+    // This is making a huge assumption - that we don't need to separate this cache by context.
+    private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
+            new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f , 1);
+
+    /**
+     * Constructs an instance of SharedPreferencesFileManager.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param name    The desired {@link android.content.SharedPreferences} file. It will be created
+     *                if it does not exist.
+     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param operatingMode the mode in which to operate this
+     */
+    public static SharedPreferencesFileManager getSharedPreferences(final Context context,
+                                                                    final String name,
+                                                                    final int operatingMode,
+                                                                    final IStorageHelper storageHelper) {
+        String key = name + "/" + context.getPackageName() + "/" + operatingMode;
+        SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
+        if(cachedFileManager == null) {
+            cachedFileManager = objectCache.putIfAbsent(key, new SharedPreferencesFileManager(context, name, operatingMode, storageHelper));
+            if (cachedFileManager == null) {
+                cachedFileManager = objectCache.get(key);
+            }
+        }
+        return cachedFileManager;
+    }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
@@ -62,10 +101,8 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public SharedPreferencesFileManager(
             final Context context,
             final String name) {
+        this(context, name, -1, null);
         Logger.verbose(TAG, "Init: " + TAG);
-        mSharedPreferencesFileName = name;
-        mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-        mStorageHelper = null;
     }
 
     /**
@@ -80,10 +117,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final int operatingMode) {
-        Logger.verbose(TAG, "Init with operating mode: " + TAG);
-        mSharedPreferencesFileName = name;
-        mSharedPreferences = context.getSharedPreferences(name, operatingMode);
-        mStorageHelper = null;
+        this(context, name, operatingMode, null);
     }
 
     /**
@@ -99,10 +133,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final IStorageHelper storageHelper) {
-        Logger.verbose(TAG, "Init with storage helper:  " + TAG);
-        mSharedPreferencesFileName = name;
-        mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-        mStorageHelper = storageHelper;
+        this(context, name, -1, storageHelper);
     }
 
     /**
@@ -119,9 +150,17 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final String name,
             final int operatingMode,
             final IStorageHelper storageHelper) {
-        Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
+        if (operatingMode == -1 && storageHelper == null) {
+            Logger.verbose(TAG, "Init: ");
+        } else if (storageHelper == null) {
+            Logger.verbose(TAG, "Init with operating mode: " + TAG);
+        } else if (operatingMode == -1) {
+            Logger.verbose(TAG, "Init with storage helper:  " + TAG);
+        } else {
+            Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
+        }
         mSharedPreferencesFileName = name;
-        mSharedPreferences = context.getSharedPreferences(name, operatingMode);
+        mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
         mStorageHelper = storageHelper;
     }
 
@@ -129,32 +168,45 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public final void putString(
             final String key,
             final String value) {
-        final SharedPreferences.Editor editor = mSharedPreferences.edit();
+        synchronized (cacheLock) {
+            if (value != null) {
+                fileCache.put(key, value);
+            } else {
+                fileCache.remove(key);
+            }
+            final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-        if (null == mStorageHelper) {
-            editor.putString(key, value);
-        } else {
-            final String encryptedValue = encrypt(value);
-            editor.putString(key, encryptedValue);
+            if (null == mStorageHelper) {
+                editor.putString(key, value);
+            } else {
+                final String encryptedValue = encrypt(value);
+                editor.putString(key, encryptedValue);
+            }
+
+            editor.apply();
         }
-
-        editor.apply();
     }
 
     @Override
     @Nullable
     public final String getString(final String key) {
-        String restoredValue = mSharedPreferences.getString(key, null);
-
-        if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
-            restoredValue = decrypt(restoredValue);
-
-            if (StringExtensions.isNullOrBlank(restoredValue)) {
-                logWarningAndRemoveKey(key);
+        synchronized (cacheLock) {
+            String memCache = fileCache.get(key);
+            if (memCache != null) {
+                return memCache;
             }
-        }
+            String restoredValue = mSharedPreferences.getString(key, null);
 
-        return restoredValue;
+            if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
+                restoredValue = decrypt(restoredValue);
+
+                if (StringExtensions.isNullOrBlank(restoredValue)) {
+                    logWarningAndRemoveKey(key);
+                }
+            }
+
+            return restoredValue;
+        }
     }
 
     @Override
@@ -190,30 +242,72 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final Map<String, String> getAll() {
-
+        // We're not synchronizing this access, since we're not modifying it here.
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
-        @SuppressWarnings(WarningType.unchecked_warning)
-        final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+        @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
         if (null != mStorageHelper) {
             final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
 
             while (iterator.hasNext()) {
                 final Map.Entry<String, String> entry = iterator.next();
-                final String decryptedValue = decrypt(entry.getValue());
-
-                if (TextUtils.isEmpty(decryptedValue)) {
-                    logWarningAndRemoveKey(entry.getKey());
-                    iterator.remove();
-                    continue;
+                //This is slightly wasteful, but we have no better key iterator and decryption
+                //is probably more painful than the additional file read when we miss in the cache.
+                String decryptedValue = getString(entry.getKey());
+                if (!TextUtils.isEmpty(decryptedValue)) {
+                    entry.setValue(decryptedValue);
                 }
-
-                entry.setValue(decryptedValue);
             }
         }
-
         return entries;
     }
+
+    @Override
+    public final Iterator<Map.Entry<String, String>> getAllFilteredByKey(final @NonNull Predicate<String> keyFilter) {
+        // We're not synchronizing this access, since we're not modifying it here.
+        // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
+        @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
+
+        return new Iterator<Map.Entry<String, String>>() {
+            final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
+            Map.Entry<String, String> nextEntry = null;
+
+            @Override
+            public boolean hasNext() {
+                if (nextEntry != null) {
+                    return true;
+                }
+                if (!iterator.hasNext()) {
+                    return false;
+                }
+                do {
+                    Map.Entry<String, String> nextElement = iterator.next();
+                    if (keyFilter.test(nextElement.getKey())) {
+                        if (mStorageHelper != null) {
+                            String decryptedValue = getString(nextElement.getKey());
+                            if (!TextUtils.isEmpty(decryptedValue)) {
+                                nextEntry = new AbstractMap.SimpleEntry<String, String>(nextElement.getKey(), decryptedValue);
+                            }
+                        } else {
+                            nextEntry = nextElement;
+                        }
+                    }
+                } while (nextEntry == null && iterator.hasNext());
+                return nextEntry != null;
+            }
+
+            @Override
+            public Map.Entry<String, String> next() {
+                if (nextEntry == null && !hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                final Map.Entry<String, String> tmp = nextEntry;
+                nextEntry = null;
+                return tmp;
+            }
+        };
+    }
+
 
     @Override
     public final boolean contains(final String key) {
@@ -222,9 +316,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final void clear() {
-        final SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.clear();
-        editor.apply();
+        synchronized (cacheLock) {
+            final SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.clear();
+            fileCache.evictAll();
+            editor.apply();
+        }
     }
 
     @Override
@@ -233,10 +330,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 TAG,
                 "Removing cache key"
         );
-
-        final SharedPreferences.Editor editor = mSharedPreferences.edit();
-        editor.remove(key);
-        editor.apply();
+        synchronized (cacheLock) {
+            fileCache.remove(key);
+            final SharedPreferences.Editor editor = mSharedPreferences.edit();
+            editor.remove(key);
+            editor.apply();
+        }
 
         Logger.infoPII(
                 TAG,

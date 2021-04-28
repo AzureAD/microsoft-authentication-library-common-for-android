@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.SharedPreferences;
 
+import java.util.Iterator;
 import java.util.Map;
 
 
@@ -76,6 +77,14 @@ public interface ISharedPreferencesFileManager {
      * @return A Map of all entries.
      */
     Map<String, String> getAll();
+
+    /**
+     * Returns an iterator on the shared preferences entries that views only those entries that
+     * the predicate evaluates to true on the key.
+     * @param keyFilter A predicate to use to evaluate the key, return true to include key value pair.
+     * @return an iterator as a view on the shared preferences file.
+     */
+    Iterator<Map.Entry<String, String>> getAllFilteredByKey(SharedPreferencesFileManager.Predicate<String> keyFilter);
 
     /**
      * Tests if the {@link SharedPreferences} file contains an entry for the supplied key.

@@ -30,6 +30,7 @@ import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.constants.DeviceAdmin;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -43,8 +44,11 @@ import java.util.Calendar;
  */
 public class SamsungSettings extends BaseSettings {
 
+    private final static String TAG = SamsungSettings.class.getSimpleName();
+
     @Override
     public void disableAdmin(@NonNull final DeviceAdmin deviceAdmin) {
+        Logger.i(TAG, "Disabling Admin on Samsung Device..");
         launchDeviceAdminSettingsPage();
 
         try {
@@ -72,6 +76,7 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void removeAccount(@NonNull final String username) {
+        Logger.i(TAG, "Removing Account from Samsung Device..");
         launchAccountListPage();
         try {
             // scroll down the recycler view to find the list item for this account
@@ -108,6 +113,7 @@ public class SamsungSettings extends BaseSettings {
     public void addWorkAccount(@NonNull final ITestBroker broker,
                                @NonNull final String username,
                                @NonNull final String password) {
+        Logger.i(TAG, "Adding Work Account on Samsung Device..");
         launchAddAccountPage();
 
         try {
@@ -138,6 +144,7 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
+        Logger.i(TAG, "Forwarding Time For One Day on Samsung Device..");
         // Disable automatic time zone
         AdbShellUtils.disableAutomaticTimeZone();
         // Open the date & time settings page
@@ -181,10 +188,12 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void activateAdmin() {
+        Logger.i(TAG, "Activate Admin for Samsung Device..");
         UiAutomatorUtils.handleButtonClick("com.android.settings:id/action_button");
     }
 
     public void enrollInKnox() {
+        Logger.i(TAG, "Handle Enrollment in knox for Samsung Device..");
         UiAutomatorUtils.handleButtonClick("com.samsung.klmsagent:id/checkBox1");
         UiAutomatorUtils.handleButtonClick("com.samsung.klmsagent:id/eula_bottom_confirm_agree");
     }

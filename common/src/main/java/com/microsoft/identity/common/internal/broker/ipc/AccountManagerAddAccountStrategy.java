@@ -35,8 +35,8 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 

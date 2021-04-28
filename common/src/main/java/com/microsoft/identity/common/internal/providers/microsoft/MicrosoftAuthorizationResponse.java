@@ -25,8 +25,6 @@ package com.microsoft.identity.common.internal.providers.microsoft;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
 
-import java.net.URL;
-
 /**
  * Sub class of {@link AuthorizationResponse} which encapsulates additional parameters
  * specific to Microsoft in addition to the default OAuth2 AuthorizationResponse.

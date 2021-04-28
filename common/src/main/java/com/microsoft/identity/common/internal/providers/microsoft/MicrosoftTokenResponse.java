@@ -30,17 +30,61 @@ import java.util.Date;
 
 public class MicrosoftTokenResponse extends TokenResponse {
 
+    private static final String SESSION_KEY_JWE = "session_key_jwe";
     private static final String CLIENT_INFO = "client_info";
 
     private static final String EXT_EXPIRES_IN = "ext_expires_in";
 
     private static final String FAMILY_ID = "foci";
+    private static final String REFRESH_TOKEN_EXPIRES_IN = "refresh_token_expires_in";
 
     /**
      * Optionally extended access_token TTL. In the event of STS outage, this field may be used to
      * extend the valid lifetime of an access_token.
      */
     private Date mExtExpiresOn;
+
+    /**
+     * Get the string representation of the remaining lifetime of the refresh token.
+     * @return the string representation of the remaining lifetime of the refresh token, may be null.
+     */
+    public String getRefreshTokenExpiresIn() {
+        return mRefreshTokenExpiresIn;
+    }
+
+    /**
+     * Set the string representation of the remaining lifetime of the refresh token.
+     * @param mRefreshTokenExpiresIn the string representation of the remaining lifetime of the refresh
+     *                               token, may be null.
+     */
+    public void setRefreshTokenExpiresIn(String mRefreshTokenExpiresIn) {
+        this.mRefreshTokenExpiresIn = mRefreshTokenExpiresIn;
+    }
+
+    /**
+     * If this request includes an encrypted session key, return it here.
+     */
+    @SerializedName(REFRESH_TOKEN_EXPIRES_IN)
+    private String mRefreshTokenExpiresIn;
+
+    /**
+     * If this request includes an encrypted session key, return it here.
+     */
+    @SerializedName(SESSION_KEY_JWE)
+    private String mSessionKeyJwe;
+
+    /**
+     * Get the session key JWE associated with this result, or null if none.
+     * @return the session key JWE associated with this result, or null if none.
+     */
+    public String getSessionKeyJwe() { return mSessionKeyJwe; }
+
+    /**
+     * Set the session key JWE associated with this result, or null if none.
+     * @param sesionKey the session key JWE associated with this result, or null if none.
+     * @return
+     */
+    public String setSessionKeyJwe(String sesionKey) { return mSessionKeyJwe; }
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.

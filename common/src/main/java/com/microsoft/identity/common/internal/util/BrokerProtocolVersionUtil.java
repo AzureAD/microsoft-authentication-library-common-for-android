@@ -23,8 +23,6 @@
 
 package com.microsoft.identity.common.internal.util;
 
-import android.text.TextUtils;
-
 import androidx.annotation.Nullable;
 
 /**
