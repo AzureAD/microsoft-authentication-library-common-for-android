@@ -571,10 +571,6 @@ public abstract class BaseController {
         return null == idTokenRecord;
     }
 
-    protected boolean accessTokenNeedsRefresh(@NonNull final ICacheRecord cacheRecord){
-        return cacheRecord.getAccessToken().shouldRefresh();
-    }
-
     protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
         requestScopes.addAll(DEFAULT_SCOPES);
