@@ -48,6 +48,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import static com.microsoft.identity.common.java.logging.DiagnosticContext.CORRELATION_ID;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
+/**
+ * A singleton class for logging Telemetry.
+ * Must be instantiated via {@link Telemetry.Builder} before use.
+ */
 public class Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
     private static volatile Telemetry sTelemetryInstance = null;
