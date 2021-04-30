@@ -20,19 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.rules;
+package com.microsoft.identity.common.java.telemetry.rules;
 
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Device;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Device;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
 final public class TelemetryPiiOiiRules {
     private static TelemetryPiiOiiRules sInstance;
@@ -78,7 +78,7 @@ final public class TelemetryPiiOiiRules {
      * @return true if the property belongs to Personally identifiable information. False otherwise.
      */
     public boolean isPii(final String propertyName) {
-        if (StringUtil.isEmpty(propertyName)) {
+        if (StringUtil.isNullOrEmpty(propertyName)) {
             return false;
         }
 
@@ -90,7 +90,7 @@ final public class TelemetryPiiOiiRules {
      * @return true if the property belongs to Objective identifiable information. False otherwise.
      */
     public boolean isOii(final String propertyName) {
-        if (StringUtil.isEmpty(propertyName)) {
+        if (StringUtil.isNullOrEmpty(propertyName)) {
             return false;
         }
 

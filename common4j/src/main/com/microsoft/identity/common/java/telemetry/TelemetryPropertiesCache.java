@@ -20,23 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.java.telemetry;
 
-import android.content.Context;
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.util.StringUtil;
+import lombok.NonNull;
 
 import java.util.UUID;
 
 /**
  * Tracks properties used in telemetry.
  */
-class TelemetryPropertiesCache {
-
-    private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
+public class TelemetryPropertiesCache {
 
     // region Cached Properties
     /**
@@ -45,10 +40,10 @@ class TelemetryPropertiesCache {
     private static final String DEVICE_ID_GUID = "device_id_guid";
     // endregion
 
-    private final SharedPreferencesFileManager mSharedPrefs;
+    private final IKeyPairStorage mStorage;
 
-    TelemetryPropertiesCache(@NonNull final Context context) {
-        mSharedPrefs = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFS_NAME, -1, null);
+    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage storage) {
+        mStorage = storage;
     }
 
     /**
@@ -57,14 +52,13 @@ class TelemetryPropertiesCache {
      * @return The String ID used to refer to this device.
      */
     synchronized String getOrCreateRandomStableDeviceId() {
-        String deviceId = mSharedPrefs.getString(DEVICE_ID_GUID);
+        String deviceId = mStorage.get(DEVICE_ID_GUID);
 
-        if (TextUtils.isEmpty(deviceId)) {
+        if (StringUtil.isNullOrEmpty(deviceId)) {
             deviceId = UUID.randomUUID().toString();
-            mSharedPrefs.putString(DEVICE_ID_GUID, deviceId);
+            mStorage.put(DEVICE_ID_GUID, deviceId);
         }
 
         return deviceId;
     }
-
 }

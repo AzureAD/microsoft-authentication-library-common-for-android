@@ -20,49 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.java.telemetry;
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-
-import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryAggregatedObserver;
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryDefaultObserver;
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryObserver;
+import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.fail;
 
-@RunWith(RobolectricTestRunner.class)
 public class TelemetryTest {
 
     @Before
     public void setup() {
-        final Context context = ApplicationProvider.getApplicationContext();
-        setupTelemetry(context);
+        new Telemetry.Builder()
+                .withTelemetryContext(new MockTelemetryContext())
+                .isDebugging(false)
+                .defaultConfiguration(new TelemetryConfiguration())
+                .build();
     }
 
     @After
     public void cleanUp() {
         Telemetry.getInstance().removeAllObservers();
-    }
-
-    private void setupTelemetry(@NonNull final Context context) {
-        new Telemetry.Builder()
-                .withContext(context)
-                .defaultConfiguration(new TelemetryConfiguration())
-                .build();
     }
 
     @Test
@@ -120,7 +108,7 @@ public class TelemetryTest {
             }
         };
 
-        ITelemetryObserver telemetryObserver = new ITelemetryObserver() {
+        final ITelemetryObserver telemetryObserver = new ITelemetryObserver() {
             @Override
             public void onReceived(Object telemetryData) {
             }
@@ -175,12 +163,12 @@ public class TelemetryTest {
         Telemetry.getInstance().addObserver(new ITelemetryAggregatedObserver() {
             @Override
             public void onReceived(Map<String, String> telemetryData) {
-                final String apiId = telemetryData.get(TelemetryEventStrings.Key.API_ID);
-                Assert.assertEquals("100", apiId);
+                final String errorDomain = telemetryData.get(TelemetryEventStrings.Key.HTTP_ERROR_DOMAIN);
+                Assert.assertEquals("TESTDOMAIN", errorDomain);
             }
         });
 
-        Telemetry.emit(new ApiStartEvent().putApiId("100"));
+        Telemetry.emit(new HttpStartEvent().putErrorDomain("TESTDOMAIN"));
         Telemetry.getInstance().flush();
     }
 
@@ -190,16 +178,16 @@ public class TelemetryTest {
             @Override
             public void onReceived(List<Map<String, String>> telemetryData) {
                 final Map<String, String> mapWithExpectedInfo = telemetryData.get(0);
-                final String apiId = mapWithExpectedInfo.get(TelemetryEventStrings.Key.API_ID);
-                final String authorityType = mapWithExpectedInfo.get(TelemetryEventStrings.Key.AUTHORITY_TYPE);
-                Assert.assertEquals("100", apiId);
-                Assert.assertEquals("AAD", authorityType);
+                final String errorDomain = mapWithExpectedInfo.get(TelemetryEventStrings.Key.HTTP_ERROR_DOMAIN);
+                final String method = mapWithExpectedInfo.get(TelemetryEventStrings.Key.HTTP_METHOD);
+                Assert.assertEquals("TESTDOMAIN", errorDomain);
+                Assert.assertEquals("TESTMETHOD", method);
             }
         });
 
-        Telemetry.emit(new ApiStartEvent()
-                .putApiId("100")
-                .putAuthorityType("AAD"));
+        Telemetry.emit(new HttpStartEvent()
+                .putErrorDomain("TESTDOMAIN")
+                .putMethod("TESTMETHOD"));
         Telemetry.getInstance().flush();
     }
 
