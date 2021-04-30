@@ -1,12 +1,15 @@
+# File: azure-pipelines\auth-client\azure-pipelines.yml
+# Description: Run instrumented test in docker conatiner
 name: Instrumented Tests
+
 trigger:
 - main
-
 
 pool:
  name: DockerBuildAgents
 
 workspace:
   clean: all
+
 steps:
 - template: ../templates/steps/auth-client/docker-tasks.yml
