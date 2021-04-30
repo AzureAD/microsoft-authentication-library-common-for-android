@@ -23,16 +23,22 @@
 package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
+
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.EmptyResult;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 
 public class RefreshOnCommand extends BaseCommand<EmptyResult>{
+
+    private static final String TAG = SilentTokenCommand.class.getSimpleName();
 
     public RefreshOnCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull String publicApiId) {
         super(parameters, controller, new EmptyCallback(), publicApiId);
@@ -40,9 +46,17 @@ public class RefreshOnCommand extends BaseCommand<EmptyResult>{
 
     @Override
     public EmptyResult execute() throws IOException, ClientException, ServiceException {
+        final String methodName = ":execute";
+
         final BaseController controller = getDefaultController();
+        Logger.verbose(
+                TAG + methodName,
+                "Executing with controller: "
+                        + controller.getClass().getSimpleName()
+        );
         SilentTokenCommandParameters commandParameters = (SilentTokenCommandParameters) getParameters();
         controller.renewAccessToken(commandParameters);
+
         return new EmptyResult();
     }
 
