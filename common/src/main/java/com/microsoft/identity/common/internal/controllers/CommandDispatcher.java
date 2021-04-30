@@ -46,8 +46,8 @@ import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
-import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -59,6 +59,7 @@ import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.EmptyResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -403,6 +404,10 @@ public class CommandDispatcher {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
                 commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
                         command.getParameters().getCorrelationId());
+            } else if (result instanceof EmptyResult){
+                //Result of a "fire and forget" commands
+                commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
+                command.getParameters().getCorrelationId());
             } else {
 
                 //For commands that don't return an AcquireTokenResult
@@ -436,10 +441,6 @@ public class CommandDispatcher {
                         break;
                     case COMPLETED:
                         commandCallbackOnTaskCompleted(command, result);
-                        break;
-                    case REFRESH:
-                    case REFRESH_ON_ERROR:
-                        commandCallbackOnTaskRefresh(command, result);
                         break;
                     case CANCEL:
                         command.getCallback().onCancel();
@@ -492,22 +493,12 @@ public class CommandDispatcher {
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
         command.getCallback().onTaskCompleted(result.getResult());
-    }
-
-    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private static void commandCallbackOnTaskRefresh(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
-        if (command instanceof SilentTokenCommand) {
-            if (CommandResult.ResultStatus.REFRESH == result.getStatus()) {
-                commandCallbackOnTaskCompleted(command, result);
-            } else if (CommandResult.ResultStatus.REFRESH_ON_ERROR == result.getStatus()) {
-                commandCallbackOnError(command, result);
-            } else {
-                throw new IllegalArgumentException("Excepted type: REFRESH or REFRESH_ON_ERROR. Input was instead of type: " + result.getResult().toString());
+        if(result.getResult() instanceof AcquireTokenResult){
+            AcquireTokenResult acquireTokenResult = (AcquireTokenResult) result.getResult();
+            if(!acquireTokenResult.getIsBrokerResult()
+                   && acquireTokenResult.getLocalAuthenticationResult().getAccessTokenRecord().shouldRefresh()) {
+                performRefresh(command);
             }
-            performRefresh((SilentTokenCommand) command);
-        } else {
-            throw new IllegalArgumentException("Excepted type: SilentTokenCommand. Input was instead of type: " + command.toString());
         }
     }
 
@@ -572,30 +563,18 @@ public class CommandDispatcher {
     private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
 
         if (result.getSucceeded()) {
-            return checkRefreshStatus(result, correlationId, CommandResult.ResultStatus.REFRESH, CommandResult.ResultStatus.COMPLETED);
+            return new CommandResult(CommandResult.ResultStatus.COMPLETED,
+                    result, correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
             final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
-                return checkRefreshStatus(result, correlationId, CommandResult.ResultStatus.REFRESH_ON_ERROR, CommandResult.ResultStatus.ERROR);
+                return new CommandResult(CommandResult.ResultStatus.ERROR,
+                        result, correlationId);
             }
         }
-    }
-
-    private static CommandResult checkRefreshStatus(final AcquireTokenResult result,
-                                                    @NonNull String correlationId,
-                                                    @NonNull CommandResult.ResultStatus refreshResultStatus,
-                                                    @NonNull CommandResult.ResultStatus originalResultStatus) {
-        final ILocalAuthenticationResult acquireTokenResult = result.getLocalAuthenticationResult();
-        return  !result.getIsBrokerResult()
-                && acquireTokenResult != null
-                && acquireTokenResult.getAccessTokenRecord().shouldRefresh() ?
-                new CommandResult(refreshResultStatus,
-                        acquireTokenResult, correlationId) :
-                new CommandResult(originalResultStatus,
-                        acquireTokenResult, correlationId);
     }
 
     public static void beginInteractive(final InteractiveTokenCommand command) {
@@ -720,36 +699,19 @@ public class CommandDispatcher {
         }
     }
 
-    private static void performRefresh(final SilentTokenCommand command) {
-        final SilentTokenCommandParameters params = ((SilentTokenCommandParameters) command.getParameters()).toBuilder().refreshDueToRefreshIn(true).correlationId(UUID.randomUUID().toString()).build();
-        logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "REFRESH");
-
-        final SilentTokenCommand refreshCommand = new SilentTokenCommand(params, command.getDefaultController(), new CommandCallback() {
-            @Override
-            public void onCancel() {
-                logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "CANCEL");
-            }
-
-            @Override
-            public void onError(Object error) {
-                logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "ERROR");
-            }
-
-            @Override
-            public void onTaskCompleted(Object o) {
-                logRefreshOnCallbackResult(command.getParameters().getCorrelationId(), params.getCorrelationId(), "SUCCESS");
-            }
-        }, command.getPublicApiId());
-        submitSilent(refreshCommand);
+    private static void performRefresh(BaseCommand command) {
+        final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(command.getParameters(), command.getDefaultController(), command.getPublicApiId());
+        logRefreshOnCallbackResult(refreshOnCommand.getParameters().getCorrelationId());
+        submitSilent(refreshOnCommand);
     }
 
-    private static void logRefreshOnCallbackResult(String originalCorrelationId, String newRefreshCorrelationId, String result){
+    private static void logRefreshOnCallbackResult(String originalCorrelationId){
         Logger.info(
                 TAG,
                 "SilentTokenCommand with CorrelationId: "
                         + originalCorrelationId
-                        + " resulted in an " + result + " and initiated a RefreshCommand with CorrelationId: "
-                        + newRefreshCorrelationId
+                        + " resulted in a refresh_on background refresh and initiated a RefreshCommand with CorrelationId: "
+                        + UUID.randomUUID().toString()
         );
     }
 

@@ -34,8 +34,7 @@ public class CommandResult {
         CANCEL,
         COMPLETED,
         ERROR,
-        REFRESH,
-        REFRESH_ON_ERROR;
+        VOID;
 
         public String getLogStatus() {
             return this.name();
