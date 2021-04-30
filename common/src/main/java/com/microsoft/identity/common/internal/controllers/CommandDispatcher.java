@@ -492,13 +492,15 @@ public class CommandDispatcher {
     // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
     @SuppressWarnings(WarningType.unchecked_warning)
     private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
-        command.getCallback().onTaskCompleted(result.getResult());
         if(result.getResult() instanceof AcquireTokenResult){
             AcquireTokenResult acquireTokenResult = (AcquireTokenResult) result.getResult();
+            command.getCallback().onTaskCompleted(acquireTokenResult.getLocalAuthenticationResult());
             if(!acquireTokenResult.getIsBrokerResult()
-                   && acquireTokenResult.getLocalAuthenticationResult().getAccessTokenRecord().shouldRefresh()) {
+                    && acquireTokenResult.getLocalAuthenticationResult().getAccessTokenRecord().shouldRefresh()) {
                 performRefresh(command);
             }
+        } else {
+            command.getCallback().onTaskCompleted(result.getResult());
         }
     }
 
@@ -572,7 +574,7 @@ public class CommandDispatcher {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
                 return new CommandResult(CommandResult.ResultStatus.ERROR,
-                        result, correlationId);
+                        baseException, correlationId);
             }
         }
     }
@@ -692,9 +694,9 @@ public class CommandDispatcher {
                                                  @NonNull final String correlationId) {
         // set correlation id on Local Authentication Result
         if (commandResult.getResult() != null &&
-                commandResult.getResult() instanceof LocalAuthenticationResult) {
+                commandResult.getResult() instanceof AcquireTokenResult) {
             final LocalAuthenticationResult localAuthenticationResult =
-                    (LocalAuthenticationResult) commandResult.getResult();
+                    (LocalAuthenticationResult) ((AcquireTokenResult) commandResult.getResult()).getLocalAuthenticationResult();
             localAuthenticationResult.setCorrelationId(correlationId);
         }
     }

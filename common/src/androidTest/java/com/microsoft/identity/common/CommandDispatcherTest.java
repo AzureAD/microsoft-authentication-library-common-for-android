@@ -96,10 +96,9 @@ public class CommandDispatcherTest {
 
         final BaseCommand silentTokenCommand = new LatchedRefreshInTestCommand(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT,
                 getEmptySilentTokenParameters(),
-                new CommandCallback<AcquireTokenResult, Exception>() {
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
                     @Override
-                    public void onTaskCompleted(final AcquireTokenResult result) {
-                        ILocalAuthenticationResult actual = ((AcquireTokenResult) result).getLocalAuthenticationResult();
+                    public void onTaskCompleted(final ILocalAuthenticationResult actual) {
                         ILocalAuthenticationResult expected = TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT.getLocalAuthenticationResult();
                         Assert.assertEquals(expected, actual);
                         taskCompleteCount.getAndIncrement();
@@ -159,10 +158,9 @@ public class CommandDispatcherTest {
 
         final BaseCommand silentTokenCommand = new LatchedRefreshInTestCommand(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT,
                 getEmptySilentTokenParameters(),
-                new CommandCallback<AcquireTokenResult, Exception>() {
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
                     @Override
-                    public void onTaskCompleted(final AcquireTokenResult result) {
-                        ILocalAuthenticationResult actual = ((AcquireTokenResult) result).getLocalAuthenticationResult();
+                    public void onTaskCompleted(final ILocalAuthenticationResult actual) {
                         ILocalAuthenticationResult expected = TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT.getLocalAuthenticationResult();
                         Assert.assertEquals(expected, actual);
                         taskCompleteCount.getAndIncrement();
@@ -217,10 +215,9 @@ public class CommandDispatcherTest {
 
         final BaseCommand silentTokenCommand = new LatchedRefreshInTestCommand(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT,
                 getEmptySilentTokenParameters(),
-                new CommandCallback<AcquireTokenResult, Exception>() {
+                new CommandCallback<ILocalAuthenticationResult, Exception>() {
                     @Override
-                    public void onTaskCompleted(final AcquireTokenResult result) {
-                        ILocalAuthenticationResult actual = ((AcquireTokenResult) result).getLocalAuthenticationResult();
+                    public void onTaskCompleted(final ILocalAuthenticationResult actual) {
                         ILocalAuthenticationResult expected = TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT.getLocalAuthenticationResult();
                         Assert.assertEquals(expected, actual);
                         taskCompleteCount.getAndIncrement();
