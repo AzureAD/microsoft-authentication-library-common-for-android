@@ -323,31 +323,7 @@ public class LocalMSALController extends BaseController {
                     "RefreshIn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if (parameters.isRefreshDueToRefreshIn()) {
-            //Note that parameters.isRefreshDueToRefreshIn() == true is always the result of a subsequent silentCall, meaning after the regular/initial silentCall that is normally triggered by user
-            final AccessTokenRecord accessTokenRecord = fullCacheRecord.getAccessToken();
-            Logger.info(
-                    TAG + methodName,
-                    "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + accessTokenRecord.getRefreshOn() + ". Regular expiry is at " + accessTokenRecord.getExpiresOn() + "."
-                            + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
-            );
-            renewAT(
-                    parametersWithScopes,
-                    acquireTokenSilentResult,
-                    tokenCache,
-                    strategy,
-                    fullCacheRecord,
-                    TAG + methodName
-            );
-            //Only remove AT from cache if token renewal was successful, because token is still valid, only refresh-expired.
-            if (acquireTokenSilentResult.getSucceeded()) {
-                Logger.info(
-                        TAG + methodName,
-                        "Access token is refresh-expired. Removing from cache..."
-                );
-                tokenCache.removeCredential(accessTokenRecord);
-            }
-        } else if ((accessTokenIsNull(fullCacheRecord)
+        if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
