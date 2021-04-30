@@ -22,9 +22,36 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry;
 
+import android.content.Context;
+
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.telemetry.TelemetryPropertiesCache;
+
+import lombok.NonNull;
+
 /**
- * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.TelemetryConfiguration} instead.
- **/
-@Deprecated
-public class TelemetryConfiguration extends com.microsoft.identity.common.java.telemetry.TelemetryConfiguration {
+ * Telemetry properties cache for Android.
+ * Use Shared Preference as storage.
+ * */
+public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
+
+    private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
+
+    public AndroidTelemetryPropertiesCache(@NonNull final Context context) {
+        super(new IKeyPairStorage() {
+            final SharedPreferencesFileManager mSharedPrefs =
+                    SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFS_NAME, -1, null);
+
+            @Override
+            public String get(@NonNull String key) {
+                return mSharedPrefs.getString(key);
+            }
+
+            @Override
+            public void put(@lombok.NonNull String key, String value) {
+                mSharedPrefs.putString(key, value);
+            }
+        });
+    }
 }

@@ -27,8 +27,8 @@ import androidx.annotation.Nullable;
 import androidx.core.util.Consumer;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.HttpEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.HttpStartEvent;
+import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
+import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
 import net.jcip.annotations.Immutable;
