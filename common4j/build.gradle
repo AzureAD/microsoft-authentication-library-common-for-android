@@ -8,7 +8,7 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.0.1'
+    id 'com.microsoft.identity.buildsystem' version '0.1.0'
 }
 
 def desugarCode = false
