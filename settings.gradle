@@ -7,6 +7,4 @@ pluginManagement {
 }
 
 rootProject.name = "com.microsoft.identity"
-include ':common', ':common-java', ':keyvault', ':labapi', ':testutils', ':uiautomationutilities'
-
-project(':common-java').projectDir = new File('common4j')
+include ':common', ':common4j', ':keyvault', ':labapi', ':testutils', ':uiautomationutilities'
