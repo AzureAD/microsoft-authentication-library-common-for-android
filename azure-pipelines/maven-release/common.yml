@@ -1,5 +1,6 @@
 # File: azure-pipelines\maven-release\common.yml
 # Description: Publish common to maven central (sonatype)
+# https://search.maven.org/search?q=g:com.microsoft.identity%20AND%20a:common
 # Variable: 'commonVersion' was defined in the Variables tab
 name: $(date:yyyyMMdd)$(rev:.r)
 

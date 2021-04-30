@@ -1,4 +1,4 @@
-# File: azure-pipelines\auth-client\azure-pipelines.yml
+# File: azure-pipelines\auth-client\instrumented-test.yml
 # Description: Run instrumented test in docker conatiner
 name: Instrumented Tests
 

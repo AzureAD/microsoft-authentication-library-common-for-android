@@ -37,6 +37,14 @@ jobs:
     inputs:
       tasks: common:version${{ parameters.versionType }}
       publishJUnitResults: false
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        # Write your PowerShell commands here.
+        $versionNameRaw = Select-String -Path ".\common\versioning\version.properties" -Pattern "^versionName=(.*)$"
+        $v = $versionNameRaw.Matches.groups[1].value
+        Write-Host "##vso[task.setvariable variable=version]$v"
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
