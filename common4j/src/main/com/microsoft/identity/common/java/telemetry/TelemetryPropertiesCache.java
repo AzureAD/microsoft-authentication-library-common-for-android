@@ -31,7 +31,7 @@ import java.util.UUID;
 /**
  * Tracks properties used in telemetry.
  */
-class TelemetryPropertiesCache {
+public class TelemetryPropertiesCache {
 
     // region Cached Properties
     /**
@@ -42,7 +42,7 @@ class TelemetryPropertiesCache {
 
     private final IKeyPairStorage mStorage;
 
-    TelemetryPropertiesCache(@NonNull final IKeyPairStorage storage) {
+    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage storage) {
         mStorage = storage;
     }
 

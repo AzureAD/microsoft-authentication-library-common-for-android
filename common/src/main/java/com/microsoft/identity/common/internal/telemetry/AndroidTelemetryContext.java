@@ -29,8 +29,6 @@ import android.os.Build;
 
 import androidx.core.content.pm.PackageInfoCompat;
 
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 import com.microsoft.identity.common.java.telemetry.AbstractTelemetryContext;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.logging.Logger;
@@ -44,25 +42,9 @@ import lombok.NonNull;
 public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
     private static final String TAG = AndroidTelemetryContext.class.getName();
-    private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
 
     public AndroidTelemetryContext(@NonNull final Context context) {
-        super(
-                new IKeyPairStorage() {
-                    final SharedPreferencesFileManager mSharedPrefs =
-                            SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFS_NAME, -1, null);
-
-                    @Override
-                    public String get(@NonNull String key) {
-                        return mSharedPrefs.getString(key);
-                    }
-
-                    @Override
-                    public void put(@lombok.NonNull String key, String value) {
-                        mSharedPrefs.putString(key, value);
-                    }
-                });
-
+        super(new AndroidTelemetryPropertiesCache(context));
         addApplicationInfo(context);
         addDeviceInfo(Build.MANUFACTURER, Build.MODEL, Build.DEVICE);
         addOsInfo();

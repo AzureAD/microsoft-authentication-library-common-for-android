@@ -96,7 +96,7 @@ public class Telemetry {
     /**
      * Prepares instance using builder.
      **/
-    private synchronized static Telemetry prepareInstance(Builder builder) {
+    private synchronized static Telemetry prepareInstance(final Builder builder) {
         sTelemetryInstance = new Telemetry(builder);
 
         return sTelemetryInstance;
@@ -114,7 +114,7 @@ public class Telemetry {
         return sTelemetryInstance;
     }
 
-    private Queue<Map<String, String>> getRequestMap() {
+    private synchronized Queue<Map<String, String>> getRequestMap() {
         return mTelemetryRawDataMap;
     }
 
@@ -123,7 +123,7 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver
      */
-    public void addObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
+    public synchronized void addObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
         if (null == observer) {
             throw new IllegalArgumentException("Telemetry Observer instance cannot be null");
         }
@@ -141,10 +141,12 @@ public class Telemetry {
      *
      * @param cls type of the observer.
      */
-    public void removeObserver(final Class<?> cls) {
-        if (null == cls || null == mObservers) {
+    public synchronized void removeObserver(final Class<?> cls) {
+        final String methodName = ":removeObserver";
+
+        if (null == cls || null == mObservers || mObservers.isEmpty()) {
             Logger.warn(
-                    TAG,
+                    TAG + methodName,
                     "Unable to remove the observe. Either the observer is null or the observer list is empty."
             );
             return;
@@ -166,10 +168,12 @@ public class Telemetry {
      *
      * @param observer ITelemetryObserver object.
      */
-    public void removeObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
-        if (null == observer || null == mObservers) {
+    public synchronized void removeObserver(@SuppressWarnings(WarningType.rawtype_warning) final ITelemetryObserver observer) {
+        final String methodName = ":removeObserver";
+
+        if (null == observer || null == mObservers || mObservers.isEmpty()) {
             Logger.warn(
-                    TAG,
+                    TAG + methodName,
                     "Unable to remove the observer. Either the observer is null or the observer list is empty."
             );
             return;
@@ -179,7 +183,7 @@ public class Telemetry {
     }
 
     // Visible for testing.
-    public void removeAllObservers() {
+    public synchronized void removeAllObservers() {
         if (mObservers == null) {
             return;
         }
@@ -195,7 +199,7 @@ public class Telemetry {
     // Suppressing rawtype warnings due to the generic type ITelemetryObserver
     // Suppressing unchecked warnings as generic type not provided for CopyOnWriteArrayList and Collections
     @SuppressWarnings({WarningType.rawtype_warning, WarningType.unchecked_warning})
-    public List<ITelemetryObserver> getObservers() {
+    public synchronized List<ITelemetryObserver> getObservers() {
         List<ITelemetryObserver> observersList;
         if (mObservers != null) {
             observersList = new CopyOnWriteArrayList<ITelemetryObserver>(mObservers);
@@ -283,7 +287,7 @@ public class Telemetry {
         }
 
         final Map<String, String> nonPiiProperties = new HashMap<>();
-        for (Map.Entry<String, String> entry : properties.entrySet()) {
+        for (final Map.Entry<String, String> entry : properties.entrySet()) {
             if (!TelemetryPiiOiiRules.getInstance().isPiiOrOii(entry.getKey())) {
                 nonPiiProperties.put(entry.getKey(), entry.getValue());
             }

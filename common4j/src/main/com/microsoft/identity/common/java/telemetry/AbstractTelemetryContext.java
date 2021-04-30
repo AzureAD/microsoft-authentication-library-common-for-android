@@ -38,9 +38,9 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 public abstract class AbstractTelemetryContext extends Properties {
     private TelemetryPropertiesCache mTelemetryPropsCache;
 
-    protected AbstractTelemetryContext(@NonNull final IKeyPairStorage telemetryPropertyCacheStorage) {
+    protected AbstractTelemetryContext(@NonNull final TelemetryPropertiesCache telemetryPropertiesCache) {
         super();
-        mTelemetryPropsCache = new TelemetryPropertiesCache(telemetryPropertyCacheStorage);
+        mTelemetryPropsCache = telemetryPropertiesCache;
         put(Device.ID, mTelemetryPropsCache.getOrCreateRandomStableDeviceId());
         put(Device.TIMEZONE, TimeZone.getDefault().getID());
     }
