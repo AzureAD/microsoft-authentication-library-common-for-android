@@ -9,6 +9,7 @@ V.Next
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 - [PATCH] Add common-java. Migrate Logger. (#1300)
 - [PATCH] Adding checks to not cache certain ErrorCodes. (#1330)
+- [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 
 Version 3.4.0
 ----------
