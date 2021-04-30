@@ -11,14 +11,15 @@ variables:
 - name: version
 
 resources:
-  pipelines:
-  - pipeline: Android\Nightly Snapshot Releases\Nightly ADAL VSTS Release
-    project: Engineering
-    source: Nightly ADAL VSTS Release
-    trigger:
-      branches:
-        include:
-        - dev
+# TODO uncomment once we have a valid artifact in the pipeline
+#  pipelines:
+#  - pipeline: Android\Nightly Snapshot Releases\Nightly ADAL VSTS Release
+#    project: Engineering
+#    source: Nightly ADAL VSTS Release
+#    trigger:
+#      branches:
+#        include:
+#        - dev
   repositories:
   - repository: self
     type: git
