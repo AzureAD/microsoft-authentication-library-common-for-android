@@ -12,7 +12,7 @@ variables:
 
 resources:
   pipelines:
-  - pipeline: Nightly ADAL VSTS Release
+  - pipeline: Android\Nightly Snapshot Releases\Nightly ADAL VSTS Release
     project: Engineering
     source: Nightly ADAL VSTS Release
     trigger:
