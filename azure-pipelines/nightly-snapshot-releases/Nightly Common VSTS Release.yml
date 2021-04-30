@@ -1,14 +1,10 @@
 # File: azure-pipelines\nightly-snapshot-releases\Nightly Common VSTS Release.yml
 # Description: Assemble & publish Snapshot common release nightly to internal feed
 # https://identitydivision.visualstudio.com/Engineering/_packaging?_a=feed&feed=AndroidADAL
-# Variable: 'version' publishes version
-name: $(date:yyyyMMdd)$(rev:.r)-$(version)
+name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
 pr: none
-
-variables:
-- name: version
 
 resources:
 # TODO uncomment once we have a valid artifact in the pipeline
