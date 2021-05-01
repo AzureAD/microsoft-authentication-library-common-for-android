@@ -126,7 +126,7 @@ dependencies {
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
-    implementation(project(":common4j"))
+    api(project(":common4j"))
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
