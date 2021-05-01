@@ -65,7 +65,7 @@ jobs:
     displayName: 'Publish Artifact: Common Release'
     inputs:
       ArtifactName: CommonRelease
-      TargetPath: '\\my\share\$(Build.DefinitionName)\$(Build.BuildNumber)'
+      TargetPath: $(Build.SourcesDirectory)/app/build/
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
 ...
