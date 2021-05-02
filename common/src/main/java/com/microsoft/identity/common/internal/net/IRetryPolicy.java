@@ -22,25 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
-
-import java.io.IOException;
-import java.util.concurrent.Callable;
-
-import lombok.SneakyThrows;
-
 /**
  * Deprecated
  *
- * @see com.microsoft.identity.common.java.net.NoRetryPolicy
+ * @see com.microsoft.identity.common.java.net.IRetryPolicy
  */
-@ThreadSafe
-@Immutable
-public class NoRetryPolicy implements IRetryPolicy<HttpResponse> {
-    @Override
-    @SneakyThrows
-    public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
-        return supplier.call();
-    }
+public interface IRetryPolicy<T> extends com.microsoft.identity.common.java.net.IRetryPolicy<T> {
 }

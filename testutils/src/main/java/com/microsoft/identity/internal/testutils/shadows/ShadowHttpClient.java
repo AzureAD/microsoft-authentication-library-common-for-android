@@ -25,10 +25,10 @@ package com.microsoft.identity.internal.testutils.shadows;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.net.AbstractHttpClient;
-import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.internal.testutils.HttpRequestInterceptor;
 import com.microsoft.identity.internal.testutils.MockHttpClient;
 

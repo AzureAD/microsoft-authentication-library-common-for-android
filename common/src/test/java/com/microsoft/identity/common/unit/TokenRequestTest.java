@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.unit;
 
-import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 
 import junit.framework.Assert;

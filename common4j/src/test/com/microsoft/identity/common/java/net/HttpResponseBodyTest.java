@@ -1,3 +1,4 @@
+package com.microsoft.identity.common.java.net;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -21,10 +22,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package com.microsoft.identity.common;
-
-import com.microsoft.identity.common.internal.net.HttpResponse;
-
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -35,7 +32,7 @@ import java.util.List;
 /**
  * Tests for {@link HttpResponse}.
  */
-public final class HttpResponseTest {
+public final class HttpResponseBodyTest {
 
     private static final String RESPONSE_BODY = "test response body";
 

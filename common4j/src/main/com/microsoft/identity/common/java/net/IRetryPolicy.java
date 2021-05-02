@@ -20,27 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
-
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
+package com.microsoft.identity.common.java.net;
 
 import java.io.IOException;
 import java.util.concurrent.Callable;
 
-import lombok.SneakyThrows;
-
 /**
- * Deprecated
- *
- * @see com.microsoft.identity.common.java.net.NoRetryPolicy
+ * Really a marker interface that takes a callable returning a type, and tries to produce
+ * an object of that type from it.  Implementations of this interface may examine the object
+ * returned and any exceptions that result from the call and decide to execute the supplier
+ * again in order to achieve a different result.
+ * @param <T> the type of the object on return.
  */
-@ThreadSafe
-@Immutable
-public class NoRetryPolicy implements IRetryPolicy<HttpResponse> {
-    @Override
-    @SneakyThrows
-    public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
-        return supplier.call();
-    }
+public interface IRetryPolicy<T> {
+    /**
+     * Evaluate the object returned from a callable and return the result.
+     * @param supplier an object to call for a result.
+     * @return the result of calling the supplier.
+     * @throws IOException if an IO error occurs.
+     */
+    T attempt (Callable<T> supplier) throws IOException;
 }
