@@ -101,6 +101,8 @@ public class CommandDispatcher {
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
                     ClientException.INTERRUPTED_OPERATION,
+                    ClientException.INVALID_BROKER_BUNDLE,
+
                     ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
@@ -248,7 +250,8 @@ public class CommandDispatcher {
                         }
 
                         //Check cache to see if the same command completed in the last 30 seconds
-                        commandResult = sCommandResultCache.get(command);
+                        // Disabling throttling ADO:1383033
+                        // commandResult = sCommandResultCache.get(command);
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
                             commandResult = executeCommand(command);
@@ -460,7 +463,8 @@ public class CommandDispatcher {
     private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
                                            CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
-            sCommandResultCache.put(command, commandResult);
+            // Disabling throttling ADO:1383033
+            // sCommandResultCache.put(command, commandResult);
         }
     }
 
