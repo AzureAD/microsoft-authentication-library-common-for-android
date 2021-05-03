@@ -37,7 +37,6 @@ import java.net.URL;
 /**
  * Tests for {@link HttpUrlConnectionFactory}.
  */
-@Ignore
 public final class HttpUrlConnectionFactoryTest {
 
     @After

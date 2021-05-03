@@ -27,5 +27,5 @@ package com.microsoft.identity.common.internal.net;
  *
  * @see com.microsoft.identity.common.java.net.IRetryPolicy
  */
-public interface IRetryPolicy<T> extends com.microsoft.identity.common.java.net.IRetryPolicy<T> {
+public interface RetryPolicy<T> extends com.microsoft.identity.common.java.net.IRetryPolicy<T> {
 }

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.net;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.net.AbstractHttpClient;
+import com.microsoft.identity.common.java.net.IRetryPolicy;
 
 import java.io.IOException;
 import java.net.URL;
@@ -61,14 +62,14 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     public static class Builder {
-        private IRetryPolicy<HttpResponse> mRetryPolicy = new NoRetryPolicy();
+        private RetryPolicy<HttpResponse> mRetryPolicy = new NoRetryPolicy();
         private int mConnectTimeoutMs = DEFAULT_CONNECT_TIME_OUT_MS;
         private int mReadTimeoutMs = DEFAULT_READ_TIME_OUT_MS;
         private Supplier<Integer> mConnectTimeoutMsSupplier = null;
         private Supplier<Integer> mReadTimeoutMsSupplier = null;
         private int mStreamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
 
-        public Builder retryPolicy(@NonNull final IRetryPolicy<HttpResponse> retryPolicy) {
+        public Builder retryPolicy(@NonNull final RetryPolicy<HttpResponse> retryPolicy) {
             mRetryPolicy = retryPolicy;
             return this;
         }
@@ -110,7 +111,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private com.microsoft.identity.common.java.net.UrlConnectionHttpClient sAdaptedObject;
 
-    private UrlConnectionHttpClient(final IRetryPolicy<HttpResponse> retryPolicy,
+    private UrlConnectionHttpClient(final RetryPolicy<HttpResponse> retryPolicy,
                                     int connectTimeoutMs,
                                     int readTimeoutMs,
                                     Supplier<Integer> connectTimeoutMsSupplier,

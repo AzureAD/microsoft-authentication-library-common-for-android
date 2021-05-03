@@ -37,7 +37,7 @@ import lombok.SneakyThrows;
  */
 @ThreadSafe
 @Immutable
-public class NoRetryPolicy implements IRetryPolicy<HttpResponse> {
+public class NoRetryPolicy implements RetryPolicy<HttpResponse> {
     @Override
     @SneakyThrows
     public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
