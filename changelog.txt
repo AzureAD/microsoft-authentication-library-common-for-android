@@ -8,6 +8,7 @@ V.Next
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 - [PATCH] Add common-java. Migrate Logger. (#1300)
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
+- [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 
 Version 3.4.2
 ----------
