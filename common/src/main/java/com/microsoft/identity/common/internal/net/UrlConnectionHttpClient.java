@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.net;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.arch.core.util.Function;
 import androidx.core.util.Consumer;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -71,6 +72,9 @@ import static com.microsoft.identity.common.internal.net.HttpUrlConnectionFactor
 @ThreadSafe
 @Immutable
 public class UrlConnectionHttpClient extends AbstractHttpClient {
+
+    public static final int INITIAL_DELAY_IS_1_SECOND = 1000;
+
     /**
      * A functional interface modeled off of java.util.function.Supplier for providing
      * values to callers.
@@ -119,7 +123,31 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     public static UrlConnectionHttpClient getDefaultInstance() {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
-            defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder().build());
+            defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
+                    .retryPolicy(new StatusCodeAndExceptionRetry.StatusCodeAndExceptionRetryBuilder()
+                            .number(1)
+                            .extensionFactor(2)
+                            .isAcceptable(new Function<HttpResponse, Boolean>() {
+                                public Boolean apply(HttpResponse response) {
+                                    return response != null && response.getStatusCode() < 400;
+                                }
+                            })
+                            .initialDelay(INITIAL_DELAY_IS_1_SECOND)
+                            .isRetryable(new Function<HttpResponse, Boolean>() {
+                                public Boolean apply(HttpResponse response) {
+                                    return response != null
+                                            && (response.getStatusCode() == HttpURLConnection.HTTP_INTERNAL_ERROR
+                                            || response.getStatusCode() == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
+                                            || response.getStatusCode() == HttpURLConnection.HTTP_UNAVAILABLE);
+                                }
+                            })
+                            .isRetryableException(new Function<Exception, Boolean>() {
+                                public Boolean apply(Exception e) {
+                                    return e instanceof SocketTimeoutException;
+                                }
+                            })
+                            .build())
+                    .build());
             reference = defaultReference.get();
         }
         return reference;
