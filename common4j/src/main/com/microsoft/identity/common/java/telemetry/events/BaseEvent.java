@@ -20,21 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.microsoft.identity.common.java.telemetry.Properties;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import lombok.NonNull;
 
-import com.microsoft.identity.common.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.telemetry.Properties;
-
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
 public class BaseEvent extends Properties {
     public BaseEvent() {
         super();
         occurs(System.currentTimeMillis());
-        correlationId(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        correlationId(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
     }
 
     @Override
@@ -79,7 +77,7 @@ public class BaseEvent extends Properties {
      * @param eventStartTime Long of the event start time. If null, then put the current time as the start time.
      * @return the event object
      */
-    public BaseEvent occurs(@Nullable Long eventStartTime) {
+    public BaseEvent occurs(Long eventStartTime) {
         if (null == eventStartTime) {
             put(Key.OCCUR_TIME, String.valueOf(System.currentTimeMillis()));
         } else {

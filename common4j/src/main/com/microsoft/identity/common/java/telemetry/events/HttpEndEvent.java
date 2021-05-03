@@ -20,47 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import java.net.URL;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-
-public class HttpStartEvent extends BaseEvent {
-    public HttpStartEvent() {
+public class HttpEndEvent extends BaseEvent {
+    public HttpEndEvent() {
         super();
-        names(Event.HTTP_START_EVENT);
+        names(Event.HTTP_END_EVENT);
         types(EventType.HTTP_EVENT);
     }
 
-    public HttpStartEvent putMethod(String method) {
-        put(Key.HTTP_METHOD, method);
-        return this;
-    }
-
-    public HttpStartEvent putPath(final URL path) {
-        if (path == null) {
-            return this;
-        }
-
-        put(Key.HTTP_PATH, path.toExternalForm());
-        return this;
-    }
-
-    public HttpStartEvent putRequestIdHeader(String requestIdHeader) {
-        put(Key.HTTP_REQUEST_ID_HEADER, requestIdHeader);
-        return this;
-    }
-
-    public HttpStartEvent putRequestQueryParams(String requestQueryParams) {
-        put(Key.REQUEST_QUERY_PARAMS, requestQueryParams);
-        return this;
-    }
-
-    public HttpStartEvent putErrorDomain(String errorDomain) {
-        put(Key.HTTP_ERROR_DOMAIN, errorDomain);
+    public HttpEndEvent putStatusCode(final int statusCode) {
+        put(Key.HTTP_RESPONSE_CODE, String.valueOf(statusCode));
         return this;
     }
 }
