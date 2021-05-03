@@ -255,7 +255,8 @@ public class CommandDispatcher {
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
                             commandResult = executeCommand(command);
-                            cacheCommandResult(command, commandResult);
+                            // Disabling throttling ADO:1383033
+                            // cacheCommandResult(command, commandResult);
                             Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
                                     + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                     + " is cacheable : " + command.isEligibleForCaching());
@@ -463,8 +464,7 @@ public class CommandDispatcher {
     private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
                                            CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
-            // Disabling throttling ADO:1383033
-            // sCommandResultCache.put(command, commandResult);
+            sCommandResultCache.put(command, commandResult);
         }
     }
 
