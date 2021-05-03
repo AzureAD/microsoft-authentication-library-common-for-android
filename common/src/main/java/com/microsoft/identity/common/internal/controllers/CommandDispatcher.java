@@ -102,7 +102,6 @@ public class CommandDispatcher {
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
                     ClientException.INTERRUPTED_OPERATION,
                     ClientException.INVALID_BROKER_BUNDLE,
-
                     ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
