@@ -11,8 +11,6 @@ trigger: none
 variables:
 - name: robolectricSdkVersion
   value: 28
-- name: commonBranch
-  value: initValue
 
 
 resources:
@@ -67,7 +65,7 @@ stages:
           }
           Write-Output "$branch"
           Write-Host "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
-          Write-Output "$(commonBranch)"
+          Write-Output "$env:commonBranch"
           Write-Output "${{ variables.commonBranch }}"
   # msal
   - job: msalValidation
@@ -82,7 +80,7 @@ stages:
       submodules: recursive
       persistCredentials: True
     - task: CmdLine@2
-      displayName: Checkout common submodule $(commonBranch)
+      displayName: Checkout common submodule $($env:commonBranch)
       inputs:
         script: |
           git fetch
