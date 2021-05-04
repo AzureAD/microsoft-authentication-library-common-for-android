@@ -35,7 +35,6 @@ jobs:
     inputs:
       script: |
         git fetch
-        git checkout $(System.PullRequest.SourceBranch)
         git status
         git rev-parse HEAD
       workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
