@@ -63,4 +63,4 @@ stages:
               }
           }
           Write-Host "##vso[task.setvariable variable=commonBranch;]$branch"
-          Write-Host "$(commonBranch)"
+          Write-Host '$(commonBranch)'
