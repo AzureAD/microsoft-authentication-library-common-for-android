@@ -46,7 +46,7 @@ stages:
         targetType: inline
         script: |
 
-          $branch = switch ( $('Build.Reason) )
+          $branch = switch ( $(Build.Reason) )
           {
               PullRequest
               {
