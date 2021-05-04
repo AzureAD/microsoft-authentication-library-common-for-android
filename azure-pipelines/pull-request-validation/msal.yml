@@ -39,6 +39,9 @@ jobs:
     displayName: Checkout common submodule ($(Build.SourceBranchName))
     inputs:
       script: |
+        echo $(Build.SourceBranchName)
+        echo $(Build.SourceBranch)
+        echo $(System.PullRequest.SourceBranch)
         git fetch
         git checkout $(Build.SourceBranchName)
         git status
