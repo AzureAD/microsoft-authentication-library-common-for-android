@@ -11,10 +11,6 @@ trigger: none
 variables:
 - name: robolectricSdkVersion
   value: 28
-- name: commonBranch
-  value:
-    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}: $(System.PullRequest.SourceBranch)
-    ${{ if eq(variables['Build.Reason'], 'Manual') }}: $(commonBranchName)
 
 resources:
   repositories:
@@ -40,112 +36,30 @@ stages:
   pool:
     name: Hosted Windows 2019 with VS2019
   jobs:
-  # msal
-  - job: msalValidation
-    displayName: msal validation
+  # setup
+  - job: setupBranch
+    displayName: setup branch
     steps:
-    - template: ../templates/steps/automation-cert.yml
-    - checkout: msal
-      displayName: Checkout msal repository
-      clean: true
-      submodules: recursive
-      persistCredentials: True
-    - task: CmdLine@2
-      displayName: Checkout common submodule $(variables.commonBranch)
-      inputs:
-        script: |
-          git fetch
-          git checkout $(variables.commonBranch)
-          git status
-          git rev-parse HEAD
-        workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
-      displayName: Assemble msal
-      inputs:
-        tasks: clean msal:assembleLocal
-    - task: Gradle@2
-      displayName: Run msal Unit tests
-      inputs:
-        tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
-  # broker
-  - job: brokerValidation
-    displayName: broker validation
-    steps:
-    - template: ../templates/steps/automation-cert.yml
-    - checkout: broker
-      displayName: Checkout broker repository
-      clean: true
-      submodules: recursive
-      persistCredentials: True
-    - task: CmdLine@2
-      displayName: Checkout common submodule $(variables.commonBranch)
-      inputs:
-        script: |
-          git fetch
-          git checkout $(variables.commonBranch)
-          git status
-          git rev-parse HEAD
-        workingDirectory: $(Agent.BuildDirectory)/s/common
     - task: PowerShell@2
-      displayName: Install Flatbuffers Compiler
-      enabled: False
+      displayName: Define branch
       inputs:
         targetType: inline
-        script: >-
-          Write-Output "Downloading flatbuffers"
-
-          $downloadLink = "https://github.com/google/flatbuffers/releases/download/v1.12.0/flatc_windows.zip"
-
-          Write-Output "Using download link: $downloadLink"
-
-          $dest = "$env:Temp\FlatBufferInstaller.zip"
-
-          (New-Object Net.WebClient).DownloadFile($downloadLink, $dest)
-
-          Write-Output "Extracting flatbuffers archive on machine...."
-
-          Expand-Archive -Path $dest -DestinationPath .\flatc-extracted
-
-          Write-Output "Finished extracting flatbuffers archive on machine...."
-
-          Write-Output "Run flatc"
-
-          .\flatc-extracted\flatc
-
-          echo '##vso[task.setvariable variable=path]$(PATH):$(CWD)\flatc-extracted\'
-
-          flatc
-    - task: Gradle@2
-      displayName: Assemble broker
-      inputs:
-        tasks: clean AADAuthenticator:assembleLocal
-    - task: Gradle@2
-      displayName: Run broker Unit tests
-      inputs:
-        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
-  # adal
-  - job: adalValidation
-    displayName: adal validation
-    steps:
-    - checkout: adal
-      displayName: Checkout adal repository
-      clean: true
-      submodules: recursive
-      persistCredentials: True
-    - task: CmdLine@2
-      displayName: Checkout common submodule $(variables.commonBranch)
-      inputs:
         script: |
-          git fetch
-          git checkout $(variables.commonBranch)
-          git status
-          git rev-parse HEAD
-        workingDirectory: $(Agent.BuildDirectory)/s/common
-    - task: Gradle@2
-      displayName: Assemble adal
-      inputs:
-        tasks: clean adal:assembleLocal
-    - task: Gradle@2
-      displayName: Run adal Unit tests
-      inputs:
-        tasks: adal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+
+          $branch = switch ( $('Build.Reason) )
+          {
+              PullRequest
+              {
+                $(System.PullRequest.SourceBranch)
+              }
+              Manual
+              {
+              $(commonBranchName)
+              }
+              default
+              {
+              ''
+              }
+          }
+          Write-Host "##vso[task.setvariable variable=commonBranch;]$branch"
+          Write-Host "$(variables.commonBranch)"
