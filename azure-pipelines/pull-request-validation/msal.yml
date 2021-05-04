@@ -18,7 +18,7 @@ resources:
   - repository: msal
     type: github
     name: AzureAD/microsoft-authentication-library-for-android
-    ref: master
+    ref: dev
     endpoint: ANDROID_GITHUB
 
 jobs:
@@ -36,16 +36,16 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - task: CmdLine@2
-    displayName: Checkout current submodule
+    displayName: Checkout common submodule ($(Build.SourceBranchName))
     inputs:
       script: |
         git fetch
         git checkout $(Build.SourceBranchName)
         git status
-        git branch
+        git rev-parse HEAD
       workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
   - task: Gradle@2
-    displayName: Assemble MSAL
+    displayName: Assemble msal
     inputs:
       gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
       cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
@@ -56,6 +56,6 @@ jobs:
       gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
       cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
       tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
-      #javaHomeSelection: $(BuildParameters.javaHomeSelection)
-      #jdkVersion: 1.11
+      javaHomeSelection: $(BuildParameters.javaHomeSelection)
+      jdkVersion: 1.11
 
