@@ -35,17 +35,11 @@ stages:
   pool:
     name: Hosted Windows 2019 with VS2019
   jobs:
-  - job: automationCert
-    displayName: Install Automation cert
-    steps:
-      - template: ../templates/steps/automation-cert.yml
   # msal
   - job: msalValidation
     displayName: msal validation
-    cancelTimeoutInMinutes: 1
-    dependsOn:
-    - automationCert
     steps:
+    - template: ../templates/steps/automation-cert.yml
     - checkout: msal
       displayName: Checkout msal repository
       clean: true
@@ -70,10 +64,8 @@ stages:
   # broker
   - job: brokerValidation
     displayName: broker validation
-    cancelTimeoutInMinutes: 1
-    dependsOn:
-    - automationCert
     steps:
+    - template: ../templates/steps/automation-cert.yml
     - checkout: broker
       displayName: Checkout broker repository
       clean: true
@@ -127,9 +119,6 @@ stages:
   # adal
   - job: adalValidation
     displayName: adal validation
-    cancelTimeoutInMinutes: 1
-    dependsOn:
-    - automationCert
     steps:
     - checkout: adal
       displayName: Checkout adal repository
