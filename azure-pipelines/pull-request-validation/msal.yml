@@ -11,8 +11,7 @@ trigger: none
 variables:
 - name: robolectricSdkVersion
   value: 28
-- name: commonBranch
-  value: ''
+
 
 resources:
   repositories:
@@ -64,4 +63,4 @@ stages:
               }
           }
           Write-Host "##vso[task.setvariable variable=commonBranch;]$branch"
-          Write-Host "$(variables.commonBranch)"
+          Write-Host "$(commonBranch)"
