@@ -460,6 +460,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
+    @SuppressWarnings("unused")
     private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
                                            CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
