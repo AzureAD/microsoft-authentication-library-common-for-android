@@ -46,6 +46,7 @@ jobs:
   - task: Gradle@2
     displayName: Assemble MSAL
     inputs:
+      gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
       cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
       tasks: clean msal:assembleLocal
   - task: Gradle@2
