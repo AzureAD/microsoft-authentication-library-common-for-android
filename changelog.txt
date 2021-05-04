@@ -1,4 +1,5 @@
 Version 3.4.3
+----------
 - [PATCH] Revert connection detection change, disable throttling cache (#1351, #1353)
 
 Version 3.4.2
