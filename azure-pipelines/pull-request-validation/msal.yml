@@ -25,15 +25,15 @@ stages:
   - job: init
     displayName: setup
     steps:
-      - checkout: msal
-        clean: true
-        submodules: recursive
-        persistCredentials: True
       - template: ../templates/steps/automation-cert.yml
   - job: msalValidation
     displayName: msal validation
     cancelTimeoutInMinutes: 1
     steps:
+    - checkout: msal
+      clean: true
+      submodules: recursive
+      persistCredentials: True
     - task: CmdLine@2
       displayName: Checkout common submodule ($(System.PullRequest.SourceBranch))
       inputs:
