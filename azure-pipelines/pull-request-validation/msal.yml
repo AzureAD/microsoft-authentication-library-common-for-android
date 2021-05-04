@@ -3,6 +3,7 @@
 # Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+# Variable: 'commonBranchName' was defined in the Variables tab
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
@@ -10,6 +11,10 @@ trigger: none
 variables:
 - name: robolectricSdkVersion
   value: 28
+- name: commonBranch
+  value:
+    ${{ if eq(variables['Build.Reason'], 'PullRequest') }}: $(System.PullRequest.SourceBranch)
+    ${{ if eq(variables['Build.Reason'], 'Manual') }}: $(commonBranchName)
 
 resources:
   repositories:
@@ -46,10 +51,11 @@ stages:
       submodules: recursive
       persistCredentials: True
     - task: CmdLine@2
-      displayName: Checkout common submodule $(System.PullRequest.SourceBranch)
+      displayName: Checkout common submodule $(variables.commonBranch)
       inputs:
         script: |
           git fetch
+          git checkout $(variables.commonBranch)
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
@@ -72,10 +78,11 @@ stages:
       submodules: recursive
       persistCredentials: True
     - task: CmdLine@2
-      displayName: Checkout common submodule $(System.PullRequest.SourceBranch)
+      displayName: Checkout common submodule $(variables.commonBranch)
       inputs:
         script: |
           git fetch
+          git checkout $(variables.commonBranch)
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
@@ -126,10 +133,11 @@ stages:
       submodules: recursive
       persistCredentials: True
     - task: CmdLine@2
-      displayName: Checkout common submodule $(System.PullRequest.SourceBranch)
+      displayName: Checkout common submodule $(variables.commonBranch)
       inputs:
         script: |
           git fetch
+          git checkout $(variables.commonBranch)
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
