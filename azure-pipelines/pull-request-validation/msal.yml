@@ -39,51 +39,23 @@ jobs:
     parameters:
       policheckCmdLineArgsDir: common
   - template: ../templates/steps/automation-cert.yml
-
   - task: CmdLine@2
     displayName: Checkout current submodule
     inputs:
       script: |
-        echo "Structure of work folder of this pipeline:"
-        tree $(Agent.WorkFolder)\1 /f
-
-        echo "Build.ArtifactStagingDirectory:"
-
-        echo "$(Build.ArtifactStagingDirectory)"
-
-        echo "Build.BinariesDirectory:" 
-
-        echo "$(Build.BinariesDirectory)"
-
-        echo "Build.SourcesDirectory:"
-
-        echo "$(Build.SourcesDirectory)"
-
-        echo "Agent.BuildDirectory:"
-
-        echo "$(Agent.BuildDirectory)"
-
-        echo "Agent.BuildDirectory/s tree"
-
-        tree $(Agent.BuildDirectory)\s /f
-
-#  - task: CmdLine@2
-#    displayName: Checkout current submodule
-#    inputs:
-#      script: |
-#        git fetch
-#        git checkout $(Build.SourceBranchName)
-#        git status
-#      workingDirectory: $(Agent.BuildDirectory)/s/msal/common
-#  - task: Gradle@2
-#    displayName: Assemble MSAL
-#    inputs:
-#      cwd: $(Agent.BuildDirectory)/s/msal
-#      tasks: clean msal:assembleLocal
-#  - task: Gradle@2
-#    displayName: Run msal Unit tests
-#    inputs:
-#      tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+        git fetch
+        git checkout $(Build.SourceBranchName)
+        git status
+      workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
+  - task: Gradle@2
+    displayName: Assemble MSAL
+    inputs:
+      cwd: $(Agent.BuildDirectory)/s/msal
+      tasks: clean msal:assembleLocal
+  - task: Gradle@2
+    displayName: Run msal Unit tests
+    inputs:
+      tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
       #javaHomeSelection: $(BuildParameters.javaHomeSelection)
       #jdkVersion: 1.11
 
