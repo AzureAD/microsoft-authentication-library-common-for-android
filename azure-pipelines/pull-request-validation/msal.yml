@@ -11,6 +11,8 @@ trigger: none
 variables:
 - name: robolectricSdkVersion
   value: 28
+- name: commonBranch
+  value: ''
 
 resources:
   repositories:
