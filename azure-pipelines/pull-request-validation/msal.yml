@@ -43,6 +43,7 @@ stages:
   - job: setupBranch
     displayName: setup branch
     steps:
+    - checkout: none
     - task: PowerShell@2
       displayName: Define branch
       inputs:
@@ -64,7 +65,7 @@ stages:
                 ''
               }
           }
-          Write-Host "##vso[task.setvariable variable=commonBranch;]$branch"
+          echo '##vso[task.setvariable variable=commonBranch]$branch'
   # msal
   - job: msalValidation
     displayName: msal validation
