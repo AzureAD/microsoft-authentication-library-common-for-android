@@ -46,19 +46,19 @@ stages:
         targetType: inline
         script: |
 
-          $branch = switch ( $(Build.Reason) )
+          $branch = switch ( '$(Build.Reason)' )
           {
               PullRequest
               {
-                $(System.PullRequest.SourceBranch)
+                '$(System.PullRequest.SourceBranch)'
               }
               Manual
               {
-              $(commonBranchName)
+                '$(commonBranchName)'
               }
               default
               {
-              ''
+                ''
               }
           }
           Write-Host "##vso[task.setvariable variable=commonBranch;]$branch"
