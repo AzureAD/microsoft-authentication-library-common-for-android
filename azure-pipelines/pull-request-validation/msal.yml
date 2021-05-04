@@ -16,41 +16,41 @@ resources:
     ref: dev
     endpoint: ANDROID_GITHUB
 
-jobs:
-- job: Phase_1
-  displayName: Phase 1
-  cancelTimeoutInMinutes: 1
+stages:
+- stage: validateConsumers
+  displayName: Validate Consumers
   pool:
     name: Hosted Windows 2019 with VS2019
-  steps:
-  - checkout: self
-    clean: true
-    persistCredentials: True
-  - checkout: msal
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: common
-  - template: ../templates/steps/automation-cert.yml
-  - task: CmdLine@2
-    displayName: Checkout common submodule ($(System.PullRequest.SourceBranch))
-    inputs:
-      script: |
-        git fetch
-        git status
-        git rev-parse HEAD
-      workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
-  - task: Gradle@2
-    displayName: Assemble msal
-    inputs:
-      gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
-      cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
-      tasks: clean msal:assembleLocal
-  - task: Gradle@2
-    displayName: Run msal Unit tests
-    inputs:
-      gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
-      cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
-      tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  jobs:
+  - job: init
+    displayName: setup
+    steps:
+      - checkout: msal
+        clean: true
+        submodules: recursive
+        persistCredentials: True
+      - template: ../templates/steps/automation-cert.yml
+  - job: msalValidation
+    displayName: msal validation
+    cancelTimeoutInMinutes: 1
+    steps:
+    - task: CmdLine@2
+      displayName: Checkout common submodule ($(System.PullRequest.SourceBranch))
+      inputs:
+        script: |
+          git fetch
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
+    - task: Gradle@2
+      displayName: Assemble msal
+      inputs:
+        gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
+        cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
+        tasks: clean msal:assembleLocal
+    - task: Gradle@2
+      displayName: Run msal Unit tests
+      inputs:
+        gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
+        cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
+        tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
