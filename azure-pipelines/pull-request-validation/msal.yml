@@ -2,12 +2,7 @@
 # Description:
 name: $(date:yyyyMMdd)$(rev:.r)
 
-trigger:
-  branches:
-    include:
-    - dev
-    - master
-  batch: True
+trigger: none
 
 variables:
 - name: robolectricSdkVersion
@@ -36,14 +31,11 @@ jobs:
     submodules: recursive
     persistCredentials: True
   - task: CmdLine@2
-    displayName: Checkout common submodule ($(Build.SourceBranchName))
+    displayName: Checkout common submodule ($(System.PullRequest.SourceBranch))
     inputs:
       script: |
-        echo $(Build.SourceBranchName)
-        echo $(Build.SourceBranch)
-        echo $(System.PullRequest.SourceBranch)
         git fetch
-        git checkout $(Build.SourceBranchName)
+        git checkout $(System.PullRequest.SourceBranch)
         git status
         git rev-parse HEAD
       workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
@@ -59,6 +51,4 @@ jobs:
       gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
       cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
       tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
-      javaHomeSelection: $(BuildParameters.javaHomeSelection)
-      jdkVersion: 1.11
 
