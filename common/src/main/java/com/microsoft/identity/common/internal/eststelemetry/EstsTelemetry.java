@@ -35,7 +35,6 @@ import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.TokenCommand;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -281,7 +280,7 @@ public class EstsTelemetry {
                     errorCode);
         } else if (command instanceof TokenCommand) {
             final ILocalAuthenticationResult localAuthenticationResult =
-                    (ILocalAuthenticationResult) ((AcquireTokenResult) commandResult.getResult()).getLocalAuthenticationResult();
+                    (ILocalAuthenticationResult) commandResult.getResult();
 
             if (localAuthenticationResult.isServicedFromCache()) {
                 // we returned a token from cache, let's increment the silent success count

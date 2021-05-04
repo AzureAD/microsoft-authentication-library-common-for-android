@@ -39,13 +39,13 @@ import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -320,10 +320,15 @@ public class LocalMSALController extends BaseController {
         if (fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
                     TAG,
-                    "RefreshIn is active. This will extend your token usage in the rare case servers are not available."
+                    "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if ((accessTokenIsNull(fullCacheRecord)
+
+        if(fullCacheRecord.getAccessToken().shouldRefresh()){
+            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+            final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
+            CommandDispatcher.submit(refreshOnCommand);
+        } else if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
@@ -371,22 +376,7 @@ public class LocalMSALController extends BaseController {
             );
 
         } else {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Returning silent result"
-            );
-            // the result checks out, return that....
-            acquireTokenSilentResult.setLocalAuthenticationResult(
-                    new LocalAuthenticationResult(
-                            finalizeCacheRecordForResult(
-                                    fullCacheRecord,
-                                    parametersWithScopes.getAuthenticationScheme()
-                            ),
-                            cacheRecords,
-                            SdkType.MSAL,
-                            true
-                    )
-            );
+            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
         }
 
         Telemetry.emit(
@@ -396,6 +386,28 @@ public class LocalMSALController extends BaseController {
         );
 
         return acquireTokenSilentResult;
+    }
+
+    private void setAcquireTokenResult(final AcquireTokenResult acquireTokenSilentResult,
+                                       final SilentTokenCommandParameters parametersWithScopes,
+                                       final List<ICacheRecord> cacheRecords) throws ClientException {
+        Logger.verbose(
+                TAG + ":acquireTokenSilent",
+                "Returning silent result"
+        );
+        // the result checks out, return that....
+        ICacheRecord fullCacheRecord = cacheRecords.get(0);
+        acquireTokenSilentResult.setLocalAuthenticationResult(
+                new LocalAuthenticationResult(
+                        finalizeCacheRecordForResult(
+                                fullCacheRecord,
+                                parametersWithScopes.getAuthenticationScheme()
+                        ),
+                        cacheRecords,
+                        SdkType.MSAL,
+                        true
+                )
+        );
     }
 
     private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,

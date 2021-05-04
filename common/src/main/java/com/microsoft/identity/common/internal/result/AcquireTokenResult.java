@@ -35,8 +35,6 @@ public class AcquireTokenResult {
     private AuthorizationResult mAuthorizationResult;
 
     private Boolean mSucceeded = false;
-    // To indicate when AcquireTokenResult was acquired from Broker.
-    private Boolean mIsBrokerResult = false;
 
     public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
         this.mLocalAuthenticationResult = result;
@@ -68,10 +66,5 @@ public class AcquireTokenResult {
     public Boolean getSucceeded() {
         return mSucceeded;
     }
-
-    public Boolean getIsBrokerResult() {
-        return mIsBrokerResult;
-    }
-    public void setIsBrokerResult(Boolean mIsBrokerResult) { this.mIsBrokerResult = mIsBrokerResult; }
 
 }
