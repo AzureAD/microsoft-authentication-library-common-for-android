@@ -66,7 +66,7 @@ stages:
               }
           }
           Write-Output "$branch"
-          Write-Output "##vso[task.setvariable variable=commonBranch]$branch"
+          Write-Host "##vso[task.setvariable variable=commonBranch;]$branch"
           Write-Output "$(commonBranch)"
           Write-Output "${{ variables.commonBranch }}"
   # msal
