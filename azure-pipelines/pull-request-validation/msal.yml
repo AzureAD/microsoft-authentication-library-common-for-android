@@ -1,0 +1,61 @@
+# File: azure-pipelines\pull-request-validation\msal.yml
+# Description:
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  branches:
+    include:
+    - dev
+    - master
+  batch: True
+
+variables:
+- name: robolectricSdkVersion
+  value: 28
+
+resources:
+  repositories:
+  - repository: msal
+    type: github
+    name: AzureAD/microsoft-authentication-library-for-android
+    ref: master
+    endpoint: ANDROID_GITHUB
+
+jobs:
+- job: Phase_1
+  displayName: Phase 1
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  steps:
+  - checkout: self
+    clean: true
+    persistCredentials: True
+  - checkout: msal
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: ../templates/steps/credscan-policheck.yml
+    parameters:
+      policheckCmdLineArgsDir: common
+  - template: ../templates/steps/automation-cert.yml
+  - task: CmdLine@2
+    displayName: Checkout current submodule
+    inputs:
+      script: |
+        git fetch
+        git checkout $(Build.SourceBranchName)
+        git status
+      workingDirectory: $(Agent.BuildDirectory)/s/msal/common
+  - task: Gradle@2
+    displayName: Assemble MSAL
+    inputs:
+      cwd: $(Agent.BuildDirectory)/s/msal
+      tasks: clean msal:assembleLocal
+  - task: Gradle@2
+    displayName: Run msal Unit tests
+    inputs:
+      tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{robolectricSdkVersion}}
+      #javaHomeSelection: $(BuildParameters.javaHomeSelection)
+      #jdkVersion: 1.11
+
