@@ -42,6 +42,7 @@ jobs:
         git fetch
         git checkout $(Build.SourceBranchName)
         git status
+        git branch
       workingDirectory: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/common
   - task: Gradle@2
     displayName: Assemble MSAL
@@ -52,6 +53,7 @@ jobs:
   - task: Gradle@2
     displayName: Run msal Unit tests
     inputs:
+      gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
       cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
       tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
       #javaHomeSelection: $(BuildParameters.javaHomeSelection)
