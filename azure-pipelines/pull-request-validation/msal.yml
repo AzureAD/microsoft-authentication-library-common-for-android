@@ -30,6 +30,10 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
+  - template: ../templates/steps/credscan-policheck.yml
+    parameters:
+      policheckCmdLineArgsDir: common
+  - template: ../templates/steps/automation-cert.yml
   - task: CmdLine@2
     displayName: Checkout common submodule ($(System.PullRequest.SourceBranch))
     inputs:
@@ -50,4 +54,3 @@ jobs:
       gradleWrapperFile: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android/gradlew.bat
       cwd: $(Agent.BuildDirectory)/s/microsoft-authentication-library-for-android
       tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
-
