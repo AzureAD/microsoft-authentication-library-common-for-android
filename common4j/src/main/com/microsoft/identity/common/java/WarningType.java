@@ -20,26 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
-
-public class BrokerStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
-    public BrokerStartEvent() {
-        super();
-        names(Event.BROKER_START_EVENT);
-        types(EventType.BROKER_EVENT);
-    }
-
-    public BrokerStartEvent putAction(final String actionName) {
-        put(Key.BROKER_ACTION, actionName);
-        return this;
-    }
-
-    public BrokerStartEvent putStrategy(final String strategyName) {
-        put(Key.BROKER_STRATEGY, strategyName);
-        return this;
-    }
+/**
+ * Class to hold names of compile time warning types
+ */
+public class WarningType {
+    public static final String rawtype_warning = "rawtypes";
+    public static final String unchecked_warning = "unchecked";
+    public static final String deprecation_warning = "deprecation";
 }

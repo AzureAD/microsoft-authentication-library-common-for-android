@@ -7,5 +7,14 @@
  * in the user manual at https://docs.gradle.org/6.8.3/userguide/multi_project_builds.html
  */
 
+pluginManagement {
+    repositories {
+        mavenLocal()
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'common4j'
 include('lib')

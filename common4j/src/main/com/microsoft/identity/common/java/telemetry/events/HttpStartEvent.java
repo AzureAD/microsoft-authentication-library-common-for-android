@@ -20,59 +20,47 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.telemetry.events;
 
-package com.microsoft.identity.common.internal.telemetry;
+import java.net.URL;
 
-import com.microsoft.identity.common.internal.util.StringUtil;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-import java.util.concurrent.ConcurrentHashMap;
-
-/**
- * The base class for the event properties.
- */
-public class Properties {
-    private ConcurrentHashMap<String, String> mProperties;
-
-    Properties(final ConcurrentHashMap<String, String> properties) {
-        mProperties = properties;
+public class HttpStartEvent extends BaseEvent {
+    public HttpStartEvent() {
+        super();
+        names(Event.HTTP_START_EVENT);
+        types(EventType.HTTP_EVENT);
     }
 
-    public Properties() {
-        mProperties = new ConcurrentHashMap<>(16, 0.75f, 1);
+    public HttpStartEvent putMethod(String method) {
+        put(Key.HTTP_METHOD, method);
+        return this;
     }
 
-    public Properties put(final String key, final String value) {
-        if (mProperties == null) {
-            mProperties = new ConcurrentHashMap<>();
+    public HttpStartEvent putPath(final URL path) {
+        if (path == null) {
+            return this;
         }
 
-        if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
-            mProperties.put(key, value);
-        }
+        put(Key.HTTP_PATH, path.toExternalForm());
         return this;
     }
 
-    public Properties remove(final String key) {
-        mProperties.remove(key);
+    public HttpStartEvent putRequestIdHeader(String requestIdHeader) {
+        put(Key.HTTP_REQUEST_ID_HEADER, requestIdHeader);
         return this;
     }
 
-    public Properties remove(final String key, final String value) {
-        mProperties.remove(key, value);
+    public HttpStartEvent putRequestQueryParams(String requestQueryParams) {
+        put(Key.REQUEST_QUERY_PARAMS, requestQueryParams);
         return this;
     }
 
-    public Properties put(final Properties appendProperties) {
-        if (mProperties == null) {
-            mProperties = appendProperties.getProperties();
-        } else {
-            mProperties.putAll(appendProperties.getProperties());
-        }
-
+    public HttpStartEvent putErrorDomain(String errorDomain) {
+        put(Key.HTTP_ERROR_DOMAIN, errorDomain);
         return this;
-    }
-
-    public ConcurrentHashMap<String, String> getProperties() {
-        return mProperties;
     }
 }

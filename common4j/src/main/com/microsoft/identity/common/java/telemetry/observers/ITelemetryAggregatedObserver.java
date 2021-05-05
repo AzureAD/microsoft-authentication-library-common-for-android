@@ -20,9 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.adapter;
+package com.microsoft.identity.common.java.telemetry.observers;
 
-public interface ITelemetryAdapter<T> {
-    //Future extensibility void process(T observable, Rule rule);
-    void process(T observable);
+import java.util.Map;
+
+/**
+ * Telemetry observer interface for MATS (Microsoft Authentication Telemetry Service) format.
+ * The calling application need to implement the interface for further data processing.
+ */
+public interface ITelemetryAggregatedObserver extends ITelemetryObserver<Map<String, String>> {
+    @Override
+    void onReceived(Map<String, String> telemetryData);
 }
