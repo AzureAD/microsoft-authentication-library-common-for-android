@@ -20,26 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 
-public class BrokerStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
-    public BrokerStartEvent() {
-        super();
-        names(Event.BROKER_START_EVENT);
-        types(EventType.BROKER_EVENT);
+import java.util.HashMap;
+
+public class InMemoryStorage implements IKeyPairStorage {
+
+    final HashMap<String, String> mMap = new HashMap<>();
+
+    @Override
+    public String get(final String key) {
+        return mMap.get(key);
     }
 
-    public BrokerStartEvent putAction(final String actionName) {
-        put(Key.BROKER_ACTION, actionName);
-        return this;
-    }
-
-    public BrokerStartEvent putStrategy(final String strategyName) {
-        put(Key.BROKER_STRATEGY, strategyName);
-        return this;
+    @Override
+    public void put(final String key, final String value) {
+        mMap.put(key, value);
     }
 }

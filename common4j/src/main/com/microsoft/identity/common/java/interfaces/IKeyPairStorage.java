@@ -20,26 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.interfaces;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import lombok.NonNull;
 
-public class BrokerStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
-    public BrokerStartEvent() {
-        super();
-        names(Event.BROKER_START_EVENT);
-        types(EventType.BROKER_EVENT);
-    }
+/**
+ * An interface for a KeyPair storage.
+ * */
+public interface IKeyPairStorage {
+    /**
+     * Gets a value from the storage.
+     *
+     * @param key A key associated to the value.
+     */
+    String get(@NonNull String key);
 
-    public BrokerStartEvent putAction(final String actionName) {
-        put(Key.BROKER_ACTION, actionName);
-        return this;
-    }
-
-    public BrokerStartEvent putStrategy(final String strategyName) {
-        put(Key.BROKER_STRATEGY, strategyName);
-        return this;
-    }
+    /**
+     * Puts a value into the storage.
+     *
+     * @param key A key associated to the value.
+     * @param value value to be persisted.
+     */
+    void put(@NonNull String key, String value);
 }

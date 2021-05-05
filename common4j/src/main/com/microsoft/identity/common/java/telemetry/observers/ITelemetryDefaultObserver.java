@@ -20,31 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.adapter;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryDefaultObserver;
+package com.microsoft.identity.common.java.telemetry.observers;
 
 import java.util.List;
 import java.util.Map;
 
-public final class TelemetryDefaultAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
-    private ITelemetryDefaultObserver mObserver;
-
-    public TelemetryDefaultAdapter(@NonNull final ITelemetryDefaultObserver observer) {
-        mObserver = observer;
-    }
-
-    public ITelemetryDefaultObserver getObserver() {
-        return mObserver;
-    }
-
-    public void process(@NonNull final List<Map<String, String>> rawData) {
-        if (null == mObserver) {
-            return;
-        }
-
-        mObserver.onReceived(rawData);
-    }
+/**
+ * The default telemetry observer interface which upload raw telemetry data.
+ */
+public interface ITelemetryDefaultObserver extends ITelemetryObserver<List<Map<String, String>>> {
+    @Override
+    void onReceived(List<Map<String, String>> telemetryData);
 }
