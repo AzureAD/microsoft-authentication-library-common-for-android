@@ -66,8 +66,8 @@ stages:
               }
           }
           Write-Output "$branch"
-          echo '##vso[task.setvariable variable=one]secondValue'
-          echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
+          echo '##vso[task.setvariable variable=one]$branch'
+          echo '##vso[task.setvariable variable=commonBranch;isOutput=true]$branch'
     - script: |
         echo ${{ variables.commonBranch }} # outputs initialValue
         echo $(commonBranch) # outputs secondValue
