@@ -22,13 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 /**
  * Internal class representing a http request.
@@ -37,33 +38,27 @@ public class HttpRequest {
 
     private static final String HOST = "Host";
 
+    @Getter
+    @Accessors(prefix = "m")
     private final URL mRequestUrl;
 
+    @Getter
+    @Accessors(prefix = "m")
     private final byte[] mRequestContent;
 
-    URL getRequestUrl() {
-        return mRequestUrl;
-    }
+    @Getter
+    @Accessors(prefix = "m")
+    private final String mRequestContentType;
 
-    byte[] getRequestContent() {
-        return mRequestContent;
-    }
+    @Getter
+    @Accessors(prefix = "m")
+    private final String mRequestMethod;
 
-    String getRequestContentType() {
-        return mRequestContentType;
-    }
-
-    String getRequestMethod() {
-        return mRequestMethod;
-    }
+    private final Map<String, String> mRequestHeaders = new HashMap<>();
 
     Map<String, String> getRequestHeaders() {
         return Collections.unmodifiableMap(mRequestHeaders);
     }
-
-    private final String mRequestContentType;
-    private final String mRequestMethod;
-    private final Map<String, String> mRequestHeaders = new HashMap<>();
 
     /**
      * Constructor for {@link HttpRequest} with request {@link URL}, headers, post message and the
@@ -85,17 +80,5 @@ public class HttpRequest {
         mRequestMethod = requestMethod;
         mRequestContent = requestContent;
         mRequestContentType = requestContentType;
-    }
-
-    /**
-     * Check if the given status code is the retryable status code(500/503/504).
-     *
-     * @param statusCode The status to check.
-     * @return True if the status code is 500, 503 or 504, false otherwise.
-     */
-    public static boolean isRetryableError(final int statusCode) {
-        return statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR
-                || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
-                || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
     }
 }

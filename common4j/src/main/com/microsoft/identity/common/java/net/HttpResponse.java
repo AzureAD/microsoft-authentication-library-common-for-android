@@ -24,6 +24,7 @@ package com.microsoft.identity.common.java.net;
 
 import net.jcip.annotations.Immutable;
 
+import java.net.HttpURLConnection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;

@@ -77,18 +77,18 @@ public final class HttpRequestTest {
     }
 
     /**
-     * Verify that HTTP GET succeed via HttpResponse.sendGet().
+     * Verify that HTTP GET succeed via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpGetSucceed() throws Exception {
+    public void testHttpGetSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.GET, false);
     }
 
     /**
-     * Verify that HTTP GET succeed via HttpResponse.sendWithMethod().
+     * Verify that HTTP GET succeed via HttpResponse.sendGet().
      */
     @Test
-    public void testHttpGetSucceedSpecific() throws Exception {
+    public void testHttpGetSucceed_ViaHttpResponseSendGet() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.GET, true);
     }
 
@@ -96,23 +96,23 @@ public final class HttpRequestTest {
      * Verify that HTTP POST succeeds via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpPostSucceed() throws Exception {
-        testHttpMethodSucceed(HttpTestMethod.HEAD, false);
+    public void testHttpPostSucceed_ViaHttpResponseSendWithMethod() throws Exception {
+        testHttpMethodSucceed(HttpTestMethod.POST, false);
     }
 
     /**
      * Verify that HTTP POST succeeds via HttpResponse.sendPost().
      */
     @Test
-    public void testHttpPostSucceedSpecific() throws Exception {
-        testHttpMethodSucceed(HttpTestMethod.HEAD, true);
+    public void testHttpPostSucceed_ViaHttpResponseSendPost() throws Exception {
+        testHttpMethodSucceed(HttpTestMethod.POST, true);
     }
 
     /**
      * Verify that HTTP HEAD succeeds via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpHeadSucceed() throws Exception {
+    public void testHttpHeadSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, false);
     }
 
@@ -120,7 +120,7 @@ public final class HttpRequestTest {
      * Verify that HTTP HEAD succeeds via HttpResponse.sendHead().
      */
     @Test
-    public void testHttpHeadSucceedSpecific() throws Exception {
+    public void testHttpHeadSucceed_ViaHttpResponseSendHead() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, true);
     }
 
@@ -128,7 +128,7 @@ public final class HttpRequestTest {
      * Verify that HTTP PUT succeeds via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpPutSucceed() throws Exception {
+    public void testHttpPutSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PUT, false);
     }
 
@@ -136,7 +136,7 @@ public final class HttpRequestTest {
      * Verify that HTTP PUT succeeds via HttpResponse.sendPut().
      */
     @Test
-    public void testHttpPutSucceedSpecific() throws Exception {
+    public void testHttpPutSucceed_ViaHttpResponseSendPut() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PUT, true);
     }
 
@@ -144,7 +144,7 @@ public final class HttpRequestTest {
      * Verify that HTTP DELETE succeeds via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpDeleteSucceed() throws Exception {
+    public void testHttpDeleteSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.DELETE, false);
     }
 
@@ -152,7 +152,7 @@ public final class HttpRequestTest {
      * Verify that HTTP DELETE succeeds via HttpResponse.sendDelete().
      */
     @Test
-    public void testHttpDeleteSucceedSpecific() throws Exception {
+    public void testHttpDeleteSucceed_ViaHttpResponseSendDelete() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.DELETE, true);
     }
 
@@ -160,7 +160,7 @@ public final class HttpRequestTest {
      * Verify that HTTP TRACE succeeds via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpTraceSucceed() throws Exception {
+    public void testHttpTraceSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.TRACE, false);
     }
 
@@ -168,7 +168,7 @@ public final class HttpRequestTest {
      * Verify that HTTP TRACE succeeds and no retry happens.
      */
     @Test
-    public void testHttpTraceSucceedSpecific() throws Exception {
+    public void testHttpTraceSucceed_ViaHttpResponseSendTrace() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.TRACE, true);
     }
 
@@ -176,7 +176,7 @@ public final class HttpRequestTest {
      * Verify that HTTP OPTIONS succeeds via HttpResponse.sendWithMethod()
      */
     @Test
-    public void testHttpOptionsSucceed() throws Exception {
+    public void testHttpOptionsSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.OPTIONS, false);
     }
 
@@ -184,7 +184,7 @@ public final class HttpRequestTest {
      * Verify that HTTP OPTIONS succeeds via HttpResponse.sendOptions()
      */
     @Test
-    public void testHttpOptionsSucceedSpecific() throws Exception {
+    public void testHttpOptionsSucceed_ViaHttpResponseSendOptions() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.OPTIONS, true);
     }
 
@@ -192,7 +192,7 @@ public final class HttpRequestTest {
      * Verify that HTTP PATCH succeeds via HttpResponse.sendWithMethod().
      */
     @Test
-    public void testHttpPatchSucceed() throws Exception {
+    public void testHttpPatchSucceed_ViaHttpResponseSendWithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, false);
     }
 
@@ -200,7 +200,7 @@ public final class HttpRequestTest {
      * Verify that HTTP PATCH succeeds via HttpResponse.sendPatch().
      */
     @Test
-    public void testHttpPatchSucceedSpecific() throws Exception {
+    public void testHttpPatchSucceed_ViaHttpResponseSendPatch() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, true);
     }
 

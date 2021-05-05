@@ -83,7 +83,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpGetSucceed() throws Exception {
+    public void testHttpGetSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.GET, false, true);
     }
 
@@ -93,7 +93,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpGetSucceedSpecific() throws Exception {
+    public void testHttpGetSucceed_WithGet() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.GET, true, true);
     }
 
@@ -103,7 +103,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpGetSucceedNoRetry() throws Exception {
+    public void testHttpGetSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.GET, false, false);
     }
 
@@ -113,7 +113,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpGetSucceedSpecificNoRetry() throws Exception {
+    public void testHttpGetSucceed_WithGet_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.GET, true, false);
     }
 
@@ -123,7 +123,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpPostSucceed() throws Exception {
+    public void testHttpPostSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, false, true);
     }
 
@@ -133,7 +133,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpPostSucceedSpecific() throws Exception {
+    public void testHttpPostSucceed_WithPost() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, true, true);
     }
 
@@ -143,7 +143,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpPostSucceedNoRetry() throws Exception {
+    public void testHttpPostSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, false, false);
     }
 
@@ -153,7 +153,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpPostSucceedSpecifcNoRetry() throws Exception {
+    public void testHttpPostSucceed_WithPost_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, true, false);
     }
 
@@ -163,7 +163,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpHeadSucceed() throws Exception {
+    public void testHttpHeadSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, false, true);
     }
 
@@ -173,7 +173,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpHeadSucceedSpecific() throws Exception {
+    public void testHttpHeadSucceed_WithHead() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, true, true);
     }
 
@@ -183,7 +183,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpHeadSucceedNoRetry() throws Exception {
+    public void testHttpHeadSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, false, false);
     }
 
@@ -193,7 +193,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpHeadSucceedSpecificNoRetry() throws Exception {
+    public void testHttpHeadSucceed_WithHead_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.HEAD, true, false);
     }
 
@@ -203,7 +203,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpPutSucceed() throws Exception {
+    public void testHttpPutSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PUT, false, true);
     }
 
@@ -213,7 +213,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpPutSucceedSpecific() throws Exception {
+    public void testHttpPutSucceed_WithPut() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PUT, true, true);
     }
 
@@ -223,7 +223,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpPutSucceedNoRetry() throws Exception {
+    public void testHttpPutSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PUT, false, false);
     }
 
@@ -233,7 +233,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpPutSucceedSpecificNoRetry() throws Exception {
+    public void testHttpPutSucceed_WithPut_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PUT, true, false);
     }
 
@@ -243,7 +243,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpDeleteSucceed() throws Exception {
+    public void testHttpDeleteSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.DELETE, false, true);
     }
 
@@ -253,7 +253,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpDeleteSucceedSpecific() throws Exception {
+    public void testHttpDeleteSucceed_WithDelete() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.DELETE, true, true);
     }
 
@@ -263,7 +263,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpDeleteSucceedNoRetry() throws Exception {
+    public void testHttpDeleteSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.DELETE, false, false);
     }
 
@@ -273,7 +273,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpDeleteSucceedSpecificNoRetry() throws Exception {
+    public void testHttpDeleteSucceed_WithDelete_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.DELETE, true, false);
     }
 
@@ -283,7 +283,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpTraceSucceed() throws Exception {
+    public void testHttpTraceSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.TRACE, false, true);
     }
 
@@ -293,7 +293,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpTraceSucceedSpecific() throws Exception {
+    public void testHttpTraceSucceed_WithTrace() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.TRACE, true, true);
     }
 
@@ -303,7 +303,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpTraceSucceedNoRetry() throws Exception {
+    public void testHttpTraceSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.TRACE, false, false);
     }
 
@@ -313,7 +313,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpTraceSucceedSpeicficNoRetry() throws Exception {
+    public void testHttpTraceSucceed_WithTrace_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.TRACE, true, false);
     }
 
@@ -323,7 +323,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpOptionsSucceed() throws Exception {
+    public void testHttpOptionsSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.OPTIONS, false, true);
     }
 
@@ -333,7 +333,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpOptionsSucceedSpecific() throws Exception {
+    public void testHttpOptionsSucceed_WithOptions() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.OPTIONS, true, true);
     }
 
@@ -343,7 +343,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpOptionsSucceedNoRetry() throws Exception {
+    public void testHttpOptionsSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.OPTIONS, false, false);
     }
 
@@ -353,7 +353,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpOptionsSucceedSpecificNoRetry() throws Exception {
+    public void testHttpOptionsSucceed_WithOptions_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.OPTIONS, true, false);
     }
 
@@ -363,7 +363,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpPatchSucceed() throws Exception {
+    public void testHttpPatchSucceed_WithMethod() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, false, true);
     }
     
@@ -373,7 +373,7 @@ public final class UrlConnectionHttpClientTest {
      * - with retry logic.
      */
     @Test
-    public void testHttpPatchSucceedSpecific() throws Exception {
+    public void testHttpPatchSucceed_WithPatch() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, true, true);
     }
 
@@ -383,7 +383,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpPatchSucceedNoRetries() throws Exception {
+    public void testHttpPatchSucceed_WithMethod_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, false, false);
     }
 
@@ -393,7 +393,7 @@ public final class UrlConnectionHttpClientTest {
      * - without retry logic.
      */
     @Test
-    public void testHttpPatchSucceedSpecificNoRetries() throws Exception {
+    public void testHttpPatchSucceed_WithPatch_NoRetry() throws Exception {
         testHttpMethodSucceed(HttpTestMethod.PATCH, true, false);
     }
 

@@ -34,20 +34,22 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Internal class for handling http request.
+ * This class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.net.HttpRequest
  */
 public final class HttpRequest extends com.microsoft.identity.common.java.net.HttpRequest {
 
     /**
      * Value of read timeout in milliseconds.
-     * This is no longer used.
+     * This is no longer used - we're now hardcoding the value in UrlConnectionHttpClient.getDefaultInstance()
      */
     @Deprecated
     public static int READ_TIMEOUT = 30000;
 
     /**
      * Value of connect timeout in milliseconds.
-     * This is no longer used.
+     * This is no longer used - we're now hardcoding the value in UrlConnectionHttpClient.getDefaultInstance()
      */
     @Deprecated
     public static int CONNECT_TIMEOUT = 30000;
@@ -290,7 +292,7 @@ public final class HttpRequest extends com.microsoft.identity.common.java.net.Ht
         }
         final com.microsoft.identity.common.java.net.HttpResponse response =
                 com.microsoft.identity.common.java.net.UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, headerMap, requestContent);
-        if (response != null && isRetryableError(response.getStatusCode())) {
+        if (response != null && com.microsoft.identity.common.java.net.UrlConnectionHttpClient.isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
         }
 

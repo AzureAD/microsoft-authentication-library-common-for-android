@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
 import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
@@ -64,6 +65,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
  * There are two ways to supply timeout values to this class, one method takes suppliers, the other
  * one integers.  If you use both of these, the suppliers method will take precendence over the method
  * using integers.
+ *
+ * TODO: add telemetry for exceptions/intermediary failures in this class.
  */
 @AllArgsConstructor
 @Builder
@@ -71,10 +74,10 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
 @Immutable
 public class UrlConnectionHttpClient extends AbstractHttpClient {
 
+    private static final Object TAG = UrlConnectionHttpClient.class.getName();
+
     protected static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
-
-    protected static final int STREAM_BUFFER_SIZE = 1024;
-
+    protected static final int STREAM_BUFFER_SIZE_BYTES = 1024;
     public static final int DEFAULT_CONNECT_TIME_OUT_MS = 30000;
     public static final int DEFAULT_READ_TIME_OUT_MS = 30000;
     public static final int DEFAULT_STREAM_BUFFER_SIZE = 1024;
@@ -112,7 +115,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         UrlConnectionHttpClient reference = defaultReference.get();
         if (reference == null) {
             defaultReference.compareAndSet(null, UrlConnectionHttpClient.builder()
-                    .streamBufferSize(STREAM_BUFFER_SIZE)
+                    .streamBufferSize(STREAM_BUFFER_SIZE_BYTES)
                     .retryPolicy(StatusCodeAndExceptionRetry.builder()
                             .number(1)
                             .extensionFactor(2)
@@ -124,7 +127,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                             .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
                             .isRetryable(new Function<HttpResponse, Boolean>() {
                                 public Boolean apply(HttpResponse response) {
-                                    return response != null && HttpRequest.isRetryableError(response.getStatusCode());
+                                    return response != null && isRetryableError(response.getStatusCode());
                                 }
                             })
                             .isRetryableException(new Function<Exception, Boolean>() {
@@ -253,6 +256,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @param stream stream to be closed
      */
     private static void safeCloseStream(final Closeable stream) {
+        final String methodName = ":safeCloseStream";
+
         if (stream == null) {
             return;
         }
@@ -260,18 +265,16 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         try {
             stream.close();
         } catch (final IOException e) {
-            //Encountered IO exception when trying to close the stream"
+            Logger.error(TAG + methodName, "Encountered IO exception when trying to close the stream", e);
         }
     }
 
     private HttpResponse executeHttpSend(HttpRequest request, Consumer<HttpResponse> completionCallback) throws IOException {
         final HttpURLConnection urlConnection = setupConnection(request);
-        urlConnection.setRequestMethod(request.getRequestMethod());
-        urlConnection.setUseCaches(true);
-        setRequestBody(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
+
+        sendRequest(urlConnection, request.getRequestContent(), request.getRequestHeaders().get(HttpConstants.HeaderField.CONTENT_TYPE));
 
         InputStream responseStream = null;
-
         HttpResponse response = null;
         try {
             try {
@@ -317,10 +320,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
         }
 
+        urlConnection.setRequestMethod(request.getRequestMethod());
+
         urlConnection.setConnectTimeout(getConnectTimeoutMs());
         urlConnection.setReadTimeout(getReadTimeoutMs());
         urlConnection.setInstanceFollowRedirects(true);
-        urlConnection.setUseCaches(false);
+        urlConnection.setUseCaches(true);
         urlConnection.setDoInput(true);
 
         return urlConnection;
@@ -334,9 +339,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         return connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get();
     }
 
-    private static void setRequestBody(@NonNull final HttpURLConnection connection,
-                                       final byte[] contentRequest,
-                                       final String requestContentType) throws IOException {
+    private static void sendRequest(@NonNull final HttpURLConnection connection,
+                                    final byte[] contentRequest,
+                                    final String requestContentType) throws IOException {
         if (contentRequest == null) {
             return;
         }
@@ -357,5 +362,17 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         } finally {
             safeCloseStream(out);
         }
+    }
+
+    /**
+     * Check if the given status code is the retryable status code(500/503/504).
+     *
+     * @param statusCode The status to check.
+     * @return True if the status code is 500, 503 or 504, false otherwise.
+     */
+    public static boolean isRetryableError(final int statusCode) {
+        return statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR
+                || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
+                || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
     }
 }

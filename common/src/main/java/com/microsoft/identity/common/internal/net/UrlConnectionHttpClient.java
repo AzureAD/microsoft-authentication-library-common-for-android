@@ -109,7 +109,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
     }
 
-    private com.microsoft.identity.common.java.net.UrlConnectionHttpClient sAdaptedObject;
+    private final com.microsoft.identity.common.java.net.UrlConnectionHttpClient sAdaptedObject;
 
     private UrlConnectionHttpClient(final RetryPolicy<HttpResponse> retryPolicy,
                                     int connectTimeoutMs,
