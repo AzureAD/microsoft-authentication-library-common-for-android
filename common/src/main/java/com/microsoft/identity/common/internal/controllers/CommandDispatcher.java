@@ -261,7 +261,7 @@ public class CommandDispatcher {
                             commandResult = executeCommand(command);
                             cacheCommandResult(command, commandResult);
                             Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
-                                    + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
+                                    + correlationId + statusMsg() + commandResult.getStatus().getLogStatus()
                                     + " is cacheable : " + command.isEligibleForCaching());
                         } else {
                             Logger.info(
@@ -345,7 +345,7 @@ public class CommandDispatcher {
                         CommandResult commandResult = executeCommand(command);
                         cacheCommandResult(command, commandResult);
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
-                                + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
+                                + correlationId + statusMsg() + commandResult.getStatus().getLogStatus()
                                 + " is cacheable : " + command.isEligibleForCaching());
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -414,7 +414,7 @@ public class CommandDispatcher {
                     Logger.info(TAG + methodName,
                             "Completed duplicate request with correlation id : **"
                                     + command.getParameters().getCorrelationId() + ", having the same result as : "
-                                    + result.getCorrelationId() + ", with the status : "
+                                    + result.getCorrelationId() + statusMsg()
                                     + result.getStatus().getLogStatus());
                 }
                 // Return command result will post() result for us.
@@ -693,7 +693,7 @@ public class CommandDispatcher {
 
                         Logger.info(TAG + methodName,
                                 "Completed interactive request for correlation id : **" + correlationId +
-                                        ", with the status : " + commandResult.getStatus().getLogStatus());
+                                        statusMsg() + commandResult.getStatus().getLogStatus());
 
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         Telemetry.getInstance().flush(correlationId);
@@ -753,6 +753,10 @@ public class CommandDispatcher {
                     (LocalAuthenticationResult) commandResult.getResult();
             localAuthenticationResult.setCorrelationId(correlationId);
         }
+    }
+
+    private static String statusMsg(){
+        return ", with the status : ";
     }
 
 
