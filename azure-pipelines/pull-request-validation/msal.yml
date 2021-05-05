@@ -32,7 +32,7 @@ resources:
 
 stages:
 - stage: validateConsumers
-  displayName: Validate Consumers
+  displayName: Validate Consumer
   pool:
     name: Hosted Windows 2019 with VS2019
   jobs:
@@ -75,7 +75,7 @@ stages:
       displayName: Echo branch name
   # msal
   - job: msalValidation
-    displayName: msal validation
+    displayName: MSAL
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
@@ -105,7 +105,7 @@ stages:
         tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
   # broker
   - job: brokerValidation
-    displayName: broker validation
+    displayName: Broker
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
@@ -164,7 +164,7 @@ stages:
         tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
   # adal
   - job: adalValidation
-    displayName: adal validation
+    displayName: ADAL
     dependsOn: setupBranch
     variables:
       commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
