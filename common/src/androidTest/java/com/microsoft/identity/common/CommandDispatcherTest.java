@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.cache.CacheRecord;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -134,7 +135,7 @@ public class CommandDispatcherTest {
         callbackLatch.await();
         controllerLatch.await();
 
-        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT, silentReturningFuture.get().getResult());
+        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_EXPIRED_RESULT.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
 
         Assert.assertTrue(silentReturningFuture.isDone());
         Assert.assertEquals(1, taskCompleteCount.get());
@@ -193,7 +194,7 @@ public class CommandDispatcherTest {
         controllerLatch.await();
         callbackLatch.await();
 
-        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT, silentReturningFuture.get().getResult());
+        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
         Assert.assertEquals(1, taskCompleteCount.get());
         Assert.assertEquals(1, acquireTokenSilentCallCount.get());
         Assert.assertEquals(0, renewAccessTokenCallCount.get());
@@ -252,7 +253,7 @@ public class CommandDispatcherTest {
         controllerLatch.await();
         callbackLatch.await();
 
-        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT, silentReturningFuture.get().getResult());
+        Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
 
         Assert.assertTrue(silentReturningFuture.isDone());
         Assert.assertEquals(1, taskCompleteCount.get());
@@ -824,6 +825,8 @@ public class CommandDispatcherTest {
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
                 controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
+                CommandDispatcher.submitReturningFuture(refreshOnCommand);
                 return expectedAcquireTokenResult;
             }
 
