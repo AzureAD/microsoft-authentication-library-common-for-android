@@ -9,6 +9,7 @@
 plugins {
     id 'java-library'
     id 'com.microsoft.identity.buildsystem' version '0.0.1'
+    id 'maven-publish'
 }
 
 def desugarCode = false
@@ -22,6 +23,49 @@ buildSystem {
 
 repositories {
     mavenCentral()
+}
+
+apply from: './versioning/version_tasks.gradle'
+
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
+version = getAppVersionName()
+
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+}
+
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId 'com.microsoft.identity'
+            artifactId 'common4j'
+            from components.java
+        }
+    }
+
+    repositories {
+        maven {
+            name "vsts-maven-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+            credentials {
+                username project.ext.vstsUsername
+                password project.ext.vstsPassword
+            }
+        }
+        maven {
+            name "vsts-maven-android"
+            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+            credentials {
+                username project.vstsUsername
+                password project.vstsPassword
+            }
+        }
+    }
 }
 
 sourceSets {
