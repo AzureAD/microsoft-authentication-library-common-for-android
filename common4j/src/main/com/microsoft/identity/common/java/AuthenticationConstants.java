@@ -20,26 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
-public class BrokerStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
-    public BrokerStartEvent() {
-        super();
-        names(Event.BROKER_START_EVENT);
-        types(EventType.BROKER_EVENT);
-    }
-
-    public BrokerStartEvent putAction(final String actionName) {
-        put(Key.BROKER_ACTION, actionName);
-        return this;
-    }
-
-    public BrokerStartEvent putStrategy(final String strategyName) {
-        put(Key.BROKER_STRATEGY, strategyName);
-        return this;
+public class AuthenticationConstants {
+    /**
+     * Represents the constants value for Active Directory.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class AAD {
+        /**
+         * String of client request id.
+         */
+        public static final String CLIENT_REQUEST_ID = "client-request-id";
     }
 }

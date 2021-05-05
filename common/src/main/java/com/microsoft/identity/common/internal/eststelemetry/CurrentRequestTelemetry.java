@@ -24,6 +24,9 @@ package com.microsoft.identity.common.internal.eststelemetry;
 
 import androidx.annotation.NonNull;
 
+import static com.microsoft.identity.common.internal.eststelemetry.SchemaConstants.Key.API_ID;
+import static com.microsoft.identity.common.internal.eststelemetry.SchemaConstants.Key.FORCE_REFRESH;
+
 public class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
 
     private String mApiId;
@@ -51,10 +54,10 @@ public class CurrentRequestTelemetry extends RequestTelemetry implements ICurren
     @Override
     public void put(@NonNull final String key, @NonNull final String value) {
         switch (key) {
-            case SchemaConstants.Key.API_ID:
+            case API_ID:
                 mApiId = value;
                 break;
-            case SchemaConstants.Key.FORCE_REFRESH:
+            case FORCE_REFRESH:
                 mForceRefresh = TelemetryUtils.getBooleanFromSchemaString(value);
                 break;
             default:
