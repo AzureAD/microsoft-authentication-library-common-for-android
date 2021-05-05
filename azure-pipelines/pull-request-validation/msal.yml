@@ -65,7 +65,7 @@ stages:
           Write-Output "$branch"
           echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
     - script: |
-        if (("$(setvarStep.commonBranch)" -eq "")) {
+        if ("$(setvarStep.commonBranch)" -eq "") {
           Write-Output "commonBranchName is not set using default common"
         }
         else{
