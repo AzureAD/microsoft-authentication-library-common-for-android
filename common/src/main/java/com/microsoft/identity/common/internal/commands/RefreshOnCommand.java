@@ -38,7 +38,7 @@ import java.io.IOException;
 
 public class RefreshOnCommand extends BaseCommand<EmptyResult>{
 
-    private static final String TAG = SilentTokenCommand.class.getSimpleName();
+    private static final String TAG = RefreshOnCommand.class.getSimpleName();
 
     public RefreshOnCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull String publicApiId) {
         super(parameters, controller, new EmptyCallback(), publicApiId);
