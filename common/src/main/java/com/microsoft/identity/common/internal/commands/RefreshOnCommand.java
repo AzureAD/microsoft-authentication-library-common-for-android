@@ -54,7 +54,7 @@ public class RefreshOnCommand extends BaseCommand<EmptyResult>{
                 "Executing with controller: "
                         + controller.getClass().getSimpleName()
         );
-        SilentTokenCommandParameters commandParameters = (SilentTokenCommandParameters) getParameters();
+        final SilentTokenCommandParameters commandParameters = (SilentTokenCommandParameters) getParameters();
         controller.renewAccessToken(commandParameters);
 
         return new EmptyResult();
