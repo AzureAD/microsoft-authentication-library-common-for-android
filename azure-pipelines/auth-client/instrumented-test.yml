@@ -8,8 +8,10 @@ trigger:
 pool:
  name: DockerBuildAgents
 
-workspace:
-  clean: all
-
-steps:
-- template: ../templates/steps/auth-client/docker-tasks.yml
+jobs:
+- job: instrumentedTest
+  displayName: Instrumented Test
+  workspace:
+    clean: all
+  steps:
+  - template: ../templates/steps/auth-client/docker-tasks.yml
