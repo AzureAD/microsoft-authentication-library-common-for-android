@@ -22,11 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.net;
 
+import androidx.annotation.NonNull;
+
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import lombok.NonNull;
 
 /**
  * Deprecated
