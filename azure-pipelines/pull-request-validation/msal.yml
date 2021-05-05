@@ -38,12 +38,12 @@ stages:
   jobs:
   # setup
   - job: setupBranch
-    displayName: setup branch
+    displayName: Setup branch
     steps:
     - checkout: none
     - task: PowerShell@2
       name: setvarStep
-      displayName: set var branch
+      displayName: Set var branch
       inputs:
         targetType: inline
         script: |
@@ -64,7 +64,13 @@ stages:
           }
           Write-Output "$branch"
           echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
-    - script: echo $(setvarStep.commonBranch)
+    - script: |
+        if (("$(setvarStep.commonBranch)" -eq "")) {
+          Write-Output "commonBranchName is not set using default common"
+        }
+        else{
+          echo $(setvarStep.commonBranch)
+        }
       name: echovar
       displayName: Echo branch name
   # msal
