@@ -20,26 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.util.ported;
 
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+/**
+ * Ported from {@link java.util.function.Consumer}
+ */
+public interface Consumer<T> {
 
-public class BrokerStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
-    public BrokerStartEvent() {
-        super();
-        names(Event.BROKER_START_EVENT);
-        types(EventType.BROKER_EVENT);
-    }
-
-    public BrokerStartEvent putAction(final String actionName) {
-        put(Key.BROKER_ACTION, actionName);
-        return this;
-    }
-
-    public BrokerStartEvent putStrategy(final String strategyName) {
-        put(Key.BROKER_STRATEGY, strategyName);
-        return this;
-    }
+    /**
+     * Performs this operation on the given argument.
+     *
+     * @param t the input argument
+     */
+    void accept(T t);
 }

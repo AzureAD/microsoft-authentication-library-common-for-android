@@ -27,12 +27,12 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.UserCancelException;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
 
-public class BrokerEndEvent extends BaseEvent {
+public class BrokerEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public BrokerEndEvent() {
         super();
         names(Event.BROKER_END_EVENT);

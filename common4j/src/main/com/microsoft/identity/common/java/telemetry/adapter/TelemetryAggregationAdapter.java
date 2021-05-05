@@ -20,19 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.adapter;
+package com.microsoft.identity.common.java.telemetry.adapter;
 
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
-import com.microsoft.identity.common.internal.telemetry.observers.ITelemetryAggregatedObserver;
-import com.microsoft.identity.common.internal.telemetry.rules.TelemetryAggregationRules;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver;
+import com.microsoft.identity.common.java.telemetry.rules.TelemetryAggregationRules;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
 public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
@@ -55,7 +55,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
             final String eventName = event.get(Key.EVENT_NAME);
             final String eventType = event.get(Key.EVENT_TYPE);
 
-            if (StringUtil.isEmpty(eventName)) {
+            if (StringUtil.isNullOrEmpty(eventName)) {
                 aggregatedData.putAll(applyAggregationRule(event));
                 continue;
             }
@@ -72,7 +72,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
                 );
             }
 
-            if (!StringUtil.isEmpty(event.get(Key.IS_SUCCESSFUL))) {
+            if (!StringUtil.isNullOrEmpty(event.get(Key.IS_SUCCESSFUL))) {
                 aggregatedData.put(
                         eventType + Key.IS_SUCCESSFUL,
                         event.get(Key.IS_SUCCESSFUL)
@@ -92,7 +92,7 @@ public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List
     private Map<String, String> applyAggregationRule(@NonNull final Map<String, String> properties) {
         final Map<String, String> nonPiiProperties = new HashMap<>();
         for (Map.Entry<String, String> entry : properties.entrySet()) {
-            if (!StringUtil.isEmpty(entry.getValue())
+            if (!StringUtil.isNullOrEmpty(entry.getValue())
                     && !TelemetryAggregationRules.getInstance().isRedundant(entry.getKey())) {
                 nonPiiProperties.put(entry.getKey(), entry.getValue());
             }

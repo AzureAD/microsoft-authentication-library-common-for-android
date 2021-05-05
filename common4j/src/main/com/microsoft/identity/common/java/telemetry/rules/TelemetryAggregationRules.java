@@ -20,21 +20,47 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.rules;
 
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import lombok.NonNull;
 
-public class HttpEndEvent extends BaseEvent {
-    public HttpEndEvent() {
-        super();
-        names(Event.HTTP_END_EVENT);
-        types(EventType.HTTP_EVENT);
+import com.microsoft.identity.common.java.util.StringUtil;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
+public class TelemetryAggregationRules {
+    private static TelemetryAggregationRules sInstance;
+    private Set<String> aggregatedPropertiesSet;
+
+    final private String[] aggregatedArray = {
+            Key.EVENT_NAME,
+            Key.OCCUR_TIME,
+            Key.EVENT_TYPE,
+            Key.IS_SUCCESSFUL
+    };
+
+    private TelemetryAggregationRules() {
+        aggregatedPropertiesSet = new HashSet<>(Arrays.asList(aggregatedArray));
     }
 
-    public HttpEndEvent putStatusCode(final int statusCode) {
-        put(Key.HTTP_RESPONSE_CODE, String.valueOf(statusCode));
-        return this;
+    @NonNull
+    public synchronized static TelemetryAggregationRules getInstance() {
+        if (sInstance == null) {
+            sInstance = new TelemetryAggregationRules();
+        }
+
+        return sInstance;
+    }
+
+    public boolean isRedundant(final String propertyName) {
+        if (StringUtil.isNullOrEmpty(propertyName)) {
+            return false;
+        }
+
+        return aggregatedPropertiesSet.contains(propertyName);
     }
 }

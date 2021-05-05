@@ -40,6 +40,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
@@ -64,7 +65,9 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -94,6 +97,13 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
+
+    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet(
+            Arrays.asList(
+                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
+                    BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
+                    ClientException.INTERRUPTED_OPERATION,
+                    ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
     @GuardedBy("mapAccessLock")
@@ -514,9 +524,15 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
+        final String errorCode;
+        if (exception instanceof BrokerCommunicationException) {
+            errorCode = ((BrokerCommunicationException) exception).getCategory().toString();
+        } else {
+            errorCode = exception.getErrorCode();
+        }
         //TODO : ADO 1373343 Add the whole transient exception category.
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE.equals(((ClientException)exception).getErrorCode())) {
+                || nonCacheableErrorCodes.contains(errorCode)) {
             return false;
         }
         return true;
