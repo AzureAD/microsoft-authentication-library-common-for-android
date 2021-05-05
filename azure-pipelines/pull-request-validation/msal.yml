@@ -70,8 +70,9 @@ stages:
   # msal
   - job: msalValidation
     displayName: msal validation
-    dependsOn:
-    - setupBranch
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: msal
@@ -80,7 +81,7 @@ stages:
       submodules: recursive
       persistCredentials: True
     - task: CmdLine@2
-      displayName: Checkout common submodule $($env:commonBranch)
+      displayName: Checkout common submodule $(commonBranch)
       inputs:
         script: |
           git fetch
@@ -99,8 +100,9 @@ stages:
   # broker
   - job: brokerValidation
     displayName: broker validation
-    dependsOn:
-    - setupBranch
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
     - template: ../templates/steps/automation-cert.yml
     - checkout: broker
@@ -157,8 +159,9 @@ stages:
   # adal
   - job: adalValidation
     displayName: adal validation
-    dependsOn:
-    - setupBranch
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
     steps:
     - checkout: adal
       displayName: Checkout adal repository
