@@ -23,18 +23,31 @@
 package com.microsoft.identity.common.internal.commands;
 
 import com.microsoft.identity.common.internal.result.EmptyResult;
+import com.microsoft.identity.common.logging.Logger;
 
 /*
     Null Object Pattern for Commands who's result should be ignored.
  */
-public class EmptyCallback implements CommandCallback<EmptyResult, Exception>{
+public class VoidCallback implements CommandCallback<EmptyResult, Exception>{
+
+    private static final String TAG = VoidCallback.class.getSimpleName();
 
     @Override
     public void onCancel() {}
 
     @Override
-    public void onTaskCompleted(EmptyResult emptyResult) {}
+    public void onTaskCompleted(EmptyResult emptyResult) {
+        Logger.verbose(
+                TAG + ":onError",
+                "Task completed. "
+        );
+    }
 
     @Override
-    public void onError(Exception error) {}
+    public void onError(Exception error) {
+        Logger.verbose(
+                TAG + ":onError",
+                error.getMessage()
+        );
+    }
 }

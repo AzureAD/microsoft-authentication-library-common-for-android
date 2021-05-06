@@ -24,9 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
@@ -41,7 +39,7 @@ public class RefreshOnCommand extends BaseCommand<EmptyResult>{
     private static final String TAG = RefreshOnCommand.class.getSimpleName();
 
     public RefreshOnCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull String publicApiId) {
-        super(parameters, controller, new EmptyCallback(), publicApiId);
+        super(parameters, controller, new VoidCallback(), publicApiId);
     }
 
     @Override
