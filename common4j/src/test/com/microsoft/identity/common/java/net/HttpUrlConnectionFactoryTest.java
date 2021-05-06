@@ -21,9 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common;
-
-import com.microsoft.identity.common.internal.net.HttpUrlConnectionFactory;
+package com.microsoft.identity.common.java.net;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -33,11 +31,12 @@ import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 /**
  * Tests for {@link HttpUrlConnectionFactory}.
  */
-@Ignore
 public final class HttpUrlConnectionFactoryTest {
 
     @After
@@ -51,7 +50,7 @@ public final class HttpUrlConnectionFactoryTest {
         HttpUrlConnectionFactory.addMockedConnection(mockedConnection);
 
         Assert.assertTrue(HttpUrlConnectionFactory.createHttpURLConnection(
-                Util.getValidRequestUrl()).equals(mockedConnection));
+                getValidRequestUrl()).equals(mockedConnection));
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == 0);
     }
 
@@ -69,11 +68,11 @@ public final class HttpUrlConnectionFactoryTest {
         final int connectionQueueCount = 3;
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount);
         Assert.assertTrue(HttpUrlConnectionFactory.createHttpURLConnection(
-                Util.getValidRequestUrl()).equals(firstMockedConnection));
+                getValidRequestUrl()).equals(firstMockedConnection));
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount - 1);
 
         Assert.assertTrue(HttpUrlConnectionFactory.createHttpURLConnection(
-                Util.getValidRequestUrl()).equals(secondMockedConnection));
+                getValidRequestUrl()).equals(secondMockedConnection));
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == connectionQueueCount - 2);
     }
 
@@ -81,6 +80,10 @@ public final class HttpUrlConnectionFactoryTest {
     public void testMockedConnectionNotSet() throws IOException {
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
         Assert.assertTrue(HttpUrlConnectionFactory.getMockedConnectionCountInQueue() == 0);
-        Assert.assertNotNull(HttpUrlConnectionFactory.createHttpURLConnection(Util.getValidRequestUrl()));
+        Assert.assertNotNull(HttpUrlConnectionFactory.createHttpURLConnection(getValidRequestUrl()));
+    }
+
+    private URL getValidRequestUrl() throws MalformedURLException {
+        return new URL("https://login.microsoftonline.com/tenant");
     }
 }

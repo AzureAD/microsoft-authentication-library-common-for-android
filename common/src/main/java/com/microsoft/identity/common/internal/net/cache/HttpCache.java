@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Utility class for caching HTTP and HTTPS responses.
+ * Utility class for caching HTTP and HTTPS responses in Android.
  *
  * @see HttpResponseCache
  */
