@@ -3,6 +3,7 @@
 steps:
 - checkout: self
   clean: true
+  submodules: recursive
 - script: |
     docker --version
     echo =============================================
