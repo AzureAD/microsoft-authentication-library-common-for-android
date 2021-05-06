@@ -20,47 +20,31 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.rules;
+package com.microsoft.identity.common.java.telemetry.adapter;
 
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+public final class TelemetryDefaultAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
+    private ITelemetryDefaultObserver mObserver;
 
-public class TelemetryAggregationRules {
-    private static TelemetryAggregationRules sInstance;
-    private Set<String> aggregatedPropertiesSet;
-
-    final private String[] aggregatedArray = {
-            Key.EVENT_NAME,
-            Key.OCCUR_TIME,
-            Key.EVENT_TYPE,
-            Key.IS_SUCCESSFUL
-    };
-
-    private TelemetryAggregationRules() {
-        aggregatedPropertiesSet = new HashSet<>(Arrays.asList(aggregatedArray));
+    public TelemetryDefaultAdapter(@NonNull final ITelemetryDefaultObserver observer) {
+        mObserver = observer;
     }
 
-    @NonNull
-    public synchronized static TelemetryAggregationRules getInstance() {
-        if (sInstance == null) {
-            sInstance = new TelemetryAggregationRules();
-        }
-
-        return sInstance;
+    public ITelemetryDefaultObserver getObserver() {
+        return mObserver;
     }
 
-    public boolean isRedundant(final String propertyName) {
-        if (StringUtil.isEmpty(propertyName)) {
-            return false;
+    public void process(@NonNull final List<Map<String, String>> rawData) {
+        if (null == mObserver) {
+            return;
         }
 
-        return aggregatedPropertiesSet.contains(propertyName);
+        mObserver.onReceived(rawData);
     }
 }

@@ -595,15 +595,15 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
-        final String mErrorCode;
+        final String errorCode;
         if (exception instanceof BrokerCommunicationException) {
-            mErrorCode = ((BrokerCommunicationException) exception).getCategory().toString();
+            errorCode = ((BrokerCommunicationException) exception).getCategory().toString();
         } else {
-            mErrorCode = exception.getErrorCode();
+            errorCode = exception.getErrorCode();
         }
         //TODO : ADO 1373343 Add the whole transient exception category.
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || nonCacheableErrorCodes.contains(mErrorCode)) {
+                || nonCacheableErrorCodes.contains(errorCode)) {
             return false;
         }
         return true;
