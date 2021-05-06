@@ -38,22 +38,12 @@ task sourcesJar(type: Jar) {
     destinationDirectory = reporting.file("$project.buildDir/libs/")
 }
 
-//javadoc {
-//    source = sourceSets.main.java
-//    include '**/*.java'
-//    //classpath += files(classpath.files)
-//    options.memberLevel = JavadocMemberLevel.PUBLIC
-//    options.addStringOption('Xdoclint:none', '-quiet')
-//    exclude '**/R.java'
-//}
-
 // Task to generate javadoc
 task generateJavadoc(type: Javadoc) {
     failOnError false
     title = "Microsoft Identity Common Java"
     source = sourceSets.main.java
-    classpath += configurations.compile
-//    classpath += project.files(getClasspath().join(File.pathSeparator))
+    classpath += project.sourceSets.main.compileClasspath
 
     include '**/*.java'
 
