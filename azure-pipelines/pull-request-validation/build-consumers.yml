@@ -92,6 +92,7 @@ stages:
         script: |
           git fetch
           git checkout $(commonBranch)
+          git pull
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
@@ -122,6 +123,7 @@ stages:
         script: |
           git fetch
           git checkout $(commonBranch)
+          git pull
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
@@ -180,6 +182,7 @@ stages:
         script: |
           git fetch
           git checkout $(commonBranch)
+          git pull
           git status
           git rev-parse HEAD
         workingDirectory: $(Agent.BuildDirectory)/s/common
