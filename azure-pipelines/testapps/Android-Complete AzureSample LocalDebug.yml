@@ -16,14 +16,14 @@ resources:
   - repository: android-complete
     type: github
     name: AzureAD/android-complete
-    ref: shahzaibj/droidSetupDevexOnly
+    ref: master
     endpoint: ANDROID_GITHUB
 
 schedules:
 - cron: 0 1 * * 1,2,3,4,5
   branches:
     include:
-    - shahzaibj/droidSetupDevexOnly
+    - master
   always: true
 
 jobs:
