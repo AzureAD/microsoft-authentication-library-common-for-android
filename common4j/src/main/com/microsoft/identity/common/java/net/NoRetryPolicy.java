@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.common.java.net;
 
 import net.jcip.annotations.Immutable;
 import net.jcip.annotations.ThreadSafe;
@@ -31,13 +31,11 @@ import java.util.concurrent.Callable;
 import lombok.SneakyThrows;
 
 /**
- * Deprecated
- *
- * @see com.microsoft.identity.common.java.net.NoRetryPolicy
+ * A retry policy that, by default, does nothing.
  */
 @ThreadSafe
 @Immutable
-public class NoRetryPolicy implements RetryPolicy<HttpResponse> {
+public class NoRetryPolicy implements IRetryPolicy<HttpResponse> {
     @Override
     @SneakyThrows
     public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {

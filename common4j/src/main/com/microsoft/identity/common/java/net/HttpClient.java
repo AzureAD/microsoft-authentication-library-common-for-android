@@ -20,12 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.common.java.net;
 
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.microsoft.identity.common.java.util.StringUtil;
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.net.URL;
@@ -51,7 +49,7 @@ public interface HttpClient {
     HttpResponse method(@NonNull String httpMethod,
                         @NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
-                        @Nullable byte[] requestContent) throws IOException;
+                        byte[] requestContent) throws IOException;
 
     /**
      * Execute an arbitrary method.
@@ -65,7 +63,7 @@ public interface HttpClient {
     HttpResponse method(@NonNull HttpMethod httpMethod,
                         @NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
-                        @Nullable byte[] requestContent) throws IOException;
+                        byte[] requestContent) throws IOException;
 
     /**
      * Execute an HTTP PUT request.
@@ -77,7 +75,7 @@ public interface HttpClient {
      */
     HttpResponse put(@NonNull URL requestUrl,
                      @NonNull Map<String, String> requestHeaders,
-                     @Nullable byte[] requestContent) throws IOException;
+                     byte[] requestContent) throws IOException;
 
     /**
      * Execute an HTTP PATCH request.
@@ -89,7 +87,7 @@ public interface HttpClient {
      */
     HttpResponse patch(@NonNull URL requestUrl,
                        @NonNull Map<String, String> requestHeaders,
-                       @Nullable byte[] requestContent) throws IOException;
+                       byte[] requestContent) throws IOException;
 
     /**
      * Execute an HTTP OPTIONS request.
@@ -111,7 +109,7 @@ public interface HttpClient {
      */
     HttpResponse post(@NonNull URL requestUrl,
                       @NonNull Map<String, String> requestHeaders,
-                      @Nullable byte[] requestContent) throws IOException;
+                      byte[] requestContent) throws IOException;
 
     /**
      * Execute an HTTP PATCH request.
@@ -123,7 +121,7 @@ public interface HttpClient {
      */
     HttpResponse delete(@NonNull URL requestUrl,
                         @NonNull Map<String, String> requestHeaders,
-                        @Nullable byte[] requestContent) throws IOException;
+                        byte[] requestContent) throws IOException;
 
     /**
      * Execute an HTTP GET request.
@@ -168,7 +166,7 @@ public interface HttpClient {
         DELETE,
         TRACE;
 
-        private static final Map<String, UrlConnectionHttpClient.HttpMethod> validMethods;
+        private static final Map<String, HttpClient.HttpMethod> validMethods;
 
         static {
             validMethods = new LinkedHashMap<>(HttpMethod.values().length);
@@ -178,7 +176,7 @@ public interface HttpClient {
         }
 
         public static HttpMethod validateAndNormalizeMethod(@NonNull final String httpMethod) {
-            if (TextUtils.isEmpty(httpMethod)) {
+            if (StringUtil.isNullOrEmpty(httpMethod)) {
                 throw new IllegalArgumentException("HTTP method cannot be null or blank");
             }
 
