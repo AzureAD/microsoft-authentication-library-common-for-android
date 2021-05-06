@@ -30,8 +30,7 @@ import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
@@ -42,6 +41,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyPar
 import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.HttpURLConnection;

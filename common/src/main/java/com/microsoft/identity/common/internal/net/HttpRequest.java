@@ -24,71 +24,35 @@ package com.microsoft.identity.common.internal.net;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.arch.core.util.Function;
+
+import com.microsoft.identity.common.java.net.HttpConstants;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownServiceException;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
-
-import static com.microsoft.identity.common.internal.net.UrlConnectionHttpClient.Supplier;
 
 /**
- * Internal class for handling http request.
+ * This class is deprecated.
+ *
+ * @see com.microsoft.identity.common.java.net.HttpRequest
  */
-public final class HttpRequest {
-
-    private static final String HOST = "Host";
+public final class HttpRequest extends com.microsoft.identity.common.java.net.HttpRequest {
 
     /**
      * Value of read timeout in milliseconds.
+     * This is no longer used - we're now hardcoding the value in UrlConnectionHttpClient.getDefaultInstance()
      */
     @Deprecated
     public static int READ_TIMEOUT = 30000;
 
     /**
      * Value of connect timeout in milliseconds.
+     * This is no longer used - we're now hardcoding the value in UrlConnectionHttpClient.getDefaultInstance()
      */
     @Deprecated
     public static int CONNECT_TIMEOUT = 30000;
-
-    /**
-     * The waiting time before doing retry to prevent hitting the server immediately failure.
-     */
-    private static final int RETRY_TIME_WAITING_PERIOD_MSEC = 1000;
-    private static final int STREAM_BUFFER_SIZE = 1024;
-    private static final HttpClient DEFAULT_HTTP_CLIENT = UrlConnectionHttpClient.builder()
-            .connectTimeoutMsSupplier(new Supplier<Integer>() { public Integer get() { return CONNECT_TIMEOUT; }})
-            .readTimeoutMsSupplier(new Supplier<Integer>() { public Integer get() { return READ_TIMEOUT; }})
-            .streamBufferSize(STREAM_BUFFER_SIZE)
-            .retryPolicy(new StatusCodeAndExceptionRetry.StatusCodeAndExceptionRetryBuilder()
-                          .number(1)
-                    .extensionFactor(2)
-                    .isAcceptable(new Function<HttpResponse, Boolean>() {
-                        public Boolean apply(HttpResponse response) {
-                            return response != null && response.getStatusCode() < 400;
-                        }
-                    })
-                    .initialDelay(RETRY_TIME_WAITING_PERIOD_MSEC)
-                    .isRetryable(new Function<HttpResponse, Boolean>() {
-                        public Boolean apply(HttpResponse response) {
-                            return response != null && HttpRequest.isRetryableError(response.getStatusCode());
-                        }
-                    })
-                    .isRetryableException(new Function<Exception, Boolean>() {
-                        public Boolean apply(Exception e) {
-                            return e instanceof SocketTimeoutException;
-                        }
-                    })
-                    .build())
-            .build();
 
     public static final String REQUEST_METHOD_GET = "GET";
     public static final String REQUEST_METHOD_POST = "POST";
@@ -98,59 +62,6 @@ public final class HttpRequest {
     public static final String REQUEST_METHOD_TRACE = "TRACE";
     public static final String REQUEST_METHOD_OPTIONS = "OPTIONS";
     public static final String REQUEST_METHOD_PATCH = "PATCH";
-
-    private static final Set<String> HTTP_METHODS = new LinkedHashSet<>();
-
-    static {
-        HTTP_METHODS.add(REQUEST_METHOD_GET);
-        HTTP_METHODS.add(REQUEST_METHOD_POST);
-        HTTP_METHODS.add(REQUEST_METHOD_HEAD);
-        HTTP_METHODS.add(REQUEST_METHOD_PUT);
-        HTTP_METHODS.add(REQUEST_METHOD_DELETE);
-        HTTP_METHODS.add(REQUEST_METHOD_TRACE);
-        HTTP_METHODS.add(REQUEST_METHOD_OPTIONS);
-        HTTP_METHODS.add(REQUEST_METHOD_PATCH);
-    }
-
-    // class variables
-    private final URL mRequestUrl;
-    private final byte[] mRequestContent;
-
-    URL getRequestUrl() {
-        return mRequestUrl;
-    }
-
-    byte[] getRequestContent() {
-        return mRequestContent;
-    }
-
-    String getRequestContentType() {
-        return mRequestContentType;
-    }
-
-    String getRequestMethod() {
-        return mRequestMethod;
-    }
-
-    Map<String, String> getmRequestHeaders() {
-        return Collections.unmodifiableMap(mRequestHeaders);
-    }
-
-    private final String mRequestContentType;
-    private final String mRequestMethod;
-    private final Map<String, String> mRequestHeaders = new HashMap<>();
-
-    /**
-     * Constructor for {@link HttpRequest} with request {@link URL} and request headers.
-     *
-     * @param requestUrl     The {@link URL} to make the http request.
-     * @param requestHeaders Headers used to send the http request.
-     */
-    private HttpRequest(@NonNull final URL requestUrl,
-                        @NonNull final Map<String, String> requestHeaders,
-                        @NonNull final String requestMethod) {
-        this(requestUrl, requestHeaders, requestMethod, null, null);
-    }
 
     /**
      * Constructor for {@link HttpRequest} with request {@link URL}, headers, post message and the
@@ -166,12 +77,7 @@ public final class HttpRequest {
                 @NonNull final String requestMethod,
                 @Nullable final byte[] requestContent,
                 @Nullable final String requestContentType) {
-        mRequestUrl = requestUrl;
-        mRequestHeaders.put(HOST, requestUrl.getAuthority());
-        mRequestHeaders.putAll(requestHeaders);
-        mRequestMethod = requestMethod;
-        mRequestContent = requestContent;
-        mRequestContentType = requestContentType;
+        super(requestUrl, requestHeaders, requestMethod, requestContent, requestContentType);
     }
 
     /**
@@ -384,22 +290,12 @@ public final class HttpRequest {
                 headerMap.put(HttpConstants.HeaderField.CONTENT_TYPE, requestContentType);
             }
         }
-        HttpResponse response = DEFAULT_HTTP_CLIENT.method(httpMethod, requestUrl, headerMap, requestContent);
-        if (response != null && isRetryableError(response.getStatusCode())) {
+        final com.microsoft.identity.common.java.net.HttpResponse response =
+                com.microsoft.identity.common.java.net.UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, headerMap, requestContent);
+        if (response != null && com.microsoft.identity.common.java.net.UrlConnectionHttpClient.isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
         }
-        return response;
-    }
 
-    /**
-     * Check if the given status code is the retryable status code(500/503/504).
-     *
-     * @param statusCode The status to check.
-     * @return True if the status code is 500, 503 or 504, false otherwise.
-     */
-    private static boolean isRetryableError(final int statusCode) {
-        return statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR
-                || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
-                || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
+        return new HttpResponse(response);
     }
 }
