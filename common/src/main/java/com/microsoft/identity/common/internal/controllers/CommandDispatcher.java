@@ -306,7 +306,7 @@ public class CommandDispatcher {
         }
     }
 
-    public static void submit(@NonNull final BaseCommand command){
+    public static void submitAndForget(@NonNull final BaseCommand command){
         submitReturningFuture(command);
     }
 
@@ -343,7 +343,6 @@ public class CommandDispatcher {
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                         CommandResult commandResult = executeCommand(command);
-                        cacheCommandResult(command, commandResult);
                         Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
                                 + correlationId + statusMsg() + commandResult.getStatus().getLogStatus()
                                 + " is cacheable : " + command.isEligibleForCaching());

@@ -327,7 +327,7 @@ public class LocalMSALController extends BaseController {
         if(fullCacheRecord.getAccessToken().shouldRefresh()){
             setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
             final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
-            CommandDispatcher.submit(refreshOnCommand);
+            CommandDispatcher.submitAndForget(refreshOnCommand);
         } else if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
@@ -376,6 +376,10 @@ public class LocalMSALController extends BaseController {
             );
 
         } else {
+            Logger.verbose(
+                    TAG + ":acquireTokenSilent",
+                    "Returning silent result"
+            );
             setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
         }
 
@@ -391,11 +395,6 @@ public class LocalMSALController extends BaseController {
     private void setAcquireTokenResult(final AcquireTokenResult acquireTokenSilentResult,
                                        final SilentTokenCommandParameters parametersWithScopes,
                                        final List<ICacheRecord> cacheRecords) throws ClientException {
-        Logger.verbose(
-                TAG + ":acquireTokenSilent",
-                "Returning silent result"
-        );
-        // the result checks out, return that....
         ICacheRecord fullCacheRecord = cacheRecords.get(0);
         acquireTokenSilentResult.setLocalAuthenticationResult(
                 new LocalAuthenticationResult(
