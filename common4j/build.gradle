@@ -32,6 +32,46 @@ project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN
 
 version = getAppVersionName()
 
+task sourcesJar(type: Jar) {
+    from sourceSets.main.java.srcDirs
+    classifier = 'sources'
+    destinationDirectory = reporting.file("$project.buildDir/libs/")
+}
+
+//javadoc {
+//    source = sourceSets.main.java
+//    include '**/*.java'
+//    //classpath += files(classpath.files)
+//    options.memberLevel = JavadocMemberLevel.PUBLIC
+//    options.addStringOption('Xdoclint:none', '-quiet')
+//    exclude '**/R.java'
+//}
+
+// Task to generate javadoc
+task generateJavadoc(type: Javadoc) {
+    failOnError false
+    title = "Microsoft Identity Common Java"
+    source = sourceSets.main.java
+    classpath += configurations.compile
+//    classpath += project.files(getClasspath().join(File.pathSeparator))
+
+    include '**/*.java'
+
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    options.addStringOption('Xdoclint:none', '-quiet')
+
+    exclude '**/BuildConfig.Java'
+    exclude '**/R.java'
+    destinationDir = reporting.file("$project.buildDir/javadoc")
+}
+
+// Task to generate javadoc.jar
+task javadocJar(type: Jar, dependsOn: generateJavadoc) {
+    from javadoc.destinationDir
+    classifier 'javadoc'
+    destinationDirectory = reporting.file("$project.buildDir/libs")
+}
+
 jar {
     manifest {
         attributes('Implementation-Title': project.name,
@@ -45,6 +85,35 @@ publishing {
             groupId 'com.microsoft.identity'
             artifactId 'common4j'
             from components.java
+
+            pom {
+                name = 'common4j'
+                description = 'This library contains code shared between the Active Directory ' +
+                        'Authentication Library (ADAL) for Android and the Microsoft ' +
+                        'Authentication Library (MSAL) for Android. This library ' +
+                        'includes only internal classes and is NOT part of the ' +
+                        'public API'
+                url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
+                developers {
+                    developer {
+                        id = 'microsoft'
+                        name = 'Microsoft'
+                    }
+                }
+                licenses {
+                    license {
+                        name = 'MIT License'
+                    }
+                }
+                inceptionYear = '2021'
+                scm {
+                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
+                }
+                properties = [
+                        branch: 'master',
+                        version: project.version
+                ]
+            }
         }
     }
 
@@ -88,4 +157,14 @@ dependencies {
     testImplementation "org.mockito:mockito-core:3.6.28"
     testCompileOnly "org.projectlombok:lombok:1.18.12"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
+}
+
+//tasks.whenTaskAdded { task ->
+//    if (task.name.contains('assemble')) {
+//        task.dependsOn sourcesJar
+//    }
+//}
+
+afterEvaluate {
+    assemble.dependsOn sourcesJar
 }
