@@ -166,5 +166,5 @@ dependencies {
 //}
 
 afterEvaluate {
-    assemble.dependsOn sourcesJar
+    assemble.dependsOn sourcesJar, javadocJar
 }
