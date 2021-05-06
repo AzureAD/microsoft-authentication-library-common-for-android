@@ -145,7 +145,15 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {
-        sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
+        final String methodName = "onReceivedError (23)";
+        final boolean isForMainFrame = request.isForMainFrame();
+
+        Logger.warn(TAG + methodName, "WebResourceError - isForMainFrame? " + isForMainFrame);
+        Logger.warnPII(TAG + methodName, "Failing url: " + request.getUrl());
+
+        if (request.isForMainFrame()) {
+            sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
+        }
     }
 
     private void sendErrorToCallback(@NonNull final WebView view,

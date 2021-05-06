@@ -23,9 +23,8 @@
 package com.microsoft.identity.common.unit;
 
 import com.google.gson.JsonParseException;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 

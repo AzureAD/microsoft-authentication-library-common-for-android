@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Migrate HTTP Layer to common java lib. (#1347)
 - [PATCH] Port eSTS telemetry layer to common-java (#1328)
 - [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
 - [MINOR] Automate broker protocol version computation. (#1301)
@@ -9,6 +10,7 @@ V.Next
 - [PATCH] Add common-java. Migrate Logger. (#1300)
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 - [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
+- [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
 
 Version 3.4.2
 ----------
