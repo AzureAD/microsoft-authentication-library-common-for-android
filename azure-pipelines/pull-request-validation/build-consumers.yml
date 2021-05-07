@@ -59,7 +59,7 @@ stages:
               }
               default
               {
-                ''
+                '$(commonBranchName)'
               }
           }
           Write-Output "$branch"
@@ -69,7 +69,7 @@ stages:
           Write-Output "commonBranchName is not set using default common"
         }
         else{
-          Write-Output "$(setvarStep.commonBranch)"
+          Write-Output "Using common branch $(setvarStep.commonBranch) in consumers"
         }
       name: echovar
       displayName: Echo branch name

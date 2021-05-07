@@ -1,5 +1,5 @@
 # File: azure-pipelines\templates\steps\nightly-snapshot-releases\common.yml
-# Description: Template to assemble and publish different versions of common
+# Description: Template to assemble and publish Snapshot/Latest versions of common
 # Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
@@ -18,7 +18,7 @@ jobs:
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 1
   pool:
-    name: Hosted VS2017
+    name: Hosted Windows 2019 with VS2019
   steps:
   - checkout: self
     clean: true
