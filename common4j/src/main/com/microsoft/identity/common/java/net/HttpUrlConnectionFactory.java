@@ -20,9 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
-
-import androidx.annotation.VisibleForTesting;
+package com.microsoft.identity.common.java.net;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -49,7 +47,6 @@ public final class HttpUrlConnectionFactory {
      *
      * @param mockedConnection The mocked {@link HttpURLConnection} to put in the queue.
      */
-    @VisibleForTesting
     public static void addMockedConnection(final HttpURLConnection mockedConnection) {
         sMockedConnectionQueue.add(mockedConnection);
     }
@@ -57,7 +54,6 @@ public final class HttpUrlConnectionFactory {
     /**
      * Used by tests to clear the mocked connection queue.
      */
-    @VisibleForTesting
     public static void clearMockedConnectionQueue() {
         sMockedConnectionQueue.clear();
     }
@@ -67,7 +63,6 @@ public final class HttpUrlConnectionFactory {
      *
      * @return The number of mocked connections in the queue.
      */
-    @VisibleForTesting
     public static int getMockedConnectionCountInQueue() {
         return sMockedConnectionQueue.size();
     }

@@ -23,84 +23,34 @@
 package com.microsoft.identity.common.internal.net;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import net.jcip.annotations.Immutable;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Internal class to wrap the raw server response, headers and status code.
+ * Deprecated
+ * <p>
+ * Currently served as an adapter of {@link com.microsoft.identity.common.java.net.HttpResponse}
  */
-@Immutable
-public final class HttpResponse {
+public final class HttpResponse extends com.microsoft.identity.common.java.net.HttpResponse {
+    public HttpResponse(@NonNull final com.microsoft.identity.common.java.net.HttpResponse responseToBeAdapted) {
+        super(responseToBeAdapted.getDate(),
+                responseToBeAdapted.getStatusCode(),
+                responseToBeAdapted.getBody(),
+                responseToBeAdapted.getHeaders());
+    }
 
-    private final int mStatusCode;
-    private final String mResponseBody;
-    private final Map<String, List<String>> mResponseHeaders;
-    private final Date mDate;
-
-    /**
-     * Constructor for {@link HttpResponse}.
-     *
-     * @param statusCode      The status code from the server response.
-     * @param responseBody    Raw response body.
-     * @param responseHeaders Response headers from the connection sent to the server.
-     */
-    public HttpResponse(final int statusCode, final String responseBody,
+    public HttpResponse(final int statusCode,
+                        final String responseBody,
                         final Map<String, List<String>> responseHeaders) {
-        this(null, statusCode, responseBody, responseHeaders);
+        super(null, statusCode, responseBody, responseHeaders);
     }
 
-    public HttpResponse(@Nullable final Date date,
+    public HttpResponse(final Date date,
                         final int statusCode,
-                        @NonNull final String responseBody,
-                        @NonNull final Map<String, List<String>> headerFields) {
-        mDate = date;
-        mStatusCode = statusCode;
-        mResponseBody = responseBody;
-        mResponseHeaders = headerFields;
+                        final String responseBody,
+                        final Map<String, List<String>> headerFields) {
+        super(date, statusCode, responseBody, headerFields);
     }
-
-    public Date getDate() {
-        return mDate;
-    }
-
-    /**
-     * @return The status code.
-     */
-    public int getStatusCode() {
-        return mStatusCode;
-    }
-
-    /**
-     * @return The raw server response.
-     */
-    public String getBody() {
-        return mResponseBody;
-    }
-
-    /**
-     * @return The unmodified Map of response headers.
-     * Response headers is set by {@link java.net.HttpURLConnection#getHeaderFields()} which is an unmodified Map.
-     */
-    public Map<String, List<String>> getHeaders() {
-        return mResponseHeaders;
-    }
-
-    //CHECKSTYLE:OFF
-    // This method is generated. Checkstyle and/or PMD has been disabled.
-    // This method *must* be regenerated if the class' structural definition changes through the
-    // addition/subtraction of fields.
-    @Override
-    public String toString() {
-        return "HttpResponse{" +
-                "mStatusCode=" + mStatusCode +
-                ", mResponseBody='" + mResponseBody + '\'' +
-                ", mResponseHeaders=" + mResponseHeaders +
-                '}';
-    }
-    //CHECKSTYLE:ON
 }
