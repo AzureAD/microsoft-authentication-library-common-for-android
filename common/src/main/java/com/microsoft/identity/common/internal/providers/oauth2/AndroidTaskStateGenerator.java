@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NonNull;
 
 /**
- * Encodes the Android Task ID (taskId) into the state sent as part of the authorization request
+ * Encodes the Android Task ID (taskId) into the state sent as part of the authorization request.
  * This allows the response to be correlated to the request.
  */
 public class AndroidTaskStateGenerator extends DefaultStateGenerator {
