@@ -147,8 +147,9 @@ public abstract class AuthorizationFragment extends Fragment {
 
     @Override
     public void onStop() {
-        final String methodName = ":onStop";
         /*
+        final String methodName = ":onStop";
+
         if (!mAuthResultSent && getActivity().isFinishing()) {
             Logger.info(TAG + methodName,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"

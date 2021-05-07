@@ -109,7 +109,8 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         sCustomTabResponseUri = responseUri;
 
         final Intent intent = new Intent(context, sCallingActivityClass);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra("RESPONSE", true);
+        //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return intent;
     }
 
@@ -129,8 +130,14 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     @Override
     void extractState(@NonNull final Bundle state) {
         super.extractState(state);
-        mAuthIntent = state.getParcelable(AUTH_INTENT);
-        mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
+        boolean response = state.getBoolean("RESPONSE", false);
+        if(response){
+            completeAuthorizationInBrowserFlow(sCustomTabResponseUri);
+            finish();
+        }else {
+            mAuthIntent = state.getParcelable(AUTH_INTENT);
+            mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
+        }
     }
 
     @Override

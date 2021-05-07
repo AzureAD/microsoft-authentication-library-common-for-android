@@ -58,14 +58,15 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
-    private boolean mIsRequestFromBroker;
+    //private boolean mIsRequestFromBroker;
 
     public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment,
-                                        boolean isRequestFromBroker) {
+                                        @Nullable Fragment fragment/*
+                                        boolean isRequestFromBroker
+                                        */) {
         super(applicationContext, activity, fragment);
-        mIsRequestFromBroker = isRequestFromBroker;
+        //mIsRequestFromBroker = isRequestFromBroker;
     }
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
