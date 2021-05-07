@@ -414,32 +414,15 @@ public abstract class BaseController {
                 "Renewing access token..."
         );
 
-        //Extract strategy from parameters
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        strategyParameters.setContext(parameters.getAndroidApplicationContext());
-        parameters.getAuthority().createOAuth2Strategy(strategyParameters);
-        final OAuth2Strategy strategy = parameters.getAuthority().createOAuth2Strategy(strategyParameters);
-
-        //Extract cache from parameters
-        final AccountRecord targetAccount = getCachedAccountRecord(parameters);
-        final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
-        final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
-
-        //Get cacheRecord from cache
-        final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
-                parameters.getClientId(),
-                TextUtils.join(" ", parameters.getScopes()),
-                targetAccount,
-                authScheme
-        );
-        final ICacheRecord cacheRecord = cacheRecords.get(0);
+        OAuth2Strategy strategy = getStrategy(parameters);
+        OAuth2TokenCache cache = getTokenCache(parameters);
+        ICacheRecord cacheRecord = getCacheRecord(parameters);
 
         Logger.info(
                 TAG + methodName,
                 "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + cacheRecord.getAccessToken().getRefreshOn() + ". Regular expiry is at " + cacheRecord.getAccessToken().getExpiresOn() + "."
                         + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
         );
-
         //Get tokenResult
         RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
         logParameters(TAG, parameters);
@@ -510,6 +493,37 @@ public abstract class BaseController {
                 Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
             }
         }
+    }
+
+    public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        //Extract strategy from parameters
+        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        strategyParameters.setContext(parameters.getAndroidApplicationContext());
+        parameters.getAuthority().createOAuth2Strategy(strategyParameters);
+        return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
+    }
+
+    public ICacheRecord getCacheRecord(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        //Extract cache from parameters
+        final AccountRecord targetAccount = getCachedAccountRecord(parameters);
+        final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
+        final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
+
+        //Get cacheRecord from cache
+        final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
+                parameters.getClientId(),
+                TextUtils.join(" ", parameters.getScopes()),
+                targetAccount,
+                authScheme
+        );
+        return cacheRecords.get(0);
+    }
+
+    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        //Extract cache from parameters
+        final AccountRecord targetAccount = getCachedAccountRecord(parameters);
+        final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
+        return parameters.getOAuth2TokenCache();
     }
 
     /**
