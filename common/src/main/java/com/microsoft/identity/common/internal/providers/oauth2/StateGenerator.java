@@ -1,14 +1,38 @@
+//  Copyright (c) Microsoft Corporation.
+//  All rights reserved.
+//
+//  This code is licensed under the MIT License.
+//
+//  Permission is hereby granted, free of charge, to any person obtaining a copy
+//  of this software and associated documentation files(the "Software"), to deal
+//  in the Software without restriction, including without limitation the rights
+//  to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+//  copies of the Software, and to permit persons to whom the Software is
+//  furnished to do so, subject to the following conditions :
+//
+//  The above copyright notice and this permission notice shall be included in
+//  all copies or substantial portions of the Software.
+//
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 /**
- * Abstract base class for state generation for authorization requests.
- *
- * In the case of MSAL we will include the task id in the generated state in order to be able to correlate
- * The response to the original request in the command dispatcher.  This class will just deal with generating the state from provided set of parameters
- * It will not encode/decode
+ * Abstract base class for generating state parameter for authorization request.
  */
 public abstract class StateGenerator {
 
+    /**
+     * Generate a non-guessable state parameter for the authorization request.
+     *
+     * See: https://tools.ietf.org/html/rfc6749#section-10.10
+     * @return String state parameter
+     */
     public abstract String generate();
 
 }
