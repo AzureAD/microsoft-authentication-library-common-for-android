@@ -8,6 +8,7 @@ on:
     branches: [ dev ]
     paths-ignore:
     - 'common/versioning/version.properties'
+    - 'common4j/versioning/version.properties'
 
 #For Testing... runs when project is starred
 #on:
