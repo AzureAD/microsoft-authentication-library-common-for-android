@@ -149,12 +149,6 @@ dependencies {
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
 }
 
-//tasks.whenTaskAdded { task ->
-//    if (task.name.contains('assemble')) {
-//        task.dependsOn sourcesJar
-//    }
-//}
-
 afterEvaluate {
     assemble.dependsOn sourcesJar, javadocJar
 }
