@@ -45,8 +45,6 @@ task generateJavadoc(type: Javadoc) {
     source = sourceSets.main.java
     classpath += project.sourceSets.main.compileClasspath
 
-    include '**/*.java'
-
     options.memberLevel = JavadocMemberLevel.PUBLIC
     options.addStringOption('Xdoclint:none', '-quiet')
 
@@ -78,7 +76,7 @@ publishing {
 
             pom {
                 name = 'common4j'
-                description = 'This library contains code shared between the Active Directory ' +
+                description = 'This library contains common java code shared between the Active Directory ' +
                         'Authentication Library (ADAL) for Android and the Microsoft ' +
                         'Authentication Library (MSAL) for Android. This library ' +
                         'includes only internal classes and is NOT part of the ' +
