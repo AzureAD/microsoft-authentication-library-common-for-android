@@ -29,4 +29,5 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Run check style
+      checkstyle_config: config/checkstyle/checkstyle.xml
       uses: nikitasavinov/checkstyle-action@0.3.1
