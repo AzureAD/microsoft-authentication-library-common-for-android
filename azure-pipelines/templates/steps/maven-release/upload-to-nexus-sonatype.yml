@@ -1,4 +1,4 @@
-# File: automation-cert.yml
+# File: upload-to-nexus-sonatype.yml
 
 parameters:
 - name: project

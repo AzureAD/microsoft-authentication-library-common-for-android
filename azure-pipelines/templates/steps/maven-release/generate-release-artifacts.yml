@@ -47,4 +47,4 @@ steps:
   displayName: 'Publish Artifact: Build Outputs'
   inputs:
     ArtifactName: build_outputs
-    TargetPath: '\\my\share\$(Build.DefinitionName)\$(Build.BuildNumber)'
+    TargetPath: $(Build.SourcesDirectory)/common/build/
