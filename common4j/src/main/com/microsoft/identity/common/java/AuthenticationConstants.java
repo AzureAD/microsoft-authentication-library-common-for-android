@@ -26,6 +26,12 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 public class AuthenticationConstants {
+
+    /**
+     * The Constant ENCODING_UTF8.
+     */
+    public static final String ENCODING_UTF8 = "UTF-8";
+
     /**
      * Represents the constants value for Active Directory.
      */

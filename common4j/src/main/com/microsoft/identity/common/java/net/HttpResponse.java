@@ -49,21 +49,21 @@ public class HttpResponse {
      */
     public HttpResponse(final int statusCode, final String responseBody,
                         final Map<String, List<String>> responseHeaders) {
-        this(null, statusCode, responseBody, responseHeaders);
+        this(new Date(), statusCode, responseBody, responseHeaders);
     }
 
     public HttpResponse(final Date date,
                         final int statusCode,
                         final String responseBody,
                         final Map<String, List<String>> headerFields) {
-        mDate = date;
+        mDate = new Date(date.getTime());
         mStatusCode = statusCode;
         mResponseBody = responseBody;
         mResponseHeaders = headerFields;
     }
 
     public Date getDate() {
-        return mDate;
+        return new Date(mDate.getTime());
     }
 
     /**

@@ -33,11 +33,14 @@ import java.net.UnknownServiceException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * This class is deprecated.
  *
  * @see com.microsoft.identity.common.java.net.HttpRequest
  */
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public final class HttpRequest extends com.microsoft.identity.common.java.net.HttpRequest {
 
     /**
@@ -286,13 +289,17 @@ public final class HttpRequest extends com.microsoft.identity.common.java.net.Ht
         Map<String, String> headerMap = requestHeaders;
         if (requestContentType != null) {
             headerMap = new LinkedHashMap<>(headerMap);
-            if (requestContentType != null) {
-                headerMap.put(HttpConstants.HeaderField.CONTENT_TYPE, requestContentType);
-            }
+            headerMap.put(HttpConstants.HeaderField.CONTENT_TYPE, requestContentType);
         }
+
         final com.microsoft.identity.common.java.net.HttpResponse response =
                 com.microsoft.identity.common.java.net.UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, headerMap, requestContent);
-        if (response != null && com.microsoft.identity.common.java.net.UrlConnectionHttpClient.isRetryableError(response.getStatusCode())) {
+
+        if (response == null) {
+            return null;
+        }
+
+        if (com.microsoft.identity.common.java.net.UrlConnectionHttpClient.isRetryableError(response.getStatusCode())) {
             throw new UnknownServiceException("Retry failed again with 500/503/504");
         }
 

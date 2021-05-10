@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
@@ -50,6 +51,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
@@ -95,8 +97,9 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     @Builder.Default
     private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
 
-    private static transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
+    private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
 
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public UrlConnectionHttpClient(@NonNull final UrlConnectionHttpClient client) {
         this(client.retryPolicy,
                 client.connectTimeoutMs,
@@ -235,7 +238,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      */
     private String convertStreamToString(final InputStream inputStream) throws IOException {
         try {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, AuthenticationConstants.ENCODING_UTF8));
             final char[] buffer = new char[streamBufferSize];
             final StringBuilder stringBuilder = new StringBuilder();
             int charsRead;
@@ -331,11 +334,11 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         return urlConnection;
     }
 
-    private Integer getReadTimeoutMs() {
+    private int getReadTimeoutMs() {
         return readTimeoutMsSupplier == null ? readTimeoutMs : readTimeoutMsSupplier.get();
     }
 
-    private Integer getConnectTimeoutMs() {
+    private int getConnectTimeoutMs() {
         return connectTimeoutMsSupplier == null ? connectTimeoutMs : connectTimeoutMsSupplier.get();
     }
 

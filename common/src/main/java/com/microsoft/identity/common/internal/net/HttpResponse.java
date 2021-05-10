@@ -28,11 +28,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Deprecated
  * <p>
  * Currently served as an adapter of {@link com.microsoft.identity.common.java.net.HttpResponse}
  */
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public final class HttpResponse extends com.microsoft.identity.common.java.net.HttpResponse {
     public HttpResponse(@NonNull final com.microsoft.identity.common.java.net.HttpResponse responseToBeAdapted) {
         super(responseToBeAdapted.getDate(),
@@ -44,7 +47,7 @@ public final class HttpResponse extends com.microsoft.identity.common.java.net.H
     public HttpResponse(final int statusCode,
                         final String responseBody,
                         final Map<String, List<String>> responseHeaders) {
-        super(null, statusCode, responseBody, responseHeaders);
+        super(statusCode, responseBody, responseHeaders);
     }
 
     public HttpResponse(final Date date,
