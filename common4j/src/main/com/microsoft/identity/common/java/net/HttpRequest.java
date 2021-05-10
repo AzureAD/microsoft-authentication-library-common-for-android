@@ -47,6 +47,10 @@ public class HttpRequest {
     private final byte[] mRequestContent;
 
     public byte[] getRequestContent() {
+        if (mRequestContent == null) {
+            return null;
+        }
+        
         return Arrays.copyOf(mRequestContent, mRequestMethod.length());
     }
 
