@@ -20,20 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.common.java.util.ported;
 
 /**
- * An exception indicating that a retry policy has intercepted an exception that lies outside
- * the scope of exceptions that it can handle.
+ * A functional interface modeled off of java.util.function.Supplier for providing
+ * values to callers.
+ * @param <T> the type of value provided.
  */
-class RetryFailedException extends RuntimeException {
-    private static final long serialVersionUID = 3344864538063263545L;
-
+public interface Supplier<T> {
     /**
-     * Constructor.
-     * @param e the causing exception.
+     * @return an instance of a T.x
      */
-    public RetryFailedException(Exception e) {
-        super(e);
-    }
+    T get();
 }

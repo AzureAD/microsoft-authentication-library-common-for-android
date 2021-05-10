@@ -20,34 +20,19 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.common.internal.providers.oauth2;
 
-public final class HttpConstants {
-
-    /**
-     * HTTP header fields.
-     */
-    public static final class HeaderField {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc1945#appendix-D.2.1">RFC-1945</a>
-         */
-        public static final String ACCEPT = "Accept";
-
-        /**
-         * @see <a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html">RFC-2616</a>
-         */
-        public static final String CONTENT_TYPE = "Content-Type";
-    }
+/**
+ * Abstract base class for generating state parameter for authorization request.
+ */
+public abstract class StateGenerator {
 
     /**
-     * Identifiers for file formats and format contents.
+     * Generate a non-guessable state parameter for the authorization request.
+     *
+     * See: https://tools.ietf.org/html/rfc6749#section-10.10
+     * @return String state parameter
      */
-    public static final class MediaType {
+    public abstract String generate();
 
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
-         */
-        public static final String APPLICATION_JSON = "application/json";
-    }
 }

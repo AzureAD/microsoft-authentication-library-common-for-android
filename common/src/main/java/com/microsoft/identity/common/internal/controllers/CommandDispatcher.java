@@ -52,9 +52,9 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
@@ -103,6 +103,7 @@ public class CommandDispatcher {
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
                     ClientException.INTERRUPTED_OPERATION,
+                    ClientException.INVALID_BROKER_BUNDLE,
                     ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
@@ -250,11 +251,13 @@ public class CommandDispatcher {
                         }
 
                         //Check cache to see if the same command completed in the last 30 seconds
-                        commandResult = sCommandResultCache.get(command);
+                        // Disabling throttling ADO:1383033
+                        // commandResult = sCommandResultCache.get(command);
                         //If nothing in cache, execute the command and cache the result
                         if (commandResult == null) {
                             commandResult = executeCommand(command);
-                            cacheCommandResult(command, commandResult);
+                            // Disabling throttling ADO:1383033
+                            // cacheCommandResult(command, commandResult);
                             Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
                                     + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                     + " is cacheable : " + command.isEligibleForCaching());
@@ -493,6 +496,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
+    @SuppressWarnings("unused")
     private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
                                            CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
