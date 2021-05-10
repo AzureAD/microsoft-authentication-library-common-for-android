@@ -27,10 +27,13 @@ import android.util.Base64;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.aad.adal.IBrokerAccountService;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.PkceChallenge;
+import com.microsoft.identity.common.internal.providers.oauth2.DefaultStateGenerator;
+import com.microsoft.identity.common.internal.providers.oauth2.StateGenerator;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -125,7 +128,12 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mPkceChallenge = PkceChallenge.newPkceChallenge();
         mCodeChallengeMethod = mPkceChallenge.getCodeChallengeMethod();
         mCodeChallenge = mPkceChallenge.getCodeChallenge();
-        mState = generateEncodedState();
+
+        if(builder.mStateGenerator != null){
+            mState = encodeState(builder.mStateGenerator.generate());
+        }else{
+            mState = encodeState(new DefaultStateGenerator().generate());
+        }
 
         if (builder.mSlice != null) {
             mSlice = builder.mSlice;
@@ -182,6 +190,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         private Boolean mMultipleCloudAware;
 
+        private StateGenerator mStateGenerator;
+
         public Builder() {
         }
 
@@ -217,6 +227,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
         public B setMultipleCloudAware(boolean multipleCloudAware) {
             mMultipleCloudAware = multipleCloudAware;
+            return self();
+        }
+
+        public B setStateGenerator(StateGenerator stateGenerator){
+            mStateGenerator = stateGenerator;
             return self();
         }
 
@@ -266,10 +281,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
 
     public String getCodeChallengeMethod() { return mCodeChallengeMethod;}
 
-    public static String generateEncodedState() {
-        final UUID stateUUID1 = UUID.randomUUID();
-        final UUID stateUUID2 = UUID.randomUUID();
-        final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
+    public static String encodeState(String state) {
 
         String encodedState;
 
