@@ -13,6 +13,10 @@ V.Next
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
 - [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
 
+Version 3.4.3
+----------
+- [PATCH] Revert connection detection change, disable throttling cache (#1351, #1353)
+
 Version 3.4.2
 ----------
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
