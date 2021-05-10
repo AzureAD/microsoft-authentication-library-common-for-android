@@ -1,108 +1,34 @@
-# 'Allow scripts to access the OAuth token' was selected in pipeline.  Add the following YAML to any steps requiring access:
-#       env:
-#           MY_ACCESS_TOKEN: $(System.AccessToken)
-# Variable 'android:serverUrl' was defined in the Variables tab
-# Variable 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
-# Variable 'test_repo_branch' was defined in the Variables tab
-# Variable 'test_repo_dir' was defined in the Variables tab
-# Variable Group 'Android Common Variables' was defined in the Variables tab
-# Cron Schedules have been converted using UTC Time Zone and may need to be updated for your location
+# File: azure-pipelines\nightly-snapshot-releases\Nightly Common VSTS Release.yml
+# Description: Assemble & publish Snapshot common release nightly to internal feed
+# https://identitydivision.visualstudio.com/Engineering/_packaging?_a=feed&feed=AndroidADAL
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+pr: none
+
 resources:
-  pipelines:
-  - pipeline: Nightly ADAL VSTS Release
-    source: Nightly ADAL VSTS Release
-    trigger:
-      branches:
-        include:
-        - dev
+# TODO uncomment once we have a valid artifact in the pipeline
+#  pipelines:
+#  - pipeline: Android\Nightly Snapshot Releases\Nightly ADAL VSTS Release
+#    project: Engineering
+#    source: Nightly ADAL VSTS Release
+#    trigger:
+#      branches:
+#        include:
+#        - dev
   repositories:
   - repository: self
     type: git
     ref: dev
+
 schedules:
 - cron: 0 21 * * *
   branches:
     include:
     - dev
   always: true
-name: $(date:yyyyMMdd)$(rev:.r)
+
 jobs:
-- job: Phase_1
-  displayName: Phase 1
-  timeoutInMinutes: 90
-  cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted VS2017
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: adal
-  - task: CmdLine@1
-    displayName: Set MVN Access Token in Environment
-    inputs:
-      filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(mvn_access_token)'
-  - task: TSAUpload@1
-    displayName: TSA Upload
-    enabled: False
-    inputs:
-      tsaVersion: TsaV2
-      codebase: NewOrUpdate
-      tsaStamp: Azure
-      codeBaseName: ADALAndroid
-      notificationAlias: androididentity@microsoft.com
-      codeBaseAdmins: REDMOND\androididentity
-      instanceUrlAzure: IDENTITYDIVISION
-      instanceUrlForTsaV2: IDENTITYDIVISION
-      projectNameIDENTITYDIVISION: IDDP
-      areaPath: IDDP\DevEx-Client-SDK\Android
-      iterationPath: IDDP\FY19\Q1
-      uploadAPIScan: false
-      uploadBinSkim: false
-      uploadFortifySCA: false
-      uploadFxCop: false
-      uploadModernCop: false
-      uploadPREfast: false
-      uploadRoslyn: false
-      uploadTSLint: false
-  - task: Gradle@2
-    displayName: Snapshot version update
-    inputs:
-      tasks: common:versionSnapshot
-      publishJUnitResults: false
-  - task: Gradle@1
-    name: Gradle1
-    displayName: Assemble Release
-    inputs:
-      tasks: 'clean common:build common:assembleRelease '
-      publishJUnitResults: false
-      jdkArchitecture: x86
-      sqAnalysisBreakBuildIfQualityGateFailed: false
-  - task: Gradle@2
-    displayName: Run unit tests
-    inputs:
-      tasks: testDebugUnitTest
-  - task: Gradle@2
-    displayName: Publish
-    inputs:
-      tasks: common:publish
-      publishJUnitResults: false
-  - task: CopyFiles@2
-    name: CopyFiles1
-    displayName: Copy Files to Artifact Staging Directory
-    inputs:
-      SourceFolder: common\build\
-      TargetFolder: $(build.artifactstagingdirectory)
-  - task: PublishPipelineArtifact@1
-    name: PublishPipelineArtifacts1
-    displayName: 'Publish Artifact: Common Release'
-    inputs:
-      ArtifactName: CommonRelease
-      TargetPath: '\\my\share\$(Build.DefinitionName)\$(Build.BuildNumber)'
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
-...
+- template: ../templates/steps/nightly-snapshot-releases/common.yml
+  parameters:
+    versionType: Snapshot

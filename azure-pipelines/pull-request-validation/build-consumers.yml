@@ -1,0 +1,196 @@
+# File: azure-pipelines\pull-request-validation\build-consumers.yml
+# Description: Test new common in ADAL / MSAL / Broker (assembleLocal and testLocalDebugUnitTest)
+# Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
+# Variable: 'mvnAccessToken' was defined in the Variables tab
+# https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+# Variable: 'commonBranchName' common branch to be used when running the pipeline manually
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+variables:
+- name: robolectricSdkVersion
+  value: 28
+
+resources:
+  repositories:
+  - repository: msal
+    type: github
+    name: AzureAD/microsoft-authentication-library-for-android
+    ref: dev
+    endpoint: ANDROID_GITHUB
+  - repository: broker
+    type: github
+    name: AzureAD/ad-accounts-for-android
+    ref: dev
+    endpoint: ANDROID_GITHUB
+  - repository: adal
+    type: github
+    name: AzureAD/azure-activedirectory-library-for-android
+    ref: dev
+    endpoint: ANDROID_GITHUB
+
+stages:
+- stage: validateConsumers
+  displayName: Validate Consumer
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  jobs:
+  # setup
+  - job: setupBranch
+    displayName: Setup branch
+    steps:
+    - checkout: none
+    - task: PowerShell@2
+      name: setvarStep
+      displayName: Set var branch
+      inputs:
+        targetType: inline
+        script: |
+          $branch = switch ( '$(Build.Reason)' )
+          {
+              PullRequest
+              {
+                '$(System.PullRequest.SourceBranch)'
+              }
+              Manual
+              {
+                '$(commonBranchName)'
+              }
+              default
+              {
+                ''
+              }
+          }
+          Write-Output "$branch"
+          echo "##vso[task.setvariable variable=commonBranch;isOutput=true]$branch"
+    - powershell: |
+        if ("$(setvarStep.commonBranch)" -eq "") {
+          Write-Output "commonBranchName is not set using default common"
+        }
+        else{
+          Write-Output "Using common branch $(setvarStep.commonBranch) in consumers"
+        }
+      name: echovar
+      displayName: Echo branch name
+  # msal
+  - job: msalValidation
+    displayName: MSAL
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    steps:
+    - template: ../templates/steps/automation-cert.yml
+    - checkout: msal
+      displayName: Checkout msal repository
+      clean: true
+      submodules: recursive
+      persistCredentials: True
+    - task: CmdLine@2
+      displayName: Checkout common submodule $(commonBranch)
+      inputs:
+        script: |
+          git fetch
+          git checkout $(commonBranch)
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/common
+    - task: Gradle@2
+      displayName: Assemble msal
+      inputs:
+        tasks: clean msal:assembleLocal
+    - task: Gradle@2
+      displayName: Run msal Unit tests
+      inputs:
+        tasks: msal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  # broker
+  - job: brokerValidation
+    displayName: Broker
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    steps:
+    - template: ../templates/steps/automation-cert.yml
+    - checkout: broker
+      displayName: Checkout broker repository
+      clean: true
+      submodules: recursive
+      persistCredentials: True
+    - task: CmdLine@2
+      displayName: Checkout common submodule $(commonBranch)
+      inputs:
+        script: |
+          git fetch
+          git checkout $(commonBranch)
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/common
+    - task: PowerShell@2
+      displayName: Install Flatbuffers Compiler
+      enabled: False
+      inputs:
+        targetType: inline
+        script: >-
+          Write-Output "Downloading flatbuffers"
+
+          $downloadLink = "https://github.com/google/flatbuffers/releases/download/v1.12.0/flatc_windows.zip"
+
+          Write-Output "Using download link: $downloadLink"
+
+          $dest = "$env:Temp\FlatBufferInstaller.zip"
+
+          (New-Object Net.WebClient).DownloadFile($downloadLink, $dest)
+
+          Write-Output "Extracting flatbuffers archive on machine...."
+
+          Expand-Archive -Path $dest -DestinationPath .\flatc-extracted
+
+          Write-Output "Finished extracting flatbuffers archive on machine...."
+
+          Write-Output "Run flatc"
+
+          .\flatc-extracted\flatc
+
+          echo '##vso[task.setvariable variable=path]$(PATH):$(CWD)\flatc-extracted\'
+
+          flatc
+    - task: Gradle@2
+      displayName: Assemble broker
+      inputs:
+        tasks: clean AADAuthenticator:assembleLocal
+    - task: Gradle@2
+      displayName: Run broker Unit tests
+      inputs:
+        tasks: AADAuthenticator:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  # adal
+  - job: adalValidation
+    displayName: ADAL
+    dependsOn: setupBranch
+    variables:
+      commonBranch: $[ dependencies.setupBranch.outputs['setvarStep.commonBranch'] ]  # map in the variable
+    steps:
+    - checkout: adal
+      displayName: Checkout adal repository
+      clean: true
+      submodules: recursive
+      persistCredentials: True
+    - task: CmdLine@2
+      displayName: Checkout common submodule $(commonBranch)
+      inputs:
+        script: |
+          git fetch
+          git checkout $(commonBranch)
+          git pull
+          git status
+          git rev-parse HEAD
+        workingDirectory: $(Agent.BuildDirectory)/s/common
+    - task: Gradle@2
+      displayName: Assemble adal
+      inputs:
+        tasks: clean adal:assembleLocal
+    - task: Gradle@2
+      displayName: Run adal Unit tests
+      inputs:
+        tasks: adal:testLocalDebugUnitTest -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}

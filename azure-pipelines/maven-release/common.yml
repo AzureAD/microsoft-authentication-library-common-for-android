@@ -1,17 +1,18 @@
-# 'Allow scripts to access the OAuth token' was selected in pipeline.  Add the following YAML to any steps requiring access:
-#       env:
-#           MY_ACCESS_TOKEN: $(System.AccessToken)
-# Variable 'android:serverUrl' was defined in the Variables tab
-# Variable 'commonVersion' was defined in the Variables tab
-# Variable 'test_repo_branch' was defined in the Variables tab
-# Variable 'test_repo_dir' was defined in the Variables tab
+# File: azure-pipelines\maven-release\common.yml
+# Description: Publish common to maven central (sonatype)
+# https://search.maven.org/search?q=g:com.microsoft.identity%20AND%20a:common
+# Variable: 'commonVersion' was defined in the Variables tab
 name: $(date:yyyyMMdd)$(rev:.r)
+
 trigger: none
+pr: none
+
 resources:
   repositories:
   - repository: self
     type: git
     ref: master
+
 jobs:
 - job: Phase_1
   displayName: SDL and Maven Build
