@@ -27,6 +27,7 @@ import android.util.Base64;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.aad.adal.IBrokerAccountService;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
@@ -128,7 +129,11 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mCodeChallengeMethod = mPkceChallenge.getCodeChallengeMethod();
         mCodeChallenge = mPkceChallenge.getCodeChallenge();
 
-        mState = encodeState(builder.mStateGenerator.generate());
+        if(builder.mStateGenerator != null){
+            mState = encodeState(builder.mStateGenerator.generate());
+        }else{
+            mState = encodeState(new DefaultStateGenerator().generate());
+        }
 
         if (builder.mSlice != null) {
             mSlice = builder.mSlice;

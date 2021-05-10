@@ -42,7 +42,7 @@ public class AndroidTaskStateGenerator extends DefaultStateGenerator {
     @Getter
     private int taskId;
 
-    public AndroidTaskStateGenerator(@NonNull final int taskId) {
+    public AndroidTaskStateGenerator(final int taskId) {
         this.taskId = taskId;
     }
 
