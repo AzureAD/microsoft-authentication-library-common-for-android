@@ -91,7 +91,7 @@ public class AppData {
     }
 
     /**
-     * Given a broker package name, verify its signature and return a AppData object.
+     * Given a broker package name, verify its signature and return an AppData object.
      *
      * @throws ClientException an exception containing mismatch signature hashes as its error message.
      */
