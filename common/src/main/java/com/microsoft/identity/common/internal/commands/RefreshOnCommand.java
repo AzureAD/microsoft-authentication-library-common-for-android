@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -29,21 +31,22 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.result.EmptyResult;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.internal.result.VoidResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 
-public class RefreshOnCommand extends BaseCommand<EmptyResult>{
+public class RefreshOnCommand extends BaseCommand<VoidResult>{
 
     private static final String TAG = RefreshOnCommand.class.getSimpleName();
 
     public RefreshOnCommand(@NonNull CommandParameters parameters, @NonNull BaseController controller, @NonNull String publicApiId) {
-        super(parameters, controller, new VoidCallback(), publicApiId);
+        super(parameters, controller, new RefreshOnCallback(), publicApiId);
     }
 
     @Override
-    public EmptyResult execute() throws IOException, ClientException, ServiceException {
+    public VoidResult execute() throws IOException, ClientException, ServiceException {
         final String methodName = ":execute";
 
         final BaseController controller = getDefaultController();
@@ -53,9 +56,13 @@ public class RefreshOnCommand extends BaseCommand<EmptyResult>{
                         + controller.getClass().getSimpleName()
         );
         final SilentTokenCommandParameters commandParameters = (SilentTokenCommandParameters) getParameters();
-        controller.renewAccessToken(commandParameters);
+        final TokenResult result = controller.renewAccessToken(commandParameters);
 
-        return new EmptyResult();
+        if(!result.getSuccess()) {
+            Log.e(TAG, result.getErrorResponse().getError());
+        }
+
+        return new VoidResult();
     }
 
     @Override

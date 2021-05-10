@@ -406,7 +406,7 @@ public abstract class BaseController {
         2) All arguments derived from SilentTokenCommandParameters
         3) New logic replacing old Access Token
      */
-    public void renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
+    public TokenResult renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
             throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
         Logger.info(
@@ -493,6 +493,8 @@ public abstract class BaseController {
                 Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
             }
         }
+
+        return tokenResult;
     }
 
     public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
@@ -519,10 +521,8 @@ public abstract class BaseController {
         return cacheRecords.get(0);
     }
 
-    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters){
         //Extract cache from parameters
-        final AccountRecord targetAccount = getCachedAccountRecord(parameters);
-        final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
         return parameters.getOAuth2TokenCache();
     }
 

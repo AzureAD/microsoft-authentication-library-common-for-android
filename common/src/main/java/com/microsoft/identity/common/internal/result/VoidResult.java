@@ -25,5 +25,5 @@ package com.microsoft.identity.common.internal.result;
 /*
     Null Object Pattern for Commands who's result should be ignored.
  */
-public class EmptyResult {
+public class VoidResult {
 }

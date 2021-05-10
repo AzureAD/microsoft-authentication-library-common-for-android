@@ -22,32 +22,34 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import com.microsoft.identity.common.internal.result.EmptyResult;
+import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.logging.Logger;
 
 /*
     Null Object Pattern for Commands who's result should be ignored.
  */
-public class VoidCallback implements CommandCallback<EmptyResult, Exception>{
+public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, BaseException> {
 
-    private static final String TAG = VoidCallback.class.getSimpleName();
+    private static final String TAG = RefreshOnCallback.class.getSimpleName();
 
     @Override
     public void onCancel() {}
 
     @Override
-    public void onTaskCompleted(EmptyResult emptyResult) {
+    public void onTaskCompleted(AcquireTokenResult result) {
         Logger.verbose(
                 TAG + ":onError",
-                "Task completed. "
+                "Task completed. " + result.getSucceeded() + ". CorrelationId: " + result.getLocalAuthenticationResult().getCorrelationId()
         );
     }
 
     @Override
-    public void onError(Exception error) {
+    public void onError(BaseException error) {
         Logger.verbose(
                 TAG + ":onError",
                 error.getMessage()
         );
     }
+
 }

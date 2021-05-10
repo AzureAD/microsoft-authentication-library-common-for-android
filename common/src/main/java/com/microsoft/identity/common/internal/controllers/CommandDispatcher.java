@@ -47,8 +47,6 @@ import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequired
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
-import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
-import com.microsoft.identity.common.internal.commands.SilentTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
@@ -59,9 +57,7 @@ import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.EmptyResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
-import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.BiConsumer;
@@ -78,7 +74,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
@@ -307,11 +302,11 @@ public class CommandDispatcher {
     }
 
     public static void submitAndForget(@NonNull final BaseCommand command){
-        submitReturningFuture(command);
+        submitAndForgetReturningFuture(command);
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public static FinalizableResultFuture<CommandResult> submitReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
+    public static FinalizableResultFuture<CommandResult> submitAndForgetReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
         final String methodName = ":submit";
 
         final CommandParameters commandParameters = command.getParameters();

@@ -48,6 +48,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
@@ -826,18 +827,19 @@ public class CommandDispatcherTest {
                 controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
                 final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
-                CommandDispatcher.submitReturningFuture(refreshOnCommand);
+                CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
                 return expectedAcquireTokenResult;
             }
 
             @Override
-            public void renewAccessToken(@NonNull SilentTokenCommandParameters parameters) throws ServiceException, ClientException, IOException {
+            public TokenResult renewAccessToken(@NonNull SilentTokenCommandParameters parameters) throws ServiceException {
                 if(!throwRenewAccessTokenError) {
                     controllerLatch.countDown();
                     renewAccessTokenCallCount.getAndIncrement();
                 }else{
                     throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", 503, null);
                 }
+                return new TokenResult();
             }
         };
     }
