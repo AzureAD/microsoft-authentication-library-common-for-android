@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import android.content.Context;
+import android.os.Build;
 
 import androidx.test.InstrumentationRegistry;
 
@@ -32,6 +33,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.security.SecureRandom;
+import java.security.Security;
+import java.util.Arrays;
 
 public class KeyStoreAccessorTests {
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -83,20 +86,42 @@ public class KeyStoreAccessorTests {
         byte[] around = accessor.decrypt(out);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testBasicFunctionalityUnsupportedSign() throws Exception {
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
-        byte[] in = new byte[1024];
-        RANDOM.nextBytes(in);
-        byte[] out = accessor.sign(in);
+        boolean exception = false;
+        try {
+            KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            byte[] in = new byte[1024];
+            RANDOM.nextBytes(in);
+            byte[] out = accessor.sign(in);
+        } catch (UnsupportedOperationException e) {
+            exception = true;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                throw e;
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !exception) {
+            throw new AssertionError("Expected the sign operation to be unsupported in this API level: " + Build.VERSION.SDK_INT);
+        }
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testBasicFunctionalityUnsupportedVerify() throws Exception {
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
-        byte[] in = new byte[1024];
-        RANDOM.nextBytes(in);
-        accessor.verify(in, in);
+        boolean exception = false;
+        try {
+            KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            byte[] in = new byte[1024];
+            RANDOM.nextBytes(in);
+            accessor.verify(in, in);
+        } catch (UnsupportedOperationException e) {
+            exception = true;
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                throw e;
+            }
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !exception) {
+            throw new AssertionError("Expected the verify operation to be unsupported in this API level: " + Build.VERSION.SDK_INT);
+        }
     }
     @Test
     public void testBasicFunctionalitySignAndVerifySupportedIfRaw() throws Exception {
