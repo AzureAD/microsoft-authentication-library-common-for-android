@@ -11,6 +11,7 @@ V.Next
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 - [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
+- [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
 
 Version 3.4.2
 ----------
