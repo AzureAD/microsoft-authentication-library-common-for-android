@@ -99,12 +99,28 @@ android {
 
     }
 
+    flavorDimensions "main"
+
+    productFlavors {
+        // The 'local' productFlavor sources common4j from mavenLocal and is intended to be used
+        // during development.
+        local {
+            dimension "main"
+        }
+
+        // The 'dist' productFlavor sources common from a central repository and is intended
+        // to be used for releases.
+        dist {
+            dimension "main"
+        }
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
 
             // Also load source from common-java
-            java.srcDirs = ['src/main/java', '../common4j/src/main']
+            java.srcDirs = ['src/main/java']
             res.srcDirs = ['src/main/res']
         }
     }
@@ -127,6 +143,14 @@ dependencies {
 
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
+
+    localApi(project(":common4j")) {
+        transitive = false
+    }
+
+    distApi("com.microsoft.identity:common4j:0.0.5") {
+        transitive = false
+    }
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
@@ -284,8 +308,8 @@ afterEvaluate {
 
     publishing {
         publications {
-            release(MavenPublication) {
-                from components.release
+            distRelease(MavenPublication) {
+                from components.distRelease
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
@@ -320,8 +344,8 @@ afterEvaluate {
                     ]
                 }
             }
-            debug(MavenPublication) {
-                from components.debug
+            distDebug(MavenPublication) {
+                from components.distDebug
                 groupId 'com.microsoft.identity'
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build

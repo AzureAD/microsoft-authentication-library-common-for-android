@@ -8,11 +8,12 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.0.1'
+    id 'com.microsoft.identity.buildsystem' version '0.1.0'
     id 'maven-publish'
 }
 
 def desugarCode = false
+
 if(project.hasProperty("sugar")){
     desugarCode = sugar.toBoolean()
 }
@@ -135,7 +136,7 @@ sourceSets {
 }
 
 dependencies {
-    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.2.3'
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
 
     implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:2.8.5"
@@ -148,6 +149,9 @@ dependencies {
     testCompileOnly "org.projectlombok:lombok:1.18.12"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
 }
+
+sourceCompatibility = "1.7"
+targetCompatibility = "1.7"
 
 afterEvaluate {
     assemble.dependsOn sourcesJar, javadocJar
