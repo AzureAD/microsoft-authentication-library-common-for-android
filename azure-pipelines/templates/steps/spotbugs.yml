@@ -1,4 +1,4 @@
-# File: azure-pipelines\templates\steps\spot-bugs.yml
+# File: azure-pipelines\templates\steps\spotbugs.yml
 # Description: Tasks to run Spotbugs (Assemble task must run first)
 # https://github.com/AzureAD/android-complete/blob/master/plugins/buildsystem/docs/Spotbugs.md
 
