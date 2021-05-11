@@ -44,7 +44,6 @@ import static com.microsoft.identity.common.java.net.UrlConnectionHttpClient.DEF
  * <p>
  * Currently served as an adapter of {@link com.microsoft.identity.common.java.net.UrlConnectionHttpClient}
  */
-@edu.umd.cs.findbugs.annotations.SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     /**

@@ -35,7 +35,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * <p>
  * Currently served as an adapter of {@link com.microsoft.identity.common.java.net.HttpResponse}
  */
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
+@SuppressFBWarnings(value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS",
+        justification = "This class kept its original name to avoid breaking change during the refactoring process." +
+                "Once the process is done, this class will be removed entirely. ")
 public final class HttpResponse extends com.microsoft.identity.common.java.net.HttpResponse {
     public HttpResponse(@NonNull final com.microsoft.identity.common.java.net.HttpResponse responseToBeAdapted) {
         super(responseToBeAdapted.getDate(),
