@@ -38,6 +38,10 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
+  - template: ../templates/steps/spot-bugs.yml
+    parameters:
+      project: common
+      spotbugsCommand: spotbugsDebug
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:

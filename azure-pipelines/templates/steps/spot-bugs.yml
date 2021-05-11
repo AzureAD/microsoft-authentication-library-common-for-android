@@ -1,0 +1,26 @@
+# File: azure-pipelines\templates\steps\spot-bugs.yml
+# Description: Tasks to run Spotbugs (Assemble task must run first)
+# https://github.com/AzureAD/android-complete/blob/master/plugins/buildsystem/docs/Spotbugs.md
+
+parameters:
+- name: project
+- name: spotbugsCommand
+  default: spotbugsLocalDebug
+  values:
+  - spotbugsLocalDebug
+  - spotbugsDebug
+- name: artifactName
+  default: CodeAnalisysLogs
+
+steps:
+- task: Gradle@2
+  displayName: 'Run Spotbugs'
+  inputs:
+    tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
+    publishJUnitResults: false
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Artifact: SpotBugs'
+  inputs:
+    targetPath: '$(Build.SourcesDirectory)\${{ parameters.project }}\build\reports\'
+    ArtifactName: ${{ parameters.artifactName }}
+  condition: failed()
