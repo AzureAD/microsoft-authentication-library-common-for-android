@@ -20,39 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
-
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-
-import java.util.HashMap;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import lombok.NonNull;
 
-public class InMemoryStorage implements IKeyPairStorage<String> {
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
-    final HashMap<String, String> mMap = new HashMap<>();
+public class TelemetryUtils {
 
-    public int size(){
-        return mMap.size();
+    static boolean getBooleanFromSchemaString(final String val) {
+        return val.equals(SchemaConstants.Value.TRUE);
     }
 
-    @Override
-    public String get(final String key) {
-        return mMap.get(key);
+    static String getSchemaCompliantStringFromBoolean(final boolean val) {
+        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
     }
 
-    @Override
-    public void put(final String key, final String value) {
-        mMap.put(key, value);
-    }
-
-    @Override
-    public void remove(@NonNull String key) {
-        mMap.remove(key);
-    }
-
-    @Override
-    public void clear() {
-        mMap.clear();
+    @NonNull
+    static String getSchemaCompliantString(final String s) {
+        if (StringUtil.isNullOrEmpty(s)) {
+            return SchemaConstants.Value.EMPTY;
+        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
+            return SchemaConstants.Value.TRUE;
+        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
+            return SchemaConstants.Value.FALSE;
+        } else {
+            return s;
+        }
     }
 }

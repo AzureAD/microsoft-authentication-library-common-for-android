@@ -22,8 +22,39 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+
+import lombok.NonNull;
+
 public class StringUtil {
+    /**
+     * The constant ENCODING_UTF8.
+     */
+    public static final String ENCODING_UTF8 = "UTF-8";
+
+    /**
+     * checks if string is null or empty.
+     *
+     * @param message String to check for null or blank.
+     * @return true, if the string is null or blank.
+     */
     public static boolean isNullOrEmpty(String message) {
         return message == null || message.trim().length() == 0;
+    }
+
+    /**
+     * Perform URL decode on the given source.
+     *
+     * @param source The String to decode for.
+     * @return The decoded string.
+     * @throws UnsupportedEncodingException If encoding is not supported.
+     */
+    public static String urlFormDecode(final String source) throws UnsupportedEncodingException {
+        if (isNullOrEmpty(source)) {
+            return "";
+        }
+
+        return URLDecoder.decode(source, ENCODING_UTF8);
     }
 }

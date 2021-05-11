@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.mocks;
 
-import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.util.ObjectMapper;

@@ -27,13 +27,13 @@ import lombok.NonNull;
 /**
  * An interface for a KeyPair storage.
  * */
-public interface IKeyPairStorage {
+public interface IKeyPairStorage<T> {
     /**
      * Gets a value from the storage.
      *
      * @param key A key associated to the value.
      */
-    String get(@NonNull String key);
+    T get(@NonNull String key);
 
     /**
      * Puts a value into the storage.
@@ -41,5 +41,17 @@ public interface IKeyPairStorage {
      * @param key A key associated to the value.
      * @param value value to be persisted.
      */
-    void put(@NonNull String key, String value);
+    void put(@NonNull String key, T value);
+
+    /**
+     * Removes a value from the storage.
+     *
+     * @param key A key associated to the value.
+     */
+    void remove(@NonNull String key);
+
+    /**
+     * Clear all data from the storage.
+     */
+    void clear();
 }

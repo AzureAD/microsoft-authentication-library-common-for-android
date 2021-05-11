@@ -20,34 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class TelemetryUtils {
+import lombok.NonNull;
 
-    static boolean getBooleanFromSchemaString(final String val) {
-        return val.equals(SchemaConstants.Value.TRUE);
+public class SentFailedRequestsMap implements IKeyPairStorage<Set<FailedRequest>> {
+    final ConcurrentHashMap<String, Set<FailedRequest>> sendFailedRequestsMap = new ConcurrentHashMap<>();
+
+    @Override
+    public Set<FailedRequest> get(@NonNull String key) {
+        return sendFailedRequestsMap.get(key);
     }
 
-    static String getSchemaCompliantStringFromBoolean(final boolean val) {
-        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
+    @Override
+    public void put(@NonNull String key, Set<FailedRequest> value) {
+        sendFailedRequestsMap.put(key, value);
     }
 
-    @NonNull
-    static String getSchemaCompliantString(final String s) {
-        if (StringUtil.isEmpty(s)) {
-            return SchemaConstants.Value.EMPTY;
-        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
-            return SchemaConstants.Value.TRUE;
-        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
-            return SchemaConstants.Value.FALSE;
-        } else {
-            return s;
-        }
+    @Override
+    public void remove(@NonNull String key) {
+        sendFailedRequestsMap.remove(key);
     }
 
+    @Override
+    public void clear() {
+        sendFailedRequestsMap.clear();
+    }
 }

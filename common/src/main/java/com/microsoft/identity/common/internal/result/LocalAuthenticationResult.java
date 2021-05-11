@@ -46,8 +46,8 @@ import java.util.concurrent.TimeUnit;
 public class LocalAuthenticationResult implements ILocalAuthenticationResult {
 
     private String mRawIdToken;
-    private AccessTokenRecord mAccessTokenRecord;
-    private IAccountRecord mAccountRecord;
+    private final AccessTokenRecord mAccessTokenRecord;
+    private final IAccountRecord mAccountRecord;
     private String mRefreshToken;
     private String mFamilyId;
     private String mSpeRing;

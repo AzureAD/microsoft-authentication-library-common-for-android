@@ -20,39 +20,43 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+class FailedRequest {
 
-import java.util.HashMap;
+    private final String mApiId;
+    private final String mCorrelationId;
+    private final String mError;
 
-import lombok.NonNull;
+    public FailedRequest(String mApiId, String mCorrelationId, String error) {
+        this.mApiId = mApiId;
+        this.mCorrelationId = mCorrelationId;
+        this.mError = error;
+    }
 
-public class InMemoryStorage implements IKeyPairStorage<String> {
+    public String toApiIdCorrelationString() {
+        return mApiId + ',' + mCorrelationId;
+    }
 
-    final HashMap<String, String> mMap = new HashMap<>();
-
-    public int size(){
-        return mMap.size();
+    public String toErrorCodeString() {
+        return mError;
     }
 
     @Override
-    public String get(final String key) {
-        return mMap.get(key);
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        FailedRequest that = (FailedRequest) o;
+        return mCorrelationId.equals(that.mCorrelationId);
     }
 
     @Override
-    public void put(final String key, final String value) {
-        mMap.put(key, value);
-    }
-
-    @Override
-    public void remove(@NonNull String key) {
-        mMap.remove(key);
-    }
-
-    @Override
-    public void clear() {
-        mMap.clear();
+    public int hashCode() {
+        return mCorrelationId.hashCode();
     }
 }

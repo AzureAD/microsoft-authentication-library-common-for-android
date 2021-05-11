@@ -20,45 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry;
+package com.microsoft.identity.common.java.result;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-import com.microsoft.identity.common.java.util.StringUtil;
-import lombok.NonNull;
+public class AcquireTokenResult {
 
-import java.util.UUID;
+    private ILocalAuthenticationResult mLocalAuthenticationResult;
 
-/**
- * Tracks properties used in telemetry.
- */
-public class TelemetryPropertiesCache {
+    private Boolean mSucceeded = false;
 
-    // region Cached Properties
-    /**
-     * The randomly generated identifier for this device.
-     */
-    private static final String DEVICE_ID_GUID = "device_id_guid";
-    // endregion
-
-    private final IKeyPairStorage<String> mStorage;
-
-    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage<String> storage) {
-        mStorage = storage;
+    public void setLocalAuthenticationResult(ILocalAuthenticationResult result) {
+        this.mLocalAuthenticationResult = result;
+        this.mSucceeded = true;
     }
 
-    /**
-     * Gets or creates the stable device id for this installation.
-     *
-     * @return The String ID used to refer to this device.
-     */
-    synchronized String getOrCreateRandomStableDeviceId() {
-        String deviceId = mStorage.get(DEVICE_ID_GUID);
-
-        if (StringUtil.isNullOrEmpty(deviceId)) {
-            deviceId = UUID.randomUUID().toString();
-            mStorage.put(DEVICE_ID_GUID, deviceId);
-        }
-
-        return deviceId;
+    public ILocalAuthenticationResult getLocalAuthenticationResult() {
+        return this.mLocalAuthenticationResult;
     }
+
+    public Boolean getSucceeded() {
+        return mSucceeded;
+    }
+
 }

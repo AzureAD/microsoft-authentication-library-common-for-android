@@ -20,39 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-
-import java.util.HashMap;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import lombok.NonNull;
 
-public class InMemoryStorage implements IKeyPairStorage<String> {
+public interface ICurrentTelemetry {
 
-    final HashMap<String, String> mMap = new HashMap<>();
-
-    public int size(){
-        return mMap.size();
-    }
-
-    @Override
-    public String get(final String key) {
-        return mMap.get(key);
-    }
-
-    @Override
-    public void put(final String key, final String value) {
-        mMap.put(key, value);
-    }
-
-    @Override
-    public void remove(@NonNull String key) {
-        mMap.remove(key);
-    }
-
-    @Override
-    public void clear() {
-        mMap.clear();
-    }
+    /**
+     * Capture telemetry for current request
+     *
+     * @param key   The key supplied for telemetry
+     * @param value The value for the supplied key
+     */
+    void put(@NonNull final String key, @NonNull final String value);
 }

@@ -20,29 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 
-import java.util.HashMap;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import lombok.NonNull;
 
-public class InMemoryStorage implements IKeyPairStorage<String> {
+class InMemorySentFailedRequestsMap implements IKeyPairStorage<Set<FailedRequest>> {
 
-    final HashMap<String, String> mMap = new HashMap<>();
-
-    public int size(){
-        return mMap.size();
-    }
+    final ConcurrentMap<String, Set<FailedRequest>> mMap = new ConcurrentHashMap<>();
 
     @Override
-    public String get(final String key) {
+    public Set<FailedRequest> get(final String key) {
         return mMap.get(key);
     }
 
     @Override
-    public void put(final String key, final String value) {
+    public void put(final String key, final Set<FailedRequest> value) {
         mMap.put(key, value);
     }
 
