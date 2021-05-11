@@ -40,6 +40,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  *
  * @see com.microsoft.identity.common.java.net.HttpRequest
  */
+
+// This SpotBugs warnining occurs when a child class and the super class has the same name, but belongs in a different packages.
+// This is by design (to avoid breaking change - and I don't want to name the class in java with "Java" suffix either).
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public final class HttpRequest extends com.microsoft.identity.common.java.net.HttpRequest {
 
