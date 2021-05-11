@@ -35,6 +35,8 @@ sourceSets {
 }
 
 dependencies {
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.2.3'
+
     implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:2.8.5"
 
