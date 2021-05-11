@@ -10,7 +10,7 @@ parameters:
   - spotbugsLocalDebug
   - spotbugsDebug
 - name: artifactName
-  default: CodeAnalisysLogs
+  default: CodeAnalysisLogs
 
 steps:
 - task: Gradle@2
