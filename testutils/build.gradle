@@ -61,6 +61,13 @@ android {
         buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
         buildConfigField("String", "RUN_ID", "\"$runId\"")
         buildConfigField("boolean", "SAVE_TEST_RESULTS_TO_CSV", "$saveTestResultsToCsv")
+
+        // Specifies a sorted list of flavors that the plugin should try to use from
+        // a given dimension. The following tells the plugin that, when encountering
+        // a dependency that includes a "main" dimension, it should select the
+        // "local" flavor. You can include additional flavor names to provide a
+        // sorted list of fallbacks for the dimension.
+        missingDimensionStrategy 'main', 'local'
     }
 
     lintOptions {
