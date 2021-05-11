@@ -103,6 +103,7 @@ public class CommandDispatcher {
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
                     ClientException.INTERRUPTED_OPERATION,
+                    ClientException.INVALID_BROKER_BUNDLE,
                     ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
@@ -250,24 +251,26 @@ public class CommandDispatcher {
                         }
 
                         //Check cache to see if the same command completed in the last 30 seconds
-                        commandResult = sCommandResultCache.get(command);
+                        // Disabling throttling ADO:1383033
+                        // commandResult = sCommandResultCache.get(command);
                         //If nothing in cache, execute the command and cache the result
-                        if (commandResult == null) {
+//                        if (commandResult == null) {
                             commandResult = executeCommand(command);
-                            cacheCommandResult(command, commandResult);
+                            // Disabling throttling ADO:1383033
+                            // cacheCommandResult(command, commandResult);
                             Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
                                     + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
                                     + " is cacheable : " + command.isEligibleForCaching());
-                        } else {
-                            Logger.info(
-                                    TAG + methodName,
-                                    "Silent command result returned from cache for correlation id : "
-                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
-                            );
-                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
-                            commandResult = new CommandResult(commandResult.getStatus(),
-                                    commandResult.getResult(), commandResult.getCorrelationId());
-                        }
+//                        } else {
+//                            Logger.info(
+//                                    TAG + methodName,
+//                                    "Silent command result returned from cache for correlation id : "
+//                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
+//                            );
+//                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
+//                            commandResult = new CommandResult(commandResult.getStatus(),
+//                                    commandResult.getResult(), commandResult.getCorrelationId());
+//                        }
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -559,6 +562,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
+    @SuppressWarnings("unused")
     private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
                                            CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
