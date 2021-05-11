@@ -162,7 +162,7 @@ dependencies {
     if (findProject(":common") != null) {
         //Use project reference if available
         implementation(project(":common")) {
-            transitive = false
+            transitive = true
         }
     } else {
         //Always use the latest release
