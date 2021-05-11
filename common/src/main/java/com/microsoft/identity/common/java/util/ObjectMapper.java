@@ -52,6 +52,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
+import lombok.val;
+
 public final class ObjectMapper {
 
     /**
@@ -272,8 +274,9 @@ public final class ObjectMapper {
         TreeMap<String, String> fields = new Gson().fromJson(json, stringMap);
         if (object instanceof IHasExtraParameters) {
             final IHasExtraParameters params = (IHasExtraParameters) object;
-            if (params.getExtraParameters() != null) {
-                for (final Map.Entry<String, String> e : params.getExtraParameters()) {
+            val extraParams = params.getExtraParameters();
+            if (extraParams != null) {
+                for (final Map.Entry<String, String> e : extraParams) {
                     if (e.getKey() != null) {
                         fields.put(e.getKey(), e.getValue());
                     }
