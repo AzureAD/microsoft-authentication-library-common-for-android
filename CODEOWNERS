@@ -1,4 +1,37 @@
 # Each line is a file pattern followed by one or more owners.
 # Reference: https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-*    @AzureAD/androididentity
+
+# Repo Code Owners
+#--------------------
+
+*       @AdamBJohnsonx @iambmelt @rpdome @shahzaibj @shoatman
+
+
+# Area Owners
+#---------------------
+
+# Cache
+/common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman 
+
+#Telemetry
+/common/src/main/java/com/microsoft/identity/common/internal/telemetry/             @shahzaibj @iambmelt
+/common/src/main/java/com/microsoft/identity/common/internal/eststelemetry          @shahzaibj @iambmelt
+/common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt
+
+# Logging
+/common/src/main/java/com/microsoft/identity/common/logging/                        @iambmelt @shahzaibj
+/common4j/src/main/com/microsoft/identity/common/java/logging/                      @iambmelt @shahzaibj
+
+# Automation
+/common/src/test/                                                                   @shahzaibj @rpdome
+/common/src/androidTest/                                                            @shahzaibj @rpdome
+/common4j/src/test/                                                                 @shahzaibj @rpdome
+/uiautomationutilities/src/                                                         @shahzaibj @rpdome
+/testutils/                                                                         @shahzaibj @rpdome
+
+# Build
+*.gradle                                                                            @shoatman @AdamBJohnsonx @shahzaibj
+
+# Pipelines
+/azure-pipelines/                                                                   @shoatman @shahzaibj @p3dr0rv
