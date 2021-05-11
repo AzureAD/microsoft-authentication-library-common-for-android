@@ -238,7 +238,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      */
     private String convertStreamToString(final InputStream inputStream) throws IOException {
         try {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, AuthenticationConstants.ENCODING_UTF8));
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
             final char[] buffer = new char[streamBufferSize];
             final StringBuilder stringBuilder = new StringBuilder();
             int charsRead;
