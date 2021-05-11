@@ -99,7 +99,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
 
-    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+                        justification = "This is caused by lombok-generated code inserting a check")
     public UrlConnectionHttpClient(@NonNull final UrlConnectionHttpClient client) {
         this(client.retryPolicy,
                 client.connectTimeoutMs,
