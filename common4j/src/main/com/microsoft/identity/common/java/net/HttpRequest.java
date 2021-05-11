@@ -51,7 +51,7 @@ public class HttpRequest {
             return null;
         }
         
-        return Arrays.copyOf(mRequestContent, mRequestMethod.length());
+        return Arrays.copyOf(mRequestContent, mRequestContent.length);
     }
 
     @Getter
