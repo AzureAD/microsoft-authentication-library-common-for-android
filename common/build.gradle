@@ -106,7 +106,6 @@ android {
         // during development.
         local {
             dimension "main"
-            versionNameSuffix "-local"
         }
 
         // The 'dist' productFlavor sources common from a central repository and is intended
