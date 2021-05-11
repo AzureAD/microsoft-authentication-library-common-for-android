@@ -1,30 +1,31 @@
-# 'Allow scripts to access the OAuth token' was selected in pipeline.  Add the following YAML to any steps requiring access:
-#       env:
-#           MY_ACCESS_TOKEN: $(System.AccessToken)
-# Variable 'android:serverUrl' was defined in the Variables tab
+# File: azure-pipelines\testapps\Android-Complete AzureSample LocalDebug.yml
+# Description: Assemble Local Debug Azure Sample App APK
 # Variable 'build_type' was defined in the Variables tab
 # Variable 'distMsalVersion' was defined in the Variables tab
-# Variable 'ENV_VSTS_MVN_ANDROID_MSAL_USERNAME' was defined in the Variables tab
 # Variable 'msal_flavor' was defined in the Variables tab
+# Variable 'ENV_VSTS_MVN_ANDROID_MSAL_USERNAME' was defined in the Variables tab
 # Variable 'mvnAccessToken' was defined in the Variables tab
-# Variable 'test_repo_branch' was defined in the Variables tab
-# Variable 'test_repo_dir' was defined in the Variables tab
-# Cron Schedules have been converted using UTC Time Zone and may need to be updated for your location
-trigger: none
-schedules:
-- cron: 0 1 * * 1,2,3,4,5
-  branches:
-    include:
-    - shahzaibj/droidSetupDevexOnly
-  always: true
+# https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+pr: none
+
 resources:
   repositories:
   - repository: android-complete
     type: github
     name: AzureAD/android-complete
-    ref: shahzaibj/droidSetupDevexOnly
+    ref: master
     endpoint: ANDROID_GITHUB
+
+schedules:
+- cron: 0 1 * * 1,2,3,4,5
+  branches:
+    include:
+    - master
+  always: true
+
 jobs:
 - job: Phase_1
   displayName: Phase 1
