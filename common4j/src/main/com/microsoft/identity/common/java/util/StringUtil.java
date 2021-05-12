@@ -34,7 +34,7 @@ public class StringUtil {
     public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
-     * checks if string is null or empty.
+     * Checks if string is null or empty.
      *
      * @param message String to check for null or blank.
      * @return true, if the string is null or blank.

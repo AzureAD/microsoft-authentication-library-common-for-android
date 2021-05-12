@@ -30,25 +30,25 @@ import java.util.concurrent.ConcurrentHashMap;
 import lombok.NonNull;
 
 public class SentFailedRequestsMap implements IKeyPairStorage<Set<FailedRequest>> {
-    final ConcurrentHashMap<String, Set<FailedRequest>> sendFailedRequestsMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Set<FailedRequest>> sentFailedRequestsMap = new ConcurrentHashMap<>();
 
     @Override
     public Set<FailedRequest> get(@NonNull String key) {
-        return sendFailedRequestsMap.get(key);
+        return sentFailedRequestsMap.get(key);
     }
 
     @Override
     public void put(@NonNull String key, Set<FailedRequest> value) {
-        sendFailedRequestsMap.put(key, value);
+        sentFailedRequestsMap.put(key, value);
     }
 
     @Override
     public void remove(@NonNull String key) {
-        sendFailedRequestsMap.remove(key);
+        sentFailedRequestsMap.remove(key);
     }
 
     @Override
     public void clear() {
-        sendFailedRequestsMap.clear();
+        sentFailedRequestsMap.clear();
     }
 }

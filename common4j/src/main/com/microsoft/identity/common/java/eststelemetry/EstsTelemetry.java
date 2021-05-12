@@ -59,9 +59,9 @@ public class EstsTelemetry {
 
     // Exposed for testing only.
     EstsTelemetry(@NonNull final IKeyPairStorage<CurrentRequestTelemetry> telemetryMap,
-                  @NonNull final IKeyPairStorage<Set<FailedRequest>> sendFailedRequestsMap) {
+                  @NonNull final IKeyPairStorage<Set<FailedRequest>> sentFailedRequestsMap) {
         mTelemetryMap = telemetryMap;
-        mSentFailedRequests = sendFailedRequestsMap;
+        mSentFailedRequests = sentFailedRequestsMap;
     }
 
     /**
@@ -363,9 +363,6 @@ public class EstsTelemetry {
             // we did not have anything in the telemetry cache for the last request
             // let's create a new object based on the data available from the current request object
             // and return the header string formed via that object
-            //
-            // We're trying to send this.. so that if we ever come across this field being null on the server
-            // then we know you have a bug in the client.
             final CurrentRequestTelemetry currentRequestTelemetry = mTelemetryMap.get(correlationId);
             if (currentRequestTelemetry == null) {
                 Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
@@ -373,6 +370,8 @@ public class EstsTelemetry {
                 return null;
             }
 
+            // We're trying to send this.. so that if we ever come across this field being null on the server
+            // then we know you have a bug in the client.
             final LastRequestTelemetry lastRequestTelemetry = new LastRequestTelemetry(currentRequestTelemetry.getSchemaVersion());
             lastRequestTelemetry.copySharedValues(currentRequestTelemetry);
             lastRequestTelemetry.putInPlatformTelemetry(

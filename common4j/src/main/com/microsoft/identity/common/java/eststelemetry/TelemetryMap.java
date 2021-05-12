@@ -30,7 +30,7 @@ import lombok.NonNull;
 
 public class TelemetryMap implements IKeyPairStorage<CurrentRequestTelemetry>{
 
-    final ConcurrentHashMap<String, CurrentRequestTelemetry> telemetryMap = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, CurrentRequestTelemetry> telemetryMap = new ConcurrentHashMap<>();
 
     @Override
     public CurrentRequestTelemetry get(@NonNull String key) {

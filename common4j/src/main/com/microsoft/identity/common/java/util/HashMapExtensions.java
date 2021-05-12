@@ -45,7 +45,7 @@ public final class HashMapExtensions {
     }
 
     /**
-     * decode url string into a key value pairs with default query delimiter.
+     * Decode url string into a key value pairs with default query delimiter.
      *
      * @param parameters URL query parameter
      * @return key value pairs
