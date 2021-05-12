@@ -85,11 +85,11 @@ public class EstsTelemetry {
      * @param command The command for which to capture telemetry
      */
     public void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
-        mAdaptedInstance.setUp(createLastRequestTelemetryCache(command.getParameters().getAndroidApplicationContext()));
+        mAdaptedInstance.setUp(createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
         mAdaptedInstance.initTelemetryForCommand(command);
     }
 
-    private LastRequestTelemetryCache createLastRequestTelemetryCache(final Context context) {
+    public static LastRequestTelemetryCache createLastRequestTelemetryCacheOnAndroid(final Context context) {
         final String methodName = ":createLastRequestTelemetryCache";
 
         if (context == null) {

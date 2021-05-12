@@ -80,6 +80,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry.createLastRequestTelemetryCacheOnAndroid;
 
 public class CommandDispatcher {
 
@@ -238,6 +239,11 @@ public class CommandDispatcher {
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
                                 SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
+
+                        // TODO: This will eventually be moved up the chain to the Android Wrapper.
+                        //       For now, we can keep it here.
+                        EstsTelemetry.getInstance().setUp(
+                                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
 
                         EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
