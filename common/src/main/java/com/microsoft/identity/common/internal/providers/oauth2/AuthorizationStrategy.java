@@ -31,12 +31,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CLOSE_AUTHORIZATION_ACTIVITY;
 
 /**
  * Abstracts the behavior associated with gathering a user authorization for an access token (oAuth)
@@ -85,6 +88,15 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
         }
 
         mReferencedActivity.get().startActivity(intent);
+    }
+
+    protected void closeAuthorizationActivity(){
+        final LocalBroadcastManager localBroadcastManager =
+                LocalBroadcastManager.getInstance(mReferencedApplicationContext.get());
+
+        localBroadcastManager.sendBroadcast(
+                new Intent(CLOSE_AUTHORIZATION_ACTIVITY)
+        );
     }
 
     /**

@@ -36,12 +36,13 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CLOSE_AUTHORIZATION_ACTIVITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CANCELLED_BY_USER;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
@@ -90,11 +91,14 @@ public abstract class AuthorizationFragment extends Fragment {
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mCancelRequestReceiver,
                 new IntentFilter(CANCEL_INTERACTIVE_REQUEST));
 
+        /*
         if (savedInstanceState == null && mInstanceState == null) {
             Logger.warn(TAG, "No stored state. Unable to handle response");
             finish();
             return;
         }
+        */
+
 
         if (savedInstanceState == null) {
             Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
@@ -124,7 +128,7 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     void extractState(@NonNull final Bundle state) {
-        setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
+        //setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
     }
 
     /**
@@ -213,4 +217,5 @@ public abstract class AuthorizationFragment extends Fragment {
         Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }
+
 }

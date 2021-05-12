@@ -1697,6 +1697,14 @@ public final class AuthenticationConstants {
          * an intent action specifying that the intent contains authorization results.
          */
         public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
+
+        public static final String CLOSE_AUTHORIZATION_ACTIVITY = "close_authorization_activity";
+
+        public static final String REDIRECT_RETURNED_ACTION = "redirect_returned_action";
+
+        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY= "destroy_redirect_receiving_activity";
+
+        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
     }
 
     /**

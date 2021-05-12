@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.ui.browser;
 
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -30,6 +31,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -45,6 +47,8 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 import java.util.concurrent.Future;
+
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 
 // Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -124,15 +128,17 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         // For broker request we need to clear all activities in the task and bring Authorization Activity to the
         // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
         // Authenticator's or Company Portal's active activity which would be confusing to the user.
-           /*
+        /*
         if (mIsRequestFromBroker) {
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         }
-
         else {
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         }
+
+
          */
+
 
         launchIntent(intent);
 
@@ -162,7 +168,6 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     @Override
     public void completeAuthorization(int requestCode, int resultCode, Intent data) {
         if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
-            dispose();
 
             //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
             @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
@@ -171,7 +176,11 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                             data,
                             mAuthorizationRequest
                     );
+
             mAuthorizationResultFuture.setResult(result);
+
+            dispose();
+            closeAuthorizationActivity();
         } else {
             Logger.warnPII(TAG, "Unknown request code " + requestCode);
         }

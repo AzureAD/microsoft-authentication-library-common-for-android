@@ -86,7 +86,7 @@ public class CommandDispatcher {
     private static final String TAG = CommandDispatcher.class.getSimpleName();
 
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
+    private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 5;
     //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
     private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
             1, INTERACTIVE_REQUEST_THREAD_POOL_SIZE, -1, 0, TimeUnit.MINUTES, "interactive"
@@ -96,6 +96,7 @@ public class CommandDispatcher {
     );
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
+    //private static final ConcurrentHashMap<Integer, InteractiveTokenCommand> sInteractiveCommands = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet(
@@ -471,6 +472,7 @@ public class CommandDispatcher {
                     Logger.warn(TAG + methodName, "ActivityManager was null; Unable to bring task for the foreground.");
                 }
             }
+
         }
     }
 
@@ -576,6 +578,20 @@ public class CommandDispatcher {
                 );
             }
 
+            /*
+            boolean taskInUse = sInteractiveCommands.putIfAbsent(command.getTaskId(), command) != null;
+
+
+            if(taskInUse){
+                //What to do in this case... i think we should cancel the running request
+                //in the same way that we do for broker
+                localBroadcastManager.sendBroadcast(
+                        new Intent(CANCEL_INTERACTIVE_REQUEST)
+                );
+            }
+
+             */
+
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -610,10 +626,11 @@ public class CommandDispatcher {
                                 resultReceiver,
                                 new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
 
-                        sCommand = command;
 
+                        sCommand = command;
                         //Try executing request
                         commandResult = executeCommand(command);
+
                         sCommand = null;
                         localBroadcastManager.unregisterReceiver(resultReceiver);
 

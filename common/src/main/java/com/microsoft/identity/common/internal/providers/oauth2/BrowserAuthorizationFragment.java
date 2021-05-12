@@ -31,6 +31,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -45,6 +46,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
@@ -71,18 +73,13 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     private static Class<?> sCallingActivityClass;
 
     /**
-     * Response URI of the browser flow.
-     * As we might not have any control over the calling Activity,
-     * we can't rely on the content of the launching intent to provide us this value.
-     */
-    private static String sCustomTabResponseUri;
-
-    /**
      * Determines if the flow has started.
      */
     private boolean mBrowserFlowStarted = false;
 
     private Intent mAuthIntent;
+
+    private boolean mResponseReceived = false;
 
     /**
      * Creates an intent to handle the completion of an authorization flow with browser.
@@ -105,12 +102,11 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             return null;
         }
 
-        // We cannot pass this as part of a new intent, because we might not have any control over the calling activity.
-        sCustomTabResponseUri = responseUri;
 
         final Intent intent = new Intent(context, sCallingActivityClass);
-        intent.putExtra("RESPONSE", true);
-        //intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.setAction(REDIRECT_RETURNED_ACTION);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_HISTORY);
+        intent.putExtra("RESPONSE_URI", responseUri);
         return intent;
     }
 
@@ -118,6 +114,10 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sCallingActivityClass = this.getActivity().getClass();
+        Bundle arguments = this.getArguments();
+        if(arguments != null){
+            mResponseReceived = arguments.getBoolean("RESPONSE", false);
+        }
     }
 
     @Override
@@ -130,19 +130,20 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     @Override
     void extractState(@NonNull final Bundle state) {
         super.extractState(state);
-        boolean response = state.getBoolean("RESPONSE", false);
-        if(response){
-            completeAuthorizationInBrowserFlow(sCustomTabResponseUri);
-            finish();
-        }else {
-            mAuthIntent = state.getParcelable(AUTH_INTENT);
-            mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
-        }
+        mAuthIntent = state.getParcelable(AUTH_INTENT);
+        mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
     }
+
+
 
     @Override
     public void onResume() {
         super.onResume();
+
+        if (mResponseReceived) {
+            // The custom tab was closed without getting a result.
+            finish();
+        }
 
         /*
          * If the Authorization Agent is set as Default or Browser,
@@ -170,16 +171,11 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
                 finish();
             }
         } else {
-            if (!StringUtil.isEmpty(sCustomTabResponseUri)) {
-                completeAuthorizationInBrowserFlow(sCustomTabResponseUri);
-            } else {
-                cancelAuthorization(true);
-            }
-            sCustomTabResponseUri = null;
+            cancelAuthorization(true);
         }
     }
 
-    private void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
+    public void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
         final Intent resultIntent = createResultIntent(customTabResponseUri);
         final Map<String, String> urlQueryParameters = StringExtensions.getUrlParameters(customTabResponseUri);
@@ -253,4 +249,5 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             return false;
         }
     }
+
 }
