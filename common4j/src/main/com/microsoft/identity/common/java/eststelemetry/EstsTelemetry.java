@@ -82,7 +82,7 @@ public class EstsTelemetry {
      * Bootstrap an instance of {@link EstsTelemetry}.
      * Must be invoked prior to any operation on this object.
      */
-    public synchronized void setUp(@NonNull final LastRequestTelemetryCache lastRequestTelemetryCache) {
+    public synchronized void setUp(@Nullable final LastRequestTelemetryCache lastRequestTelemetryCache) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = lastRequestTelemetryCache;
         }

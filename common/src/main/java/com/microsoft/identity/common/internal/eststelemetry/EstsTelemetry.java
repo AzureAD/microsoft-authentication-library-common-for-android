@@ -89,7 +89,8 @@ public class EstsTelemetry {
         mAdaptedInstance.initTelemetryForCommand(command);
     }
 
-    public static LastRequestTelemetryCache createLastRequestTelemetryCacheOnAndroid(final Context context) {
+    @Nullable
+    public static LastRequestTelemetryCache createLastRequestTelemetryCacheOnAndroid(@Nullable final Context context) {
         final String methodName = ":createLastRequestTelemetryCache";
 
         if (context == null) {
