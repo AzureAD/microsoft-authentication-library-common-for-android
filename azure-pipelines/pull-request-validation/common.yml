@@ -1,23 +1,20 @@
-# 'Allow scripts to access the OAuth token' was selected in pipeline.  Add the following YAML to any steps requiring access:
-#       env:
-#           MY_ACCESS_TOKEN: $(System.AccessToken)
-# Variable 'android:serverUrl' was defined in the Variables tab
-# Variable 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
-# Variable 'mvnAccessToken' was defined in the Variables tab
-# Variable 'test_repo_branch' was defined in the Variables tab
-# Variable 'test_repo_dir' was defined in the Variables tab
+# File: azure-pipelines\pull-request-validation\common.yml
+# Description: Assemble and run unit test
+name: $(date:yyyyMMdd)$(rev:.r)
+
 trigger:
   branches:
     include:
     - dev
     - master
   batch: True
-name: $(date:yyyyMMdd)$(rev:.r)
+
 resources:
   repositories:
   - repository: self
     type: git
     ref: dev
+
 jobs:
 - job: Phase_1
   displayName: Phase 1
@@ -31,20 +28,20 @@ jobs:
     persistCredentials: True
   - template: ../templates/steps/credscan-policheck.yml
     parameters:
-      policheckCmdLineArgsDir: adal
+      policheckCmdLineArgsDir: common
   - template: ../templates/steps/automation-cert.yml
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
     inputs:
-      tasks: clean common:assemble
+      tasks: clean common:assembleLocal
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
-      tasks: common:testDebugUnitTest
+      tasks: common:testLocalDebugUnitTest
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
 ...

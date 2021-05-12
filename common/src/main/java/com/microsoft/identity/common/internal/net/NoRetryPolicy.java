@@ -31,7 +31,9 @@ import java.util.concurrent.Callable;
 import lombok.SneakyThrows;
 
 /**
- * A retry policy that, by default, does nothing.
+ * Deprecated
+ *
+ * @see com.microsoft.identity.common.java.net.NoRetryPolicy
  */
 @ThreadSafe
 @Immutable

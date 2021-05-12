@@ -33,7 +33,7 @@ import androidx.annotation.NonNull;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import java.io.Serializable;
 import java.util.HashMap;

@@ -22,11 +22,11 @@ package com.microsoft.identity.common.internal.telemetry.events;
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-public class CacheStartEvent extends BaseEvent {
+public class CacheStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public CacheStartEvent() {
         super();
         names(Event.CACHE_START_EVENT);
