@@ -39,7 +39,7 @@ public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, Ba
     @Override
     public void onTaskCompleted(AcquireTokenResult result) {
         Logger.verbose(
-                TAG + ":onError",
+                TAG + ":onTaskCompleted",
                 "Task completed. " + result.getSucceeded() + ". CorrelationId: " + result.getLocalAuthenticationResult().getCorrelationId()
         );
     }
