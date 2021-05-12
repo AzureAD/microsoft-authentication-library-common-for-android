@@ -22,10 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java;
 
+import java.nio.charset.Charset;
+
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
 public class AuthenticationConstants {
+
+    /**
+     * The Constant ENCODING_UTF8.
+     */
+    public static final Charset ENCODING_UTF8 = Charset.forName("UTF-8");
+
     /**
      * Represents the constants value for Active Directory.
      */
