@@ -187,7 +187,6 @@ public class EstsTelemetryTest {
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
                         .build();
 
-
         final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
@@ -370,6 +369,53 @@ public class EstsTelemetryTest {
         }
 
         Assert.assertEquals(FAILED_REQUEST_CAP, lastRequestTelemetry.getFailedRequests().size());
+    }
+
+    @Test
+    public void testSendSubsequentCachedCommand(){
+        DiagnosticContext.INSTANCE.getRequestContext().put(CORRELATION_ID, correlationId);
+
+        final EstsTelemetry telemetry = getTelemetry(null, null, new InMemoryStorage());
+
+        final ICommand<Boolean> mockCommand = MockCommand.builder()
+                .correlationId(correlationId)
+                .isEligibleForEstsTelemetry(true)
+                .willReachTokenEndpoint(true)
+                .build();
+
+        final ILocalAuthenticationResult cachedSuccessResult = MockAuthenticationResult.builder()
+                .isServicedFromCache(true)
+                .build();
+
+        final ICommandResult mockCommandResult =
+                MockCommandResult.<ILocalAuthenticationResult>builder()
+                        .correlationId(correlationId)
+                        .result(cachedSuccessResult)
+                        .resultStatus(ICommandResult.ResultStatus.COMPLETED)
+                        .build();
+
+        // First request. cached.
+        telemetry.initTelemetryForCommand(mockCommand);
+        telemetry.emitApiId(apiId);
+        telemetry.emitForceRefresh(false);
+        telemetry.flush(mockCommand, mockCommandResult);
+
+        // 2nd Request. cached.
+        telemetry.initTelemetryForCommand(mockCommand);
+        telemetry.emitApiId(apiId);
+        telemetry.emitForceRefresh(false);
+        telemetry.flush(mockCommand, mockCommandResult);
+
+        // 3rd request.
+        telemetry.initTelemetryForCommand(mockCommand);
+        telemetry.emitApiId(apiId);
+        telemetry.emitForceRefresh(true);
+
+        final Map<String, String> headers = telemetry.getTelemetryHeaders();
+
+        Assert.assertEquals(2, headers.size());
+        Assert.assertEquals("2|" + apiId + ",1|,,,,,", headers.get(CURRENT_REQUEST_HEADER_NAME));
+        Assert.assertEquals("2|2|||1", headers.get(LAST_REQUEST_HEADER_NAME));
     }
 
     private void flush(@NonNull ICommand<Boolean> mockCommand,

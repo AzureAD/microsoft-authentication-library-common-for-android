@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.exception.IServiceException;
 import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Collections;
@@ -215,8 +215,8 @@ public class EstsTelemetry {
                     correlationId,
                     errorCode);
         } else if (commandResult.getResult() != null &&
-                commandResult.getResult() instanceof ILocalAuthenticationResult) {
-            final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
+                commandResult.getResult() instanceof ILocalAuthenticationResultBase) {
+            final ILocalAuthenticationResultBase localAuthenticationResult = (ILocalAuthenticationResultBase) commandResult.getResult();
             if (localAuthenticationResult.isServicedFromCache()) {
                 // we returned a token from cache, let's increment the silent success count
                 lastRequestTelemetry.incrementSilentSuccessCount();
@@ -301,8 +301,8 @@ public class EstsTelemetry {
             // we did not go to token endpoint
             return false;
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED) {
-            if (commandResult.getResult() instanceof ILocalAuthenticationResult) {
-                final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
+            if (commandResult.getResult() instanceof ILocalAuthenticationResultBase) {
+                final ILocalAuthenticationResultBase localAuthenticationResult = (ILocalAuthenticationResultBase) commandResult.getResult();
                 if (localAuthenticationResult.isServicedFromCache()) {
                     // we did not go to token endpoint
                     return false;

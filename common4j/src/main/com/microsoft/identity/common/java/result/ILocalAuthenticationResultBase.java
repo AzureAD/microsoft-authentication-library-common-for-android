@@ -30,9 +30,9 @@ import lombok.NonNull;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
- * {@link ILocalAuthenticationResult}
+ * {@link ILocalAuthenticationResultBase}
  */
-public interface ILocalAuthenticationResult {
+public interface ILocalAuthenticationResultBase {
 
     /**
      * @return The access token requested.
