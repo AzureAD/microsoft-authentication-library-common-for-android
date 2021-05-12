@@ -304,6 +304,71 @@ public class CommandDispatcher {
         }
     }
 
+    public static void submitAndForget(@NonNull final BaseCommand command){
+        submitAndForgetReturningFuture(command);
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static FinalizableResultFuture<CommandResult> submitAndForgetReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
+        final String methodName = ":submit";
+
+        final CommandParameters commandParameters = command.getParameters();
+        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
+                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() :
+                        commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+
+        // set correlation id on parameters as it may not already be set
+        commandParameters.setCorrelationId(correlationId);
+
+        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+        Logger.info(
+                TAG,
+                "RefreshOnCommand with CorrelationId: "
+                        + correlationId
+        );
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        synchronized (mapAccessLock) {
+            final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
+            finalFuture.whenComplete(getCommandResultConsumer(command, handler));
+            sSilentExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+
+                    try {
+                        //initializing again since the request is transferred to a different thread pool
+                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion());
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
+                        CommandResult commandResult = executeCommand(command);
+                        Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
+                                + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
+                                + " is cacheable : " + command.isEligibleForCaching());
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+                        Telemetry.getInstance().flush(correlationId);
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        finalFuture.setResult(commandResult);
+                    } catch (final Throwable t) {
+                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
+                        finalFuture.setException(new ExecutionException(t));
+                    } finally {
+                        DiagnosticContext.clear();
+                    }
+
+                }
+            });
+            return finalFuture;
+        }
+    }
+
+    private static String statusMsg(String status){
+        return ", with the status : " + status;
+    }
+
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
                                       @NonNull Object parameters, @Nullable String publicApiId) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
