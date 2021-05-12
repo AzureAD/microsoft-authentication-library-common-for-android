@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -46,6 +47,7 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.internal.eststelemetry.PublicApiId;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
@@ -316,25 +318,48 @@ public class LocalMSALController extends BaseController {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
+        if (fullCacheRecord.getAccessToken().refreshOnIsActive()) {
+            Logger.info(
+                    TAG,
+                    "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
+            );
+        }
 
-        if (accessTokenIsNull(fullCacheRecord)
-                || refreshTokenIsNull(fullCacheRecord)
-                || parametersWithScopes.isForceRefresh()
-                || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
-                || !strategy.validateCachedResult(authScheme, fullCacheRecord)) {
-            if (!refreshTokenIsNull(fullCacheRecord)) {
-                // No AT found, but the RT checks out, so we'll use it
-                Logger.verbose(
+        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
+            if (!fullCacheRecord.getAccessToken().isExpired()) {
+                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                CommandDispatcher.submitAndForget(refreshOnCommand);
+            } else {
+                Logger.warn(
                         TAG + methodName,
-                        "No access token found, but RT is available."
+                        "Access token is expired. Removing from cache..."
                 );
-
-                renewAccessToken(
+                // Remove the expired token
+                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
+                renewAT(
                         parametersWithScopes,
                         acquireTokenSilentResult,
                         tokenCache,
                         strategy,
-                        fullCacheRecord
+                        fullCacheRecord,
+                        TAG + methodName
+                );
+            }
+        } else if ((accessTokenIsNull(fullCacheRecord)
+                || refreshTokenIsNull(fullCacheRecord)
+                || parametersWithScopes.isForceRefresh()
+                || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
+                || !strategy.validateCachedResult(authScheme, fullCacheRecord))) {
+            if (!refreshTokenIsNull(fullCacheRecord)) {
+                // No AT found, but the RT checks out, so we'll use it
+                renewAT(
+                        parametersWithScopes,
+                        acquireTokenSilentResult,
+                        tokenCache,
+                        strategy,
+                        fullCacheRecord,
+                        TAG + methodName
                 );
             } else {
                 //TODO need the refactor, should just throw the ui required exception, rather than
@@ -359,36 +384,21 @@ public class LocalMSALController extends BaseController {
             );
             // Remove the expired token
             tokenCache.removeCredential(fullCacheRecord.getAccessToken());
-
-            Logger.verbose(
-                    TAG + methodName,
-                    "Renewing access token..."
-            );
-            // Request a new AT
-            renewAccessToken(
+            renewAT(
                     parametersWithScopes,
                     acquireTokenSilentResult,
                     tokenCache,
                     strategy,
-                    fullCacheRecord
+                    fullCacheRecord,
+                    TAG + methodName
             );
+
         } else {
             Logger.verbose(
-                    TAG + methodName,
+                    TAG + ":acquireTokenSilent",
                     "Returning silent result"
             );
-            // the result checks out, return that....
-            acquireTokenSilentResult.setLocalAuthenticationResult(
-                    new LocalAuthenticationResult(
-                            finalizeCacheRecordForResult(
-                                    fullCacheRecord,
-                                    parametersWithScopes.getAuthenticationScheme()
-                            ),
-                            cacheRecords,
-                            SdkType.MSAL,
-                            true
-                    )
-            );
+            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
         }
 
         Telemetry.emit(
@@ -398,6 +408,42 @@ public class LocalMSALController extends BaseController {
         );
 
         return acquireTokenSilentResult;
+    }
+
+    private void setAcquireTokenResult(final AcquireTokenResult acquireTokenSilentResult,
+                                       final SilentTokenCommandParameters parametersWithScopes,
+                                       final List<ICacheRecord> cacheRecords) throws ClientException {
+        ICacheRecord fullCacheRecord = cacheRecords.get(0);
+        acquireTokenSilentResult.setLocalAuthenticationResult(
+                new LocalAuthenticationResult(
+                        finalizeCacheRecordForResult(
+                                fullCacheRecord,
+                                parametersWithScopes.getAuthenticationScheme()
+                        ),
+                        cacheRecords,
+                        SdkType.MSAL,
+                        true
+                )
+        );
+    }
+
+    private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,
+                         @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                         @NonNull final ICacheRecord cacheRecord,
+                         @NonNull final String tag) throws IOException, ClientException, ServiceException {
+        Logger.verbose(
+                TAG + tag,
+                "Renewing access token..."
+        );
+        renewAccessToken(
+                parametersWithScopes,
+                acquireTokenSilentResult,
+                tokenCache,
+                strategy,
+                cacheRecord
+        );
     }
 
     @Override
