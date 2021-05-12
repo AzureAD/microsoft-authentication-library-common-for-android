@@ -240,12 +240,7 @@ public class CommandDispatcher {
                                 SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
-                        // TODO: This will eventually be moved up the chain to the Android Wrapper.
-                        //       For now, we can keep it here.
-                        EstsTelemetry.getInstance().setUp(
-                                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
-
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
@@ -346,7 +341,9 @@ public class CommandDispatcher {
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
                                         SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+
+                        initTelemetryForCommand(command);
+
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
                         CommandResult commandResult = executeCommand(command);
@@ -369,6 +366,15 @@ public class CommandDispatcher {
             });
             return finalFuture;
         }
+    }
+
+    private static void initTelemetryForCommand(@NonNull BaseCommand command) {
+        // TODO: This will eventually be moved up the chain to the Android Wrapper.
+        //       For now, we can keep it here.
+        EstsTelemetry.getInstance().setUp(
+                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
+
+        EstsTelemetry.getInstance().initTelemetryForCommand(command);
     }
 
     private static String statusMsg(String status){
@@ -667,7 +673,7 @@ public class CommandDispatcher {
 
                         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 

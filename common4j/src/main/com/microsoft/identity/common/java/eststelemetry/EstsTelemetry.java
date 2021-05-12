@@ -191,7 +191,7 @@ public class EstsTelemetry {
         }
 
         if (isTelemetryLoggedByServer(command, commandResult)) {
-            // telemetry headers have been sent to token endpoint and logger by sts
+            // telemetry headers have been sent to token endpoint and logged by sts
             // this is the time to reset local telemetry state
 
             // reset silent successful count as we just went to token endpoint

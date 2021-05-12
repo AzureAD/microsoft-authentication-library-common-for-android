@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.exception.IBaseException;
 import com.microsoft.identity.common.java.exception.IServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -38,6 +39,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -58,7 +60,7 @@ public class EstsTelemetryTest {
     final String errorCode = "ERROR_CODE";
 
     @After
-    public void tearDown(){
+    public void tearDown() {
         DiagnosticContext.INSTANCE.getRequestContext().clear();
     }
 
@@ -87,6 +89,37 @@ public class EstsTelemetryTest {
         Assert.assertEquals(inMemoryTelemetryMap.mMap.size(), 1);
         Assert.assertNotNull(inMemoryTelemetryMap.mMap.get(correlationId));
         Assert.assertEquals(apiId, inMemoryTelemetryMap.mMap.get(correlationId).getApiId());
+    }
+
+    @Test
+    public void testEmitPlatformParameters() {
+        DiagnosticContext.INSTANCE.getRequestContext().put(CORRELATION_ID, correlationId);
+        final EstsTelemetry telemetry = getTelemetry(null, null, new InMemoryStorage());
+
+        final ICommand<Boolean> mockCommand = MockCommand.builder()
+                .correlationId(correlationId)
+                .isEligibleForEstsTelemetry(true)
+                .willReachTokenEndpoint(true)
+                .build();
+
+        telemetry.initTelemetryForCommand(mockCommand);
+        telemetry.emitApiId(apiId);
+        telemetry.emitForceRefresh(true);
+
+        final ConcurrentHashMap<String, String> mProperties = new ConcurrentHashMap<>();
+        mProperties.put(TelemetryEventStrings.Key.AT_STATUS, TelemetryEventStrings.Value.TRUE);
+        mProperties.put(TelemetryEventStrings.Key.MRRT_STATUS, TelemetryEventStrings.Value.FALSE);
+        mProperties.put(TelemetryEventStrings.Key.RT_STATUS, TelemetryEventStrings.Value.TRUE);
+        mProperties.put(TelemetryEventStrings.Key.FRT_STATUS, TelemetryEventStrings.Value.FALSE);
+        mProperties.put(TelemetryEventStrings.Key.ID_TOKEN_STATUS, TelemetryEventStrings.Value.FALSE);
+        mProperties.put(TelemetryEventStrings.Key.ACCOUNT_STATUS, TelemetryEventStrings.Value.TRUE);
+        telemetry.emit(mProperties);
+
+        final Map<String, String> headers = telemetry.getTelemetryHeaders();
+
+        Assert.assertEquals(2, headers.size());
+        Assert.assertEquals("2|" + apiId + ",1|1,0,1,1,0,0", headers.get(CURRENT_REQUEST_HEADER_NAME));
+        Assert.assertEquals("2|0|||1", headers.get(LAST_REQUEST_HEADER_NAME));
     }
 
     @Test
@@ -204,7 +237,8 @@ public class EstsTelemetryTest {
                 .willReachTokenEndpoint(true)
                 .build();
         final IServiceException exception = MockServiceException.builder()
-                .httpStatusCode(404).build();
+                .httpStatusCode(400)
+                .build();
         final ICommandResult mockCommandResult =
                 MockCommandResult.<IBaseException>builder()
                         .correlationId(correlationId)
@@ -322,7 +356,7 @@ public class EstsTelemetryTest {
     }
 
     @Test
-    public void LastRequestTelemetryFailedRequestListIsCapped() {
+    public void testLastRequestTelemetryFailedRequestListIsCapped() {
         final LastRequestTelemetry lastRequestTelemetry = new LastRequestTelemetry(
                 SchemaConstants.CURRENT_SCHEMA_VERSION
         );
