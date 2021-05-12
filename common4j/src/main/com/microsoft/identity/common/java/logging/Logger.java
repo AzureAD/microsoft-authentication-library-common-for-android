@@ -59,13 +59,22 @@ public class Logger {
     @Accessors(prefix = "s")
     private static boolean sAllowPii = false;
 
-    @Setter(onMethod_ = {@Synchronized})
     @Accessors(prefix = "s")
     private static String sPlatformString = "";
 
     private static final ReentrantReadWriteLock sLoggersLock = new ReentrantReadWriteLock();
 
     private static final Map<String, ILoggerCallback> sLoggers = new HashMap<>();
+
+    /**
+     * Set the platform string to be used when generating logs.
+     *
+     * @param platformString the platform string to set
+     */
+    @Synchronized
+    public static void setPlatformString(String platformString) {
+        Logger.sPlatformString = platformString;
+    }
 
     /**
      * Enum class for LogLevel that the sdk recognizes.
@@ -410,7 +419,7 @@ public class Logger {
     /**
      * If applicable, log the discarded log.
      * This is applicable for testing only (IDetailedLoggerCallback is package-private).
-     * */
+     */
     private static void logDiscardedLogIfApplicable(String logMessage, ILoggerCallback callback, @NonNull String tag, @NonNull Logger.LogLevel logLevel, boolean containsPII) {
         if (callback instanceof IDetailedLoggerCallback) {
             ((IDetailedLoggerCallback) callback).discardedLog(tag, logLevel, logMessage, containsPII);

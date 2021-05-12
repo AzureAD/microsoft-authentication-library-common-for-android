@@ -20,28 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
+package com.microsoft.identity.common.internal.providers.oauth2;
 
-import java.nio.charset.Charset;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+@RunWith(JUnit4.class)
+public class StateGeneratorTest {
 
-public class AuthenticationConstants {
+    private static final int TASK_ID = 19;
+    private static final String STATE_EXAMPLE_1 = String.format("%s:%s", TASK_ID, "SOMEGUID-SOMEGUID");
 
-    /**
-     * The Constant ENCODING_UTF8.
-     */
-    public static final Charset ENCODING_UTF8 = Charset.forName("UTF-8");
+    @Test
+    public void test_stateGeneratorGenerateMethod(){
+        StateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
+        String state = generator.generate();
+        String expected = String.valueOf(TASK_ID);
+        Assert.assertEquals(expected, state.split(":")[0]);
+    }
 
-    /**
-     * Represents the constants value for Active Directory.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class AAD {
-        /**
-         * String of client request id.
-         */
-        public static final String CLIENT_REQUEST_ID = "client-request-id";
+    @Test
+    public void test_stateGeneratorGetTaskFromStateMethod(){
+        int taskId = AndroidTaskStateGenerator.getTaskFromState(STATE_EXAMPLE_1);
+        Assert.assertEquals(TASK_ID, taskId);
     }
 }

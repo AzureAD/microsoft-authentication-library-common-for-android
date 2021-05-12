@@ -20,36 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.common.internal.providers.oauth2;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.logging.Logger;
+import java.util.UUID;
 
-/*
-    Null Object Pattern for Commands who's result should be ignored.
+/**
+ * This generates a non-guessable value for the state parameter in an authorization request per the specification: https://tools.ietf.org/html/rfc6749#section-10.10
  */
-public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, BaseException> {
-
-    private static final String TAG = RefreshOnCallback.class.getSimpleName();
-
+public class DefaultStateGenerator extends StateGenerator {
     @Override
-    public void onCancel() {}
+    public String generate() {
+        final UUID stateUUID1 = UUID.randomUUID();
+        final UUID stateUUID2 = UUID.randomUUID();
+        final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
 
-    @Override
-    public void onTaskCompleted(AcquireTokenResult result) {
-        Logger.verbose(
-                TAG + ":onTaskCompleted",
-                "Task succeeded: " + result.getSucceeded() + " . CorrelationId: " + result.getLocalAuthenticationResult().getCorrelationId()
-        );
-    }
-
-    @Override
-    public void onError(BaseException error) {
-        Logger.verbose(
-                TAG + ":onError",
-                error.getMessage()
-        );
+        return state;
     }
 
 }

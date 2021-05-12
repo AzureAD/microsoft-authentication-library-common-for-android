@@ -9,6 +9,7 @@
 plugins {
     id 'java-library'
     id 'com.microsoft.identity.buildsystem' version '0.0.1'
+    id 'maven-publish'
 }
 
 def desugarCode = false
@@ -24,6 +25,106 @@ repositories {
     mavenCentral()
 }
 
+apply from: './versioning/version_tasks.gradle'
+
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
+version = getAppVersionName()
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.java.srcDirs
+    classifier = 'sources'
+    destinationDirectory = reporting.file("$project.buildDir/output/jars")
+}
+
+// Task to generate javadoc
+task generateJavadoc(type: Javadoc) {
+    failOnError false
+    title = "Microsoft Identity Common Java"
+    source = sourceSets.main.java
+    classpath += project.sourceSets.main.compileClasspath
+
+    options.memberLevel = JavadocMemberLevel.PUBLIC
+    options.addStringOption('Xdoclint:none', '-quiet')
+
+    exclude '**/BuildConfig.Java'
+    exclude '**/R.java'
+    destinationDir = reporting.file("$project.buildDir/output/javadoc")
+}
+
+// Task to generate javadoc.jar
+task javadocJar(type: Jar, dependsOn: generateJavadoc) {
+    from javadoc.destinationDir
+    classifier 'javadoc'
+    destinationDirectory = reporting.file("$project.buildDir/output/jars")
+}
+
+jar {
+    manifest {
+        attributes('Implementation-Title': project.name,
+                'Implementation-Version': project.version)
+    }
+}
+
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId 'com.microsoft.identity'
+            artifactId 'common4j'
+            from components.java
+
+            pom {
+                name = 'common4j'
+                description = 'This library contains common java code shared between the Active Directory ' +
+                        'Authentication Library (ADAL) for Android and the Microsoft ' +
+                        'Authentication Library (MSAL) for Android. This library ' +
+                        'includes only internal classes and is NOT part of the ' +
+                        'public API'
+                url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
+                developers {
+                    developer {
+                        id = 'microsoft'
+                        name = 'Microsoft'
+                    }
+                }
+                licenses {
+                    license {
+                        name = 'MIT License'
+                    }
+                }
+                inceptionYear = '2021'
+                scm {
+                    url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
+                }
+                properties = [
+                        branch: 'master',
+                        version: project.version
+                ]
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name "vsts-maven-adal-android"
+            url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
+            credentials {
+                username project.ext.vstsUsername
+                password project.ext.vstsPassword
+            }
+        }
+        maven {
+            name "vsts-maven-android"
+            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+            credentials {
+                username project.vstsUsername
+                password project.vstsPassword
+            }
+        }
+    }
+}
+
 sourceSets {
     main {
         java.srcDirs = ['src/main']
@@ -34,6 +135,8 @@ sourceSets {
 }
 
 dependencies {
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.2.3'
+
     implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:2.8.5"
 
@@ -44,4 +147,8 @@ dependencies {
     testImplementation "org.mockito:mockito-core:3.6.28"
     testCompileOnly "org.projectlombok:lombok:1.18.12"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
+}
+
+afterEvaluate {
+    assemble.dependsOn sourcesJar, javadocJar
 }
