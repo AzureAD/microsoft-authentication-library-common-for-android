@@ -321,7 +321,11 @@ public class CommandDispatcher {
         commandParameters.setCorrelationId(correlationId);
 
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
-        logRefreshOnCallbackResult(command.getParameters().getCorrelationId());
+        Logger.info(
+                TAG,
+                "RefreshOnCommand with CorrelationId: "
+                        + correlationId
+        );
 
         final Handler handler = new Handler(Looper.getMainLooper());
 
@@ -360,14 +364,6 @@ public class CommandDispatcher {
             });
             return finalFuture;
         }
-    }
-
-    private static void logRefreshOnCallbackResult(String correlationId){
-        Logger.info(
-                TAG,
-                "RefreshOnCommand with CorrelationId: "
-                        + correlationId
-        );
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
