@@ -23,7 +23,7 @@
 
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 
 import java.util.Date;
 
@@ -31,7 +31,7 @@ import lombok.Builder;
 import lombok.NonNull;
 
 @Builder
-public class MockAuthenticationResult implements ILocalAuthenticationResult {
+public class MockAuthenticationResult implements ILocalAuthenticationResultBase {
 
     @Builder.Default
     String accessToken = "MOCK_ACCESS_TOKEN";

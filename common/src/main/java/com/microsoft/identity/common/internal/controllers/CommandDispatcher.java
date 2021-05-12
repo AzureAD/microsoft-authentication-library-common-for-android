@@ -305,6 +305,15 @@ public class CommandDispatcher {
         }
     }
 
+    private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
+        // TODO: This will eventually be moved up the chain to the Android Wrapper.
+        //       For now, we can keep it here.
+        EstsTelemetry.getInstance().setUp(
+                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
+
+        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+    }
+
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
                                       @NonNull Object parameters, @Nullable String publicApiId) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();

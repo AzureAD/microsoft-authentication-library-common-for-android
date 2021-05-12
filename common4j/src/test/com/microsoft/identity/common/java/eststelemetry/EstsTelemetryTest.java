@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.IBaseException;
 import com.microsoft.identity.common.java.exception.IServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
 import org.junit.After;
@@ -127,11 +127,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResult>builder()
+                MockCommandResult.<ILocalAuthenticationResultBase>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -157,11 +157,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResult>builder()
+                MockCommandResult.<ILocalAuthenticationResultBase>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -177,11 +177,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResult>builder()
+                MockCommandResult.<ILocalAuthenticationResultBase>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -372,7 +372,7 @@ public class EstsTelemetryTest {
     }
 
     @Test
-    public void testSendSubsequentCachedCommand(){
+    public void testSendSubsequentCachedCommand() {
         DiagnosticContext.INSTANCE.getRequestContext().put(CORRELATION_ID, correlationId);
 
         final EstsTelemetry telemetry = getTelemetry(null, null, new InMemoryStorage());
@@ -383,12 +383,12 @@ public class EstsTelemetryTest {
                 .willReachTokenEndpoint(true)
                 .build();
 
-        final ILocalAuthenticationResult cachedSuccessResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResultBase cachedSuccessResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
 
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResult>builder()
+                MockCommandResult.<ILocalAuthenticationResultBase>builder()
                         .correlationId(correlationId)
                         .result(cachedSuccessResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
