@@ -468,7 +468,7 @@ public abstract class BaseController {
             if (tokenResult.getErrorResponse() != null) {
                 final String errorCode = tokenResult.getErrorResponse().getError();
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
-                Logger.info(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
+                Logger.warn(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
                 if (INVALID_GRANT.equals(errorCode) && BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = cache.removeCredential(cacheRecord.getRefreshToken());
