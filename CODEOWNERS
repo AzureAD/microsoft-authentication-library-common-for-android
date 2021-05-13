@@ -1,4 +1,58 @@
 # Each line is a file pattern followed by one or more owners.
 # Reference: https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners
 
-*    @AzureAD/androididentity
+
+# Repo Code Owners
+#--------------------
+
+*       @AdamBJohnsonx @iambmelt @rpdome @shahzaibj @shoatman
+
+
+# Area Owners
+#---------------------
+
+# Automation
+/common/src/test/                                                                   @shahzaibj @rpdome
+/common/src/androidTest/                                                            @shahzaibj @rpdome
+/common4j/src/test/                                                                 @shahzaibj @rpdome
+/uiautomationutilities/src/                                                         @shahzaibj @rpdome
+/testutils/                                                                         @shahzaibj @rpdome
+
+# AuthSchemes
+/common/src/main/java/com/microsoft/identity/common/internal/authscheme             @iambmelt @AdamBJohnsonx
+
+# Broker
+/common/src/main/java/com/microsoft/identity/common/internal/broker                 @rpdome @AdamBJohnsonx
+
+# Build
+*.gradle                                                                            @shoatman @AdamBJohnsonx @shahzaibj
+
+# Cache
+/common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman 
+
+# Commands
+/common/src/main/java/com/microsoft/identity/common/internal/commands               @shoatman @iambmelt @AdamBJohnsonx 
+
+# DTOs
+/common/src/main/java/com/microsoft/identity/common/internal/dto                    @iambmelt @AdamBJohnsonx 
+
+# Logging
+/common/src/main/java/com/microsoft/identity/common/logging/                        @iambmelt @shahzaibj
+/common4j/src/main/com/microsoft/identity/common/java/logging/                      @iambmelt @shahzaibj
+
+# Migration
+/common/src/main/java/com/microsoft/identity/common/internal/migration              @iambmelt @rpdome @shahzaibj
+
+# Networking
+/common/src/main/java/com/microsoft/identity/common/internal/net                    @AdamBJohnsonx @rpdome
+
+# Platform
+/common/src/main/java/com/microsoft/identity/common/internal/platform               @iambmelt @AdamBJohnsonx 
+
+# Pipelines
+/azure-pipelines/                                                                   @shoatman @shahzaibj @p3dr0rv
+
+# Telemetry
+/common/src/main/java/com/microsoft/identity/common/internal/telemetry/             @shahzaibj @iambmelt
+/common/src/main/java/com/microsoft/identity/common/internal/eststelemetry          @shahzaibj @iambmelt
+/common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt
