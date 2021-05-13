@@ -7,6 +7,7 @@ trigger:
     include:
     - dev
     - master
+    - release/*
   batch: True
 
 resources:
@@ -38,7 +39,7 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
-  - template: ../templates/steps/spot-bugs.yml
+  - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
       spotbugsCommand: spotbugsDebug
