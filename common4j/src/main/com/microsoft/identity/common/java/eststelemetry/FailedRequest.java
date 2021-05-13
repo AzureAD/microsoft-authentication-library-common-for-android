@@ -20,34 +20,43 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import androidx.annotation.NonNull;
+class FailedRequest {
 
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+    private final String mApiId;
+    private final String mCorrelationId;
+    private final String mError;
 
-public class TelemetryUtils {
-
-    static boolean getBooleanFromSchemaString(final String val) {
-        return val.equals(SchemaConstants.Value.TRUE);
+    public FailedRequest(String mApiId, String mCorrelationId, String error) {
+        this.mApiId = mApiId;
+        this.mCorrelationId = mCorrelationId;
+        this.mError = error;
     }
 
-    static String getSchemaCompliantStringFromBoolean(final boolean val) {
-        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
+    public String toApiIdCorrelationString() {
+        return mApiId + ',' + mCorrelationId;
     }
 
-    @NonNull
-    static String getSchemaCompliantString(final String s) {
-        if (StringUtil.isEmpty(s)) {
-            return SchemaConstants.Value.EMPTY;
-        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
-            return SchemaConstants.Value.TRUE;
-        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
-            return SchemaConstants.Value.FALSE;
-        } else {
-            return s;
+    public String toErrorCodeString() {
+        return mError;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        FailedRequest that = (FailedRequest) o;
+        return mCorrelationId.equals(that.mCorrelationId);
     }
 
+    @Override
+    public int hashCode() {
+        return mCorrelationId.hashCode();
+    }
 }

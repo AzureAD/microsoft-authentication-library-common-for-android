@@ -39,7 +39,7 @@ public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
     private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
 
     public AndroidTelemetryPropertiesCache(@NonNull final Context context) {
-        super(new IKeyPairStorage() {
+        super(new IKeyPairStorage<String>() {
             final SharedPreferencesFileManager mSharedPrefs =
                     SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFS_NAME, -1, null);
 
@@ -49,8 +49,18 @@ public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
             }
 
             @Override
-            public void put(@lombok.NonNull String key, String value) {
+            public void put(@NonNull String key, String value) {
                 mSharedPrefs.putString(key, value);
+            }
+
+            @Override
+            public void remove(@NonNull String key) {
+                mSharedPrefs.remove(key);
+            }
+
+            @Override
+            public void clear() {
+                mSharedPrefs.clear();
             }
         });
     }

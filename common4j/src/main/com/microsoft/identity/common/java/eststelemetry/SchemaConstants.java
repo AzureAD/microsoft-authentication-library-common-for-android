@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
@@ -69,12 +69,12 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final String[] currentRequestPlatformFields = new String[]{
-            Key.ACCOUNT_STATUS,
-            Key.ID_TOKEN_STATUS,
-            Key.AT_STATUS,
-            Key.RT_STATUS,
-            Key.FRT_STATUS,
-            Key.MRRT_STATUS
+            SchemaConstants.Key.ACCOUNT_STATUS,
+            SchemaConstants.Key.ID_TOKEN_STATUS,
+            SchemaConstants.Key.AT_STATUS,
+            SchemaConstants.Key.RT_STATUS,
+            SchemaConstants.Key.FRT_STATUS,
+            SchemaConstants.Key.MRRT_STATUS
     };
 
     /**
@@ -83,7 +83,7 @@ public class SchemaConstants {
      * Failure do so will break the schema.
      */
     private static final String[] lastRequestPlatformFields = new String[]{
-        Key.ALL_TELEMETRY_DATA_SENT
+            SchemaConstants.Key.ALL_TELEMETRY_DATA_SENT
     };
 
     static boolean isCurrentPlatformField(final String key) {

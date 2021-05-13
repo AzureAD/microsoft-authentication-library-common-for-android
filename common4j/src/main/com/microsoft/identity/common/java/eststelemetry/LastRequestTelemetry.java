@@ -20,13 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import android.util.Pair;
-
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.util.ported.Pair;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -111,7 +110,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
     }
 
     @Override
-    public RequestTelemetry copySharedValues(@NonNull final RequestTelemetry requestTelemetry) {
+    public IRequestTelemetry copySharedValues(@NonNull final IRequestTelemetry requestTelemetry) {
         if (requestTelemetry instanceof LastRequestTelemetry) {
             this.silentSuccessfulCount = ((LastRequestTelemetry) requestTelemetry).silentSuccessfulCount;
         }

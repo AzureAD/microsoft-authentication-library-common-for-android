@@ -20,29 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
 
-public interface IRequestTelemetry {
+package com.microsoft.identity.common.java.exception;
 
-    /**
-     * Get partial header string pertaining to fields specific to this telemetry object
-     *
-     * @return Header string component for direct member fields
-     */
-    String getHeaderStringForFields();
+/**
+ * Interface for base exception of Broker/MSAL.
+ */
+public interface IBaseException {
 
     /**
-     * Get a complete header string for all fields belonging to the schema for this telemetry object
-     *
-     * @return Complete header string for this telemetry object
-     */
-    String getCompleteHeaderString();
-
-    /**
-     * Returning a telemetry object that contains data included in the provided telemetry object
-     *
-     * @param requestTelemetry supplied telemetry object
-     * @return telemetry object
-     */
-    RequestTelemetry copySharedValues(RequestTelemetry requestTelemetry);
+     * Returns an error code associated to this exception.
+     * */
+    String getErrorCode();
 }
