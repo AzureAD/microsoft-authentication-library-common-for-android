@@ -240,7 +240,7 @@ public class CommandDispatcher {
                                 SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
-                        initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
@@ -252,26 +252,24 @@ public class CommandDispatcher {
                         }
 
                         //Check cache to see if the same command completed in the last 30 seconds
-                        // Disabling throttling ADO:1383033
-                        // commandResult = sCommandResultCache.get(command);
+                        commandResult = sCommandResultCache.get(command);
                         //If nothing in cache, execute the command and cache the result
-//                        if (commandResult == null) {
+                        if (commandResult == null) {
                             commandResult = executeCommand(command);
-                            // Disabling throttling ADO:1383033
-                            // cacheCommandResult(command, commandResult);
+                            cacheCommandResult(command, commandResult);
                             Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
-                                    + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
+                                    + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                     + " is cacheable : " + command.isEligibleForCaching());
-//                        } else {
-//                            Logger.info(
-//                                    TAG + methodName,
-//                                    "Silent command result returned from cache for correlation id : "
-//                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
-//                            );
-//                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
-//                            commandResult = new CommandResult(commandResult.getStatus(),
-//                                    commandResult.getResult(), commandResult.getCorrelationId());
-//                        }
+                        } else {
+                            Logger.info(
+                                    TAG + methodName,
+                                    "Silent command result returned from cache for correlation id : "
+                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
+                            );
+                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
+                            commandResult = new CommandResult(commandResult.getStatus(),
+                                    commandResult.getResult(), commandResult.getCorrelationId());
+                        }
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -365,6 +363,8 @@ public class CommandDispatcher {
             });
             return finalFuture;
         }
+    }
+
     private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
         // TODO: This will eventually be moved up the chain to the Android Wrapper.
         //       For now, we can keep it here.
@@ -415,8 +415,8 @@ public class CommandDispatcher {
                     Logger.info(TAG + methodName,
                             "Completed duplicate request with correlation id : **"
                                     + command.getParameters().getCorrelationId() + ", having the same result as : "
-                                    + result.getCorrelationId() + statusMsg(result.getStatus().getLogStatus())
-                    );
+                                    + result.getCorrelationId() + ", with the status : "
+                                    + result.getStatus().getLogStatus());
                 }
                 // Return command result will post() result for us.
                 returnCommandResult(command, result, handler);
@@ -598,15 +598,15 @@ public class CommandDispatcher {
      * @return
      */
     private static boolean eligibleToCacheException(BaseException exception) {
-        final String errorCode;
+        final String mErrorCode;
         if (exception instanceof BrokerCommunicationException) {
-            errorCode = ((BrokerCommunicationException) exception).getCategory().toString();
+            mErrorCode = ((BrokerCommunicationException) exception).getCategory().toString();
         } else {
-            errorCode = exception.getErrorCode();
+            mErrorCode = exception.getErrorCode();
         }
         //TODO : ADO 1373343 Add the whole transient exception category.
         if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || nonCacheableErrorCodes.contains(errorCode)) {
+                || nonCacheableErrorCodes.contains(mErrorCode)) {
             return false;
         }
         return true;
@@ -665,7 +665,7 @@ public class CommandDispatcher {
 
                         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                        initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
