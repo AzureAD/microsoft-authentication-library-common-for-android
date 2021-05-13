@@ -20,41 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import lombok.NonNull;
 
-public class StringUtil {
-    /**
-     * The constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF-8";
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
-    /**
-     * Checks if string is null or empty.
-     *
-     * @param message String to check for null or blank.
-     * @return true, if the string is null or blank.
-     */
-    public static boolean isNullOrEmpty(String message) {
-        return message == null || message.trim().length() == 0;
+public class TelemetryUtils {
+
+    static boolean getBooleanFromSchemaString(final String val) {
+        return val.equals(SchemaConstants.Value.TRUE);
     }
 
-    /**
-     * Perform URL decode on the given source.
-     *
-     * @param source The String to decode for.
-     * @return The decoded string.
-     * @throws UnsupportedEncodingException If encoding is not supported.
-     */
-    public static String urlFormDecode(final String source) throws UnsupportedEncodingException {
-        if (isNullOrEmpty(source)) {
-            return "";
-        }
+    static String getSchemaCompliantStringFromBoolean(final boolean val) {
+        return val ? SchemaConstants.Value.TRUE : SchemaConstants.Value.FALSE;
+    }
 
-        return URLDecoder.decode(source, ENCODING_UTF8);
+    @NonNull
+    static String getSchemaCompliantString(final String s) {
+        if (StringUtil.isNullOrEmpty(s)) {
+            return SchemaConstants.Value.EMPTY;
+        } else if (s.equals(TelemetryEventStrings.Value.TRUE)) {
+            return SchemaConstants.Value.TRUE;
+        } else if (s.equals(TelemetryEventStrings.Value.FALSE)) {
+            return SchemaConstants.Value.FALSE;
+        } else {
+            return s;
+        }
     }
 }

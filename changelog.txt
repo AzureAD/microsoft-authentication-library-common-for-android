@@ -1,6 +1,7 @@
 V.Next
 ----------
-- [PATCH] Fix/Suppress SpotBugs issue (#1367) 
+- [MINOR] Migrate eSTS Telemetry to common4j (#1372)
+- [PATCH] Fix/Suppress SpotBugs issue (#1367)
 - [MINOR] Migrate HTTP Layer to common java lib. (#1347)
 - [PATCH] Port eSTS telemetry layer to common-java (#1328)
 - [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)

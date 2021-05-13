@@ -20,28 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import lombok.NonNull;
 
 public abstract class RequestTelemetry implements IRequestTelemetry {
 
     private final static String TAG = RequestTelemetry.class.getSimpleName();
 
     @SerializedName(SchemaConstants.SCHEMA_VERSION_KEY)
-    private String mSchemaVersion;
+    private final String mSchemaVersion;
 
     @SerializedName("platform_telemetry")
-    private ConcurrentMap<String, String> mPlatformTelemetry;
+    private final ConcurrentMap<String, String> mPlatformTelemetry;
 
     RequestTelemetry(@NonNull final String schemaVersion) {
         mSchemaVersion = schemaVersion;
@@ -64,14 +63,15 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
         }
     }
 
-    String getSchemaVersion() {
+    @Override
+    public String getSchemaVersion() {
         return mSchemaVersion;
     }
 
     @Override
     public String getCompleteHeaderString() {
         final String methodName = ":getCompleteHeaderString";
-        if (StringUtil.isEmpty(mSchemaVersion)) {
+        if (StringUtil.isNullOrEmpty(mSchemaVersion)) {
             Logger.verbose(
                     TAG + methodName,
                     "SCHEMA_VERSION is null or empty. " +
@@ -115,7 +115,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
      */
     @NonNull
     // This only being used to compute the platform telemetry header string
-    private String getHeaderStringForFields(@Nullable final String[] fields, @Nullable final Map<String, String> telemetry) {
+    private String getHeaderStringForFields(final String[] fields, final Map<String, String> telemetry) {
         if (fields == null || telemetry == null) {
             return "";
         }
@@ -136,7 +136,7 @@ public abstract class RequestTelemetry implements IRequestTelemetry {
     }
 
     @Override
-    public RequestTelemetry copySharedValues(@NonNull final RequestTelemetry requestTelemetry) {
+    public IRequestTelemetry copySharedValues(@NonNull final IRequestTelemetry requestTelemetry) {
         // grab whatever platform fields we can from current request
         for (final Map.Entry<String, String> entry : mPlatformTelemetry.entrySet()) {
             this.putInPlatformTelemetry(entry.getKey(), entry.getValue());

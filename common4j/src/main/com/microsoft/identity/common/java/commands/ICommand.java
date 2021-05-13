@@ -20,45 +20,35 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry;
-
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-import com.microsoft.identity.common.java.util.StringUtil;
-import lombok.NonNull;
-
-import java.util.UUID;
+package com.microsoft.identity.common.java.commands;
 
 /**
- * Tracks properties used in telemetry.
- */
-public class TelemetryPropertiesCache {
-
-    // region Cached Properties
-    /**
-     * The randomly generated identifier for this device.
-     */
-    private static final String DEVICE_ID_GUID = "device_id_guid";
-    // endregion
-
-    private final IKeyPairStorage<String> mStorage;
-
-    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage<String> storage) {
-        mStorage = storage;
-    }
+ * Interface for Broker/MSAL command classes.
+ * */
+public interface ICommand<T> {
 
     /**
-     * Gets or creates the stable device id for this installation.
-     *
-     * @return The String ID used to refer to this device.
+     * Executes the command's operation.
      */
-    synchronized String getOrCreateRandomStableDeviceId() {
-        String deviceId = mStorage.get(DEVICE_ID_GUID);
+    T execute() throws Exception;
 
-        if (StringUtil.isNullOrEmpty(deviceId)) {
-            deviceId = UUID.randomUUID().toString();
-            mStorage.put(DEVICE_ID_GUID, deviceId);
-        }
+    /**
+     * Returns true if this command should be sent with ESTS Telemetry.
+     */
+    boolean isEligibleForEstsTelemetry();
 
-        return deviceId;
-    }
+    /**
+     * Returns a correlation ID associated to the command.
+     */
+    String getCorrelationId();
+
+    /**
+     * Returns true if this command can be cached (for throttling purpose).
+     */
+    boolean isEligibleForCaching();
+
+    /**
+     * Returns true if this command reaches the token endpoint.
+     */
+    boolean willReachTokenEndpoint();
 }
