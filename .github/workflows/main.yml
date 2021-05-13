@@ -8,6 +8,7 @@ on:
     branches: [ dev ]
     paths-ignore:
     - 'common/versioning/version.properties'
+    - 'common4j/versioning/version.properties'
 
 #For Testing... runs when project is starred
 #on:
@@ -30,7 +31,7 @@ jobs:
         java-version: 8
     - uses: eskatos/gradle-command-action@v1
       with:
-        arguments: common:incrementLatestVersion
+        arguments: common:incrementLatestVersion common4j:incrementLatestVersion
     - run: |
         git config user.name github-actions
         git config user.email github-actions@github.com

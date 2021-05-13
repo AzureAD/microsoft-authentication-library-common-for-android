@@ -20,45 +20,57 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.telemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-import com.microsoft.identity.common.java.util.StringUtil;
-import lombok.NonNull;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import java.util.UUID;
+import com.microsoft.identity.common.java.exception.IServiceException;
 
-/**
- * Tracks properties used in telemetry.
- */
-public class TelemetryPropertiesCache {
+import java.util.HashMap;
+import java.util.List;
 
-    // region Cached Properties
-    /**
-     * The randomly generated identifier for this device.
-     */
-    private static final String DEVICE_ID_GUID = "device_id_guid";
-    // endregion
+import lombok.Builder;
+import lombok.experimental.SuperBuilder;
 
-    private final IKeyPairStorage<String> mStorage;
+@SuperBuilder
+class MockServiceException implements IServiceException {
 
-    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage<String> storage) {
-        mStorage = storage;
+    @Builder.Default
+    String errorCode = "ERROR_CODE";
+
+    @Builder.Default
+    String oAuthSubErrorCode = "OAUTH_SUBERROR_CODE";
+
+    @Builder.Default
+    int httpStatusCode = 0;
+
+    @Builder.Default
+    HashMap<String, String> httpResponseBody = new HashMap<>();
+
+    @Builder.Default
+    HashMap<String, List<String>> httpResponseHeaders = new HashMap<>();
+
+    @Override
+    public String getErrorCode() {
+        return errorCode;
     }
 
-    /**
-     * Gets or creates the stable device id for this installation.
-     *
-     * @return The String ID used to refer to this device.
-     */
-    synchronized String getOrCreateRandomStableDeviceId() {
-        String deviceId = mStorage.get(DEVICE_ID_GUID);
+    @Override
+    public String getOAuthSubErrorCode() {
+        return oAuthSubErrorCode;
+    }
 
-        if (StringUtil.isNullOrEmpty(deviceId)) {
-            deviceId = UUID.randomUUID().toString();
-            mStorage.put(DEVICE_ID_GUID, deviceId);
-        }
+    @Override
+    public int getHttpStatusCode() {
+        return httpStatusCode;
+    }
 
-        return deviceId;
+    @Override
+    public HashMap<String, String> getHttpResponseBody() {
+        return httpResponseBody;
+    }
+
+    @Override
+    public HashMap<String, List<String>> getHttpResponseHeaders() {
+        return httpResponseHeaders;
     }
 }

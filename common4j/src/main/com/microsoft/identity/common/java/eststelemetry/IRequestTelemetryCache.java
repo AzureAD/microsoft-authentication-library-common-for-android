@@ -20,43 +20,26 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
 
-public class FailedRequest {
+package com.microsoft.identity.common.java.eststelemetry;
 
-    private String mApiId;
-    private String mCorrelationId;
-    private String mError;
+/**
+ * This is a "cache of one" i.e. there will always be only one IRequestTelemetry object saved
+ * in the cache at any given time
+ */
+public interface IRequestTelemetryCache<T extends IRequestTelemetry>{
 
-    public FailedRequest(String mApiId, String mCorrelationId, String error) {
-        this.mApiId = mApiId;
-        this.mCorrelationId = mCorrelationId;
-        this.mError = error;
-    }
+    /**
+     * Save telemetry associated to the {@link IRequestTelemetry} object to the cache
+     *
+     * @param requestTelemetry
+     */
+    void saveRequestTelemetryToCache(final T requestTelemetry);
 
-    public String toApiIdCorrelationString() {
-        return mApiId + ',' + mCorrelationId;
-    }
-
-    public String toErrorCodeString() {
-        return mError;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
-        FailedRequest that = (FailedRequest) o;
-        return mCorrelationId.equals(that.mCorrelationId);
-    }
-
-    @Override
-    public int hashCode() {
-        return mCorrelationId.hashCode();
-    }
+    /**
+     * Get the telemetry object from the cache
+     *
+     * @return a {@link IRequestTelemetry} object
+     */
+    T getRequestTelemetryFromCache();
 }

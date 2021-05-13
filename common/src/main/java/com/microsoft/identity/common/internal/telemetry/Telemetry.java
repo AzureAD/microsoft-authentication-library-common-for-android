@@ -40,7 +40,6 @@ import lombok.NonNull;
  *
  * This is now acting as an adapter for {@link com.microsoft.identity.common.java.telemetry.Telemetry}.
  **/
-@Deprecated
 public class Telemetry extends com.microsoft.identity.common.java.telemetry.Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
 
@@ -48,7 +47,6 @@ public class Telemetry extends com.microsoft.identity.common.java.telemetry.Tele
     private static final com.microsoft.identity.common.java.telemetry.Telemetry actualInstance =
             com.microsoft.identity.common.java.telemetry.Telemetry.getInstance();
 
-    @Deprecated
     public synchronized static Telemetry getInstance() {
         return instance;
     }
