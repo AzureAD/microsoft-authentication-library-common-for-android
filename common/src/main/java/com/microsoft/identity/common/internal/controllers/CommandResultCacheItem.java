@@ -53,6 +53,4 @@ public class CommandResultCacheItem {
     public CommandResult getValue(){
         return mValue;
     }
-
-
 }

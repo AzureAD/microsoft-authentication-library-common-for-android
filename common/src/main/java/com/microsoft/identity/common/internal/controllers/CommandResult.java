@@ -24,26 +24,12 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.Nullable;
 
-public class CommandResult {
+import com.microsoft.identity.common.java.commands.ICommandResult;
+
+public class CommandResult implements ICommandResult {
 
     public String getCorrelationId() {
         return mCorrelationId;
-    }
-
-    public enum ResultStatus {
-        CANCEL,
-        COMPLETED,
-        ERROR;
-
-        public String getLogStatus() {
-            if (ResultStatus.COMPLETED == this) {
-                return "SUCCESS";
-            } else if (ResultStatus.ERROR == this) {
-                return "ERROR";
-            } else {
-                return "CANCEL";
-            }
-        }
     }
 
     private final ResultStatus mStatus;
