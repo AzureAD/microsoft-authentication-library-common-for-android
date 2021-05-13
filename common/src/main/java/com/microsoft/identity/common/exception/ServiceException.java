@@ -26,6 +26,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
+import com.microsoft.identity.common.java.exception.IServiceException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 
 import org.json.JSONException;
@@ -33,7 +34,7 @@ import org.json.JSONException;
 import java.util.HashMap;
 import java.util.List;
 
-public class ServiceException extends BaseException {
+public class ServiceException extends BaseException implements IServiceException {
 
     public static final String sName =  ServiceException.class.getName();
     private static final long serialVersionUID = 5139563940871615046L;

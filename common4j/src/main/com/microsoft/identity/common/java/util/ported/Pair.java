@@ -20,17 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
 
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.util.ported;
 
-public interface ICurrentTelemetry {
+import lombok.AllArgsConstructor;
 
-    /**
-     * Capture telemetry for current request
-     *
-     * @param key   The key supplied for telemetry
-     * @param value The value for the supplied key
-     */
-    void put(@NonNull final String key, @NonNull final String value);
+@AllArgsConstructor
+public class Pair<T, U> {
+    public final T first;
+    public final U second;
 }

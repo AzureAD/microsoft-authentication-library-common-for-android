@@ -51,7 +51,7 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
@@ -80,6 +80,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry.createLastRequestTelemetryCacheOnAndroid;
 
 public class CommandDispatcher {
 
@@ -239,7 +240,7 @@ public class CommandDispatcher {
                                 SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
@@ -302,6 +303,15 @@ public class CommandDispatcher {
             });
             return finalFuture;
         }
+    }
+
+    private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
+        // TODO: This will eventually be moved up the chain to the Android Wrapper.
+        //       For now, we can keep it here.
+        EstsTelemetry.getInstance().setUp(
+                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
+
+        EstsTelemetry.getInstance().initTelemetryForCommand(command);
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
@@ -596,7 +606,7 @@ public class CommandDispatcher {
 
                         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
