@@ -324,11 +324,11 @@ public class LocalMSALController extends BaseController {
                     "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-//        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
+        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
 //            if (!fullCacheRecord.getAccessToken().isExpired()) {
-//                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-//                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
-//                CommandDispatcher.submitAndForget(refreshOnCommand);
+                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                CommandDispatcher.submitAndForget(refreshOnCommand);
 //            } else {
 //                Logger.warn(
 //                        TAG + methodName,
@@ -345,9 +345,7 @@ public class LocalMSALController extends BaseController {
 //                        TAG + methodName
 //                );
 //            }
-//        } else
-//
-            if ((accessTokenIsNull(fullCacheRecord)
+        } else if ((accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
