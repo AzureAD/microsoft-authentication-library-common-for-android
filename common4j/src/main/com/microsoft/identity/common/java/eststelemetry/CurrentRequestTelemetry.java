@@ -20,28 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
 
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import static com.microsoft.identity.common.internal.eststelemetry.SchemaConstants.Key.API_ID;
-import static com.microsoft.identity.common.internal.eststelemetry.SchemaConstants.Key.FORCE_REFRESH;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
 
-public class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
+import static com.microsoft.identity.common.java.eststelemetry.SchemaConstants.Key.API_ID;
+import static com.microsoft.identity.common.java.eststelemetry.SchemaConstants.Key.FORCE_REFRESH;
 
+class CurrentRequestTelemetry extends RequestTelemetry implements ICurrentTelemetry {
+
+    @Getter
+    @Accessors(prefix = "m")
     private String mApiId;
+
+    @Getter
+    @Accessors(prefix = "m")
     private boolean mForceRefresh;
 
     CurrentRequestTelemetry() {
         super(SchemaConstants.CURRENT_SCHEMA_VERSION);
-    }
-
-    String getApiId() {
-        return mApiId;
-    }
-
-    boolean getForceRefresh() {
-        return mForceRefresh;
     }
 
     @Override

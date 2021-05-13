@@ -24,7 +24,9 @@ package com.microsoft.identity.common.internal.controllers;
 
 import androidx.annotation.Nullable;
 
-public class CommandResult {
+import com.microsoft.identity.common.java.commands.ICommandResult;
+
+public class CommandResult implements ICommandResult {
 
     public String getCorrelationId() {
         return mCorrelationId;

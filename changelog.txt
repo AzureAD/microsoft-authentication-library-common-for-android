@@ -2,6 +2,7 @@ V.Next
 ----------
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MINOR] Migrate eSTS Telemetry to common4j (#1372)
 - [PATCH] Fix/Suppress SpotBugs issue (#1367)
 - [MINOR] Migrate HTTP Layer to common java lib. (#1347)
 - [PATCH] Port eSTS telemetry layer to common-java (#1328)
@@ -10,7 +11,7 @@ V.Next
 - [MAJOR] New API on KeyAccessor (#1309)
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
-- [PATCH] Add common-java. Migrate Logger. (#1300)
+- [MINOR] Add common-java. Migrate Logger. (#1300)
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 - [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)

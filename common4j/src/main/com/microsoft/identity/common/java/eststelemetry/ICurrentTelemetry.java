@@ -20,41 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+package com.microsoft.identity.common.java.eststelemetry;
 
 import lombok.NonNull;
 
-public class StringUtil {
-    /**
-     * The constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF-8";
+public interface ICurrentTelemetry {
 
     /**
-     * Checks if string is null or empty.
+     * Capture telemetry for current request
      *
-     * @param message String to check for null or blank.
-     * @return true, if the string is null or blank.
+     * @param key   The key supplied for telemetry
+     * @param value The value for the supplied key
      */
-    public static boolean isNullOrEmpty(String message) {
-        return message == null || message.trim().length() == 0;
-    }
-
-    /**
-     * Perform URL decode on the given source.
-     *
-     * @param source The String to decode for.
-     * @return The decoded string.
-     * @throws UnsupportedEncodingException If encoding is not supported.
-     */
-    public static String urlFormDecode(final String source) throws UnsupportedEncodingException {
-        if (isNullOrEmpty(source)) {
-            return "";
-        }
-
-        return URLDecoder.decode(source, ENCODING_UTF8);
-    }
+    void put(@NonNull final String key, @NonNull final String value);
 }
