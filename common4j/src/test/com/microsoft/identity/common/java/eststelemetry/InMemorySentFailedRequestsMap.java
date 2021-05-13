@@ -20,41 +20,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import lombok.NonNull;
 
-public class StringUtil {
-    /**
-     * The constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF-8";
+class InMemorySentFailedRequestsMap implements IKeyPairStorage<Set<FailedRequest>> {
 
-    /**
-     * Checks if string is null or empty.
-     *
-     * @param message String to check for null or blank.
-     * @return true, if the string is null or blank.
-     */
-    public static boolean isNullOrEmpty(String message) {
-        return message == null || message.trim().length() == 0;
+    final ConcurrentMap<String, Set<FailedRequest>> mMap = new ConcurrentHashMap<>();
+
+    @Override
+    public Set<FailedRequest> get(final String key) {
+        return mMap.get(key);
     }
 
-    /**
-     * Perform URL decode on the given source.
-     *
-     * @param source The String to decode for.
-     * @return The decoded string.
-     * @throws UnsupportedEncodingException If encoding is not supported.
-     */
-    public static String urlFormDecode(final String source) throws UnsupportedEncodingException {
-        if (isNullOrEmpty(source)) {
-            return "";
-        }
+    @Override
+    public void put(final String key, final Set<FailedRequest> value) {
+        mMap.put(key, value);
+    }
 
-        return URLDecoder.decode(source, ENCODING_UTF8);
+    @Override
+    public void remove(@NonNull String key) {
+        mMap.remove(key);
+    }
+
+    @Override
+    public void clear() {
+        mMap.clear();
     }
 }

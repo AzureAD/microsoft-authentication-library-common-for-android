@@ -26,9 +26,15 @@ import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 
 import java.util.HashMap;
 
-public class InMemoryStorage implements IKeyPairStorage {
+import lombok.NonNull;
+
+public class InMemoryStorage implements IKeyPairStorage<String> {
 
     final HashMap<String, String> mMap = new HashMap<>();
+
+    public int size(){
+        return mMap.size();
+    }
 
     @Override
     public String get(final String key) {
@@ -38,5 +44,15 @@ public class InMemoryStorage implements IKeyPairStorage {
     @Override
     public void put(final String key, final String value) {
         mMap.put(key, value);
+    }
+
+    @Override
+    public void remove(@NonNull String key) {
+        mMap.remove(key);
+    }
+
+    @Override
+    public void clear() {
+        mMap.clear();
     }
 }

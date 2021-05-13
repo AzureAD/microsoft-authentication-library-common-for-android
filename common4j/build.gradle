@@ -140,12 +140,15 @@ dependencies {
 
     implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:2.8.5"
+    implementation 'org.json:json:20180813'
 
     compileOnly "org.projectlombok:lombok:1.18.12"
     annotationProcessor "org.projectlombok:lombok:1.18.12"
 
+    testCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+
     testImplementation "junit:junit:4.13"
-    testImplementation "org.mockito:mockito-core:3.6.28"
+    testImplementation "org.mockito:mockito-core:3.9.0"
     testCompileOnly "org.projectlombok:lombok:1.18.12"
     testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
 }
