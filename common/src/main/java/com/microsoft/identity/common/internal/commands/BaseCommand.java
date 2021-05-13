@@ -27,13 +27,13 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.java.commands.ICommand;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.SuperBuilder;
@@ -43,7 +43,7 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @EqualsAndHashCode
 @SuperBuilder(toBuilder = true)
-public abstract class BaseCommand<T> implements Command<T> {
+public abstract class BaseCommand<T> implements ICommand<T> {
 
     @NonNull
     private final CommandParameters parameters;
@@ -85,7 +85,18 @@ public abstract class BaseCommand<T> implements Command<T> {
         return controllers.get(0);
     }
 
+    @Override
     public boolean isEligibleForCaching() {
+        return false;
+    }
+
+    @Override
+    public String getCorrelationId() {
+        return getParameters().getCorrelationId();
+    }
+
+    @Override
+    public boolean willReachTokenEndpoint() {
         return false;
     }
 }

@@ -20,41 +20,36 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
+package com.microsoft.identity.common.java.eststelemetry;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.NonNull;
 
-public class StringUtil {
-    /**
-     * The constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF-8";
+public class TelemetryMap implements IKeyPairStorage<CurrentRequestTelemetry>{
 
-    /**
-     * Checks if string is null or empty.
-     *
-     * @param message String to check for null or blank.
-     * @return true, if the string is null or blank.
-     */
-    public static boolean isNullOrEmpty(String message) {
-        return message == null || message.trim().length() == 0;
+    private final ConcurrentHashMap<String, CurrentRequestTelemetry> telemetryMap = new ConcurrentHashMap<>();
+
+    @Override
+    public CurrentRequestTelemetry get(@NonNull String key) {
+        return telemetryMap.get(key);
     }
 
-    /**
-     * Perform URL decode on the given source.
-     *
-     * @param source The String to decode for.
-     * @return The decoded string.
-     * @throws UnsupportedEncodingException If encoding is not supported.
-     */
-    public static String urlFormDecode(final String source) throws UnsupportedEncodingException {
-        if (isNullOrEmpty(source)) {
-            return "";
-        }
+    @Override
+    public void put(@NonNull String key, CurrentRequestTelemetry value) {
+        telemetryMap.put(key, value);
+    }
 
-        return URLDecoder.decode(source, ENCODING_UTF8);
+    @Override
+    public void remove(@NonNull String key) {
+        telemetryMap.remove(key);
+    }
+
+    @Override
+    public void clear() {
+        telemetryMap.clear();
     }
 }
+

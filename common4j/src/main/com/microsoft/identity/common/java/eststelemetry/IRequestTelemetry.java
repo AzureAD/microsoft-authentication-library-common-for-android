@@ -20,25 +20,36 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.eststelemetry;
+package com.microsoft.identity.common.java.eststelemetry;
 
-/**
- * This is a "cache of one" i.e. there will always be only one RequestTelemetry object saved
- * in the cache at any given time
- */
-public interface IRequestTelemetryCache {
+interface IRequestTelemetry {
 
     /**
-     * Save telemetry associated to the {@link RequestTelemetry} object to the cache
+     * Get partial header string pertaining to fields specific to this telemetry object
      *
-     * @param requestTelemetry
+     * @return Header string component for direct member fields
      */
-    void saveRequestTelemetryToCache(final RequestTelemetry requestTelemetry);
+    String getHeaderStringForFields();
 
     /**
-     * Get the telemetry object from the cache
+     * Get schema version of the telemetry.
      *
-     * @return a {@link RequestTelemetry} object
+     * @return schema version.
      */
-    RequestTelemetry getRequestTelemetryFromCache();
+    String getSchemaVersion();
+
+    /**
+     * Get a complete header string for all fields belonging to the schema for this telemetry object
+     *
+     * @return Complete header string for this telemetry object
+     */
+    String getCompleteHeaderString();
+
+    /**
+     * Returning a telemetry object that contains data included in the provided telemetry object
+     *
+     * @param requestTelemetry supplied telemetry object
+     * @return telemetry object
+     */
+    IRequestTelemetry copySharedValues(IRequestTelemetry requestTelemetry);
 }

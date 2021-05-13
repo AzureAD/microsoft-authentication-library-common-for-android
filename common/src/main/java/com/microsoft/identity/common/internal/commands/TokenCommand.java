@@ -53,4 +53,9 @@ public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
     }
 
     abstract void notify(int requestCode, int resultCode, final Intent data);
+
+    @Override
+    public boolean willReachTokenEndpoint() {
+        return true;
+    }
 }
