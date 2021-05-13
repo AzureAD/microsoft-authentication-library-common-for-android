@@ -32,17 +32,6 @@ public class CommandResult implements ICommandResult {
         return mCorrelationId;
     }
 
-    public enum ResultStatus {
-        CANCEL,
-        COMPLETED,
-        ERROR,
-        VOID;
-
-        public String getLogStatus() {
-            return this.name();
-        }
-    }
-
     private final ResultStatus mStatus;
     private final Object mResult;
     private final String mCorrelationId;
