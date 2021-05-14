@@ -42,7 +42,6 @@ jobs:
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
-      spotbugsCommand: spotbugsDebug
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
