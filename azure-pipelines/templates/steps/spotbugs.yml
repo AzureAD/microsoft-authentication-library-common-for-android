@@ -6,9 +6,6 @@ parameters:
 - name: project
 - name: spotbugsCommand
   default: spotbugsLocalDebug
-  values:
-  - spotbugsLocalDebug
-  - spotbugsDebug
 - name: artifactName
   default: CodeAnalysisLogs
 
