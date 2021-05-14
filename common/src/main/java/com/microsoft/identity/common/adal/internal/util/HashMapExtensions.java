@@ -25,7 +25,7 @@ package com.microsoft.identity.common.adal.internal.util;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
-import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONArray;

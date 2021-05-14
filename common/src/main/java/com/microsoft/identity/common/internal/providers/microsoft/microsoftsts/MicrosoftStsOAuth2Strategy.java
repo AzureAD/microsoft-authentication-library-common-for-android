@@ -37,12 +37,12 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpConstants;
-import com.microsoft.identity.common.internal.net.HttpResponse;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
-import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpConstants;
+import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
@@ -277,7 +277,7 @@ public class MicrosoftStsOAuth2Strategy
         }
 
 
-        builder.setLibraryName(DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         builder.setLibraryVersion(Device.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
@@ -390,7 +390,7 @@ public class MicrosoftStsOAuth2Strategy
         try {
             tokenRequest.setCorrelationId(
                     UUID.fromString(
-                            DiagnosticContext
+                            DiagnosticContext.INSTANCE
                                     .getRequestContext()
                                     .get(DiagnosticContext.CORRELATION_ID)
                     )
@@ -467,9 +467,9 @@ public class MicrosoftStsOAuth2Strategy
         final String methodName = "#performPkeyAuthRequest";
         final String requestBody = ObjectMapper.serializeObjectToFormUrlEncoded(request);
         final Map<String, String> headers = new TreeMap<>();
-        headers.put("client-request-id", DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        headers.put("client-request-id", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
         headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
 
         headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
