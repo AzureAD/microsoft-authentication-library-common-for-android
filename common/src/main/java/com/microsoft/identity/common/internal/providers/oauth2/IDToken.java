@@ -39,8 +39,6 @@ import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 
-import static com.microsoft.identity.common.internal.net.ObjectMapper.TAG;
-
 /**
  * Represents the OpenID Connect Id Token.
  * Standard ID token Claims per spec
@@ -48,6 +46,8 @@ import static com.microsoft.identity.common.internal.net.ObjectMapper.TAG;
  */
 @EqualsAndHashCode
 public class IDToken {
+
+    private static final String TAG = IDToken.class.getName();
 
     /**
      * Subject - Identifier for the End-User at the Issuer.
@@ -189,7 +189,6 @@ public class IDToken {
      * the number of seconds from 1970-01-01T0:0:0Z as measured in UTC until the date/time.
      */
     public static final String UPDATED_AT = "updated_at";
-
 
     private final Map<String, ?> mTokenClaims;
     private final String mRawIdToken;

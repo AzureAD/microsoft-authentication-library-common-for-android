@@ -25,7 +25,11 @@ package com.microsoft.identity.common.internal.logging;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-@Deprecated
+/**
+ * Deprecated.
+ *
+ * This is now acting as an adapter for {@link com.microsoft.identity.common.java.logging.Logger}.
+ **/
 public class Logger extends com.microsoft.identity.common.logging.Logger {
 
     private static final String TAG = Logger.class.getSimpleName();
@@ -40,7 +44,6 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
     /**
      * Enum class for LogLevel that the sdk recognizes.
      */
-    @Deprecated
     public enum LogLevel {
         /**
          * Error level logging.
@@ -60,37 +63,31 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         VERBOSE
     }
 
-    @Deprecated
     public static void setAllowPii(final boolean allowPii) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.setAllowPii(allowPii);
     }
 
-    @Deprecated
     public static void setAllowLogcat(final boolean allowLogcat) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.setAllowLogcat(allowLogcat);
     }
 
-    @Deprecated
     public static boolean getAllowPii() {
         logDeprecationWarning();
         return com.microsoft.identity.common.logging.Logger.getAllowPii();
     }
 
-    @Deprecated
     public static boolean getAllowLogcat() {
         logDeprecationWarning();
         return com.microsoft.identity.common.logging.Logger.getAllowLogcat();
     }
 
-    @Deprecated
     public static String getDiagnosticContextMetadata() {
         logDeprecationWarning();
         return com.microsoft.identity.common.logging.Logger.getDiagnosticContextMetadata();
     }
 
-    @Deprecated
     public static void error(final String tag,
                              @Nullable final String errorMessage,
                              @Nullable final Throwable exception) {
@@ -98,7 +95,6 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.error(tag, errorMessage, exception);
     }
 
-    @Deprecated
     public static void error(final String tag,
                              @Nullable final String correlationID,
                              @Nullable final String errorMessage,
@@ -107,7 +103,6 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.error(tag, correlationID, errorMessage, exception);
     }
 
-    @Deprecated
     public static void errorPII(final String tag,
                                 @Nullable final String errorMessage,
                                 @Nullable final Throwable exception) {
@@ -115,7 +110,6 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.errorPII(tag, errorMessage, exception);
     }
 
-    @Deprecated
     public static void errorPII(final String tag,
                                 @Nullable final String correlationID,
                                 @Nullable final String errorMessage,
@@ -124,13 +118,11 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.errorPII(tag, correlationID, errorMessage, exception);
     }
 
-    @Deprecated
     public static void warn(final String tag, @Nullable final String message) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.warn(tag, message);
     }
 
-    @Deprecated
     public static void warn(final String tag,
                             @Nullable final String correlationID,
                             @Nullable final String message) {
@@ -138,13 +130,11 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.warn(tag, correlationID, message);
     }
 
-    @Deprecated
     public static void warnPII(final String tag, @Nullable final String message) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.warnPII(tag, message);
     }
 
-    @Deprecated
     public static void warnPII(final String tag,
                                @Nullable final String correlationID,
                                @Nullable final String message) {
@@ -152,13 +142,11 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.warnPII(tag, correlationID, message);
     }
 
-    @Deprecated
     public static void info(final String tag, @Nullable final String message) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.info(tag, message);
     }
 
-    @Deprecated
     public static void info(final String tag,
                             @Nullable final String correlationID,
                             @Nullable final String message) {
@@ -166,13 +154,11 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.info(tag, correlationID, message);
     }
 
-    @Deprecated
     public static void infoPII(final String tag, @Nullable final String message) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.infoPII(tag, message);
     }
 
-    @Deprecated
     public static void infoPII(final String tag,
                                @Nullable final String correlationID,
                                @Nullable final String message) {
@@ -180,13 +166,11 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.infoPII(tag, correlationID, message);
     }
 
-    @Deprecated
     public static void verbose(final String tag, @Nullable final String message) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.verbose(tag, message);
     }
 
-    @Deprecated
     public static void verbose(final String tag,
                                @Nullable final String correlationID,
                                @Nullable final String message) {
@@ -194,13 +178,11 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         com.microsoft.identity.common.logging.Logger.verbose(tag, correlationID, message);
     }
 
-    @Deprecated
     public static void verbosePII(final String tag, @Nullable final String message) {
         logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.verbosePII(tag, message);
     }
 
-    @Deprecated
     public static void verbosePII(final String tag,
                                   @Nullable final String correlationID,
                                   @Nullable final String message) {

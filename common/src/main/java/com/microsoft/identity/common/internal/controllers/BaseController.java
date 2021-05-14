@@ -56,9 +56,10 @@ import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
@@ -189,6 +190,7 @@ public abstract class BaseController {
                 ((MicrosoftAuthorizationRequest.Builder) builder)
                         .setAuthority(requestAuthority.getAuthorityURL())
                         .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                        .setStateGenerator(new AndroidTaskStateGenerator(interactiveTokenCommandParameters.getActivity().getTaskId()))
                         .setSlice(requestAuthority.mSlice);
             }
 

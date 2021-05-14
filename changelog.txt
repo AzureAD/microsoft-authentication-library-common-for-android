@@ -1,17 +1,41 @@
 V.Next
 ----------
+- [MINOR] Migrate eSTS Telemetry to common4j (#1372)
+- [PATCH] Fix/Suppress SpotBugs issue (#1367)
+- [MINOR] Migrate HTTP Layer to common java lib. (#1347)
+- [PATCH] Port eSTS telemetry layer to common-java (#1328)
+- [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
+- [MINOR] Automate broker protocol version computation. (#1301)
+- [MAJOR] New API on KeyAccessor (#1309)
+- [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
+- [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
+- [MINOR] Add common-java. Migrate Logger. (#1300)
+- [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
+- [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
+- [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
+- [PATCH] Fixes null object reference when getting account by localAccountId (#1318)
+
+Version 3.4.3
+----------
+- [PATCH] Revert connection detection change, disable throttling cache (#1351, #1353)
+
+Version 3.4.2
+----------
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+
+Version 3.4.1
+----------
+- [PATCH] Adding checks to not cache certain ErrorCodes. (#1330, #1329)
+
+Version 3.4.0
+----------
 - [MINOR] Enable optional refresh token in cache (#1294)
 - [MINOR] Hide Switch Account in Broker interactive flows (#1284)
 - [MINOR] Adds the ability for KeyAccessors to expose their manager (#1285)
 - [MINOR] Propagate unknown parameters from the server (#1292)
 - [MINOR] Adds new API support for the broker - SSO token and flight support (#1290)
 - [MINOR] Elevates AndroidCommon Logger out of internal package (#1279)
-- [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
 - [MINOR] Automate broker protocol version computation. (#1301)
-- [MAJOR] New API on KeyAccessor (#1309)
-- [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
-- [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
-- [PATCH] Fixes null object reference when getting account by localAccountId (#1318)
 
 Version 3.3.1
 ----------

@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import com.microsoft.identity.common.internal.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpClient;
 
 import java.net.URL;
 import java.util.Map;
