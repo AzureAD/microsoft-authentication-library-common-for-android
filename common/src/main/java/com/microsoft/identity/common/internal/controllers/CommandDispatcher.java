@@ -141,6 +141,8 @@ public class CommandDispatcher {
                     1, config.getMaxTheadPoolInteractive(), -1, 0, TimeUnit.MINUTES, "interactive"
             );
             sConfigured = true;
+        }else{
+            Logger.warn(TAG, "CommandDispatcher was already configured.");
         }
     }
 
