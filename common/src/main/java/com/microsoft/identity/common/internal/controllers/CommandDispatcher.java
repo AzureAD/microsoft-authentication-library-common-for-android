@@ -135,7 +135,7 @@ public class CommandDispatcher {
         sExecutingCommandMap = newMap;
     }
 
-    public static void configureCommandDispatcher(CommandDispatcherConfiguration config){
+    public static synchronized void configureCommandDispatcher(CommandDispatcherConfiguration config){
         if(!sConfigured) {
             sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
                     1, config.getMaxTheadPoolInteractive(), -1, 0, TimeUnit.MINUTES, "interactive"
