@@ -46,7 +46,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-public class AuthorizationActivity extends DualScreenActivity {
+public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
 
     private AuthorizationFragment mFragment;
 

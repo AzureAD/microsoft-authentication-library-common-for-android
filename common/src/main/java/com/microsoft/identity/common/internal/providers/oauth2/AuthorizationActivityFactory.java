@@ -22,17 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
-import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
@@ -46,36 +40,40 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_CONTROLS_ENABLED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
-public class AuthorizationActivity extends DualScreenActivity {
+public class AuthorizationActivityFactory {
 
-    private AuthorizationFragment mFragment;
 
-    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
-        AuthorizationFragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
-        Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
 
-        if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-            fragment = new WebViewAuthorizationFragment();
+    public static Intent createStartIntent(final Context context,
+                                           final Intent authIntent,
+                                           final String requestUrl,
+                                           final String redirectUri,
+                                           final HashMap<String, String> requestHeaders,
+                                           final AuthorizationAgent authorizationAgent,
+                                           final boolean webViewZoomEnabled,
+                                           final boolean webViewZoomControlsEnabled) {
+        Intent intent;
+        if (ProcessUtil.isBrokerProcess(context)) {
+            intent = new Intent(context, BrokerAuthorizationActivity.class);
         } else {
-            fragment = new BrowserAuthorizationFragment();
+            intent = new Intent(context, CurrentTaskAuthorizationActivity.class) {
+
+                @Override
+                public Object clone() {
+                    return super.clone();
+                }
+            };
         }
 
-        fragment.setInstanceState(intent.getExtras());
-        return fragment;
+        intent.putExtra(AUTH_INTENT, authIntent);
+        intent.putExtra(REQUEST_URL, requestUrl);
+        intent.putExtra(REDIRECT_URI, redirectUri);
+        intent.putExtra(REQUEST_HEADERS, requestHeaders);
+        intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
+        intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+        intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+        intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+        return intent;
     }
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        mFragment = getAuthorizationFragmentFromStartIntent(getIntent());
-        setFragment(mFragment);
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (!mFragment.onBackPressed()) {
-            super.onBackPressed();
-        }
-    }
 }

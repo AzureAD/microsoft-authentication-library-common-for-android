@@ -1697,6 +1697,23 @@ public final class AuthenticationConstants {
          * an intent action specifying that the intent contains authorization results.
          */
         public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
+
+        /**
+         * and intent action specifying the the authorization result redirect was returned to the application
+         */
+        public static final String REDIRECT_RETURNED_ACTION = "redirect_returned_action";
+
+        /**
+         * and intent action specifying the activity receiving the authorization result redirect should be destroyed
+         */
+        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY= "destroy_redirect_receiving_activity";
+
+        /**
+         * an intent action used to tell the activity used to launch custom tabs that it should re-launch in order to close the custom tabs UI
+         * Custom Tabs does not provide a mechanism to programmtically close custom tabs... hence we have to make this happen via the activity used
+         * to launch custom tabs and intent flags to clear the task.
+         */
+        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
     }
 
     /**
