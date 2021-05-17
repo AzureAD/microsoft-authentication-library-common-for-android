@@ -22,116 +22,28 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-import android.text.TextUtils;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.logging.DiagnosticContext;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Helper class to add additional platform specific query parameters or headers for the request sent to sts.
+ * A static class holding device data.
  */
-public final class Device {
+@SuppressFBWarnings(value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS",
+        justification = "This class kept its original name to avoid breaking change during the refactoring process." +
+                "Once the process is done, this class will be removed entirely. ")
+public final class Device extends com.microsoft.identity.common.java.platform.Device {
 
     private static IDevicePopManager sDevicePoPManager;
 
-    /**
-     * The String representing the sdk platform version.
-     */
-    public static final String PRODUCT_VERSION = "2.0.2";
-
-    /**
-     * Private constructor to prevent a help class from being initiated.
-     */
-    private Device() {
-    }
-
-    @SuppressWarnings("deprecation")
-    public static Map<String, String> getPlatformIdParameters() {
-        final Map<String, String> platformParameters = new HashMap<>();
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            //CPU_ABI has been deprecated
-            platformParameters.put(PlatformIdParameters.CPU_PLATFORM, Build.CPU_ABI);
-        } else {
-            final String[] supportedABIs = Build.SUPPORTED_ABIS;
-
-            if (supportedABIs != null && supportedABIs.length > 0) {
-                platformParameters.put(PlatformIdParameters.CPU_PLATFORM, supportedABIs[0]);
-            }
-        }
-
-        platformParameters.put(PlatformIdParameters.OS, String.valueOf(Build.VERSION.SDK_INT));
-        platformParameters.put(PlatformIdParameters.DEVICE_MODEL, Build.MODEL);
-
-        return Collections.unmodifiableMap(platformParameters);
-    }
-
-    public static String getProductVersion() {
-        final String version = DiagnosticContext.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.VERSION);
-        if (TextUtils.isEmpty(version)) {
-            return PRODUCT_VERSION;
-        } else {
-            return version;
-        }
-    }
-
-    public static final class PlatformIdParameters {
-        /**
-         * The String representing the CPU for the device.
-         */
-        public static final String CPU_PLATFORM = "x-client-CPU";
-
-        /**
-         * The String representing the device OS.
-         */
-        public static final String OS = "x-client-OS";
-
-        /**
-         * The String representing the device model.
-         */
-        public static final String DEVICE_MODEL = "x-client-DM";
-
-        /**
-         * String for the broker version.
-         */
-        public static final String BROKER_VERSION = "x-client-brkrver";
-    }
-
-    /**
-     * Gets the API level of the current runtime.
-     *
-     * @return The API level.
-     */
-    public static int getApiLevel() {
-        return Build.VERSION.SDK_INT;
-    }
-
-    /**
-     * Gets the manufacturer of the current device.
-     *
-     * @return The name of the device manufacturer.
-     */
-    public static String getManufacturer() {
-        return Build.MANUFACTURER;
-    }
-
-    /**
-     * Gets the model name/code of the current device.
-     *
-     * @return The device model name.
-     */
-    public static String getModel() {
-        return Build.MODEL;
+    // Note: this needs to be invoked at the beginning of an android flow.
+    static {
+        com.microsoft.identity.common.java.platform.Device.setDeviceMetadata(new AndroidDeviceMetadata());
     }
 
     public static synchronized IDevicePopManager getDevicePoPManagerInstance() throws ClientException {
@@ -139,7 +51,6 @@ public final class Device {
             if (null == sDevicePoPManager) {
                 sDevicePoPManager = new DevicePopManager();
             }
-
             return sDevicePoPManager;
         } catch (CertificateException
                 | NoSuchAlgorithmException
