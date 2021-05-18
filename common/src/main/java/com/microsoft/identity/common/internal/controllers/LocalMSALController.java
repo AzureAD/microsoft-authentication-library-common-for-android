@@ -343,7 +343,7 @@ public class LocalMSALController extends BaseController {
                         tokenCache,
                         strategy,
                         fullCacheRecord,
-                        TAG + methodNamest
+                        TAG + methodName
                 );
             }
         } else
