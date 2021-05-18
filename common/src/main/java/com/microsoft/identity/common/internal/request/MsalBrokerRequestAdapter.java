@@ -55,6 +55,7 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
@@ -105,11 +106,28 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
         Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
 
-        final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
-                QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
+        final List<Pair<String, String>> queryParams = parameters.getExtraQueryStringParameters();
+        final List<Pair<String, String>> extraQueryStringParameters = queryParams != null ?
+                new ArrayList<>(queryParams) : new ArrayList<Pair<String, String>>();
+
+        final AzureActiveDirectorySlice sliceData = parameters.getAuthority().getSlice();
+        if (sliceData != null) {
+            String slice = sliceData.getSlice();
+            if (slice != null) {
+                extraQueryStringParameters.add(new Pair(AzureActiveDirectorySlice.SLICE_PARAMETER, slice));
+            }
+            String dc = sliceData.getDC();
+            if (dc != null) {
+                extraQueryStringParameters.add(new Pair(AzureActiveDirectorySlice.DC_PARAMETER, dc));
+            }
+        }
+
+        final String extraQueryStringParameter = (queryParams != null || sliceData != null) ?
+                QueryParamsAdapter._toJson(extraQueryStringParameters)
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
         final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
                 .scope(TextUtils.join(" ", parameters.getScopes()))
