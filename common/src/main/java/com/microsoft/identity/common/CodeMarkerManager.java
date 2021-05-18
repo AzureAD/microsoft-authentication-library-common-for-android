@@ -62,7 +62,7 @@ public class CodeMarkerManager {
      * This method captures a particular marker and records the timestamp on which this has been received.
      * @param marker : A string code which represents a particular place in code.
      */
-    public void markCode(String marker) {
+    public synchronized void markCode(String marker) {
         if(this.enableCodeMarker) {
             if(this.codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
                 clearMarkers();
