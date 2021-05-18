@@ -90,14 +90,14 @@ public class KeyStoreAccessorTests {
     public void testBasicFunctionalityUnsupportedSign() throws Exception {
         boolean exception = false;
         try {
-            KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
-            byte[] in = new byte[1024];
+            final KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
-            byte[] out = accessor.sign(in);
+            final byte[] out = accessor.sign(in);
         } catch (UnsupportedOperationException e) {
             exception = true;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                throw e;
+                throw new AssertionError(e);
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !exception) {
@@ -109,14 +109,14 @@ public class KeyStoreAccessorTests {
     public void testBasicFunctionalityUnsupportedVerify() throws Exception {
         boolean exception = false;
         try {
-            KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
-            byte[] in = new byte[1024];
+            final KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             accessor.verify(in, in);
         } catch (UnsupportedOperationException e) {
             exception = true;
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-                throw e;
+                throw new AssertionError(e);
             }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !exception) {
