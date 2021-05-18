@@ -34,7 +34,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder(toBuilder = true)
 public class MsalConfiguration {
 
-    private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
+    private static final String TAG = MsalConfiguration.class.getSimpleName();
     private static MsalConfiguration sInstance = null;
 
     // private constructor restricted to this class itself
@@ -44,8 +44,9 @@ public class MsalConfiguration {
 
     // static method to create instance of Singleton class
     public static MsalConfiguration getInstance() {
-        if (sInstance == null)
+        if (sInstance == null) {
             sInstance = createDefaultInstance();
+         }
 
         return sInstance;
     }

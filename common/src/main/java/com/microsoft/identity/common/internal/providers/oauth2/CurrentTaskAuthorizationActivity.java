@@ -57,7 +57,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
+        final Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
 
         if(fragment instanceof CurrentTaskBrowserAuthorizationFragment){
             mFragment = (CurrentTaskBrowserAuthorizationFragment) fragment;
