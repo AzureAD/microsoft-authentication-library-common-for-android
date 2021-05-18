@@ -85,7 +85,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
         return handleNullTaskAffinity;
     }
 
-    public boolean authorziationInCurrentTask(){
+    public boolean authorizationInCurrentTask(){
         return authorizationInCurrentTask;
     }
 
