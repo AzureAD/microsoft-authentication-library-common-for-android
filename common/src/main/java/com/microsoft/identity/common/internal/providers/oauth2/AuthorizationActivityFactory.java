@@ -26,6 +26,12 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import android.content.Context;
 import android.content.Intent;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
+import com.microsoft.identity.common.internal.configuration.MsalConfiguration;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
@@ -42,9 +48,19 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 public class AuthorizationActivityFactory {
 
-
-
-    public static Intent createStartIntent(final Context context,
+    /**
+     * Return the correct authorization activty based on library configuration
+     * @param context
+     * @param authIntent
+     * @param requestUrl
+     * @param redirectUri
+     * @param requestHeaders
+     * @param authorizationAgent
+     * @param webViewZoomEnabled
+     * @param webViewZoomControlsEnabled
+     * @return
+     */
+    public static Intent getAuthorizationActivityIntent(final Context context,
                                            final Intent authIntent,
                                            final String requestUrl,
                                            final String redirectUri,
@@ -53,16 +69,15 @@ public class AuthorizationActivityFactory {
                                            final boolean webViewZoomEnabled,
                                            final boolean webViewZoomControlsEnabled) {
         Intent intent;
+        final MsalConfiguration libraryConfig = MsalConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
         } else {
-            intent = new Intent(context, CurrentTaskAuthorizationActivity.class) {
-
-                @Override
-                public Object clone() {
-                    return super.clone();
-                }
-            };
+            if(libraryConfig.isAuthorizationInCurrentTask()) {
+                intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
+            }else{
+                intent = new Intent(context, AuthorizationActivity.class);
+            }
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);
@@ -74,6 +89,31 @@ public class AuthorizationActivityFactory {
         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         return intent;
+    }
+
+    /**
+     *
+     * @param intent
+     * @return
+     */
+    public static Fragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
+        Fragment fragment;
+        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
+        Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
+
+        final MsalConfiguration libraryConfig = MsalConfiguration.getInstance();
+
+        if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
+            fragment = new WebViewAuthorizationFragment();
+        } else {
+            if(libraryConfig.isAuthorizationInCurrentTask()) {
+                fragment = new CurrentTaskBrowserAuthorizationFragment();
+            }else{
+                fragment = new BrowserAuthorizationFragment();
+            }
+        }
+
+        return fragment;
     }
 
 }

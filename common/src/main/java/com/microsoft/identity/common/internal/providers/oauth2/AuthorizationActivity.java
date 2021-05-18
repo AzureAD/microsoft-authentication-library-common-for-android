@@ -28,6 +28,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
@@ -35,6 +36,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
 
@@ -48,27 +50,21 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 public class AuthorizationActivity extends DualScreenActivity {
 
+    public static final String TAG = AuthorizationActivity.class.getSimpleName();
+
     private AuthorizationFragment mFragment;
-
-    public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
-        AuthorizationFragment fragment;
-        final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
-        Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
-
-        if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
-            fragment = new WebViewAuthorizationFragment();
-        } else {
-            fragment = new BrowserAuthorizationFragment();
-        }
-
-        fragment.setInstanceState(intent.getExtras());
-        return fragment;
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mFragment = getAuthorizationFragmentFromStartIntent(getIntent());
+        Fragment fragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(getIntent());
+        if(fragment instanceof AuthorizationFragment){
+            mFragment = (AuthorizationFragment)fragment;
+            mFragment.setInstanceState(getIntent().getExtras());
+        }else{
+            IllegalStateException ex = new IllegalStateException("Unexpected fragment type.");
+            Logger.error(TAG, "Did not receive AuthorizationFragment from factory", ex);
+        }
         setFragment(mFragment);
     }
 

@@ -74,12 +74,12 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final AuthorizationFragment authFragment = AuthorizationActivity.getAuthorizationFragmentFromStartIntent(intent);
+            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
             fragment.getFragmentManager()
                     .beginTransaction()
                     .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .add(fragment.getId(), authFragment, AuthorizationFragment.class.getName())
+                    .add(fragment.getId(), authFragment, Fragment.class.getName())
                     .commit();
             return;
         }

@@ -50,7 +50,7 @@ public class MsalConfiguration {
         return sInstance;
     }
 
-    public static void intializeMsalConfiguration(MsalConfiguration config){
+    public static synchronized void intializeMsalConfiguration(MsalConfiguration config){
         if(sInstance == null){
             sInstance = config;
         }else{
@@ -58,7 +58,7 @@ public class MsalConfiguration {
         }
     }
 
-    private static MsalConfiguration createDefaultInstance(){
+    private static synchronized MsalConfiguration createDefaultInstance(){
         return MsalConfiguration.builder().authorizationInCurrentTask(false).build();
     }
 
