@@ -667,7 +667,7 @@ public class CommandDispatcher {
 
                         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                        initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
