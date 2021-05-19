@@ -325,7 +325,28 @@ public class LocalMSALController extends BaseController {
 //            );
 //        }
 
-        if (accessTokenIsNull(fullCacheRecord)
+        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
+            if (!fullCacheRecord.getAccessToken().isExpired()) {
+                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+                CommandDispatcher.submitAndForget(refreshOnCommand);
+            } else {
+                Logger.warn(
+                        TAG + methodName,
+                        "Access token is expired. Removing from cache..."
+                );
+                // Remove the expired token
+                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
+                renewAT(
+                        parametersWithScopes,
+                        acquireTokenSilentResult,
+                        tokenCache,
+                        strategy,
+                        fullCacheRecord,
+                        TAG + methodName
+                );
+            }
+        } else if (accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
@@ -406,6 +427,42 @@ public class LocalMSALController extends BaseController {
         );
 
         return acquireTokenSilentResult;
+    }
+
+    private void setAcquireTokenResult(final AcquireTokenResult acquireTokenSilentResult,
+                                       final SilentTokenCommandParameters parametersWithScopes,
+                                       final List<ICacheRecord> cacheRecords) throws ClientException {
+        ICacheRecord fullCacheRecord = cacheRecords.get(0);
+        acquireTokenSilentResult.setLocalAuthenticationResult(
+                new LocalAuthenticationResult(
+                        finalizeCacheRecordForResult(
+                                fullCacheRecord,
+                                parametersWithScopes.getAuthenticationScheme()
+                        ),
+                        cacheRecords,
+                        SdkType.MSAL,
+                        true
+                )
+        );
+    }
+
+    private void renewAT(@NonNull final SilentTokenCommandParameters parametersWithScopes,
+                         @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                         @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                         @NonNull final ICacheRecord cacheRecord,
+                         @NonNull final String tag) throws IOException, ClientException, ServiceException {
+        Logger.verbose(
+                TAG + tag,
+                "Renewing access token..."
+        );
+        renewAccessToken(
+                parametersWithScopes,
+                acquireTokenSilentResult,
+                tokenCache,
+                strategy,
+                cacheRecord
+        );
     }
 
     @Override
