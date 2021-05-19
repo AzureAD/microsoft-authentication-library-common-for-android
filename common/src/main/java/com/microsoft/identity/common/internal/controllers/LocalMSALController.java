@@ -380,10 +380,11 @@ public class LocalMSALController extends BaseController {
                     strategy,
                     fullCacheRecord
             );
-        } else if(fullCacheRecord.getAccessToken().shouldRefresh()) {
-            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-            final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
-            CommandDispatcher.submitAndForget(refreshOnCommand);
+//        }
+//        else if(fullCacheRecord.getAccessToken().shouldRefresh()) {
+//            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+//            final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+//            CommandDispatcher.submitAndForget(refreshOnCommand);
         } else {
             Logger.verbose(
                     TAG + methodName,
