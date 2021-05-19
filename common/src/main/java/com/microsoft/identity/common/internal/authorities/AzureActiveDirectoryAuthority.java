@@ -56,6 +56,20 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
 
+    public AzureActiveDirectoryAuthority(AzureActiveDirectoryAudience signInAudience) {
+        mAudience = signInAudience;
+        mAuthorityTypeString = "AAD";
+        getAzureActiveDirectoryCloud();
+    }
+
+    public AzureActiveDirectoryAuthority() {
+        //Defaulting to AllAccounts which maps to the "common" tenant
+        mAudience = new AllAccounts();
+        mAuthorityTypeString = "AAD";
+        mMultipleCloudsSupported = false;
+        getAzureActiveDirectoryCloud();
+    }
+
     private void getAzureActiveDirectoryCloud() {
         final String methodName = ":getAzureActiveDirectoryCloud";
         AzureActiveDirectoryCloud cloud = null;
@@ -76,30 +90,16 @@ public class AzureActiveDirectoryAuthority extends Authority {
         mAzureActiveDirectoryCloud = cloud;
     }
 
-    public AzureActiveDirectoryAuthority(AzureActiveDirectoryAudience signInAudience) {
-        mAudience = signInAudience;
-        mAuthorityTypeString = "AAD";
-        getAzureActiveDirectoryCloud();
-    }
-
-    public AzureActiveDirectoryAuthority() {
-        //Defaulting to AllAccounts which maps to the "common" tenant
-        mAudience = new AllAccounts();
-        mAuthorityTypeString = "AAD";
-        mMultipleCloudsSupported = false;
-        getAzureActiveDirectoryCloud();
-    }
-
     public Map<String, String> getFlightParameters() {
         return this.mFlightParameters;
     }
 
-    public void setMultipleCloudsSupported(boolean supported) {
-        mMultipleCloudsSupported = supported;
-    }
-
     public boolean getMultipleCloudsSupported() {
         return mMultipleCloudsSupported;
+    }
+
+    public void setMultipleCloudsSupported(boolean supported) {
+        mMultipleCloudsSupported = supported;
     }
 
     @Override
@@ -176,11 +176,12 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     /**
      * Checks if current authority belongs to the same cloud as the passed in authority
+     *
      * @param authorityToCheck authority to check against
      * @return true if host name matches for authorityURL of both authorities, otherwise false
      */
     public boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck) throws IOException {
-        if(!AzureActiveDirectory.isInitialized()) {
+        if (!AzureActiveDirectory.isInitialized()) {
             // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
             AzureActiveDirectory.performCloudDiscovery();
         }
