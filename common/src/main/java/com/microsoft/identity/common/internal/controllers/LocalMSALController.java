@@ -324,33 +324,12 @@ public class LocalMSALController extends BaseController {
                     "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-//        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
-//            if (!fullCacheRecord.getAccessToken().isExpired()) {
-//                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-//                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
-//                CommandDispatcher.submitAndForget(refreshOnCommand);
-//            } else {
-//                Logger.warn(
-//                        TAG + methodName,
-//                        "Access token is expired. Removing from cache..."
-//                );
-//                // Remove the expired token
-//                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
-//                renewAT(
-//                        parametersWithScopes,
-//                        acquireTokenSilentResult,
-//                        tokenCache,
-//                        strategy,
-//                        fullCacheRecord,
-//                        TAG + methodName
-//                );
-//            }
-//        } else
-            if ((accessTokenIsNull(fullCacheRecord)
-                || refreshTokenIsNull(fullCacheRecord)
-                || parametersWithScopes.isForceRefresh()
-                || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
-                || !strategy.validateCachedResult(authScheme, fullCacheRecord)) {
+
+        if ((accessTokenIsNull(fullCacheRecord)
+            || refreshTokenIsNull(fullCacheRecord)
+            || parametersWithScopes.isForceRefresh()
+            || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
+            || !strategy.validateCachedResult(authScheme, fullCacheRecord))) {
             if (!refreshTokenIsNull(fullCacheRecord)) {
                 // No AT found, but the RT checks out, so we'll use it
                 Logger.verbose(
@@ -381,7 +360,7 @@ public class LocalMSALController extends BaseController {
 
                 throw exception;
             }
-        } else if (fullCacheRecord.getAccessToken().isExpired()) {
+        } else if(fullCacheRecord.getAccessToken().isExpired()) {
             Logger.warn(
                     TAG + methodName,
                     "Access token is expired. Removing from cache..."
@@ -401,6 +380,10 @@ public class LocalMSALController extends BaseController {
                     strategy,
                     fullCacheRecord
             );
+        } else if(fullCacheRecord.getAccessToken().shouldRefresh()) {
+            setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+            final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+            CommandDispatcher.submitAndForget(refreshOnCommand);
         } else {
             Logger.verbose(
                     TAG + methodName,
