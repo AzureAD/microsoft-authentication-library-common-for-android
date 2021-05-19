@@ -316,6 +316,12 @@ public class LocalMSALController extends BaseController {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
+        if (fullCacheRecord.getAccessToken().refreshOnIsActive()) {
+            Logger.info(
+                    TAG,
+                    "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
+            );
+        }
 
         if (accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
