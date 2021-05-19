@@ -37,6 +37,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
@@ -176,12 +177,17 @@ public class AzureActiveDirectoryAuthority extends Authority {
     /**
      * Checks if current authority belongs to the same cloud as the passed in authority
      * @param authorityToCheck authority to check against
-     * @return true if the preferred network host name matches for both authorities, otherwise false
+     * @return true if host name matches for authorityURL of both authorities, otherwise false
      */
-    public boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck){
-        final AzureActiveDirectoryCloud currentAuthorityCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(this.getAuthorityURL());
-        final AzureActiveDirectoryCloud authorityToCheckCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authorityToCheck.getAuthorityURL());
-        return currentAuthorityCloud.getPreferredNetworkHostName().equals(authorityToCheckCloud.getPreferredNetworkHostName());
+    public boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck) throws IOException {
+        if(!AzureActiveDirectory.isInitialized()) {
+            // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
+            AzureActiveDirectory.performCloudDiscovery();
+        }
+
+        // getAuthorityURL returns a url with mapped preferred_network_host_name as the host part of the url
+        // So for two authorities from same cloud getAuthorityURL should return the same host name
+        return this.getAuthorityURL().getHost().equals(authorityToCheck.getAuthorityURL().getHost());
     }
 
 }
