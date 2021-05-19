@@ -35,7 +35,7 @@ public class CodeMarkerManager {
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private static final int MAX_SIZE_CODE_MARKER = 1000;
-    private volatile List<CodeMarker> codeMarkers = new ArrayList<CodeMarker>();
+    private volatile List<CodeMarker> codeMarkers = new ArrayList<>();
 
     //baseMilliSeconds is the time in milliseconds when first codemarker was captured.
     private long baseMilliSeconds = 0;
@@ -62,7 +62,7 @@ public class CodeMarkerManager {
      * This method captures a particular marker and records the timestamp on which this has been received.
      * @param marker : A string code which represents a particular place in code.
      */
-    public synchronized void markCode(String marker) {
+    public void markCode(String marker) {
         if(this.enableCodeMarker) {
             if(this.codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
                 clearMarkers();
