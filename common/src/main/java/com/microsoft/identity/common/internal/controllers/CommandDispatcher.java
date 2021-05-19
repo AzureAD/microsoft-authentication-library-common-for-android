@@ -53,10 +53,10 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
@@ -82,6 +82,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry.createLastRequestTelemetryCacheOnAndroid;
 
 public class CommandDispatcher {
 
@@ -105,6 +106,7 @@ public class CommandDispatcher {
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
                     ClientException.INTERRUPTED_OPERATION,
+                    ClientException.INVALID_BROKER_BUNDLE,
                     ClientException.IO_ERROR));
 
     private static final Object mapAccessLock = new Object();
@@ -242,7 +244,7 @@ public class CommandDispatcher {
                                 SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
@@ -254,26 +256,28 @@ public class CommandDispatcher {
                         }
 
                         //Check cache to see if the same command completed in the last 30 seconds
-                        commandResult = sCommandResultCache.get(command);
+                        // Disabling throttling ADO:1383033
+                        // commandResult = sCommandResultCache.get(command);
                         //If nothing in cache, execute the command and cache the result
-                        if (commandResult == null) {
-                            CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
-                            commandResult = executeCommand(command);
-                            CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
-                            cacheCommandResult(command, commandResult);
+//                        if (commandResult == null) {
+                        CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
+                        commandResult = executeCommand(command);
+                        CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
+                            // Disabling throttling ADO:1383033
+                            // cacheCommandResult(command, commandResult);
                             Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
                                     + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
                                     + " is cacheable : " + command.isEligibleForCaching());
-                        } else {
-                            Logger.info(
-                                    TAG + methodName,
-                                    "Silent command result returned from cache for correlation id : "
-                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
-                            );
-                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
-                            commandResult = new CommandResult(commandResult.getStatus(),
-                                    commandResult.getResult(), commandResult.getCorrelationId());
-                        }
+//                        } else {
+//                            Logger.info(
+//                                    TAG + methodName,
+//                                    "Silent command result returned from cache for correlation id : "
+//                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
+//                            );
+//                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
+//                            commandResult = new CommandResult(commandResult.getStatus(),
+//                                    commandResult.getResult(), commandResult.getCorrelationId());
+//                        }
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -306,6 +310,15 @@ public class CommandDispatcher {
             });
             return finalFuture;
         }
+    }
+
+    private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
+        // TODO: This will eventually be moved up the chain to the Android Wrapper.
+        //       For now, we can keep it here.
+        EstsTelemetry.getInstance().setUp(
+                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
+
+        EstsTelemetry.getInstance().initTelemetryForCommand(command);
     }
 
     private static void logParameters(@NonNull String tag, @NonNull String correlationId,
@@ -500,6 +513,7 @@ public class CommandDispatcher {
      * @param command
      * @param commandResult
      */
+    @SuppressWarnings("unused")
     private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
                                            CommandResult commandResult) {
         if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
@@ -599,7 +613,7 @@ public class CommandDispatcher {
 
                         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        initTelemetryForCommand(command);
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 

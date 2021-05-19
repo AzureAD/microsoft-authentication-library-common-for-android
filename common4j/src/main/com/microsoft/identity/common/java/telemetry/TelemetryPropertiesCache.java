@@ -40,9 +40,9 @@ public class TelemetryPropertiesCache {
     private static final String DEVICE_ID_GUID = "device_id_guid";
     // endregion
 
-    private final IKeyPairStorage mStorage;
+    private final IKeyPairStorage<String> mStorage;
 
-    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage storage) {
+    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage<String> storage) {
         mStorage = storage;
     }
 
