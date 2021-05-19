@@ -7,18 +7,18 @@ package com.microsoft.identity.common;
 public class PerfConstants {
 
     public static class CodeMarkerConstants {
-        public static String BROKER_OPERATION_EXECUTION_START = "10110";
-        public static String BROKER_PROCESS_START = "10111";
-        public static String BROKER_PROCESS_END = "10120";
-        public static String ACQUIRE_TOKEN_SILENT_START = "10011";
-        public static String ACQUIRE_TOKEN_SILENT_EXECUTOR_START = "10012";
-        public static String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START = "10013";
-        public static String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END = "10014";
-        public static String ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END = "10020";
+        public static final String BROKER_OPERATION_EXECUTION_START = "10110";
+        public static final String BROKER_PROCESS_START = "10111";
+        public static final String BROKER_PROCESS_END = "10120";
+        public static final String ACQUIRE_TOKEN_SILENT_START = "10011";
+        public static final String ACQUIRE_TOKEN_SILENT_EXECUTOR_START = "10012";
+        public static final String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START = "10013";
+        public static final String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END = "10014";
+        public static final String ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END = "10020";
     }
 
     public static class ScenarioConstants {
-        public static String SCENARIO_NON_BROKERED_ACQUIRE_TOKEN_SILENTLY = "100";
-        public static String SCENARIO_BROKERED_ACQUIRE_TOKEN_SILENTLY = "200";
+        public static final String SCENARIO_NON_BROKERED_ACQUIRE_TOKEN_SILENTLY = "100";
+        public static final String SCENARIO_BROKERED_ACQUIRE_TOKEN_SILENTLY = "200";
     }
 }
