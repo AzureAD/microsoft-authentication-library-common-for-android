@@ -55,7 +55,7 @@ public class AndroidTaskStateGenerator extends DefaultStateGenerator {
 
     public static int getTaskFromState(String state) {
         String[] parts = state.split(SPLITTER);
-        int returnValue = 0;
+        int returnValue = -1;
         if (parts.length >= 2) {
             try {
                 returnValue = Integer.parseInt(parts[0]);

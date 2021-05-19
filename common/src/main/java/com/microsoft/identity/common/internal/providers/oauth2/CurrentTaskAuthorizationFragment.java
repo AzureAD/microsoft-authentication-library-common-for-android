@@ -41,6 +41,8 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CANCELLED_BY_USER;
@@ -62,11 +64,6 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
     private Bundle mInstanceState;
 
     /**
-     * Determines if authentication result has been sent.
-     */
-    protected boolean mAuthResultSent = false;
-
-    /**
      * Listens to an operation cancellation event.
      */
     private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
@@ -80,6 +77,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
         mInstanceState = instanceStateBundle;
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         final String methodName = "#onCreate";
@@ -100,6 +98,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
         }
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     void finish() {
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
@@ -140,6 +139,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
     }
 
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     @Override
     public void onDestroy() {
 
@@ -156,6 +156,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
         return false;
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     void sendResult(int resultCode, final Intent resultIntent) {
         Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
 
@@ -164,7 +165,6 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
         resultIntent.putExtra(RESULT_CODE, resultCode);
 
         LocalBroadcastManager.getInstance(getContext()).sendBroadcast(resultIntent);
-        mAuthResultSent = true;
     }
 
     void cancelAuthorization(boolean isCancelledByUser) {

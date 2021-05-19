@@ -45,6 +45,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
@@ -67,9 +69,9 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
 
     /**
      * Class of the Activity that hosts this fragment.
-     * This needs to be static - see createCustomTabResponseIntent() for more details.
+     *
      */
-    private static Class<?> sCallingActivityClass;
+    private Class<?> mCallingActivityClass;
 
     /**
      * Response URI of the browser flow.
@@ -97,29 +99,18 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
     @Nullable
     public static Intent createCustomTabResponseIntent(final Context context,
                                                        final String responseUri) {
-        if (sCallingActivityClass == null) {
-            // can't create intent for response if no activity available, this can happen if the app
-            // was closed either by the user or the OS.
-            // An example would be in the case of using browser without custom tabs, and closing
-            // the app after the interactive request started in the browser. After closing, the user
-            // returns to the browser and completes authorization and when the OS redirects here,
-            // the calling activity class is NULL as the app was closed and memory was wiped.
-            Logger.warn(TAG, "Calling activity class is NULL. Unable to create intent for response.");
-            return null;
-        }
 
-
-        final Intent intent = new Intent(context, sCallingActivityClass);
+        final Intent intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         intent.setAction(REDIRECT_RETURNED_ACTION);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NO_HISTORY);
         intent.putExtra("RESPONSE_URI", responseUri);
         return intent;
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sCallingActivityClass = this.getActivity().getClass();
         Bundle arguments = this.getArguments();
         if(arguments != null){
             mResponseReceived = arguments.getBoolean("RESPONSE", false);

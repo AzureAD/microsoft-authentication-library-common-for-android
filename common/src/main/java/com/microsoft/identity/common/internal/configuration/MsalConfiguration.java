@@ -43,7 +43,7 @@ public class MsalConfiguration {
     }
 
     // static method to create instance of Singleton class
-    public static MsalConfiguration getInstance() {
+    public synchronized static MsalConfiguration getInstance() {
         if (sInstance == null) {
             sInstance = createDefaultInstance();
          }

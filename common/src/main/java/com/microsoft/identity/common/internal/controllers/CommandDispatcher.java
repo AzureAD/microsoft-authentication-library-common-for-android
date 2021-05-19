@@ -100,6 +100,8 @@ public class CommandDispatcher {
     private static final Object sLock = new Object();
     private static boolean sConfigured = false;
     private static InteractiveTokenCommand sCommand = null;
+    private static ConcurrentHashMap<Integer, InteractiveTokenCommand> interactiveCommands = new ConcurrentHashMap<>();
+    private static boolean sConcurrentInteractiveRequests = false;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
     private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet(
@@ -141,6 +143,7 @@ public class CommandDispatcher {
                     1, config.getMaxTheadPoolInteractive(), -1, 0, TimeUnit.MINUTES, "interactive"
             );
             sConfigured = true;
+            sConcurrentInteractiveRequests = config.isConcurrentInterativeRequests();
         }else{
             Logger.warn(TAG, "CommandDispatcher was already configured.");
         }

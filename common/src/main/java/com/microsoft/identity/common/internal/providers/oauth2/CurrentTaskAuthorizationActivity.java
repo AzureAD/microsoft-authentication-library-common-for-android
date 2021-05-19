@@ -27,19 +27,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Base64;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
-import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_AGENT;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.DESTROY_REDIRECT_RECEIVING_ACTIVITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REFRESH_TO_CLOSE;
@@ -68,7 +69,6 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             throw ex;
         }
 
-        // Custom Tab Redirects should not be creating a new instance of this activity
         if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
             if(CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
                 Bundle arguments = new Bundle();
@@ -78,6 +78,8 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
                 finish();
                 return;
             }
+
+            return;
         }
 
         setFragment(mFragment);
@@ -114,12 +116,10 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (REFRESH_TO_CLOSE.equals(intent.getAction())) {
-            // The custom tab is now destroyed so we can finish the redirect activity
             Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY);
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
             unregisterAndFinish();
         } else if (REDIRECT_RETURNED_ACTION.equals(intent.getAction())) {
-            // We have successfully redirected back to this activity. Return the result and close.
             unregisterAndFinish();
         }
     }

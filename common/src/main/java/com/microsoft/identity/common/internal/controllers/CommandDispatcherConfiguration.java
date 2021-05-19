@@ -40,4 +40,7 @@ public class CommandDispatcherConfiguration {
     @Expose()
     private int maxTheadPoolInteractive;
 
+    @Expose()
+    private boolean concurrentInterativeRequests;
+
 }
