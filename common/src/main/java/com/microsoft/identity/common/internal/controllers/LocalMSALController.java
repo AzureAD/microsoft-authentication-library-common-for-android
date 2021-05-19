@@ -325,28 +325,30 @@ public class LocalMSALController extends BaseController {
 //            );
 //        }
 
-        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
-            if (!fullCacheRecord.getAccessToken().isExpired()) {
-                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
-                CommandDispatcher.submitAndForget(refreshOnCommand);
-            } else {
-                Logger.warn(
-                        TAG + methodName,
-                        "Access token is expired. Removing from cache..."
-                );
-                // Remove the expired token
-                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
-                renewAT(
-                        parametersWithScopes,
-                        acquireTokenSilentResult,
-                        tokenCache,
-                        strategy,
-                        fullCacheRecord,
-                        TAG + methodName
-                );
-            }
-        } else if (accessTokenIsNull(fullCacheRecord)
+        fullCacheRecord.getAccessToken().shouldRefresh();
+//        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
+//            if (!fullCacheRecord.getAccessToken().isExpired()) {
+//                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
+//                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
+//                CommandDispatcher.submitAndForget(refreshOnCommand);
+//            } else {
+//                Logger.warn(
+//                        TAG + methodName,
+//                        "Access token is expired. Removing from cache..."
+//                );
+//                // Remove the expired token
+//                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
+//                renewAT(
+//                        parametersWithScopes,
+//                        acquireTokenSilentResult,
+//                        tokenCache,
+//                        strategy,
+//                        fullCacheRecord,
+//                        TAG + methodName
+//                );
+//            }
+//        } else
+            if (accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
                 || !isRequestAuthorityRealmSameAsATRealm(parametersWithScopes.getAuthority(), fullCacheRecord.getAccessToken())
