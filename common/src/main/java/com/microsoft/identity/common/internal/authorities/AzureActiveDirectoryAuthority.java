@@ -173,4 +173,15 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return mAudience;
     }
 
+    /**
+     * Checks if current authority belongs to the same cloud as the passed in authority
+     * @param authorityToCheck authority to check against
+     * @return true if the preferred network host name matches for both authorities, otherwise false
+     */
+    public boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck){
+        final AzureActiveDirectoryCloud currentAuthorityCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(this.getAuthorityURL());
+        final AzureActiveDirectoryCloud authorityToCheckCloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authorityToCheck.getAuthorityURL());
+        return currentAuthorityCloud.getPreferredNetworkHostName().equals(authorityToCheckCloud.getPreferredNetworkHostName());
+    }
+
 }
