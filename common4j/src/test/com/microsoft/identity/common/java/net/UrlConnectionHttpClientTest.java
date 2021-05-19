@@ -74,7 +74,7 @@ public final class UrlConnectionHttpClientTest {
      */
     @Test(expected = NullPointerException.class)
     public void testNullRequestUrl() throws IOException {
-        sNoRetryClient.get(null, Collections.emptyMap());
+        sNoRetryClient.get(null, Collections.<String, String>emptyMap());
     }
 
     /**
@@ -1052,7 +1052,7 @@ public final class UrlConnectionHttpClientTest {
         URL validRequestUrl = getRequestUrl();
         return method.specific(
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.emptyMap(),
+                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
                 method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null);
     }
 
@@ -1060,7 +1060,7 @@ public final class UrlConnectionHttpClientTest {
         URL validRequestUrl = getRequestUrl();
         return method.specificNoRetry(
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.emptyMap(),
+                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
                 method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null);
     }
 
@@ -1069,7 +1069,7 @@ public final class UrlConnectionHttpClientTest {
         return UrlConnectionHttpClient.getDefaultInstance().method(
                 method.name(),
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.emptyMap(),
+                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
                 method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null
         );
     }
@@ -1079,7 +1079,7 @@ public final class UrlConnectionHttpClientTest {
         return sNoRetryClient.method(
                 method.name(),
                 validRequestUrl,
-                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.emptyMap(),
+                method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
                 method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null
         );
     }
