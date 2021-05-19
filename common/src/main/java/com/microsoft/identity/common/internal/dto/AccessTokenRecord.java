@@ -328,15 +328,6 @@ public class AccessTokenRecord extends Credential {
         mRefreshOn = refreshOn;
     }
 
-    /**
-     * Convenience method for determining if refreshIn is returned from server.
-     *
-     * @return RefreshOn is active.
-     */
-    public boolean refreshOnIsActive() {
-        return !getExpiresOn().equals(getRefreshOn());
-    }
-
     private boolean isExpired(final String expires) {
         // Init a Calendar for the current time/date
         final Calendar calendar = Calendar.getInstance();
@@ -369,8 +360,10 @@ public class AccessTokenRecord extends Credential {
         final String refreshOn = getRefreshOn();
         if (refreshOn != null && !refreshOn.isEmpty()) {
             return isExpired(refreshOn);
-        } else {
+        }
+        else if(getRefreshOn() != null) {
             return isExpired();
         }
+        return true;
     }
 }
