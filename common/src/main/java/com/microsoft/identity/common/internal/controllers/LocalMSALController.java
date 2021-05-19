@@ -318,36 +318,6 @@ public class LocalMSALController extends BaseController {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
-//        if (fullCacheRecord.getAccessToken().refreshOnIsActive()) {
-//            Logger.info(
-//                    TAG,
-//                    "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
-//            );
-//        }
-
-        fullCacheRecord.getAccessToken().shouldRefresh();
-//        if (fullCacheRecord.getAccessToken().shouldRefresh()) {
-//            if (!fullCacheRecord.getAccessToken().isExpired()) {
-//                setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
-//                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
-//                CommandDispatcher.submitAndForget(refreshOnCommand);
-//            } else {
-//                Logger.warn(
-//                        TAG + methodName,
-//                        "Access token is expired. Removing from cache..."
-//                );
-//                // Remove the expired token
-//                tokenCache.removeCredential(fullCacheRecord.getAccessToken());
-//                renewAT(
-//                        parametersWithScopes,
-//                        acquireTokenSilentResult,
-//                        tokenCache,
-//                        strategy,
-//                        fullCacheRecord,
-//                        TAG + methodName
-//                );
-//            }
-//        } else
             if (accessTokenIsNull(fullCacheRecord)
                 || refreshTokenIsNull(fullCacheRecord)
                 || parametersWithScopes.isForceRefresh()
