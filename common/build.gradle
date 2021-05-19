@@ -33,10 +33,6 @@ def unitTestType = "UnitTest"
 def androidTestType = "AndroidTest"
 def bothTestType = "BothTest"
 
-project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
-
-
 android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
