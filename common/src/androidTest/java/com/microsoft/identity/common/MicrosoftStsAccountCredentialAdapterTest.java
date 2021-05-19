@@ -45,8 +45,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -129,23 +128,19 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         MOCK_ID_TOKEN_WITH_CLAIMS = idTokenWithClaims;
     }
 
-    @Mock
     MicrosoftStsOAuth2Strategy mockStrategy;
-
-    @Mock
     MicrosoftStsAuthorizationRequest mockRequest;
-
-    @Mock
     MicrosoftStsTokenResponse mockResponse;
-
-    @Mock
     MicrosoftStsAccount mockAccount;
 
     private MicrosoftStsAccountCredentialAdapter mAccountCredentialAdapter;
 
     @Before
     public void setUp() throws MalformedURLException {
-        MockitoAnnotations.initMocks(this);
+        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
+        mockAccount = Mockito.mock(MicrosoftStsAccount.class);
         when(mockStrategy.createAccount(any(MicrosoftStsTokenResponse.class))).thenReturn(mockAccount);
         when(mockStrategy.getIssuerCacheIdentifier(mockRequest)).thenReturn(MOCK_ENVIRONMENT);
         when(mockStrategy.getIssuerCacheIdentifierFromTokenEndpoint()).thenReturn(MOCK_ENVIRONMENT);
