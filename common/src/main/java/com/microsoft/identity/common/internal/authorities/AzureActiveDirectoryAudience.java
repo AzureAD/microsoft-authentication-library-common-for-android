@@ -39,6 +39,7 @@ import com.microsoft.identity.common.logging.Logger;
 import java.util.List;
 import java.util.Locale;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -51,6 +52,7 @@ import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL
 import static com.microsoft.identity.common.internal.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
 
 @SuperBuilder
+@SuppressFBWarnings(value = "RCN", justification = "Lombok-generated code creates redundant checks")
 @EqualsAndHashCode
 @NoArgsConstructor
 @AllArgsConstructor

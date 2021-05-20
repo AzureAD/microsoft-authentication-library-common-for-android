@@ -74,6 +74,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
@@ -218,11 +220,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = brokerRequestFromBundle(intent.getExtras());
 
-        return BrokerInteactiveParametersFromBrokerRequest(callingActivity, intent.getIntExtra(CALLER_INFO_UID, 0),
+        return brokerInteactiveParametersFromBrokerRequest(callingActivity, intent.getIntExtra(CALLER_INFO_UID, 0),
                 intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY), brokerRequest);
     }
 
-    public BrokerInteractiveTokenCommandParameters BrokerInteactiveParametersFromBrokerRequest(@NonNull Activity callingActivity, int callingAppUid, String negotiatedBrokerProtocolVersion, BrokerRequest brokerRequest) {
+    @SuppressFBWarnings(value = "RCN", justification = "The SDK type may actually be null")
+    public BrokerInteractiveTokenCommandParameters brokerInteactiveParametersFromBrokerRequest(@NonNull Activity callingActivity, int callingAppUid, String negotiatedBrokerProtocolVersion, BrokerRequest brokerRequest) {
         if (brokerRequest == null) {
             Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
                     "validation is expected to fail", null

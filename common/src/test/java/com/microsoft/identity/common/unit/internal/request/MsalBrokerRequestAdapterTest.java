@@ -10,8 +10,6 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
-import com.microsoft.identity.common.internal.authorities.AllAccounts;
-import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
@@ -45,9 +43,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.junit.MockitoRule;
-import org.mockito.junit.MockitoTestRule;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
@@ -318,7 +314,7 @@ public class MsalBrokerRequestAdapterTest {
                 .build();
         BrokerRequest brokerRequest = adapter.brokerRequestFromAcquireTokenParameters(params);
         Activity mockActivity = Mockito.mock(Activity.class);
-        BrokerInteractiveTokenCommandParameters out = adapter.BrokerInteactiveParametersFromBrokerRequest(mockActivity, 0, "3.0",
+        BrokerInteractiveTokenCommandParameters out = adapter.brokerInteactiveParametersFromBrokerRequest(mockActivity, 0, "3.0",
                 brokerRequest);
         Assert.assertEquals(TEST_SCOPES, out.getScopes());
         Assert.assertEquals(null, out.getFragment());
