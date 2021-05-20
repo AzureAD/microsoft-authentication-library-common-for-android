@@ -17,12 +17,12 @@ jobs:
 - template: ../templates/steps/maven-release/maven-release-jobs.yml
   parameters:
     project: common
-    projectVersion: ${{ variables.commonVersion }}
+    projectVersion: $(commonVersion)
     gradleAssembleReleaseTask: common:clean common:build common:assembleRelease
     gradleGeneratePomFiletask: common:generatePomFileForDistReleasePublication
-    aarSourceFolder: common\build\outputs\aar\
+    aarSourceFolder: common\build\outputs\aar
     jarSourceFolder: common\build\outputs\jar
-    pomSourceFolder: common\build\publications\release\
+    pomSourceFolder: common\build\publications\release
     gpgAar: true
     gpgSourcesJar: true
     gpgJavadocJar: false
