@@ -20,6 +20,8 @@ steps:
     testResultsFormat: 'JUnit'
     testResultsFiles: '**/TEST-*.xml'
     searchFolder: '$(System.DefaultWorkingDirectory)'
+    condition: succeededOrFailed()
+    displayName: 'Publish Test Results'
 - script: |
     echo =============================================
     echo Kill all running containers if existing
