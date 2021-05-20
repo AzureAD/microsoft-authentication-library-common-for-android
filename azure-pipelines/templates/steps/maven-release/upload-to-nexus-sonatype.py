@@ -27,7 +27,7 @@ if not credentialsdirectory:
     sys.exit("Missing CREDENTIALS_SECUREFILEPATH")
 
 with open(credentialsdirectory) as f:
-    credentials = json.loads(f)
+    credentials = json.load(f)
 
 data = '<promoteRequest><data><description>{}</description></data></promoteRequest>'.format(prj)
 response = requests.post('https://oss.sonatype.org/service/local/staging/profiles/{}/start'.format(CONFIG[prj]['profile_id']), headers=HEADERS, data=data, verify=False, auth=(credentials["username"], credentials["password"]))
