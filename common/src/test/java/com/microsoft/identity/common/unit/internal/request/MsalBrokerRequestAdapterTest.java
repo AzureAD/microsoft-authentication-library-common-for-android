@@ -12,7 +12,6 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
@@ -25,33 +24,32 @@ import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
+import com.microsoft.identity.common.internal.util.StringUtil;
 
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.robolectric.ParameterizedRobolectricTestRunner;
-import org.robolectric.RobolectricTestRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RunWith(ParameterizedRobolectricTestRunner.class)
 public class MsalBrokerRequestAdapterTest {
 
     public static final String TEST_APPLICATION_NAME = "application";
     public static final String TEST_APPLICATION_VERSION = "version";
-    @Rule
-    public MockitoRule mockitoRule = MockitoJUnit.rule();
-
     public static final boolean CLOUD_IS_VALIDATES = true;
     public static final String CACHE_HOST_NAME = "cacheHostName";
     public static final String NETWORK_HOST_NAME = "networkHostName";
@@ -71,14 +69,7 @@ public class MsalBrokerRequestAdapterTest {
             .build();
     public static final AzureActiveDirectorySlice TEST_SLICE_WITH_NOTHING = AzureActiveDirectorySlice.builder()
             .build();
-
-    private final List<AzureActiveDirectorySlice> slices = Arrays.asList(TEST_SLICE_WITH_DC,
-            TEST_SLICE_WITH_SLICE, TEST_SLICE_WITH_SLICE_DC, TEST_SLICE_WITH_NOTHING, null);
-
-    public static Context mockContext = Mockito.mock(Context.class);
-
     public static final IAccountRecord TEST_ACCOUNT_RECORD = Mockito.mock(IAccountRecord.class);
-
     public static final List<BrowserDescriptor> TEST_BROWSER_SAFE_LIST = Arrays.asList(
             BrowserDescriptor.builder()
                     .packageName("aBrowser")
@@ -86,7 +77,6 @@ public class MsalBrokerRequestAdapterTest {
                     .versionLowerBound("1")
                     .versionUpperBound("2")
                     .build());
-
     public static final String TEST_CLAIMS_JSON = "{ \"claims\": \"something\"";
     public static final String TEST_CLIENT_ID = "aClientId";
     public static final String TEST_CORRELATION_ID = "aCorrelationId";
@@ -146,212 +136,49 @@ public class MsalBrokerRequestAdapterTest {
             .build();
     public static final AzureActiveDirectoryAuthority TEST_AUTHORITY_WITHOUT_SLICE = AzureActiveDirectoryAuthority.builder()
             .audience(TEST_AUDIENCE)
-            .slice(null)
             .authorityTypeString(TEST_AUTHORITY_TYPE)
             .azureActiveDirectoryCloud(TEST_CLOUD)
             .authorityUrl("https://an.authority.url/")
             .build();
     public static final Fragment TEST_FRAGMENT = new Fragment();
+    public static Context mockContext = Mockito.mock(Context.class);
+    private final List<AzureActiveDirectorySlice> slices = Arrays.asList(TEST_SLICE_WITH_DC,
+            TEST_SLICE_WITH_SLICE, TEST_SLICE_WITH_SLICE_DC, TEST_SLICE_WITH_NOTHING, null);
+    @Rule
+    public MockitoRule mockitoRule = MockitoJUnit.rule();
+    MsalBrokerRequestAdapter adapter = new MsalBrokerRequestAdapter();
+    boolean forceRefresh = true;
+    boolean handleNullTaskAffinity = true;
+    boolean isSharedDevice = true;
+    boolean isWebViewZoomControlsEnabled = true;
+    boolean isWebViewZoomEnabled = true;
+    boolean powerOptCheckEnabled = true;
+    OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter.LOGIN;
+    SdkType sdkType = SdkType.ADAL;
+    Authority testAuthority = TEST_AUTHORITY_WITH_SLICE;
+    String testApplicationName = TEST_APPLICATION_NAME;
+    String testApplicationVersion = TEST_APPLICATION_VERSION;
+    AbstractAuthenticationScheme authenticationScheme = BearerAuthenticationSchemeInternal.builder().build();
+    AuthorizationAgent authorizationAgent = AuthorizationAgent.BROWSER;
+    boolean brokerBrowserSupportEnabled = false;
+    List<BrowserDescriptor> testBrowserSafeList = TEST_BROWSER_SAFE_LIST;
+    IAccountRecord testAccountRecord = TEST_ACCOUNT_RECORD;
+    String testClaimsJson = TEST_CLAIMS_JSON;
+    String testClientId = TEST_CLIENT_ID;
+    String testCorrelationId = TEST_CORRELATION_ID;
+    List<Pair<String, String>> testExtraOptions = TEST_EXTRA_OPTIONS;
+    List<Pair<String, String>> testExtraQueryStringParameters = TEST_EXTRA_QUERY_STRING_PARAMETERS;
+    List<String> testExtraScope = TEST_EXTRA_SCOPE;
+    Fragment testFragment = TEST_FRAGMENT;
+    String testLoginHint = TEST_LOGIN_HINT;
+    OAuth2TokenCache testOauth2TokenCache = TEST_OAUTH_2_TOKEN_CACHE;
+    String testRedirectUri = TEST_REDIRECT_URI;
+    HashMap<String, String> testRequestHeaders = TEST_REQUEST_HEADERS;
+    String requiredBrokerProtocolVersion = REQUIRED_BROKER_PROTOCOL_VERSION;
+    String sdkVersion = SDK_VERSION;
+    Set<String> testScopes = TEST_SCOPES;
 
-        MsalBrokerRequestAdapter adapter = new MsalBrokerRequestAdapter();
-        boolean forceRefresh = true;
-        boolean handleNullTaskAffinity = true;
-        boolean isSharedDevice = true;
-        boolean isWebViewZoomControlsEnabled = true;
-        boolean isWebViewZoomEnabled = true;
-        boolean powerOptCheckEnabled = true;
-        OpenIdConnectPromptParameter promptParameter = OpenIdConnectPromptParameter.LOGIN;
-        SdkType sdkType = SdkType.ADAL;
-        Authority testAuthority = TEST_AUTHORITY_WITH_SLICE;
-        String testApplicationName = TEST_APPLICATION_NAME;
-        String testApplicationVersion = TEST_APPLICATION_VERSION;
-        AbstractAuthenticationScheme authenticationScheme = BearerAuthenticationSchemeInternal.builder().build();
-        AuthorizationAgent authorizationAgent = AuthorizationAgent.BROWSER;
-        boolean brokerBrowserSupportEnabled = false;
-        List<BrowserDescriptor> testBrowserSafeList = TEST_BROWSER_SAFE_LIST;
-        IAccountRecord testAccountRecord = TEST_ACCOUNT_RECORD;
-        String testClaimsJson = TEST_CLAIMS_JSON;
-        String testClientId = TEST_CLIENT_ID;
-        String testCorrelationId = TEST_CORRELATION_ID;
-        List<Pair<String, String>> testExtraOptions = TEST_EXTRA_OPTIONS;
-        List<Pair<String, String>> testExtraQueryStringParameters = TEST_EXTRA_QUERY_STRING_PARAMETERS;
-        List<String> testExtraScope = TEST_EXTRA_SCOPE;
-        Fragment testFragment = TEST_FRAGMENT;
-        String testLoginHint = TEST_LOGIN_HINT;
-        OAuth2TokenCache testOauth2TokenCache = TEST_OAUTH_2_TOKEN_CACHE;
-        String testRedirectUri = TEST_REDIRECT_URI;
-        HashMap<String, String> testRequestHeaders = TEST_REQUEST_HEADERS;
-        String requiredBrokerProtocolVersion = REQUIRED_BROKER_PROTOCOL_VERSION;
-        String sdkVersion = SDK_VERSION;
-
-    @ParameterizedRobolectricTestRunner.Parameters
-    public static Collection arguments() {
-        return Arrays.asList(new Object[][] {
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.CONSENT, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, null,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, null, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, null, null,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, null, null,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { false, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, false, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, false, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, false, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, false, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, false, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_SLICE,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_SLICE_DC,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_NONE_SLICE,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITHOUT_SLICE,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_NULL_SLICE,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-                { true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITHOUT_SLICE,
-                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
-                        AuthorizationAgent.BROWSER,
-                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
-                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS_SLICE,
-                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
-                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
-                        TEST_SCOPES },
-
-        });
-    }
-
-    public MsalBrokerRequestAdapterTest(boolean forceRefresh, boolean handleNullTaskAffinity, boolean isSharedDevice,
+    public MsalBrokerRequestAdapterTest(String name, boolean forceRefresh, boolean handleNullTaskAffinity, boolean isSharedDevice,
                                         boolean isWebViewZoomControlsEnabled, boolean isWebViewZoomEnabled,
                                         boolean powerOptCheckEnabled, OpenIdConnectPromptParameter promptParameter,
                                         SdkType sdkType, Authority testAuthority, String testApplicationName,
@@ -398,7 +225,179 @@ public class MsalBrokerRequestAdapterTest {
         this.testScopes = testScopes;
     }
 
-    Set<String> testScopes = TEST_SCOPES;
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+    public static Collection arguments() {
+        return Arrays.asList(new Object[][]{
+                {"login_adal", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"consent_adal", true, true, true, true, true, true, OpenIdConnectPromptParameter.CONSENT, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"select_account_msal", true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"null_query_params", true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, null,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"null_options", true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, null, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"null_params_and_options", true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, null, null,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"null_params_and_options_and_slice", true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_NULL_SLICE,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, null, null,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"null_params_and_options", true, true, true, true, true, true, OpenIdConnectPromptParameter.SELECT_ACCOUNT, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, null, null,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"false_force_refresh", false, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"false_null_task_affinity", true, false, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"false_is_shared", true, true, false, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"false_webview_zoom_control", true, true, true, false, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"false_webvire_zoom_enabled", true, true, true, true, false, true, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"false_is_power_opt_check", true, true, true, true, true, false, OpenIdConnectPromptParameter.LOGIN, SdkType.ADAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"different_sdk_version", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion2",
+                        TEST_SCOPES},
+                {"slice_no_qp", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_SLICE,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"slice_and_dc_no_qp", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_SLICE_DC,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"none_specified_slice_no_qp", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_NONE_SLICE,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"no_slice_provided_no_qp", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITHOUT_SLICE,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"null_slice_provided_no_qp", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITH_NULL_SLICE,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+                {"no_slice_provided_has_qp", true, true, true, true, true, true, OpenIdConnectPromptParameter.LOGIN, SdkType.MSAL, TEST_AUTHORITY_WITHOUT_SLICE,
+                        TEST_APPLICATION_NAME, TEST_APPLICATION_VERSION, BearerAuthenticationSchemeInternal.builder().build(),
+                        AuthorizationAgent.BROWSER,
+                        true, TEST_BROWSER_SAFE_LIST, TEST_ACCOUNT_RECORD, TEST_CLAIMS_JSON, TEST_CLIENT_ID,
+                        TEST_CORRELATION_ID, TEST_EXTRA_OPTIONS, TEST_EXTRA_QUERY_STRING_PARAMETERS_SLICE,
+                        TEST_EXTRA_SCOPE, TEST_FRAGMENT, TEST_LOGIN_HINT,
+                        TEST_OAUTH_2_TOKEN_CACHE, TEST_REDIRECT_URI, TEST_REQUEST_HEADERS, "3.0", "anSdkVersion",
+                        TEST_SCOPES},
+        });
+    }
 
     @Test
     public void testRequestGeneration() {
@@ -407,6 +406,7 @@ public class MsalBrokerRequestAdapterTest {
 
     private void parameterizedTransmissionTest(boolean forceRefresh, boolean handleNullTaskAffinity, boolean isSharedDevice, boolean isWebViewZoomControlsEnabled, boolean isWebViewZoomEnabled, boolean powerOptCheckEnabled, OpenIdConnectPromptParameter promptParameter, SdkType sdkType, Authority testAuthority, String testApplicationName, String testApplicationVersion, AbstractAuthenticationScheme authenticationScheme, AuthorizationAgent authorizationAgent, boolean brokerBrowserSupportEnabled, List<BrowserDescriptor> testBrowserSafeList, IAccountRecord testAccountRecord, String testClaimsJson, String testClientId, String testCorrelationId, List<Pair<String, String>> testExtraOptions, List<Pair<String, String>> testExtraQueryStringParameters, List<String> testExtraScope, Fragment testFragment, String testLoginHint, OAuth2TokenCache testOauth2TokenCache, String testRedirectUri, HashMap<String, String> testRequestHeaders, String requiredBrokerProtocolVersion, String sdkVersion, Set<String> testScopes) {
         MsalBrokerRequestAdapter adapter = new MsalBrokerRequestAdapter();
+        final List<Pair<String, String>> testExtraQueryStringParametersCopy = testExtraQueryStringParameters == null ? null : new ArrayList<>(testExtraQueryStringParameters);
         InteractiveTokenCommandParameters params = InteractiveTokenCommandParameters.builder()
                 .authority(testAuthority)
                 .activity(new Activity())
@@ -421,7 +421,7 @@ public class MsalBrokerRequestAdapterTest {
                 .clientId(testClientId)
                 .correlationId(testCorrelationId)
                 .extraOptions(testExtraOptions)
-                .extraQueryStringParameters(testExtraQueryStringParameters)
+                .extraQueryStringParameters(testExtraQueryStringParametersCopy)
                 .extraScopesToConsent(testExtraScope)
                 .forceRefresh(forceRefresh)
                 .fragment(testFragment)
@@ -446,8 +446,38 @@ public class MsalBrokerRequestAdapterTest {
                 brokerRequest);
         Assert.assertEquals(testScopes, out.getScopes());
         Assert.assertEquals(null, out.getFragment());
-        Assert.assertEquals(testAuthority, out.getAuthority());
         Assert.assertEquals(sdkType, out.getSdkType());
+        final List<Pair<String, String>> slices = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(p -> "slice".equals(p.first))
+                .collect(Collectors.toList());
+        if (!slices.isEmpty()) {
+
+        }
+        final List<Pair<String, String>> dcs = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(p -> "dc".equals(p.first))
+                .collect(Collectors.toList());
+        if (!dcs.isEmpty()) {
+
+        }
+        if (slices.isEmpty() && dcs.isEmpty()) {
+            if (testAuthority.getSlice() == null && out.getAuthority().getSlice() != null) {
+                if (!((StringUtil.isEmpty(out.getAuthority().getSlice().getSlice()) && StringUtil.isEmpty(out.getAuthority().getSlice().getDC())))) {
+                    throw new AssertionError("Slice mismatch");
+                }
+            } else {
+                Assert.assertEquals(testAuthority, out.getAuthority());
+                Assert.assertEquals(testAuthority.getSlice(), out.getAuthority().getSlice());
+            }
+        } else {
+            testExtraQueryStringParametersCopy.removeAll(slices);
+            testExtraQueryStringParametersCopy.removeAll(dcs);
+            if (!slices.isEmpty()) {
+                Assert.assertEquals(slices.get(slices.size() - 1).second, out.getAuthority().getSlice().getSlice());
+            }
+            if (!dcs.isEmpty()) {
+                Assert.assertEquals(dcs.get(dcs.size() - 1).second, out.getAuthority().getSlice().getDC());
+            }
+        }
+        Assert.assertEquals(testAuthority, out.getAuthority());
+        Assert.assertEquals(testExtraQueryStringParametersCopy, out.getExtraQueryStringParameters());
         Assert.assertEquals(sdkVersion, out.getSdkVersion());
         Assert.assertEquals(testApplicationName, out.getApplicationName());
         Assert.assertEquals(testApplicationVersion, out.getApplicationVersion());
@@ -459,12 +489,4 @@ public class MsalBrokerRequestAdapterTest {
         Assert.assertEquals(testLoginHint, out.getLoginHint());
         Assert.assertEquals(null, out.getAccount());
     }
-
-    /*
-    @Test
-    public void authorityFromUrlTest() {
-        AzureActiveDirectoryAuthority a = (AzureActiveDirectoryAuthority) Authority.getAuthorityFromAuthorityUrl("https://login.fabrikam.com/aTenantId");
-        Assert.assertEquals("https://login.fabrikam.com/aTenantId", a.getAuthorityURL().toString());
-    }
-    */
 }

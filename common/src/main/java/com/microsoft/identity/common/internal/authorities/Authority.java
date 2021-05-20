@@ -250,6 +250,10 @@ public abstract class Authority {
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @SuppressWarnings("PMD")
+    /**
+     * This implementation of {@link equals} does not take into account particular fields.
+     * The <strong>only</strong> fields considered here are authority type and authority url.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -267,6 +271,10 @@ public abstract class Authority {
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @SuppressWarnings("PMD")
+    /**
+     * This implementation of {@link hashCode} does not take into account particular fields.
+     * The <strong>only</strong> fields considered here are authority type and authority url.
+     */
     @Override
     public int hashCode() {
         int result = ((mAuthorityTypeString == null) ? "0" : mAuthorityTypeString).hashCode();

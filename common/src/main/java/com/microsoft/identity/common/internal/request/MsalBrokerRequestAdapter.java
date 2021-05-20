@@ -235,7 +235,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         List<Pair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
         List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
-        ;
+        List<Pair<String, String>> extraQPCopy = new ArrayList<>(extraQP);
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
                 brokerRequest.getAuthority(),
@@ -267,7 +267,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationVersion(brokerRequest.getApplicationVersion())
                 .callerPackageName(brokerRequest.getApplicationName())
                 .callerAppVersion(brokerRequest.getApplicationVersion())
-                .extraQueryStringParameters(extraQP)
+                .extraQueryStringParameters((brokerRequest.getExtraQueryStringParameter() == null ||
+                        (extraQPCopy.size() > 0 && extraQP.size() == 0) ? null : extraQP))
                 .authority(authority)
                 .extraOptions(extraOptions)
                 .scopes(getScopesAsSet(brokerRequest.getScope()))
