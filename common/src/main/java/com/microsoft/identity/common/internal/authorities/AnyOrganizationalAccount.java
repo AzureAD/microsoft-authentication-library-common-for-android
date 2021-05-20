@@ -22,6 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@Accessors(prefix = "m")
 public class AnyOrganizationalAccount extends AzureActiveDirectoryAudience {
 
     public AnyOrganizationalAccount() {

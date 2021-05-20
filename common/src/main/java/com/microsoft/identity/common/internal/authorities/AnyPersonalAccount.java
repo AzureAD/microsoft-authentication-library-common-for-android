@@ -22,6 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 public class AnyPersonalAccount extends AzureActiveDirectoryAudience {
 
     public static final String ANY_PERSONAL_ACCOUNT_TENANT_ID = "consumers";

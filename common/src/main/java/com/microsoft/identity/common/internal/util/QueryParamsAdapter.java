@@ -85,7 +85,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     public static List<Pair<String, String>> _fromJson(final String jsonString) {
-        if (TextUtils.isEmpty(jsonString)) {
+        if (StringUtil.isEmpty(jsonString)) {
             return new ArrayList<>();
         }
         final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();

@@ -145,11 +145,11 @@ dependencies {
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
     localApi(project(":common4j")) {
-        transitive = false
+        transitive = true
     }
 
     distApi("com.microsoft.identity:common4j:0.0.+") {
-        transitive = false
+        transitive = true
     }
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')

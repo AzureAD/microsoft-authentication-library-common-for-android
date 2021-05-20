@@ -38,10 +38,44 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyPar
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
+import lombok.Builder;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@Accessors(prefix = "m")
 public class AzureActiveDirectoryAuthority extends Authority {
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        AzureActiveDirectoryAuthority that = (AzureActiveDirectoryAuthority) o;
+
+        if (mMultipleCloudsSupported != that.mMultipleCloudsSupported) return false;
+        if (mAudience != null ? !mAudience.equals(that.mAudience) : that.mAudience != null)
+            return false;
+        if (mFlightParameters != null ? !mFlightParameters.equals(that.mFlightParameters) : that.mFlightParameters != null)
+            return false;
+        return mAzureActiveDirectoryCloud != null ? mAzureActiveDirectoryCloud.equals(that.mAzureActiveDirectoryCloud) : that.mAzureActiveDirectoryCloud == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (mAudience != null ? mAudience.hashCode() : 0);
+        result = 31 * result + (mFlightParameters != null ? mFlightParameters.hashCode() : 0);
+        result = 31 * result + (mMultipleCloudsSupported ? 1 : 0);
+        result = 31 * result + (mAzureActiveDirectoryCloud != null ? mAzureActiveDirectoryCloud.hashCode() : 0);
+        return result;
+    }
 
     private static transient final String TAG = AzureActiveDirectoryAuthority.class.getSimpleName();
 
@@ -51,6 +85,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
     @SerializedName("flight_parameters")
     public Map<String, String> mFlightParameters;
 
+    @Builder.Default
     public boolean mMultipleCloudsSupported = false;
 
     private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
@@ -103,22 +138,35 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     @Override
     public Uri getAuthorityUri() {
+        return Uri.parse(getAuthorityURI().toString());
+
+    }
+
+    public URI getAuthorityURI() {
         getAzureActiveDirectoryCloud();
-        Uri issuer;
+        URI issuer;
 
         if (mAzureActiveDirectoryCloud == null) {
-            issuer = Uri.parse(mAudience.getCloudUrl());
+            issuer = URI.create(mAudience.getCloudUrl());
         } else {
-            issuer = Uri.parse("https://" + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
+            issuer = URI.create("https://" + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
         }
 
-        return issuer.buildUpon().appendPath(mAudience.getTenantId()).build();
+        try {
+            final String tenantId = mAudience.getTenantId();
+            return new URI(issuer.getScheme(), issuer.getAuthority(), issuer.getPath() + (tenantId != null ?
+                    "/" + tenantId : ""),
+                    issuer.getQuery(), issuer.getFragment());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException();
+        }
     }
+
 
     @Override
     public URL getAuthorityURL() {
         try {
-            return new URL(this.getAuthorityUri().toString());
+            return new URL(this.getAuthorityURI().toString());
         } catch (MalformedURLException e) {
             throw new IllegalArgumentException("Authority URL is not a URL.", e);
         }
@@ -173,4 +221,15 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return mAudience;
     }
 
+    @Override
+    public String toString() {
+        return "AzureActiveDirectoryAuthority{" +
+                "mAudience=" + mAudience +
+                ", mFlightParameters=" + mFlightParameters +
+                ", mMultipleCloudsSupported=" + mMultipleCloudsSupported +
+                ", mAzureActiveDirectoryCloud=" + mAzureActiveDirectoryCloud +
+                ", super: { " + super.toString() +
+                '}' +
+                '}';
+    }
 }

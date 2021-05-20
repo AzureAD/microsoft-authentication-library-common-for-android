@@ -24,14 +24,18 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 /**
  * Internal representation of a Bearer Auth Scheme.
  */
 @Getter
+@EqualsAndHashCode(callSuper = true)
 @Accessors(prefix = "m")
+@SuperBuilder
 public class BearerAuthenticationSchemeInternal
         extends TokenAuthenticationScheme
         implements ITokenAuthenticationSchemeInternal {

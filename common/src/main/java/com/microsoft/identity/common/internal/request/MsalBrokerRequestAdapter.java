@@ -104,7 +104,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
-        Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
+        Logger.info(TAG, "Constructing brokerRequest from AcquireTokenOperationParameters.");
 
         final List<Pair<String, String>> queryParams = parameters.getExtraQueryStringParameters();
         final List<Pair<String, String>> extraQueryStringParameters = queryParams != null ?
@@ -130,7 +130,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join(" ", parameters.getScopes()))
+                .scope(StringUtil.join(' ', parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .userName(parameters.getLoginHint())
@@ -218,6 +218,11 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = brokerRequestFromBundle(intent.getExtras());
 
+        return BrokerInteactiveParametersFromBrokerRequest(callingActivity, intent.getIntExtra(CALLER_INFO_UID, 0),
+                intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY), brokerRequest);
+    }
+
+    public BrokerInteractiveTokenCommandParameters BrokerInteactiveParametersFromBrokerRequest(@NonNull Activity callingActivity, int callingAppUid, String negotiatedBrokerProtocolVersion, BrokerRequest brokerRequest) {
         if (brokerRequest == null) {
             Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
                     "validation is expected to fail", null
@@ -225,10 +230,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             return BrokerInteractiveTokenCommandParameters.builder().build();
         }
 
-        int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
-
         List<Pair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
-        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
+        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
+        ;
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
                 brokerRequest.getAuthority(),
@@ -241,11 +245,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         String correlationIdString = brokerRequest.getCorrelationId();
 
-        if (TextUtils.isEmpty(correlationIdString)) {
+        if (StringUtil.isEmpty(correlationIdString)) {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
-        final String negotiatedBrokerProtocolVersion = intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
@@ -285,7 +288,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         // Set Global environment variable for instance discovery if present
-        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+        if (!StringUtil.isEmpty(brokerRequest.getEnvironment())) {
             AzureActiveDirectory.setEnvironment(
                     Environment.valueOf(brokerRequest.getEnvironment())
             );
@@ -414,7 +417,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Helper method to transforn scopes string to Set
      */
     private Set<String> getScopesAsSet(@Nullable final String scopeString) {
-        if (TextUtils.isEmpty(scopeString)) {
+        if (StringUtil.isEmpty(scopeString)) {
             return new HashSet<>();
         }
         final String[] scopes = scopeString.split(" ");
@@ -425,7 +428,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
     private String getRedirectUri(@NonNull TokenCommandParameters parameters) {
-        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+        if (StringUtil.isEmpty(parameters.getRedirectUri())) {
             return BrokerValidator.getBrokerRedirectUri(
                     parameters.getAndroidApplicationContext(),
                     parameters.getApplicationName()
