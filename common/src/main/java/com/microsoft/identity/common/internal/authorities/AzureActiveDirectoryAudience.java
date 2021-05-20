@@ -173,7 +173,7 @@ public abstract class AzureActiveDirectoryAudience {
     }
 
     public static AzureActiveDirectoryAudience getAzureActiveDirectoryAudience(final String cloudUrl,
-                                                                               final @NonNull String tenantId) {
+                                                                               final String tenantId) {
         final String methodName = ":getAzureActiveDirectoryAudience";
         AzureActiveDirectoryAudience audience = null;
 
