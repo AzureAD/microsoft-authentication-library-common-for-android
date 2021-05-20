@@ -173,7 +173,7 @@ jobs:
     name: credentials
     displayName: Download Nexus Sonatype Login Credentials
     inputs:
-      secureFile: NexusSonatypeCredentials.json
+      secureFile: NugetADDSonatypeCredentials.json
       retryCount: 5
   - task: PythonScript@0
     displayName: Upload to Nexus Sonatype Staging Directory
