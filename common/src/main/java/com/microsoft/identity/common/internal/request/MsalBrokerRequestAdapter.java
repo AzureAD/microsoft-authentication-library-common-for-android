@@ -124,7 +124,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             }
         }
 
-        final String extraQueryStringParameter = (queryParams != null || sliceData != null) ?
+        final String extraQueryStringParameter = (extraStringQueryParameters.size() > 0) ?
                 QueryParamsAdapter._toJson(extraQueryStringParameters)
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
