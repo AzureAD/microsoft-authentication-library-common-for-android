@@ -22,6 +22,7 @@ if len(sys.argv) == 3 and sys.argv[1] in CONFIG.keys():
 else:
     sys.exit("Invalid argv {}".format(sys.argv))
 
+gpgdirectory = os.environ.get("BUILD_ARTIFACTSTAGINGDIRECTORY", None)
 credentialsdirectory = os.environ.get("CREDENTIALS_SECUREFILEPATH", None)
 if not credentialsdirectory:
     sys.exit("Missing CREDENTIALS_SECUREFILEPATH")
@@ -33,9 +34,8 @@ data = '<promoteRequest><data><description>{}</description></data></promoteReque
 response = requests.post('https://oss.sonatype.org/service/local/staging/profiles/{}/start'.format(CONFIG[prj]['profile_id']), headers=HEADERS, data=data, verify=False, auth=(credentials["username"], credentials["password"]))
 xmldoc = minidom.parseString(response.content)
 repository_id = xmldoc.getElementsByTagName('stagedRepositoryId')[0].firstChild.nodeValue
-directory = '{}/{}/{}'.format(os.environ["SYSTEM_ARTIFACTSDIRECTORY"], prj, prjVersion)
 
-for filename in os.listdir(directory):
+for filename in os.listdir(gpgdirectory):
     repo_name = filename
     if filename.startswith("pom-default.xml"):
         new_string = "{}-{}.pom".format(prj, prjVersion)
@@ -44,5 +44,5 @@ for filename in os.listdir(directory):
     url = "https://oss.sonatype.org/service/local/staging/deployByRepositoryId/{}/com/microsoft/{}/{}/{}".format(repository_id, CONFIG[prj]['path'], prjVersion, repo_name)
     print(url)
 
-    with open(directory + "/" + filename, 'rb') as f:
+    with open(gpgdirectory + "/" + filename, 'rb') as f:
         requests.post(url, data=f, verify=False, auth=(credentials["username"], credentials["password"]))
