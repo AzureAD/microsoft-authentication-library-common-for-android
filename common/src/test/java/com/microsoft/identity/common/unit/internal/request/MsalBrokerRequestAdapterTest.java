@@ -13,6 +13,7 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -43,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @RunWith(ParameterizedRobolectricTestRunner.class)
@@ -447,13 +449,19 @@ public class MsalBrokerRequestAdapterTest {
         Assert.assertEquals(testScopes, out.getScopes());
         Assert.assertEquals(null, out.getFragment());
         Assert.assertEquals(sdkType, out.getSdkType());
-        final List<Pair<String, String>> slices = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(p -> "slice".equals(p.first))
-                .collect(Collectors.toList());
+        final List<Pair<String, String>> slices = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(new Predicate<Pair<String, String>>() {
+            public boolean test(Pair<String, String> p1) {
+                return "slice".equals(p1.first);
+            }
+        }).collect(Collectors.toList());
         if (!slices.isEmpty()) {
 
         }
-        final List<Pair<String, String>> dcs = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(p -> "dc".equals(p.first))
-                .collect(Collectors.toList());
+        final List<Pair<String, String>> dcs = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(new Predicate<Pair<String, String>>() {
+            public boolean test(Pair<String, String> p1) {
+                return "dc".equals(p1.first);
+            }
+        }).collect(Collectors.toList());
         if (!dcs.isEmpty()) {
 
         }
