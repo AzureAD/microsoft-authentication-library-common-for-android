@@ -1201,6 +1201,7 @@ public class BrokerOAuth2TokenCache
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
 
+        // TODO - Everything inside this loop can be parallelized... should it be?
         for (final BrokerApplicationMetadata metadata : allMetadata) {
             final OAuth2TokenCache candidateCache = getTokenCacheForClient(metadata);
 
