@@ -11,6 +11,7 @@ parameters:
   - recursive
 - name: project
 - name: projectVersion
+- name: EnvVstsMvnAndroidAccessTokenVar
 # release artifacts
 - name: gradleAssembleReleaseTask
 - name: gradleGeneratePomFiletask
@@ -63,7 +64,7 @@ jobs:
     displayName: Set MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(mvnAccessToken)'
+      arguments: '##vso[task.setvariable variable=${{ parameters.EnvVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
