@@ -153,7 +153,7 @@ jobs:
     displayName: GPG Signing
     inputs:
       targetType: filePath
-      filePath: $(Build.SourcesDirectory)/azure-pipelines/templates/steps/maven-release/gpg-signing.sh
+      filePath: gpg-signing.sh
       workingDirectory: $(Build.SourcesDirectory)/$(BuildOutputs)
     env:
       PROJECT: ${{ parameters.project }}
@@ -186,5 +186,5 @@ jobs:
     inputs:
       arguments: ${{ parameters.project }} ${{ parameters.projectVersion }}
       scriptSource: filePath
-      scriptPath: $(Build.SourcesDirectory)/azure-pipelines/templates/steps/maven-release/upload-to-nexus-sonatype.py
+      scriptPath: upload-to-nexus-sonatype.py
 ...
