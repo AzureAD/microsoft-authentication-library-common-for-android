@@ -449,19 +449,19 @@ public class MsalBrokerRequestAdapterTest {
         Assert.assertEquals(testScopes, out.getScopes());
         Assert.assertEquals(null, out.getFragment());
         Assert.assertEquals(sdkType, out.getSdkType());
-        final List<Pair<String, String>> slices = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(new Predicate<Pair<String, String>>() {
+        final List<Pair<String, String>> slices = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.<Pair<String,String>>emptyList()).stream().filter(new Predicate<Pair<String, String>>() {
             public boolean test(Pair<String, String> p1) {
                 return "slice".equals(p1.first);
             }
-        }).collect(Collectors.toList());
+        }).collect(Collectors.<Pair<String,String>>toList());
         if (!slices.isEmpty()) {
 
         }
-        final List<Pair<String, String>> dcs = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.emptyList()).stream().filter(new Predicate<Pair<String, String>>() {
+        final List<Pair<String, String>> dcs = Optional.ofNullable(testExtraQueryStringParametersCopy).orElse(Collections.<Pair<String,String>>emptyList()).stream().filter(new Predicate<Pair<String, String>>() {
             public boolean test(Pair<String, String> p1) {
                 return "dc".equals(p1.first);
             }
-        }).collect(Collectors.toList());
+        }).collect(Collectors.<Pair<String,String>>toList());
         if (!dcs.isEmpty()) {
 
         }

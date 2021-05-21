@@ -57,7 +57,6 @@ import lombok.experimental.SuperBuilder;
 
 @SuperBuilder
 @Accessors(prefix = "m")
-@EqualsAndHashCode
 @ToString
 public abstract class Authority {
 
