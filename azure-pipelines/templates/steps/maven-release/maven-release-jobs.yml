@@ -1,5 +1,6 @@
 # File: azure-pipelines\templates\steps\maven-release\maven-release-jobs.yml
 # Description: Job template to publish to maven central (sonatype)
+# This templates require mvnAccessToken
 
 parameters:
 # general
@@ -11,7 +12,7 @@ parameters:
   - recursive
 - name: project
 - name: projectVersion
-- name: EnvVstsMvnAndroidAccessTokenVar
+- name: envVstsMvnAndroidAccessTokenVar
 # release artifacts
 - name: gradleAssembleReleaseTask
 - name: gradleGeneratePomFiletask
@@ -64,7 +65,7 @@ jobs:
     displayName: Set MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=${{ parameters.EnvVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
+      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
@@ -124,8 +125,9 @@ jobs:
   pool:
     name: Hosted Ubuntu 1604
   steps:
-  - checkout: self
-    clean: true
+  - ${{ if not(startsWith(parameters.project, 'common')) }}:
+    - checkout: common
+      clean: true
   - task: DownloadPipelineArtifact@2
     displayName: Download Pipeline Artifacts
     inputs:
@@ -153,7 +155,7 @@ jobs:
     displayName: GPG Signing
     inputs:
       targetType: filePath
-      filePath: gpg-signing.sh
+      filePath: azure-pipelines/templates/steps/maven-release/gpg-signing.sh
       workingDirectory: $(Build.SourcesDirectory)/$(BuildOutputs)
     env:
       PROJECT: ${{ parameters.project }}
@@ -186,5 +188,5 @@ jobs:
     inputs:
       arguments: ${{ parameters.project }} ${{ parameters.projectVersion }}
       scriptSource: filePath
-      scriptPath: upload-to-nexus-sonatype.py
+      scriptPath: azure-pipelines/templates/steps/maven-release/upload-to-nexus-sonatype.py
 ...
