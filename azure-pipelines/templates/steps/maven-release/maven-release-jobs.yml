@@ -13,6 +13,7 @@ parameters:
 - name: project
 - name: projectVersion
 - name: envVstsMvnAndroidAccessTokenVar
+  default: 'none'
 # release artifacts
 - name: gradleAssembleReleaseTask
 - name: gradleGeneratePomFiletask
@@ -61,11 +62,12 @@ jobs:
     clean: true
     submodules: ${{ parameters.checkoutSubmodules }}
     persistCredentials: True
-  - task: CmdLine@1
-    displayName: Set MVN Access Token in Environment
-    inputs:
-      filename: echo
-      arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
+  - ${{ if ne(parameters.envVstsMvnAndroidAccessTokenVar, 'none') }}:
+    - task: CmdLine@1
+      displayName: Set MVN Access Token in Environment
+      inputs:
+        filename: echo
+        arguments: '##vso[task.setvariable variable=${{ parameters.envVstsMvnAndroidAccessTokenVar }}]$(mvnAccessToken)'
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
