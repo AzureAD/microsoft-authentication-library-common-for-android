@@ -53,6 +53,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.internal.cache.ADALOAuth2TokenCache.ERR_UNSUPPORTED_OPERATION;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
@@ -1202,16 +1205,32 @@ public class BrokerOAuth2TokenCache
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
 
         // TODO - Everything inside this loop can be parallelized... should it be?
-        for (final BrokerApplicationMetadata metadata : allMetadata) {
-            final OAuth2TokenCache candidateCache = getTokenCacheForClient(metadata);
+        final ExecutorService executorService = Executors.newCachedThreadPool();
 
-            if (null != candidateCache) {
-                allAccounts.addAll(
-                        ((MsalOAuth2TokenCache) candidateCache)
-                                .getAccountCredentialCache()
-                                .getAccounts()
-                );
-            }
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            executorService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    final OAuth2TokenCache candidateCache = getTokenCacheForClient(metadata);
+
+                    if (null != candidateCache) {
+                        allAccounts.addAll(
+                                ((MsalOAuth2TokenCache) candidateCache)
+                                        .getAccountCredentialCache()
+                                        .getAccounts()
+                        );
+                    }
+                }
+            });
+        }
+
+        executorService.shutdown();
+
+        try {
+            // TODO 30 seconds is actually waaay to long, but what should this threshold be?
+            executorService.awaitTermination(30, TimeUnit.SECONDS);
+        } catch (final InterruptedException e) {
+            // Should not happen...
         }
 
         // Hit the FOCI cache
