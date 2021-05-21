@@ -160,7 +160,7 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
     }
 
     @Override
-    public void handleStaySignedIn(UiResponse staySignedInResponse) {
+    public void handleStaySignedIn(final UiResponse staySignedInResponse) {
         final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
 
         if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {

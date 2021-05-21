@@ -111,7 +111,8 @@ public class PromptHandlerParameters {
     private final boolean enrollPageExpected;
 
     /**
-     * Denotes whether or not the Stay signed in page is expected to appear during an interactive token
+     * Denotes whether or not the Stay signed in page is expected to appear during an interactive
+     * token request
      */
     private final boolean staySignedInPageExpected;
 

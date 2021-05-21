@@ -56,9 +56,9 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
     void handleRegistration();
 
     /**
-     * Clicks yes or no on the "Stay signed in?" screen that gets shown after user signs in
+     * Clicks yes or no on the "Stay signed in?" screen that gets shown after user signs in.
      *
-     * @param staySignedInResponse denotes whether to accept or decline the staySignedIn prompt
+     * @param staySignedInResponse denotes whether to accept or decline the staySignedIn prompt.
      */
     void handleStaySignedIn(UiResponse staySignedInResponse);
 }
