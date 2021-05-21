@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.interaction.microsoftsts;
 
 import com.microsoft.identity.client.ui.automation.interaction.IOAuth2LoginComponentHandler;
+import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 
 /**
  * A Login Component Handler for Microsoft STS.
@@ -53,4 +54,11 @@ public interface IMicrosoftStsLoginComponentHandler extends IOAuth2LoginComponen
      * Respond to the register page during an authorization request.
      */
     void handleRegistration();
+
+    /**
+     * Clicks yes or no on the "Stay signed in?" screen that gets shown after user signs in
+     *
+     * @param staySignedInResponse denotes whether to accept or decline the staySignedIn prompt
+     */
+    void handleStaySignedIn(UiResponse staySignedInResponse);
 }
