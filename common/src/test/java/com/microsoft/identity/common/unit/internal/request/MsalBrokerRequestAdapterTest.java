@@ -1,7 +1,28 @@
+// Copyright (c) Microsoft Corporation.
+// All rights reserved.
+//
+// This code is licensed under the MIT License.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files(the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions :
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 package com.microsoft.identity.common.unit.internal.request;
 
 import android.app.Activity;
-import android.content.Context;
 import android.util.Pair;
 
 import androidx.fragment.app.Fragment;
@@ -13,7 +34,6 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAu
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
@@ -26,15 +46,17 @@ import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.unit.MockAccountRecord;
+import com.microsoft.identity.common.unit.MockOauth2TokenCache;
 
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import org.robolectric.ParameterizedRobolectricTestRunner;
+import org.robolectric.Robolectric;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -71,7 +93,8 @@ public class MsalBrokerRequestAdapterTest {
             .build();
     public static final AzureActiveDirectorySlice TEST_SLICE_WITH_NOTHING = AzureActiveDirectorySlice.builder()
             .build();
-    public static final IAccountRecord TEST_ACCOUNT_RECORD = Mockito.mock(IAccountRecord.class);
+    public static final IAccountRecord TEST_ACCOUNT_RECORD = new MockAccountRecord();
+
     public static final List<BrowserDescriptor> TEST_BROWSER_SAFE_LIST = Arrays.asList(
             BrowserDescriptor.builder()
                     .packageName("aBrowser")
@@ -87,7 +110,7 @@ public class MsalBrokerRequestAdapterTest {
     public static final List<Pair<String, String>> TEST_EXTRA_QUERY_STRING_PARAMETERS_SLICE = Arrays.asList(new Pair<String, String>("QPone", "QPtwo"), new Pair<>("slice", "aDifferentSlice"));
     public static final List<String> TEST_EXTRA_SCOPE = Arrays.asList("extraScope");
     public static final String TEST_LOGIN_HINT = "aLoginHint";
-    public static final OAuth2TokenCache TEST_OAUTH_2_TOKEN_CACHE = Mockito.mock(OAuth2TokenCache.class);
+    public static final OAuth2TokenCache TEST_OAUTH_2_TOKEN_CACHE = new MockOauth2TokenCache();
     public static final String TEST_REDIRECT_URI = "aRedirectUri";
     public static final HashMap<String, String> TEST_REQUEST_HEADERS = new HashMap<>(Collections.singletonMap("aHeader", "aValue"));
     public static final String REQUIRED_BROKER_PROTOCOL_VERSION = "3.0";
@@ -143,7 +166,6 @@ public class MsalBrokerRequestAdapterTest {
             .authorityUrl("https://an.authority.url/")
             .build();
     public static final Fragment TEST_FRAGMENT = new Fragment();
-    public static Context mockContext = Mockito.mock(Context.class);
     private final List<AzureActiveDirectorySlice> slices = Arrays.asList(TEST_SLICE_WITH_DC,
             TEST_SLICE_WITH_SLICE, TEST_SLICE_WITH_SLICE_DC, TEST_SLICE_WITH_NOTHING, null);
     @Rule
@@ -443,7 +465,7 @@ public class MsalBrokerRequestAdapterTest {
                 .scopes(testScopes)
                 .build();
         BrokerRequest brokerRequest = adapter.brokerRequestFromAcquireTokenParameters(params);
-        Activity mockActivity = Mockito.mock(Activity.class);
+        Activity mockActivity = Robolectric.buildActivity(Activity.class).get();
         BrokerInteractiveTokenCommandParameters out = adapter.brokerInteactiveParametersFromBrokerRequest(mockActivity, 0, "3.0",
                 brokerRequest);
         Assert.assertEquals(testScopes, out.getScopes());
@@ -497,4 +519,5 @@ public class MsalBrokerRequestAdapterTest {
         Assert.assertEquals(testLoginHint, out.getLoginHint());
         Assert.assertEquals(null, out.getAccount());
     }
+
 }
