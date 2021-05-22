@@ -1,0 +1,30 @@
+plugins {
+    id 'java-library'
+    id 'com.microsoft.identity.buildsystem' version '0.1.0'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_7
+    targetCompatibility = JavaVersion.VERSION_1_7
+}
+
+buildSystem {
+    desugar = false
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src/main']
+    }
+    test {
+        java.srcDirs = ['src/test']
+    }
+}
+
+dependencies {
+    implementation "com.microsoft.azure:msal4j:1.10.0"
+    testImplementation "junit:junit:4.13"
+    testImplementation "org.mockito:mockito-core:3.9.0"
+    compileOnly "org.projectlombok:lombok:1.18.12"
+    annotationProcessor "org.projectlombok:lombok:1.18.12"
+}
