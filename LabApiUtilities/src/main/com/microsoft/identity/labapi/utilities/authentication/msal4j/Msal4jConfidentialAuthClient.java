@@ -26,7 +26,6 @@ import com.microsoft.aad.msal4j.ClientCredentialFactory;
 import com.microsoft.aad.msal4j.ClientCredentialParameters;
 import com.microsoft.aad.msal4j.ConfidentialClientApplication;
 import com.microsoft.aad.msal4j.IClientCredential;
-
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
 import com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.TokenParameters;
@@ -36,7 +35,7 @@ import com.microsoft.identity.labapi.utilities.authentication.common.ClientAsser
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
-public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient {
+public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient<TokenParameters> {
 
     @Override
     public IAuthenticationResult acquireToken(@NonNull final String clientSecret,

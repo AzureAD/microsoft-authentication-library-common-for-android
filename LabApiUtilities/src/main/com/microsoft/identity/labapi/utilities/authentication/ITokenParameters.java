@@ -22,14 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
-import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
+import java.util.Set;
 
-public interface IConfidentialAuthClient<T extends ITokenParameters> {
+public interface ITokenParameters {
 
-    IAuthenticationResult acquireToken(String clientSecret, T tokenParameters);
+    String getAuthority();
 
-    IAuthenticationResult acquireToken(ClientAssertion clientAssertion, T tokenParameters);
+    Set<String> getScopes();
 
-    IAuthenticationResult acquireToken(CertificateCredential certificateCredential, T tokenParameters);
+    String getClientId();
+
 }

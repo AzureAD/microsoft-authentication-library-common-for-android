@@ -35,7 +35,7 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class TokenParameters {
+public class TokenParameters implements ITokenParameters {
     private final String mAuthority;
     @Singular
     private final Set<String> mScopes;
