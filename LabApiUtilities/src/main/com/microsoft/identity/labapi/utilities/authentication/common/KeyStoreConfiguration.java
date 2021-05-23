@@ -20,21 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication.port;
+package com.microsoft.identity.labapi.utilities.authentication.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
 /**
- * A class representing a client assertion used by the authorization server to authenticate the client application.
- * Adding support for client authentication for internal use with test execution
- * https://tools.ietf.org/html/rfc7521#section-6.1
+ * Class holds information necessary to instantiate a keystore in order to retrieve and access
+ * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
  */
 @Getter
-@Accessors(prefix = "m")
 @AllArgsConstructor
-public class ClientAssertion {
-    private final String mClientAssertion;
-    private final String mClientAssertionType;
+@Accessors(prefix = "m")
+public class KeyStoreConfiguration {
+    private final String mKeyStoreType;
+    private final String mKeyStoreProvider;
+    private final char[] mKeyStorePassword;
 }

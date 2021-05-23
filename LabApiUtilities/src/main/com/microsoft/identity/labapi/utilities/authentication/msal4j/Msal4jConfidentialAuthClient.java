@@ -30,8 +30,8 @@ import com.microsoft.aad.msal4j.IClientCredential;
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
 import com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.TokenParameters;
-import com.microsoft.identity.labapi.utilities.authentication.port.CertificateCredential;
-import com.microsoft.identity.labapi.utilities.authentication.port.ClientAssertion;
+import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
+import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;

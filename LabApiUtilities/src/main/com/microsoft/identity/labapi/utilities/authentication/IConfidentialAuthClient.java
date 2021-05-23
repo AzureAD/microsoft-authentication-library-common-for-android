@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.authentication.port.CertificateCredential;
-import com.microsoft.identity.labapi.utilities.authentication.port.ClientAssertion;
+import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
+import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 
 public interface IConfidentialAuthClient {
 
