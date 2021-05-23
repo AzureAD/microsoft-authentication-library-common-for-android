@@ -27,4 +27,6 @@ dependencies {
     testImplementation "org.mockito:mockito-core:3.9.0"
     compileOnly "org.projectlombok:lombok:1.18.12"
     annotationProcessor "org.projectlombok:lombok:1.18.12"
+    testImplementation "junit:junit:4.13"
+    testImplementation "org.mockito:mockito-core:3.9.0"
 }

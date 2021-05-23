@@ -43,21 +43,25 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CertificateCredential {
+
+    @NonNull
     private final PrivateKey mPrivateKey;
+
+    @NonNull
     private final X509Certificate mPublicCertificate;
 
-    public CertificateCredential create(@NonNull final PrivateKey privateKey,
+    public static CertificateCredential create(@NonNull final PrivateKey privateKey,
                                         @NonNull final X509Certificate certificate) {
         return new CertificateCredential(privateKey, certificate);
     }
 
     @SneakyThrows
-    public CertificateCredential create(@NonNull final KeyStoreConfiguration keyStoreConfiguration,
+    public static CertificateCredential create(@NonNull final KeyStoreConfiguration keyStoreConfiguration,
                                         @NonNull final ClientCertificateMetadata clientCertificateMetadata) {
         return getCertificateInfoFromStore(keyStoreConfiguration, clientCertificateMetadata);
     }
 
-    private CertificateCredential getCertificateInfoFromStore(@NonNull final KeyStoreConfiguration keyStoreConfiguration,
+    private static CertificateCredential getCertificateInfoFromStore(@NonNull final KeyStoreConfiguration keyStoreConfiguration,
                                                               @NonNull final ClientCertificateMetadata clientCertificateMetadata)
             throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
             IOException, CertificateException {
@@ -80,6 +84,10 @@ public class CertificateCredential {
 
         final X509Certificate publicCertificate = (X509Certificate) keystore
                 .getCertificate(clientCertificateMetadata.getAlias());
+
+        if (key == null || publicCertificate == null) {
+            throw new CertificateException("Certificate not found in KeyStore");
+        }
 
         return new CertificateCredential(key, publicCertificate);
     }
