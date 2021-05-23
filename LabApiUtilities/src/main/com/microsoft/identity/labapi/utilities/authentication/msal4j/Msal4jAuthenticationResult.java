@@ -20,24 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package java.com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.authentication.msal4j;
 
-import java.util.Set;
+import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
+import java.util.Date;
 
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
-import lombok.experimental.Accessors;
 
-@Getter
-@Accessors(prefix = "m")
-@Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class TokenParameters {
-    private final String mAuthority;
-    @Singular
-    private final Set<String> mScopes;
-    private final String mClientId;
+@AllArgsConstructor
+public class Msal4jAuthenticationResult implements IAuthenticationResult {
+
+    private final com.microsoft.aad.msal4j.IAuthenticationResult mAuthenticationResult;
+
+    @Override
+    public String getAccessToken() {
+        return mAuthenticationResult.accessToken();
+    }
+
+    @Override
+    public String getIdToken() {
+        return mAuthenticationResult.idToken();
+    }
+
+    @Override
+    public String getScopes() {
+        return mAuthenticationResult.scopes();
+    }
+
+    @Override
+    public Date getExpiresOnDate() {
+        return mAuthenticationResult.expiresOnDate();
+    }
 }

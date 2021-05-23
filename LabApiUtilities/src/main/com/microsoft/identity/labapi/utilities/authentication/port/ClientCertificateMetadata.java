@@ -20,21 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package java.com.microsoft.identity.labapi.utilities.authentication.common.port;
+package com.microsoft.identity.labapi.utilities.authentication.port;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
 /**
- * A class representing a client assertion used by the authorization server to authenticate the client application.
- * Adding support for client authentication for internal use with test execution
- * https://tools.ietf.org/html/rfc7521#section-6.1
+ * Configuration information for the client certificate to be used.
  */
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor
-public class ClientAssertion {
-    private final String mClientAssertion;
-    private final String mClientAssertionType;
+public class ClientCertificateMetadata {
+    private final String mAlias;
+    private final char[] mPassword;
 }

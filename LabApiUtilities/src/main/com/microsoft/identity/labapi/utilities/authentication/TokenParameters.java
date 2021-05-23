@@ -20,21 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package java.com.microsoft.identity.labapi.utilities.authentication.common.port;
+package com.microsoft.identity.labapi.utilities.authentication;
 
+import java.util.Set;
+
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.Singular;
 import lombok.experimental.Accessors;
 
-/**
- * Class holds information necessary to instantiate a keystore in order to retrieve and access
- * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
- */
 @Getter
-@AllArgsConstructor
 @Accessors(prefix = "m")
-public class KeyStoreConfiguration {
-    private final String mKeyStoreType;
-    private final String mKeyStoreProvider;
-    private final char[] mKeyStorePassword;
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class TokenParameters {
+    private final String mAuthority;
+    @Singular
+    private final Set<String> mScopes;
+    private final String mClientId;
 }

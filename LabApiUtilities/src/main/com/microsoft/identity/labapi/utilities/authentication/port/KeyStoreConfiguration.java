@@ -20,27 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package java.com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.authentication.port;
 
-public interface IAuthenticationResult {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
-    /**
-     * @return access token
-     */
-    String getAccessToken();
-
-    /**
-     * @return id token
-     */
-    String getIdToken();
-
-    /**
-     * @return granted scopes values returned by the service
-     */
-    String getScopes();
-
-    /**
-     * @return access token expiration date
-     */
-    java.util.Date getExpiresOnDate();
+/**
+ * Class holds information necessary to instantiate a keystore in order to retrieve and access
+ * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
+ */
+@Getter
+@AllArgsConstructor
+@Accessors(prefix = "m")
+public class KeyStoreConfiguration {
+    private final String mKeyStoreType;
+    private final String mKeyStoreProvider;
+    private final char[] mKeyStorePassword;
 }

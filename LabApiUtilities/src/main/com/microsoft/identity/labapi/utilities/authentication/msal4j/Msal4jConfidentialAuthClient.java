@@ -20,18 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package java.com.microsoft.identity.labapi.utilities.authentication.msal4j;
+package com.microsoft.identity.labapi.utilities.authentication.msal4j;
 
 import com.microsoft.aad.msal4j.ClientCredentialFactory;
 import com.microsoft.aad.msal4j.ClientCredentialParameters;
 import com.microsoft.aad.msal4j.ConfidentialClientApplication;
 import com.microsoft.aad.msal4j.IClientCredential;
 
-import java.com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
-import java.com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
-import java.com.microsoft.identity.labapi.utilities.authentication.TokenParameters;
-import java.com.microsoft.identity.labapi.utilities.authentication.common.port.CertificateCredential;
-import java.com.microsoft.identity.labapi.utilities.authentication.common.port.ClientAssertion;
+import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
+import com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
+import com.microsoft.identity.labapi.utilities.authentication.TokenParameters;
+import com.microsoft.identity.labapi.utilities.authentication.port.CertificateCredential;
+import com.microsoft.identity.labapi.utilities.authentication.port.ClientAssertion;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;

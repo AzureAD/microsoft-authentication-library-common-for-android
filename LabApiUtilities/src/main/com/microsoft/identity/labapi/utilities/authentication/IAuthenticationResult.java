@@ -20,35 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package java.com.microsoft.identity.labapi.utilities.authentication.msal4j;
+package com.microsoft.identity.labapi.utilities.authentication;
 
-import java.com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
-import java.util.Date;
+public interface IAuthenticationResult {
 
-import lombok.AllArgsConstructor;
+    /**
+     * @return access token
+     */
+    String getAccessToken();
 
-@AllArgsConstructor
-public class Msal4jAuthenticationResult implements IAuthenticationResult {
+    /**
+     * @return id token
+     */
+    String getIdToken();
 
-    private final com.microsoft.aad.msal4j.IAuthenticationResult mAuthenticationResult;
+    /**
+     * @return granted scopes values returned by the service
+     */
+    String getScopes();
 
-    @Override
-    public String getAccessToken() {
-        return mAuthenticationResult.accessToken();
-    }
-
-    @Override
-    public String getIdToken() {
-        return mAuthenticationResult.idToken();
-    }
-
-    @Override
-    public String getScopes() {
-        return mAuthenticationResult.scopes();
-    }
-
-    @Override
-    public Date getExpiresOnDate() {
-        return mAuthenticationResult.expiresOnDate();
-    }
+    /**
+     * @return access token expiration date
+     */
+    java.util.Date getExpiresOnDate();
 }
