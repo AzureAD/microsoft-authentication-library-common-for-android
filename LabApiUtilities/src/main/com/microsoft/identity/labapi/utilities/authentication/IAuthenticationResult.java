@@ -22,12 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-public interface IAuthenticationResult {
-
-    /**
-     * @return access token
-     */
-    String getAccessToken();
+public interface IAuthenticationResult extends IAccessTokenAccessor {
 
     /**
      * @return id token

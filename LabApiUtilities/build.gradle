@@ -22,6 +22,28 @@ sourceSets {
 }
 
 dependencies {
+    // keyvault per product flavor
+    if (findProject(":keyvault") != null) {
+        //Use project reference if available
+        implementation(project(":keyvault")) {
+            transitive = true
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'keyvault', version: '0.0.+')
+    }
+
+    // labapi per product flavor
+    if (findProject(":labapi") != null) {
+        //Use project reference if available
+        implementation(project(":labapi")) {
+            transitive = true
+        }
+    } else {
+        //Always use the latest release
+        implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
+    }
+
     implementation "com.microsoft.azure:msal4j:1.10.0"
     testImplementation "junit:junit:4.13"
     testImplementation "org.mockito:mockito-core:3.9.0"

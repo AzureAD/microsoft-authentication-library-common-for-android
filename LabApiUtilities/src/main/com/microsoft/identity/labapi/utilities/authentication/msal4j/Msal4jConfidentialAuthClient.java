@@ -28,6 +28,7 @@ import com.microsoft.aad.msal4j.ConfidentialClientApplication;
 import com.microsoft.aad.msal4j.IClientCredential;
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
 import com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
+import com.microsoft.identity.labapi.utilities.authentication.ITokenParameters;
 import com.microsoft.identity.labapi.utilities.authentication.TokenParameters;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
@@ -35,25 +36,25 @@ import com.microsoft.identity.labapi.utilities.authentication.common.ClientAsser
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
-public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient<TokenParameters> {
+public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient {
 
     @Override
     public IAuthenticationResult acquireToken(@NonNull final String clientSecret,
-                                              @NonNull final TokenParameters tokenParameters) {
+                                              @NonNull final ITokenParameters tokenParameters) {
         final IClientCredential credential = ClientCredentialFactory.createFromSecret(clientSecret);
         return acquireToken(credential, tokenParameters);
     }
 
     @Override
     public IAuthenticationResult acquireToken(@NonNull final ClientAssertion clientAssertion,
-                                              @NonNull final TokenParameters tokenParameters) {
+                                              @NonNull final ITokenParameters tokenParameters) {
         final IClientCredential credential = ClientCredentialFactory.createFromClientAssertion(clientAssertion.getClientAssertion());
         return acquireToken(credential, tokenParameters);
     }
 
     @Override
     public IAuthenticationResult acquireToken(@NonNull final CertificateCredential certificateCredential,
-                                              @NonNull final TokenParameters tokenParameters) {
+                                              @NonNull final ITokenParameters tokenParameters) {
         final IClientCredential credential = ClientCredentialFactory.createFromCertificate(
                 certificateCredential.getPrivateKey(), certificateCredential.getPublicCertificate()
         );
@@ -62,7 +63,7 @@ public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient<Tok
 
     @SneakyThrows
     private IAuthenticationResult acquireToken(@NonNull final IClientCredential clientCredential,
-                                               @NonNull final TokenParameters tokenParameters) {
+                                               @NonNull final ITokenParameters tokenParameters) {
         final ConfidentialClientApplication app =
                 ConfidentialClientApplication
                         .builder(tokenParameters.getClientId(), clientCredential)

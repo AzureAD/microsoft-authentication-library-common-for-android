@@ -22,14 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
-import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
+public interface IAccessTokenAccessor {
 
-public interface IConfidentialAuthClient {
-
-    IAuthenticationResult acquireToken(String clientSecret, ITokenParameters tokenParameters);
-
-    IAuthenticationResult acquireToken(ClientAssertion clientAssertion, ITokenParameters tokenParameters);
-
-    IAuthenticationResult acquireToken(CertificateCredential certificateCredential, ITokenParameters tokenParameters);
+    /**
+     * @return access token
+     */
+    String getAccessToken() throws AuthenticationException;
 }
