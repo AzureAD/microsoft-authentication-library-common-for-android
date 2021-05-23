@@ -51,7 +51,7 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 public class MicrosoftClientAssertion extends ClientAssertion {
 
-    private static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+    public static final String CLIENT_ASSERTION_TYPE = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
     private static final String THUMBPRINT_ALGORITHM = "SHA-1";
     private static final int ONE_MINUTE_MILLIS = Math.toIntExact(TimeUnit.MINUTES.toMillis(1));
 
