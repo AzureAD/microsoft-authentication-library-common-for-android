@@ -28,6 +28,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Singular;
 import lombok.experimental.Accessors;
 
@@ -36,8 +37,14 @@ import lombok.experimental.Accessors;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class TokenParameters implements ITokenParameters {
+
+    @NonNull
     private final String mAuthority;
+
+    @NonNull
     @Singular
     private final Set<String> mScopes;
+
+    @NonNull
     private final String mClientId;
 }
