@@ -21,7 +21,7 @@ steps:
     testResultsFiles: '**/TEST-*.xml'
     searchFolder: '$(System.DefaultWorkingDirectory)'
     condition: succeededOrFailed()
-    displayName: 'Publish Test Results'
+    displayName: 'Publish Test Resultsx'
 - script: |
     echo =============================================
     echo Kill all running containers if existing
