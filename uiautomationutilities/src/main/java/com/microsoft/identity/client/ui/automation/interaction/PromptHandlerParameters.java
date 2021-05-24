@@ -111,6 +111,12 @@ public class PromptHandlerParameters {
     private final boolean enrollPageExpected;
 
     /**
+     * Denotes whether or not the Stay signed in page is expected to appear during an interactive
+     * token request
+     */
+    private final boolean staySignedInPageExpected;
+
+    /**
      * Denotes the way in which we want to respond to the enroll page for this request.
      */
     @Builder.Default
@@ -127,4 +133,7 @@ public class PromptHandlerParameters {
      */
     @Builder.Default
     private final UiResponse speedBumpResponse = UiResponse.ACCEPT;
+
+    @Builder.Default
+    private final UiResponse staySignedInResponse = UiResponse.ACCEPT;
 }
