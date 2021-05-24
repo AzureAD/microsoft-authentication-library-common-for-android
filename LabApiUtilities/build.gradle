@@ -59,12 +59,9 @@ dependencies {
     }
 
     implementation "com.microsoft.azure:msal4j:1.10.0"
-    testImplementation "junit:junit:4.13"
-    testImplementation "org.mockito:mockito-core:3.9.0"
-    compileOnly "org.projectlombok:lombok:1.18.12"
-    annotationProcessor "org.projectlombok:lombok:1.18.12"
-    testImplementation "junit:junit:4.13"
-    testImplementation "org.mockito:mockito-core:3.9.0"
+    testImplementation "junit:junit:4.13.1"
+    compileOnly "org.projectlombok:lombok:1.18.16"
+    annotationProcessor "org.projectlombok:lombok:1.18.16"
 }
 
 afterEvaluate {
