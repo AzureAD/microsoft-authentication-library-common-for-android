@@ -20,14 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.authentication.exception;
 
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
 
-public interface IAccessTokenAccessor {
+@Getter
+@Accessors(prefix = "m")
+public class LabApiException extends Exception {
+    private final LabError mErrorCode;
 
-    /**
-     * @return access token
-     */
-    String getAccessToken() throws LabApiException;
+    public LabApiException(@NonNull final LabError error) {
+        super(error.name());
+        mErrorCode = error;
+    }
+
+    public LabApiException(@NonNull final LabError error, @NonNull final Throwable throwable) {
+        super(error.name(), throwable);
+        mErrorCode = error;
+    }
 }

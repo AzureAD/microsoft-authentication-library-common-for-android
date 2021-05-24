@@ -25,6 +25,8 @@ package com.microsoft.identity.labapi.utilities.authentication;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabError;
 import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfidentialAuthClient;
 
 import lombok.NonNull;
@@ -64,7 +66,7 @@ public class LabApiAuthenticationClient implements IAccessTokenAccessor {
     }
 
     @Override
-    public String getAccessToken() throws AuthenticationException {
+    public String getAccessToken() throws LabApiException {
         final String accessTokenForKeyVault = mKeyVaultAuthenticationClient.getAccessToken();
         Configuration.getDefaultApiClient().setAccessToken(accessTokenForKeyVault);
 
@@ -79,8 +81,8 @@ public class LabApiAuthenticationClient implements IAccessTokenAccessor {
             labAppSecret = secretsApi.getSecret(
                     SECRET_NAME_LAB_APP_SECRET, SECRET_VERSION, KEY_VAULT_API_VERSION
             ).getValue();
-        } catch (ApiException e) {
-            throw new AuthenticationException();
+        } catch (final ApiException e) {
+            throw new LabApiException(LabError.FAILED_TO_GET_SECRET_FROM_KEYVAULT, e);
         }
 
         final TokenParameters tokenParameters = TokenParameters

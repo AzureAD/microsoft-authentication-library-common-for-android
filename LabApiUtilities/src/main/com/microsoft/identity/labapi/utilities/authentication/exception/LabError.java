@@ -20,7 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.authentication.exception;
 
-public class AuthenticationException extends Exception {
+public enum LabError {
+    FAILED_TO_GET_TOKEN_FOR_KEYVAULT,
+    FAILED_TO_GET_SECRET_FROM_KEYVAULT;
 }

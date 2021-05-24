@@ -25,6 +25,8 @@ package com.microsoft.identity.labapi.utilities.authentication;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabError;
 
 import lombok.NonNull;
 
@@ -65,7 +67,7 @@ public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
     }
 
     @Override
-    public String getAccessToken() throws AuthenticationException {
+    public String getAccessToken() throws LabApiException {
         final IAuthenticationResult authenticationResult;
 
         if (mClientSecret != null && mClientSecret.trim().length() > 0) {
@@ -94,7 +96,7 @@ public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
         if (authenticationResult != null) {
             return authenticationResult.getAccessToken();
         } else {
-            throw new AuthenticationException();
+            throw new LabApiException(LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT);
         }
     }
 }
