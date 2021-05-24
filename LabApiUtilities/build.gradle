@@ -1,6 +1,13 @@
 plugins {
     id 'java-library'
     id 'com.microsoft.identity.buildsystem' version '0.1.0'
+    id 'com.github.gmazzo.buildconfig' version '3.0.0'
+}
+
+def labClientSecret = "" // will be blank unless specified by developer
+
+if (project.hasProperty("labSecret")) {
+    labClientSecret = labSecret
 }
 
 java {
@@ -12,12 +19,19 @@ buildSystem {
     desugar = false
 }
 
+buildConfig {
+    packageName("com.microsoft.identity.labapi.utilities")  // forces the package. Defaults to '${project.group}'
+    useJavaOutput() // forces the outputType to 'java'
+}
+
+
 sourceSets {
     main {
         java.srcDirs = ['src/main']
     }
     test {
-        java.srcDirs = ['src/test']
+        java.srcDirs = ['src/test', 'build/generated/source/buildConfig/test']
+        buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
     }
 }
 
