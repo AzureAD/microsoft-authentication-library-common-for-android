@@ -66,3 +66,7 @@ dependencies {
     testImplementation "junit:junit:4.13"
     testImplementation "org.mockito:mockito-core:3.9.0"
 }
+
+afterEvaluate {
+    assemble.dependsOn generateBuildConfig, generateTestBuildConfig
+}
