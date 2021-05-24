@@ -20,33 +20,38 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.platform;
+package com.microsoft.identity.common.internal.util;
 
-public class MockDeviceMetadata implements IDeviceMetadata {
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 
-    static final String TEST_CPU = "TestCPU";
-    static final String TEST_OS = "TestOS";
-    static final String TEST_DEVICE_MODEL = "TestDeviceModel";
-    static final String TEST_MANUFACTURER = "TestManufacturer";
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+
+/**
+ * Adapts {@link ISharedPreferencesFileManager} to {@link IKeyPairStorage<Long>}
+ * */
+@AllArgsConstructor
+public class SharedPrefLongKeyPairStorage implements IKeyPairStorage<Long> {
+    private ISharedPreferencesFileManager mManager;
 
     @Override
-    public String getCpu() {
-        return TEST_CPU;
+    public Long get(@NonNull String key) {
+        return mManager.getLong(key);
     }
 
     @Override
-    public String getOs() {
-        return TEST_OS;
+    public void put(@NonNull String key, Long value) {
+        mManager.putLong(key, value);
     }
 
     @Override
-    public String getDeviceModel() {
-        return TEST_DEVICE_MODEL;
+    public void remove(@NonNull String key) {
+        mManager.remove(key);
     }
 
     @Override
-    public String getManufacturer() {
-        return TEST_MANUFACTURER;
+    public void clear() {
+        mManager.clear();
     }
 }
-

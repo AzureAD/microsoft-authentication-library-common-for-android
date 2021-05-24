@@ -35,13 +35,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import lombok.NonNull;
 
 /**
- * Helper class to add additional platform specific query parameters or headers for the request sent to sts.
+ * Helper class to add additional platform specific query parameters or headers for the request sent to eSTS.
  */
 public class Device {
     private static final String TAG = Device.class.getSimpleName();
 
     /**
-     * The String to be returned if the value is not set properly.
+     * The String to be returned if the value is not set.
      */
     protected static final String NOT_SET = "NOT_SET";
 
@@ -144,7 +144,7 @@ public class Device {
     }
 
     /**
-     * Gets the model name/code of the current device.
+     * Gets the model name of the current device.
      *
      * @return The device model name.
      */

@@ -1870,6 +1870,7 @@ public final class AuthenticationConstants {
         /**
          * The String representing the sdk version.
          */
+        @Deprecated
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
         /**

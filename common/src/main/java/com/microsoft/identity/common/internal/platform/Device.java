@@ -41,7 +41,7 @@ public final class Device extends com.microsoft.identity.common.java.platform.De
 
     private static IDevicePopManager sDevicePoPManager;
 
-    // Note: this needs to be invoked at the beginning of an android flow.
+    // TODO: this needs to be invoked at the beginning of an android flow.
     static {
         com.microsoft.identity.common.java.platform.Device.setDeviceMetadata(new AndroidDeviceMetadata());
     }

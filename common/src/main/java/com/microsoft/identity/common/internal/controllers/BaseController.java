@@ -286,7 +286,7 @@ public abstract class BaseController {
             ((MicrosoftTokenRequest) tokenRequest).setClientAppVersion(parameters.getApplicationVersion());
         }
 
-        if (tokenRequest instanceof IHasExtraParameters && parameters instanceof IHasExtraParameters) {
+        if (parameters instanceof IHasExtraParameters) {
             ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters)parameters).getExtraParameters());
         }
 

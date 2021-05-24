@@ -23,17 +23,12 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-
-import java.util.Calendar;
-import java.util.Date;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -47,64 +42,23 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 public class ClockSkewManager extends com.microsoft.identity.common.java.util.ClockSkewManager {
 
     private static final class PreferencesMetadata {
-
         private static final String SKEW_PREFERENCES_FILENAME =
                 "com.microsoft.identity.client.clock_correction";
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public ClockSkewManager(@NonNull final ISharedPreferencesFileManager manager) {
-        super(new IKeyPairStorage<Long>() {
-            @Override
-            public Long get(@lombok.NonNull String key) {
-                return manager.getLong(key);
-            }
-
-            @Override
-            public void put(@lombok.NonNull String key, Long value) {
-                manager.putLong(key, value);
-            }
-
-            @Override
-            public void remove(@lombok.NonNull String key) {
-                manager.remove(key);
-            }
-
-            @Override
-            public void clear() {
-                manager.clear();
-            }
-        });
+        super(new SharedPrefLongKeyPairStorage(manager));
     }
 
     public ClockSkewManager(@NonNull final Context context) {
-        super(new IKeyPairStorage<Long>() {
-            final SharedPreferencesFileManager clockSkewPreferences = SharedPreferencesFileManager.getSharedPreferences(
-                    context,
-                    PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
-                    -1,
-                    null
-            );
-
-            @Override
-            public Long get(@lombok.NonNull String key) {
-                return clockSkewPreferences.getLong(key);
-            }
-
-            @Override
-            public void put(@lombok.NonNull String key, Long value) {
-                clockSkewPreferences.putLong(key, value);
-            }
-
-            @Override
-            public void remove(@lombok.NonNull String key) {
-                clockSkewPreferences.remove(key);
-            }
-
-            @Override
-            public void clear() {
-                clockSkewPreferences.clear();
-            }
-        });
+        super(new SharedPrefLongKeyPairStorage(
+                SharedPreferencesFileManager.getSharedPreferences(
+                        context,
+                        PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
+                        -1,
+                        null
+                )
+        ));
     }
 }

@@ -30,12 +30,15 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import lombok.val;
+import java.util.Map;
 
 /**
  * Tests for {@link com.microsoft.identity.common.java.platform.Device}.
  */
 public class DeviceTest {
+
+    final String NOT_SET = "NOT_SET";
+    final String TEST_VERSION = "TEST_VERSION";
 
     @After
     public void setUp() {
@@ -45,50 +48,50 @@ public class DeviceTest {
     @Test
     public void testGetDataWhenMetadataIsNotSet(){
         // Shouldn't crash.
-        val platformParameter = Device.getPlatformIdParameters();
+        final Map<String, String> platformParameter = Device.getPlatformIdParameters();
         Assert.assertEquals(3, platformParameter.size());
-        Assert.assertEquals("NOT_SET", platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
-        Assert.assertEquals("NOT_SET", platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
-        Assert.assertEquals("NOT_SET", platformParameter.get(Device.PlatformIdParameters.OS));
+        Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
+        Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
+        Assert.assertEquals(NOT_SET, platformParameter.get(Device.PlatformIdParameters.OS));
 
-        Assert.assertEquals("NOT_SET", Device.getManufacturer());
-        Assert.assertEquals("NOT_SET", Device.getModel());
-        Assert.assertEquals("NOT_SET", Device.getProductVersion());
+        Assert.assertEquals(NOT_SET, Device.getManufacturer());
+        Assert.assertEquals(NOT_SET, Device.getModel());
+        Assert.assertEquals(NOT_SET, Device.getProductVersion());
     }
 
     @Test
     public void testGetPlatformIdParameters(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
-        val platformParameter = Device.getPlatformIdParameters();
+        final Map<String, String> platformParameter = Device.getPlatformIdParameters();
         Assert.assertEquals(3, platformParameter.size());
-        Assert.assertEquals(MockDeviceMetadata.testCPU, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
-        Assert.assertEquals(MockDeviceMetadata.testDeviceModel, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
-        Assert.assertEquals(MockDeviceMetadata.testOS, platformParameter.get(Device.PlatformIdParameters.OS));
+        Assert.assertEquals(MockDeviceMetadata.TEST_CPU, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
+        Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
+        Assert.assertEquals(MockDeviceMetadata.TEST_OS, platformParameter.get(Device.PlatformIdParameters.OS));
     }
 
     @Test
     public void testGetProductVersion_DiagContextNotSet(){
-        Assert.assertEquals("NOT_SET", Device.getProductVersion());
+        Assert.assertEquals(NOT_SET, Device.getProductVersion());
     }
 
     @Test
     public void testGetProductVersion(){
-        DiagnosticContext.INSTANCE.getRequestContext().put(AuthenticationConstants.SdkPlatformFields.VERSION, "TestVersion");
-        Assert.assertEquals("TestVersion", Device.getProductVersion());
+        DiagnosticContext.INSTANCE.getRequestContext().put(AuthenticationConstants.SdkPlatformFields.VERSION, TEST_VERSION);
+        Assert.assertEquals(TEST_VERSION, Device.getProductVersion());
 
     }
     @Test
     public void testGetManufacturer(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
-        Assert.assertEquals(MockDeviceMetadata.testManufacturer, Device.getManufacturer());
+        Assert.assertEquals(MockDeviceMetadata.TEST_MANUFACTURER, Device.getManufacturer());
     }
 
 
     @Test
     public void testGetModel(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
-        Assert.assertEquals(MockDeviceMetadata.testDeviceModel, Device.getModel());
+        Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, Device.getModel());
     }
 }
 
