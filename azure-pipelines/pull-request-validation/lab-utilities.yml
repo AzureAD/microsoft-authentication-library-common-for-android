@@ -29,7 +29,7 @@ jobs:
         name: Gradle1
         displayName: Assembles the outputs of this project.
         inputs:
-          tasks: LabApiUtilities:clean LabApiUtilties:assemble
+          tasks: LabApiUtilities:clean LabApiUtilities:assemble
       - task: Gradle@2
         displayName: Run the unit tests.
         inputs:
