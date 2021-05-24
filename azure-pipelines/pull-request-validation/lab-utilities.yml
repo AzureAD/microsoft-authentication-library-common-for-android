@@ -1,5 +1,5 @@
-# File: azure-pipelines\pull-request-validation\common4j.yml
-# Description: Run test in common4j
+# File: azure-pipelines\pull-request-validation\lab-utilities.yml
+# Description: Run test in LabApiUtilities
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
