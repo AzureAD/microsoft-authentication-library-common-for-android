@@ -28,7 +28,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.platform.Device;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import java.net.URL;
 
