@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import java.net.URL;
 

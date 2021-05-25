@@ -26,7 +26,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 
 import java.util.Map;
 

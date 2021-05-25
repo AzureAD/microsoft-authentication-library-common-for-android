@@ -219,6 +219,13 @@ public class KeyStoreAccessor {
                             .setEncryptionPaddings(params[2])
                             .setKeySize(cipher.keySize())
                             .build();
+                } else {
+                    spec = new KeyGenParameterSpec.Builder(alias, KEY_PURPOSES)
+                            .setKeySize(cipher.keySize())
+                            .setBlockModes(params[1])
+                            .setEncryptionPaddings(params[2])
+                            .setKeySize(cipher.keySize())
+                            .build();
                 }
                 generator.init(spec);
                 generator.generateKey();
