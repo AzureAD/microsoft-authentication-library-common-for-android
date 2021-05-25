@@ -30,6 +30,9 @@ import lombok.experimental.Accessors;
  * A class representing a client assertion used by the authorization server to authenticate the client application.
  * Adding support for client authentication for internal use with test execution
  * https://tools.ietf.org/html/rfc7521#section-6.1
+ *
+ * Lomboked from original source located at:
+ * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/oauth2/ClientAssertion.java
  */
 @Getter
 @Accessors(prefix = "m")

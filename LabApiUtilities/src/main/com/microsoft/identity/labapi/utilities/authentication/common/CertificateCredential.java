@@ -43,6 +43,12 @@ import lombok.experimental.Accessors;
 
 import static com.microsoft.identity.labapi.utilities.authentication.exception.LabError.CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
 
+/**
+ * Represents a certificate credential used for creating a client assertion.
+ *
+ * Lomboked from original source located at:
+ * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/keys/CertificateCredential.java
+ */
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

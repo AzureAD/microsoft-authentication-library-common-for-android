@@ -28,6 +28,9 @@ import lombok.experimental.Accessors;
 
 /**
  * Configuration information for the client certificate to be used.
+ *
+ * Lomboked from original source located at:
+ * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/keys/ClientCertificateMetadata.java
  */
 @Getter
 @Accessors(prefix = "m")

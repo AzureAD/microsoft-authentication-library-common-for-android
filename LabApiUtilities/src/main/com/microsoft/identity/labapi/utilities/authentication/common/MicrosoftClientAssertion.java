@@ -47,6 +47,9 @@ import lombok.experimental.Accessors;
 /**
  * This class is used to create a client assertion per the following documentation.
  * https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-certificate-credentials
+ *
+ * Lomboked from original source located at:
+ * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/microsoft/MicrosoftClientAssertion.java
  */
 @Getter
 @Accessors(prefix = "m")

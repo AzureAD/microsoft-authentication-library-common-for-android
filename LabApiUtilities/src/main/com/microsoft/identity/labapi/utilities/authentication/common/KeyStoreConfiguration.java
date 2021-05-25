@@ -29,6 +29,9 @@ import lombok.experimental.Accessors;
 /**
  * Class holds information necessary to instantiate a keystore in order to retrieve and access
  * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
+ *
+ * Lomboked from original source located at:
+ * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/keys/KeyStoreConfiguration.java
  */
 @Getter
 @AllArgsConstructor
