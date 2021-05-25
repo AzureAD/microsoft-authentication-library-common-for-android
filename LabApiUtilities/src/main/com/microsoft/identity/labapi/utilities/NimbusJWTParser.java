@@ -35,9 +35,14 @@ import java.util.Map;
  */
 public class NimbusJWTParser implements IJWTParser {
     @Override
-    public Map<String, ?> parseJWT(String rawJwt) throws ParseException {
-        final JWT jwt = JWTParser.parse(rawJwt);
-        final JWTClaimsSet claimsSet = jwt.getJWTClaimsSet();
-        return new HashMap<>(claimsSet.getClaims());
+    public Map<String, ?> parseJWT(String rawJwt) {
+        try {
+            final JWT jwt = JWTParser.parse(rawJwt);
+            final JWTClaimsSet claimsSet;
+            claimsSet = jwt.getJWTClaimsSet();
+            return new HashMap<>(claimsSet.getClaims());
+        } catch (final ParseException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

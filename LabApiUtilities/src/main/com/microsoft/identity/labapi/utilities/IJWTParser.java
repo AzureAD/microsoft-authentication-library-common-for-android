@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities;
 
-import java.text.ParseException;
 import java.util.Map;
 
 /**
@@ -36,5 +35,5 @@ public interface IJWTParser {
      * @param jwt the JWT to parse
      * @return a Map containing the JWT claims
      */
-    Map<String, ?> parseJWT(String jwt) throws ParseException;
+    Map<String, ?> parseJWT(String jwt);
 }
