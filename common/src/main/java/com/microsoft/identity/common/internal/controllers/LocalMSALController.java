@@ -313,7 +313,7 @@ public class LocalMSALController extends BaseController {
                 authScheme
         );
 
-        // The first element is the 'fully-loaded' CacheRecord which may contain the AccountRecord,
+        // The first element is the 'fully-loaded' CacheRecord which may contain the AccountRecord, asd
         // AccessTokenRecord, RefreshTokenRecord, and IdTokenRecord... (if all of those artifacts exist)
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
