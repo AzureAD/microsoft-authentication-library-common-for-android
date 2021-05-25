@@ -61,11 +61,11 @@ public class LabApiAuthenticationClient implements IAccessTokenAccessor {
     }
 
     public LabApiAuthenticationClient() {
-        this(new Msal4jConfidentialAuthClient());
+        this(ConfidentialAuthClientFactory.INSTANCE.getConfidentialAuthClient());
     }
 
     public LabApiAuthenticationClient(@NonNull final String clientSecret) {
-        this(new Msal4jConfidentialAuthClient(), clientSecret);
+        this(ConfidentialAuthClientFactory.INSTANCE.getConfidentialAuthClient(), clientSecret);
     }
 
     @Override

@@ -27,7 +27,6 @@ import com.microsoft.identity.labapi.utilities.IJWTParser;
 import com.microsoft.identity.labapi.utilities.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
-import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfidentialAuthClient;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,12 +40,14 @@ import java.util.List;
 public class KeyVaultAuthenticationClientTest {
 
     final IJWTParser jwtParser = JWTParserFactory.INSTANCE.getJwtParser();
+    final IConfidentialAuthClient confidentialAuthClient =
+            ConfidentialAuthClientFactory.INSTANCE.getConfidentialAuthClient();
 
     @Test
     public void canGetTokenForKeyVaultUsingClientSecret() {
         final KeyVaultAuthenticationClient keyVaultAuthenticationClient =
                 new KeyVaultAuthenticationClient(
-                        new Msal4jConfidentialAuthClient(),
+                        confidentialAuthClient,
                         TestBuildConfig.LAB_CLIENT_SECRET
                 );
 
@@ -66,7 +67,7 @@ public class KeyVaultAuthenticationClientTest {
     @Test
     public void canGetTokenForKeyVaultUsingCertificate() {
         final KeyVaultAuthenticationClient keyVaultAuthenticationClient =
-                new KeyVaultAuthenticationClient(new Msal4jConfidentialAuthClient());
+                new KeyVaultAuthenticationClient(confidentialAuthClient);
 
         try {
             final String accessToken = keyVaultAuthenticationClient.getAccessToken();
