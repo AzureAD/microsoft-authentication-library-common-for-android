@@ -28,7 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.logging.Logger;
 
 /**

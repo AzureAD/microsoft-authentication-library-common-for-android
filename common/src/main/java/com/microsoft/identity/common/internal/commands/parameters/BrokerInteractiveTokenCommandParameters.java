@@ -28,6 +28,7 @@ import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.BrokerRequestType;
+import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 
 import java.util.Map;
 

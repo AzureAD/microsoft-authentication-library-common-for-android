@@ -60,7 +60,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;

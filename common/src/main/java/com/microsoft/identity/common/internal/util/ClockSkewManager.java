@@ -30,64 +30,35 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
-import java.util.Calendar;
-import java.util.Date;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-public class ClockSkewManager implements IClockSkewManager {
+/**
+ * Deprecated
+ * Currently serving as an adapter of {@link com.microsoft.identity.common.java.util.ClockSkewManager}
+ */
+@SuppressFBWarnings(value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS",
+        justification = "This class kept its original name to avoid breaking change during the refactoring process." +
+                "Once the process is done, this class will be removed entirely. ")
+public class ClockSkewManager extends com.microsoft.identity.common.java.util.ClockSkewManager {
 
     private static final class PreferencesMetadata {
-
         private static final String SKEW_PREFERENCES_FILENAME =
                 "com.microsoft.identity.client.clock_correction";
-
-        private static final String KEY_SKEW = "skew";
     }
-
-    private ISharedPreferencesFileManager mClockSkewPreferences;
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public ClockSkewManager(@NonNull final ISharedPreferencesFileManager manager) {
-        mClockSkewPreferences = manager;
+        super(new SharedPrefLongKeyPairStorage(manager));
     }
 
     public ClockSkewManager(@NonNull final Context context) {
-        mClockSkewPreferences = SharedPreferencesFileManager.getSharedPreferences(
-                context,
-                PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
-                -1,
-                null
-        );
-    }
-
-    @Override
-    public void onTimestampReceived(long referenceTime) {
-        final long clientTime = getCurrentClientTime().getTime();
-        final long skewMillis = clientTime - referenceTime;
-        mClockSkewPreferences.putLong(PreferencesMetadata.KEY_SKEW, skewMillis);
-    }
-
-    @Override
-    public long getSkewMillis() {
-        return mClockSkewPreferences.getLong(PreferencesMetadata.KEY_SKEW);
-    }
-
-    @Override
-    public Date toClientTime(long referenceTime) {
-        return new Date(referenceTime + getSkewMillis());
-    }
-
-    @Override
-    public Date toReferenceTime(long clientTime) {
-        return new Date(clientTime - getSkewMillis());
-    }
-
-    @Override
-    public Date getCurrentClientTime() {
-        return Calendar.getInstance().getTime();
-    }
-
-    @Override
-    public Date getAdjustedReferenceTime() {
-        return toReferenceTime(getCurrentClientTime().getTime());
+        super(new SharedPrefLongKeyPairStorage(
+                SharedPreferencesFileManager.getSharedPreferences(
+                        context,
+                        PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
+                        -1,
+                        null
+                )
+        ));
     }
 }
