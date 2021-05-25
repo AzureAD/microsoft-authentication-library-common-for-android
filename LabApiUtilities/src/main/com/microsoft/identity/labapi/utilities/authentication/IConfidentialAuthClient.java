@@ -28,6 +28,11 @@ import com.microsoft.identity.labapi.utilities.authentication.common.ClientAsser
 /**
  * An interface that describes a confidential authentication client. Such an authentication client
  * has the ability to obtain tokens for an app by using client credentials.
+ * <p>
+ * The primary purpose of this interface is to decouple the token fetch from a particular
+ * implementation i.e. anyone can implement this interface and configure a confidential auth client
+ * as they like. For example, one implementation may choose to use msal4j library whereas another
+ * interface can choose to use adal4j in its implementation.
  */
 public interface IConfidentialAuthClient {
 
