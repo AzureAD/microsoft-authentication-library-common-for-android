@@ -25,13 +25,13 @@ package com.microsoft.identity.labapi.utilities.authentication;
 import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
 
 /**
- * An interface describing an access token accessor i.e. anyone that has the ability to return an
- * access token.
+ * An interface describing an access token accessor i.e. anyone that has the ability to return a
+ * valid (unexpired) access token.
  */
 public interface IAccessTokenAccessor {
 
     /**
-     * Obtain an access token.
+     * Obtain a valid access token.
      *
      * @return a String representing an access token
      */
