@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Migrate Device, ObjectMapper, ClockSkewManager and IHasExtraParameters to common4j (#1383)
 - [MINOR] Migrate eSTS Telemetry to common4j (#1372)
 - [PATCH] Fix/Suppress SpotBugs issue (#1367)
 - [MINOR] Migrate HTTP Layer to common java lib. (#1347)

@@ -20,9 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.java.platform;
 
-import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import lombok.NonNull;
 
-public interface ISuccessResponse extends IHasExtraParameters {
+/**
+ * An interface representing metadata of the device.
+ * The implementation of its child varies from platform to platform.
+ */
+public interface IDeviceMetadata {
+    @NonNull
+    String getCpu();
+
+    @NonNull
+    String getOs();
+
+    @NonNull
+    String getDeviceModel();
+
+    @NonNull
+    String getManufacturer();
 }

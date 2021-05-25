@@ -20,9 +20,29 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 
-public interface ISuccessResponse extends IHasExtraParameters {
+import lombok.AllArgsConstructor;
+import lombok.NonNull;
+
+/**
+ * Adapts {@link ISharedPreferencesFileManager} to {@link IKeyPairStorage<Long>}
+ * */
+public class SharedPrefLongKeyPairStorage extends AbstractSharedPrefKeyPairStorage<Long> {
+    public SharedPrefLongKeyPairStorage(ISharedPreferencesFileManager mManager) {
+        super(mManager);
+    }
+
+    @Override
+    public Long get(@NonNull String key) {
+        return mManager.getLong(key);
+    }
+
+    @Override
+    public void put(@NonNull String key, Long value) {
+        mManager.putLong(key, value);
+    }
 }

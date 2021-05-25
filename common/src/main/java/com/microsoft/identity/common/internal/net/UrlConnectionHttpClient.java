@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.net;
 
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.net.AbstractHttpClient;
 import com.microsoft.identity.common.java.net.IRetryPolicy;
 
 import java.io.IOException;
@@ -42,6 +41,8 @@ import static com.microsoft.identity.common.java.net.UrlConnectionHttpClient.DEF
 /**
  * Deprecated
  * <p>
+ * Kept for backcompat purpose. Will be remove in the next major release.
+ *
  * Currently served as an adapter of {@link com.microsoft.identity.common.java.net.UrlConnectionHttpClient}
  */
 public class UrlConnectionHttpClient extends AbstractHttpClient {
@@ -162,7 +163,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     @Override
     public HttpResponse method(@NonNull HttpMethod httpMethod, @NonNull URL requestUrl, @NonNull Map<String, String> requestHeaders, byte[] requestContent) throws IOException {
-        return new HttpResponse(sAdaptedObject.method(httpMethod, requestUrl, requestHeaders, requestContent));
+        return new HttpResponse(sAdaptedObject.method(httpMethod.adapt(), requestUrl, requestHeaders, requestContent));
     }
 
     @Override
