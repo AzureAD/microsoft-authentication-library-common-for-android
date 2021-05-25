@@ -20,43 +20,43 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java;
+package com.microsoft.identity.common.internal.platform;
 
-import java.nio.charset.Charset;
+import android.os.Build;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import com.microsoft.identity.common.java.platform.IDeviceMetadata;
 
-public class AuthenticationConstants {
-
-    /**
-     * The Constant UTF8.
-     */
-    public static final String ENCODING_UTF8_STRING = "UTF-8";
-
-    /**
-     * The Constant ENCODING_UTF8.
-     */
-    public static final Charset ENCODING_UTF8 = Charset.forName(ENCODING_UTF8_STRING);
-
-    /**
-     * Represents the constants value for Active Directory.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class AAD {
-        /**
-         * String of client request id.
-         */
-        public static final String CLIENT_REQUEST_ID = "client-request-id";
+/**
+ * Provides device metadata in Android.
+ **/
+public class AndroidDeviceMetadata implements IDeviceMetadata {
+    @Override
+    public String getCpu() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            //CPU_ABI has been deprecated
+            return Build.CPU_ABI;
+        } else {
+            final String[] supportedABIs = Build.SUPPORTED_ABIS;
+            if (supportedABIs != null && supportedABIs.length > 0) {
+                return supportedABIs[0];
+            }
+        }
+        return "UNKNOWN";
     }
 
-    /**
-     * Sdk platform and Sdk version fields.
-     */
-    public static final class SdkPlatformFields {
-        /**
-         * The String representing the sdk version.
-         */
-        public static final String VERSION = "x-client-Ver";
+    @Override
+    public String getOs() {
+        return String.valueOf(Build.VERSION.SDK_INT);
+    }
+
+    @Override
+    public String getDeviceModel() {
+        return Build.MODEL;
+    }
+
+    @Override
+    public String getManufacturer() {
+        return Build.MANUFACTURER;
     }
 }
+
