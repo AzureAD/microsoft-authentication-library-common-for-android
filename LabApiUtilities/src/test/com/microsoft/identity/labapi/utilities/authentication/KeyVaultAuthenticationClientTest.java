@@ -31,7 +31,6 @@ import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiEx
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.text.ParseException;
 import java.util.List;
 
 /**
@@ -59,7 +58,7 @@ public class KeyVaultAuthenticationClientTest {
                     Constants.KEY_VAULT_TOKEN_AUDIENCE,
                     ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
             );
-        } catch (final LabApiException | ParseException e) {
+        } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
     }
@@ -77,7 +76,7 @@ public class KeyVaultAuthenticationClientTest {
                     Constants.KEY_VAULT_TOKEN_AUDIENCE,
                     ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
             );
-        } catch (final LabApiException | ParseException e) {
+        } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
     }
