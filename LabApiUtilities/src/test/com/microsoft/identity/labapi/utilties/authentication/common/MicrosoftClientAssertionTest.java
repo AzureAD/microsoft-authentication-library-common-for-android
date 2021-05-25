@@ -26,10 +26,14 @@ import com.microsoft.identity.labapi.utilities.authentication.common.Certificate
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
 import com.microsoft.identity.labapi.utilities.authentication.common.MicrosoftClientAssertion;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * A test to validate that we can create instances of {@link MicrosoftClientAssertion}.
+ */
 public class MicrosoftClientAssertionTest {
 
     private final static String CLIENT_ID = "some_client_id";
@@ -40,17 +44,22 @@ public class MicrosoftClientAssertionTest {
 
     @Test
     public void testCanCreateMicrosoftClientAssertionWithValidCertificate() {
-        final MicrosoftClientAssertion microsoftClientAssertion = MicrosoftClientAssertion
-                .builder()
-                .clientId(CLIENT_ID)
-                .audience(AUDIENCE)
-                .certificateCredential(CertificateCredential.create(
-                        new KeyStoreConfiguration(
-                                KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-                        ),
-                        new ClientCertificateMetadata(CERTIFICATE_ALIAS, null)
-                ))
-                .build();
+        final MicrosoftClientAssertion microsoftClientAssertion;
+        try {
+            microsoftClientAssertion = MicrosoftClientAssertion
+                    .builder()
+                    .clientId(CLIENT_ID)
+                    .audience(AUDIENCE)
+                    .certificateCredential(CertificateCredential.create(
+                            new KeyStoreConfiguration(
+                                    KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
+                            ),
+                            new ClientCertificateMetadata(CERTIFICATE_ALIAS, null)
+                    ))
+                    .build();
+        } catch (LabApiException e) {
+            throw new AssertionError(e);
+        }
 
         Assert.assertNotNull(microsoftClientAssertion);
         Assert.assertNotNull(microsoftClientAssertion.getClientAssertion());

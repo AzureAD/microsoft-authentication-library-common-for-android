@@ -28,6 +28,9 @@ import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiEx
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * A test to validate that we can obtain tokens for Lab API.
+ */
 public class LabApiAuthenticationClientTest {
 
     @Test

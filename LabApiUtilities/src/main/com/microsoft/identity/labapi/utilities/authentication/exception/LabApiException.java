@@ -26,6 +26,9 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
+/**
+ * An Exception that should be thrown by all Lab Api operations if they encounter an error.
+ */
 @Getter
 @Accessors(prefix = "m")
 public class LabApiException extends Exception {

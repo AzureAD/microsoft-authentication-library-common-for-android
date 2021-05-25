@@ -25,11 +25,36 @@ package com.microsoft.identity.labapi.utilities.authentication;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 
+/**
+ * An interface that describes a confidential authentication client. Such an authentication client
+ * has the ability to obtain tokens for an app by using client credentials.
+ */
 public interface IConfidentialAuthClient {
 
+    /**
+     * Acquire a token for a confidential client using a client secret.
+     *
+     * @param clientSecret    the client secret that will be exchanged for a token
+     * @param tokenParameters the token parameters to use while acquiring token
+     * @return an {@link IAuthenticationResult} containing the result of the token request
+     */
     IAuthenticationResult acquireToken(String clientSecret, ITokenParameters tokenParameters);
 
+    /**
+     * Acquire a token for a confidential client using a client assertion.
+     *
+     * @param clientAssertion the client assertion that will be exchanged for a token
+     * @param tokenParameters the token parameters to use while acquiring token
+     * @return an {@link IAuthenticationResult} containing the result of the token request
+     */
     IAuthenticationResult acquireToken(ClientAssertion clientAssertion, ITokenParameters tokenParameters);
 
+    /**
+     * Acquire a token for a confidential client using a Certificate.
+     *
+     * @param certificateCredential the {@link CertificateCredential} that will be exchanged for a token
+     * @param tokenParameters       the token parameters to use while acquiring token
+     * @return an {@link IAuthenticationResult} containing the result of the token request
+     */
     IAuthenticationResult acquireToken(CertificateCredential certificateCredential, ITokenParameters tokenParameters);
 }

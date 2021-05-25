@@ -31,6 +31,9 @@ import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfi
 
 import lombok.NonNull;
 
+/**
+ * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
+ */
 public class LabApiAuthenticationClient implements IAccessTokenAccessor {
 
     private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
@@ -67,12 +70,15 @@ public class LabApiAuthenticationClient implements IAccessTokenAccessor {
 
     @Override
     public String getAccessToken() throws LabApiException {
+        // first get token for KeyVault...because we find lab app id and secret from there
         final String accessTokenForKeyVault = mKeyVaultAuthenticationClient.getAccessToken();
         Configuration.getDefaultApiClient().setAccessToken(accessTokenForKeyVault);
 
         final String labAppId, labAppSecret;
 
         try {
+            // we are going to use the KeyVault API to obtain the Lab App client id and
+            // client secret
             final SecretsApi secretsApi = new SecretsApi();
             labAppId = secretsApi.getSecret(
                     SECRET_NAME_LAB_APP_ID, SECRET_VERSION, KEY_VAULT_API_VERSION
@@ -92,6 +98,7 @@ public class LabApiAuthenticationClient implements IAccessTokenAccessor {
                 .scope(SCOPE)
                 .build();
 
+        // obtain token for Lab Api using the client secret retrieved from KeyVault
         final IAuthenticationResult authenticationResult = mConfidentialAuthClient.acquireToken(
                 labAppSecret, tokenParameters
         );

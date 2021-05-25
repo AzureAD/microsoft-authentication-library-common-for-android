@@ -29,6 +29,9 @@ import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfi
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * A test to validate that we can obtain tokens for KeyVault API.
+ */
 public class KeyVaultAuthenticationClientTest {
 
     @Test

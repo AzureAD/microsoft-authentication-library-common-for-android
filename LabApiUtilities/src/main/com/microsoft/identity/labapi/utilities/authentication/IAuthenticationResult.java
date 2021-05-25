@@ -22,19 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
+/**
+ * An interface describing an authentication result object. Such an object will provide things such
+ * as access token, id token etc.
+ */
 public interface IAuthenticationResult extends IAccessTokenAccessor {
 
     /**
-     * @return id token
+     * Obtain an id token.
+     *
+     * @return a String representing an id token
      */
     String getIdToken();
 
     /**
+     * Obtain the scopes that were granted in the token.
+     *
      * @return granted scopes values returned by the service
      */
     String getScopes();
 
     /**
+     * Obtain the expiration date of the access token.
+     *
      * @return access token expiration date
      */
     java.util.Date getExpiresOnDate();

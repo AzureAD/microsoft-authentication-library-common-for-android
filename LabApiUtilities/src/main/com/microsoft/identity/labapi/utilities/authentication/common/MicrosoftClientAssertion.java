@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -77,17 +78,17 @@ public class MicrosoftClientAssertion extends ClientAssertion {
             return new MicrosoftClientAssertion(assertion.serialize(), CLIENT_ASSERTION_TYPE);
         }
 
-        public MicrosoftClientAssertionBuilder clientId(String clientId) {
+        public MicrosoftClientAssertionBuilder clientId(@NonNull final String clientId) {
             this.clientId = clientId;
             return this;
         }
 
-        public MicrosoftClientAssertionBuilder audience(String audience) {
+        public MicrosoftClientAssertionBuilder audience(@NonNull final String audience) {
             this.audience = audience;
             return this;
         }
 
-        public MicrosoftClientAssertionBuilder certificateCredential(CertificateCredential certificateCredential) {
+        public MicrosoftClientAssertionBuilder certificateCredential(@NonNull final CertificateCredential certificateCredential) {
             this.certificateCredential = certificateCredential;
             return this;
         }
@@ -97,7 +98,9 @@ public class MicrosoftClientAssertion extends ClientAssertion {
         }
 
         @SuppressWarnings("deprecation")
-        private SignedJWT createSignedJwt(String clientId, String audience, CertificateCredential credential) {
+        private SignedJWT createSignedJwt(@NonNull final String clientId,
+                                          @NonNull final String audience,
+                                          @NonNull final CertificateCredential credential) {
 
             final long time = System.currentTimeMillis();
 
@@ -105,43 +108,34 @@ public class MicrosoftClientAssertion extends ClientAssertion {
                     .audience(audience)
                     .issuer(clientId)
                     .notBeforeTime(new Date(time))
-                    .expirationTime(new Date(time
-                            + ONE_MINUTE_MILLIS))
+                    .expirationTime(new Date(time + ONE_MINUTE_MILLIS))
                     .subject(clientId)
                     .build();
 
-            SignedJWT jwt;
-
             try {
-                JWSHeader.Builder builder = new JWSHeader.Builder(JWSAlgorithm.RS256);
-                List<Base64> certs = new ArrayList<Base64>();
+                final JWSHeader.Builder builder = new JWSHeader.Builder(JWSAlgorithm.RS256);
+                final List<Base64> certs = new ArrayList<>();
                 certs.add(Base64.encode(credential.getPublicCertificate().getEncoded()));
                 builder.x509CertChain(certs);
                 //x509CertThumbprint has been deprecated.  We have to keep using this since this is the only thing that AAD accepts.
                 builder.x509CertThumbprint(createSHA1ThumbPrint(credential.getPublicCertificate()));
 
-                jwt = new SignedJWT(builder.build(), claimsSet);
+                final SignedJWT jwt = new SignedJWT(builder.build(), claimsSet);
                 final RSASSASigner signer = new RSASSASigner(credential.getPrivateKey());
 
                 jwt.sign(signer);
-            } catch (final Exception e) {
-                throw new RuntimeException("exception in createSignedJwt", e);
+                return jwt;
+            } catch (final NoSuchAlgorithmException | CertificateEncodingException | JOSEException e) {
+                throw new RuntimeException("Failed to create signed JWT", e);
             }
-
-            return jwt;
         }
 
-        private Base64URL createSHA1ThumbPrint(X509Certificate clientCertificate)
+        private Base64URL createSHA1ThumbPrint(@NonNull final X509Certificate clientCertificate)
                 throws CertificateEncodingException, NoSuchAlgorithmException {
-
-            Base64URL thumbprint;
-
-            MessageDigest mdSha1 = MessageDigest.getInstance(THUMBPRINT_ALGORITHM);
+            final MessageDigest mdSha1 = MessageDigest.getInstance(THUMBPRINT_ALGORITHM);
             mdSha1.reset();
             mdSha1.update(clientCertificate.getEncoded());
-            thumbprint = new Base64URL(Base64.encode(mdSha1.digest()).toString());
-
-            return thumbprint;
+            return new Base64URL(Base64.encode(mdSha1.digest()).toString());
         }
     }
 }

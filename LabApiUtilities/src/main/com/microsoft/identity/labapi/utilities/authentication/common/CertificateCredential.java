@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+
 import java.io.IOException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -39,6 +41,8 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 
+import static com.microsoft.identity.labapi.utilities.authentication.exception.LabError.CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
+
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -50,21 +54,36 @@ public class CertificateCredential {
     @NonNull
     private final X509Certificate mPublicCertificate;
 
+    /**
+     * Create a Certificate Credential using a Private Key and X509 Certificate.
+     *
+     * @param privateKey  the {@link PrivateKey} to sign the assertion
+     * @param certificate the {@link X509Certificate} used for thumbprint
+     * @return a Certificate Credential object
+     */
     public static CertificateCredential create(@NonNull final PrivateKey privateKey,
-                                        @NonNull final X509Certificate certificate) {
+                                               @NonNull final X509Certificate certificate) {
         return new CertificateCredential(privateKey, certificate);
     }
 
+    /**
+     * Create a Certificate Credential using a KeyStore Configuration and Client Certificate
+     * Metadata.
+     *
+     * @param keyStoreConfiguration     the {@link KeyStoreConfiguration} to access KeyStore
+     * @param clientCertificateMetadata the {@link ClientCertificateMetadata} of the cert
+     * @return a Certificate Credential object
+     */
     @SneakyThrows
     public static CertificateCredential create(@NonNull final KeyStoreConfiguration keyStoreConfiguration,
-                                        @NonNull final ClientCertificateMetadata clientCertificateMetadata) {
+                                               @NonNull final ClientCertificateMetadata clientCertificateMetadata) throws LabApiException {
         return getCertificateInfoFromStore(keyStoreConfiguration, clientCertificateMetadata);
     }
 
     private static CertificateCredential getCertificateInfoFromStore(@NonNull final KeyStoreConfiguration keyStoreConfiguration,
-                                                              @NonNull final ClientCertificateMetadata clientCertificateMetadata)
+                                                                     @NonNull final ClientCertificateMetadata clientCertificateMetadata)
             throws NoSuchProviderException, KeyStoreException, NoSuchAlgorithmException, UnrecoverableKeyException,
-            IOException, CertificateException {
+            IOException, CertificateException, LabApiException {
 
         final KeyStore keystore = KeyStore.getInstance(
                 keyStoreConfiguration.getKeyStoreType(), keyStoreConfiguration.getKeyStoreProvider()
@@ -74,8 +93,8 @@ public class CertificateCredential {
 
         final PrivateKey key;
 
-        //TODO: Adding logging for the two different cases.  The Microsoft Certificate Store does not require a password
         if (clientCertificateMetadata.getPassword() == null) {
+            // The Microsoft Certificate Store does not require a password
             key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(), null);
         } else {
             key = (PrivateKey) keystore.getKey(clientCertificateMetadata.getAlias(),
@@ -86,7 +105,7 @@ public class CertificateCredential {
                 .getCertificate(clientCertificateMetadata.getAlias());
 
         if (key == null || publicCertificate == null) {
-            throw new CertificateException("Certificate not found in KeyStore");
+            throw new LabApiException(CERTIFICATE_NOT_FOUND_IN_KEY_STORE);
         }
 
         return new CertificateCredential(key, publicCertificate);

@@ -30,6 +30,10 @@ import com.microsoft.identity.labapi.utilities.authentication.exception.LabError
 
 import lombok.NonNull;
 
+/**
+ * A an authentication client that can acquire access tokens for the KeyVault that hosts resources
+ * used by the MSIDLAB API.
+ */
 public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
 
     private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
@@ -71,10 +75,13 @@ public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
         final IAuthenticationResult authenticationResult;
 
         if (mClientSecret != null && mClientSecret.trim().length() > 0) {
+            // if client secret is provided then we would use that to acquire token
             authenticationResult = mConfidentialAuthClient.acquireToken(
                     mClientSecret, getTokenParametersForKeyVault()
             );
         } else {
+            // client secret was not provided...so we would try to use the Certificate
+            // the cert must be in store for it to succeed..otherwise it would just fail
             final KeyStoreConfiguration keyStoreConfiguration = new KeyStoreConfiguration(
                     KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
             );

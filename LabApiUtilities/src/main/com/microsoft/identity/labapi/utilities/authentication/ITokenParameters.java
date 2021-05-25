@@ -24,6 +24,9 @@ package com.microsoft.identity.labapi.utilities.authentication;
 
 import java.util.Set;
 
+/**
+ * An interface describing token parameters that can be used for acquiring tokens.
+ */
 public interface ITokenParameters {
 
     String getAuthority();

@@ -22,7 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.exception;
 
+/**
+ * Represents errors that can occur in a Lab Api flow. This includes flows to authenticate against
+ * the lab api as well as flows to obtain an account via the Lab Api.
+ */
 public enum LabError {
     FAILED_TO_GET_TOKEN_FOR_KEYVAULT,
-    FAILED_TO_GET_SECRET_FROM_KEYVAULT;
+    FAILED_TO_GET_SECRET_FROM_KEYVAULT,
+    CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
 }

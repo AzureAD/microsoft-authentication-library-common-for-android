@@ -29,13 +29,15 @@ import com.microsoft.aad.msal4j.IClientCredential;
 import com.microsoft.identity.labapi.utilities.authentication.IAuthenticationResult;
 import com.microsoft.identity.labapi.utilities.authentication.IConfidentialAuthClient;
 import com.microsoft.identity.labapi.utilities.authentication.ITokenParameters;
-import com.microsoft.identity.labapi.utilities.authentication.TokenParameters;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientAssertion;
 
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
+/**
+ * An {@link IConfidentialAuthClient} that uses MSAL4J for token acquisition.
+ */
 public class Msal4jConfidentialAuthClient implements IConfidentialAuthClient {
 
     @Override

@@ -25,6 +25,8 @@ package com.microsoft.identity.labapi.utilties.authentication.common;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.authentication.exception.LabError;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,6 +47,9 @@ import java.security.cert.X509Certificate;
 import java.util.Date;
 import java.util.Set;
 
+/**
+ * A test to validate that we can create instances of {@link CertificateCredential}.
+ */
 public class CertificateCredentialTest {
 
     private final static String CERTIFICATE_ALIAS_INVALID = "SomeRandomCertThatShouldNotExist";
@@ -211,27 +216,37 @@ public class CertificateCredentialTest {
 
     @Test
     public void testCanCertificateCredentialFromKeyStoreConfigurationAndCertificateMetadata() {
-        final CertificateCredential certificateCredential = CertificateCredential.create(
-                new KeyStoreConfiguration(
-                        KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-                ),
-                new ClientCertificateMetadata(CERTIFICATE_ALIAS_VALID, null)
-        );
+        final CertificateCredential certificateCredential;
+        try {
+            certificateCredential = CertificateCredential.create(
+                    new KeyStoreConfiguration(
+                            KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
+                    ),
+                    new ClientCertificateMetadata(CERTIFICATE_ALIAS_VALID, null)
+            );
+        } catch (LabApiException e) {
+            throw new AssertionError(e);
+        }
 
         Assert.assertNotNull(certificateCredential);
         Assert.assertNotNull(certificateCredential.getPrivateKey());
         Assert.assertNotNull(certificateCredential.getPublicCertificate());
     }
 
-    @Test(expected = CertificateException.class)
+    @Test
     public void testCannotCreateCertificateCredentialIfCertNotFoundInKeyStore() {
-        CertificateCredential.create(
-                new KeyStoreConfiguration(
-                        KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
-                ),
-                new ClientCertificateMetadata(CERTIFICATE_ALIAS_INVALID, null)
-        );
-        Assert.fail("We weren't expecting to hit this line...exception should've already occurred");
+        try {
+            CertificateCredential.create(
+                    new KeyStoreConfiguration(
+                            KEYSTORE_TYPE, KEYSTORE_PROVIDER, null
+                    ),
+                    new ClientCertificateMetadata(CERTIFICATE_ALIAS_INVALID, null)
+            );
+            Assert.fail("We weren't expecting to hit this line...exception should've already occurred");
+        } catch (final LabApiException e) {
+            Assert.assertNotNull(e);
+            Assert.assertEquals(LabError.CERTIFICATE_NOT_FOUND_IN_KEY_STORE, e.getErrorCode());
+        }
     }
 
 }

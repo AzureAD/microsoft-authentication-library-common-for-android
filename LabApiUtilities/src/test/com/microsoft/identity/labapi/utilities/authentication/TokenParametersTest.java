@@ -28,6 +28,9 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * A test to validate that we can create instances of {@link TokenParameters}.
+ */
 public class TokenParametersTest {
 
     private final static String CLIENT_ID = "some_client_id";
@@ -47,7 +50,7 @@ public class TokenParametersTest {
 
     @Test
     public void testTokenParametersScopesAreEmptyIfNotProvided() {
-        final TokenParameters tokenParameters =TokenParameters.builder()
+        final TokenParameters tokenParameters = TokenParameters.builder()
                 .clientId(CLIENT_ID)
                 .authority(AUTHORITY)
                 .build();
@@ -101,7 +104,7 @@ public class TokenParametersTest {
 
     @Test(expected = NullPointerException.class)
     public void testCanCreateTokenParametersWithScopeSet() {
-        final Set<String> scopes = new HashSet<String>(){{
+        final Set<String> scopes = new HashSet<String>() {{
             add(SCOPE_1);
             add(SCOPE_2);
         }};
