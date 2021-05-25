@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
+import com.microsoft.identity.labapi.utilities.Constants;
+import com.microsoft.identity.labapi.utilities.IJWTParser;
+import com.microsoft.identity.labapi.utilities.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfidentialAuthClient;
@@ -29,10 +32,15 @@ import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfi
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.text.ParseException;
+import java.util.List;
+
 /**
  * A test to validate that we can obtain tokens for KeyVault API.
  */
 public class KeyVaultAuthenticationClientTest {
+
+    final IJWTParser jwtParser = JWTParserFactory.INSTANCE.getJwtParser();
 
     @Test
     public void canGetTokenForKeyVaultUsingClientSecret() {
@@ -46,7 +54,11 @@ public class KeyVaultAuthenticationClientTest {
             final String accessToken = keyVaultAuthenticationClient.getAccessToken();
             Assert.assertNotNull(accessToken);
             Assert.assertNotEquals("", accessToken);
-        } catch (final LabApiException e) {
+            Assert.assertEquals(
+                    Constants.KEY_VAULT_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
+            );
+        } catch (final LabApiException | ParseException e) {
             throw new AssertionError(e);
         }
     }
@@ -60,7 +72,11 @@ public class KeyVaultAuthenticationClientTest {
             final String accessToken = keyVaultAuthenticationClient.getAccessToken();
             Assert.assertNotNull(accessToken);
             Assert.assertNotEquals("", accessToken);
-        } catch (final LabApiException e) {
+            Assert.assertEquals(
+                    Constants.KEY_VAULT_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
+            );
+        } catch (final LabApiException | ParseException e) {
             throw new AssertionError(e);
         }
     }

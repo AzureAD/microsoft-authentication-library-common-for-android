@@ -58,6 +58,7 @@ dependencies {
         implementation(group: 'com.microsoft.identity', name: 'labapi', version: '0.0.+')
     }
 
+    implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "com.microsoft.azure:msal4j:1.10.0"
     testImplementation "junit:junit:4.13.1"
     compileOnly "org.projectlombok:lombok:1.18.16"

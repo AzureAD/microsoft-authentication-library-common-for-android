@@ -22,16 +22,24 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
+import com.microsoft.identity.labapi.utilities.Constants;
+import com.microsoft.identity.labapi.utilities.IJWTParser;
+import com.microsoft.identity.labapi.utilities.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
 import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.text.ParseException;
+import java.util.List;
+
 /**
  * A test to validate that we can obtain tokens for Lab API.
  */
 public class LabApiAuthenticationClientTest {
+
+    final IJWTParser jwtParser = JWTParserFactory.INSTANCE.getJwtParser();
 
     @Test
     public void canGetTokenForLabApiUsingClientSecret() {
@@ -42,7 +50,11 @@ public class LabApiAuthenticationClientTest {
             final String accessToken = labApiAuthenticationClient.getAccessToken();
             Assert.assertNotNull(accessToken);
             Assert.assertNotEquals("", accessToken);
-        } catch (final LabApiException e) {
+            Assert.assertEquals(
+                    Constants.LAB_API_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
+            );
+        } catch (final LabApiException | ParseException e) {
             throw new AssertionError(e);
         }
     }
@@ -56,7 +68,11 @@ public class LabApiAuthenticationClientTest {
             final String accessToken = labApiAuthenticationClient.getAccessToken();
             Assert.assertNotNull(accessToken);
             Assert.assertNotEquals("", accessToken);
-        } catch (final LabApiException e) {
+            Assert.assertEquals(
+                    Constants.LAB_API_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
+            );
+        } catch (final LabApiException | ParseException e) {
             throw new AssertionError(e);
         }
     }
