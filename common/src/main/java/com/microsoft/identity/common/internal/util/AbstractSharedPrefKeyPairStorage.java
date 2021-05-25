@@ -29,20 +29,19 @@ import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * Adapts {@link ISharedPreferencesFileManager} to {@link IKeyPairStorage<Long>}
+ * Adapts {@link ISharedPreferencesFileManager} to {@link IKeyPairStorage}
  * */
-public class SharedPrefLongKeyPairStorage extends AbstractSharedPrefKeyPairStorage<Long> {
-    public SharedPrefLongKeyPairStorage(ISharedPreferencesFileManager mManager) {
-        super(mManager);
+@AllArgsConstructor
+public abstract class AbstractSharedPrefKeyPairStorage<T> implements IKeyPairStorage<T> {
+    protected ISharedPreferencesFileManager mManager;
+
+    @Override
+    public void remove(@NonNull String key) {
+        mManager.remove(key);
     }
 
     @Override
-    public Long get(@NonNull String key) {
-        return mManager.getLong(key);
-    }
-
-    @Override
-    public void put(@NonNull String key, Long value) {
-        mManager.putLong(key, value);
+    public void clear() {
+        mManager.clear();
     }
 }
