@@ -79,6 +79,12 @@ public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
             authenticationResult = mConfidentialAuthClient.acquireToken(
                     mClientSecret, getTokenParametersForKeyVault()
             );
+
+            if (authenticationResult != null) {
+                return authenticationResult.getAccessToken();
+            } else {
+                throw new LabApiException(LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET);
+            }
         } else {
             // client secret was not provided...so we would try to use the Certificate
             // the cert must be in store for it to succeed..otherwise it would just fail
@@ -98,12 +104,12 @@ public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
             authenticationResult = mConfidentialAuthClient.acquireToken(
                     certificateCredential, getTokenParametersForKeyVault()
             );
-        }
 
-        if (authenticationResult != null) {
-            return authenticationResult.getAccessToken();
-        } else {
-            throw new LabApiException(LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT);
+            if (authenticationResult != null) {
+                return authenticationResult.getAccessToken();
+            } else {
+                throw new LabApiException(LabError.FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE);
+            }
         }
     }
 }
