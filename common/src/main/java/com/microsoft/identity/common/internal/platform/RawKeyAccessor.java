@@ -99,11 +99,12 @@ public class RawKeyAccessor implements KeyAccessor {
             mRandom.nextBytes(iv);
             final IvParameterSpec ivSpec = new IvParameterSpec(iv);
             c.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
-            c.update(plaintext);
+            byte[] text = c.update(plaintext);
             byte[] tmp = c.doFinal();
-            final byte[] output = new byte[iv.length + tmp.length];
+            final byte[] output = new byte[iv.length + text.length + tmp.length];
             System.arraycopy(iv, 0, output, 0, iv.length);
-            System.arraycopy(tmp, 0, output, iv.length, tmp.length);
+            System.arraycopy(text, 0, output, iv.length, text.length);
+            System.arraycopy(tmp, 0, output, iv.length + text.length, tmp.length);
             return output;
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;

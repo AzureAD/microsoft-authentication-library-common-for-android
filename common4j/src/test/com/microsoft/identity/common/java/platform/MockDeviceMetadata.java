@@ -20,9 +20,33 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.java.platform;
 
-import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+public class MockDeviceMetadata implements IDeviceMetadata {
 
-public interface ISuccessResponse extends IHasExtraParameters {
+    static final String TEST_CPU = "TestCPU";
+    static final String TEST_OS = "TestOS";
+    static final String TEST_DEVICE_MODEL = "TestDeviceModel";
+    static final String TEST_MANUFACTURER = "TestManufacturer";
+
+    @Override
+    public String getCpu() {
+        return TEST_CPU;
+    }
+
+    @Override
+    public String getOs() {
+        return TEST_OS;
+    }
+
+    @Override
+    public String getDeviceModel() {
+        return TEST_DEVICE_MODEL;
+    }
+
+    @Override
+    public String getManufacturer() {
+        return TEST_MANUFACTURER;
+    }
 }
+

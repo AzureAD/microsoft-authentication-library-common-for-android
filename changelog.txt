@@ -2,6 +2,7 @@ V.Next
 ----------
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MINOR] Migrate Device, ObjectMapper, ClockSkewManager and IHasExtraParameters to common4j (#1383)
 - [MINOR] Migrate eSTS Telemetry to common4j (#1372)
 - [PATCH] Fix/Suppress SpotBugs issue (#1367)
 - [MINOR] Migrate HTTP Layer to common java lib. (#1347)
@@ -15,6 +16,7 @@ V.Next
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 - [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
+- [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
 
 Version 3.4.3
 ----------
