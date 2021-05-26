@@ -40,12 +40,12 @@ using System.Xml.Serialization;
 namespace PerfClTool
 {
     /// <summary>
-    ///     Class for XML Utility methods
+    /// Class for XML Utility methods
     /// </summary>
     internal class XmlUtility
     {
         /// <summary>
-        ///     Method to deserialize an XML file to type
+        /// Method to deserialize an XML file to type
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="filePath"></param>
@@ -63,7 +63,7 @@ namespace PerfClTool
                     stream = null;
                     xmlReader.DtdProcessing = DtdProcessing.Prohibit;
                     var xmlSerializer = new XmlSerializer(typeof(T));
-                    pmConfig = (T) xmlSerializer.Deserialize(xmlReader);
+                    pmConfig = (T)xmlSerializer.Deserialize(xmlReader);
                 }
             }
             finally
@@ -75,7 +75,7 @@ namespace PerfClTool
         }
 
         /// <summary>
-        ///     Serializes an object of Type T to the specified file-path
+        /// Serializes an object of Type T to the specified file-path
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="obj"></param>

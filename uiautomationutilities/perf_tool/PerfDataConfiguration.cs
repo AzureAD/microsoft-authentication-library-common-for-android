@@ -26,6 +26,9 @@ using System.Xml.Serialization;
 
 namespace PerfClTool.Measurement
 {
+    /// <summary>
+    /// configuration
+    /// </summary>
     [XmlRoot(ElementName = "MeasurementConfiguration")]
     public class MeasurementConfiguration
     {
@@ -50,6 +53,9 @@ namespace PerfClTool.Measurement
         public List<MeasurementConfiguration> MeasurementConfiguration { get; set; }
     }
 
+    /// <summary>
+    /// measurement
+    /// </summary>
     [XmlRoot(ElementName = "Measurement")]
     public class Measurement
     {
@@ -105,6 +111,9 @@ namespace PerfClTool.Measurement
         public Apps Apps { get; set; }
     }
 
+    /// <summary>
+    /// configuration
+    /// </summary>
     [XmlRoot(ElementName = "PerfDataConfiguration")]
     public class PerfDataConfiguration
     {
