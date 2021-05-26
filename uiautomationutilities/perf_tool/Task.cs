@@ -35,7 +35,7 @@ namespace PerfDiffResultMailer
         public string Device { get; set; }
         public string AndroidVersion { get; set; }
         public string ApkPath { get; set; }
-        public Dictionary<string,string> FeatureGateOverrides { get; set; }
-        public Dictionary<MeasurementsData,double> Gen3MeasurementDetails { get; set; }
+        public Dictionary<string, string> FeatureGateOverrides { get; set; }
+        public Dictionary<MeasurementsData, double> Gen3MeasurementDetails { get; set; }
     }
 }

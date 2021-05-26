@@ -34,12 +34,14 @@ namespace PerfClTool.Measurement
     {
         public List<PerfDataRecord> PerfDataRecordsList = new List<PerfDataRecord>();
         private PerfDataRecord _headers;
+
         public PerfData(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 throw new Exception($"File not found {filePath}");
             }
+
             PerfDataRecordsList = File.ReadLines(filePath)
                 .Select(line => line.Split(','))
                 .Select(tokens => new PerfDataRecord(
@@ -62,6 +64,7 @@ namespace PerfClTool.Measurement
                     tokens[MapHeaderToIndex("SystemDiskWrite")]
                     )
                 ).ToList();
+
             //Check if header is present
             if (PerfDataRecordsList.ElementAt(0).TimeStamp.Equals("TimeStamp"))
             {
@@ -72,7 +75,7 @@ namespace PerfClTool.Measurement
 
         private int MapHeaderToIndex(string token)
         {
-            switch(token)
+            switch (token)
             {
                 case "TimeStamp": return 0;
                 case "Marker": return 1;
@@ -97,7 +100,8 @@ namespace PerfClTool.Measurement
 
         public PerfDataRecord FindMarker(String marker, int skipCount = 0)
         {
-            var records = PerfDataRecordsList.Where(t => t.Marker.Equals(marker, StringComparison.InvariantCultureIgnoreCase));
+            var records = PerfDataRecordsList.Where(t =>
+            t.Marker.Equals(marker, StringComparison.InvariantCultureIgnoreCase));
             if (records.Count() > skipCount)
             {
                 return records.ElementAt(skipCount);
@@ -107,10 +111,12 @@ namespace PerfClTool.Measurement
                 return null;
             }
         }
+
         public void AddMarkerNames()
         {
             _headers.MarkerName = "MarkerName";
         }
+
         public void AdjustTimeElapsed()
         {
             var firstMarkerTimeElapsed = Int64.Parse(PerfDataRecordsList.ElementAt(0).Time);
@@ -134,9 +140,10 @@ namespace PerfClTool.Measurement
         public void AppendMarkersDataToFile(string filePath)
         {
             var sb = new StringBuilder();
-            foreach(var dataRecord in PerfDataRecordsList)
+            foreach (var dataRecord in PerfDataRecordsList)
             {
-                sb.AppendLine($"{dataRecord.Marker},{dataRecord.MarkerName},{long.Parse(dataRecord.Time)/1000},{dataRecord.Thread},{dataRecord.ResidentSize},{dataRecord.VirtualSize}");
+                sb.AppendLine($"{dataRecord.Marker},{dataRecord.MarkerName},{long.Parse(dataRecord.Time) / 1000}," +
+                    $"{dataRecord.Thread},{dataRecord.ResidentSize},{dataRecord.VirtualSize}");
             }
             File.AppendAllText(filePath, sb.ToString());
         }
@@ -144,10 +151,6 @@ namespace PerfClTool.Measurement
         public void AddPidCreationTime(DateTime startTime)
         {
             var firstRecord = PerfDataRecordsList.ElementAt(0);
-            /*if (!(firstRecord.Marker.Equals("1") || firstRecord.Marker.Equals("10011")))
-            {
-                throw new Exception("Unable to find first marker in PerfData.txt");
-            }*/
             var timeDifference = DateTime.Parse(firstRecord.TimeStamp) - startTime;
 
             var logcatRecord = new PerfDataRecord()
@@ -180,7 +183,7 @@ namespace PerfClTool.Measurement
             {
                 TimeStamp = DateTime.Parse(firstRecord.TimeStamp).AddMilliseconds(activityDisplayTimeMs).ToString("yyyy-MM-ddTHH:mm:ss.fff"),
                 Marker = "activityDisplay",
-                Time = Convert.ToString(Convert.ToInt64(firstRecord.Time) + activityDisplayTimeMs* 1000, CultureInfo.InvariantCulture),
+                Time = Convert.ToString(Convert.ToInt64(firstRecord.Time) + activityDisplayTimeMs * 1000, CultureInfo.InvariantCulture),
                 Thread = firstRecord.Thread,
                 CpuUsed = firstRecord.CpuUsed.Equals(PerfDataRecord.ValueNotApplicable) ? firstRecord.CpuUsed : "0",
                 CpuTotal = firstRecord.CpuTotal.Equals(PerfDataRecord.ValueNotApplicable) ? firstRecord.CpuTotal : "0",

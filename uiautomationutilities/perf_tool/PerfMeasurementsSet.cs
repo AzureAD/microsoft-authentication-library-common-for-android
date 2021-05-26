@@ -101,7 +101,8 @@ namespace PerfClTool.Measurement
             StringBuilder sb = new StringBuilder();
             sb.Append(scenarioName);
             sb.Append("," + _measurementConfiguration.Name);
-            foreach (var aggregateMeasurement in new List<AggregatedMeasurement> { _numIterations, _average, _stdev, _min, _max, _percentile25, _percentile50, _percentile75, _best75Avg, _best75Stdev })
+            foreach (var aggregateMeasurement in new List<AggregatedMeasurement>
+            { _numIterations, _average, _stdev, _min, _max, _percentile25, _percentile50, _percentile75, _best75Avg, _best75Stdev })
             {
                 switch (metricType)
                 {
@@ -158,7 +159,8 @@ namespace PerfClTool.Measurement
             }
 
             //Append Aggregated Data
-            foreach (AggregatedMeasurement aggregateData in new List<AggregatedMeasurement> { _numIterations, _average, _min, _max, _stdev, _percentile25, _percentile50, _percentile75, _best75Avg, _best75Stdev })
+            foreach (AggregatedMeasurement aggregateData in new List<AggregatedMeasurement>
+            { _numIterations, _average, _min, _max, _stdev, _percentile25, _percentile50, _percentile75, _best75Avg, _best75Stdev })
             {
                 sb.Append(scenarioName);
                 sb.Append("," + _measurementConfiguration.Name);

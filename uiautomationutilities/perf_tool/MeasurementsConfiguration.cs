@@ -50,7 +50,8 @@ namespace PerfClTool.Measurement
     {
         private static readonly string configurationFile = "PerfDataConfiguration.xml";
         private static MeasurementData _appScenarios = new MeasurementData(StringComparer.OrdinalIgnoreCase);
-        private static Dictionary<string, MeasurementConfiguration> _measurementConfigurations = new Dictionary<string, MeasurementConfiguration>(StringComparer.OrdinalIgnoreCase);
+        private static Dictionary<string, MeasurementConfiguration> _measurementConfigurations = 
+            new Dictionary<string, MeasurementConfiguration>(StringComparer.OrdinalIgnoreCase);
         private static List<string> AllScenarios = new List<string>();
 
         public static List<string> getAllScenarioNames()
@@ -87,7 +88,6 @@ namespace PerfClTool.Measurement
                     {
                         if(!_measurementConfigurations.ContainsKey(measurement.Id))
                         {
-                            //throw new Utils.CustomException<Utils.MarkerConfigurationNotFoundException>($"No measurement details found for measurement ID - {measurement}");
                             throw new Exception();
                         }
                     }
@@ -95,6 +95,7 @@ namespace PerfClTool.Measurement
             }
         }
 
+        // get configuration given an app name and a scenario
         internal static List<PerfMeasurementConfiguration> GetMeasurementConfigurations(String appName, String scenarioName)
         {
             if(!_appScenarios.ContainsKey(appName))
@@ -105,7 +106,8 @@ namespace PerfClTool.Measurement
             {
                 throw new Exception($"no configuration data found for app {appName}, scenario {scenarioName}");
             }
-            return _appScenarios[appName][scenarioName].Select(t => new PerfMeasurementConfiguration( _measurementConfigurations[t.Id], Convert.ToBoolean(t.IsPrimary))).ToList();
+            return _appScenarios[appName][scenarioName].Select(t => new PerfMeasurementConfiguration(
+                _measurementConfigurations[t.Id], Convert.ToBoolean(t.IsPrimary))).ToList();
         }
     }
 }

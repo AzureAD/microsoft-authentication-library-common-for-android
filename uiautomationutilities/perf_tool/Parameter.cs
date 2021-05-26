@@ -27,7 +27,7 @@ namespace PerfDiffResultMailer
 {
     public class Parameter
     {
-       
+
         public  string Name { get; set; }
         public string DatabaseColumn { get; set; }
         public  int Threshhold { get; set; }

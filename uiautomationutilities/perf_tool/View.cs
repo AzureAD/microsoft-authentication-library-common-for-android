@@ -28,6 +28,7 @@ using System.Globalization;
 
 namespace PerfDiffResultMailer
 {
+    // This class represents the email report look/display
     class View
     {
         public static string BuildHeaderofHTML()
@@ -62,31 +63,30 @@ namespace PerfDiffResultMailer
             htmlBuilder.Append(".seagreen{ background-color:#4EEB98}  ");
             htmlBuilder.Append(".lightgreen{ background-color:#A1EB4E}  ");
             htmlBuilder.Append(".red{ background-color:#ff0000} .yellow{background-color:#FAD7A0} ");
-            htmlBuilder.Append(".green{background-color:#228b22} .purple{background-color:#D2B4DE } .grey{background-color:#B2BABB}.lightgrey{background-color:#ECF0F1}");
+            htmlBuilder.Append(".green{background-color:#228b22} .purple{background-color:#D2B4DE } " +
+                ".grey{background-color:#B2BABB}.lightgrey{background-color:#ECF0F1}");
             htmlBuilder.Append("table {border-spacing:0; BORDER:black 1px solid; BORDER-COLLAPSE:collapse}");
             htmlBuilder.Append("table td{ BORDER:black 1px solid;padding:0; margin:0;}");
             htmlBuilder.Append("</style>");
             return htmlBuilder.ToString();
         }
 
-        internal static string CreateTableHtml(List<Parameter> parameters, HashSet<string> primaryMeasurements, HashSet<string> secondaryMeasurements,
+        internal static string CreateTableHtml(List<Parameter> parameters, 
+            HashSet<string> primaryMeasurements, HashSet<string> secondaryMeasurements,
             string[] heading, HashSet<string> activeScenarios, HashSet<string> activeM, string jobId)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-            // int columns = (parameters.Count * (3)) + 1;
             int columns = (parameters.Count * (3)) + 2;
             htmlBuilder.Append("<table class=\"table\">");
             htmlBuilder.Append(CreateTableHeader(columns, parameters, heading, jobId));
-            //htmlBuilder.Append(DiffTableHTML(parameters, "grey", primaryScenarios,activeScenarios,activeM));
-            //htmlBuilder.Append(DiffTableHTML(parameters, "lightgrey", secondaryScenarios, activeScenarios,activeM));
             htmlBuilder.Append(DiffTableHTML1(parameters, "grey", activeScenarios, primaryMeasurements, secondaryMeasurements));
-           // htmlBuilder.Append(DiffTableHTML1(parameters, "lightgrey", activeScenarios));
             htmlBuilder.Append("</table>");
             htmlBuilder.Append("<br><br>");
             return htmlBuilder.ToString();
         }
 
-        private static string DiffTableHTML1(List<Parameter> parameters, string color, HashSet<string> activeScenarios,HashSet<string> primaryMeasurements,HashSet<string> secondaryMeasurements)
+        private static string DiffTableHTML1(List<Parameter> parameters, string color, 
+            HashSet<string> activeScenarios, HashSet<string> primaryMeasurements, HashSet<string> secondaryMeasurements)
         {
             StringBuilder htmlBuilder = new StringBuilder();
             foreach (string scenario in activeScenarios)
@@ -94,7 +94,8 @@ namespace PerfDiffResultMailer
                 HashSet<string> activeM = new HashSet<string>();
                 foreach (var parameter in parameters)
                 {
-                    if(parameter.BaseScenarioToPerfValueMap.ContainsKey(scenario)) {
+                    if (parameter.BaseScenarioToPerfValueMap.ContainsKey(scenario))
+                    {
                         foreach (var perfM in parameter.BaseScenarioToPerfValueMap[scenario])
                         {
                             activeM.Add(perfM.Key);
@@ -111,23 +112,27 @@ namespace PerfDiffResultMailer
                 }
                 bool first = true;
                 htmlBuilder.Append("<tr  class=\"" + color + "\">");
-                htmlBuilder.Append("<td class=\"" + "blue" + "\"rowspan=\"" + /*1*/activeM.Count + "\"style=\"width:90px\" style=\"padding-left:5px; padding-right:5px;\">" + scenario + "</td>");
+                htmlBuilder.Append("<td class=\"" + "blue" + "\"rowspan=\"" + /*1*/activeM.Count +
+                    "\"style=\"width:90px\" style=\"padding-left:5px; padding-right:5px;\">" + scenario + "</td>");
                 foreach (string measurement in activeM)
                 {
                     string mColor = (primaryMeasurements.Contains(measurement)) ? "grey" : "lightgrey";
-                   
+
                     if (!first)
                         htmlBuilder.Append("<tr class=\"" + mColor + "\">");
-                    htmlBuilder.Append("<td rowspan=\"" + 1 + "\"style=\"width:290px\" style=\"padding-left:5px; padding-right:5px;\" >" + measurement + "</td>");
+                    htmlBuilder.Append("<td rowspan=\"" + 1 + "\"style=\"width:290px\" " +
+                        "style=\"padding-left:5px; padding-right:5px;\" >" + measurement + "</td>");
                     foreach (var parameter in parameters)
                     {
                         Dictionary<string, double> baseMeasurements = new Dictionary<string, double>();
-                        if(parameter.BaseScenarioToPerfValueMap.ContainsKey(scenario)){
+                        if (parameter.BaseScenarioToPerfValueMap.ContainsKey(scenario))
+                        {
                             baseMeasurements = parameter.BaseScenarioToPerfValueMap[scenario];
                         }
                         Dictionary<string, double> targetMeasurements = new Dictionary<string, double>();
 
-                        if (parameter.TargetScenarioToPerfValueMap.ContainsKey(scenario)) {
+                        if (parameter.TargetScenarioToPerfValueMap.ContainsKey(scenario))
+                        {
                             targetMeasurements = parameter.TargetScenarioToPerfValueMap[scenario];
                         }
 
@@ -143,7 +148,9 @@ namespace PerfDiffResultMailer
             return htmlBuilder.ToString();
         }
 
-        private static string DiffTableHelper(Dictionary<string, double> BaseScenarioToPerfValueMap, Dictionary<string, double> TargetScenarioToPerfValueMap, string scenario, int threshhold)
+        // differences display
+        private static string DiffTableHelper(Dictionary<string, double> BaseScenarioToPerfValueMap, 
+            Dictionary<string, double> TargetScenarioToPerfValueMap, string scenario, int threshhold)
         {
             StringBuilder htmlBuilder = new StringBuilder();
             bool basePresent = false;
@@ -178,7 +185,7 @@ namespace PerfDiffResultMailer
             {
                 double diff = targetValue - baseValue;
                 // Calculate color based on %. i.e. if the value deviates +- threshold% from the base then give the color
-                double diffpercent = (((diff>0)?diff:(-1*diff)) / baseValue) * 100;
+                double diffpercent = (((diff > 0) ? diff : (-1 * diff)) / baseValue) * 100;
                 diffpercent = (diff > 0) ? diffpercent : (-1 * diffpercent);
                 string diffColor = GetColor(diffpercent, threshhold);
                 string difference = String.Format(CultureInfo.InvariantCulture, "{0:#,#.00}", diff);
@@ -201,59 +208,22 @@ namespace PerfDiffResultMailer
             return htmlBuilder.ToString();
         }
 
-        /*  private static string DiffTableHTML(List<Parameter> parameters, string color, List<string> measurements, HashSet<string> activeScenarios, HashSet<string> activeM)
-          {
-              StringBuilder htmlBuilder = new StringBuilder();
-              foreach (string measurement in measurements)
-              {
-                  if (activeM.Contains(measurement))
-                  {
-                      bool first = true;
-                      htmlBuilder.Append("<tr  class=\"" + color + "\">");
-                      htmlBuilder.Append("<td rowspan=\"" + /*1*///activeScenarios[measurement] + "\"style=\"width:290px\" style=\"padding-left:5px;\">" + measurement + "</td>");
-                                                                 /* foreach (var parameter in parameters)
-                                                                  {
-                                                                      Dictionary<string, double> baseMeasurements = parameter.BaseScenarioToPerfValueMap[measurement];
-                                                                      Dictionary<string, double> targetMeasurements = parameter.TargetScenarioToPerfValueMap[measurement];
-                                                                      foreach (var measurement in baseMeasurements)
-                                                                      {
-                                                                          if (!first)
-                                                                              htmlBuilder.Append("<tr>");
-                                                                          htmlBuilder.Append("<td rowspan=\"" + 1 + "\"style=\"width:290px\" style=\"padding-left:5px;\">" + measurement.Key + "</td>");
-                                                                          htmlBuilder.Append(DiffTableHelper(baseMeasurements, targetMeasurements, measurement.Key, parameter.Threshhold));
-                                                                          first = false;
-
-                                                                      }
-                                                                      htmlBuilder.Append("</tr>");
-                                                                  }
-
-                                                              }
-                                                          }
-                                                          return htmlBuilder.ToString();
-                                                      }*/
         private static string GetTaskInfoTable(List<Task> tasks, string color)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-            //bool start = true;
             htmlBuilder.Append("<table cellspacing=\"0\" cellpadding=\"0\">");
             foreach (Task task in tasks)
             {
-                //if (!start)
-                //{
-                    htmlBuilder.Append("<tr>");
-                //}
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;border: none;\">" + "<a href=\"" + task.LogsDir + "\"><u> (" + task.Checkpoint + ") </u></a></td>");
-               // htmlBuilder.Append("<td  align=\"center\" style=\"padding-left:5px; padding-right:5px;\">" + task.Device + " - "+task.AndroidVersion + "</td>");
-                //htmlBuilder.Append("<td style=\"padding-left:7px; padding-right:7px;\">" + task.ApkPath + "</td>");
+                htmlBuilder.Append("<tr>");
+                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;border: none;\">" + 
+                    "<a href=\"" + task.LogsDir + "\"><u> (" + task.Checkpoint + ") </u></a></td>");
                 string featuregateoverrides = "";
-                foreach(var featuregate in task.FeatureGateOverrides)
+                foreach (var featuregate in task.FeatureGateOverrides)
                 {
-                    featuregateoverrides += featuregate.Key + "|" + featuregate.Value+" , ";
+                    featuregateoverrides += featuregate.Key + "|" + featuregate.Value + " , ";
                 }
-                featuregateoverrides = featuregateoverrides.TrimEnd(',',' ');
-                //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + ((featuregateoverrides.Length==0)?"-":featuregateoverrides) + "</td>");
+                featuregateoverrides = featuregateoverrides.TrimEnd(',', ' ');
                 htmlBuilder.Append("</tr>");
-                //start = false;
             }
             htmlBuilder.Append("</table>");
             return htmlBuilder.ToString();
@@ -262,51 +232,34 @@ namespace PerfDiffResultMailer
         public static string CreateAppInfoTable(List<Task> baseTasks, List<Task> targetTasks, string app, string deviceModel, string OS)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-           
+
             htmlBuilder.Append("<tr>");
             htmlBuilder.Append("<td style=\"font-weight:bold\" style=\"padding-left:5px; padding-right:5px;\" align=\"left\" class=\"blue\">" + app + "</td>");
             htmlBuilder.Append("<td style=\"font-weight:bold\" style=\"padding-left:5px; padding-right:5px;\" align=\"left\" class=\"blue\">" + deviceModel + " with " + OS + "</td>");
-            //htmlBuilder.Append("<td  style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + baseTasks.Count + "\">" + "Base Tasks" + "</td>");
             htmlBuilder.Append("<td>");
             htmlBuilder.Append(GetTaskInfoTable(baseTasks, "blue"));
             htmlBuilder.Append("</td>");
-            //htmlBuilder.Append("<tr><td  style=\"padding-left:5px; padding-right:5px;\" align=\"left\" rowspan=\"" + targetTasks.Count + "\">" + "Target Tasks" + "</td>");
             htmlBuilder.Append("<td>");
             htmlBuilder.Append(GetTaskInfoTable(targetTasks, ""));
             htmlBuilder.Append("</td>");
             return htmlBuilder.ToString();
         }
 
+        // Measurement table headers
         private static string CreateTableHeader(int columns, List<Parameter> parameters, string[] heading, string jobId)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-            //htmlBuilder.Append("<thead><tr class=\"pink\" style=\"font-weight:bold\"><td colspan=\"" + columns + "\" align=\"center\">" + heading[0] + "</td></tr></thead>");//PerfCLRuns
-            //htmlBuilder.Append("<thead><tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + columns + "\" align=\"center\">" + heading[1] + "</td></tr></thead>");//AppName
-            htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + /*1*/2 + "\" align=\"center\">" + "Perf Run on "+ jobId + "</td>");
+            htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + /*1*/2 + "\" align=\"center\">" + "Perf Run on " + jobId + "</td>");
             foreach (var parameter in parameters)
             {
                 htmlBuilder.Append("<td colspan=\"" + 3 + "\" align=\"center\" class=\"" + parameter.Color + "\">" + parameter.Name + "</td>"); //add indivdual colors
             }
             htmlBuilder.Append("</tr>");
-            //htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\">"); // checkpoints
-            //htmlBuilder.Append("<td colspan=\"" + /*1*/2 + "\"align=\"center\"> Checkpoint </td>");
-            foreach (var parameter in parameters)
-            {
-                /*htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.BaseLogDir + "\">" + parameter.BaseCheckpoint + "</a></td>");
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.TargetLogDir + "\">" + parameter.TargetCheckPoint + "</a></td>");
-                htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "Difference" + "</td>");*/
-            }
-            //htmlBuilder.Append("</tr>");
             htmlBuilder.Append("<tr class=\"yellow\" style=\"font-weight:bold\">"); // Scenario / Measurement Name
             htmlBuilder.Append("<td colspan=\"" + 1 + "\"align=\"center\"> Scenario Name </td>");
             htmlBuilder.Append("<td colspan=\"" + 1 + "\"align=\"center\"> Measurement Name </td>");
             foreach (var parameter in parameters)
             {
-                /*htmlBuilder.Append("<td align=\"middle\">");
-                htmlBuilder.Append("<a href=\"" + parameter.BaseLogDir + "\"><u> " + parameter.BaseLogId + " </u></a> </td>");
-                htmlBuilder.Append("<td align=\"middle\">");
-                htmlBuilder.Append("<a href=\"" + parameter.TargetLogDir + "\"><u> " + parameter.TargetLogId + " </u></a> </td>");
-                htmlBuilder.Append("<td>" + "</td>");*/
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.BaseLogDir + "\">" + parameter.BaseCheckpoint + "</a></td>");
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\"><a href = \"" + parameter.TargetLogDir + "\">" + parameter.TargetCheckPoint + "</a></td>");
                 htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + "Difference" + "</td>");
@@ -325,7 +278,9 @@ namespace PerfDiffResultMailer
                 return "";
         }
 
-        public static string CreateSummaryHtml(Dictionary<string, Dictionary<Task, string>> featuregatesToTasksValueMap, List<Task> baseTasks, List<Task> targetTasks, string appName)
+        // Summary values
+        public static string CreateSummaryHtml(Dictionary<string, Dictionary<Task, string>> featuregatesToTasksValueMap,
+            List<Task> baseTasks, List<Task> targetTasks, string appName)
         {
             StringBuilder htmlBuilder = new StringBuilder();
             if (featuregatesToTasksValueMap.Count == 0)
@@ -399,33 +354,21 @@ namespace PerfDiffResultMailer
             result.Add(BuildHeaderofHTML());
             return result;
         }
+
+        // Summary headers
         public static List<string> InfoInit()
         {
             List<string> info = new List<string>();
-           /* info.Add("<p><font color=\"red\" size=\"+2\"><bold>Command Line<bold></font></p>");
-            info.Add("<table class=\"table\">");
-            info.Add("<tr>");
-            info.Add("<td class=\"blue\" style=\"padding-left:5px; padding-right:5px;\">" + "Command Line" + "</td>");
-            info.Add("<td style=\"padding-left:5px; padding-right:5px; width:500px\"\">" + commandLine + "</td>");
-            info.Add("</tr>");
-            //htmlBuilder.Append("<tr style=\"font-weight:bold\"  align=\"center\">");
-            //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">" + commandLine + "</td>");
-            //htmlBuilder.Append("</tr>");
-            info.Add("</table><br>");*/
             info.Add("<p><font color=\"red\" size=\"+2\"><bold>Job Summary<bold></font></p>");
             StringBuilder htmlBuilder = new StringBuilder();
-           
-            //info.Add("<font><bold>Command Line : <bold></font>");
-            //info.Add("<font><bold>"+commandLine+"<bold></font>");
+
             htmlBuilder.Append("<table class=\"table\">");
             htmlBuilder.Append("<tr class=\"pink\" style=\"font-weight:bold\"  align=\"center\">");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Target Application</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Device Configuration</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Base Build</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Target Build</td>");
-            //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Device</td>");
-            //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">ApkPaths</td>");
-            //htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">FeatureGate Overrides</td>");
+
             htmlBuilder.Append("</tr>");
             info.Add(htmlBuilder.ToString());
             return info;

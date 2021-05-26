@@ -22,15 +22,11 @@
 //  THE SOFTWARE.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PerfDiffResultMailer
 {
     // This class's object defines a particular measurement of a particular scenario. 
-    // This works as a key to refer to the measurement and the value of the particular measurement is kept in the Disctionary in class Task.
+    // This works as a key to refer to the measurement and the value of the particular measurement is kept in the Dictionary in class Task.
     public class MeasurementsData : IEquatable<MeasurementsData>
     {
         public string ScenarioName { get; set; }
@@ -49,10 +45,12 @@ namespace PerfDiffResultMailer
         public bool Equals(MeasurementsData other)
         {
             if (other == null)
+            {
                 return false;
+            }
 
             return (this.ScenarioName.Equals(other.ScenarioName)) &&
-                (this.ActivityName.Equals(other.ActivityName)) && (this.MeasurementName.Equals(other.MeasurementName));                
+                (this.ActivityName.Equals(other.ActivityName)) && (this.MeasurementName.Equals(other.MeasurementName));
         }
     }
 }

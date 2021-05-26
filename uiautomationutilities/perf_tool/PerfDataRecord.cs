@@ -28,7 +28,10 @@ namespace PerfClTool.Measurement
     internal class PerfDataRecord
     {
         public static readonly string ValueNotApplicable = "NA";
-        public PerfDataRecord(string timeStamp, string marker, string time, string thread, string cpuUsed, string cpuTotal, string residentSize, string virtualSize, string wifiSent, string wifiRecv, string wwanSent, string wwanRecv, string appSent, string appRecv, string battery, string systemDiskRead, string systemDiskWrite)
+        public PerfDataRecord(string timeStamp, string marker, string time, string thread, string cpuUsed,
+            string cpuTotal, string residentSize, string virtualSize, string wifiSent, string wifiRecv,
+            string wwanSent, string wwanRecv, string appSent, string appRecv, string battery,
+            string systemDiskRead, string systemDiskWrite)
         {
             TimeStamp = timeStamp;
             Marker = marker;

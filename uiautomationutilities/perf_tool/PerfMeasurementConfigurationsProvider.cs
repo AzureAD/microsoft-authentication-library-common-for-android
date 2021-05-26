@@ -22,10 +22,7 @@
 //  THE SOFTWARE.
 
 using PerfClTool.Measurement;
-using System;
 using System.Collections.Generic;
-using System.Dynamic;
-using System.Text;
 
 namespace IdentityPerfTestApp
 {

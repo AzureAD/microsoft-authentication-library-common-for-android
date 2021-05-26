@@ -27,8 +27,10 @@ using System.Linq;
 
 namespace PerfClTool.Measurement
 {
+    // Contains a number of math utilities
     internal class MathUtils
     {
+        // STD deviation
         public static double GetStdDeviation(List<double> values)
         {
             var average = values.Average();
@@ -48,6 +50,8 @@ namespace PerfClTool.Measurement
 
             return stdev;
         }
+
+        // Percentile
         public static double GetPercentile(List<double> values, int percentile)
         {
             if (percentile < 0 || percentile > 100)
@@ -85,6 +89,7 @@ namespace PerfClTool.Measurement
             return left + part * (right - left);
         }
 
+        // Subset
         public static List<double> GetMinSdSubset(List<double> values, int factor)
         {
             values.Sort();
