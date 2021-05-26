@@ -25,6 +25,9 @@ using System.Collections.Generic;
 
 namespace PerfDiffResultMailer
 {
+    /// <summary>
+    /// Task
+    /// </summary>
     public class Task
     {
         public string Id { get; set; }

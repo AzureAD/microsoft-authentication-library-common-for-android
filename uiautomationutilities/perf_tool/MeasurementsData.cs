@@ -25,8 +25,10 @@ using System;
 
 namespace PerfDiffResultMailer
 {
-    // This class's object defines a particular measurement of a particular scenario. 
-    // This works as a key to refer to the measurement and the value of the particular measurement is kept in the Dictionary in class Task.
+    /// <summary>
+    /// This class's object defines a particular measurement of a particular scenario.
+    /// This works as a key to refer to the measurement and the value of the particular measurement is kept in the Dictionary in class Task.
+    /// </summary>
     public class MeasurementsData : IEquatable<MeasurementsData>
     {
         public string ScenarioName { get; set; }

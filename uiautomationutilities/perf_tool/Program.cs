@@ -28,6 +28,11 @@ namespace IdentityPerfTestApp
 {
     class Program
     {
+
+        /// <summary>
+        /// Starting point
+        /// </summary>
+        /// <param name="args"></param>
         static void Main(string[] args)
         {
             SendEmail.main(args);

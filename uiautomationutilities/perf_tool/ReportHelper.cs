@@ -94,6 +94,13 @@ namespace PerfClTool
             return TableResultSummary;
         }
 
+        /// <summary>
+        /// formats the perf report as an email and sends it
+        /// </summary>
+        /// <param name="stringhtml"></param>
+        /// <param name="fromAddress"></param>
+        /// <param name="fromPassword"></param>
+        /// <param name="toList"></param>
         public static void ShowResultNSendEmail(string stringhtml, string fromAddress, string fromPassword, string toList)
         {
             try

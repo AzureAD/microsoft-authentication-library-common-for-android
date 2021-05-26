@@ -26,6 +26,10 @@ using System.Collections.Generic;
 
 namespace IdentityPerfTestApp
 {
+
+    /// <summary>
+    /// configurations provider
+    /// </summary>
     class PerfMeasurementConfigurationsProvider
     {
         List<PerfMeasurementConfiguration> measurementConfigurations;

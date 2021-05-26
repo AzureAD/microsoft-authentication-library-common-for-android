@@ -25,6 +25,9 @@ using System;
 
 namespace PerfClTool.Measurement
 {
+    /// <summary>
+    /// The different metric types available
+    /// </summary>
     public enum PerformanceMetricType
     {
         ResponseTime,
@@ -36,6 +39,9 @@ namespace PerfClTool.Measurement
         VssDelta
     }
 
+    /// <summary>
+    /// Performance metric base
+    /// </summary>
     internal abstract class PerformanceMetric
     {
         public abstract String Name { get; }
@@ -45,6 +51,9 @@ namespace PerfClTool.Measurement
         public override string ToString() => MeasurementValue.ToString(format: "F2");
     }
 
+    /// <summary>
+    /// Performance metric based on response time
+    /// </summary>
     internal class ResponseTimeMetric : PerformanceMetric
     {
         public ResponseTimeMetric(double value) : base(value) => MeasurementValue = value;
@@ -53,6 +62,9 @@ namespace PerfClTool.Measurement
         public override string Name => "ResponseTime(ms)";
     }
 
+    /// <summary>
+    /// Performance metric based on rss start
+    /// </summary>
     internal class RssBeginMetric : PerformanceMetric
     {
         public RssBeginMetric(double value) : base(value) => MeasurementValue = value;
@@ -61,6 +73,9 @@ namespace PerfClTool.Measurement
         public override string Name => "RssBegin(KB)";
     }
 
+    /// <summary>
+    /// Performance metric based on rss end
+    /// </summary>
     internal class RssEndMetric : PerformanceMetric
     {
         public RssEndMetric(double value) : base(value) => MeasurementValue = value;
@@ -69,6 +84,9 @@ namespace PerfClTool.Measurement
         public override string Name => "RssEnd(KB)";
     }
 
+    /// <summary>
+    /// Performance metric based on rss diff
+    /// </summary>
     internal class RssDeltaMetric : PerformanceMetric
     {
         public RssDeltaMetric(double value) : base(value) => MeasurementValue = value;
@@ -77,6 +95,9 @@ namespace PerfClTool.Measurement
         public override string Name => "RssDelta(KB)";
     }
 
+    /// <summary>
+    /// Performance metric based on vss start
+    /// </summary>
     internal class VssBeginMetric : PerformanceMetric
     {
         public VssBeginMetric(double value) : base(value) => MeasurementValue = value;
@@ -85,6 +106,9 @@ namespace PerfClTool.Measurement
         public override string Name => "VssBegin(KB)";
     }
 
+    /// <summary>
+    /// Performance metric based on vss end
+    /// </summary>
     internal class VssEndMetric : PerformanceMetric
     {
         public VssEndMetric(double value) : base(value) => MeasurementValue = value;
@@ -93,6 +117,9 @@ namespace PerfClTool.Measurement
         public override string Name => "VssEnd(KB)";
     }
 
+    /// <summary>
+    /// Performance metric based on vss delta
+    /// </summary>
     internal class VssDeltaMetric : PerformanceMetric
     {
         public VssDeltaMetric(double value) : base(value) => MeasurementValue = value;

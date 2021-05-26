@@ -199,6 +199,7 @@ namespace TestScript
             ReportHelper.ShowResultNSendEmail(emailBody, fromAddress, fromPassword, emailToList);
         }
 
+        //create a task
         private static Task createTask(string deviceModel, string baseBuild, string appName, string id, string artifactURL)
         {
             Task task = new Task();
@@ -211,6 +212,7 @@ namespace TestScript
             return task;
         }
 
+        //delete previous csvs
         private static void deletePreviousRunOutputCSVs(string outputFileLocation, string outputFileNamePrefix)
         {
             string[] fileList = System.IO.Directory.GetFiles(outputFileLocation, outputFileNamePrefix + "*.csv");
@@ -221,6 +223,7 @@ namespace TestScript
             }
         }
 
+        // do measurement
         private static Dictionary<string, List<PerfMeasurementsSet>> measure(DateTime startTime, string[] files,
             string typeOfBuild, PerfMeasurementConfigurationsProvider configProvider)
         {

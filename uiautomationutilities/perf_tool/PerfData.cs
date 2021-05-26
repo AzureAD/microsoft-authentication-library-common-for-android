@@ -98,6 +98,12 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        /// search for a marker
+        /// </summary>
+        /// <param name="marker"></param>
+        /// <param name="skipCount"></param>
+        /// <returns></returns>
         public PerfDataRecord FindMarker(String marker, int skipCount = 0)
         {
             var records = PerfDataRecordsList.Where(t =>
@@ -117,6 +123,9 @@ namespace PerfClTool.Measurement
             _headers.MarkerName = "MarkerName";
         }
 
+        /// <summary>
+        /// time elapsed
+        /// </summary>
         public void AdjustTimeElapsed()
         {
             var firstMarkerTimeElapsed = Int64.Parse(PerfDataRecordsList.ElementAt(0).Time);
@@ -129,6 +138,10 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        ///  writing markers headers to file
+        /// </summary>
+        /// <param name="filePath"></param>
         public static void AppendAllHeadersToFile(String filePath)
         {
             StringBuilder sb = new StringBuilder();
@@ -137,6 +150,10 @@ namespace PerfClTool.Measurement
             File.AppendAllText(filePath, sb.ToString());
         }
 
+        /// <summary>
+        /// writing markers data to file
+        /// </summary>
+        /// <param name="filePath"></param>
         public void AppendMarkersDataToFile(string filePath)
         {
             var sb = new StringBuilder();
@@ -148,6 +165,10 @@ namespace PerfClTool.Measurement
             File.AppendAllText(filePath, sb.ToString());
         }
 
+        /// <summary>
+        /// add creation time
+        /// </summary>
+        /// <param name="startTime"></param>
         public void AddPidCreationTime(DateTime startTime)
         {
             var firstRecord = PerfDataRecordsList.ElementAt(0);
@@ -176,6 +197,10 @@ namespace PerfClTool.Measurement
             PerfDataRecordsList.Insert(0, logcatRecord);
         }
 
+        /// <summary>
+        /// add activity display time
+        /// </summary>
+        /// <param name="activityDisplayTimeMs"></param>
         public void AddActivityDisplayTime(long activityDisplayTimeMs)
         {
             var firstRecord = PerfDataRecordsList.ElementAt(0);

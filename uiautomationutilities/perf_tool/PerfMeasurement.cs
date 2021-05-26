@@ -57,6 +57,9 @@ namespace PerfClTool.Measurement
         public abstract string Name { get; }
     }
 
+    /// <summary>
+    /// Average
+    /// </summary>
     internal class Average : AggregatedMeasurement
     {
         public Average(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -73,6 +76,9 @@ namespace PerfClTool.Measurement
         public override string Name => "Average";
     }
 
+    /// <summary>
+    /// Number of iterations
+    /// </summary>
     internal class NumIterations : AggregatedMeasurement
     {
         public NumIterations(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -89,6 +95,9 @@ namespace PerfClTool.Measurement
         public override string Name => "NumIterations";
     }
 
+    /// <summary>
+    /// STD deviation
+    /// </summary>
     internal class Stdev : AggregatedMeasurement
     {
         public Stdev(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -105,6 +114,9 @@ namespace PerfClTool.Measurement
         public override string Name => "Stdev";
     }
 
+    /// <summary>
+    /// Min
+    /// </summary>
     internal class Min : AggregatedMeasurement
     {
         public Min(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -121,6 +133,9 @@ namespace PerfClTool.Measurement
         public override string Name => "Min";
     }
 
+    /// <summary>
+    /// Max
+    /// </summary>
     internal class Max : AggregatedMeasurement
     {
         public Max(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -137,6 +152,9 @@ namespace PerfClTool.Measurement
         public override string Name => "Max";
     }
 
+    /// <summary>
+    /// 25th percentile
+    /// </summary>
     internal class Percentile25 : AggregatedMeasurement
     {
         public Percentile25(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -153,6 +171,9 @@ namespace PerfClTool.Measurement
         public override string Name => "25Percentile";
     }
 
+   /// <summary>
+   /// 50th percentile
+   /// </summary>
     internal class Percentile50 : AggregatedMeasurement
     {
         public Percentile50(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -169,6 +190,9 @@ namespace PerfClTool.Measurement
         public override string Name => "50Percentile";
     }
 
+    /// <summary>
+    /// 75th percentile
+    /// </summary>
     internal class Percentile75 : AggregatedMeasurement
     {
         public Percentile75(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -185,6 +209,9 @@ namespace PerfClTool.Measurement
         public override string Name => "75Percentile";
     }
 
+    /// <summary>
+    /// Best 75th factor average
+    /// </summary>
     internal class Best75Avg : AggregatedMeasurement
     {
         public Best75Avg(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)
@@ -201,6 +228,9 @@ namespace PerfClTool.Measurement
         public override string Name => "75BestAvg";
     }
 
+    /// <summary>
+    /// Best 75th factor STD deviation
+    /// </summary>
     internal class Best75Stdev : AggregatedMeasurement
     {
         public Best75Stdev(List<IterationMeasurement> rawIterationsData) : base(rawIterationsData)

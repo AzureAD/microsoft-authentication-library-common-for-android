@@ -29,6 +29,10 @@ using System.Text;
 
 namespace PerfClTool.Measurement
 {
+
+    /// <summary>
+    /// measurement set
+    /// </summary>
     internal class PerfMeasurementsSet
     {
         public PerfMeasurementConfiguration _measurementConfiguration { get; private set; }
@@ -49,6 +53,11 @@ namespace PerfClTool.Measurement
             _measurementConfiguration = measurementConfiguration;
             _iterationMeasurements = new List<IterationMeasurement>();
         }
+
+        /// <summary>
+        /// add measurement
+        /// </summary>
+        /// <param name="perfData"></param>
         public void AddIterationMeasurement(PerfData perfData)
         {
             var startRecord = perfData.FindMarker(_measurementConfiguration.StartMarker, Int32.Parse(_measurementConfiguration.Startskip));
@@ -58,10 +67,6 @@ namespace PerfClTool.Measurement
                 if (_measurementConfiguration.IsPrimary)
                 {
                     throw new Exception($"markers not found {_measurementConfiguration.StartMarker}, {_measurementConfiguration.EndMarker}");
-                }
-                else
-                {
-                    //PerfConsole.LogErrorMessage($"markers not found {_measurementConfiguration.StartMarker}, {_measurementConfiguration.EndMarker}");
                 }
             }
             else
@@ -75,6 +80,9 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        /// aggregate measurements
+        /// </summary>
         public void GenerateAggregateMeasurements()
         {
             _numIterations = new NumIterations(_iterationMeasurements);
@@ -89,6 +97,10 @@ namespace PerfClTool.Measurement
             _best75Stdev = new Best75Stdev(_iterationMeasurements);
         }
 
+        /// <summary>
+        /// save measurement summary headers to given file
+        /// </summary>
+        /// <param name="fileName"></param>
         public static void AppendMeasurementSummaryHeadersToFile(String fileName)
         {
             StringBuilder sb = new StringBuilder();
@@ -96,6 +108,12 @@ namespace PerfClTool.Measurement
             File.AppendAllText(fileName, sb.ToString());
         }
 
+        /// <summary>
+        /// save measurement summary to given file
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="scenarioName"></param>
+        /// <param name="metricType"></param>
         public void AppendMeasurementSummaryToFile(String fileName, String scenarioName, PerformanceMetricType metricType)
         {
             StringBuilder sb = new StringBuilder();
@@ -135,6 +153,11 @@ namespace PerfClTool.Measurement
             File.AppendAllText(fileName, sb.ToString());
         }
 
+        /// <summary>
+        /// save measurements data to given file
+        /// </summary>
+        /// <param name="fileName"></param>
+        /// <param name="scenarioName"></param>
         public void AppendMeasurementsDataToFile(String fileName, String scenarioName)
         {
             StringBuilder sb = new StringBuilder();

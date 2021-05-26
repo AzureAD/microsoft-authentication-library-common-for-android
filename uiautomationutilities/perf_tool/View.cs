@@ -28,7 +28,9 @@ using System.Globalization;
 
 namespace PerfDiffResultMailer
 {
-    // This class represents the email report look/display
+    /// <summary>
+    /// This class represents the email report look/display
+    /// </summary>
     class View
     {
         public static string BuildHeaderofHTML()
@@ -148,7 +150,7 @@ namespace PerfDiffResultMailer
             return htmlBuilder.ToString();
         }
 
-        // differences display
+        // differences display 
         private static string DiffTableHelper(Dictionary<string, double> BaseScenarioToPerfValueMap, 
             Dictionary<string, double> TargetScenarioToPerfValueMap, string scenario, int threshhold)
         {
@@ -268,6 +270,7 @@ namespace PerfDiffResultMailer
             return htmlBuilder.ToString();
         }
 
+        // generate a color based on the diff and threshold
         private static string GetColor(double diff, double threshold)
         {
             if (diff > threshold)
@@ -278,7 +281,14 @@ namespace PerfDiffResultMailer
                 return "";
         }
 
-        // Summary values
+        /// <summary>
+        /// Formatting the report summary values
+        /// </summary>
+        /// <param name="featuregatesToTasksValueMap"></param>
+        /// <param name="baseTasks"></param>
+        /// <param name="targetTasks"></param>
+        /// <param name="appName"></param>
+        /// <returns></returns>
         public static string CreateSummaryHtml(Dictionary<string, Dictionary<Task, string>> featuregatesToTasksValueMap,
             List<Task> baseTasks, List<Task> targetTasks, string appName)
         {
@@ -355,7 +365,10 @@ namespace PerfDiffResultMailer
             return result;
         }
 
-        // Summary headers
+        /// <summary>
+        /// Formatting the report summary headers
+        /// </summary>
+        /// <returns></returns>
         public static List<string> InfoInit()
         {
             List<string> info = new List<string>();

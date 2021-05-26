@@ -25,6 +25,10 @@ using System;
 
 namespace PerfClTool.Measurement
 {
+
+    /// <summary>
+    /// Represents a performance record
+    /// </summary>
     internal class PerfDataRecord
     {
         public static readonly string ValueNotApplicable = "NA";

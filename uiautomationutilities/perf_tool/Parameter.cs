@@ -25,6 +25,10 @@ using System.Collections.Generic;
 
 namespace PerfDiffResultMailer
 {
+
+    /// <summary>
+    /// Represents a specific way of measuring perfomance 
+    /// </summary>
     public class Parameter
     {
 

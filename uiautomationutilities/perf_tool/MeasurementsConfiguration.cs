@@ -95,7 +95,12 @@ namespace PerfClTool.Measurement
             }
         }
 
-        // get configuration given an app name and a scenario
+        /// <summary>
+        /// get configuration given an app name and a scenario
+        /// </summary>
+        /// <param name="appName"></param>
+        /// <param name="scenarioName"></param>
+        /// <returns></returns>
         internal static List<PerfMeasurementConfiguration> GetMeasurementConfigurations(String appName, String scenarioName)
         {
             if(!_appScenarios.ContainsKey(appName))

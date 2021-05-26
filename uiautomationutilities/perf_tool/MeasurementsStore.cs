@@ -39,6 +39,12 @@ namespace PerfClTool.Measurement
             AllScenarioMeasurements = new Dictionary<string, List<PerfMeasurementsSet>>();
         }
 
+        /// <summary>
+        /// add this scenario measurements
+        /// </summary>
+        /// <param name="scenarioName"></param>
+        /// <param name="perfData"></param>
+        /// <param name="enabledMeasurementsConfiguration"></param>
         public static void AddScenarioIterationMeasurements(String scenarioName, PerfData perfData,
             List<PerfMeasurementConfiguration> enabledMeasurementsConfiguration)
         {
@@ -56,6 +62,9 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        /// produce aggregate measurements
+        /// </summary>
         public static void GenerateAggregateMeasurements()
         {
             foreach (var measurementSetList in AllScenarioMeasurements.Values)
@@ -66,6 +75,10 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        /// save response time summary to file
+        /// </summary>
+        /// <param name="fileName"></param>
         public static void DumpResponseTimeSummaryToFile(String fileName)
         {
             PerfMeasurementsSet.AppendMeasurementSummaryHeadersToFile(fileName);
@@ -76,6 +89,10 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        /// save rss end summary to file
+        /// </summary>
+        /// <param name="fileName"></param>
         public static void DumpRssEndSummaryToFile(String fileName)
         {
             PerfMeasurementsSet.AppendMeasurementSummaryHeadersToFile(fileName);
@@ -85,6 +102,11 @@ namespace PerfClTool.Measurement
                 t.AppendMeasurementSummaryToFile(fileName, scenarioMeasurements.Key, PerformanceMetricType.RssEnd));
             }
         }
+
+        /// <summary>
+        /// save vss end summary to file
+        /// </summary>
+        /// <param name="fileName"></param>
         public static void DumpVssEndSummaryToFile(String fileName)
         {
             PerfMeasurementsSet.AppendMeasurementSummaryHeadersToFile(fileName);
@@ -95,6 +117,10 @@ namespace PerfClTool.Measurement
             }
         }
 
+        /// <summary>
+        /// save measurements data to file
+        /// </summary>
+        /// <param name="fileName"></param>
         public static void DumpAllMeasurementsDataToFile(String fileName)
         {
             foreach (var scenarioMeasurements in AllScenarioMeasurements)
