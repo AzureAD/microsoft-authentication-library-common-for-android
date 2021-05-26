@@ -57,26 +57,25 @@ public class DefaultConnectionServiceTest {
 
     @Test
     public void testConnectionWhenConnected() {
-        DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
+        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
 
         assertTrue(defaultConnectionService.isConnectionAvailable());
     }
 
     @Test
     public void testConnectionWhenNoActiveNetwork() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) mContext
+        final ConnectivityManager connectivityManager = (ConnectivityManager) mContext
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
 
         shadowOf(connectivityManager).setActiveNetworkInfo(null);
-        DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
+        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
 
         assertFalse(defaultConnectionService.isConnectionAvailable());
     }
 
     @Test
     public void testNetworkDisabledFromOptimizations() {
-        PowerManagerWrapperShadow.ignoringBatteryOptimizations = false;
-        DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
+        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
         ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.M);
 
         assertTrue(defaultConnectionService.isNetworkDisabledFromOptimizations());
@@ -85,7 +84,7 @@ public class DefaultConnectionServiceTest {
     @Test
     public void testNetworkDisabledFromOptimizationsForAPIsBelow23() {
         ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.LOLLIPOP_MR1);
-        DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
+        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
 
         assertFalse(defaultConnectionService.isNetworkDisabledFromOptimizations());
     }

@@ -31,16 +31,13 @@ import org.robolectric.annotation.Implements;
 @Implements(PowerManagerWrapper.class)
 public class PowerManagerWrapperShadow {
 
-    public static boolean deviceIdleMode = true;
-    public static boolean ignoringBatteryOptimizations = true;
-
     @Implementation
     public boolean isDeviceIdleMode(final Context connectionContext) {
-        return deviceIdleMode;
+        return true;
     }
 
     @Implementation
     public boolean isIgnoringBatteryOptimizations(final Context connectionContext) {
-        return ignoringBatteryOptimizations;
+        return false;
     }
 }
