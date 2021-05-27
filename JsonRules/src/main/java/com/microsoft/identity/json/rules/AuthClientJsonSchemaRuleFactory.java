@@ -29,6 +29,10 @@ import com.sun.codemodel.JType;
 import org.jsonschema2pojo.rules.Rule;
 import org.jsonschema2pojo.rules.RuleFactory;
 
+/**
+ * A {@link RuleFactory} that provides a custom implementation of the {@link org.jsonschema2pojo.rules.TypeRule}
+ * and also provides an additional {@link MapRule} as well.
+ */
 public class AuthClientJsonSchemaRuleFactory extends RuleFactory {
 
     @Override

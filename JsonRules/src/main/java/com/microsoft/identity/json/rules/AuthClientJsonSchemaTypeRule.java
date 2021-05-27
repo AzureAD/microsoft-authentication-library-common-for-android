@@ -29,6 +29,11 @@ import com.sun.codemodel.JType;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.rules.TypeRule;
 
+/**
+ * An implementation of {@link TypeRule} that will use a {@link MapRule} to generate a field of a
+ * Map data type if the type of the field in schema was defined as an "object" AND the field did not
+ * have any properties on it. Otherwise, this rule will just delegate the operation to its parent.
+ */
 public class AuthClientJsonSchemaTypeRule extends TypeRule {
 
     private final AuthClientJsonSchemaRuleFactory ruleFactory;

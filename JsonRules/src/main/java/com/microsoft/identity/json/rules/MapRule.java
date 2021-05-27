@@ -31,6 +31,9 @@ import org.jsonschema2pojo.rules.Rule;
 
 import java.util.Map;
 
+/**
+ * A {@link Rule} to generate fields with the Map data type.
+ */
 public class MapRule implements Rule<JClassContainer, JClass> {
     @Override
     public JClass apply(String nodeName, JsonNode node, JsonNode parent, JClassContainer jClassContainer, Schema schema) {
