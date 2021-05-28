@@ -34,7 +34,7 @@ import lombok.NonNull;
  * A an authentication client that can acquire access tokens for the KeyVault that hosts resources
  * used by the MSIDLAB API.
  */
-public class KeyVaultAuthenticationClient implements IAccessTokenAccessor {
+public class KeyVaultAuthenticationClient implements IAccessTokenSupplier {
 
     private final static String CLIENT_ID = "4bc6e96f-bd23-408f-8ecb-a7a7145463f9";
     private final static String SCOPE = "https://vault.azure.net/.default";

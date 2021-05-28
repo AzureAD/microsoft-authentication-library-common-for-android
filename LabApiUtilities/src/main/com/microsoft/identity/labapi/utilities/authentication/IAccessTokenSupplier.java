@@ -28,7 +28,7 @@ import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiEx
  * An interface describing an access token accessor i.e. anyone that has the ability to return a
  * valid (unexpired) access token.
  */
-public interface IAccessTokenAccessor {
+public interface IAccessTokenSupplier {
 
     /**
      * Obtain a valid access token.

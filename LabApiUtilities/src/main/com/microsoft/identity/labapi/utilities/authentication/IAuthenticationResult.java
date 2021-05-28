@@ -26,7 +26,7 @@ package com.microsoft.identity.labapi.utilities.authentication;
  * An interface describing an authentication result object. Such an object will provide things such
  * as access token, id token etc.
  */
-public interface IAuthenticationResult extends IAccessTokenAccessor {
+public interface IAuthenticationResult extends IAccessTokenSupplier {
 
     /**
      * Obtain an id token.

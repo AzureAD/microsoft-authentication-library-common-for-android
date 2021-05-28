@@ -27,14 +27,13 @@ import com.microsoft.identity.internal.test.keyvault.Configuration;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
 import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.authentication.exception.LabError;
-import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfidentialAuthClient;
 
 import lombok.NonNull;
 
 /**
  * A an authentication client that can acquire access tokens for the Microsoft Identity Lab Api.
  */
-public class LabApiAuthenticationClient implements IAccessTokenAccessor {
+public class LabApiAuthenticationClient implements IAccessTokenSupplier {
 
     private final static String SECRET_NAME_LAB_APP_ID = "LabVaultAppID";
     private final static String SECRET_NAME_LAB_APP_SECRET = "LabVaultAppSecret";
