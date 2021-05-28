@@ -23,15 +23,14 @@
 package com.microsoft.identity.labapi.utilities;
 
 /**
- * An {@link IJWTParserFactory} that can return an implementation of an {@link IJWTParser}.
- * Currently it only returns a default implementation that is using Nimbus.
+ * A factory that can return an implementation of an {@link IJWTParser}.
  */
-public enum JWTParserFactory implements IJWTParserFactory {
+public interface IJWTParserFactory {
 
-    INSTANCE;
-
-    @Override
-    public IJWTParser getJwtParser() {
-        return new NimbusJWTParser();
-    }
+    /**
+     * Obtain an instance of an {@link IJWTParser}.
+     *
+     * @return the JWT Parser to use.
+     */
+    IJWTParser getJwtParser();
 }
