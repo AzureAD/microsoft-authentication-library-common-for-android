@@ -1699,7 +1699,7 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Returns the TokenCache to use for supplied client and environment.
+     * Returns the {@link MsalOAuth2TokenCache} to use for supplied client id and environment.
      *
      * @param clientId          The target client id.
      * @param environment       The target environment.
