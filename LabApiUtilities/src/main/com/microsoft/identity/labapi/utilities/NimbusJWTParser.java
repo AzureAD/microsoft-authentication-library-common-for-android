@@ -42,7 +42,7 @@ public class NimbusJWTParser implements IJWTParser {
             claimsSet = jwt.getJWTClaimsSet();
             return new HashMap<>(claimsSet.getClaims());
         } catch (final ParseException e) {
-            throw new IllegalArgumentException(e);
+            throw new RuntimeException(e);
         }
     }
 }

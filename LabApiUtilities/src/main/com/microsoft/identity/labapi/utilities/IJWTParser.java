@@ -30,7 +30,8 @@ import java.util.Map;
 public interface IJWTParser {
 
     /**
-     * Parse a JWT and returns the claims inside the token.
+     * Parse a JWT and returns the claims inside the token. A {@link RuntimeException} is thrown if
+     * the parsing fails.
      *
      * @param jwt the JWT to parse
      * @return a Map containing the JWT claims
