@@ -1667,7 +1667,7 @@ public class BrokerOAuth2TokenCache
 
     @Nullable
     private MsalOAuth2TokenCache getTokenCacheForClient(@Nullable final BrokerApplicationMetadata metadata) {
-        final String methodName = ":getTokenCacheForClient (1 arg)";
+        final String methodName = ":getTokenCacheForClient(bam)";
 
         MsalOAuth2TokenCache targetCache = null;
 
@@ -1711,7 +1711,7 @@ public class BrokerOAuth2TokenCache
     private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
                                                         @NonNull final String environment,
                                                         final int callingProcessUid) {
-        final String methodName = ":getTokenCacheForClient (3 arg)";
+        final String methodName = ":getTokenCacheForClient(id, env, uid)";
 
         final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
                 clientId,
