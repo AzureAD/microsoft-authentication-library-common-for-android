@@ -30,6 +30,10 @@ jobs:
         displayName: Assembles the outputs of this project.
         inputs:
           tasks: LabApiUtilities:clean LabApiUtilities:assemble
+      - template: azure-pipelines/templates/steps/spotbugs.yml@common
+        parameters:
+          project: LabApiUtilities
+          spotbugsCommand: spotbugsMain
       - task: Gradle@2
         displayName: Run the unit tests.
         inputs:
