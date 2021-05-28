@@ -22,19 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.authentication.msal4j.Msal4jConfidentialAuthClient;
-
 /**
- * An {@link IConfidentialAuthClientFactory} that can return an implementation of an
- * {@link IConfidentialAuthClient}.
- * <p>
- * Currently it only returns a default implementation that is using msal4j.
+ * A factory that can return an implementation of an {@link IConfidentialAuthClient}
  */
-public enum ConfidentialAuthClientFactory implements IConfidentialAuthClientFactory {
-    INSTANCE;
+public interface IConfidentialAuthClientFactory {
 
-    @Override
-    public IConfidentialAuthClient getConfidentialAuthClient() {
-        return new Msal4jConfidentialAuthClient();
-    }
+    /**
+     * Obtain an instance of an {@link IConfidentialAuthClient}.
+     *
+     * @return the Confidential Auth Client to use.
+     */
+    IConfidentialAuthClient getConfidentialAuthClient();
 }
