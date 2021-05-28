@@ -22,20 +22,34 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
-import lombok.AllArgsConstructor;
+import java.util.Arrays;
+
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
  * Configuration information for the client certificate to be used.
- *
+ * <p>
  * Lomboked from original source located at:
  * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/keys/ClientCertificateMetadata.java
  */
 @Getter
 @Accessors(prefix = "m")
-@AllArgsConstructor
 public class ClientCertificateMetadata {
     private final String mAlias;
     private final char[] mPassword;
+
+    public char[] getPassword() {
+        if (mPassword == null) {
+            return null;
+        }
+
+        return Arrays.copyOf(mPassword, mPassword.length);
+    }
+
+    public ClientCertificateMetadata(@NonNull final String alias, final char[] password) {
+        this.mAlias = alias;
+        mPassword = password != null ? Arrays.copyOf(password, password.length) : null;
+    }
 }

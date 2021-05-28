@@ -22,22 +22,39 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
-import lombok.AllArgsConstructor;
+import java.util.Arrays;
+
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
  * Class holds information necessary to instantiate a keystore in order to retrieve and access
  * a ClientCertificateConfiguration and the private key associated with that ClientCertificateConfiguration.
- *
+ * <p>
  * Lomboked from original source located at:
  * https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/providers/keys/KeyStoreConfiguration.java
  */
 @Getter
-@AllArgsConstructor
 @Accessors(prefix = "m")
 public class KeyStoreConfiguration {
     private final String mKeyStoreType;
     private final String mKeyStoreProvider;
     private final char[] mKeyStorePassword;
+
+    public char[] getKeyStorePassword() {
+        if (mKeyStorePassword == null) {
+            return null;
+        }
+
+        return Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
+    }
+
+    public KeyStoreConfiguration(@NonNull final String keyStoreType,
+                                 @NonNull final String keyStoreProvider,
+                                 final char[] keyStorePassword) {
+        this.mKeyStoreType = keyStoreType;
+        this.mKeyStoreProvider = keyStoreProvider;
+        mKeyStorePassword = keyStorePassword != null ? Arrays.copyOf(keyStorePassword, keyStorePassword.length) : null;
+    }
 }
