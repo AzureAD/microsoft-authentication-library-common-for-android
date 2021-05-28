@@ -20,32 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
-
-import com.microsoft.identity.common.java.providers.oauth2.StateGenerator;
+package com.microsoft.identity.common.java.providers.oauth2;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
-@RunWith(JUnit4.class)
-public class StateGeneratorTest {
-
-    private static final int TASK_ID = 19;
-    private static final String STATE_EXAMPLE_1 = String.format("%s:%s", TASK_ID, "SOMEGUID-SOMEGUID");
+public class PkceChallengeTest {
 
     @Test
-    public void test_stateGeneratorGenerateMethod(){
-        StateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
-        String state = generator.generate();
-        String expected = String.valueOf(TASK_ID);
-        Assert.assertEquals(expected, state.split(":")[0]);
+    public void testGenerateCodeVerifier() {
+        final byte[] verifierBytes = new byte[]{-121, -61, 79, 79, 38, 98, 25, 43, 105, -86,
+                -122, -94, 40, 72, 57, 76, -68, -71, 28, 98, 47, -17, -101, -55, 63, 93, 53,
+                -113, 78, 124, -52, -38};
+        Assert.assertEquals("h8NPTyZiGStpqoaiKEg5TLy5HGIv75vJP101j058zNo",
+                PkceChallenge.generateCodeVerifier(verifierBytes));
     }
 
     @Test
-    public void test_stateGeneratorGetTaskFromStateMethod(){
-        int taskId = AndroidTaskStateGenerator.getTaskFromState(STATE_EXAMPLE_1);
-        Assert.assertEquals(TASK_ID, taskId);
+    public void testGenerateCodeVerifierChallenge(){
+        final String verifier = "z86XHrKFENPT1U8dZt_Aa6UIybxaTKrqJkdTwsGfAv4";
+
+        Assert.assertEquals("9zH10spxQ4ivCvet1EQdRQI82xZ7I8DKU2NFvoSg5mY",
+                PkceChallenge.generateCodeVerifierChallenge(verifier));
     }
 }

@@ -24,12 +24,10 @@ package com.microsoft.identity.common;
 
 import android.content.Context;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
-import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
@@ -42,16 +40,19 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.shadows.ShadowStorageHelper;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Locale;
+import java.util.Map;
 
 import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
 import static org.junit.Assert.assertEquals;
@@ -59,8 +60,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(AndroidJUnit4.class)
-public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKeyEnabledHelper {
+@RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowStorageHelper.class})
+public class SharedPreferencesAccountCredentialCacheTest {
 
     static final BearerAuthenticationSchemeInternal BEARER_AUTHENTICATION_SCHEME = new BearerAuthenticationSchemeInternal();
     static final String HOME_ACCOUNT_ID = "29f3807a-4fb0-42f2-a44a-236aa0cb3f97.0287f963-2d72-4363-9e3a-5705c5b0f031";
@@ -94,8 +96,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
 
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-        final Context testContext = InstrumentationRegistry.getTargetContext();
+        final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 testContext,

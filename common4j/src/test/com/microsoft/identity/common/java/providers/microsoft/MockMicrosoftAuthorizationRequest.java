@@ -20,32 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.java.providers.microsoft;
 
-import com.microsoft.identity.common.java.providers.oauth2.StateGenerator;
+public class MockMicrosoftAuthorizationRequest extends MicrosoftAuthorizationRequest<MockMicrosoftAuthorizationRequest> {
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+    public static final String MOCK_AUTH_ENDPOINT = "https://MOCK_AUTH_ENDPOINT";
 
-@RunWith(JUnit4.class)
-public class StateGeneratorTest {
-
-    private static final int TASK_ID = 19;
-    private static final String STATE_EXAMPLE_1 = String.format("%s:%s", TASK_ID, "SOMEGUID-SOMEGUID");
-
-    @Test
-    public void test_stateGeneratorGenerateMethod(){
-        StateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
-        String state = generator.generate();
-        String expected = String.valueOf(TASK_ID);
-        Assert.assertEquals(expected, state.split(":")[0]);
+    /**
+     * Constructor of MockMicrosoftAuthorizationRequest.
+     *
+     * @param builder
+     */
+    protected MockMicrosoftAuthorizationRequest(Builder builder) {
+        super(builder);
     }
 
-    @Test
-    public void test_stateGeneratorGetTaskFromStateMethod(){
-        int taskId = AndroidTaskStateGenerator.getTaskFromState(STATE_EXAMPLE_1);
-        Assert.assertEquals(TASK_ID, taskId);
+    @Override
+    public String getAuthorizationEndpoint() {
+        return MOCK_AUTH_ENDPOINT;
+    }
+
+    public static class Builder extends MicrosoftAuthorizationRequest.Builder<MockMicrosoftAuthorizationRequest.Builder> {
+        @Override
+        public MockMicrosoftAuthorizationRequest.Builder self() {
+            return this;
+        }
+
+        public MockMicrosoftAuthorizationRequest build() {
+            return new MockMicrosoftAuthorizationRequest(this);
+        }
     }
 }

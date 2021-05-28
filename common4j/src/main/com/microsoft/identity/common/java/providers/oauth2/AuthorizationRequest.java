@@ -20,28 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
-
-import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.util.Pair;
-
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ported.Pair;
+
+import org.apache.http.client.utils.URIBuilder;
 
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 /**
  * A class holding the state of the Authorization Request (OAuth 2.0).
@@ -49,6 +48,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  * This should include all fo the required parameters of the authorization request for oAuth2
  * This should provide an extension point for additional parameters to be set
  */
+@Getter
+@Accessors(prefix = "m")
 public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> implements Serializable {
     /**
      * Serial version id.
@@ -60,7 +61,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     @Expose()
     @SerializedName("response_type")
-    private String mResponseType;
+    private final String mResponseType;
 
     /**
      * A required value.
@@ -69,7 +70,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     @Expose()
     @SerializedName("client_id")
-    private String mClientId;
+    private final String mClientId;
 
     /**
      * Redirect URLs are a critical part of the OAuth flow. After a user successfully authorizes an
@@ -77,7 +78,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      * either an authorization code or access token in the URL.
      */
     @SerializedName("redirect_uri")
-    private String mRedirectUri;
+    private final String mRedirectUri;
 
     /**
      * A recommended value.
@@ -90,41 +91,37 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     @Expose()
     @SerializedName("state")
-    protected String mState;
+    private final String mState;
 
     /**
-     * Scopes scopes that you want the user to consent to is required for V2 auth request.
+     * Scopes that you want the user to consent to is required for V2 auth request.
      */
     @Expose()
     @SerializedName("scope")
-    private String mScope;
+    private final String mScope;
 
     /**
-     * Claims request parameter (Per ODIC spec)
+     * Claims request parameter (Per OIDC spec)
      */
     @Expose()
     @SerializedName("claims")
-    private String mClaims;
-
-    /**
-     * Version name of the installed Company Portal app.
-     */
-    @Expose()
-    @SerializedName("cpVersion")
-    private String mCpVersion;
+    private final String mClaims;
 
     @Expose()
-    transient private boolean webViewZoomControlsEnabled;
+    final transient private boolean mWebViewZoomControlsEnabled;
 
     @Expose()
-    transient private boolean webViewZoomEnabled;
+    final transient private boolean mWebViewZoomEnabled;
 
     /**
      * Header of the request.
      */
-    private transient HashMap<String, String> mRequestHeaders;
+    private final transient HashMap<String, String> mRequestHeaders;
 
-    private transient List<Pair<String, String>> mExtraQueryParams;
+    /**
+     * Extra query parameters.
+     */
+    private final transient List<Pair<String, String>> mExtraQueryParams;
 
     /**
      * Constructor of AuthorizationRequest.
@@ -137,19 +134,16 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mScope = builder.mScope;
 
         // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
-        @SuppressWarnings(WarningType.unchecked_warning)
-        List<Pair<String, String>> extraQueryParams = builder.mExtraQueryParams;
+        @SuppressWarnings(WarningType.unchecked_warning) final List<Pair<String, String>> extraQueryParams = builder.mExtraQueryParams;
+        mExtraQueryParams = extraQueryParams;
 
         // Suppressing unchecked warning of casting HashMap to HashMap<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
-        @SuppressWarnings(WarningType.unchecked_warning)
-        HashMap<String, String> requestHeaders = builder.mRequestHeaders;
-
-        mExtraQueryParams = extraQueryParams;
-        mClaims = builder.mClaims;
+        @SuppressWarnings(WarningType.unchecked_warning) final HashMap<String, String> requestHeaders = builder.mRequestHeaders;
         mRequestHeaders = requestHeaders;
-        webViewZoomEnabled = builder.mWebViewZoomEnabled;
-        webViewZoomControlsEnabled = builder.mWebViewZoomControlsEnabled;
-        mCpVersion = builder.mCpVersion;
+
+        mClaims = builder.mClaims;
+        mWebViewZoomEnabled = builder.mWebViewZoomEnabled;
+        mWebViewZoomControlsEnabled = builder.mWebViewZoomControlsEnabled;
     }
 
     public static final class ResponseType {
@@ -164,31 +158,13 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         private String mScope;
         private String mClaims;
         private HashMap<String, String> mRequestHeaders;
-        private boolean mWebViewZoomControlsEnabled;
-        private boolean mWebViewZoomEnabled;
-        private String mCpVersion;
-
-        /**
-         * Can be used to pre-fill the username/email address field of the sign-in page for the user, if you know their username ahead of time.
-         */
-        public String mLoginHint;
-
-        /**
-         * Correlation ID.
-         */
-        public UUID mCorrelationId;
+        private boolean mWebViewZoomControlsEnabled = false;
+        private boolean mWebViewZoomEnabled = false;
 
         /**
          * Extra query parameters.
          */
         public List<Pair<String, String>> mExtraQueryParams;
-
-        public String mPrompt;
-
-        public B setPrompt(String prompt) {
-            mPrompt = prompt;
-            return self();
-        }
 
         public B setResponseType(String responseType) {
             mResponseType = responseType;
@@ -215,16 +191,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-        public B setLoginHint(String loginHint) {
-            mLoginHint = loginHint;
-            return self();
-        }
-
-        public B setCorrelationId(UUID correlationId) {
-            mCorrelationId = correlationId;
-            return self();
-        }
-
         public B setExtraQueryParams(List<Pair<String, String>> extraQueryParams) {
             mExtraQueryParams = extraQueryParams;
             return self();
@@ -240,25 +206,13 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-        public Builder<B> setWebViewZoomEnabled(boolean webViewZoomEnabled) {
+        public B setWebViewZoomEnabled(boolean webViewZoomEnabled) {
             mWebViewZoomEnabled = webViewZoomEnabled;
             return self();
         }
 
-        public Builder<B> setWebViewZoomControlsEnabled(boolean webViewZoomControlsEnabled) {
+        public B setWebViewZoomControlsEnabled(boolean webViewZoomControlsEnabled) {
             mWebViewZoomControlsEnabled = webViewZoomControlsEnabled;
-            return self();
-        }
-
-        public Builder<B> setCpInstallationDetail(final @NonNull Context context) {
-            try {
-                final PackageInfo packageInfo =
-                        context.getPackageManager().getPackageInfo(COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
-                mCpVersion = packageInfo.versionName;
-            } catch (final PackageManager.NameNotFoundException e) {
-                // CP is not installed. No need to do anything.
-            }
-
             return self();
         }
 
@@ -266,66 +220,6 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
 
         @SuppressWarnings(WarningType.rawtype_warning)
         public abstract AuthorizationRequest build();
-    }
-//
-//    /**
-//     * Return the start URL to load in the web view.
-//     *
-//     * @return String of start URL.
-//     * @throws UnsupportedEncodingException
-//     * @throws ClientException
-//     */
-//    public abstract String getAuthorizationStartUrl() throws UnsupportedEncodingException, ClientException;
-
-    /**
-     * @return Response type of the authorization request.
-     */
-    public String getResponseType() {
-        return mResponseType;
-    }
-
-    public List<Pair<String, String>> getExtraQueryParams() {
-        return mExtraQueryParams;
-    }
-
-    /**
-     * @return mClientId of the authorization request.
-     */
-    public String getClientId() {
-        return mClientId;
-    }
-
-    /**
-     * @return mRequestHeaders of the authorization request.
-     */
-    public HashMap<String, String> getRequestHeaders() {
-        return mRequestHeaders;
-    }
-
-    /**
-     * @return mRedirectUri of the authorization request.
-     */
-    public String getRedirectUri() {
-        return mRedirectUri;
-    }
-
-    /**
-     * @return mState of the authorization request.
-     */
-    public String getState() {
-        return mState;
-    }
-
-    public String getClaims() {
-        return mClaims;
-    }
-
-    public boolean isWebViewZoomEnabled() {
-        return webViewZoomEnabled;
-    }
-
-    public boolean isWebViewZoomControlsEnabled() {
-        return webViewZoomControlsEnabled;
     }
 
     //CHECKSTYLE:OFF
@@ -340,36 +234,41 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
                 '}';
     }
 
-    public String getScope() {
-        return mScope;
-    }
-
     public abstract String getAuthorizationEndpoint();
 
-    public Uri getAuthorizationRequestAsHttpRequest() {
-        final Map<String, Object> qpMap = new HashMap<>();
-        qpMap.putAll(ObjectMapper.serializeObjectHashMap(this));
+    /**
+     * Constructs A request URI from this object.
+     */
+    public URI getAuthorizationRequestAsHttpRequest() throws URISyntaxException {
+        final URIBuilder builder = new URIBuilder(getAuthorizationEndpoint());
+
+        appendParameterToBuilder(builder, ObjectMapper.serializeObjectHashMap(this));
+
         // Add extra qp, if present...
-        if (null != mExtraQueryParams && !mExtraQueryParams.isEmpty()) {
-            for (final Pair<String, String> queryParam : mExtraQueryParams) {
-                //Skip appending for duplicated extra query parameters
-                if (!qpMap.containsKey(queryParam.first)) {
-                    qpMap.put(queryParam.first, queryParam.second);
-                }
-            }
+        appendParameterToBuilder(builder, mExtraQueryParams);
+
+        return builder.build();
+    }
+
+    protected void appendParameterToBuilder(@NonNull final URIBuilder builder,
+                                            @Nullable final Map<String, ?> params) {
+        if (params == null) {
+            return;
         }
 
-        final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
+        for (final Map.Entry<String, ?> entry : params.entrySet()) {
+            builder.addParameter(entry.getKey(), String.valueOf(entry.getValue()));
+        }
+    }
 
-        for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
-            if (entry.getKey() != null && entry.getValue() != null) {
-                uriBuilder.appendQueryParameter(
-                        entry.getKey(),
-                        entry.getValue().toString()
-                );
-            }
+    protected void appendParameterToBuilder(@NonNull final URIBuilder builder,
+                                            @Nullable final List<Pair<String, String>> params) {
+        if (params == null) {
+            return;
         }
 
-        return uriBuilder.build();
+        for (Pair<String, String> entry : params) {
+            builder.addParameter(entry.first, entry.second);
+        }
     }
 }

@@ -35,7 +35,7 @@ import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
@@ -43,6 +43,8 @@ import com.microsoft.identity.common.internal.result.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -76,7 +78,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public Future<AuthorizationResult> requestAuthorization(
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException {
+            throws ClientException, URISyntaxException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
         final Context context = getApplicationContext();
@@ -110,8 +112,8 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         }
 
         authIntent.setPackage(browser.getPackageName());
-        final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
-        authIntent.setData(requestUrl);
+        final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+        authIntent.setData(Uri.parse(requestUrl.toString()));
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
 
@@ -133,7 +135,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
-    private Intent buildAuthorizationActivityStartIntent(Intent authIntent, Uri requestUrl) {
+    private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
         return AuthorizationActivity.createStartIntent(
                 getApplicationContext(),
                 authIntent,

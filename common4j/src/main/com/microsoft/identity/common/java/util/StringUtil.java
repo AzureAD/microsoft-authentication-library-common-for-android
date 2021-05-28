@@ -25,9 +25,12 @@ package com.microsoft.identity.common.java.util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 public class StringUtil {
+    private static String TAG = StringUtil.class.getSimpleName();
+
     /**
      * The constant ENCODING_UTF8.
      */
@@ -57,4 +60,28 @@ public class StringUtil {
 
         return URLDecoder.decode(source, ENCODING_UTF8);
     }
+
+    /**
+     * Counts the number of occurrences of one String in another.
+     *
+     * @param str
+     * @param subString
+     * @return int
+     */
+    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
+        int count = 0;
+
+        if (isNullOrEmpty(str) || isNullOrEmpty(subString)) {
+            return count;
+        }
+
+        for (int i = 0; i <= (str.length() - subString.length()); i++) {
+            if (str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
 }

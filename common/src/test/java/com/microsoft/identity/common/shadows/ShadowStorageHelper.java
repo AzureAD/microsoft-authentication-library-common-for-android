@@ -20,32 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.shadows;
 
-import com.microsoft.identity.common.java.providers.oauth2.StateGenerator;
+import androidx.annotation.NonNull;
 
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 
-@RunWith(JUnit4.class)
-public class StateGeneratorTest {
+import org.robolectric.annotation.Implements;
 
-    private static final int TASK_ID = 19;
-    private static final String STATE_EXAMPLE_1 = String.format("%s:%s", TASK_ID, "SOMEGUID-SOMEGUID");
+import java.io.IOException;
+import java.security.GeneralSecurityException;
 
-    @Test
-    public void test_stateGeneratorGenerateMethod(){
-        StateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
-        String state = generator.generate();
-        String expected = String.valueOf(TASK_ID);
-        Assert.assertEquals(expected, state.split(":")[0]);
+import javax.crypto.SecretKey;
+
+@Implements(StorageHelper.class)
+public class ShadowStorageHelper {
+
+    /**
+     * Fake saving key to key store as Android Key Store is not available in Robolectric
+     */
+    public void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
+        return;
     }
 
-    @Test
-    public void test_stateGeneratorGetTaskFromStateMethod(){
-        int taskId = AndroidTaskStateGenerator.getTaskFromState(STATE_EXAMPLE_1);
-        Assert.assertEquals(TASK_ID, taskId);
-    }
 }

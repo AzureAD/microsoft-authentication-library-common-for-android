@@ -22,18 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.util.Base64;
-
-import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.util.Base64;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -47,21 +44,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
+import static com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_V1_V2;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-@RunWith(AndroidJUnit4.class)
+@PowerMockIgnore("javax.crypto.*")
+@RunWith(PowerMockRunner.class)
 public class MicrosoftStsAccountCredentialAdapterTest {
 
     public static final String MOCK_ID_TOKEN_WITH_CLAIMS;
@@ -160,7 +160,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockAccount.getRealm()).thenReturn(MOCK_TID);
         when(mockAccount.getLocalAccountId()).thenReturn(MOCK_OID);
         when(mockAccount.getUsername()).thenReturn(MOCK_PREFERRED_USERNAME);
-        when(mockAccount.getAuthorityType()).thenReturn("MSSTS");
+        when(mockAccount.getAuthorityType()).thenReturn(AUTHORITY_TYPE_V1_V2);
         when(mockAccount.getFirstName()).thenReturn(MOCK_GIVEN_NAME);
         when(mockAccount.getName()).thenReturn(MOCK_NAME);
         when(mockAccount.getMiddleName()).thenReturn(MOCK_MIDDLE_NAME);
@@ -184,7 +184,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_TID, account.getRealm());
         assertEquals(MOCK_OID, account.getLocalAccountId());
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
-        assertEquals("MSSTS", account.getAuthorityType());
+        assertEquals(AUTHORITY_TYPE_V1_V2, account.getAuthorityType());
         assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
         assertEquals(MOCK_FAMILY_NAME, account.getFamilyName());
         assertEquals(MOCK_MIDDLE_NAME, account.getMiddleName());
@@ -217,9 +217,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     static String createRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
-
-        return new String(Base64.encode(claims.getBytes(
-                Charset.forName("UTF-8")), Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE));
+        return Base64.encode(claims);
     }
-
 }

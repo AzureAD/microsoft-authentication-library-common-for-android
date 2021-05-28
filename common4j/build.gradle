@@ -14,7 +14,7 @@ plugins {
 
 def desugarCode = false
 
-if(project.hasProperty("sugar")){
+if (project.hasProperty("sugar")) {
     desugarCode = sugar.toBoolean()
 }
 
@@ -137,6 +137,9 @@ sourceSets {
 
 dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
+
+    implementation "com.nimbusds:nimbus-jose-jwt:9.9"
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
 
     implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:2.8.5"
