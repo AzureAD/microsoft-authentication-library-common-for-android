@@ -70,11 +70,12 @@ public class TokenParametersTest {
         Assert.fail("We weren't expecting to hit this line...exception should've already occurred");
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCanCreateTokenParametersWhenRequiredDataProvided() {
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .authority(AUTHORITY)
                 .scope(SCOPE_1)
+                .clientId(CLIENT_ID)
                 .build();
 
         Assert.assertNotNull(tokenParameters);
@@ -85,10 +86,11 @@ public class TokenParametersTest {
         Assert.assertTrue(tokenParameters.getScopes().contains(SCOPE_1));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCanCreateTokenParametersWithMultipleScopes() {
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .authority(AUTHORITY)
+                .clientId(CLIENT_ID)
                 .scope(SCOPE_1)
                 .scope(SCOPE_2)
                 .build();
@@ -102,7 +104,7 @@ public class TokenParametersTest {
         Assert.assertTrue(tokenParameters.getScopes().contains(SCOPE_2));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void testCanCreateTokenParametersWithScopeSet() {
         final Set<String> scopes = new HashSet<String>() {{
             add(SCOPE_1);
@@ -111,6 +113,7 @@ public class TokenParametersTest {
 
         final TokenParameters tokenParameters = TokenParameters.builder()
                 .authority(AUTHORITY)
+                .clientId(CLIENT_ID)
                 .scopes(scopes)
                 .build();
 
