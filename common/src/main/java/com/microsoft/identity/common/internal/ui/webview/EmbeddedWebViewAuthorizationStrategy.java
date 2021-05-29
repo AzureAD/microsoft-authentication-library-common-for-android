@@ -33,7 +33,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
+import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -89,15 +89,15 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(Uri requestUrl) {
-        return AuthorizationActivity.createStartIntent(
-                    getApplicationContext(),
-                    null,
-                    requestUrl.toString(),
-                    mAuthorizationRequest.getRedirectUri(),
-                    mAuthorizationRequest.getRequestHeaders(),
-                    AuthorizationAgent.WEBVIEW,
-                    mAuthorizationRequest.isWebViewZoomEnabled(),
-                    mAuthorizationRequest.isWebViewZoomControlsEnabled());
+        return AuthorizationActivityFactory.getAuthorizationActivityIntent(
+                getApplicationContext(),
+                null,
+                requestUrl.toString(),
+                mAuthorizationRequest.getRedirectUri(),
+                mAuthorizationRequest.getRequestHeaders(),
+                AuthorizationAgent.WEBVIEW,
+                mAuthorizationRequest.isWebViewZoomEnabled(),
+                mAuthorizationRequest.isWebViewZoomControlsEnabled());
     }
 
     @Override
