@@ -10,8 +10,9 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi;
+
+import java.io.IOException;
 
 import java.util.Map;
 import java.util.List;

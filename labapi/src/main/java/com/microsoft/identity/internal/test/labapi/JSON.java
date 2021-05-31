@@ -10,24 +10,25 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import io.gsonfire.GsonFireBuilder;
+import io.gsonfire.PostProcessor;
+import io.gsonfire.TypeSelector;
 import com.google.gson.JsonParseException;
 import com.google.gson.TypeAdapter;
 import com.google.gson.internal.bind.util.ISO8601Utils;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import com.google.gson.JsonElement;
-import io.gsonfire.GsonFireBuilder;
-
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.OffsetDateTime;
 import org.threeten.bp.format.DateTimeFormatter;
 
-import okio.ByteString;
+import com.microsoft.identity.internal.test.labapi.model.*;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -37,6 +38,7 @@ import java.text.ParseException;
 import java.text.ParsePosition;
 import java.util.Date;
 import java.util.Map;
+import java.util.HashMap;
 
 public class JSON {
     private Gson gson;
@@ -45,13 +47,11 @@ public class JSON {
     private SqlDateTypeAdapter sqlDateTypeAdapter = new SqlDateTypeAdapter();
     private OffsetDateTimeTypeAdapter offsetDateTimeTypeAdapter = new OffsetDateTimeTypeAdapter();
     private LocalDateTypeAdapter localDateTypeAdapter = new LocalDateTypeAdapter();
-    private ByteArrayAdapter byteArrayAdapter = new ByteArrayAdapter();
 
     public static GsonBuilder createGson() {
         GsonFireBuilder fireBuilder = new GsonFireBuilder()
         ;
-        GsonBuilder builder = fireBuilder.createGsonBuilder();
-        return builder;
+        return fireBuilder.createGsonBuilder();
     }
 
     private static String getDiscriminatorValue(JsonElement readElement, String discriminatorField) {
@@ -62,8 +62,8 @@ public class JSON {
         return element.getAsString();
     }
 
-    private static Class getClassByDiscriminator(Map classByDiscriminatorValue, String discriminatorValue) {
-        Class clazz = (Class) classByDiscriminatorValue.get(discriminatorValue.toUpperCase());
+    private static <T> Class<? extends T> getClassByDiscriminator(Map<String, Class<? extends T>> classByDiscriminatorValue, String discriminatorValue) {
+        Class<? extends T> clazz = classByDiscriminatorValue.get(discriminatorValue.toUpperCase());
         if(null == clazz) {
             throw new IllegalArgumentException("cannot determine model class of name: <" + discriminatorValue + ">");
         }
@@ -76,7 +76,6 @@ public class JSON {
             .registerTypeAdapter(java.sql.Date.class, sqlDateTypeAdapter)
             .registerTypeAdapter(OffsetDateTime.class, offsetDateTimeTypeAdapter)
             .registerTypeAdapter(LocalDate.class, localDateTypeAdapter)
-            .registerTypeAdapter(byte[].class, byteArrayAdapter)
             .create();
     }
 
@@ -140,34 +139,6 @@ public class JSON {
             if (returnType.equals(String.class))
                 return (T) body;
             else throw (e);
-        }
-    }
-
-    /**
-     * Gson TypeAdapter for Byte Array type
-     */
-    public class ByteArrayAdapter extends TypeAdapter<byte[]> {
-
-        @Override
-        public void write(JsonWriter out, byte[] value) throws IOException {
-            if (value == null) {
-                out.nullValue();
-            } else {
-                out.value(ByteString.of(value).base64());
-            }
-        }
-
-        @Override
-        public byte[] read(JsonReader in) throws IOException {
-            switch (in.peek()) {
-                case NULL:
-                    in.nextNull();
-                    return null;
-                default:
-                    String bytesAsBase64 = in.nextString();
-                    ByteString byteString = ByteString.decodeBase64(bytesAsBase64);
-                    return byteString.toByteArray();
-            }
         }
     }
 

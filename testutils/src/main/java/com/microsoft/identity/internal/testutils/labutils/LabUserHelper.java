@@ -61,7 +61,7 @@ public class LabUserHelper {
         List<ConfigInfo> configInfos;
 
         try {
-            configInfos = api.getConfig(
+            configInfos = api.apiConfigGet(
                     query.userType,
                     query.userRole,
                     query.mfa,
@@ -70,12 +70,21 @@ public class LabUserHelper {
                     query.homeUpn,
                     query.b2cProvider,
                     query.federationProvider,
-
                     query.azureEnvironment,
+                    query.guestHomeAzureEnvironment,
                     query.appType,
                     query.publicClient,
                     query.signInAudience,
-                    query.guestHomedIn);
+                    query.guestHomedIn,
+                    query.hasAltId,
+                    query.altIdSource,
+                    query.altIdType,
+                    query.passwordPolicyValidityPeriod,
+                    query.passwordPolicyNotificationDays,
+                    query.tokenLifetimePolicy,
+                    query.tokenType,
+                    query.tokenLifetime);
+
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);
         }
@@ -187,7 +196,7 @@ public class LabUserHelper {
         List<ConfigInfo> configInfos;
 
         try {
-            configInfos = api.getConfigByUPN(upn);
+            configInfos = api.apiConfigUpnGet(upn);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);
         }
@@ -225,7 +234,7 @@ public class LabUserHelper {
 
         LabConfig.setCurrentLabConfig(labConfig);
 
-        return labConfig.getConfigInfo().getUserInfo().getUpn();
+        return labConfig.getConfigInfo().getUserInfo().getHomeUPN();
     }
 
     public static String loadTempUser(final String userType) {
@@ -236,7 +245,7 @@ public class LabUserHelper {
         TempUser tempUser;
 
         try {
-            tempUser = createTempUserApi.post(userType);
+            tempUser = createTempUserApi.apiCreateTempUserPost(userType);
             final String password = LabHelper.getPasswordForLab(tempUser.getCredentialVaultKeyName());
             LabConfig labConfig = new LabConfig(tempUser, password);
             LabConfig.setCurrentLabConfig(labConfig);
@@ -253,7 +262,7 @@ public class LabUserHelper {
         createTempUserApi.getApiClient().setReadTimeout(TEMP_USER_API_READ_TIMEOUT);
 
         try {
-            return createTempUserApi.post(userType);
+            return createTempUserApi.apiCreateTempUserPost(userType);
         } catch (ApiException e) {
             throw new RuntimeException("Error retrieving lab user", e);
         }
@@ -299,7 +308,7 @@ public class LabUserHelper {
         instance.setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
-            return api.getAppByParam(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
+            return api.apiAppGet(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
                     isAdminConsented.getValue(), publicClient.getValue()).get(0);
         } catch (ApiException e) {
             throw new RuntimeException(e);
@@ -310,7 +319,7 @@ public class LabUserHelper {
         instance.setupApiClientWithAccessToken();
         ResetApi resetApi = new ResetApi();
         try {
-            resetApi.putResetInfo(upn, "Password");
+            resetApi.apiResetPut(upn, "Password");
         } catch (ApiException e) {
             throw new RuntimeException("Error resetting lab user password", e);
         }
