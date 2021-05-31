@@ -70,6 +70,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             throw ex;
         }
 
+        //This will be invoked when CurrentTaskAuthorizationActivity is not found in the current task stack... hence it will create fresh
         if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
             if(CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
                 Bundle arguments = new Bundle();
@@ -113,6 +114,12 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
         }
     }
 
+    /**
+     * This is invoked when an existing activities is re-used and provided with a new intent with additinoal information
+     * NOTE: It's important that you use setIntent update the intent associated with the activity.  Otherwise subsequent calls to
+     * getIntent() in other event handlers will return the original intent or null
+     * @param intent
+     */
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -120,14 +127,28 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY);
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
             unregisterAndFinish();
-        } else if (REDIRECT_RETURNED_ACTION.equals(intent.getAction())) {
-            unregisterAndFinish();
         }
+        //IMPORTANT: If you don't call this...
+        //then getIntent will return the original intent used to launch the activity or null
+        setIntent(intent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+
+        //onNewIntent will change the value of getIntent from what was used to create the activity
+        //to the intent that was communicated to an existing activity
+        if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
+            if(CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
+                Bundle arguments = new Bundle();
+                arguments.putBoolean("RESPONSE", true);
+                mFragment.setArguments(arguments);
+                mFragment.completeAuthorizationInBrowserFlow(getIntent().getStringExtra("RESPONSE_URI"));
+                setResult(RESULT_OK);
+                unregisterAndFinish();
+            }
+        }
         if (mCloseCustomTabs) {
             // The custom tab was closed without getting a result.
             unregisterAndFinish();
