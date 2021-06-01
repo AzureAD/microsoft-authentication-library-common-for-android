@@ -171,6 +171,9 @@ dependencies {
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
 
+    // For powermockito!
+    testImplementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
+
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
     androidTestImplementation "org.mockito:mockito-android:$rootProject.ext.mockitoAndroidVersion"
