@@ -493,7 +493,8 @@ public class MicrosoftStsOAuth2Strategy
             return httpClient.post(
                     authority,
                     headers,
-                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+                    requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                    null
             );
         } catch (final UnsupportedEncodingException exception) {
             throw new ClientException(ErrorStrings.UNSUPPORTED_ENCODING,

@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.net.util.MockConnection;
 import com.microsoft.identity.common.java.net.util.ResponseBody;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -38,8 +39,11 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.net.ssl.SSLContext;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -67,6 +71,7 @@ public final class UrlConnectionHttpClientTest {
     @After
     public void tearDown() {
         HttpUrlConnectionFactory.clearMockedConnectionQueue();
+        SSLSocketFactoryWrapper.setLastHandshakeTLSversion("");
     }
 
     /**
@@ -74,12 +79,12 @@ public final class UrlConnectionHttpClientTest {
      */
     @Test(expected = NullPointerException.class)
     public void testNullRequestUrl() throws IOException {
-        sNoRetryClient.get(null, Collections.<String, String>emptyMap());
+        sNoRetryClient.get(null, Collections.<String, String>emptyMap(), null);
     }
 
     /**
      * Verify that HTTP GET succeed
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -89,7 +94,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP GET succeed
-     * - via {@link UrlConnectionHttpClient#get(URL, Map)}
+     * - via {@link UrlConnectionHttpClient#get(URL, Map, SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -99,7 +104,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP GET succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -109,7 +114,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP GET succeed
-     * - via {@link UrlConnectionHttpClient#get(URL, Map)}
+     * - via {@link UrlConnectionHttpClient#get(URL, Map, SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -119,7 +124,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP POST succeed
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -129,7 +134,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP POST succeed
-     * - via {@link UrlConnectionHttpClient#post(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#post(URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -139,7 +144,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP POST succeed
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -149,7 +154,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP POST succeed
-     * - via {@link UrlConnectionHttpClient#post(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#post(URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -159,7 +164,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP HEAD succeed
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -169,7 +174,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP HEAD succeed
-     * - via {@link UrlConnectionHttpClient#head(URL, Map)}
+     * - via {@link UrlConnectionHttpClient#head(URL, Map, SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -179,7 +184,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP HEAD succeed
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -189,7 +194,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP HEAD succeed
-     * - via {@link UrlConnectionHttpClient#head(URL, Map)}
+     * - via {@link UrlConnectionHttpClient#head(URL, Map, SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -199,7 +204,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PUT succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -209,7 +214,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PUT succeeds
-     * - via {@link UrlConnectionHttpClient#put(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#put(URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -219,7 +224,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PUT succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -229,7 +234,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PUT succeeds
-     * - via {@link UrlConnectionHttpClient#put(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#put(URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -239,7 +244,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP DELETE succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -249,7 +254,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP DELETE succeeds
-     * - via {@link UrlConnectionHttpClient#delete(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#delete(URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -259,7 +264,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP DELETE succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -269,7 +274,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP DELETE succeeds
-     * - via {@link UrlConnectionHttpClient#delete(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#delete(URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -279,7 +284,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP TRACE succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -289,7 +294,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP TRACE succeeds
-     * - via {@link UrlConnectionHttpClient#trace(URL, Map))}
+     * - via {@link UrlConnectionHttpClient#trace(URL, Map, SSLContext))}
      * - with retry logic.
      */
     @Test
@@ -299,7 +304,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP TRACE succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -309,7 +314,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP TRACE succeeds
-     * - via {@link UrlConnectionHttpClient#trace(URL, Map))}
+     * - via {@link UrlConnectionHttpClient#trace(URL, Map, SSLContext))}
      * - without retry logic.
      */
     @Test
@@ -319,7 +324,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP OPTIONS succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -329,7 +334,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP OPTIONS succeeds
-     * - via {@link UrlConnectionHttpClient#options(URL, Map)}
+     * - via {@link UrlConnectionHttpClient#options(URL, Map, SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -339,7 +344,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP OPTIONS succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -349,7 +354,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP OPTIONS succeeds
-     * - via {@link UrlConnectionHttpClient#options(URL, Map)}
+     * - via {@link UrlConnectionHttpClient#options(URL, Map, SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -359,7 +364,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PATCH succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - with retry logic.
      */
     @Test
@@ -369,7 +374,7 @@ public final class UrlConnectionHttpClientTest {
     
     /**
      * Verify that HTTP PATCH succeeds
-     * - via {@link UrlConnectionHttpClient#patch(URL, Map, byte[])}}
+     * - via {@link UrlConnectionHttpClient#patch(URL, Map, byte[], SSLContext)}}
      * - with retry logic.
      */
     @Test
@@ -379,7 +384,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PATCH succeeds
-     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#method(String, URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -389,7 +394,7 @@ public final class UrlConnectionHttpClientTest {
 
     /**
      * Verify that HTTP PATCH succeeds
-     * - via {@link UrlConnectionHttpClient#patch(URL, Map, byte[])}
+     * - via {@link UrlConnectionHttpClient#patch(URL, Map, byte[], SSLContext)}
      * - without retry logic.
      */
     @Test
@@ -921,7 +926,7 @@ public final class UrlConnectionHttpClientTest {
 
         try {
             assertEquals(2, HttpUrlConnectionFactory.getMockedConnectionCountInQueue());
-            final HttpResponse response = sendWithMethodWithoutRetry(HttpTestMethod.POST);
+            sendWithMethodWithoutRetry(HttpTestMethod.POST);
         } catch (final IOException e) {
             if (!(e instanceof SocketTimeoutException)) {
                 fail();
@@ -944,11 +949,11 @@ public final class UrlConnectionHttpClientTest {
             }
 
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().get(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().get(url, headers, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.get(url, headers);
+                return sNoRetryClient.get(url, headers, null);
             }
         },
         HEAD {
@@ -957,38 +962,38 @@ public final class UrlConnectionHttpClientTest {
             }
 
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().head(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().head(url, headers, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.head(url, headers);
+                return sNoRetryClient.head(url, headers, null);
             }
         },
         PUT {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().put(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().put(url, headers, body, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.put(url, headers, body);
+                return sNoRetryClient.put(url, headers, body, null);
             }
         },
         POST {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().post(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().post(url, headers, body, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.post(url, headers, body);
+                return sNoRetryClient.post(url, headers, body, null);
             }
         },
         OPTIONS {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().options(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().options(url, headers, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.options(url, headers);
+                return sNoRetryClient.options(url, headers, null);
             }
         },
         TRACE {
@@ -997,29 +1002,29 @@ public final class UrlConnectionHttpClientTest {
             }
 
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().trace(url, headers);
+                return UrlConnectionHttpClient.getDefaultInstance().trace(url, headers, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.trace(url, headers);
+                return sNoRetryClient.trace(url, headers, null);
             }
         },
         PATCH {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().patch(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().patch(url, headers, body, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.patch(url, headers, body);
+                return sNoRetryClient.patch(url, headers, body, null);
             }
         },
         DELETE {
             HttpResponse specific(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return UrlConnectionHttpClient.getDefaultInstance().delete(url, headers, body);
+                return UrlConnectionHttpClient.getDefaultInstance().delete(url, headers, body, null);
             }
 
             HttpResponse specificNoRetry(URL url, Map<String, String> headers, byte[] body) throws Exception {
-                return sNoRetryClient.delete(url, headers, body);
+                return sNoRetryClient.delete(url, headers, body, null);
             }
         };
 
@@ -1070,7 +1075,8 @@ public final class UrlConnectionHttpClientTest {
                 method.name(),
                 validRequestUrl,
                 method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
-                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null
+                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null,
+                null
         );
     }
 
@@ -1080,7 +1086,8 @@ public final class UrlConnectionHttpClientTest {
                 method.name(),
                 validRequestUrl,
                 method.canHaveBody() ? Collections.singletonMap(CONTENT_TYPE_KEY, CONTENT_TYPE_VALUE) : Collections.<String, String>emptyMap(),
-                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null
+                method.canHaveBody() ? UUID.nameUUIDFromBytes((validRequestUrl.toString() + method).getBytes(UTF8)).toString().getBytes(UTF8) : null,
+                null
         );
     }
 
@@ -1091,5 +1098,67 @@ public final class UrlConnectionHttpClientTest {
 
     private URL getRequestUrl() throws MalformedURLException {
         return new URL("https://login.microsoftonline.com/common");
+    }
+
+    /**
+     * Note: The following tests are made against https://badssl.com
+     *       and they could change the URL/configuration at any time.
+     *       If these test fails, check the website first.
+     */
+
+    @Test
+    public void testNoSSL() throws IOException {
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("http://http.badssl.com/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(response.getStatusCode(), 200);
+        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "");
+    }
+
+    @Test
+    public void testTLS1() throws IOException {
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://tls-v1-0.badssl.com:1010/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(response.getStatusCode(), 200);
+        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1");
+    }
+
+    @Test
+    public void testTLS11() throws IOException {
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://tls-v1-1.badssl.com:1011/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(response.getStatusCode(), 200);
+        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.1");
+    }
+
+    @Test
+    public void testTLS12() throws IOException {
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://tls-v1-2.badssl.com:1012/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(response.getStatusCode(), 200);
+        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.2");
     }
 }
