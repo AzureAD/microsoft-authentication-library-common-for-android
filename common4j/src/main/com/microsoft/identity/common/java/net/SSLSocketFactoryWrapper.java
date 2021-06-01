@@ -60,7 +60,7 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     @Accessors(prefix = "s")
     static String sLastHandshakeTLSversion = "";
 
-    private static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
+    private static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"};
 
     private final SSLSocketFactory mBaseSocketFactory;
 

@@ -1161,4 +1161,18 @@ public final class UrlConnectionHttpClientTest {
         Assert.assertEquals(response.getStatusCode(), 200);
         Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.2");
     }
+
+    @Test
+    public void testPickHighestTLS() throws IOException {
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://www.microsoft.com/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(response.getStatusCode(), 200);
+        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.2");
+    }
 }
