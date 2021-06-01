@@ -27,6 +27,10 @@ import com.microsoft.identity.common.java.logging.Logger;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javax.net.SocketFactory;
 import javax.net.ssl.HandshakeCompletedEvent;
@@ -53,6 +57,12 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
 
     private static final SSLSocketFactoryWrapper sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) getDefault());
 
+    // Required/recommended cipher for TLS 1.3
+    // See: https://datatracker.ietf.org/doc/html/rfc8446#section-9.1
+    private static final String TLS_AES_128_GCM_SHA256 = "TLS_AES_128_GCM_SHA256";
+    private static final String TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
+    private static final String TLS_CHACHA20_POLY1305_SHA256 = "TLS_CHACHA20_POLY1305_SHA256";
+
     // Gets TLS version of the latest-established socket connection. For testing only.
     // NOTE: This onMethod thing doesn't generate javadoc, but this method is only exposed for testing only.
     @Getter(value = AccessLevel.PACKAGE, onMethod_={@Synchronized})
@@ -60,7 +70,7 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     @Accessors(prefix = "s")
     static String sLastHandshakeTLSversion = "";
 
-    private static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"};
+    private static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
 
     private final SSLSocketFactory mBaseSocketFactory;
 
@@ -112,7 +122,8 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     private Socket modifyEnabledSockets(Socket socket) {
         if (socket instanceof SSLSocket) {
             final SSLSocket sslSocket = (SSLSocket) socket;
-            sslSocket.setEnabledProtocols(SUPPORTED_SSL_PROTOCOLS);
+            sslSocket.setEnabledProtocols(getEnabledProtocols(sslSocket));
+            sslSocket.setEnabledCipherSuites(getEnabledCipherSuites(sslSocket));
             sslSocket.addHandshakeCompletedListener(new HandshakeCompletedListener() {
                 @Override
                 public void handshakeCompleted(final HandshakeCompletedEvent event) {
@@ -121,6 +132,46 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
             });
         }
         return socket;
+    }
+
+
+    private String[] getEnabledProtocols(@NonNull SSLSocket sslSocket) {
+        final List<String> enabledProtocols = new ArrayList<>();
+
+        final List<String> supportedProtocols = Arrays.asList(sslSocket.getSupportedProtocols());
+        for (final String protocol: SUPPORTED_SSL_PROTOCOLS){
+            if (supportedProtocols.contains(protocol)){
+                enabledProtocols.add(protocol);
+            }
+        }
+
+        final String[] array = new String[enabledProtocols.size()];
+        enabledProtocols.toArray(array);
+        return array;
+    }
+
+    /**
+     * Add required cipher for TLS 1.3
+     * See: https://datatracker.ietf.org/doc/html/rfc8446#section-9.1
+     */
+    private String[] getEnabledCipherSuites(@NonNull SSLSocket sslSocket) {
+        final List<String> enabledCipherSuites = new ArrayList<>();
+        Collections.addAll(enabledCipherSuites, sslSocket.getEnabledCipherSuites());
+
+        final List<String> supportedCipherSuites = Arrays.asList(sslSocket.getSupportedCipherSuites());
+        if (supportedCipherSuites.contains(TLS_AES_128_GCM_SHA256)) {
+            enabledCipherSuites.add(TLS_AES_128_GCM_SHA256);
+        }
+        if (supportedCipherSuites.contains(TLS_AES_256_GCM_SHA384)) {
+            enabledCipherSuites.add(TLS_AES_256_GCM_SHA384);
+        }
+        if (supportedCipherSuites.contains(TLS_CHACHA20_POLY1305_SHA256)) {
+            enabledCipherSuites.add(TLS_CHACHA20_POLY1305_SHA256);
+        }
+
+        final String[] array = new String[enabledCipherSuites.size()];
+        enabledCipherSuites.toArray(array);
+        return array;
     }
 
     /**
