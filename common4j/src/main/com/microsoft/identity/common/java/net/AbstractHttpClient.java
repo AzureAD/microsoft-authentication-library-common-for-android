@@ -22,16 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
+
+/**
+ * A class that simplifies its child's implementation, by making every methods in {@link HttpClient}
+ * calling a single method - the only method the child class needs to override.
+ * */
 public abstract class AbstractHttpClient implements HttpClient {
 
     @Override

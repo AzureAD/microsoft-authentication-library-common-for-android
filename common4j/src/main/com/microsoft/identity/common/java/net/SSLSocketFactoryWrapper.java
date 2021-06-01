@@ -48,7 +48,7 @@ import lombok.Synchronized;
 import lombok.experimental.Accessors;
 
 /**
- * This class is a SSLSocketFactory wrapper that explicitly enables TLSv1.2.
+ * This class is a SSLSocketFactory wrapper that supports Higher TLS by default.
  * In Android, the default socket would return one that only supports up to TLSv1.1 if API<20
  * reference: https://developer.android.com/reference/javax/net/ssl/SSLSocket
  */
@@ -57,12 +57,6 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
 
     private static final SSLSocketFactoryWrapper sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) getDefault());
 
-    // Required/recommended cipher for TLS 1.3
-    // See: https://datatracker.ietf.org/doc/html/rfc8446#section-9.1
-    private static final String TLS_AES_128_GCM_SHA256 = "TLS_AES_128_GCM_SHA256";
-    private static final String TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
-    private static final String TLS_CHACHA20_POLY1305_SHA256 = "TLS_CHACHA20_POLY1305_SHA256";
-
     // Gets TLS version of the latest-established socket connection. For testing only.
     // NOTE: This onMethod thing doesn't generate javadoc, but this method is only exposed for testing only.
     @Getter(value = AccessLevel.PACKAGE, onMethod_={@Synchronized})
@@ -70,6 +64,15 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     @Accessors(prefix = "s")
     static String sLastHandshakeTLSversion = "";
 
+    // Required/recommended cipher for TLS 1.3
+    // See: https://datatracker.ietf.org/doc/html/rfc8446#section-9.1
+    private static final String TLS_AES_128_GCM_SHA256 = "TLS_AES_128_GCM_SHA256";
+    private static final String TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
+    private static final String TLS_CHACHA20_POLY1305_SHA256 = "TLS_CHACHA20_POLY1305_SHA256";
+
+    /**
+     * SSL Protocols that our library supports.
+     */
     private static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
 
     private final SSLSocketFactory mBaseSocketFactory;
@@ -134,7 +137,10 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
         return socket;
     }
 
-
+    /**
+     * Returns a list of protocols that are both supported by us {@see SUPPORTED_SSL_PROTOCOLS},
+     * and by the connection itself.
+     * */
     private String[] getEnabledProtocols(@NonNull SSLSocket sslSocket) {
         final List<String> enabledProtocols = new ArrayList<>();
 
