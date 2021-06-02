@@ -10,19 +10,22 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.model;
 
 import java.util.Objects;
-
+import java.util.Arrays;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-
-import io.swagger.annotations.ApiModelProperty;
-
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.IOException;
 /**
  * LabAvailability
  */
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2019-10-29T14:56:43.172-07:00")
+
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
 public class LabAvailability {
   @SerializedName("labName")
   private String labName = null;
@@ -48,7 +51,7 @@ public class LabAvailability {
    * Get labName
    * @return labName
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getLabName() {
     return labName;
   }
@@ -66,7 +69,7 @@ public class LabAvailability {
    * Get region
    * @return region
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getRegion() {
     return region;
   }
@@ -84,7 +87,7 @@ public class LabAvailability {
    * Get status
    * @return status
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getStatus() {
     return status;
   }
@@ -102,7 +105,7 @@ public class LabAvailability {
    * Get id
    * @return id
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getId() {
     return id;
   }
@@ -120,7 +123,7 @@ public class LabAvailability {
    * Get active
    * @return active
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getActive() {
     return active;
   }
@@ -178,4 +181,3 @@ public class LabAvailability {
   }
 
 }
-
