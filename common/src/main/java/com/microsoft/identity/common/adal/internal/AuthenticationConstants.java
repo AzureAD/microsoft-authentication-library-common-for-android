@@ -1706,7 +1706,7 @@ public final class AuthenticationConstants {
         /**
          * An intent action specifying that the activity receiving the authorization result redirect should be destroyed.
          */
-        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY= "destroy_redirect_receiving_activity";
+        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION = "destroy_redirect_receiving_activity_action";
 
         /**
          * An intent action used to tell the activity used to launch custom tabs that it should re-launch in order to close the custom tabs UI
