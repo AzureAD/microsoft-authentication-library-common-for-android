@@ -9,7 +9,6 @@ import java.util.Date;
 public class AccessTokenRecordTest extends TestCase {
 
     public void testIsExpired() {
-
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         //When expiresOn is null
         try {
@@ -26,11 +25,9 @@ public class AccessTokenRecordTest extends TestCase {
         final String tomorrow = String.valueOf(Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()).getTime());
         accessTokenRecord.setExpiresOn(tomorrow);
         assertFalse(accessTokenRecord.isExpired());
-
     }
 
     public void testShouldRefresh() {
-
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
 
         //When refreshOn is null
@@ -45,7 +42,6 @@ public class AccessTokenRecordTest extends TestCase {
         final String tomorrow = String.valueOf(Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()).getTime());
         accessTokenRecord.setRefreshOn(tomorrow);
         assertFalse(accessTokenRecord.shouldRefresh());
-
     }
 
 }
