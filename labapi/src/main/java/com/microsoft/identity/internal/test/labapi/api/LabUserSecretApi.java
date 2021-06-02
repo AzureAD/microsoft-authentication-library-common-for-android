@@ -27,7 +27,7 @@ import java.io.IOException;
 
 
 import com.microsoft.identity.internal.test.labapi.model.CustomErrorResponse;
-import com.microsoft.identity.internal.test.labapi.model.CustomSuccessResponse;
+import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -35,14 +35,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LabPolicyInfoApi {
+public class LabUserSecretApi {
     private ApiClient apiClient;
 
-    public LabPolicyInfoApi() {
+    public LabUserSecretApi() {
         this(Configuration.getDefaultApiClient());
     }
 
-    public LabPolicyInfoApi(ApiClient apiClient) {
+    public LabUserSecretApi(ApiClient apiClient) {
         this.apiClient = apiClient;
     }
 
@@ -55,20 +55,23 @@ public class LabPolicyInfoApi {
     }
 
     /**
-     * Build call for apiLabPolicyInfoGet
+     * Build call for apiLabUserSecretGet
+     * @param secret Enter the Lab Name as the Secret Param (optional)
      * @param progressListener Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call apiLabPolicyInfoGetCall(final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call apiLabUserSecretGetCall(String secret, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
         
         // create path and map variables
-        String localVarPath = "/api/LabPolicyInfo";
+        String localVarPath = "/api/LabUserSecret";
 
         List<Pair> localVarQueryParams = new ArrayList<Pair>();
         List<Pair> localVarCollectionQueryParams = new ArrayList<Pair>();
+        if (secret != null)
+        localVarQueryParams.addAll(apiClient.parameterToPair("secret", secret));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -103,9 +106,9 @@ public class LabPolicyInfoApi {
     }
     
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call apiLabPolicyInfoGetValidateBeforeCall(final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    private com.squareup.okhttp.Call apiLabUserSecretGetValidateBeforeCall(String secret, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         
-        com.squareup.okhttp.Call call = apiLabPolicyInfoGetCall(progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = apiLabUserSecretGetCall(secret, progressListener, progressRequestListener);
         return call;
 
         
@@ -115,36 +118,39 @@ public class LabPolicyInfoApi {
     }
 
     /**
-     * Will give you the different Policies available to be used with Create Temp User / Enable/Disable Policy API
-     * Policy will be listed as GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. Use the LabUserInfo endpoint to query the user policy info.
-     * @return CustomSuccessResponse
+     * Use LabSecret EndPoint Instead of this. This will be deprecated end of March 2020  You need to provide the secret in Query String.
+     * If not found it will return the KeyVault providers generic error message &#x27;not found&#x27;
+     * @param secret Enter the Lab Name as the Secret Param (optional)
+     * @return SecretResponse
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public CustomSuccessResponse apiLabPolicyInfoGet() throws ApiException {
-        ApiResponse<CustomSuccessResponse> resp = apiLabPolicyInfoGetWithHttpInfo();
+    public SecretResponse apiLabUserSecretGet(String secret) throws ApiException {
+        ApiResponse<SecretResponse> resp = apiLabUserSecretGetWithHttpInfo(secret);
         return resp.getData();
     }
 
     /**
-     * Will give you the different Policies available to be used with Create Temp User / Enable/Disable Policy API
-     * Policy will be listed as GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. Use the LabUserInfo endpoint to query the user policy info.
-     * @return ApiResponse&lt;CustomSuccessResponse&gt;
+     * Use LabSecret EndPoint Instead of this. This will be deprecated end of March 2020  You need to provide the secret in Query String.
+     * If not found it will return the KeyVault providers generic error message &#x27;not found&#x27;
+     * @param secret Enter the Lab Name as the Secret Param (optional)
+     * @return ApiResponse&lt;SecretResponse&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<CustomSuccessResponse> apiLabPolicyInfoGetWithHttpInfo() throws ApiException {
-        com.squareup.okhttp.Call call = apiLabPolicyInfoGetValidateBeforeCall(null, null);
-        Type localVarReturnType = new TypeToken<CustomSuccessResponse>(){}.getType();
+    public ApiResponse<SecretResponse> apiLabUserSecretGetWithHttpInfo(String secret) throws ApiException {
+        com.squareup.okhttp.Call call = apiLabUserSecretGetValidateBeforeCall(secret, null, null);
+        Type localVarReturnType = new TypeToken<SecretResponse>(){}.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
     /**
-     * Will give you the different Policies available to be used with Create Temp User / Enable/Disable Policy API (asynchronously)
-     * Policy will be listed as GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO. Use the LabUserInfo endpoint to query the user policy info.
+     * Use LabSecret EndPoint Instead of this. This will be deprecated end of March 2020  You need to provide the secret in Query String. (asynchronously)
+     * If not found it will return the KeyVault providers generic error message &#x27;not found&#x27;
+     * @param secret Enter the Lab Name as the Secret Param (optional)
      * @param callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call apiLabPolicyInfoGetAsync(final ApiCallback<CustomSuccessResponse> callback) throws ApiException {
+    public com.squareup.okhttp.Call apiLabUserSecretGetAsync(String secret, final ApiCallback<SecretResponse> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -165,8 +171,8 @@ public class LabPolicyInfoApi {
             };
         }
 
-        com.squareup.okhttp.Call call = apiLabPolicyInfoGetValidateBeforeCall(progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CustomSuccessResponse>(){}.getType();
+        com.squareup.okhttp.Call call = apiLabUserSecretGetValidateBeforeCall(secret, progressListener, progressRequestListener);
+        Type localVarReturnType = new TypeToken<SecretResponse>(){}.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

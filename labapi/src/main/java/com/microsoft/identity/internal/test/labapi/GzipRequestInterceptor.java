@@ -10,7 +10,6 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi;
 
 import com.squareup.okhttp.*;
