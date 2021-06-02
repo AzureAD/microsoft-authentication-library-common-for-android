@@ -41,7 +41,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 /**
  * Authorization activity for addressing authorization activities that are launched within the task
- * associated with the activity provided as a parameter to InteractiveTokenCommand
+ * associated with the activity provided as a parameter to InteractiveTokenCommand.
  *
  * NOTE: this is only used when library configuration (set in MSAL) indicates that it should be used.
  * DEFAULT today is to create a new task for authorization; however this leads to problems if the user
