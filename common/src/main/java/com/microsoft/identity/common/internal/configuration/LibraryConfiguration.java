@@ -54,7 +54,7 @@ public class LibraryConfiguration {
         return sInstance;
     }
 
-    public static synchronized void intializeLibraryConfiguration(LibraryConfiguration config){
+    public static synchronized void intializeLibraryConfiguration(@Nonnull final LibraryConfiguration config){
         if(sInstance == null){
             sInstance = config;
         }else{
