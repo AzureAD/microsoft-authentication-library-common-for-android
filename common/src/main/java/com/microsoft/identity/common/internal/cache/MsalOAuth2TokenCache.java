@@ -899,6 +899,8 @@ public class MsalOAuth2TokenCache
                                                            @NonNull AccountRecord accountRecord) {
         final List<IdTokenRecord> result = new ArrayList<>();
 
+        // Load all the credentials to inspect once, such that we don't need to requery the cache
+        // pass these into the new getCredentialsFilteredBy overload, rather than hit disk again
         final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
 
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
