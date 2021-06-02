@@ -140,14 +140,14 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
         //onNewIntent will change the value of getIntent from what was used to create the activity
         //to the intent that was communicated to an existing activity
         if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
-            if(CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
-                Bundle arguments = new Bundle();
-                arguments.putBoolean("RESPONSE", true);
-                mFragment.setArguments(arguments);
-                mFragment.completeAuthorizationInBrowserFlow(getIntent().getStringExtra("RESPONSE_URI"));
-                setResult(RESULT_OK);
-                unregisterAndFinish();
-            }
+
+            Bundle arguments = new Bundle();
+            arguments.putBoolean("RESPONSE", true);
+            mFragment.setArguments(arguments);
+            mFragment.completeAuthorizationInBrowserFlow(getIntent().getStringExtra("RESPONSE_URI"));
+            setResult(RESULT_OK);
+            unregisterAndFinish();
+
         }
         if (mCloseCustomTabs) {
             // The custom tab was closed without getting a result.
