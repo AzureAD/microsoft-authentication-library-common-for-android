@@ -46,9 +46,9 @@ import java.util.concurrent.Future;
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
-    private WeakReference<Context> mReferencedApplicationContext;
-    private WeakReference<Activity> mReferencedActivity;
-    private WeakReference<Fragment> mReferencedFragment;
+    private final WeakReference<Context> mReferencedApplicationContext;
+    private final WeakReference<Activity> mReferencedActivity;
+    private final WeakReference<Fragment> mReferencedFragment;
 
     /**
      * Constructor of AuthorizationStrategy.

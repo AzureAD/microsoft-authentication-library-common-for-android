@@ -53,15 +53,16 @@ public class AuthorizationActivityFactory {
 
     /**
      * Return the correct authorization activity based on library configuration.
-     * @param context Android application context
-     * @param authIntent Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
-     * @param requestUrl The authorization request in URL format
-     * @param redirectUri The expected redirect URI associated with the authorization request
-     * @param requestHeaders Additional HTTP headers included with the authorization request
-     * @param authorizationAgent The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
-     * @param webViewZoomEnabled This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
+     *
+     * @param context                    Android application context
+     * @param authIntent                 Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
+     * @param requestUrl                 The authorization request in URL format
+     * @param redirectUri                The expected redirect URI associated with the authorization request
+     * @param requestHeaders             Additional HTTP headers included with the authorization request
+     * @param authorizationAgent         The means by which authorization should be performed (EMBEDDED, WEBVIEW) NOTE: This should move to library configuration
+     * @param webViewZoomEnabled         This parameter is specific to embedded and controls whether webview zoom is enabled... NOTE: Needs refactoring
      * @param webViewZoomControlsEnabled This parameter is specific to embedded and controls whether webview zoom controls are enabled... NOTE: Needs refactoring
-     * @return
+     * @return An android Intent which will be used by Android to create an AuthorizationActivity
      */
     public static Intent getAuthorizationActivityIntent(final Context context,
                                                         final Intent authIntent,
@@ -76,9 +77,9 @@ public class AuthorizationActivityFactory {
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
         } else {
-            if(libraryConfig.isAuthorizationInCurrentTask()) {
+            if (libraryConfig.isAuthorizationInCurrentTask()) {
                 intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
-            }else{
+            } else {
                 intent = new Intent(context, AuthorizationActivity.class);
             }
         }
@@ -96,9 +97,13 @@ public class AuthorizationActivityFactory {
 
     /**
      * Returns the correct authorization fragment for local (non-broker) authorization flows.
-     * Fragments include: WebView, Browser, CurrentTaskBrowser (Which implements a different approach to closing custom tabs)
+     * Fragments include:
+     * {@link WebViewAuthorizationFragment}
+     * {@link BrowserAuthorizationFragment}
+     * {@link CurrentTaskBrowserAuthorizationFragment}
+     *
      * @param intent
-     * @return
+     * @return returns an Fragment that's used as to authorize a token request.
      */
     public static Fragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
         Fragment fragment;
@@ -110,9 +115,9 @@ public class AuthorizationActivityFactory {
         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
             fragment = new WebViewAuthorizationFragment();
         } else {
-            if(libraryConfig.isAuthorizationInCurrentTask()) {
+            if (libraryConfig.isAuthorizationInCurrentTask()) {
                 fragment = new CurrentTaskBrowserAuthorizationFragment();
-            }else{
+            } else {
                 fragment = new BrowserAuthorizationFragment();
             }
         }

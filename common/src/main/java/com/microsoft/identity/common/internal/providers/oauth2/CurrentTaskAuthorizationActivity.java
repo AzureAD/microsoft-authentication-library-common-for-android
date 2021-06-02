@@ -35,13 +35,13 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.microsoft.identity.common.internal.ui.DualScreenActivity;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.DESTROY_REDIRECT_RECEIVING_ACTIVITY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REFRESH_TO_CLOSE;
 
 /**
  * Authorization activity for addressing authorization activities that are launched within the task
- * associated with the activity provided as a parameter to acquireTokenInteractive
+ * associated with the activity provided as a parameter to InteractiveTokenCommand
  *
  * NOTE: this is only used when library configuration (set in MSAL) indicates that it should be used.
  * DEFAULT today is to create a new task for authorization; however this leads to problems if the user
@@ -124,7 +124,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         if (REFRESH_TO_CLOSE.equals(intent.getAction())) {
-            Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY);
+            Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION);
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
             unregisterAndFinish();
         }

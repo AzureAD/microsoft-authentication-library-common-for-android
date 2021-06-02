@@ -24,9 +24,11 @@ package com.microsoft.identity.common.internal.configuration;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 
+import lombok.NonNull;
+
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.experimental.SuperBuilder;
 
 /**
  * Holds configuration settings that are global in scope.
@@ -34,16 +36,11 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @EqualsAndHashCode()
-@Builder
+@Builder()
 public class LibraryConfiguration {
 
     private static final String TAG = LibraryConfiguration.class.getSimpleName();
     private static LibraryConfiguration sInstance = null;
-
-    // private constructor restricted to this class itself
-    private LibraryConfiguration() {
-
-    }
 
     // static method to create instance of Singleton class
     public synchronized static LibraryConfiguration getInstance() {
@@ -54,15 +51,15 @@ public class LibraryConfiguration {
         return sInstance;
     }
 
-    public static synchronized void intializeLibraryConfiguration(@Nonnull final LibraryConfiguration config){
-        if(sInstance == null){
+    public static synchronized void intializeLibraryConfiguration(@NonNull final LibraryConfiguration config) {
+        if (sInstance == null) {
             sInstance = config;
-        }else{
+        } else {
             Logger.warn(TAG, "MsalConfiguration was already initialized");
         }
     }
 
-    private static synchronized LibraryConfiguration createDefaultInstance(){
+    private static synchronized LibraryConfiguration createDefaultInstance() {
         return LibraryConfiguration.builder().authorizationInCurrentTask(false).build();
     }
 

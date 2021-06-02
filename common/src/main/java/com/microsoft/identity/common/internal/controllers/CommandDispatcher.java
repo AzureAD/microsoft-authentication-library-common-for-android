@@ -537,7 +537,7 @@ public class CommandDispatcher {
             final LocalBroadcastManager localBroadcastManager =
                     LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
-            // only send broadcast to cancel if within broker
+            //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
             if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
                 localBroadcastManager.sendBroadcast(
