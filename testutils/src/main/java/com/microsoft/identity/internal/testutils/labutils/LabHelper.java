@@ -49,7 +49,7 @@ public class LabHelper {
         LabInfo labInfo;
         try {
             // return the first object
-            labInfo = labApi.getLabName(labName).get(0);
+            labInfo = labApi.apiLabLabnameGet(labName).get(0);
         } catch (ApiException ex) {
             throw new RuntimeException("Error retrieving lab info", ex);
         }
@@ -80,7 +80,7 @@ public class LabHelper {
         SecretResponse secretResponse;
 
         try {
-            secretResponse = labSecretApi.getLabUserSecret(secretName);
+            secretResponse = labSecretApi.apiLabSecretGet(secretName);
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving secret from lab.", ex);
         }
