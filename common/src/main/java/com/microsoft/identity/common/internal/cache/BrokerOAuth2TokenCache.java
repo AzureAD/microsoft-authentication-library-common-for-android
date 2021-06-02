@@ -1703,7 +1703,7 @@ public class BrokerOAuth2TokenCache
      *
      * @param clientId          The target client id.
      * @param environment       The target environment.
-     * @param callingProcessUid The uid of the calling process.
+     * @param callingProcessUid The uid of the calling process. This value is unique to the calling app and is assigned during installation.
      * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
      * cache was found.
      */
