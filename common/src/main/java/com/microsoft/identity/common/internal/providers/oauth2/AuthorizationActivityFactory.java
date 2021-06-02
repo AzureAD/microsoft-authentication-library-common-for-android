@@ -95,7 +95,7 @@ public class AuthorizationActivityFactory {
     }
 
     /**
-     * Returns the correct authorization fragment for local (non-broker) authorization flows
+     * Returns the correct authorization fragment for local (non-broker) authorization flows.
      * Fragments include: WebView, Browser, CurrentTaskBrowser (Which implements a different approach to closing custom tabs)
      * @param intent
      * @return
