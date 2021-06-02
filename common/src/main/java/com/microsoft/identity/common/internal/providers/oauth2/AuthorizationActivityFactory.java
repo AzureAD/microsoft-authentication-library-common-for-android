@@ -52,7 +52,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 public class AuthorizationActivityFactory {
 
     /**
-     * Return the correct authorization activity based on library configuration
+     * Return the correct authorization activity based on library configuration.
      * @param context Android application context
      * @param authIntent Android intent used by the authorization activity to launch the specific implementation of authorization (BROWSER, EMBEDDED)
      * @param requestUrl The authorization request in URL format
