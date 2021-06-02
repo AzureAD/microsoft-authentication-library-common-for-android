@@ -47,7 +47,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.WEB_VIEW_ZOOM_ENABLED;
 
 /**
- * Constructs intents and/or fragments for interactive requests based on library configuration and current request
+ * Constructs intents and/or fragments for interactive requests based on library configuration and current request.
  */
 public class AuthorizationActivityFactory {
 
