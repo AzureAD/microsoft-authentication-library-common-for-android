@@ -34,7 +34,7 @@ import lombok.experimental.SuperBuilder;
  */
 @Getter
 @EqualsAndHashCode()
-@SuperBuilder(toBuilder = true)
+@Builder
 public class LibraryConfiguration {
 
     private static final String TAG = LibraryConfiguration.class.getSimpleName();
