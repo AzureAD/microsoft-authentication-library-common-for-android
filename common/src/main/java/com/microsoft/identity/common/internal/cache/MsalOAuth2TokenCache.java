@@ -406,7 +406,7 @@ public class MsalOAuth2TokenCache
                 "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
         );
 
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_MS_STS.equals(
                 accountRecord.getAuthorityType()
         );
 
@@ -556,7 +556,7 @@ public class MsalOAuth2TokenCache
                 "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
         );
 
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_MS_STS.equals(
                 accountRecord.getAuthorityType()
         );
 
@@ -689,7 +689,7 @@ public class MsalOAuth2TokenCache
                              @NonNull final AbstractAuthenticationScheme authScheme) {
         Telemetry.emit(new CacheStartEvent());
 
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_MS_STS.equals(
                 account.getAuthorityType()
         );
 

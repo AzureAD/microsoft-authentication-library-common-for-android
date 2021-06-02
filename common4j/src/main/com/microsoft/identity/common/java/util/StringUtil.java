@@ -62,26 +62,19 @@ public class StringUtil {
     }
 
     /**
-     * Counts the number of occurrences of one String in another.
+     * Counts the number of occurrences of one String in another (case-insensitive).
      *
-     * @param str
-     * @param subString
-     * @return int
+     * @param sourceString  A string that might contain the other string.
+     * @param subString     A 'keyword' string that we use to count the occurrences.
+     * @return # of matches
      */
-    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
-        int count = 0;
-
-        if (isNullOrEmpty(str) || isNullOrEmpty(subString)) {
-            return count;
+    public static int countMatches(@Nullable final String sourceString, @Nullable final String subString) {
+        if (isNullOrEmpty(sourceString) || isNullOrEmpty(subString)) {
+            return 0;
         }
 
-        for (int i = 0; i <= (str.length() - subString.length()); i++) {
-            if (str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
-                count++;
-            }
-        }
-
-        return count;
+        final String truncatedSourceString = sourceString.toLowerCase().replace(subString.toLowerCase(), "");
+        return (sourceString.length() - truncatedSourceString.length()) / subString.length();
     }
 
 }

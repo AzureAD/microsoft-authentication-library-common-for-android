@@ -28,15 +28,19 @@ import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.UrlUtil;
 
 import org.apache.http.client.utils.URIBuilder;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -47,7 +51,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      */
     private static final long serialVersionUID = 6545759826515911472L;
 
-    private static final String AUTHORIZATION_ENDPOINT = "/oAuth2/v2.0/authorize";
+    private static final String AUTHORIZATION_ENDPOINT = "oAuth2/v2.0/authorize";
 
     /**
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
@@ -73,7 +77,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      */
     @Expose()
     @SerializedName("cpVersion")
-    private final String mCpVersion;
+    private final String mCompanyPortalVersion;
 
     @Getter
     @Accessors(prefix = "m")
@@ -82,13 +86,13 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     /**
      * The original scope of the request.
      * Does not contain extra scopes to consent.
-     *
+     * <p>
      * TODO: We might want to remove this at some point.
-     *       I (Dome) don't think this belongs here.
-     *       It seems like this is plugged into AuthRequest just to be passed to TokenRequest.
-     *       That said, I'm not sure if removing this will have any unintended side effects,
-     *       so I'm keeping it here for now.
-     * */
+     * I (Dome) don't think this belongs here.
+     * It seems like this is plugged into AuthRequest just to be passed to TokenRequest.
+     * That said, I'm not sure if removing this will have any unintended side effects,
+     * so I'm keeping it here for now.
+     */
     @Getter
     @Accessors(prefix = "m")
     private final transient String mTokenScope;
@@ -130,7 +134,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mPrompt = builder.mPrompt;
         mUid = builder.mUid;
         mUtid = builder.mUtid;
-        mCpVersion = builder.mCpVersion;
+        mCompanyPortalVersion = builder.mCompanyPortalVersion;
         mDisplayableId = builder.mDisplayableId;
         mTokenScope = builder.mTokenScope;
         mSlice = builder.mSlice;
@@ -143,7 +147,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUtid;
         private String mDisplayableId;
         private String mTokenScope;
-        private String mCpVersion;
+        private String mCompanyPortalVersion;
         private String mPrompt;
         private AzureActiveDirectorySlice mSlice;
         private Map<String, String> mFlightParameters = new HashMap<>();
@@ -168,8 +172,8 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             return self();
         }
 
-        public MicrosoftStsAuthorizationRequest.Builder setInstalledCpVersion(String cpVersion) {
-            mCpVersion = cpVersion;
+        public MicrosoftStsAuthorizationRequest.Builder setInstalledCompanyPortalVersion(String companyPortalVersion) {
+            mCompanyPortalVersion = companyPortalVersion;
             return self();
         }
 
@@ -222,16 +226,16 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     @Override
-    public String getAuthorizationEndpoint() {
+    public String getAuthorizationEndpoint() throws URISyntaxException {
         final String methodName = ":getAuthorizationEndpoint";
 
-        if (this.getAuthority() == null){
+        if (this.getAuthority() == null) {
             Logger.error(TAG + methodName, "Authority is null. " +
                     "cannot construct authorization endpoint URL.", null);
             throw new IllegalStateException("Authority is null.");
         }
 
-        return this.getAuthority() + AUTHORIZATION_ENDPOINT;
+        return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT);
     }
 }
 

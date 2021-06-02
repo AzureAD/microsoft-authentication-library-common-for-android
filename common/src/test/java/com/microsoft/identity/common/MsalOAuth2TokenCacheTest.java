@@ -218,7 +218,7 @@ public class MsalOAuth2TokenCacheTest {
 
         // Used by mocks
         defaultTestBundleV1 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -237,7 +237,7 @@ public class MsalOAuth2TokenCacheTest {
         );
 
         defaultTestBundleV2 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -760,7 +760,7 @@ public class MsalOAuth2TokenCacheTest {
         );
 
         assertNotNull(account);
-        assertEquals(MicrosoftAccount.AUTHORITY_TYPE_V1_V2, account.getAuthorityType());
+        assertEquals(MicrosoftAccount.AUTHORITY_TYPE_MS_STS, account.getAuthorityType());
         Assert.assertEquals(LOCAL_ACCOUNT_ID, account.getLocalAccountId());
         Assert.assertEquals(USERNAME, account.getUsername());
         Assert.assertEquals(HOME_ACCOUNT_ID, account.getHomeAccountId());
@@ -776,7 +776,7 @@ public class MsalOAuth2TokenCacheTest {
         for (int ii = 0; ii < iterations; ii++) {
             testBundles.add(
                     new AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user@tenant.onmicrosoft.com",
                             HOME_ACCOUNT_ID,
@@ -947,7 +947,7 @@ public class MsalOAuth2TokenCacheTest {
         for (int ii = 0; ii < iterations; ii++) {
             testBundles.add(
                     new AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user" + ii + "@tenant.onmicrosoft.com",
                             UUID.randomUUID().toString(),
@@ -1001,7 +1001,7 @@ public class MsalOAuth2TokenCacheTest {
         for (int ii = 0; ii < iterations; ii++) {
             testBundles.add(
                     new AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user" + ii + "@tenant.onmicrosoft.com",
                             randomHomeAccountId,

@@ -72,7 +72,7 @@ public class AuthorizationRequestTests {
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testCreateUriFromAuthorizationRequest() throws URISyntaxException {
         final MockAuthorizationRequest request = new MockAuthorizationRequest.Builder()
                 .setClientId(MOCK_CLIENT_ID)
                 .setClaims(MOCK_CLAIMS)

@@ -102,14 +102,14 @@ public class MicrosoftStsAuthorizationRequestTests {
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
+    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, URISyntaxException {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setPrompt(DEFAULT_TEST_PROMPT)
                 .setUid(DEFAULT_TEST_UID)
                 .setUtid(DEFAULT_TEST_UTID)
-                .setInstalledCpVersion(TEST_CP_VERSION)
+                .setInstalledCompanyPortalVersion(TEST_CP_VERSION)
                 .setSlice(DEFAULT_TEST_SLICE)
                 .setFlightParameters(DEFAULT_FLIGHT_PARAMETER)
                 .setDisplayableId(DEFAULT_TEST_DISPLAYABLEID)
@@ -262,20 +262,22 @@ public class MicrosoftStsAuthorizationRequestTests {
     public void testRequestWithCpVersion() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
-                .setInstalledCpVersion(TEST_CP_VERSION)
+                .setInstalledCompanyPortalVersion(TEST_CP_VERSION)
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("CP Version", actualCodeRequestUrl.contains("cpVersion=" + TEST_CP_VERSION));
     }
-/*
+
     @Test
-    public void testSetFlightParameters() throws MalformedURLException, URISyntaxException {
+    public void testSetFlightParameters() throws URISyntaxException, MalformedURLException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
-                .setFlightParameters(TEST_FLIGHT_PARAMETER)
+                .setAuthority(getValidRequestUrl())
+                .setFlightParameters(DEFAULT_FLIGHT_PARAMETER)
                 .build();
 
         final String actualCodeRequestUrl = request.getAuthorizationRequestAsHttpRequest().toString();
-        assertTrue("CP Version", actualCodeRequestUrl.contains("cpVersion=" + TEST_CP_VERSION));
-    }*/
+        assertTrue("Flight Param 1", actualCodeRequestUrl.contains(MOCK_FLIGHT_QUERY_1 + "=" + MOCK_FLIGHT_VALUE_1));
+        assertTrue("Flight Param 2", actualCodeRequestUrl.contains(MOCK_FLIGHT_QUERY_2 + "=" + MOCK_FLIGHT_VALUE_2));
+    }
 }

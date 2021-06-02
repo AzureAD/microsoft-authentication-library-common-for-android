@@ -234,7 +234,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
                 '}';
     }
 
-    public abstract String getAuthorizationEndpoint();
+    public abstract String getAuthorizationEndpoint() throws URISyntaxException;
 
     /**
      * Constructs A request URI from this object.

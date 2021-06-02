@@ -48,7 +48,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public abstract class MicrosoftAccount extends BaseAccount {
 
-    public static final String AUTHORITY_TYPE_V1_V2 = "MSSTS";
+    public static final String AUTHORITY_TYPE_MS_STS = "MSSTS";
 
     private static final String TAG = MicrosoftAccount.class.getSimpleName();
 

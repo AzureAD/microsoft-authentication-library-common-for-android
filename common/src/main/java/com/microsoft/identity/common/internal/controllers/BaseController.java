@@ -266,7 +266,7 @@ public abstract class BaseController {
             try {
                 final PackageInfo packageInfo =
                         parameters.getAndroidApplicationContext().getPackageManager().getPackageInfo(COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
-                msBuilder.setInstalledCpVersion(packageInfo.versionName);
+                msBuilder.setInstalledCompanyPortalVersion(packageInfo.versionName);
             } catch (final PackageManager.NameNotFoundException e) {
                 // CP is not installed. No need to do anything.
             }

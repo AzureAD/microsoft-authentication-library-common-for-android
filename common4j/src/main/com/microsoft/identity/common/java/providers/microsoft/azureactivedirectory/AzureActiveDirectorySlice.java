@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 import com.google.gson.annotations.SerializedName;
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -35,6 +36,7 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 public class AzureActiveDirectorySlice {
 
     public final static String SLICE_PARAMETER = "slice";

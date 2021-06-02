@@ -146,7 +146,7 @@ public class BrokerOAuth2TokenCacheTest {
         );
 
         mDefaultFociTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -165,7 +165,7 @@ public class BrokerOAuth2TokenCacheTest {
         );
 
         mDefaultAppUidTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -188,7 +188,7 @@ public class BrokerOAuth2TokenCacheTest {
         for (int ii = 0; ii < mOtherAppTokenCaches.size(); ii++) {
             mOtherCacheTestBundles.add(
                     new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user@tenant.onmicrosoft.com",
                             HOME_ACCOUNT_ID,

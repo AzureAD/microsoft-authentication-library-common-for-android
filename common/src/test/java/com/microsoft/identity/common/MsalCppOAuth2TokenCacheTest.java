@@ -76,7 +76,7 @@ public class MsalCppOAuth2TokenCacheTest {
 
         // Credentials for testing
         mTestBundle = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,

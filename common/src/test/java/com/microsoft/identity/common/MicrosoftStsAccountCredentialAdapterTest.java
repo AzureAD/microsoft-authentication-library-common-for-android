@@ -54,7 +54,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import static com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_V1_V2;
+import static com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -160,7 +160,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         when(mockAccount.getRealm()).thenReturn(MOCK_TID);
         when(mockAccount.getLocalAccountId()).thenReturn(MOCK_OID);
         when(mockAccount.getUsername()).thenReturn(MOCK_PREFERRED_USERNAME);
-        when(mockAccount.getAuthorityType()).thenReturn(AUTHORITY_TYPE_V1_V2);
+        when(mockAccount.getAuthorityType()).thenReturn(AUTHORITY_TYPE_MS_STS);
         when(mockAccount.getFirstName()).thenReturn(MOCK_GIVEN_NAME);
         when(mockAccount.getName()).thenReturn(MOCK_NAME);
         when(mockAccount.getMiddleName()).thenReturn(MOCK_MIDDLE_NAME);
@@ -184,7 +184,7 @@ public class MicrosoftStsAccountCredentialAdapterTest {
         assertEquals(MOCK_TID, account.getRealm());
         assertEquals(MOCK_OID, account.getLocalAccountId());
         assertEquals(MOCK_PREFERRED_USERNAME, account.getUsername());
-        assertEquals(AUTHORITY_TYPE_V1_V2, account.getAuthorityType());
+        assertEquals(AUTHORITY_TYPE_MS_STS, account.getAuthorityType());
         assertEquals(MOCK_GIVEN_NAME, account.getFirstName());
         assertEquals(MOCK_FAMILY_NAME, account.getFamilyName());
         assertEquals(MOCK_MIDDLE_NAME, account.getMiddleName());

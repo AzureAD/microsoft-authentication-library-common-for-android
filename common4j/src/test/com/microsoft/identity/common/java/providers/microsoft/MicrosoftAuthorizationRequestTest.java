@@ -61,7 +61,7 @@ public class MicrosoftAuthorizationRequestTest {
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
+    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, URISyntaxException {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
