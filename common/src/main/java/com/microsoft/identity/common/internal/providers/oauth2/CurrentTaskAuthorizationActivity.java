@@ -115,7 +115,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     }
 
     /**
-     * This is invoked when an existing activities is re-used and provided with a new intent with additinoal information
+     * This is invoked when an existing activity is re-used and provided with a new intent with additional information
      * NOTE: It's important that you use setIntent update the intent associated with the activity.  Otherwise subsequent calls to
      * getIntent() in other event handlers will return the original intent or null
      * @param intent
