@@ -53,7 +53,7 @@ public class PolicyHelper {
         instance.setupApiClientWithAccessToken();
         final EnablePolicyApi enablePolicyApi = new EnablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.putPolicy(upn, policy);
+            final CustomSuccessResponse customSuccessResponse = enablePolicyApi.apiEnablePolicyPut(upn, policy);
             final String expectedResult = (policy +" Enabled for user : " + upn).toLowerCase();
             final String result = customSuccessResponse.getResult();
             Assert.assertNotNull(result);
@@ -76,7 +76,7 @@ public class PolicyHelper {
         instance.setupApiClientWithAccessToken();
         final DisablePolicyApi disablePolicyApi = new DisablePolicyApi();
         try {
-            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.put(upn, policy);
+            final CustomSuccessResponse customSuccessResponse = disablePolicyApi.apiDisablePolicyPut(upn, policy);
             final String expectedResult = (policy + " Disabled for user : " + upn).toLowerCase();
             final String result = customSuccessResponse.getResult();
             Assert.assertNotNull(result);
