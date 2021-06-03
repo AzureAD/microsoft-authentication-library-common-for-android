@@ -39,13 +39,10 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
-  - template: ../templates/steps/spotbugs.yml
-    parameters:
-      project: common
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
-      tasks: common:testLocalDebugUnitTest
+      tasks: common:testDebugUnitTest
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
 ...
