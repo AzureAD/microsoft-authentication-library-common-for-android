@@ -140,13 +140,6 @@ public class PackageHelper {
     public static String getBrokerRedirectUrl(final String packageName, final String signatureDigest) {
         if (!StringExtensions.isNullOrBlank(packageName)
                 && !StringExtensions.isNullOrBlank(signatureDigest)) {
-            // If the caller is the Authenticator, then use the broker redirect URI.
-            if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
-                    && (signatureDigest.equals(BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash)
-                    || signatureDigest.equals(BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash))) {
-                return AuthenticationConstants.Broker.BROKER_REDIRECT_URI;
-            }
-
             try {
                 return String.format("%s://%s/%s", AuthenticationConstants.Broker.REDIRECT_PREFIX,
                         URLEncoder.encode(packageName, AuthenticationConstants.ENCODING_UTF8),
