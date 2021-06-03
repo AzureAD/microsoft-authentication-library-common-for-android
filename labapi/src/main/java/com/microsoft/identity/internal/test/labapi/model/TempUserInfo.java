@@ -10,19 +10,22 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.model;
 
 import java.util.Objects;
-
+import java.util.Arrays;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-
-import io.swagger.annotations.ApiModelProperty;
-
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.IOException;
 /**
  * TempUserInfo
  */
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2019-10-29T14:56:43.172-07:00")
+
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
 public class TempUserInfo {
   @SerializedName("title")
   private String title = null;
@@ -51,7 +54,7 @@ public class TempUserInfo {
    * Get title
    * @return title
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getTitle() {
     return title;
   }
@@ -69,7 +72,7 @@ public class TempUserInfo {
    * Get upn
    * @return upn
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getUpn() {
     return upn;
   }
@@ -87,7 +90,7 @@ public class TempUserInfo {
    * Get groupAssignment
    * @return groupAssignment
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getGroupAssignment() {
     return groupAssignment;
   }
@@ -105,7 +108,7 @@ public class TempUserInfo {
    * Get accountLifeSpanInMinutes
    * @return accountLifeSpanInMinutes
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getAccountLifeSpanInMinutes() {
     return accountLifeSpanInMinutes;
   }
@@ -123,7 +126,7 @@ public class TempUserInfo {
    * Get currentTime
    * @return currentTime
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getCurrentTime() {
     return currentTime;
   }
@@ -141,7 +144,7 @@ public class TempUserInfo {
    * Get createdTime
    * @return createdTime
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getCreatedTime() {
     return createdTime;
   }
@@ -201,4 +204,3 @@ public class TempUserInfo {
   }
 
 }
-

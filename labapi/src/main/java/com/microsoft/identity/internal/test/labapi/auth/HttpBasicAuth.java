@@ -10,7 +10,6 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.auth;
 
 import com.microsoft.identity.internal.test.labapi.Pair;
@@ -19,6 +18,8 @@ import com.squareup.okhttp.Credentials;
 
 import java.util.Map;
 import java.util.List;
+
+import java.io.UnsupportedEncodingException;
 
 public class HttpBasicAuth implements Authentication {
     private String username;

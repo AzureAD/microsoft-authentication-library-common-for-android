@@ -10,7 +10,6 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.auth;
 
 import com.microsoft.identity.internal.test.labapi.Pair;
@@ -18,8 +17,7 @@ import com.microsoft.identity.internal.test.labapi.Pair;
 import java.util.Map;
 import java.util.List;
 
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2019-10-29T14:56:43.172-07:00")
-public class ApiKeyAuth implements Authentication {
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")public class ApiKeyAuth implements Authentication {
   private final String location;
   private final String paramName;
 
