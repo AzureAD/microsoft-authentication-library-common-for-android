@@ -1,13 +1,20 @@
 package com.microsoft.identity.common.internal.dto;
 
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
 import junit.framework.TestCase;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
 
+@RunWith(AndroidJUnit4.class)
 public class AccessTokenRecordTest extends TestCase {
 
+    @Test
     public void testIsExpired() {
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         //When expiresOn is null
@@ -27,6 +34,7 @@ public class AccessTokenRecordTest extends TestCase {
         assertFalse(accessTokenRecord.isExpired());
     }
 
+    @Test
     public void testShouldRefresh() {
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
 
