@@ -76,12 +76,10 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
-        } else {
-            if (libraryConfig.isAuthorizationInCurrentTask()) {
+        } else if (libraryConfig.isAuthorizationInCurrentTask()) {
                 intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
-            } else {
+        } else {
                 intent = new Intent(context, AuthorizationActivity.class);
-            }
         }
 
         intent.putExtra(AUTH_INTENT, authIntent);
