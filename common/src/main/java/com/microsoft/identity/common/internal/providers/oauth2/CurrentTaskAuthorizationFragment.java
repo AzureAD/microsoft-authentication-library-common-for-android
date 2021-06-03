@@ -143,9 +143,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
     @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     @Override
     public void onDestroy() {
-
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
-
         super.onDestroy();
     }
 
