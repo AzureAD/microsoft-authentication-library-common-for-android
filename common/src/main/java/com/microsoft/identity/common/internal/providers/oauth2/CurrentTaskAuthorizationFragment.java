@@ -125,7 +125,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
      * When authorization fragment is launched.  It will be launched on a new thread. (TODO: verify this)
      * Initialize based on value provided in intent.
      */
-    private static String setDiagnosticContextForNewThread(String correlationId) {
+    private static String setDiagnosticContextForNewThread(@Nonnull final String correlationId) {
         final String methodName = ":setDiagnosticContextForAuthorizationActivity";
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
