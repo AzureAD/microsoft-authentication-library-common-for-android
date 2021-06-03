@@ -569,7 +569,7 @@ public final class AuthenticationConstants {
         /**
          * String of ADAL version.
          */
-        public static final String ADAL_ID_VERSION = "x-client-Ver";
+        public static final String ADAL_ID_VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
         /**
          * String of ADAL id CPU.
@@ -1870,7 +1870,8 @@ public final class AuthenticationConstants {
         /**
          * The String representing the sdk version.
          */
-        public static final String VERSION = "x-client-Ver";
+        @Deprecated
+        public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
         /**
          * The String representing the MSAL SdkType.

@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -32,11 +32,10 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.commands.parameters.IHasExtraParameters;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -72,7 +71,7 @@ public final class ObjectMapper {
      * track of the last seen name, and then when we get called to skip a value, if it will be a string, save it in a map.
      * This map is linked to preserve the order of the parameters for testing use.  At the end of this process, we
      * store the resulting Iterable in the object that can accept it.
-     * 
+     *
      * In order to do this, we're providing a completely fake reader object to a new json reader and then
      * delegating all of its operations away.
      */
@@ -104,6 +103,7 @@ public final class ObjectMapper {
                         };
                         final JsonReader jsonReader = new JsonReader(reader) {
                             String lastName = null;
+
                             public void beginArray() throws IOException {
                                 in.beginArray();
                             }
@@ -244,13 +244,14 @@ public final class ObjectMapper {
 
         final StringBuilder builder = new StringBuilder();
 
-        Iterator<TreeMap.Entry<String, String>> iterator = fields.entrySet().iterator();
+        Iterator<Map.Entry<String, String>> iterator = fields.entrySet().iterator();
 
+        //URLEncoder.encode doesn't support (String, Charset) in JDK 7,8
         while (iterator.hasNext()) {
-            TreeMap.Entry<String, String> entry = iterator.next();
-            builder.append(URLEncoder.encode(entry.getKey(), AuthenticationConstants.ENCODING_UTF8));
+            Map.Entry<String, String> entry = iterator.next();
+            builder.append(URLEncoder.encode(entry.getKey(), AuthenticationConstants.ENCODING_UTF8_STRING));
             builder.append('=');
-            builder.append(URLEncoder.encode(entry.getValue(), AuthenticationConstants.ENCODING_UTF8));
+            builder.append(URLEncoder.encode(entry.getValue(), AuthenticationConstants.ENCODING_UTF8_STRING));
 
             if (iterator.hasNext()) {
                 builder.append('&');
@@ -290,7 +291,7 @@ public final class ObjectMapper {
      * Method to serialize the object into a map.
      *
      * @param object Object
-     * @return Map<String,Object>
+     * @return Map<String, Object>
      */
     public static Map<String, Object> serializeObjectHashMap(final Object object) {
         String json = ObjectMapper.serializeObjectToJsonString(object);
@@ -312,7 +313,7 @@ public final class ObjectMapper {
     public static Map<String, String> deserializeQueryStringToMap(final String queryString) {
         final Map<String, String> decodedUrlMap = new HashMap<>();
 
-        if (StringUtil.isEmpty(queryString)) {
+        if (StringUtil.isNullOrEmpty(queryString)) {
             return decodedUrlMap;
         }
 
@@ -329,7 +330,7 @@ public final class ObjectMapper {
                 final String key = URLDecoder.decode(elements[0], ENCODING_SCHEME);
                 final String value = URLDecoder.decode(elements[1], ENCODING_SCHEME);
 
-                if (!StringUtil.isEmpty(key) && !StringUtil.isEmpty(value)) {
+                if (!StringUtil.isNullOrEmpty(key) && !StringUtil.isNullOrEmpty(value)) {
                     decodedUrlMap.put(key, value);
                 }
             } catch (final UnsupportedEncodingException e) {
@@ -340,3 +341,4 @@ public final class ObjectMapper {
         return decodedUrlMap;
     }
 }
+

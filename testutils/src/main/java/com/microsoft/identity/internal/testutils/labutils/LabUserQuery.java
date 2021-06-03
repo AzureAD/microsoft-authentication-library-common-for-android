@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
+import lombok.EqualsAndHashCode;
+
+@EqualsAndHashCode
 public class LabUserQuery {
     public String userType;
     public String userRole;
@@ -32,65 +35,17 @@ public class LabUserQuery {
     public String b2cProvider;
     public String federationProvider;
     public String azureEnvironment;
+    public String guestHomeAzureEnvironment;
     public String appType;
     public String publicClient;
     public String signInAudience;
     public String guestHomedIn;
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-
-        if (obj == null || obj.getClass() != this.getClass()) {
-            return false;
-        }
-
-        LabUserQuery query = (LabUserQuery) obj;
-
-        return computeEquals(query.userType, this.userType) &&
-                computeEquals(query.userRole, this.userRole) &&
-                computeEquals(query.mfa, this.mfa) &&
-                computeEquals(query.protectionPolicy, this.protectionPolicy) &&
-                computeEquals(query.homeDomain, this.homeDomain) &&
-                computeEquals(query.homeUpn, this.homeUpn) &&
-                computeEquals(query.b2cProvider, this.b2cProvider) &&
-                computeEquals(query.federationProvider, this.federationProvider) &&
-                computeEquals(query.azureEnvironment, this.azureEnvironment) &&
-                computeEquals(query.appType, this.appType) &&
-                computeEquals(query.publicClient, this.publicClient) &&
-                computeEquals(query.signInAudience, this.signInAudience) &&
-                computeEquals(query.guestHomedIn, this.guestHomedIn);
-    }
-
-    @Override
-    public int hashCode() {
-        return computeHashCode(userType, 2) +
-                computeHashCode(mfa, 3) +
-                computeHashCode(protectionPolicy, 5) +
-                computeHashCode(homeDomain, 7) +
-                computeHashCode(homeUpn, 11) +
-                computeHashCode(b2cProvider, 13) +
-                computeHashCode(federationProvider, 17) +
-                computeHashCode(azureEnvironment, 19) +
-                computeHashCode(signInAudience, 23) +
-                computeHashCode(guestHomedIn, 29) +
-                computeHashCode(userRole, 31) +
-                computeHashCode(appType, 37) +
-                computeHashCode(publicClient, 41);
-
-    }
-
-    private boolean computeEquals(String a, String b) {
-        if (a == null && b == null) return true;
-        if (a == null || b == null) return false;
-        return a.equals(b);
-    }
-
-    private int computeHashCode(String s, int n) {
-        if (s == null) {
-            return 0;
-        }
-
-        return n * s.hashCode();
-    }
+    public String hasAltId;
+    public String altIdSource;
+    public String altIdType;
+    public String passwordPolicyValidityPeriod;
+    public String passwordPolicyNotificationDays;
+    public String tokenLifetimePolicy;
+    public String tokenType;
+    public String tokenLifetime;
 }
