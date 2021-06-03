@@ -40,7 +40,6 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.result.ResultFuture;
-import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;

@@ -106,8 +106,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
                 //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-                @SuppressWarnings(WarningType.unchecked_warning)
-                final AuthorizationResult result = mOAuth2Strategy
+                @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
                         .getAuthorizationResultFactory()
                         .createAuthorizationResult(
                                 resultCode,

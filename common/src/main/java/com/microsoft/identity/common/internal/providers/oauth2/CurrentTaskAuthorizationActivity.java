@@ -52,6 +52,7 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
     private static final String TAG = CurrentTaskAuthorizationActivity.class.getSimpleName();
 
     private CurrentTaskBrowserAuthorizationFragment mFragment;
+    //Determines whether we should close this activity onResume.
     private boolean mCloseCustomTabs = true;
     private BroadcastReceiver redirectReceiver;
 
@@ -70,7 +71,12 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
             throw ex;
         }
 
-        //This will be invoked when CurrentTaskAuthorizationActivity is not found in the current task stack... hence it will create fresh
+        //When the authorization response is received back to the library via an intent filter
+        //That activity will launch this one to handle the processing of the authorization response.
+        //It does that by invoked startActivityForResult.  If this activity is present in the same task stack/affinity
+        //As the activity which received the authorization result and the onNewIntent method will be invoked.
+        //If this activity is not in the same task stack/affinity then starting this activity will create a new instance
+        //In that new instance scneario the following will be executed.
         if (REDIRECT_RETURNED_ACTION.equals(getIntent().getAction())) {
             if(CurrentTaskBrowserAuthorizationFragment.class.isInstance(mFragment)) {
                 Bundle arguments = new Bundle();
@@ -121,10 +127,10 @@ public class CurrentTaskAuthorizationActivity extends DualScreenActivity {
      * @param intent
      */
     @Override
-    protected void onNewIntent(Intent intent) {
+    protected void onNewIntent(final Intent intent) {
         super.onNewIntent(intent);
         if (REFRESH_TO_CLOSE.equals(intent.getAction())) {
-            Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION);
+            final Intent broadcast = new Intent(DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION);
             LocalBroadcastManager.getInstance(this).sendBroadcast(broadcast);
             unregisterAndFinish();
         }

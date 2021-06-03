@@ -26,6 +26,7 @@ import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.WarningType;
@@ -103,30 +104,30 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
     }
 
     @SuppressWarnings(WarningType.unchecked_warning)
-    private GenericAuthorizationStrategy getBrowserAuthorizationStrategy(Context applicationContext,
-                                                                         Activity activity,
-                                                                         Fragment fragment,
-                                                                         boolean isBrokerRequest,
-                                                                         List<BrowserDescriptor> browserSafeList){
+    private GenericAuthorizationStrategy getBrowserAuthorizationStrategy(@NonNull final Context applicationContext,
+                                                                         @NonNull final Activity activity,
+                                                                         @Nullable final Fragment fragment,
+                                                                         @NonNull final boolean isBrokerRequest,
+                                                                         @NonNull final List<BrowserDescriptor> browserSafeList) {
         GenericAuthorizationStrategy genericAuthorizationStrategy = null;
 
-        if(LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()){
-            CurrentTaskBrowserAuthorizationStrategy currentTaskBrowserAuthorizationStrategy =
+        if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()) {
+            final CurrentTaskBrowserAuthorizationStrategy currentTaskBrowserAuthorizationStrategy =
                     new CurrentTaskBrowserAuthorizationStrategy(applicationContext,
                             activity,
                             fragment);
             currentTaskBrowserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
 
-            genericAuthorizationStrategy = (GenericAuthorizationStrategy)currentTaskBrowserAuthorizationStrategy;
-        }else{
-            BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+            genericAuthorizationStrategy = (GenericAuthorizationStrategy) currentTaskBrowserAuthorizationStrategy;
+        } else {
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
                     applicationContext,
                     activity,
                     fragment,
                     isBrokerRequest
             );
             browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
-            genericAuthorizationStrategy = (GenericAuthorizationStrategy)browserAuthorizationStrategy;
+            genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
         }
 
         return genericAuthorizationStrategy;

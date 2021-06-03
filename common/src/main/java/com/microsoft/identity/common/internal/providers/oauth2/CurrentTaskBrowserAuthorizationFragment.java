@@ -65,7 +65,6 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
 
     private static final String TAG = BrowserAuthorizationFragment.class.getSimpleName();
 
-    @VisibleForTesting
     private static final String BROWSER_FLOW_STARTED = "browserFlowStarted";
 
     /**
@@ -85,8 +84,8 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
      * @param responseUri the response URI, which carries the parameters describing the response.
      */
     @Nullable
-    public static Intent createCustomTabResponseIntent(final Context context,
-                                                       final String responseUri) {
+    public static Intent createCustomTabResponseIntent(@NonNull final Context context,
+                                                       @NonNull final String responseUri) {
 
         final Intent intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         intent.setAction(REDIRECT_RETURNED_ACTION);
@@ -97,7 +96,7 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
 
     @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(final @Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Bundle arguments = this.getArguments();
         if(arguments != null){
@@ -118,8 +117,6 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
         mAuthIntent = state.getParcelable(AUTH_INTENT);
         mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
     }
-
-
 
     @Override
     public void onResume() {

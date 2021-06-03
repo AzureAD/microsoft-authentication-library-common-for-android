@@ -67,7 +67,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
     /**
      * Listens to an operation cancellation event.
      */
-    private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             cancelAuthorization(intent.getBooleanExtra(REQUEST_CANCELLED_BY_USER, false));
@@ -117,15 +117,20 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
         }
     }
 
+    /**
+     * Get the state form the provided bundle and act on it as needed
+     *
+     * @param state a bundle containing data provided when the activity was created
+     */
     void extractState(@NonNull final Bundle state) {
         setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
     }
 
     /**
-     * When authorization fragment is launched.  It will be launched on a new thread. (TODO: verify this)
+     * When authorization fragment is launched.  It may be launched on a new thread.
      * Initialize based on value provided in intent.
      */
-    private static String setDiagnosticContextForNewThread(@Nonnull final String correlationId) {
+    private static String setDiagnosticContextForNewThread(@NonNull final String correlationId) {
         final String methodName = ":setDiagnosticContextForAuthorizationActivity";
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
@@ -133,7 +138,7 @@ public abstract class CurrentTaskAuthorizationFragment extends Fragment {
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
-                "Initializing diagnostic context for AuthorizationActivity"
+                "Initializing diagnostic context for CurrentTaskAuthorizationActivity"
         );
 
         return correlationId;
