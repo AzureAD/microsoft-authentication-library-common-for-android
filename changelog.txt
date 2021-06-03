@@ -1,3 +1,7 @@
+Version 3.4.4
+----------
+- [MINOR] Fixing Redirect Uri for Authenticator App, when migrating to MSAL (#1399)
+
 Version 3.4.3
 ----------
 - [PATCH] Revert connection detection change, disable throttling cache (#1351, #1353)
