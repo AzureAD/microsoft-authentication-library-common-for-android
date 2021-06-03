@@ -22,12 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.logging.formatter;
 
-import android.util.Log;
-
 import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
 /**
- * A log formatter that returns a string as it is without adding any additional logging parameters.
+ * A log formatter that returns a log message as it is without adding any additional logging parameters.
  */
 public class SimpleTextFormatter implements ILogFormatter {
 

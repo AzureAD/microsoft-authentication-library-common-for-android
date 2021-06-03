@@ -35,61 +35,80 @@ public class CodeMarkerManager {
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private static final int MAX_SIZE_CODE_MARKER = 1000;
-    private volatile List<CodeMarker> codeMarkers = new ArrayList<>();
-
-    //baseMilliSeconds is the time in milliseconds when first codemarker was captured.
+    private final List<CodeMarker> codeMarkers = new ArrayList<>();
+    //baseMilliSeconds is the time in milliseconds when first code marker was captured.
     private long baseMilliSeconds = 0;
     private String scenarioCode = null;
-    private static CodeMarkerManager sCodeMarkerManager = new CodeMarkerManager();
-
-    public static CodeMarkerManager getInstance() {
-        return CodeMarkerManager.sCodeMarkerManager;
-    }
 
     private CodeMarkerManager() {
+    }
+
+    private static class CodeMarkerHolder {
+        static final CodeMarkerManager INSTANCE = new CodeMarkerManager();
+    }
+
+    public static CodeMarkerManager getInstance() {
+        return CodeMarkerHolder.INSTANCE;
+    }
+
+    /**
+     * This method captures a particular marker and records the timestamp on which this has been received.
+     *
+     * @param marker : A string code which represents a particular place in code.
+     */
+    public void markCode(final String marker) {
+        if (enableCodeMarker) {
+            if (codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
+                clearMarkers();
+            }
+
+            final long currentMilliSeconds = System.currentTimeMillis();
+            if (codeMarkers.size() == 0) {
+                baseMilliSeconds = currentMilliSeconds;
+            }
+
+            final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            final String applicableMarker = (scenarioCode == null ? "" : scenarioCode) + marker;
+            final long timeDiff = currentMilliSeconds - baseMilliSeconds;
+            final String date = dateFormat.format(new Date());
+            final long threadId = Thread.currentThread().getId();
+            final CodeMarker codeMarker = new CodeMarker(applicableMarker, timeDiff, date, threadId);
+            codeMarkers.add(codeMarker);
+        }
     }
 
     /**
      * This method sets a scenarioCode Defined in {@link PerfConstants.ScenarioConstants}.
      * This scenario code will be pre-fixed to every code marker.
+     *
      * @param scenarioCode
      */
-    public void setPrefixScenarioCode(String scenarioCode) {
+    public void setPrefixScenarioCode(final String scenarioCode) {
         this.scenarioCode = scenarioCode;
     }
 
     /**
-     * This method captures a particular marker and records the timestamp on which this has been received.
-     * @param marker : A string code which represents a particular place in code.
+     * @return whether code marker capturing is enabled
      */
-    public void markCode(String marker) {
-        if(this.enableCodeMarker) {
-            if(this.codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
-                clearMarkers();
-            }
-            long currentMilliSeconds = System.currentTimeMillis();
-            if (this.codeMarkers.size() == 0) {
-                this.baseMilliSeconds = currentMilliSeconds;
-            }
-            SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-            this.codeMarkers.add(new CodeMarker((this.scenarioCode == null ? "" : this.scenarioCode) + marker, currentMilliSeconds - this.baseMilliSeconds, f.format(new Date()), Thread.currentThread().getId()));
-        }
+    public boolean codeMarkerIsEnabled() {
+        return enableCodeMarker;
     }
 
     /**
      * This method enables or disables the {@link CodeMarkerManager} as per the argument passed to this.
      * Only enabled {@link CodeMarkerManager} will be able to capture the codemarkers.
+     *
      * @param enableCodeMarker
      */
-    public void setEnableCodeMarker(boolean enableCodeMarker) {
+    public void setEnableCodeMarker(final boolean enableCodeMarker) {
         this.enableCodeMarker = enableCodeMarker;
     }
 
     /**
-     * This medhod clears all the existing markers.
-     * This medhod can be used to start another iteration after capturing the csv content.
+     * This method clears all the existing markers.
+     * This method can be used to start another iteration after capturing the csv content.
      */
-    public void clearMarkers(){
+    public void clearMarkers() {
         this.codeMarkers.clear();
     }
 
@@ -102,10 +121,11 @@ public class CodeMarkerManager {
     }
 
     /**
-     * This method returns the content of all the codemarkers available till the time converted to CSV which can be directly written to a file.
+     * This method returns the content of all the code markers available till the time converted to CSV which can be directly written to a file.
+     *
      * @return
      */
     public String getFileContent() {
-        return CodeMarkerUtil.getCSVContent(this.codeMarkers);
+        return CodeMarkerUtil.getCsvContent(this.codeMarkers);
     }
 }

@@ -25,27 +25,30 @@ package com.microsoft.identity.common;
 import java.util.List;
 
 /**
- * This class holds static methods which provides functionalities related to codemarkers.
+ * This class holds static methods which provides functionality related to code markers.
  */
 public class CodeMarkerUtil {
     /**
-     * This method converts list of codemarkers to csv content which can be written to a file.
+     * This method converts list of code markers to csv content which can be written to a file.
      *
-     * @param codeMarkers
-     * @return
+     * @param codeMarkers code markers
+     * @return string to save
      */
-    public static String getCSVContent(List<CodeMarker> codeMarkers) {
-        if (codeMarkers == null) return "";
+    public static String getCsvContent(final List<CodeMarker> codeMarkers) {
+        if (codeMarkers == null) {
+            return "";
+        }
 
-        StringBuilder stringToWrite = new StringBuilder();
+        final StringBuilder stringToWrite = new StringBuilder();
         if (codeMarkers.size() > 0) {
-            stringToWrite.append(codeMarkers.get(0).getCSVHeader());
+            stringToWrite.append(codeMarkers.get(0).getCsvHeader());
         }
 
-        for (CodeMarker codeMarker : codeMarkers) {
+        for (final CodeMarker codeMarker : codeMarkers) {
             stringToWrite.append('\n');
-            stringToWrite.append(codeMarker.getCSVLine());
+            stringToWrite.append(codeMarker.getCsvLine());
         }
+
         return stringToWrite.toString();
     }
 }

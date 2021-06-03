@@ -71,30 +71,34 @@ public class BrokerOperationExecutor {
         /**
          * Gets a BrokerOperationBundle bundle to pass to each IpcStrategies.
          */
-        @NonNull BrokerOperationBundle getBundle();
+        @NonNull
+        BrokerOperationBundle getBundle();
 
         /**
          * Extracts the result object from a bundle returned by an IpcStrategy.
          * If the broker returns an error, this will throw an exception.
          */
-        @NonNull T extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException;
+        @NonNull
+        T extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException;
 
         /**
          * Returns method name (for logging/telemetry purpose).
          */
-        @NonNull String getMethodName();
+        @NonNull
+        String getMethodName();
 
         /**
          * ID of the telemetry API event associated to this strategy task.
          * If this value returns null, no telemetry event will be emitted.
          */
-        @Nullable String getTelemetryApiId();
+        @Nullable
+        String getTelemetryApiId();
 
         /**
          * A method that will be invoked before the success event is emitted.
          * If the calling operation wants to put any value in the success event, put it here.
          */
-        void putValueInSuccessEvent(final @NonNull ApiEndEvent event,final @NonNull T result);
+        void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull T result);
     }
 
     private final List<IIpcStrategy> mStrategies;
@@ -111,10 +115,13 @@ public class BrokerOperationExecutor {
      * It will return a result immediately if any of the strategy succeeds, or throw an exception if all of the strategies fails.
      */
     public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
-                                                      @NonNull final BrokerOperation<U> operation)
-            throws BaseException {
-        Logger.warn(TAG, "BrokerOperationExecutor.execute method start");
-        CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
+                                                      @NonNull final BrokerOperation<U> operation) throws BaseException {
+        final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
+        final boolean codeMarkerIsEnabled = codeMarkerManager.codeMarkerIsEnabled();
+        if (codeMarkerIsEnabled) {
+            Logger.warn(TAG, "BrokerOperationExecutor.execute method start");
+        }
+        codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
         final String methodName = ":execute";
 
         emitOperationStartEvent(parameters, operation);
@@ -130,13 +137,21 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
-                Logger.warn(TAG, "marking broker start");
-                CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
-                Logger.warn(TAG, "finish marking broker start");
+                if (codeMarkerIsEnabled) {
+                    Logger.warn(TAG, "marking broker start");
+                }
+                codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
+                if (codeMarkerIsEnabled) {
+                    Logger.warn(TAG, "finish marking broker start");
+                }
                 final U result = performStrategy(strategy, operation);
-                Logger.warn(TAG, "marking broker end");
-                CodeMarkerManager.getInstance().markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
-                Logger.warn(TAG, "finishing marking broker end");
+                if (codeMarkerIsEnabled) {
+                    Logger.warn(TAG, "marking broker end");
+                }
+                codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
+                if (codeMarkerIsEnabled) {
+                    Logger.warn(TAG, "finishing marking broker end");
+                }
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {

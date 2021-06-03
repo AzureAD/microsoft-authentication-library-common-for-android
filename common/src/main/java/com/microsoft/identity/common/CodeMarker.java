@@ -22,10 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.util.Pair;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.*;
 
 /**
  * A Class containing information of a code marker which is an event in code.
@@ -33,16 +32,15 @@ import java.util.List;
  */
 public class CodeMarker {
 
-    private static String csvNoValue = "NA";
-    private static char csvSeparator = ',';
-
-    private String marker;
+    private static final String csvNoValue = "NA";
+    private static final char csvSeparator = ',';
+    private final String marker;
     /* timeInMilliseconds represents time in milliseconds from the time of creation of first codemarker.
     If timeInMilliseconds is zero(0) then it means that this is the first codemarker of the scenario.*/
-    private long timeInMilliseconds;
+    private final long timeInMilliseconds;
     // timeStamp is the system time at the time of the capture of the codemarker.
-    private String timeStamp;
-    private long threadId;
+    private final String timeStamp;
+    private final long threadId;
     private String cpuUsed = null;
     private String cpuTotal = null;
     private String residentSize = null;
@@ -64,49 +62,66 @@ public class CodeMarker {
         this.threadId = threadId;
     }
 
-    // Returns list of pairs of (key,value) where key is the representation of heading in csv and value is the measurable value.
-    private List<Pair<String,String>> getKeyValuePairsOfCodeMarker() {
-        List<Pair<String,String>> csvKeyValuePairs = new ArrayList<Pair<String,String>>();
-        csvKeyValuePairs.add(new Pair("TimeStamp", this.timeStamp == null ? CodeMarker.csvNoValue : this.timeStamp));
-        csvKeyValuePairs.add(new Pair("Marker", this.marker == null ? CodeMarker.csvNoValue : this.marker));
-        csvKeyValuePairs.add(new Pair("Time", Long.toString(this.timeInMilliseconds)));
-        csvKeyValuePairs.add(new Pair("Thread", Long.toString(this.threadId)));
-        csvKeyValuePairs.add(new Pair("CpuUsed", this.cpuUsed == null ? CodeMarker.csvNoValue : this.cpuUsed));
-        csvKeyValuePairs.add(new Pair("CpuTotal", this.cpuTotal == null ? CodeMarker.csvNoValue : this.cpuTotal));
-        csvKeyValuePairs.add(new Pair("ResidentSize", this.residentSize == null ? CodeMarker.csvNoValue : this.residentSize));
-        csvKeyValuePairs.add(new Pair("VirtualSize", this.virtualSize == null ? CodeMarker.csvNoValue : this.virtualSize));
-        csvKeyValuePairs.add(new Pair("WifiSent", this.wifiSent == null ? CodeMarker.csvNoValue : this.wifiSent));
-        csvKeyValuePairs.add(new Pair("WifiRecv", this.wifiRecv == null ? CodeMarker.csvNoValue : this.wifiRecv));
-        csvKeyValuePairs.add(new Pair("WwanSent", this.wwanSent == null ? CodeMarker.csvNoValue : this.wwanSent));
-        csvKeyValuePairs.add(new Pair("WwanRecv", this.wwanRecv == null ? CodeMarker.csvNoValue : this.wwanRecv));
-        csvKeyValuePairs.add(new Pair("AppSent", this.appSent == null ? CodeMarker.csvNoValue : this.appSent));
-        csvKeyValuePairs.add(new Pair("AppRecv", this.appRecv == null ? CodeMarker.csvNoValue : this.appRecv));
-        csvKeyValuePairs.add(new Pair("Battery", this.battery == null ? CodeMarker.csvNoValue : this.battery));
-        csvKeyValuePairs.add(new Pair("SystemDiskRead", this.systemDiskRead == null ? CodeMarker.csvNoValue : this.systemDiskRead));
-        csvKeyValuePairs.add(new Pair("SystemDiskWrite", this.systemDiskWrite == null ? CodeMarker.csvNoValue : this.systemDiskWrite));
+    /**
+     * Returns list of pairs of (key,value) where key is the representation of heading in csv and value is the measurable value.
+     * Used a LinkedHashMap to preserve the insertion order
+     */
+    private LinkedHashMap<String, String> getKeyValuePairsOfCodeMarker() {
+        final LinkedHashMap<String, String> csvKeyValuePairs = new LinkedHashMap<>();
+        csvKeyValuePairs.put(TIMESTAMP, timeStamp == null ? CodeMarker.csvNoValue : timeStamp);
+        csvKeyValuePairs.put(MARKER, marker == null ? CodeMarker.csvNoValue : marker);
+        csvKeyValuePairs.put(TIME, Long.toString(timeInMilliseconds));
+        csvKeyValuePairs.put(THREAD, Long.toString(threadId));
+        csvKeyValuePairs.put(CPU_USED, cpuUsed == null ? CodeMarker.csvNoValue : cpuUsed);
+        csvKeyValuePairs.put(CPU_TOTAL, cpuTotal == null ? CodeMarker.csvNoValue : cpuTotal);
+        csvKeyValuePairs.put(RESIDENT_SIZE, residentSize == null ? CodeMarker.csvNoValue : residentSize);
+        csvKeyValuePairs.put(VIRTUAL_SIZE, virtualSize == null ? CodeMarker.csvNoValue : virtualSize);
+        csvKeyValuePairs.put(WIFI_SENT, wifiSent == null ? CodeMarker.csvNoValue : wifiSent);
+        csvKeyValuePairs.put(WIFI_RECEIVED, wifiRecv == null ? CodeMarker.csvNoValue : wifiRecv);
+        csvKeyValuePairs.put(WAN_SENT, wwanSent == null ? CodeMarker.csvNoValue : wwanSent);
+        csvKeyValuePairs.put(WAN_RECEIVED, wwanRecv == null ? CodeMarker.csvNoValue : wwanRecv);
+        csvKeyValuePairs.put(APP_SENT, appSent == null ? CodeMarker.csvNoValue : appSent);
+        csvKeyValuePairs.put(APP_RECEIVED, appRecv == null ? CodeMarker.csvNoValue : appRecv);
+        csvKeyValuePairs.put(BATTERY, battery == null ? CodeMarker.csvNoValue : battery);
+        csvKeyValuePairs.put(SYSTEM_DISK_READ, systemDiskRead == null ? CodeMarker.csvNoValue : systemDiskRead);
+        csvKeyValuePairs.put(SYSTEM_DISK_WRITE, systemDiskWrite == null ? CodeMarker.csvNoValue : systemDiskWrite);
         return csvKeyValuePairs;
     }
 
-    public String getCSVHeader() {
-        StringBuilder csvStringBuilder = new StringBuilder();
-        List<Pair<String,String>> csvKeyValuePairs = getKeyValuePairsOfCodeMarker();
-        for(int i = 0; i < csvKeyValuePairs.size(); i++) {
-            if(i != 0) {
+    /**
+     * Loop through the headers and have them as a csv separated string
+     *
+     * @return csv separated string
+     */
+    public String getCsvHeader() {
+        final StringBuilder csvStringBuilder = new StringBuilder();
+        final LinkedHashMap<String, String> csvKeyValuePairs = getKeyValuePairsOfCodeMarker();
+        int index = 0;
+        for (final String key : csvKeyValuePairs.keySet()) {
+            if (index != 0) {
                 csvStringBuilder.append(CodeMarker.csvSeparator);
             }
-            csvStringBuilder.append(csvKeyValuePairs.get(i).first);
+            csvStringBuilder.append(key);
+            index++;
         }
         return csvStringBuilder.toString();
     }
 
-    public String getCSVLine() {
-        StringBuilder csvStringBuilder = new StringBuilder();
-        List<Pair<String,String>> csvKeyValuePairs = getKeyValuePairsOfCodeMarker();
-        for(int i = 0; i < csvKeyValuePairs.size(); i++) {
-            if(i != 0) {
+    /**
+     * Loop through the values and have them as a csv separated string
+     *
+     * @return csv separated string
+     */
+    public String getCsvLine() {
+        final StringBuilder csvStringBuilder = new StringBuilder();
+        final LinkedHashMap<String, String> csvKeyValuePairs = getKeyValuePairsOfCodeMarker();
+        int index = 0;
+        for (final String value : csvKeyValuePairs.values()) {
+            if (index != 0) {
                 csvStringBuilder.append(CodeMarker.csvSeparator);
             }
-            csvStringBuilder.append(csvKeyValuePairs.get(i).second);
+            csvStringBuilder.append(value);
+            index++;
         }
         return csvStringBuilder.toString();
     }
