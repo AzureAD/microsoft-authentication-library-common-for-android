@@ -1,0 +1,50 @@
+# File: docker-tasks.yml
+
+steps:
+- checkout: self
+  clean: true
+  submodules: recursive
+- script: |
+    docker --version
+    echo =============================================
+    echo Kill all running containers if existing
+    echo =============================================
+    docker container kill $(docker ps -q)
+    echo =============================================
+    echo Run unit and instrumented inside docker container
+    echo =============================================
+    docker run --privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 sh scripts/run-instrumented-tests.sh
+  displayName: 'Build and test inside docker container'
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/TEST-*.xml'
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    condition: succeededOrFailed()
+    displayName: 'Publish Test Results'
+- script: |
+    echo =============================================
+    echo Kill all running containers if existing
+    echo =============================================
+    docker container kill $(docker ps -q)
+    echo =============================================
+    echo Cleaning up build output that is owned by docker user rather than agent user
+    echo =============================================
+    docker run --privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 gradle clean
+    echo =============================================
+    echo prune containers to avoid running out of disk space - shutdown containers still exist on disk
+    echo =============================================
+    docker system prune --volumes -f
+    echo =============================================
+    echo Dump environment variables for build agent
+    echo =============================================
+    env
+    echo =============================================
+    echo Docker status
+    echo =============================================
+    docker system df
+  condition: always()
+  displayName: 'Cleanup'
+- task: PostBuildCleanup@3
+  condition: always()
+  displayName: 'Post build clean up'
