@@ -20,44 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
+package com.microsoft.identity.common.java;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
-public class StringUtil {
-    private static String TAG = StringUtil.class.getSimpleName();
+public class TestUtils {
 
     /**
-     * The constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF-8";
-
-    /**
-     * Checks if string is null or empty.
+     * Counts the number of occurrences of one String in another (case-insensitive).
      *
-     * @param message String to check for null or blank.
-     * @return true, if the string is null or blank.
+     * @param sourceString  A string that might contain the other string.
+     * @param subString     A 'keyword' string that we use to count the occurrences.
+     * @return # of matches
      */
-    public static boolean isNullOrEmpty(String message) {
-        return message == null || message.trim().length() == 0;
-    }
-
-    /**
-     * Perform URL decode on the given source.
-     *
-     * @param source The String to decode for.
-     * @return The decoded string.
-     * @throws UnsupportedEncodingException If encoding is not supported.
-     */
-    public static String urlFormDecode(final String source) throws UnsupportedEncodingException {
-        if (isNullOrEmpty(source)) {
-            return "";
+    public static int countMatches(@Nullable final String sourceString, @Nullable final String subString) {
+        if (StringUtil.isNullOrEmpty(sourceString) || StringUtil.isNullOrEmpty(subString)) {
+            return 0;
         }
 
-        return URLDecoder.decode(source, ENCODING_UTF8);
+        final String truncatedSourceString = sourceString.toLowerCase().replace(subString.toLowerCase(), "");
+        return (sourceString.length() - truncatedSourceString.length()) / subString.length();
     }
+
 }

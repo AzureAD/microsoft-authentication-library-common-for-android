@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
+import com.microsoft.identity.common.java.TestUtils;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -181,7 +182,7 @@ public class MicrosoftStsAuthorizationRequestTests {
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
 
         Assert.assertTrue(actualCodeRequestUrlWithLoginHint.contains(CONSTANT_LOGIN_HINT));
-        Assert.assertEquals(expectedCount, StringUtil.countMatches(actualCodeRequestUrlWithLoginHint, "login_hint"));
+        Assert.assertEquals(expectedCount, TestUtils.countMatches(actualCodeRequestUrlWithLoginHint, "login_hint"));
     }
 
     @Test
@@ -197,8 +198,8 @@ public class MicrosoftStsAuthorizationRequestTests {
 
         Assert.assertTrue(actualCodeRequestUrl.contains(CONSTANT_LOGIN_HINT));
         Assert.assertTrue(actualCodeRequestUrl.contains(CONSTANT_INSTANCE_AWARE));
-        Assert.assertEquals(expectedCount, StringUtil.countMatches(actualCodeRequestUrl, CONSTANT_LOGIN_HINT));
-        Assert.assertEquals(expectedCount, StringUtil.countMatches(actualCodeRequestUrl, CONSTANT_INSTANCE_AWARE));
+        Assert.assertEquals(expectedCount, TestUtils.countMatches(actualCodeRequestUrl, CONSTANT_LOGIN_HINT));
+        Assert.assertEquals(expectedCount, TestUtils.countMatches(actualCodeRequestUrl, CONSTANT_INSTANCE_AWARE));
     }
 
     @Test
