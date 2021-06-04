@@ -1,0 +1,77 @@
+# File: azure-pipelines\testapps\Azure Sample App PROD.yml
+# Description: Assemble External Release Azure Sample App APK
+# Variable: 'distMsalVersion' was defined in the Variables tab
+# https://github.com/AzureAD/android-complete/blob/master/docs/ProjectBuild/gradle_project_properties.md
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+pr: none
+
+resources:
+  repositories:
+  - repository: ms-identity-android-java
+    type: github
+    name: Azure-Samples/ms-identity-android-java
+    ref: master
+    endpoint: ANDROID_GITHUB
+
+jobs:
+- job: Phase_1
+  displayName: Phase 1
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  steps:
+  - checkout: ms-identity-android-java
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: ../templates/steps/credscan-policheck.yml
+    parameters:
+      policheckCmdLineArgsDir: app
+  - task: PowerShell@2
+    displayName: Generate Assemble Task Name for building Azure Sample App
+    inputs:
+      targetType: inline
+      script: >-
+        $assembleTask = "assembleExternalRelease"
+
+
+        if (("$(distMsalVersion)" -ne "")) {
+            $assembleTask = $assembleTask + " -PdistMsalVersion=" + "$(distMsalVersion)"
+        }
+
+
+        Write-Host "##vso[task.setvariable variable=AssembleTask;]$assembleTask"
+  - template: ../templates/steps/automation-cert.yml
+  - task: Gradle@1
+    name: Gradle1
+    displayName: Assemble Azure Sample App
+    inputs:
+      tasks: app:clean app:$(assembleTask)
+      publishJUnitResults: false
+      jdkArchitecture: x86
+      sqAnalysisBreakBuildIfQualityGateFailed: false
+  - task: PowerShell@2
+    displayName: Write MSAL version to a text file
+    inputs:
+      targetType: inline
+      script: >-
+        Write-Output "MSAL version = $distMsalVersion"
+
+        Write-Output "Writing MSAL version to a file"
+
+        Set-Content -Path "$(Build.SourcesDirectory)\MsalVersion.txt" -Value '$(distMsalVersion)'
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Azure Sample App APK
+    inputs:
+      PathtoPublish: $(Build.SourcesDirectory)/app/build/outputs/apk/external/release/app-external-release.apk
+      ArtifactName: AzureSampleExternalRelease
+  - task: PublishBuildArtifacts@1
+    displayName: Publish MSAL version file
+    inputs:
+      PathtoPublish: $(Build.SourcesDirectory)/MsalVersion.txt
+      ArtifactName: MsalVersion
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: Component Detection
+...
