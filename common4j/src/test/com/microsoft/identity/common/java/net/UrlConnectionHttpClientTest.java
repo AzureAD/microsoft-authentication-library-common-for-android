@@ -28,14 +28,16 @@ import com.microsoft.identity.common.java.net.util.ResponseBody;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
@@ -48,7 +50,6 @@ import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.SSLSocket;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -1200,4 +1201,31 @@ public final class UrlConnectionHttpClientTest {
         Assert.fail();
     }
 
+    @Test(expected = IllegalStateException.class)
+    public void testConnectingToHttpsButGetHttpUrlConnection() throws IOException {
+        HttpUrlConnectionFactory.addMockedConnection(MockConnection.getMockedHttpConnection());
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://www.microsoft.com/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.fail();
+    }
+
+    @Test
+    public void testConnectingToHttp() throws IOException {
+        HttpUrlConnectionFactory.addMockedConnection(MockConnection.getMockedHttpConnection());
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("http://www.somewebsite.com/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(200, response.getStatusCode());
+    }
 }

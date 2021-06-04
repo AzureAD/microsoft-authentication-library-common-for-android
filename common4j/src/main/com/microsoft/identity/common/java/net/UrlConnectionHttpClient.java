@@ -337,8 +337,12 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                             new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
                             getDefaultWrapper();
             ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
-        } else {
+        } else if ("https".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
+            throw new IllegalStateException("Trying to initiate a HTTPS request, but didn't get back HttpsURLConnection");
+        } else if ("http".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
             Logger.warn(TAG + methodName, "Making a request for non-https URL.");
+        } else {
+            Logger.warn(TAG + methodName, "gets a request from an unexpected protocol: " + request.getRequestUrl().getProtocol());
         }
 
         urlConnection.setRequestMethod(request.getRequestMethod());
