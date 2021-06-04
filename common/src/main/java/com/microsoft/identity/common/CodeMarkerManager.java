@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import com.microsoft.identity.common.logging.Logger;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -32,6 +34,7 @@ import java.util.List;
  */
 public class CodeMarkerManager {
 
+    private static final String TAG = CodeMarkerManager.class.getSimpleName();
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private static final int MAX_SIZE_CODE_MARKER = 1000;
@@ -58,6 +61,8 @@ public class CodeMarkerManager {
      */
     public void markCode(final String marker) {
         if (enableCodeMarker) {
+            Logger.info(TAG, "Marking code with " + marker);
+
             if (codeMarkers.size() >= CodeMarkerManager.MAX_SIZE_CODE_MARKER) {
                 clearMarkers();
             }
@@ -96,9 +101,9 @@ public class CodeMarkerManager {
 
     /**
      * This method enables or disables the {@link CodeMarkerManager} as per the argument passed to this.
-     * Only enabled {@link CodeMarkerManager} will be able to capture the codemarkers.
+     * Only enabled {@link CodeMarkerManager} will be able to capture the code markers.
      *
-     * @param enableCodeMarker
+     * @param enableCodeMarker whether to enable code markers
      */
     public void setEnableCodeMarker(final boolean enableCodeMarker) {
         this.enableCodeMarker = enableCodeMarker;
@@ -109,23 +114,21 @@ public class CodeMarkerManager {
      * This method can be used to start another iteration after capturing the csv content.
      */
     public void clearMarkers() {
-        this.codeMarkers.clear();
+        codeMarkers.clear();
     }
 
     /**
      * This method clears all the existing markers as well as the scenario code which might have been set earlier.
      */
     public void clearAll() {
-        this.codeMarkers.clear();
-        this.scenarioCode = null;
+        codeMarkers.clear();
+        scenarioCode = null;
     }
 
     /**
-     * This method returns the content of all the code markers available till the time converted to CSV which can be directly written to a file.
-     *
-     * @return
+     * @return the content of all the code markers available till the time converted to CSV which can be directly written to a file.
      */
     public String getFileContent() {
-        return CodeMarkerUtil.getCsvContent(this.codeMarkers);
+        return CodeMarkerUtil.getCsvContent(codeMarkers);
     }
 }

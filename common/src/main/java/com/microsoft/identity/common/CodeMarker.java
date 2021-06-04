@@ -22,9 +22,25 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import java.util.*;
+import java.util.LinkedHashMap;
 
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.*;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.APP_RECEIVED;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.APP_SENT;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.BATTERY;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.CPU_TOTAL;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.CPU_USED;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.MARKER;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.RESIDENT_SIZE;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.SYSTEM_DISK_READ;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.SYSTEM_DISK_WRITE;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.THREAD;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.TIME;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.TIMESTAMP;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.VIRTUAL_SIZE;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.WAN_RECEIVED;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.WAN_SENT;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.WIFI_RECEIVED;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerParameters.WIFI_SENT;
 
 /**
  * A Class containing information of a code marker which is an event in code.

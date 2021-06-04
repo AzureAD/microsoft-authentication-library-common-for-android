@@ -98,7 +98,7 @@ public class BrokerOperationExecutor {
          * A method that will be invoked before the success event is emitted.
          * If the calling operation wants to put any value in the success event, put it here.
          */
-        void putValueInSuccessEvent(final @NonNull ApiEndEvent event, final @NonNull T result);
+        void putValueInSuccessEvent(@NonNull final ApiEndEvent event, @NonNull final T result);
     }
 
     private final List<IIpcStrategy> mStrategies;
@@ -117,10 +117,6 @@ public class BrokerOperationExecutor {
     public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
                                                       @NonNull final BrokerOperation<U> operation) throws BaseException {
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
-        final boolean codeMarkerIsEnabled = codeMarkerManager.codeMarkerIsEnabled();
-        if (codeMarkerIsEnabled) {
-            Logger.warn(TAG, "BrokerOperationExecutor.execute method start");
-        }
         codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
         final String methodName = ":execute";
 
@@ -137,21 +133,9 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
-                if (codeMarkerIsEnabled) {
-                    Logger.warn(TAG, "marking broker start");
-                }
                 codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
-                if (codeMarkerIsEnabled) {
-                    Logger.warn(TAG, "finish marking broker start");
-                }
                 final U result = performStrategy(strategy, operation);
-                if (codeMarkerIsEnabled) {
-                    Logger.warn(TAG, "marking broker end");
-                }
                 codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
-                if (codeMarkerIsEnabled) {
-                    Logger.warn(TAG, "finishing marking broker end");
-                }
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {

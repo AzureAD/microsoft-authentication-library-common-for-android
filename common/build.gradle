@@ -140,9 +140,9 @@ dependencies {
     //Java 8 - Desugaring - Enabled/Disabled via plugin
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
-    // localApi(project(":common4j")) {
-    //     transitive = false
-    // }
+    localApi(project(":common4j")) {
+        transitive = false
+    }
 
     distApi("com.microsoft.identity:common4j:0.0.+") {
         transitive = false
