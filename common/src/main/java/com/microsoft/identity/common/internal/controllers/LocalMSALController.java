@@ -68,7 +68,7 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.logging.Logger;

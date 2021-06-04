@@ -20,50 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common;
 
-import android.content.Context;
+package com.microsoft.identity.common.java.util;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import com.microsoft.identity.common.java.InMemoryStorage;
 
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(JUnit4.class)
 public class ClockSkewManagerTest {
-
-    private Context context;
-    private IClockSkewManager clockSkewManager;
-
-    @Before
-    public void setUp() {
-        context = InstrumentationRegistry.getTargetContext();
-    }
-
-    @After
-    public void tearDown() {
-        // Reset the skew to 0
-        if (null != clockSkewManager) {
-            clockSkewManager.onTimestampReceived(0L);
-        }
-
-        // Reset the Context
-        context = null;
-    }
 
     @Test
     public void testOnTimestampReceived() {
-        clockSkewManager = new ClockSkewManager(context) {
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
             @Override
             public Date getCurrentClientTime() {
                 return new Date(12345);
@@ -77,7 +52,7 @@ public class ClockSkewManagerTest {
 
     @Test
     public void testOnTimestampReceived2() {
-        clockSkewManager = new ClockSkewManager(context) {
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
             @Override
             public Date getCurrentClientTime() {
                 return new Date(67890);
@@ -91,7 +66,7 @@ public class ClockSkewManagerTest {
 
     @Test
     public void testGetReferenceTime() {
-        clockSkewManager = new ClockSkewManager(context) {
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
             @Override
             public Date getCurrentClientTime() {
                 return new Date(67890);
@@ -108,7 +83,7 @@ public class ClockSkewManagerTest {
 
     @Test
     public void testToClientTime() {
-        clockSkewManager = new ClockSkewManager(context) {
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
             @Override
             public long getSkewMillis() {
                 return 42L;
@@ -120,7 +95,7 @@ public class ClockSkewManagerTest {
 
     @Test
     public void testToReferenceTime() {
-        clockSkewManager = new ClockSkewManager(context) {
+        final IClockSkewManager clockSkewManager = new ClockSkewManager(new InMemoryStorage<Long>()) {
             @Override
             public long getSkewMillis() {
                 return 42L;
@@ -130,3 +105,4 @@ public class ClockSkewManagerTest {
         assertEquals(67848L, clockSkewManager.toReferenceTime(67890).getTime());
     }
 }
+

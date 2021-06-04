@@ -10,7 +10,6 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.auth;
 
 import com.microsoft.identity.internal.test.labapi.Pair;

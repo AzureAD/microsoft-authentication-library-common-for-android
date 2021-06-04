@@ -28,21 +28,21 @@ import java.util.HashMap;
 
 import lombok.NonNull;
 
-public class InMemoryStorage implements IKeyPairStorage<String> {
+public class InMemoryStorage<T> implements IKeyPairStorage<T> {
 
-    final HashMap<String, String> mMap = new HashMap<>();
+    final HashMap<String, T> mMap = new HashMap<>();
 
     public int size(){
         return mMap.size();
     }
 
     @Override
-    public String get(final String key) {
+    public T get(final String key) {
         return mMap.get(key);
     }
 
     @Override
-    public void put(final String key, final String value) {
+    public void put(final String key, final T value) {
         mMap.put(key, value);
     }
 
