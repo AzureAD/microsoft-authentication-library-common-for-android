@@ -1,0 +1,104 @@
+# File: azure-pipelines\testapps\Android-Complete AzureSample LocalDebug.yml
+# Description: Assemble Local Debug Azure Sample App APK
+# Variable 'build_type' was defined in the Variables tab
+# Variable 'distMsalVersion' was defined in the Variables tab
+# Variable 'msal_flavor' was defined in the Variables tab
+# Variable 'ENV_VSTS_MVN_ANDROID_MSAL_USERNAME' was defined in the Variables tab
+# Variable 'mvnAccessToken' was defined in the Variables tab
+# https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+pr: none
+
+resources:
+  repositories:
+  - repository: android-complete
+    type: github
+    name: AzureAD/android-complete
+    ref: master
+    endpoint: ANDROID_GITHUB
+
+schedules:
+- cron: 0 1 * * 1,2,3,4,5
+  branches:
+    include:
+    - master
+  always: true
+
+jobs:
+- job: Phase_1
+  displayName: Phase 1
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  steps:
+  - checkout: android-complete
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: ../templates/steps/credscan-policheck.yml
+    parameters:
+      policheckCmdLineArgsDir: adal
+  - task: PowerShell@2
+    displayName: Setup Android Complete
+    inputs:
+      targetType: inline
+      script: >-
+        # Include the .gitconfig file included with project to your local gitconfig
+
+        git config --local include.path ../.gitconfig
+
+        # Run this newly minted command to clone each repo as a subfolder
+
+        git droidSetupDevexOnly
+      errorActionPreference: continue
+  - task: PowerShell@2
+    displayName: Lowercase build variant
+    inputs:
+      targetType: inline
+      script: >-
+        $buildType = "$(build_type)".ToLower()
+
+        $msalFlavor= "$(msal_flavor)".ToLower()
+
+        Write-Host "##vso[task.setvariable variable=BuildType;]$buildType"
+
+        Write-Host "##vso[task.setvariable variable=MsalFlavor;]$msalFlavor"
+  - task: PowerShell@2
+    displayName: Generate Assemble Task Name for build MSAL Test App
+    inputs:
+      targetType: inline
+      script: >-
+        $TextInfo = (Get-Culture).TextInfo
+
+        $BuildType = $TextInfo.ToTitleCase("$(buildType)")
+
+        $MsalFlavor = $TextInfo.ToTitleCase("$(msalFlavor)")
+
+        $assembleTask = "assemble" + $MsalFlavor + $BuildType
+
+
+        if (("$(distMsalVersion)" -ne "")) {
+            $assembleTask = $assembleTask + " -PdistMsalVersion=" + "$(distMsalVersion)"
+        }
+
+
+        Write-Host "##vso[task.setvariable variable=AssembleTask;]$assembleTask"
+  - template: ../templates/steps/automation-cert.yml
+  - task: Gradle@1
+    name: Gradle1
+    displayName: Assemble Azure Sample App
+    inputs:
+      tasks: AzureSample:clean AzureSample:assembleLocalDebug
+      publishJUnitResults: false
+      jdkArchitecture: x86
+      sqAnalysisBreakBuildIfQualityGateFailed: false
+  - task: PublishBuildArtifacts@1
+    displayName: Publish Azure Sample App APK
+    inputs:
+      PathtoPublish: c:/temp/android_auth/AzureSample/outputs/apk/local/debug/AzureSample-local-debug.apk
+      ArtifactName: AzureSampleLocalDebug
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: Component Detection
+...
