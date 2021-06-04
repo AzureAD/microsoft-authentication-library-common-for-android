@@ -1,0 +1,79 @@
+# File: upload-to-nexus-sonatype.yml
+
+parameters:
+- name: project
+
+steps:
+- task: CmdLine@2
+  displayName: Download Python Requests Library
+  inputs:
+    script: pip install requests
+- task: DownloadSecureFile@1
+  name: credentials
+  displayName: Download Nexus Sonatype Login Credentials
+  inputs:
+    secureFile: NexusSonatypeCredentials.json
+    retryCount: 5
+- task: PythonScript@0
+  displayName: Upload to Nexus Sonatype Staging Directory
+  inputs:
+    arguments: ${{ parameters.project }}
+    scriptSource: inline
+    script: >-
+      import requests
+
+      from xml.dom import minidom
+
+      import sys
+
+      import os
+
+      import json
+
+      CONFIG = {
+          'adal': {'profile_id': '4ac616f169d24a', 'env_var': 'ADALVERSION', 'path': 'aad/adal'},
+          'msal': {'profile_id': '60bca90c1b7703', 'env_var': 'MSALVERSION', 'path': 'identity/client/msal'},
+          'common': {'profile_id': '60bca90c1b7703', 'env_var': 'COMMONVERSION', 'path': 'identity/common'}
+      }
+      if len(sys.argv) == 2 and sys.argv[1] in CONFIG.keys():
+          prj = sys.argv[1]
+      else:
+          sys.exit()
+
+      headers = {
+          'Content-Type': 'application/xml',
+      }
+
+
+      data = '<promoteRequest><data><description>{}</description></data></promoteRequest>'.format(prj)
+
+
+      credentialsdirectory = os.environ["CREDENTIALS_SECUREFILEPATH"]
+
+      with open(credentialsdirectory) as f:
+          credentials = json.load(f)
+
+      response = requests.post('https://oss.sonatype.org/service/local/staging/profiles/{}/start'.format(CONFIG[prj]['profile_id']), headers=headers, data=data, verify=False, auth=(credentials["username"], credentials["password"]))
+
+
+      xmldoc = minidom.parseString(response.content)
+
+      repository_id = xmldoc.getElementsByTagName('stagedRepositoryId')[0].firstChild.nodeValue
+
+
+      prjVersion = os.environ[CONFIG[prj]['env_var']]
+
+      directory = '{}/{}/{}'.format(os.environ["SYSTEM_ARTIFACTSDIRECTORY"], prj, prjVersion)
+
+      for filename in os.listdir(directory):
+          repo_name = filename
+          if filename.startswith("pom-default.xml"):
+              new_string = "{}-{}.pom".format(prj, prjVersion)
+              repo_name = filename.replace("pom-default.xml", new_string)
+          print(filename)
+          url = "https://oss.sonatype.org/service/local/staging/deployByRepositoryId/{}/com/microsoft/{}/{}/{}".format(repository_id, CONFIG[prj]['path'], prjVersion, repo_name)
+          print(url)
+
+          with open(directory + "/" + filename, 'rb') as f:
+              requests.post(url, data=f, verify=False, auth=(credentials["username"], credentials["password"]))
+...
