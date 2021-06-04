@@ -46,9 +46,9 @@ import java.util.concurrent.Future;
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
-    private WeakReference<Context> mReferencedApplicationContext;
-    private WeakReference<Activity> mReferencedActivity;
-    private WeakReference<Fragment> mReferencedFragment;
+    private final WeakReference<Context> mReferencedApplicationContext;
+    private final WeakReference<Activity> mReferencedActivity;
+    private final WeakReference<Fragment> mReferencedFragment;
 
     /**
      * Constructor of AuthorizationStrategy.
@@ -73,12 +73,12 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final AuthorizationFragment authFragment = AuthorizationActivity.getAuthorizationFragmentFromStartIntent(intent);
+            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
             fragment.getFragmentManager()
                     .beginTransaction()
                     .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .add(fragment.getId(), authFragment, AuthorizationFragment.class.getName())
+                    .add(fragment.getId(), authFragment, Fragment.class.getName())
                     .commit();
             return;
         }

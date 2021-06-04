@@ -49,6 +49,7 @@ import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -536,8 +537,8 @@ public class CommandDispatcher {
             final LocalBroadcastManager localBroadcastManager =
                     LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
-            // only send broadcast to cancel if within broker
-            if (command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+            //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
+            if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
                 localBroadcastManager.sendBroadcast(
                         new Intent(CANCEL_INTERACTIVE_REQUEST)

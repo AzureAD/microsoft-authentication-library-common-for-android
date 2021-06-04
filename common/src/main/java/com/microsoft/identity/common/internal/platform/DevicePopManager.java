@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -252,14 +253,14 @@ class DevicePopManager implements IDevicePopManager {
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
         mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
-                                                   .keyStore(instance)
-                                                   .thumbprintSupplier(new Supplier<byte[]>() {
-                                                       @SneakyThrows(ClientException.class)
-                                                       @Override
-                                                       public byte[] get() {
-                                                           return getAsymmetricKeyThumbprint().getBytes(UTF8);
-                                                       }
-                                                   })
+                .keyStore(instance)
+                .thumbprintSupplier(new Supplier<byte[]>() {
+                    @SneakyThrows(ClientException.class)
+                    @Override
+                    public byte[] get() {
+                        return getAsymmetricKeyThumbprint().getBytes(UTF8);
+                    }
+                })
                 .build();
     }
 
@@ -304,6 +305,7 @@ class DevicePopManager implements IDevicePopManager {
 
     /**
      * Given an RSA private key entry, get the RSA thumbprint.
+     *
      * @param entry the entry to compute the thumbprint for.
      * @return A String that would be identicative of this specific key.
      * @throws JOSEException If there is a computation problem.
@@ -801,7 +803,7 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
         return mKeyManager.getCertificateChain();
-   }
+    }
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {
@@ -1205,7 +1207,7 @@ class DevicePopManager implements IDevicePopManager {
                             final boolean useStrongbox, boolean enableImport) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox);
         } else {
             initialize28(keyPairGenerator, keySize, useStrongbox, enableImport);
