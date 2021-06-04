@@ -51,6 +51,8 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.result.VoidResult;
+import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
@@ -475,8 +477,11 @@ public class CommandDispatcher {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
                 commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
                         command.getParameters().getCorrelationId());
+            } else if (result instanceof VoidResult){
+                commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
+                        command.getParameters().getCorrelationId());
             } else {
-                //For commands that don't return an AcquireTokenResult
+                //For commands that don't return neither AcquireTokenResult or VoidResult
                 commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
                         command.getParameters().getCorrelationId());
             }
