@@ -28,7 +28,7 @@
 *.gradle                                                                            @shoatman @AdamBJohnsonx @shahzaibj
 
 # Cache
-/common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman 
+/common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman @iamgusain
 
 # Commands
 /common/src/main/java/com/microsoft/identity/common/internal/commands               @shoatman @iambmelt @AdamBJohnsonx 
