@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
+import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -62,6 +63,16 @@ public class TestUtils {
         final Context context = ApplicationProvider.getApplicationContext();
 
         return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, Context.MODE_PRIVATE, null);
+    }
+
+    public static Activity getMockActivity(final Context context) {
+        Activity activity = new Activity() {
+            @Override
+            public Context getApplicationContext() {
+                return context;
+            }
+        };
+        return activity;
     }
 
     /**
