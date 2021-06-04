@@ -1,5 +1,6 @@
 Version 3.4.4
 ----------
+- [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 
 Version 3.4.3
