@@ -28,6 +28,7 @@ import com.microsoft.identity.common.java.net.util.ResponseBody;
 
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
@@ -37,6 +38,8 @@ import java.io.OutputStream;
 import java.net.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -44,6 +47,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.SSLSocket;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -1116,11 +1121,12 @@ public final class UrlConnectionHttpClientTest {
                 null
         );
 
-        Assert.assertEquals(response.getStatusCode(), 200);
-        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "");
+        Assert.assertEquals(200,response.getStatusCode());
+        Assert.assertEquals("", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
+//    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
     public void testTLS1() throws IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
@@ -1130,12 +1136,13 @@ public final class UrlConnectionHttpClientTest {
                 null
         );
 
-        Assert.assertEquals(response.getStatusCode(), 200);
-        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1");
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals("TLSv1", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
-    public void testTLS11() throws IOException {
+//    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
+    public void testTLS11() throws IOException, NoSuchAlgorithmException, KeyManagementException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
                 new URL("https://tls-v1-1.badssl.com:1011/"),
@@ -1144,8 +1151,8 @@ public final class UrlConnectionHttpClientTest {
                 null
         );
 
-        Assert.assertEquals(response.getStatusCode(), 200);
-        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.1");
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals("TLSv1.1", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
@@ -1158,8 +1165,8 @@ public final class UrlConnectionHttpClientTest {
                 null
         );
 
-        Assert.assertEquals(response.getStatusCode(), 200);
-        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.2");
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals("TLSv1.2", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test
@@ -1174,7 +1181,23 @@ public final class UrlConnectionHttpClientTest {
                 null
         );
 
-        Assert.assertEquals(response.getStatusCode(), 200);
-        Assert.assertEquals(SSLSocketFactoryWrapper.getLastHandshakeTLSversion(), "TLSv1.3");
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals("TLSv1.3", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
+
+    @Test(expected = SSLHandshakeException.class)
+    public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws IOException {
+        final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder().supportedSslProtocol(new String[]{"TLSv1.3"}).build();
+
+        final HttpResponse response = client.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://tls-v1-2.badssl.com:1012/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.fail();
+    }
+
 }

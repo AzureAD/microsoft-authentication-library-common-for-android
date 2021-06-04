@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
-import com.microsoft.identity.common.java.logging.Logger;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
@@ -32,17 +30,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import javax.net.SocketFactory;
 import javax.net.ssl.HandshakeCompletedEvent;
 import javax.net.ssl.HandshakeCompletedListener;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.Synchronized;
 import lombok.experimental.Accessors;
@@ -55,7 +51,10 @@ import lombok.experimental.Accessors;
 public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     private static final String TAG = SSLSocketFactoryWrapper.class.getSimpleName();
 
-    private static final SSLSocketFactoryWrapper sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) getDefault());
+    /**
+     * SSL Protocols that our library supports.
+     */
+    public static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
 
     // Gets TLS version of the latest-established socket connection. For testing only.
     // NOTE: This onMethod thing doesn't generate javadoc, but this method is only exposed for testing only.
@@ -70,15 +69,19 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     private static final String TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
     private static final String TLS_CHACHA20_POLY1305_SHA256 = "TLS_CHACHA20_POLY1305_SHA256";
 
-    /**
-     * SSL Protocols that our library supports.
-     */
-    private static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
-
+    private final String[] mEnabledSSLProtocol;
     private final SSLSocketFactory mBaseSocketFactory;
 
-    private SSLSocketFactoryWrapper(SSLSocketFactory baseSocketFactory) {
+
+    public SSLSocketFactoryWrapper(@NonNull final SSLSocketFactory baseSocketFactory) {
         mBaseSocketFactory = baseSocketFactory;
+        mEnabledSSLProtocol = SUPPORTED_SSL_PROTOCOLS;
+    }
+
+    public SSLSocketFactoryWrapper(@NonNull final SSLSocketFactory baseSocketFactory,
+                                   @NonNull String[] enabledSSLProtocol) {
+        mBaseSocketFactory = baseSocketFactory;
+        mEnabledSSLProtocol = enabledSSLProtocol;
     }
 
     @Override
@@ -145,7 +148,7 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
         final List<String> enabledProtocols = new ArrayList<>();
 
         final List<String> supportedProtocols = Arrays.asList(sslSocket.getSupportedProtocols());
-        for (final String protocol: SUPPORTED_SSL_PROTOCOLS){
+        for (final String protocol: mEnabledSSLProtocol){
             if (supportedProtocols.contains(protocol)){
                 enabledProtocols.add(protocol);
             }
@@ -178,26 +181,5 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
         final String[] array = new String[enabledCipherSuites.size()];
         enabledCipherSuites.toArray(array);
         return array;
-    }
-
-    /**
-     * Returns a {@link SSLSocketFactoryWrapper}.
-     */
-    @NonNull
-    public static synchronized SSLSocketFactory getSocketFactory(@Nullable SSLContext context) {
-        final String methodName = "getSocketFactory";
-        Logger.verbose(TAG + methodName, "getting SSLSocketFactory.");
-
-        if (context == null){
-            return sDefault;
-        }
-
-        final SocketFactory factory = context.getSocketFactory();
-        if (factory == null){
-            Logger.warn(TAG + methodName, "Failed to construct a SSLSocketFactory from SSLContext, returns the default one.");
-            return sDefault;
-        }
-
-        return new SSLSocketFactoryWrapper((SSLSocketFactory) context.getSocketFactory());
     }
 }

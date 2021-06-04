@@ -52,6 +52,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -97,6 +98,17 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private final Supplier<Integer> readTimeoutMsSupplier = null;
     @Builder.Default
     private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
+    @Builder.Default
+    private final String[] supportedSslProtocol = SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+
+    private SSLSocketFactoryWrapper sDefault;
+
+    private synchronized SSLSocketFactoryWrapper getDefaultWrapper(){
+        if (sDefault == null){
+            sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) SSLSocketFactory.getDefault(), supportedSslProtocol);
+        }
+        return sDefault;
+    }
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
 
@@ -174,7 +186,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @param requestHeaders Headers used to send the http request.
      * @param requestContent Optional request body, if applicable.
      * @param sslContext     an optional {@link SSLContext} object.
-     * @return HttpResponse      The response for this request.
+     * @return HttpResponse  The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
     @Override
@@ -320,9 +332,11 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
         }
 
         if (urlConnection instanceof HttpsURLConnection) {
-            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(
-                    SSLSocketFactoryWrapper.getSocketFactory(request.getSslContext())
-            );
+            final SSLSocketFactory factory =
+                    request.getSslContext() != null ?
+                            new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
+                            getDefaultWrapper();
+            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
         } else {
             Logger.warn(TAG + methodName, "Making a request for non-https URL.");
         }
@@ -381,4 +395,5 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
                 || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
     }
+
 }

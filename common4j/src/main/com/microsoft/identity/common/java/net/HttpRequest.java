@@ -29,7 +29,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocket;
 
 import lombok.Getter;
 import lombok.NonNull;
@@ -83,7 +82,7 @@ public class HttpRequest {
      * @param requestHeaders     Headers used to send the http request.
      * @param requestContent     Post message sent in the post request.
      * @param requestContentType Request content type.
-     * @param sslContext          an optional {@link SSLContext} object.
+     * @param sslContext         an optional {@link SSLContext} object.
      */
     public HttpRequest(@NonNull final URL requestUrl,
                        @NonNull final Map<String, String> requestHeaders,
