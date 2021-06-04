@@ -82,7 +82,9 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -809,8 +811,8 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final net.minidev.json.JSONObject jwkJson = getDevicePopJwkMinifiedJson();
-            return jwkJson.getAsString(SignedHttpRequestJwtClaims.JWK);
+            final Map<String, Object> jwkMap = getDevicePopJwkMinifiedJson();
+            return jwkMap.get(SignedHttpRequestJwtClaims.JWK).toString();
         } catch (final UnrecoverableEntryException e) {
             exception = e;
             errCode = INVALID_PROTECTION_PARAMS;
@@ -1446,15 +1448,15 @@ class DevicePopManager implements IDevicePopManager {
      * @throws NoSuchAlgorithmException    If the KeyStore is unable to use the designated alg.
      * @throws KeyStoreException           If the KeyStore experiences an error during read.
      */
-    private net.minidev.json.JSONObject getDevicePopJwkMinifiedJson()
+    private Map<String, Object> getDevicePopJwkMinifiedJson()
             throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
         final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();
-        final net.minidev.json.JSONObject jwkContents = publicRsaKey.toJSONObject();
-        final net.minidev.json.JSONObject wrappedJwk = new net.minidev.json.JSONObject();
-        wrappedJwk.appendField(SignedHttpRequestJwtClaims.JWK, jwkContents);
+        final Map<String, Object> jwkContents = publicRsaKey.toJSONObject();
+        final Map<String, Object> wrappedJwk = new HashMap<>();
+        wrappedJwk.put(SignedHttpRequestJwtClaims.JWK, jwkContents);
 
         return wrappedJwk;
     }
