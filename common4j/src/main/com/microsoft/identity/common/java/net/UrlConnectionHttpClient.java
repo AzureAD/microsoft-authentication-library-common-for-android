@@ -45,6 +45,7 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -75,7 +76,6 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
 @AllArgsConstructor
 @Builder
 @ThreadSafe
-@Immutable
 public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private static final Object TAG = UrlConnectionHttpClient.class.getName();
@@ -99,7 +99,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     @Builder.Default
     private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
     @Builder.Default
-    private final String[] supportedSslProtocol = SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+    private final List<String> supportedSslProtocol = SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+
 
     private SSLSocketFactoryWrapper sDefault;
 

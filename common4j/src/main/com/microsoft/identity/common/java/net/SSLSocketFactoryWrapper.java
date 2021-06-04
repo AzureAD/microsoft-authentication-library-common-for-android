@@ -54,7 +54,8 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     /**
      * SSL Protocols that our library supports.
      */
-    public static final String[] SUPPORTED_SSL_PROTOCOLS = new String[]{"SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"};
+    public static final List<String> SUPPORTED_SSL_PROTOCOLS =
+            Collections.unmodifiableList(Arrays.asList("SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
 
     // Gets TLS version of the latest-established socket connection. For testing only.
     // NOTE: This onMethod thing doesn't generate javadoc, but this method is only exposed for testing only.
@@ -69,19 +70,13 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
     private static final String TLS_AES_256_GCM_SHA384 = "TLS_AES_256_GCM_SHA384";
     private static final String TLS_CHACHA20_POLY1305_SHA256 = "TLS_CHACHA20_POLY1305_SHA256";
 
-    private final String[] mEnabledSSLProtocol;
+    private final List<String> mEnabledSSLProtocol;
     private final SSLSocketFactory mBaseSocketFactory;
 
-
-    public SSLSocketFactoryWrapper(@NonNull final SSLSocketFactory baseSocketFactory) {
-        mBaseSocketFactory = baseSocketFactory;
-        mEnabledSSLProtocol = SUPPORTED_SSL_PROTOCOLS;
-    }
-
     public SSLSocketFactoryWrapper(@NonNull final SSLSocketFactory baseSocketFactory,
-                                   @NonNull String[] enabledSSLProtocol) {
+                                   @Nullable List<String> enabledSSLProtocol) {
         mBaseSocketFactory = baseSocketFactory;
-        mEnabledSSLProtocol = enabledSSLProtocol;
+        mEnabledSSLProtocol = enabledSSLProtocol == null ? SUPPORTED_SSL_PROTOCOLS : enabledSSLProtocol;
     }
 
     @Override

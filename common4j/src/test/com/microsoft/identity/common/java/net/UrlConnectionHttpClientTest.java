@@ -42,6 +42,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -1188,7 +1189,9 @@ public final class UrlConnectionHttpClientTest {
 
     @Test(expected = SSLHandshakeException.class)
     public void testConnectingToTLS13ServerWhileEnforcing12OnClientSide() throws IOException {
-        final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder().supportedSslProtocol(new String[]{"TLSv1.3"}).build();
+        final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
+                .supportedSslProtocol(Arrays.asList("TLSv1.3"))
+                .build();
 
         final HttpResponse response = client.method(
                 HttpClient.HttpMethod.GET,
