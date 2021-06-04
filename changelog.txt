@@ -1,5 +1,6 @@
 Version 3.4.4
 ----------
+- [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 
 Version 3.4.3
