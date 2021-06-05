@@ -20,18 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities;
+package com.microsoft.identity.labapi.utilities.exception;
+
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 /**
- * An {@link IJWTParserFactory} that can return an implementation of an {@link IJWTParser}.
- * Currently it only returns a default implementation that is using Nimbus.
+ * An Exception that should be thrown by all Lab Api operations if they encounter an error.
  */
-public enum JWTParserFactory implements IJWTParserFactory {
+@Getter
+@Accessors(prefix = "m")
+public class LabApiException extends Exception {
+    private final LabError mErrorCode;
 
-    INSTANCE;
+    public LabApiException(@NonNull final LabError error) {
+        super(error.name());
+        mErrorCode = error;
+    }
 
-    @Override
-    public IJWTParser getJwtParser() {
-        return new NimbusJWTParser();
+    public LabApiException(@NonNull final LabError error, @NonNull final Throwable throwable) {
+        super(error.name(), throwable);
+        mErrorCode = error;
     }
 }

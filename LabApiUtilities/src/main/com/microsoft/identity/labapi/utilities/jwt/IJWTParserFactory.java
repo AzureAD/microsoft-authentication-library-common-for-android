@@ -20,12 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities;
+package com.microsoft.identity.labapi.utilities.jwt;
 
-public class Constants {
+/**
+ * A factory that can return an implementation of an {@link IJWTParser}.
+ */
+public interface IJWTParserFactory {
 
-    public static final String AUDIENCE_CLAIM = "aud";
-    public static final String KEY_VAULT_TOKEN_AUDIENCE = "https://vault.azure.net";
-    public static final String LAB_API_TOKEN_AUDIENCE = "https://msidlab.com";
-
+    /**
+     * Obtain an instance of an {@link IJWTParser}.
+     *
+     * @return the JWT Parser to use.
+     */
+    IJWTParser getJwtParser();
 }

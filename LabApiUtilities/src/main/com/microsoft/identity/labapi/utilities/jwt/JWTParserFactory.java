@@ -20,15 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication.exception;
+package com.microsoft.identity.labapi.utilities.jwt;
 
 /**
- * Represents errors that can occur in a Lab Api flow. This includes flows to authenticate against
- * the lab api as well as flows to obtain an account via the Lab Api.
+ * An {@link IJWTParserFactory} that can return an implementation of an {@link IJWTParser}.
+ * Currently it only returns a default implementation that is using Nimbus.
  */
-public enum LabError {
-    FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET,
-    FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE,
-    FAILED_TO_GET_SECRET_FROM_KEYVAULT,
-    CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
+public enum JWTParserFactory implements IJWTParserFactory {
+
+    INSTANCE;
+
+    @Override
+    public IJWTParser getJwtParser() {
+        return new NimbusJWTParser();
+    }
 }

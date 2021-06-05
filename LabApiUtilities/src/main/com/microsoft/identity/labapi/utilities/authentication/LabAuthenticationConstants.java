@@ -20,27 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication.exception;
+package com.microsoft.identity.labapi.utilities.authentication;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
+public class LabAuthenticationConstants {
 
-/**
- * An Exception that should be thrown by all Lab Api operations if they encounter an error.
- */
-@Getter
-@Accessors(prefix = "m")
-public class LabApiException extends Exception {
-    private final LabError mErrorCode;
+    public static final String AUDIENCE_CLAIM = "aud";
+    public static final String KEY_VAULT_TOKEN_AUDIENCE = "https://vault.azure.net";
+    public static final String LAB_API_TOKEN_AUDIENCE = "https://msidlab.com";
 
-    public LabApiException(@NonNull final LabError error) {
-        super(error.name());
-        mErrorCode = error;
-    }
-
-    public LabApiException(@NonNull final LabError error, @NonNull final Throwable throwable) {
-        super(error.name(), throwable);
-        mErrorCode = error;
-    }
 }
