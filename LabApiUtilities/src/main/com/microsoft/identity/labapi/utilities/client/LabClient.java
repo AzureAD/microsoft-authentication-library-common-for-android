@@ -32,6 +32,7 @@ import com.microsoft.identity.internal.test.labapi.model.SecretResponse;
 import com.microsoft.identity.internal.test.labapi.model.TempUser;
 import com.microsoft.identity.labapi.utilities.authentication.LabApiAuthenticationClient;
 import com.microsoft.identity.labapi.utilities.constants.TempUserType;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 import com.microsoft.identity.labapi.utilities.exception.LabError;
 
@@ -43,7 +44,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
@@ -78,39 +79,41 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(configInfo);
 
-        return new LabAccount(username, password);
+        return new LabAccount(username, password, UserType.fromName(
+                configInfo.getUserInfo().getUserType())
+        );
     }
 
-    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery labQuery) throws LabApiException {
+    private List<ConfigInfo> fetchConfigsFromLab(@NonNull final LabQuery query) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
         try {
-            ConfigApi api = new ConfigApi();
-            final List<ConfigInfo> configInfos = api.apiConfigGet(
-                    labQuery.getUserType().getValue(),
-                    labQuery.getUserRole().getValue(),
-                    labQuery.getMfa().getValue(),
-                    labQuery.getProtectionPolicy().getValue(),
-                    labQuery.getHomeDomain().getValue(),
-                    labQuery.getHomeUpn().getValue(),
-                    labQuery.getB2cProvider().getValue(),
-                    labQuery.getFederationProvider().getValue(),
-                    labQuery.getAzureEnvironment().getValue(),
-                    labQuery.getGuestHomeAzureEnvironment().getValue(),
-                    labQuery.getAppType().getValue(),
-                    labQuery.getPublicClient().getValue(),
-                    labQuery.getSignInAudience().getValue(),
-                    labQuery.getGuestHomedIn().getValue(),
-                    labQuery.getHasAltId().getValue(),
-                    labQuery.getAltIdSource().getValue(),
-                    labQuery.getAltIdType().getValue(),
-                    labQuery.getPasswordPolicyValidityPeriod().getValue(),
-                    labQuery.getPasswordPolicyNotificationDays().getValue(),
-                    labQuery.getTokenLifetimePolicy().getValue(),
-                    labQuery.getTokenType().getValue(),
-                    labQuery.getTokenLifetime().getValue());
-            return configInfos;
+            final ConfigApi api = new ConfigApi();
+            return api.apiConfigGet(
+                    query.getUserType() != null ? query.getUserType().getValue() : null,
+                    query.getUserRole() != null ? query.getUserRole().getValue() : null,
+                    query.getMfa() != null ? query.getMfa().getValue() : null,
+                    query.getProtectionPolicy() != null ? query.getProtectionPolicy().getValue() : null,
+                    query.getHomeDomain() != null ? query.getHomeDomain().getValue() : null,
+                    query.getHomeUpn() != null ? query.getHomeUpn().getValue() : null,
+                    query.getB2cProvider() != null ? query.getB2cProvider().getValue() : null,
+                    query.getFederationProvider() != null ? query.getFederationProvider().getValue() : null,
+                    query.getAzureEnvironment() != null ? query.getAzureEnvironment().getValue() : null,
+                    query.getGuestHomeAzureEnvironment() != null ? query.getGuestHomeAzureEnvironment().getValue() : null,
+                    query.getAppType() != null ? query.getAppType().getValue() : null,
+                    query.getPublicClient() != null ? query.getPublicClient().getValue() : null,
+                    query.getSignInAudience() != null ? query.getSignInAudience().getValue() : null,
+                    query.getGuestHomedIn() != null ? query.getGuestHomedIn().getValue() : null,
+                    query.getHasAltId() != null ? query.getHasAltId().getValue() : null,
+                    query.getAltIdSource() != null ? query.getAltIdSource().getValue() : null,
+                    query.getAltIdType() != null ? query.getAltIdType().getValue() : null,
+                    query.getPasswordPolicyValidityPeriod() != null ? query.getPasswordPolicyValidityPeriod().getValue() : null,
+                    query.getPasswordPolicyNotificationDays() != null ? query.getPasswordPolicyNotificationDays().getValue() : null,
+                    query.getTokenLifetimePolicy() != null ? query.getTokenLifetimePolicy().getValue() : null,
+                    query.getTokenType() != null ? query.getTokenType().getValue() : null,
+                    query.getTokenLifetime() != null ? query.getTokenLifetime().getValue() : null
+            );
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
         }
@@ -134,7 +137,8 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(tempUser);
 
-        return new LabAccount(tempUser.getUpn(), password);
+        // all temp users created by Lab Api are currently cloud users
+        return new LabAccount(tempUser.getUpn(), password, UserType.CLOUD);
     }
 
     @Override

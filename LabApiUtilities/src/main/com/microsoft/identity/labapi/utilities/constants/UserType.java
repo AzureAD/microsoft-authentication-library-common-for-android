@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.constants;
 
+import lombok.NonNull;
+
 public enum UserType {
     CLOUD(LabConstants.UserType.CLOUD),
     B2C(LabConstants.UserType.B2C),
@@ -38,6 +40,10 @@ public enum UserType {
 
     public String getValue() {
         return value;
+    }
+
+    public static UserType fromName(@NonNull final String name) {
+        return valueOf(UserType.class, name.toUpperCase());
     }
 
 }

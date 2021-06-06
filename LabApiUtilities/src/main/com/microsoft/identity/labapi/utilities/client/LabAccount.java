@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.client;
 
+import com.microsoft.identity.labapi.utilities.constants.UserType;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -35,4 +37,5 @@ import lombok.experimental.Accessors;
 public class LabAccount {
     private final String mUsername;
     private final String mPassword;
+    private final UserType mAccountType;
 }
