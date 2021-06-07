@@ -30,7 +30,7 @@ jobs:
         displayName: Assembles the outputs of this project.
         inputs:
           tasks: LabApiUtilities:clean LabApiUtilities:assemble
-      - template: azure-pipelines/templates/steps/spotbugs.yml@common
+      - template: ../templates/steps/spotbugs.yml
         parameters:
           project: LabApiUtilities
           spotbugsCommand: spotbugsMain
