@@ -79,7 +79,7 @@ public class BrokerOperationExecutor {
          * If the broker returns an error, this will throw an exception.
          */
         @NonNull
-        T extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException;
+        T extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException;
 
         /**
          * Returns method name (for logging/telemetry purpose).
