@@ -64,7 +64,6 @@ public class ShadowHttpClient {
      * @param requestContent the request body
      * @return the mocked response or the actual response
      * @throws IOException throw an IOException when an error occurred
-     * @see HttpClient#method(HttpClient.HttpMethod, URL, Map, byte[])
      */
     public HttpResponse method(@NonNull HttpClient.HttpMethod httpMethod,
                                @NonNull URL requestUrl,
@@ -72,7 +71,7 @@ public class ShadowHttpClient {
                                @Nullable byte[] requestContent) throws IOException {
         HttpRequestInterceptor interceptor = MockHttpClient.intercept(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
-            return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent);
+            return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent, null);
         } else {
             return interceptor.intercept(httpMethod, requestUrl, requestHeaders, requestContent);
         }

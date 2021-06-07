@@ -31,7 +31,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
 import com.microsoft.identity.internal.testutils.mocks.MockTokenResponse;
