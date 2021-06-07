@@ -34,6 +34,8 @@ import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCred
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
+import org.mockito.Mockito;
+
 import java.util.Map;
 
 public class TestUtils {
