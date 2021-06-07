@@ -25,11 +25,13 @@ package com.microsoft.identity.common.internal.authorities;
 import com.google.gson.annotations.SerializedName;
 
 public class AzureActiveDirectorySlice {
+    public static final String SLICE = "slice";
+    public static final String DC = "dc";
 
-    @SerializedName("slice")
+    @SerializedName(SLICE)
     private String mSlice;
 
-    @SerializedName("dc")
+    @SerializedName(DC)
     private String mDataCenter;
 
     public String getSlice() {

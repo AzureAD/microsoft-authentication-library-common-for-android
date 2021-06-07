@@ -39,9 +39,25 @@ import com.microsoft.identity.common.logging.Logger;
 import java.util.List;
 import java.util.Locale;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
 import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
 
+@SuperBuilder
+@SuppressFBWarnings(value = "RCN", justification = "Lombok-generated code creates redundant checks")
+@EqualsAndHashCode
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(prefix = "m")
+@ToString(callSuper = true)
 public abstract class AzureActiveDirectoryAudience {
 
     private static final String TAG = AzureActiveDirectoryAudience.class.getSimpleName();

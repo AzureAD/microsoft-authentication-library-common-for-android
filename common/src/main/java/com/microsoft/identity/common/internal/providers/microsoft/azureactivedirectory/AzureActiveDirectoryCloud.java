@@ -27,11 +27,18 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
 /**
  * This class contains information about a specific Azure Active Directory Cloud.  Azure Active Directory
  * as a service is available in multiple clouds.  World wide is the default; however their are sovereign clouds
  * available for Germany, China, etc....
  */
+@SuperBuilder
+@EqualsAndHashCode
+@Accessors(prefix = "m")
 public class AzureActiveDirectoryCloud {
 
     @SerializedName("preferred_network")

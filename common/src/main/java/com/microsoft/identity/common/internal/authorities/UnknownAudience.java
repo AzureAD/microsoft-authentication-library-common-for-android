@@ -22,5 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
 public class UnknownAudience extends AzureActiveDirectoryAudience {
 }

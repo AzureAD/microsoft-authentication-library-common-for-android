@@ -55,6 +55,7 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
@@ -72,6 +73,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
@@ -103,16 +106,33 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
-        Logger.info(TAG, "Constructing result bundle from AcquireTokenOperationParameters.");
+        Logger.info(TAG, "Constructing brokerRequest from AcquireTokenOperationParameters.");
 
-        final String extraQueryStringParameter = parameters.getExtraQueryStringParameters() != null ?
-                QueryParamsAdapter._toJson(parameters.getExtraQueryStringParameters())
+        final List<Pair<String, String>> queryParams = parameters.getExtraQueryStringParameters();
+        final List<Pair<String, String>> extraQueryStringParameters = queryParams != null ?
+                new ArrayList<>(queryParams) : new ArrayList<Pair<String, String>>();
+
+        final AzureActiveDirectorySlice sliceData = parameters.getAuthority().getSlice();
+        if (sliceData != null) {
+            String slice = sliceData.getSlice();
+            if (slice != null) {
+                extraQueryStringParameters.add(new Pair(AzureActiveDirectorySlice.SLICE_PARAMETER, slice));
+            }
+            String dc = sliceData.getDC();
+            if (dc != null) {
+                extraQueryStringParameters.add(new Pair(AzureActiveDirectorySlice.DC_PARAMETER, dc));
+            }
+        }
+
+        final String extraQueryStringParameter = (extraQueryStringParameters.size() > 0) ?
+                QueryParamsAdapter._toJson(extraQueryStringParameters)
                 : null;
         final String extraOptions = parameters.getExtraOptions() != null ?
                 QueryParamsAdapter._toJson(parameters.getExtraOptions()) : null;
+
         final BrokerRequest brokerRequest = BrokerRequest.builder()
                 .authority(parameters.getAuthority().getAuthorityURL().toString())
-                .scope(TextUtils.join(" ", parameters.getScopes()))
+                .scope(StringUtil.join(' ', parameters.getScopes()))
                 .redirect(getRedirectUri(parameters))
                 .clientId(parameters.getClientId())
                 .userName(parameters.getLoginHint())
@@ -200,6 +220,12 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         final BrokerRequest brokerRequest = brokerRequestFromBundle(intent.getExtras());
 
+        return brokerInteactiveParametersFromBrokerRequest(callingActivity, intent.getIntExtra(CALLER_INFO_UID, 0),
+                intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY), brokerRequest);
+    }
+
+    @SuppressFBWarnings(value = "RCN", justification = "The SDK type may actually be null")
+    public BrokerInteractiveTokenCommandParameters brokerInteactiveParametersFromBrokerRequest(@NonNull Activity callingActivity, int callingAppUid, String negotiatedBrokerProtocolVersion, BrokerRequest brokerRequest) {
         if (brokerRequest == null) {
             Logger.error(TAG, "Broker Result is null, returning empty parameters, " +
                     "validation is expected to fail", null
@@ -207,10 +233,9 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             return BrokerInteractiveTokenCommandParameters.builder().build();
         }
 
-        int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
-
         List<Pair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
-        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
+        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
+        List<Pair<String, String>> extraQPCopy = new ArrayList<>(extraQP);
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
                 brokerRequest.getAuthority(),
@@ -223,11 +248,10 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         String correlationIdString = brokerRequest.getCorrelationId();
 
-        if (TextUtils.isEmpty(correlationIdString)) {
+        if (StringUtil.isEmpty(correlationIdString)) {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
         }
-        final String negotiatedBrokerProtocolVersion = intent.getStringExtra(NEGOTIATED_BP_VERSION_KEY);
 
         Logger.info(TAG, "Authorization agent passed in by MSAL: " + brokerRequest.getAuthorizationAgent());
 
@@ -243,7 +267,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .applicationVersion(brokerRequest.getApplicationVersion())
                 .callerPackageName(brokerRequest.getApplicationName())
                 .callerAppVersion(brokerRequest.getApplicationVersion())
-                .extraQueryStringParameters(extraQP)
+                .extraQueryStringParameters((brokerRequest.getExtraQueryStringParameter() == null ||
+                        (extraQPCopy.size() > 0 && extraQP.size() == 0) ? null : extraQP))
                 .authority(authority)
                 .extraOptions(extraOptions)
                 .scopes(getScopesAsSet(brokerRequest.getScope()))
@@ -267,7 +292,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         // Set Global environment variable for instance discovery if present
-        if (!TextUtils.isEmpty(brokerRequest.getEnvironment())) {
+        if (!StringUtil.isEmpty(brokerRequest.getEnvironment())) {
             AzureActiveDirectory.setEnvironment(
                     Environment.valueOf(brokerRequest.getEnvironment())
             );
@@ -396,7 +421,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Helper method to transforn scopes string to Set
      */
     private Set<String> getScopesAsSet(@Nullable final String scopeString) {
-        if (TextUtils.isEmpty(scopeString)) {
+        if (StringUtil.isEmpty(scopeString)) {
             return new HashSet<>();
         }
         final String[] scopes = scopeString.split(" ");
@@ -407,7 +432,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * Helper method to get redirect uri from parameters, calculates from package signature if not available.
      */
     private String getRedirectUri(@NonNull TokenCommandParameters parameters) {
-        if (TextUtils.isEmpty(parameters.getRedirectUri())) {
+        if (StringUtil.isEmpty(parameters.getRedirectUri())) {
             return BrokerValidator.getBrokerRedirectUri(
                     parameters.getAndroidApplicationContext(),
                     parameters.getApplicationName()

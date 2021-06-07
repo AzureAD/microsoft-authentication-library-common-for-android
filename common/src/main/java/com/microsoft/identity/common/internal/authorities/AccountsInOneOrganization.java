@@ -22,6 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.authorities;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class AccountsInOneOrganization extends AzureActiveDirectoryAudience {
 
     public AccountsInOneOrganization() {

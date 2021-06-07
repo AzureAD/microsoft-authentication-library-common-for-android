@@ -32,6 +32,15 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.Set;
 
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+@Builder
+@EqualsAndHashCode
+@Accessors(prefix = "m")
+@Getter
 public class BrowserDescriptor implements Serializable {
     private static final long serialVersionUID = 3745812401643512530L;
     @SerializedName("browser_package_name")

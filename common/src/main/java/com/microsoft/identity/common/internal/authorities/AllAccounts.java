@@ -24,16 +24,23 @@ package com.microsoft.identity.common.internal.authorities;
 
 import androidx.annotation.NonNull;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class AllAccounts extends AzureActiveDirectoryAudience {
 
     public static final String ALL_ACCOUNTS_TENANT_ID = "common";
 
     public AllAccounts() {
-        this.setTenantId(ALL_ACCOUNTS_TENANT_ID);
+        super.setTenantId(ALL_ACCOUNTS_TENANT_ID);
     }
 
     public AllAccounts(@NonNull final String cloudUrl) {
-        this.setCloudUrl(cloudUrl);
-        this.setTenantId(ALL_ACCOUNTS_TENANT_ID);
+        super.setCloudUrl(cloudUrl);
+        super.setTenantId(ALL_ACCOUNTS_TENANT_ID);
     }
 }

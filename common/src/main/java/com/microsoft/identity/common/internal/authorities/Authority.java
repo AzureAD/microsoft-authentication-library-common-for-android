@@ -36,15 +36,28 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.internal.util.ObjectUtils;
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@Accessors(prefix = "m")
+@ToString
 public abstract class Authority {
 
     private static final String TAG = Authority.class.getSimpleName();
@@ -94,7 +107,7 @@ public abstract class Authority {
 
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
-        if (!TextUtils.isEmpty(BuildConfig.SLICE) || !TextUtils.isEmpty(BuildConfig.DC)) {
+        if (!StringUtil.isEmpty(BuildConfig.SLICE) || !StringUtil.isEmpty(BuildConfig.DC)) {
             com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(BuildConfig.SLICE);
             slice.setDataCenter(BuildConfig.DC);
@@ -236,6 +249,10 @@ public abstract class Authority {
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @SuppressWarnings("PMD")
+    /**
+     * This implementation of {@link equals} does not take into account particular fields.
+     * The <strong>only</strong> fields considered here are authority type and authority url.
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -243,7 +260,7 @@ public abstract class Authority {
 
         Authority authority = (Authority) o;
 
-        if (!mAuthorityTypeString.equals(authority.mAuthorityTypeString)) return false;
+        if (!ObjectUtils.equals(mAuthorityTypeString, authority.mAuthorityTypeString)) return false;
         return getAuthorityURL().equals(authority.getAuthorityURL());
     }
     //CHECKSTYLE:ON
@@ -253,9 +270,13 @@ public abstract class Authority {
     // This method *must* be regenerated if the class' structural definition changes through the
     // addition/subtraction of fields.
     @SuppressWarnings("PMD")
+    /**
+     * This implementation of {@link hashCode} does not take into account particular fields.
+     * The <strong>only</strong> fields considered here are authority type and authority url.
+     */
     @Override
     public int hashCode() {
-        int result = mAuthorityTypeString.hashCode();
+        int result = ((mAuthorityTypeString == null) ? "0" : mAuthorityTypeString).hashCode();
         result = 31 * result + getAuthorityURL().hashCode();
         return result;
     }
