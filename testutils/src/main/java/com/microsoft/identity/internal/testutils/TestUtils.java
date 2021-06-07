@@ -66,13 +66,10 @@ public class TestUtils {
     }
 
     public static Activity getMockActivity(final Context context) {
-        Activity activity = new Activity() {
-            @Override
-            public Context getApplicationContext() {
-                return context;
-            }
-        };
-        return activity;
+        final Activity mockedActivity = Mockito.mock(Activity.class);
+        Mockito.when(mockedActivity.getApplicationContext()).thenReturn(context);
+
+        return mockedActivity;
     }
 
     /**
