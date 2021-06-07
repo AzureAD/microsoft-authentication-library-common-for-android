@@ -187,7 +187,7 @@ public class CommandDispatcher {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
-                                                                                         @NonNull final BaseCommand command) {
+                                                                                     @NonNull final BaseCommand command) {
 
         final String methodName = ":submitSilent";
 
@@ -237,7 +237,7 @@ public class CommandDispatcher {
                     try {
                         //initializing again since the request is transferred to a different thread pool
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
-                                SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
                         initTelemetryForCommand(command);
@@ -256,12 +256,12 @@ public class CommandDispatcher {
                         // commandResult = sCommandResultCache.get(command);
                         //If nothing in cache, execute the command and cache the result
 //                        if (commandResult == null) {
-                            commandResult = executeCommand(command);
-                            // Disabling throttling ADO:1383033
-                            // cacheCommandResult(command, commandResult);
-                            Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
-                                    + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
-                                    + " is cacheable : " + command.isEligibleForCaching());
+                        commandResult = executeCommand(command);
+                        // Disabling throttling ADO:1383033
+                        // cacheCommandResult(command, commandResult);
+                        Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
+                                + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
+                                + " is cacheable : " + command.isEligibleForCaching());
 //                        } else {
 //                            Logger.info(
 //                                    TAG + methodName,
@@ -299,6 +299,68 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.clear();
                     }
+                }
+            });
+            return finalFuture;
+        }
+    }
+
+    public static void submitAndForget(@NonNull final BaseCommand command){
+        submitAndForgetReturningFuture(command);
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    public static FinalizableResultFuture<CommandResult> submitAndForgetReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
+        final String methodName = ":submit";
+
+        final CommandParameters commandParameters = command.getParameters();
+        final String correlationId = initializeDiagnosticContext(commandParameters.getCorrelationId(),
+                commandParameters.getSdkType() == null ? SdkType.UNKNOWN.getProductName() :
+                        commandParameters.getSdkType().getProductName(), commandParameters.getSdkVersion());
+
+        // set correlation id on parameters as it may not already be set
+        commandParameters.setCorrelationId(correlationId);
+
+        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+        Logger.info(
+                TAG,
+                "RefreshOnCommand with CorrelationId: "
+                        + correlationId
+        );
+
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        synchronized (mapAccessLock) {
+            final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
+            finalFuture.whenComplete(getCommandResultConsumer(command, handler));
+            sSilentExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+
+                    try {
+                        //initializing again since the request is transferred to a different thread pool
+                        initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion());
+                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
+                        CommandResult commandResult = executeCommand(command);
+                        Logger.info(TAG + methodName, "Completed as owner for correlation id : **"
+                                + correlationId + statusMsg(commandResult.getStatus().getLogStatus())
+                                + " is cacheable : " + command.isEligibleForCaching());
+                        // set correlation id on Local Authentication Result
+                        setCorrelationIdOnResult(commandResult, correlationId);
+                        Telemetry.getInstance().flush(correlationId);
+                        EstsTelemetry.getInstance().flush(command, commandResult);
+                        finalFuture.setResult(commandResult);
+                    } catch (final Throwable t) {
+                        Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
+                        finalFuture.setException(new ExecutionException(t));
+                    } finally {
+                        DiagnosticContext.clear();
+                    }
+
                 }
             });
             return finalFuture;
@@ -355,8 +417,8 @@ public class CommandDispatcher {
                     Logger.info(TAG + methodName,
                             "Completed duplicate request with correlation id : **"
                                     + command.getParameters().getCorrelationId() + ", having the same result as : "
-                                    + result.getCorrelationId() + ", with the status : "
-                                    + result.getStatus().getLogStatus());
+                                    + result.getCorrelationId() + statusMsg(result.getStatus().getLogStatus())
+                    );
                 }
                 // Return command result will post() result for us.
                 returnCommandResult(command, result, handler);
@@ -409,9 +471,9 @@ public class CommandDispatcher {
                         command.getParameters().getCorrelationId());
             }
         } else /* baseException == null */ {
-            if (result != null && result instanceof AcquireTokenResult) {
+            if (result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
+                commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
                         command.getParameters().getCorrelationId());
             } else {
                 //For commands that don't return an AcquireTokenResult
@@ -556,22 +618,21 @@ public class CommandDispatcher {
     /**
      * Get Commandresult from acquiretokenresult
      *
-     * @param baseException
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
-                                                                 @NonNull AcquireTokenResult result, @NonNull String correlationId) {
-        //Token Commands
+    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
+
         if (result.getSucceeded()) {
             return new CommandResult(CommandResult.ResultStatus.COMPLETED,
                     result.getLocalAuthenticationResult(), correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {
-                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+                return new CommandResult(CommandResult.ResultStatus.ERROR,
+                        baseException, correlationId);
             }
         }
     }
@@ -636,7 +697,7 @@ public class CommandDispatcher {
 
                         Logger.info(TAG + methodName,
                                 "Completed interactive request for correlation id : **" + correlationId +
-                                        ", with the status : " + commandResult.getStatus().getLogStatus());
+                                        statusMsg(commandResult.getStatus().getLogStatus()));
 
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         Telemetry.getInstance().flush(correlationId);
@@ -697,5 +758,10 @@ public class CommandDispatcher {
             localAuthenticationResult.setCorrelationId(correlationId);
         }
     }
+
+    private static String statusMsg(String status){
+        return ", with the status : " + status;
+    }
+
 
 }
