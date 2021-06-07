@@ -11,7 +11,7 @@ V.Next
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
 - [MINOR] Add common-java. Migrate Logger. (#1300)
-- [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
+- [MINOR] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 - [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
 - [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
