@@ -27,6 +27,9 @@ import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import java.util.List;
 
+/**
+ * An interface describing the operations that need to be performed by a Lab Api Client.
+ */
 public interface ILabClient {
 
     LabAccount fetchUser(LabQuery labQuery) throws LabApiException;

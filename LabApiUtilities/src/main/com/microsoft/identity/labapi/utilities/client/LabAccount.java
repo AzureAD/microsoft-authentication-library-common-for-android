@@ -30,6 +30,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+/**
+ * An account object model that will used to represent accounts used for testing purposes.
+ */
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PUBLIC)

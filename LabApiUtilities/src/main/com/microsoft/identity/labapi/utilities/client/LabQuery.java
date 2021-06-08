@@ -52,6 +52,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+/**
+ * A query used for fetching accounts from the Lab Api.
+ */
 @Getter
 @Accessors(prefix = "m")
 @Builder
