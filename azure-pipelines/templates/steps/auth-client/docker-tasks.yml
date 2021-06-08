@@ -1,6 +1,9 @@
 # File: docker-tasks.yml
 
 steps:
+- task: PostBuildCleanup@3
+  condition: always()
+  displayName: 'Post build clean up'
 - checkout: self
   clean: true
   submodules: recursive
@@ -16,11 +19,11 @@ steps:
     docker run --privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ authclient.azurecr.io/samples/dbi-instrumented-api30 sh scripts/run-instrumented-tests.sh
   displayName: 'Build and test inside docker container'
 - task: PublishTestResults@2
+  condition: succeededOrFailed()
   inputs:
     testResultsFormat: 'JUnit'
     testResultsFiles: '**/TEST-*.xml'
     searchFolder: '$(System.DefaultWorkingDirectory)'
-    condition: succeededOrFailed()
     displayName: 'Publish Test Results'
 - script: |
     echo =============================================
@@ -45,6 +48,3 @@ steps:
     docker system df
   condition: always()
   displayName: 'Cleanup'
-- task: PostBuildCleanup@3
-  condition: always()
-  displayName: 'Post build clean up'
