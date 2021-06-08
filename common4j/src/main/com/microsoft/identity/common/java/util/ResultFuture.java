@@ -58,7 +58,7 @@ public class ResultFuture<T> implements Future<T> {
     }
 
     @Override
-    public T get() throws InterruptedException, ExecutionException {
+    public synchronized T get() throws InterruptedException, ExecutionException {
         mCountDownLatch.await();
 
         if (null != mException) {
@@ -69,7 +69,7 @@ public class ResultFuture<T> implements Future<T> {
     }
 
     @Override
-    public T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException, ExecutionException {
+    public synchronized T get(final long l, @NonNull final TimeUnit timeUnit) throws InterruptedException, TimeoutException, ExecutionException {
         if (mCountDownLatch.await(l, timeUnit)) {
             if (null != mException) {
                 throw new ExecutionException(mException);
