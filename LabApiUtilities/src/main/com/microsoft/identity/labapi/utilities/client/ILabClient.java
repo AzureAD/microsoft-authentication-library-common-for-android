@@ -32,11 +32,40 @@ import java.util.List;
  */
 public interface ILabClient {
 
+    /**
+     * Load an existing account from Lab Api based on the provided query.
+     *
+     * @param labQuery parameters that determine what kind of account to fetch from lab
+     * @return a {@link LabAccount} object
+     * @throws LabApiException if an error occurs while trying to fetch account from lab
+     */
     LabAccount fetchUser(LabQuery labQuery) throws LabApiException;
 
+    /**
+     * Loads existing account(s) from Lab Api based on the provided query.
+     *
+     * @param labQuery parameters that determine what kind of account(s) to fetch from lab
+     * @return a list of {@link LabAccount} objects
+     * @throws LabApiException if an error occurs while trying to fetch account(s) from lab
+     */
     List<LabAccount> fetchUsers(LabQuery labQuery) throws LabApiException;
 
+    /**
+     * Create and return a new temp AAD user using Lab Api.
+     *
+     * @param tempUserType the {@link TempUserType} of the user to create
+     * @return a {@link LabAccount} object
+     * @throws LabApiException if an error occurs while trying to fetch account from lab
+     */
     LabAccount createTempUser(TempUserType tempUserType) throws LabApiException;
 
+    /**
+     * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for
+     * accounts but may also be used for any other secret that the Lab has stored in their KeyVault.
+     *
+     * @param secretName the name (identifier) of the secret that should be loaded
+     * @return a String containing the value of the secret
+     * @throws LabApiException if an error occurs while trying to load secret from lab
+     */
     String getSecret(String secretName) throws LabApiException;
 }
