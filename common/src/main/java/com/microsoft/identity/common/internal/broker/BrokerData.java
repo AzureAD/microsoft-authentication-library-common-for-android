@@ -38,6 +38,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_RELEASE_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_SIGNATURE;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_DEBUG_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
 
@@ -61,6 +62,11 @@ public class BrokerData {
             COMPANY_PORTAL_APP_RELEASE_SIGNATURE
     );
 
+    public static final BrokerData COMPANY_PORTAL_DEBUG = new BrokerData(
+            COMPANY_PORTAL_APP_PACKAGE_NAME,
+            COMPANY_PORTAL_APP_DEBUG_SIGNATURE
+    );
+
     public static final BrokerData BROKER_HOST = new BrokerData(
             BROKER_HOST_APP_PACKAGE_NAME,
             BROKER_HOST_APP_SIGNATURE
@@ -69,6 +75,7 @@ public class BrokerData {
     private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_DEBUG);
         add(BROKER_HOST);
+        add(COMPANY_PORTAL_DEBUG);
     }});
 
     private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
