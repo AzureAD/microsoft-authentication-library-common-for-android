@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;

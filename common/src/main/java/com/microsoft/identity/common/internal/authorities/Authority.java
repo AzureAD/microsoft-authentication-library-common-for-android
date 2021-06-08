@@ -33,9 +33,9 @@ import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -95,7 +95,7 @@ public abstract class Authority {
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
         if (!TextUtils.isEmpty(BuildConfig.SLICE) || !TextUtils.isEmpty(BuildConfig.DC)) {
-            com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
+            final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(BuildConfig.SLICE);
             slice.setDataCenter(BuildConfig.DC);
             mSlice = slice;

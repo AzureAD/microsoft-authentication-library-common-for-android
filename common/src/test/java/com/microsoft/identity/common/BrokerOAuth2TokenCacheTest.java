@@ -24,10 +24,8 @@ package com.microsoft.identity.common;
 
 import android.content.Context;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
@@ -48,21 +46,25 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.shadows.ShadowStorageHelper;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
@@ -85,27 +87,25 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
-@RunWith(AndroidJUnit4.class)
-public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
+@SuppressWarnings("rawtypes")
+@RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowStorageHelper.class})
+public class BrokerOAuth2TokenCacheTest {
 
     private static final int TEST_APP_UID = 1337;
 
-    MicrosoftStsOAuth2Strategy mockStrategy;
+    private Context mContext;
 
-    MicrosoftStsAuthorizationRequest mockRequest;
-
-    MicrosoftStsTokenResponse mockResponse;
-
-    IAccountCredentialAdapter mMockCredentialAdapter;
+    private MicrosoftStsOAuth2Strategy mockStrategy;
+    private MicrosoftStsAuthorizationRequest mockRequest;
+    private MicrosoftStsTokenResponse mockResponse;
+    private IAccountCredentialAdapter mMockCredentialAdapter;
 
     private MicrosoftFamilyOAuth2TokenCache mFociCache;
     private IAccountCredentialCache mFociCredentialCache;
-
     private IAccountCredentialCache mAppUidCredentialCache;
-
     private List<MsalOAuth2TokenCache> mOtherAppTokenCaches;
     private List<IAccountCredentialCache> mOtherAppCredentialCaches;
-
     private BrokerOAuth2TokenCache mBrokerOAuth2TokenCache;
 
     private MsalOAuth2TokenCacheTest.AccountCredentialTestBundle mDefaultFociTestBundle;
@@ -115,28 +115,24 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     private IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private int[] testAppUids;
 
+
     @Before
-    @Override
-    public void setUp() throws Exception {
-        super.setUp();
+    public void setUp() {
 
-        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
-        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
-        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
-        mMockCredentialAdapter = Mockito.mock(IAccountCredentialAdapter.class);
+        mockStrategy = PowerMockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = PowerMockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = PowerMockito.mock(MicrosoftStsTokenResponse.class);
+        mMockCredentialAdapter = PowerMockito.mock(IAccountCredentialAdapter.class);
 
+        mContext = ApplicationProvider.getApplicationContext();
 
-        // Our test context
-        final Context context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().getTargetContext();
+        mApplicationMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(mContext);
 
-        mApplicationMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(context);
-
-        // Test Configs for caches...
-        initFociCache(context);
-        initOtherCaches(context);
+        initFociCache(mContext);
+        initOtherCaches(mContext);
 
         mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                context,
+                mContext,
                 TEST_APP_UID,
                 mApplicationMetadataCache,
                 new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -150,7 +146,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         mDefaultFociTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -162,14 +158,14 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
                 SESSION_KEY,
                 CredentialType.IdToken
         );
 
         mDefaultAppUidTestBundle = new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -181,7 +177,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 null,
                 SESSION_KEY,
                 CredentialType.IdToken
@@ -192,7 +188,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         for (int ii = 0; ii < mOtherAppTokenCaches.size(); ii++) {
             mOtherCacheTestBundles.add(
                     new MsalOAuth2TokenCacheTest.AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user@tenant.onmicrosoft.com",
                             HOME_ACCOUNT_ID,
@@ -204,7 +200,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                             SECRET,
                             UUID.randomUUID().toString(),
                             SECRET,
-                            MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                            MOCK_ID_TOKEN_WITH_CLAIMS,
                             null,
                             SESSION_KEY,
                             CredentialType.IdToken
@@ -213,11 +209,8 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         }
     }
 
-
     @After
     public void tearDown() throws Exception {
-        super.tearDown();
-
         if (null != mAppUidCredentialCache) {
             mAppUidCredentialCache.clearAll();
         }
@@ -232,7 +225,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         mApplicationMetadataCache.clear();
     }
-
 
     private void initOtherCaches(final Context context) {
         testAppUids = new int[]{
@@ -782,7 +774,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    InstrumentationRegistry.getContext(),
+                    mContext,
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -852,7 +844,7 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         for (final int testUid : testAppUids) {
             // Create the cache to query...
             mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                    InstrumentationRegistry.getContext(),
+                    mContext,
                     testUid,
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
@@ -885,12 +877,10 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
 
-        final Context context = InstrumentationRegistry.getContext();
-
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                context,
+                mContext,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(context)
+                new SharedPreferencesBrokerApplicationMetadataCache(mContext)
         );
 
         assertEquals(
@@ -899,9 +889,9 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
-                context,
+                mContext,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(context)
+                new SharedPreferencesBrokerApplicationMetadataCache(mContext)
         );
 
         assertEquals(
@@ -1168,5 +1158,4 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 retrievedResult.getRefreshToken()
         );
     }
-
 }

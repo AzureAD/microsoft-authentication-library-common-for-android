@@ -22,8 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
@@ -34,17 +33,21 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.shadows.ShadowStorageHelper;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.UUID;
 
+import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.AUTHORITY_TYPE;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CLIENT_ID;
@@ -59,7 +62,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.when;
 
-@RunWith(AndroidJUnit4.class)
+@RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowStorageHelper.class})
 public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTest {
 
     private static final AbstractAuthenticationScheme BEARER_SCHEME = new BearerAuthenticationSchemeInternal();
@@ -76,7 +80,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
     public void setUp() throws Exception {
         super.setUp();
         mOauth2TokenCache = new MicrosoftFamilyOAuth2TokenCache<>(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 accountCredentialCache,
                 mockCredentialAdapter
         );
@@ -92,7 +96,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final String randomHomeAccountId = UUID.randomUUID().toString();
 
         final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 UUID.randomUUID().toString(),
                 "test.user@tenant.onmicrosoft.com",
                 randomHomeAccountId,
@@ -104,7 +108,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
                 SESSION_KEY,
                 CredentialType.IdToken
@@ -212,7 +216,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final String realm = UUID.randomUUID().toString();
 
         final AccountCredentialTestBundle frtTestBundle = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 localAccountId,
                 "test.user@tenant.onmicrosoft.com",
                 randomHomeAccountId,
@@ -224,7 +228,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
                 SESSION_KEY,
                 CredentialType.IdToken
@@ -270,7 +274,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
 
         // Save another FRT, this time with a different client id
         final AccountCredentialTestBundle frtTestBundle2 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 localAccountId,
                 "test.user@tenant.onmicrosoft.com",
                 randomHomeAccountId,
@@ -282,7 +286,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID + "2",
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
                 SESSION_KEY,
                 CredentialType.IdToken
@@ -391,7 +395,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         final String randomRealm = UUID.randomUUID().toString();
 
         final AccountCredentialTestBundle frtTestBundleV2 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 UUID.randomUUID().toString(),
                 "test.user@tenant.onmicrosoft.com",
                 randomHomeAccountId,
@@ -403,7 +407,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
                 SESSION_KEY,
                 CredentialType.IdToken
@@ -449,7 +453,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
         );
 
         final AccountCredentialTestBundle frtTestBundleV1 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 UUID.randomUUID().toString(),
                 "test.user@tenant.onmicrosoft.com",
                 randomHomeAccountId,
@@ -461,7 +465,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
                 SECRET,
                 CLIENT_ID,
                 SECRET,
-                MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS,
+                MOCK_ID_TOKEN_WITH_CLAIMS,
                 "1",
                 SESSION_KEY,
                 CredentialType.V1IdToken

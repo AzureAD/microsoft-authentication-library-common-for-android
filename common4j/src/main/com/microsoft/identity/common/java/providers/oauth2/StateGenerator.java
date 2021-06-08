@@ -20,21 +20,19 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
-
-import java.util.UUID;
+package com.microsoft.identity.common.java.providers.oauth2;
 
 /**
- * This generates a non-guessable value for the state parameter in an authorization request per the specification: https://tools.ietf.org/html/rfc6749#section-10.10
+ * Abstract base class for generating state parameter for authorization request.
  */
-public class DefaultStateGenerator extends StateGenerator {
-    @Override
-    public String generate() {
-        final UUID stateUUID1 = UUID.randomUUID();
-        final UUID stateUUID2 = UUID.randomUUID();
-        final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
+public abstract class StateGenerator {
 
-        return state;
-    }
-
+    /**
+     * Generate a non-guessable state parameter for the authorization request.
+     * <p>
+     * See: https://tools.ietf.org/html/rfc6749#section-10.10
+     *
+     * @return String state parameter
+     */
+    public abstract String generate();
 }
