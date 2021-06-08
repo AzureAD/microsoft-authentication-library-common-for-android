@@ -38,6 +38,7 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.arch.core.util.Function;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -45,6 +46,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
+import com.microsoft.identity.common.internal.providers.oauth2.WebViewAuthorizationFragment;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
@@ -53,10 +55,17 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
@@ -80,12 +89,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_SUBCODE = "error_subcode";
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
+    private final WebViewAuthorizationFragment.SsoCredentialResolver mSsoTokenHandler;
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl) {
-        this(activity, completionCallback, pageLoadedCallback, null, redirectUrl);
+        this(activity, completionCallback, pageLoadedCallback, null, redirectUrl, null);
     }
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
@@ -93,8 +103,18 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback,
                                              @NonNull final String redirectUrl) {
+        this(activity, completionCallback, pageLoadedCallback, pageCommitVisibleCallback, redirectUrl, null);
+    }
+
+    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
+                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
+                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
+                                             @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback,
+                                             @NonNull final String redirectUrl,
+                                             final WebViewAuthorizationFragment.SsoCredentialResolver ssoTokenHandling) {
         super(activity, completionCallback, pageLoadedCallback, pageCommitVisibleCallback);
         mRedirectUrl = redirectUrl;
+        mSsoTokenHandler = ssoTokenHandling;
     }
 
     /**
@@ -148,7 +168,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url) {
         final String formattedURL = url.toLowerCase(Locale.US);
-
+        final String ssoNonce = isSsoTokenRedirect(url);
         if (isPkeyAuthUrl(formattedURL)) {
             Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
             try {
@@ -161,6 +181,26 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 Logger.errorPII(TAG, exception.getMessage(), exception);
                 returnError(exception.getErrorCode(), exception.getMessage());
                 view.stopLoading();
+            }
+        } else if (ssoNonce != null) {
+            Logger.info(TAG, "SSO Token redirect.");
+            view.stopLoading();
+            final Map<String, String> oldHeaders = mSsoTokenHandler.getHeaders();
+            // I do not love this being a HashMap, but I don't dare change the type because of the djinni layer.
+            Map<String, String> headers = new HashMap<>(oldHeaders);
+            final String newHeaderName = mSsoTokenHandler.getHeaderName();
+            final String newCredential = mSsoTokenHandler.getInterruptCredential(ssoNonce);
+            if (headers != null && newHeaderName != null && newCredential != null) {
+                headers.put(newHeaderName, newCredential);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        view.loadUrl(url, headers);
+                    }
+                });
+            } else {
+                returnError(ErrorStrings.UNKNOWN_ERROR,
+                        "Unknown failure leading to missing SSO challenge");
             }
         } else if (isRedirectUrl(formattedURL)) {
             Logger.info(TAG, "Navigation starts with the redirect uri.");
@@ -194,6 +234,31 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             return false;
         }
         return true;
+    }
+
+    private String isSsoTokenRedirect(String url) {
+            URI realUrl = URI.create(url);
+            String query = realUrl.getQuery();
+            if (query == null) {
+                return null;
+            }
+
+            Pattern ssoPattern = Pattern.compile(".*[&?]sso_nonce=([^&]*).*");
+            if(realUrl.getQuery().contains("sso_nonce=")) {
+                final Matcher matcher = ssoPattern.matcher(query);
+                if(matcher.matches()) {
+                    if (matcher.groupCount() != 1) {
+                        Logger.warn(TAG, "too many sso_nonce query parameters");
+                        return null;
+                    } else {
+                        String sso_nonce = matcher.group(1);
+                        if (!StringUtil.isEmpty(sso_nonce)) {
+                            return sso_nonce;
+                        }
+                    }
+                }
+            }
+            return null;
     }
 
     private boolean isUriSSLProtected(@NonNull final String url) {

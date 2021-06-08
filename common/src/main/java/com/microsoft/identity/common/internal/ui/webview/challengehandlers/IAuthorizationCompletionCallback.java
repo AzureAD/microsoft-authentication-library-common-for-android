@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
 import android.content.Intent;
 
+import java.net.URL;
+
 /**
  * This is the callback interface to send the authorization challenge response
  * back to the activity which will implement this interface.
@@ -40,4 +42,6 @@ public interface IAuthorizationCompletionCallback {
     void onChallengeResponseReceived(int returnCode, Intent responseIntent);
 
     void setPKeyAuthStatus(boolean status);
+
+    String getSsoNonceResponse(URL url);
 }

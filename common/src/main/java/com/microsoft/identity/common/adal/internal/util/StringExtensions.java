@@ -26,6 +26,7 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -119,11 +120,10 @@ public final class StringExtensions {
      * @return String
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
-    public static String encodeBase64URLSafeString(final byte[] bytes)
-            throws UnsupportedEncodingException {
+    public static String encodeBase64URLSafeString(final byte[] bytes) {
         return new String(
                 Base64.encode(bytes, Base64.NO_PADDING | Base64.NO_WRAP | Base64.URL_SAFE),
-                ENCODING_UTF8);
+                AuthenticationConstants.CHARSET_UTF8);
     }
 
     /**

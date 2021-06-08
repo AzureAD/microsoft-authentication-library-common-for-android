@@ -38,6 +38,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
 
+import java.net.URL;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTHENTICATOR_MFA_LINKING_PREFIX;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
@@ -89,6 +91,11 @@ public class AzureActiveDirectoryWebViewClientTest {
                     @Override
                     public void setPKeyAuthStatus(boolean status) {
                         return;
+                    }
+
+                    @Override
+                    public String getSsoNonceResponse(URL url) {
+                        return null;
                     }
                 },
                 new OnPageLoadedCallback() {
