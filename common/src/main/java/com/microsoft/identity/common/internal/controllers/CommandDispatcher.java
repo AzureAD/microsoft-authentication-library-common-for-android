@@ -73,6 +73,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
@@ -530,8 +531,11 @@ public class CommandDispatcher {
         }
     }
 
+    private static final AtomicInteger interactiveCommands = new AtomicInteger(0);
+
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
+        Logger.info(TAG, "Attempting interactive command current queue is " + interactiveCommands.get());
         synchronized (sLock) {
             final LocalBroadcastManager localBroadcastManager =
                     LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
@@ -543,60 +547,66 @@ public class CommandDispatcher {
                         new Intent(CANCEL_INTERACTIVE_REQUEST)
                 );
             }
-
+            Logger.info(TAG,"Beginning execution with " + interactiveCommands.getAndIncrement() +
+                    " commands in flight.");
             sInteractiveExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-                    final CommandParameters commandParameters = command.getParameters();
-                    final String correlationId = initializeDiagnosticContext(
-                            commandParameters.getCorrelationId(),
-                            commandParameters.getSdkType() == null ?
-                                    SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
-                            commandParameters.getSdkVersion()
-                    );
                     try {
-                        // set correlation id on parameters as it may not already be set
-                        commandParameters.setCorrelationId(correlationId);
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(
+                                commandParameters.getCorrelationId(),
+                                commandParameters.getSdkType() == null ?
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion()
+                        );
+                        try {
+                            // set correlation id on parameters as it may not already be set
+                            commandParameters.setCorrelationId(correlationId);
 
-                        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+                            logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
+                            EstsTelemetry.getInstance().initTelemetryForCommand(command);
 
-                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+                            EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
-                            @Override
-                            public void onReceive(Context context, Intent intent) {
-                                completeInteractive(intent);
-                            }
-                        };
+                            final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                                @Override
+                                public void onReceive(Context context, Intent intent) {
+                                    completeInteractive(intent);
+                                }
+                            };
 
-                        CommandResult commandResult;
-                        Handler handler = new Handler(Looper.getMainLooper());
+                            CommandResult commandResult;
+                            Handler handler = new Handler(Looper.getMainLooper());
 
-                        localBroadcastManager.registerReceiver(
-                                resultReceiver,
-                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                            localBroadcastManager.registerReceiver(
+                                    resultReceiver,
+                                    new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
 
-                        sCommand = command;
+                            sCommand = command;
 
-                        //Try executing request
-                        commandResult = executeCommand(command);
-                        sCommand = null;
-                        localBroadcastManager.unregisterReceiver(resultReceiver);
+                            //Try executing request
+                            commandResult = executeCommand(command);
+                            sCommand = null;
+                            localBroadcastManager.unregisterReceiver(resultReceiver);
 
-                        // set correlation id on Local Authentication Result
-                        setCorrelationIdOnResult(commandResult, correlationId);
+                            // set correlation id on Local Authentication Result
+                            setCorrelationIdOnResult(commandResult, correlationId);
 
-                        Logger.info(TAG + methodName,
-                                "Completed interactive request for correlation id : **" + correlationId +
-                                        ", with the status : " + commandResult.getStatus().getLogStatus());
+                            Logger.info(TAG + methodName,
+                                    "Completed interactive request for correlation id : **" + correlationId +
+                                            ", with the status : " + commandResult.getStatus().getLogStatus());
 
-                        EstsTelemetry.getInstance().flush(command, commandResult);
-                        Telemetry.getInstance().flush(correlationId);
-                        returnCommandResult(command, commandResult, handler);
+                            EstsTelemetry.getInstance().flush(command, commandResult);
+                            Telemetry.getInstance().flush(correlationId);
+                            returnCommandResult(command, commandResult, handler);
+                        } finally {
+                            DiagnosticContext.clear();
+                        }
                     } finally {
-                        DiagnosticContext.clear();
+                        Logger.info(TAG, "Retiring request, resulting queue depth is " +
+                                interactiveCommands.decrementAndGet());
                     }
                 }
             });
