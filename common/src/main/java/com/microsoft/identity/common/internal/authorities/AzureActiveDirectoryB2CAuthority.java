@@ -94,6 +94,13 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
         return new MicrosoftStsOAuth2Strategy(config, parameters);
     }
 
+    /**
+     * This method attempts to split the Authority URI
+     * and returns the last item, which is the policy name.
+     * The authority format for Azure AD B2C is: https://{azureADB2CHostname}/tfp/{tenant}/{policyName}
+     *
+     * @return a String with the Policy name
+     */
     public String getB2CPolicyName(){
         try {
             final String authorityUriString = this.getAuthorityUri().toString();
