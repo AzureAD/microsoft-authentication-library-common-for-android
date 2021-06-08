@@ -43,6 +43,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1173,6 +1174,29 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
+    public void testTLSWithTLS11Context() throws IOException, NoSuchAlgorithmException, KeyManagementException {
+        final SSLContext context = SSLContext.getInstance("TLSv1.1");
+        context.init(null, null, new SecureRandom());
+
+        // Microsoft.com supports TLS 1.3
+        // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
+        final HttpResponse response = sNoRetryClient.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://www.microsoft.com/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                context
+        );
+
+        Assert.assertEquals(200, response.getStatusCode());
+
+        // The version specified in SSLContext.getInstance() will always be overwritten by
+        // SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS (or any values that was set during
+        // the initialization of UrlConnectionHttpClient.
+        Assert.assertEquals("TLSv1.3", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
+    }
+
+    @Test
     public void testPickHighestTLS() throws IOException {
         // Microsoft.com supports TLS 1.3
         // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
@@ -1203,6 +1227,26 @@ public final class UrlConnectionHttpClientTest {
         );
 
         Assert.fail();
+    }
+
+    @Test
+    public void testSpecifyingSupportedSSLVersion() throws IOException {
+        final UrlConnectionHttpClient client = UrlConnectionHttpClient.builder()
+                .supportedSslProtocol(Arrays.asList("TLSv1.2"))
+                .build();
+
+        // Microsoft.com supports TLS 1.3
+        // https://www.ssllabs.com/ssltest/analyze.html?d=www.microsoft.com&s=2600%3a1406%3a1400%3a69d%3a0%3a0%3a0%3a356e&hideResults=on&ignoreMismatch=on
+        final HttpResponse response = client.method(
+                HttpClient.HttpMethod.GET,
+                new URL("https://www.microsoft.com/"),
+                new LinkedHashMap<String, String>(),
+                null,
+                null
+        );
+
+        Assert.assertEquals(200, response.getStatusCode());
+        Assert.assertEquals("TLSv1.2", SSLSocketFactoryWrapper.getLastHandshakeTLSversion());
     }
 
     @Test(expected = IllegalStateException.class)
