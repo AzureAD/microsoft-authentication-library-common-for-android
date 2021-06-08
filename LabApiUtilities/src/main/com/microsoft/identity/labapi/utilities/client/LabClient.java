@@ -49,11 +49,18 @@ public class LabClient implements ILabClient {
 
     private final LabApiAuthenticationClient mLabApiAuthenticationClient;
 
+    /**
+     * Temp users API provided by Lab team can often take more than 10 seconds to return...hence, we
+     * are overriding the read timeout.
+     */
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
     @Override
     public LabAccount fetchUser(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
+        // for each query, lab actually returns a list of accounts..all of which fit the criteria..
+        // usually we only need one such account, and hence over here we are just picking the first
+        // element of the list.
         final ConfigInfo configInfo = configInfos.get(0);
         return createAccount(configInfo);
     }
@@ -72,8 +79,10 @@ public class LabClient implements ILabClient {
     }
 
     private LabAccount createAccount(@NonNull final ConfigInfo configInfo) throws LabApiException {
+        // for guest accounts the UPN is located under homeUpn field
         String username = configInfo.getUserInfo().getHomeUPN();
         if (username == null || username.equals("") || username.equalsIgnoreCase("None")) {
+            // for accounts that are NOT guest..the UPN is directly on the UPN field
             username = configInfo.getUserInfo().getUpn();
         }
 
