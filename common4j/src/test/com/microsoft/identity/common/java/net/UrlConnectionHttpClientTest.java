@@ -1128,7 +1128,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-//    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
+    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
     public void testTLS1() throws IOException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
@@ -1143,7 +1143,7 @@ public final class UrlConnectionHttpClientTest {
     }
 
     @Test
-//    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
+    @Ignore("Ignored because our pipeline doesn't support TLS1.0 and TLS1.1. This still can be run locally.")
     public void testTLS11() throws IOException, NoSuchAlgorithmException, KeyManagementException {
         final HttpResponse response = sNoRetryClient.method(
                 HttpClient.HttpMethod.GET,
