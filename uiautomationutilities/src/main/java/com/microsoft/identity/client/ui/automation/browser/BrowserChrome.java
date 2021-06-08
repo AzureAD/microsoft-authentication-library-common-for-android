@@ -50,6 +50,10 @@ public class BrowserChrome extends App implements IBrowser {
     public void handleFirstRun() {
         Logger.i(TAG, "Handle First Run of Browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
+        final UiObject nextButtonForLiteMode = UiAutomatorUtils.obtainUiObjectWithText("Next");
+        if (nextButtonForLiteMode.exists()){
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+        }
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
     }
 
