@@ -57,7 +57,7 @@ public class CodeMarkerManager {
     /**
      * This method captures a particular marker and records the timestamp on which this has been received.
      *
-     * @param marker : A string code which represents a particular place in code.
+     * @param marker A string code which represents a particular place in code.
      */
     public void markCode(final String marker) {
         if (enableCodeMarker) {
@@ -86,7 +86,7 @@ public class CodeMarkerManager {
      * This method sets a scenarioCode Defined in {@link PerfConstants.ScenarioConstants}.
      * This scenario code will be pre-fixed to every code marker.
      *
-     * @param scenarioCode
+     * @param scenarioCode a code representing one of the scenarios defined
      */
     public void setPrefixScenarioCode(final String scenarioCode) {
         this.scenarioCode = scenarioCode;

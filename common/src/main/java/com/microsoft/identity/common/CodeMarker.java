@@ -105,9 +105,9 @@ public class CodeMarker {
     }
 
     /**
-     * Loop through the headers and have them as a csv separated string
+     * Loop through the headers and have them as a csv string
      *
-     * @return csv separated string
+     * @return csv string
      */
     public String getCsvHeader() {
         final StringBuilder csvStringBuilder = new StringBuilder();
@@ -124,9 +124,9 @@ public class CodeMarker {
     }
 
     /**
-     * Loop through the values and have them as a csv separated string
+     * Loop through the values and have them as a csv string
      *
-     * @return csv separated string
+     * @return csv string
      */
     public String getCsvLine() {
         final StringBuilder csvStringBuilder = new StringBuilder();
