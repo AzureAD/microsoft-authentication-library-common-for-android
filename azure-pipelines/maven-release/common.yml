@@ -2,6 +2,9 @@
 # Description: Publish common to maven central (sonatype)
 # https://search.maven.org/search?q=g:com.microsoft.identity%20AND%20a:common
 # Variable: 'commonVersion' was defined in the Variables tab
+# Variable: 'ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME' was defined in the Variables tab
+# Variable: 'mvnAccessToken' was defined in the Variables tab
+# https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 name: $(date:yyyyMMdd)$(rev:.r)
 
 trigger: none
@@ -14,47 +17,17 @@ resources:
     ref: master
 
 jobs:
-- job: Phase_1
-  displayName: SDL and Maven Build
-  cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted Windows 2019 with VS2019
-  steps:
-  - checkout: self
-    clean: true
-    persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: common
-  - template: ../templates/steps/maven-release/generate-release-artifacts.yml
-    parameters:
-      gradleAssembleReleaseTask: common:clean common:build common:assembleRelease
-      gradleGeneratePomFiletask: common:generatePomFileForReleasePublication
-      aarSourceFolder: common\build\outputs\aar\
-      jarSourceFolder: common\build\outputs\jar
-      pomSourceFolder: common\build\publications\release\
-- job: Job_1
-  displayName: GPG Signing
-  cancelTimeoutInMinutes: 1
-  dependsOn: Phase_1
-  pool:
-    name: Hosted Ubuntu 1604
-  steps:
-  - checkout: self
-    clean: true
-  - template: ../templates/steps/maven-release/gpg-signing.yml
-    parameters:
-      gpgSigning: "#!/bin/bash\n\nsudo apt-get update\nsudo apt-get install -y gnupg2\n\nGPG_TTY=$(tty)\nexport GPG_TTY\n\ngpg --import $(public.secureFilePath)\ngpg --import $(private.secureFilePath)\n\n\n\ngpg --batch --no-use-agent --passphrase-file $(passphrase.secureFilePath) --armor --detach-sign $(System.ArtifactsDirectory)/build_outputs/common-$(commonVersion).aar\n\ngpg --batch --no-use-agent --passphrase-file $(passphrase.secureFilePath) --armor --detach-sign $(System.ArtifactsDirectory)/build_outputs/common-$(commonVersion)-sources.jar\n\ngpg --batch --no-use-agent --passphrase-file $(passphrase.secureFilePath) --armor --detach-sign $(System.ArtifactsDirectory)/build_outputs/pom-default.xml\n\ncd $(System.ArtifactsDirectory)/build_outputs/ &&\nfor file in *; do\n if [[ -f \"$file\" ]]; then\n     md5sum -- \"$file\" > \"${file}.md5\"\n fi \n if [[ -f \"$file\" ]]; then\n     shasum -- \"$file\" > \"${file}.sha1\"\n fi\ndone\n\nmkdir  -p $(System.ArtifactsDirectory)/common/$(commonVersion)\n\nmv $(System.ArtifactsDirectory)/build_outputs/*.jar $(System.ArtifactsDirectory)/common/$(commonVersion)\nmv $(System.ArtifactsDirectory)/build_outputs/*.asc $(System.ArtifactsDirectory)/common/$(commonVersion)\nmv $(System.ArtifactsDirectory)/build_outputs/*.aar $(System.ArtifactsDirectory)/common/$(commonVersion)\nmv $(System.ArtifactsDirectory)/build_outputs/*.xml $(System.ArtifactsDirectory)/common/$(commonVersion)\nmv $(System.ArtifactsDirectory)/build_outputs/*.sha1 $(System.ArtifactsDirectory)/common/$(commonVersion)\nmv $(System.ArtifactsDirectory)/build_outputs/*.md5 $(System.ArtifactsDirectory)/common/$(commonVersion)"
-  - task: CmdLine@2
-    displayName: Download certificates library
-    inputs:
-      script: >
-        pip install certifi
-  - task: PublishPipelineArtifact@1
-    displayName: 'Publish Artifact: GPG Signing artifacts'
-    inputs:
-      PathtoPublish: $(System.ArtifactsDirectory)/common/$(commonVersion)
-      ArtifactName: GPG Signing artifacts
-  - template: ../templates/steps/maven-release/upload-to-nexus-sonatype.yml
-    parameters:
-      project: common
+- template: ../templates/steps/maven-release/maven-release-jobs.yml
+  parameters:
+    project: common
+    projectVersion: $(commonVersion)
+    envVstsMvnAndroidAccessTokenVar: ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME
+    gradleAssembleReleaseTask: common:clean common:build common:assembleRelease
+    gradleGeneratePomFiletask: common:generatePomFileForReleasePublication
+    aarSourceFolder: common\build\outputs\aar
+    jarSourceFolder: common\build\outputs\jar
+    pomSourceFolder: common\build\publications\release
+    gpgAar: true
+    gpgSourcesJar: true
+    gpgJavadocJar: false
+    gpgJar: false
