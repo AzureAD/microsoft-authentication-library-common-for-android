@@ -39,7 +39,7 @@ public interface ILabClient {
      * @return a {@link LabAccount} object
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
-    LabAccount fetchUser(LabQuery labQuery) throws LabApiException;
+    LabAccount getLabAccount(LabQuery labQuery) throws LabApiException;
 
     /**
      * Loads existing account(s) from Lab Api based on the provided query.
@@ -48,7 +48,7 @@ public interface ILabClient {
      * @return a list of {@link LabAccount} objects
      * @throws LabApiException if an error occurs while trying to fetch account(s) from lab
      */
-    List<LabAccount> fetchUsers(LabQuery labQuery) throws LabApiException;
+    List<LabAccount> getLabAccounts(LabQuery labQuery) throws LabApiException;
 
     /**
      * Create and return a new temp AAD user using Lab Api.

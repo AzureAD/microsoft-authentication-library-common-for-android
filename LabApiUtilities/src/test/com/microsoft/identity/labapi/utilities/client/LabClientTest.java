@@ -46,7 +46,7 @@ public class LabClientTest {
                 .build();
 
         try {
-            final LabAccount labAccount = labClient.fetchUser(query);
+            final LabAccount labAccount = labClient.getLabAccount(query);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
@@ -71,7 +71,7 @@ public class LabClientTest {
                 .build();
 
         try {
-            final LabAccount labAccount = labClient.fetchUser(query);
+            final LabAccount labAccount = labClient.getLabAccount(query);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());

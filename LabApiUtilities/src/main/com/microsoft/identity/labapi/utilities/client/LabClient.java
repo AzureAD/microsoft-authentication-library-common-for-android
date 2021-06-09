@@ -56,7 +56,7 @@ public class LabClient implements ILabClient {
     private static final int TEMP_USER_API_READ_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(15);
 
     @Override
-    public LabAccount fetchUser(@NonNull final LabQuery labQuery) throws LabApiException {
+    public LabAccount getLabAccount(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
         // for each query, lab actually returns a list of accounts..all of which fit the criteria..
         // usually we only need one such account, and hence over here we are just picking the first
@@ -66,7 +66,7 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public List<LabAccount> fetchUsers(@NonNull final LabQuery labQuery) throws LabApiException {
+    public List<LabAccount> getLabAccounts(@NonNull final LabQuery labQuery) throws LabApiException {
         final List<ConfigInfo> configInfos = fetchConfigsFromLab(labQuery);
 
         final List<LabAccount> labAccounts = new ArrayList<>(configInfos.size());
