@@ -14,7 +14,6 @@ resources:
   repositories:
   - repository: self
     type: git
-    ref: master
 
 jobs:
 - template: ../templates/steps/maven-release/maven-release-jobs.yml
