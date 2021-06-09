@@ -315,7 +315,7 @@ public class ThreadUtilsTests {
         result.cancel(true);
         s.shutdownNow();
     }
-    private Runnable exceptionTaskLatched(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
+    private Runnable exceptionTaskLatched(final CountDownLatch latch, final CountDownLatch goLatch, final CountDownLatch stopLatch) {
         return new Runnable() {
             @Override
             public void run() {
@@ -332,7 +332,7 @@ public class ThreadUtilsTests {
         };
     }
 
-    private Runnable hangThreadLatch(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
+    private Runnable hangThreadLatch(final CountDownLatch latch, final CountDownLatch goLatch, final CountDownLatch stopLatch) {
         return new Runnable() {
             @Override
             public void run() {
