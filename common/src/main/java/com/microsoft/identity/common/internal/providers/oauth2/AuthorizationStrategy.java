@@ -34,8 +34,10 @@ import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 
 import java.lang.ref.WeakReference;
+import java.net.URISyntaxException;
 import java.util.concurrent.Future;
 
 /**
@@ -92,7 +94,7 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
      */
     public abstract Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                                      GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException;
+            throws ClientException, URISyntaxException;
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 }

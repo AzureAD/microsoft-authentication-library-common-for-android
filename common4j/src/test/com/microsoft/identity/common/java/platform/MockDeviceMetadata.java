@@ -24,10 +24,10 @@ package com.microsoft.identity.common.java.platform;
 
 public class MockDeviceMetadata implements IDeviceMetadata {
 
-    static final String TEST_CPU = "TestCPU";
-    static final String TEST_OS = "TestOS";
-    static final String TEST_DEVICE_MODEL = "TestDeviceModel";
-    static final String TEST_MANUFACTURER = "TestManufacturer";
+    public static final String TEST_CPU = "TestCPU";
+    public static final String TEST_OS = "TestOS";
+    public static final String TEST_DEVICE_MODEL = "TestDeviceModel";
+    public static final String TEST_MANUFACTURER = "TestManufacturer";
 
     @Override
     public String getCpu() {

@@ -190,29 +190,6 @@ public final class StringUtil {
     }
 
     /**
-     * Counts the number of occurrences of one String in another.
-     *
-     * @param str
-     * @param subString
-     * @return int
-     */
-    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
-        int count = 0;
-
-        if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
-            return count;
-        }
-
-        for (int i = 0; i <= (str.length() - subString.length()); i++) {
-            if (str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    /**
      * Util method to check if a string is a UUID or not
      *
      * @param inputString : inputString

@@ -25,9 +25,12 @@ package com.microsoft.identity.common.java.util;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 public class StringUtil {
+    private static String TAG = StringUtil.class.getSimpleName();
+
     /**
      * The constant ENCODING_UTF8.
      */

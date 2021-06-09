@@ -20,17 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
-
-import android.util.Base64;
+package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.util.Base64;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 /**
  * The client creates a code challenge derived from the code
@@ -49,9 +51,10 @@ import java.security.SecureRandom;
  * @see <a href="https://tools.ietf.org/html/rfc7636#page-17">RFC-7636</a>
  */
 
+@Getter
+@Accessors(prefix = "m")
 public final class PkceChallenge implements Serializable {
     private static final int CODE_VERIFIER_BYTE_SIZE = 32;
-    private static final int ENCODE_MASK = Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP;
     private static final String DIGEST_ALGORITHM = "SHA-256";
     private static final String ISO_8859_1 = "ISO_8859_1";
     private static final String CHALLENGE_SHA256 = "S256";
@@ -77,32 +80,12 @@ public final class PkceChallenge implements Serializable {
     private final String mCodeChallenge;
 
     @SerializedName("code_challenge_method")
-    private final String mCodeChallengeMethod = CHALLENGE_SHA256;
+    private final String mCodeChallengeMethod;
 
     private PkceChallenge(final String codeVerifier, final String codeChallenge) {
         mCodeVerifier = codeVerifier;
         mCodeChallenge = codeChallenge;
-    }
-
-    /**
-     * @return String of code verifier
-     */
-    public String getCodeVerifier() {
-        return mCodeVerifier;
-    }
-
-    /**
-     * @return String of code challenge
-     */
-    public String getCodeChallenge() {
-        return mCodeChallenge;
-    }
-
-    /**
-     * @return String of code challenge
-     */
-    public String getCodeChallengeMethod() {
-        return mCodeChallengeMethod;
+        mCodeChallengeMethod = CHALLENGE_SHA256;
     }
 
     /**
@@ -112,7 +95,7 @@ public final class PkceChallenge implements Serializable {
      */
     public static PkceChallenge newPkceChallenge() {
         // Generate the code_verifier as a high-entropy cryptographic random String
-        final String codeVerifier = generateCodeVerifier();
+        final String codeVerifier = generateCodeVerifier(null);
 
         // Create a code_challenge derived from the code_verifier
         final String codeChallenge = generateCodeVerifierChallenge(codeVerifier);
@@ -120,18 +103,20 @@ public final class PkceChallenge implements Serializable {
         return new PkceChallenge(codeVerifier, codeChallenge);
     }
 
-    private static String generateCodeVerifier() {
-        final byte[] verifierBytes = new byte[CODE_VERIFIER_BYTE_SIZE];
-        new SecureRandom().nextBytes(verifierBytes);
-        return Base64.encodeToString(verifierBytes, ENCODE_MASK);
+    static String generateCodeVerifier(byte[] verifierBytes) {
+        if (verifierBytes == null){
+            verifierBytes = new byte[CODE_VERIFIER_BYTE_SIZE];
+            new SecureRandom().nextBytes(verifierBytes);
+        }
+        return Base64.encode(verifierBytes);
     }
 
-    private static String generateCodeVerifierChallenge(final String verifier) {
+    static String generateCodeVerifierChallenge(final String verifier) {
         try {
             MessageDigest digester = MessageDigest.getInstance(DIGEST_ALGORITHM);
             digester.update(verifier.getBytes(ISO_8859_1));
             byte[] digestBytes = digester.digest();
-            return Base64.encodeToString(digestBytes, ENCODE_MASK);
+            return Base64.encode(digestBytes);
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalStateException("Failed to generate the code verifier challenge", e);
         } catch (final UnsupportedEncodingException e) {

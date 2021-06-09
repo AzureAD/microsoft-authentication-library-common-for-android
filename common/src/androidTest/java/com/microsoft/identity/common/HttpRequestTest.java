@@ -42,13 +42,11 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.UnknownServiceException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 
 import static com.microsoft.identity.common.java.net.HttpUrlConnectionFactory.addMockedConnection;
-import static com.microsoft.identity.common.java.net.HttpUrlConnectionFactory.clearMockedConnectionQueue;
 import static com.microsoft.identity.common.java.net.HttpUrlConnectionFactory.getMockedConnectionCountInQueue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
