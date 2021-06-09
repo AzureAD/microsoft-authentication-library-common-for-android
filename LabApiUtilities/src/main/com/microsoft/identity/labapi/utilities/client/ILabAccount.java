@@ -24,21 +24,30 @@ package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.constants.UserType;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
 /**
- * An account object model that will used to represent accounts used for testing purposes.
+ * An interface describing the properties that should be available on an Account provided by the
+ * Lab Api.
  */
-@Getter
-@Accessors(prefix = "m")
-@AllArgsConstructor(access = AccessLevel.PUBLIC)
-@EqualsAndHashCode
-public class LabAccount implements ILabAccount {
-    private final String mUsername;
-    private final String mPassword;
-    private final UserType mUserType;
+public interface ILabAccount {
+
+    /**
+     * Get the username (UPN) of this account.
+     *
+     * @return a String representing the account's username
+     */
+    String getUsername();
+
+    /**
+     * Get the password used for signing in with this account.
+     *
+     * @return a String representing the account's password
+     */
+    String getPassword();
+
+    /**
+     * Get the {@link UserType} of this account.
+     *
+     * @return the {@link UserType} representing account's user type
+     */
+    UserType getUserType();
 }

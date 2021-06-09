@@ -50,9 +50,9 @@ public class LabClientTest {
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
-            Assert.assertNotNull(labAccount.getAccountType());
+            Assert.assertNotNull(labAccount.getUserType());
             Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
-            Assert.assertEquals(UserType.CLOUD, labAccount.getAccountType());
+            Assert.assertEquals(UserType.CLOUD, labAccount.getUserType());
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -75,9 +75,9 @@ public class LabClientTest {
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
-            Assert.assertNotNull(labAccount.getAccountType());
+            Assert.assertNotNull(labAccount.getUserType());
             Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
-            Assert.assertEquals(UserType.FEDERATED, labAccount.getAccountType());
+            Assert.assertEquals(UserType.FEDERATED, labAccount.getUserType());
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
@@ -96,9 +96,9 @@ public class LabClientTest {
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());
-            Assert.assertNotNull(labAccount.getAccountType());
+            Assert.assertNotNull(labAccount.getUserType());
             Assert.assertTrue(labAccount.getUsername().toLowerCase().contains("msidlab4"));
-            Assert.assertEquals(UserType.CLOUD, labAccount.getAccountType());
+            Assert.assertEquals(UserType.CLOUD, labAccount.getUserType());
         } catch (final LabApiException e) {
             throw new AssertionError(e);
         }
