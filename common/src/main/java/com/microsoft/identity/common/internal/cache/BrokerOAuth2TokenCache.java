@@ -43,9 +43,9 @@ import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
@@ -1201,12 +1201,9 @@ public class BrokerOAuth2TokenCache
 
         final List<BrokerApplicationMetadata> allMetadata = mApplicationMetadataCache.getAll();
 
+        // TODO - Everything inside this loop can be parallelized... should it be?
         for (final BrokerApplicationMetadata metadata : allMetadata) {
-            final OAuth2TokenCache candidateCache = getTokenCacheForClient(
-                    metadata.getClientId(),
-                    metadata.getEnvironment(),
-                    metadata.getUid() // Supports v1 broker back-compat which yields all accounts
-            );
+            final OAuth2TokenCache candidateCache = getTokenCacheForClient(metadata);
 
             if (null != candidateCache) {
                 allAccounts.addAll(
@@ -1668,26 +1665,9 @@ public class BrokerOAuth2TokenCache
                 );
     }
 
-    /**
-     * Returns the TokenCache to use for supplied client and environment.
-     *
-     * @param clientId          The target client id.
-     * @param environment       The target environment.
-     * @param callingProcessUid The uid of the calling process.
-     * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
-     * cache was found.
-     */
     @Nullable
-    private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
-                                                        @NonNull final String environment,
-                                                        final int callingProcessUid) {
-        final String methodName = ":getTokenCacheForClient";
-
-        final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
-                clientId,
-                environment,
-                callingProcessUid
-        );
+    private MsalOAuth2TokenCache getTokenCacheForClient(@Nullable final BrokerApplicationMetadata metadata) {
+        final String methodName = ":getTokenCacheForClient(bam)";
 
         MsalOAuth2TokenCache targetCache = null;
 
@@ -1704,7 +1684,7 @@ public class BrokerOAuth2TokenCache
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
-                targetCache = initializeProcessUidCache(getContext(), callingProcessUid);
+                targetCache = initializeProcessUidCache(getContext(), metadata.getUid());
             }
         }
 
@@ -1716,6 +1696,32 @@ public class BrokerOAuth2TokenCache
         }
 
         return targetCache;
+    }
+
+    /**
+     * Returns the {@link MsalOAuth2TokenCache} to use for supplied client id and environment.
+     *
+     * @param clientId          The target client id.
+     * @param environment       The target environment.
+     * @param callingProcessUid The uid of the calling process. This value is unique to the calling app and is assigned during installation.
+     * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
+     * cache was found.
+     */
+    @Nullable
+    private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
+                                                        @NonNull final String environment,
+                                                        final int callingProcessUid) {
+        final String methodName = ":getTokenCacheForClient(id, env, uid)";
+
+        final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
+                clientId,
+                environment,
+                callingProcessUid
+        );
+
+        Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));
+
+        return getTokenCacheForClient(metadata);
     }
 
     /**

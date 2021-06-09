@@ -10,19 +10,22 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.model;
 
 import java.util.Objects;
-
+import java.util.Arrays;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-
-import io.swagger.annotations.ApiModelProperty;
-
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.IOException;
 /**
  * TempUser
  */
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2019-10-29T14:56:43.172-07:00")
+
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
 public class TempUser {
   @SerializedName("title")
   private String title = null;
@@ -66,7 +69,7 @@ public class TempUser {
    * Get title
    * @return title
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getTitle() {
     return title;
   }
@@ -84,7 +87,7 @@ public class TempUser {
    * Get userType
    * @return userType
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getUserType() {
     return userType;
   }
@@ -102,7 +105,7 @@ public class TempUser {
    * Get upn
    * @return upn
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getUpn() {
     return upn;
   }
@@ -120,7 +123,7 @@ public class TempUser {
    * Get passwordUri
    * @return passwordUri
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getPasswordUri() {
     return passwordUri;
   }
@@ -138,7 +141,7 @@ public class TempUser {
    * Get credentialVaultKeyName
    * @return credentialVaultKeyName
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getCredentialVaultKeyName() {
     return credentialVaultKeyName;
   }
@@ -156,7 +159,7 @@ public class TempUser {
    * Get tenantId
    * @return tenantId
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getTenantId() {
     return tenantId;
   }
@@ -174,7 +177,7 @@ public class TempUser {
    * Get tenantName
    * @return tenantName
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getTenantName() {
     return tenantName;
   }
@@ -192,7 +195,7 @@ public class TempUser {
    * Get labName
    * @return labName
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getLabName() {
     return labName;
   }
@@ -210,7 +213,7 @@ public class TempUser {
    * Get tenantDomain
    * @return tenantDomain
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getTenantDomain() {
     return tenantDomain;
   }
@@ -228,7 +231,7 @@ public class TempUser {
    * Get authority
    * @return authority
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getAuthority() {
     return authority;
   }
@@ -246,7 +249,7 @@ public class TempUser {
    * Get objectId
    * @return objectId
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getObjectId() {
     return objectId;
   }
@@ -316,4 +319,3 @@ public class TempUser {
   }
 
 }
-

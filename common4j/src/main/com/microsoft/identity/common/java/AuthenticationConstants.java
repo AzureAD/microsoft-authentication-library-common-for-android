@@ -30,9 +30,14 @@ import lombok.NoArgsConstructor;
 public class AuthenticationConstants {
 
     /**
+     * The Constant UTF8.
+     */
+    public static final String ENCODING_UTF8_STRING = "UTF-8";
+
+    /**
      * The Constant ENCODING_UTF8.
      */
-    public static final Charset ENCODING_UTF8 = Charset.forName("UTF-8");
+    public static final Charset ENCODING_UTF8 = Charset.forName(ENCODING_UTF8_STRING);
 
     /**
      * Represents the constants value for Active Directory.
@@ -43,5 +48,15 @@ public class AuthenticationConstants {
          * String of client request id.
          */
         public static final String CLIENT_REQUEST_ID = "client-request-id";
+    }
+
+    /**
+     * Sdk platform and Sdk version fields.
+     */
+    public static final class SdkPlatformFields {
+        /**
+         * The String representing the sdk version.
+         */
+        public static final String VERSION = "x-client-Ver";
     }
 }

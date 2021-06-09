@@ -47,10 +47,8 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
@@ -68,12 +66,15 @@ import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -97,7 +98,7 @@ public class LocalMSALController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(
             @NonNull final InteractiveTokenCommandParameters parameters)
-            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
+            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, URISyntaxException {
         final String methodName = ":acquireToken";
 
         Logger.verbose(
@@ -217,7 +218,7 @@ public class LocalMSALController extends BaseController {
     private AuthorizationResult performAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                             @NonNull final Context context,
                                                             @NonNull final InteractiveTokenCommandParameters parameters)
-            throws ExecutionException, InterruptedException, ClientException {
+            throws ExecutionException, InterruptedException, ClientException, URISyntaxException {
 
         throwIfNetworkNotAvailable(context, parameters.isPowerOptCheckEnabled());
 
