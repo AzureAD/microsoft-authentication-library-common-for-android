@@ -69,18 +69,28 @@ public class PackageHelper {
      */
     public String getCurrentSignatureForPackage(final String packageName) {
         try {
-            final PackageInfo info = getPackageInfo(mPackageManager, packageName);
-            final Signature [] signatures = getSignatures(info);
+            return getCurrentSignatureForPackage(getPackageInfo(mPackageManager, packageName));
+        } catch (NameNotFoundException e) {
+            Logger.error(TAG, "Calling App's package does not exist in PackageManager. ", "", e);
+        }
+        return null;
+    }
+
+    /**
+     * Reads first signature in the list for given package name.
+     *
+     * @param packageInfo package for which signature should be returned
+     * @return signature for package
+     */
+    public String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
+        try {
+            final Signature [] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
                 final Signature signature = signatures[0];
                 MessageDigest md = MessageDigest.getInstance("SHA");
                 md.update(signature.toByteArray());
                 return Base64.encodeToString(md.digest(), Base64.NO_WRAP);
-                // Server side needs to register all other tags. ADAL will
-                // send one of them.
             }
-        } catch (NameNotFoundException e) {
-            Logger.error(TAG, "Calling App's package does not exist in PackageManager. ", "", e);
         } catch (NoSuchAlgorithmException e) {
             Logger.error(TAG, "Digest SHA algorithm does not exists. ", "", e);
         }
