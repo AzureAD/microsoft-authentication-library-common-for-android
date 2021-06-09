@@ -59,7 +59,7 @@ public class Device {
     }
 
     // Visible for testing only.
-    static void clearDeviceMetadata(){
+    public static void clearDeviceMetadata(){
         sLock.writeLock().lock();
         try {
             sDeviceMetadata = null;
@@ -123,6 +123,42 @@ public class Device {
          * String for the broker version.
          */
         public static final String BROKER_VERSION = "x-client-brkrver";
+    }
+
+    /**
+     * Gets the CPU of the current device.
+     *
+     * @return The name of the device CPU.
+     */
+    @NonNull
+    public static String getCpu() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getCpu();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Gets the OS of the current device.
+     *
+     * @return The name/version of the device OS.
+     */
+    @NonNull
+    public static String getOs() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getOs();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
     }
 
     /**

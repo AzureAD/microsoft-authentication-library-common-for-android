@@ -24,10 +24,8 @@ package com.microsoft.identity.common;
 
 import android.content.Context;
 
-import androidx.test.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
@@ -43,9 +41,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
-
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.MsalOAuth2TokenCacheTest.AccountCredentialTestBundle;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
@@ -60,25 +58,25 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
 
-@RunWith(AndroidJUnit4.class)
-public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
+@RunWith(RobolectricTestRunner.class)
+public class MsalCppOAuth2TokenCacheTest {
 
     private MsalCppOAuth2TokenCache mCppCache;
 
     // Test Accounts/Credentials
     private AccountCredentialTestBundle mTestBundle;
 
+    private Context mContext;
+
     @Before
     public void setUp() throws Exception {
-        super.setUp();
-
         // Context and related init
-        final Context context = InstrumentationRegistry.getTargetContext();
-        mCppCache = MsalCppOAuth2TokenCache.create(context);
+        mContext = ApplicationProvider.getApplicationContext();
+        mCppCache = MsalCppOAuth2TokenCache.create(mContext);
 
         // Credentials for testing
         mTestBundle = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
