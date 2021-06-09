@@ -25,10 +25,8 @@ package com.microsoft.identity.common;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
-import androidx.test.InstrumentationRegistry;
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
@@ -49,15 +47,19 @@ import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.shadows.ShadowStorageHelper;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,8 +92,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
-@RunWith(AndroidJUnit4.class)
-public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
+@RunWith(RobolectricTestRunner.class)
+@Config(shadows = {ShadowStorageHelper.class})
+public class MsalOAuth2TokenCacheTest {
 
     private static final String JUNK_KEY = "9ac15f53-27ad-471a-ad57-033cdacb0ee9";
     private static final String JUNK_VALUE = "OWFjMTVmNTMtMjdhZC00NzFhLWFkNTctMDMzY2RhY2IwZWU5";
@@ -204,18 +207,18 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         }
     }
 
+    Context mContext;
+
     @Before
-    @Override
     public void setUp() throws Exception {
-        super.setUp();
-        mockStrategy = Mockito.mock(MicrosoftStsOAuth2Strategy.class);
-        mockRequest = Mockito.mock(MicrosoftStsAuthorizationRequest.class);
-        mockResponse = Mockito.mock(MicrosoftStsTokenResponse.class);
-        mockCredentialAdapter = Mockito.mock(IAccountCredentialAdapter.class);
+        mockStrategy = PowerMockito.mock(MicrosoftStsOAuth2Strategy.class);
+        mockRequest = PowerMockito.mock(MicrosoftStsAuthorizationRequest.class);
+        mockResponse = PowerMockito.mock(MicrosoftStsTokenResponse.class);
+        mockCredentialAdapter = PowerMockito.mock(IAccountCredentialAdapter.class);
 
         // Used by mocks
         defaultTestBundleV1 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -234,7 +237,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         defaultTestBundleV2 = new AccountCredentialTestBundle(
-                MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                 LOCAL_ACCOUNT_ID,
                 USERNAME,
                 HOME_ACCOUNT_ID,
@@ -256,12 +259,13 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         configureMocksForTestBundle(defaultTestBundleV2);
 
         // Context and related init
-        final Context context = InstrumentationRegistry.getTargetContext();
+        mContext = ApplicationProvider.getApplicationContext();
+
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
-                context,
+                mContext,
                 "test_prefs",
                 -1,
-                new StorageHelper(context)
+                new StorageHelper(mContext)
         );
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();
@@ -272,7 +276,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         mOauth2TokenCache = new MsalOAuth2TokenCache<>(
-                context,
+                mContext,
                 accountCredentialCache,
                 mockCredentialAdapter
         );
@@ -756,12 +760,12 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         );
 
         assertNotNull(account);
-        assertEquals(MicrosoftAccount.AUTHORITY_TYPE_V1_V2, account.getAuthorityType());
-        assertEquals(LOCAL_ACCOUNT_ID, account.getLocalAccountId());
-        assertEquals(USERNAME, account.getUsername());
-        assertEquals(HOME_ACCOUNT_ID, account.getHomeAccountId());
-        assertEquals(ENVIRONMENT, account.getEnvironment());
-        assertEquals(REALM, account.getRealm());
+        assertEquals(MicrosoftAccount.AUTHORITY_TYPE_MS_STS, account.getAuthorityType());
+        Assert.assertEquals(LOCAL_ACCOUNT_ID, account.getLocalAccountId());
+        Assert.assertEquals(USERNAME, account.getUsername());
+        Assert.assertEquals(HOME_ACCOUNT_ID, account.getHomeAccountId());
+        Assert.assertEquals(ENVIRONMENT, account.getEnvironment());
+        Assert.assertEquals(REALM, account.getRealm());
     }
 
     @Test
@@ -772,7 +776,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         for (int ii = 0; ii < iterations; ii++) {
             testBundles.add(
                     new AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user@tenant.onmicrosoft.com",
                             HOME_ACCOUNT_ID,
@@ -943,7 +947,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         for (int ii = 0; ii < iterations; ii++) {
             testBundles.add(
                     new AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user" + ii + "@tenant.onmicrosoft.com",
                             UUID.randomUUID().toString(),
@@ -997,7 +1001,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         for (int ii = 0; ii < iterations; ii++) {
             testBundles.add(
                     new AccountCredentialTestBundle(
-                            MicrosoftAccount.AUTHORITY_TYPE_V1_V2,
+                            MicrosoftAccount.AUTHORITY_TYPE_MS_STS,
                             UUID.randomUUID().toString(),
                             "test.user" + ii + "@tenant.onmicrosoft.com",
                             randomHomeAccountId,
@@ -1507,7 +1511,7 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         final RefreshTokenRecord refreshTokenRecord = mOauth2TokenCache.
                 getFamilyRefreshTokenForHomeAccountId(HOME_ACCOUNT_ID);
         assertNotNull(refreshTokenRecord);
-        assertEquals(refreshTokenRecord.getSecret(), SECRET);
+        Assert.assertEquals(refreshTokenRecord.getSecret(), SECRET);
     }
 
     @Test

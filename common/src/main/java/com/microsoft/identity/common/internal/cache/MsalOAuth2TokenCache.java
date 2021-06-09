@@ -42,10 +42,10 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
@@ -406,7 +406,7 @@ public class MsalOAuth2TokenCache
                 "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
         );
 
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_MS_STS.equals(
                 accountRecord.getAuthorityType()
         );
 
@@ -556,7 +556,7 @@ public class MsalOAuth2TokenCache
                 "isFamilyRefreshToken? [" + isFamilyRefreshToken + "]"
         );
 
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_MS_STS.equals(
                 accountRecord.getAuthorityType()
         );
 
@@ -689,7 +689,7 @@ public class MsalOAuth2TokenCache
                              @NonNull final AbstractAuthenticationScheme authScheme) {
         Telemetry.emit(new CacheStartEvent());
 
-        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_V1_V2.equals(
+        final boolean isMultiResourceCapable = MicrosoftAccount.AUTHORITY_TYPE_MS_STS.equals(
                 account.getAuthorityType()
         );
 

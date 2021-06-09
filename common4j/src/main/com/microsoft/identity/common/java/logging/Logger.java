@@ -162,7 +162,7 @@ public class Logger {
      * @param errorMessage The error message to log.
      * @param exception    An exception to log
      */
-    public static void error(@NonNull final String tag,
+    public static void error(final String tag,
                              final String errorMessage,
                              final Throwable exception) {
         log(tag, LogLevel.ERROR, getDiagnosticContextMetadata(), errorMessage, exception, false);
@@ -177,7 +177,7 @@ public class Logger {
      * @param errorMessage  The error message to log.
      * @param exception     An exception to log.
      */
-    public static void error(@NonNull final String tag,
+    public static void error(final String tag,
                              final String correlationID,
                              final String errorMessage,
                              final Throwable exception) {
@@ -192,7 +192,7 @@ public class Logger {
      * @param errorMessage The error message to log.
      * @param exception    An exception to log.
      */
-    public static void errorPII(@NonNull final String tag,
+    public static void errorPII(final String tag,
                                 final String errorMessage,
                                 final Throwable exception) {
         log(tag, LogLevel.ERROR, getDiagnosticContextMetadata(), errorMessage, exception, true);
@@ -207,7 +207,7 @@ public class Logger {
      * @param errorMessage  The error message to log.
      * @param exception     An exception to log.
      */
-    public static void errorPII(@NonNull final String tag,
+    public static void errorPII(final String tag,
                                 final String correlationID,
                                 final String errorMessage,
                                 final Throwable exception) {
@@ -221,7 +221,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void warn(@NonNull final String tag,
+    public static void warn(final String tag,
                             final String message) {
         log(tag, LogLevel.WARN, getDiagnosticContextMetadata(), message, null, false);
     }
@@ -234,7 +234,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void warn(@NonNull final String tag,
+    public static void warn(final String tag,
                             final String correlationID,
                             final String message) {
         log(tag, LogLevel.WARN, correlationID, message, null, false);
@@ -247,7 +247,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void warnPII(@NonNull final String tag,
+    public static void warnPII(final String tag,
                                final String message) {
         log(tag, LogLevel.WARN, getDiagnosticContextMetadata(), message, null, true);
     }
@@ -260,7 +260,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void warnPII(@NonNull final String tag,
+    public static void warnPII(final String tag,
                                final String correlationID,
                                final String message) {
         log(tag, LogLevel.WARN, correlationID, message, null, true);
@@ -273,7 +273,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void info(@NonNull final String tag,
+    public static void info(final String tag,
                             final String message) {
         log(tag, Logger.LogLevel.INFO, getDiagnosticContextMetadata(), message, null, false);
     }
@@ -286,7 +286,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void info(@NonNull final String tag,
+    public static void info(final String tag,
                             final String correlationID,
                             final String message) {
         log(tag, LogLevel.INFO, correlationID, message, null, false);
@@ -299,7 +299,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void infoPII(@NonNull final String tag,
+    public static void infoPII(final String tag,
                                final String message) {
         log(tag, LogLevel.INFO, getDiagnosticContextMetadata(), message, null, true);
     }
@@ -312,7 +312,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void infoPII(@NonNull final String tag,
+    public static void infoPII(final String tag,
                                final String correlationID,
                                final String message) {
         log(tag, LogLevel.INFO, correlationID, message, null, true);
@@ -325,7 +325,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void verbose(@NonNull final String tag,
+    public static void verbose(final String tag,
                                final String message) {
         log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(), message, null, false);
     }
@@ -338,7 +338,7 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void verbose(@NonNull final String tag,
+    public static void verbose(final String tag,
                                final String correlationID,
                                final String message) {
         log(tag, LogLevel.VERBOSE, correlationID, message, null, false);
@@ -351,7 +351,7 @@ public class Logger {
      *                or activity where the log call occurs.
      * @param message The message to log.
      */
-    public static void verbosePII(@NonNull final String tag,
+    public static void verbosePII(final String tag,
                                   final String message) {
         log(tag, LogLevel.VERBOSE, getDiagnosticContextMetadata(), message, null, true);
     }
@@ -364,13 +364,13 @@ public class Logger {
      * @param correlationID Unique identifier for a request or flow used to trace program execution.
      * @param message       The message to log.
      */
-    public static void verbosePII(@NonNull final String tag,
+    public static void verbosePII(final String tag,
                                   final String correlationID,
                                   final String message) {
         log(tag, LogLevel.VERBOSE, correlationID, message, null, true);
     }
 
-    private static void log(@NonNull final String tag,
+    private static void log(final String tag,
                             @NonNull final LogLevel logLevel,
                             final String correlationID,
                             final String message,
