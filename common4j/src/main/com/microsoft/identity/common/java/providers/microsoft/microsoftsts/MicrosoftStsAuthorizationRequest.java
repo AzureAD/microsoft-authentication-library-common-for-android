@@ -20,22 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
-
-import android.net.Uri;
-import android.text.TextUtils;
-import android.util.Pair;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.UrlUtil;
 
+import org.apache.http.client.utils.URIBuilder;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
+
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
+    private static final Object TAG = MicrosoftStsAuthorizationRequest.class.getSimpleName();
+
     /**
      * Serial version id.
      */
@@ -47,20 +57,49 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      * Indicates the type of user interaction that is required. The only valid values at this time are 'login', 'none', and 'consent'.
      */
     @Expose()
+    @Getter
+    @Accessors(prefix = "m")
     @SerializedName("prompt")
-    private String mPrompt;
+    private final String mPrompt;
 
+    @Getter
+    @Accessors(prefix = "m")
     @SerializedName("login_req")
-    private String mUid;
+    private final String mUid;
 
+    @Getter
+    @Accessors(prefix = "m")
     @SerializedName("domain_req")
-    private String mUtid;
+    private final String mUtid;
 
-    //@SerializedName("login_hint")
-    private transient String mDisplayableId;
+    /**
+     * Version name of the installed Company Portal app.
+     */
+    @Expose()
+    @SerializedName("cpVersion")
+    private final String mCompanyPortalVersion;
 
-    private transient String mTokenScope;
+    @Getter
+    @Accessors(prefix = "m")
+    private final transient String mDisplayableId;
 
+    /**
+     * The original scope of the request.
+     * Does not contain extra scopes to consent.
+     * <p>
+     * TODO: We might want to remove this at some point.
+     * I (Dome) don't think this belongs here.
+     * It seems like this is plugged into AuthRequest just to be passed to TokenRequest.
+     * That said, I'm not sure if removing this will have any unintended side effects,
+     * so I'm keeping it here for now.
+     */
+    @Getter
+    @Accessors(prefix = "m")
+    private final transient String mTokenScope;
+
+    protected transient AzureActiveDirectorySlice mSlice;
+
+    protected transient Map<String, String> mFlightParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
     // TODO private boolean mIsExtendedLifetimeEnabled = false;
@@ -95,8 +134,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         mPrompt = builder.mPrompt;
         mUid = builder.mUid;
         mUtid = builder.mUtid;
+        mCompanyPortalVersion = builder.mCompanyPortalVersion;
         mDisplayableId = builder.mDisplayableId;
         mTokenScope = builder.mTokenScope;
+        mSlice = builder.mSlice;
+        mFlightParameters = builder.mFlightParameters;
     }
 
     public static class Builder extends MicrosoftAuthorizationRequest.Builder<MicrosoftStsAuthorizationRequest.Builder> {
@@ -105,6 +147,10 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         private String mUtid;
         private String mDisplayableId;
         private String mTokenScope;
+        private String mCompanyPortalVersion;
+        private String mPrompt;
+        private AzureActiveDirectorySlice mSlice;
+        private Map<String, String> mFlightParameters = new HashMap<>();
 
         public MicrosoftStsAuthorizationRequest.Builder setUid(String uid) {
             mUid = uid;
@@ -126,6 +172,26 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             return self();
         }
 
+        public MicrosoftStsAuthorizationRequest.Builder setInstalledCompanyPortalVersion(String companyPortalVersion) {
+            mCompanyPortalVersion = companyPortalVersion;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setPrompt(String prompt) {
+            mPrompt = prompt;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setSlice(AzureActiveDirectorySlice slice) {
+            mSlice = slice;
+            return self();
+        }
+
+        public MicrosoftStsAuthorizationRequest.Builder setFlightParameters(Map<String, String> flightParameters) {
+            mFlightParameters = flightParameters;
+            return self();
+        }
+
         @Override
         public MicrosoftStsAuthorizationRequest.Builder self() {
             return this;
@@ -136,78 +202,40 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
         }
     }
 
-    public String getUid() {
-        return mUid;
-    }
-
-    public String getUtid() {
-        return mUtid;
-    }
-
-    public String getDisplayableId() {
-        return mDisplayableId;
-    }
-
-    public String getPrompt() {
-        return mPrompt;
-    }
-
-    public String getTokenScope() {
-        return mTokenScope;
-    }
-
     @Override
-    public Uri getAuthorizationRequestAsHttpRequest() {
-        final Map<String, Object> qpMap = new HashMap<>();
-        qpMap.putAll(ObjectMapper.serializeObjectHashMap(this));
-
-        for (Map.Entry<String, String> entry : mFlightParameters.entrySet()) {
-            qpMap.put(entry.getKey(), entry.getValue());
-        }
+    public URI getAuthorizationRequestAsHttpRequest() throws URISyntaxException {
+        final URIBuilder builder = new URIBuilder(super.getAuthorizationRequestAsHttpRequest());
+        appendParameterToBuilder(builder, mFlightParameters);
 
         if (mSlice != null) {
-            if (!TextUtils.isEmpty(mSlice.getSlice())) {
-                qpMap.put(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
+            if (!StringUtil.isNullOrEmpty(mSlice.getSlice())) {
+                builder.addParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, mSlice.getSlice());
             }
-            if (!TextUtils.isEmpty(mSlice.getDC())) {
-                qpMap.put(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDC());
+            if (!StringUtil.isNullOrEmpty(mSlice.getDataCenter())) {
+                builder.addParameter(AzureActiveDirectorySlice.DC_PARAMETER, mSlice.getDataCenter());
             }
         }
 
         // If login_hint is provided, block the user from switching user during login.
         // hsu = HideSwitchUser
-        if (!TextUtils.isEmpty(getLoginHint())) {
-            qpMap.put(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
+        if (!StringUtil.isNullOrEmpty(getLoginHint())) {
+            builder.addParameter(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
         }
 
-        // Add extra qp, if present...
-        if (null != getExtraQueryParams() && !getExtraQueryParams().isEmpty()) {
-            for (final Pair<String, String> queryParam : getExtraQueryParams()) {
-                //Skip appending for duplicated extra query parameters
-                if (!qpMap.containsKey(queryParam.first)) {
-                    qpMap.put(queryParam.first, queryParam.second);
-                }
-            }
-        }
-
-        final Uri.Builder uriBuilder = Uri.parse(getAuthorizationEndpoint()).buildUpon();
-
-        for (Map.Entry<String, Object> entry : qpMap.entrySet()) {
-            if (entry.getKey() != null && entry.getValue() != null) {
-                uriBuilder.appendQueryParameter(entry.getKey(), entry.getValue().toString());
-            }
-        }
-
-        return uriBuilder.build();
+        return builder.build();
     }
 
     @Override
-    public String getAuthorizationEndpoint() {
-        final Uri authorityUri = Uri.parse(this.getAuthority().toString());
-        Uri endpointUri = authorityUri.buildUpon()
-                .appendEncodedPath(AUTHORIZATION_ENDPOINT)
-                .build();
-        return endpointUri.toString();
+    public String getAuthorizationEndpoint() throws URISyntaxException {
+        final String methodName = ":getAuthorizationEndpoint";
 
+        if (this.getAuthority() == null) {
+            Logger.error(TAG + methodName, "Authority is null. " +
+                    "cannot construct authorization endpoint URL.", null);
+            throw new IllegalStateException("Authority is null.");
+        }
+
+        return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT);
     }
 }
+

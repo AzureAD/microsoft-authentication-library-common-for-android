@@ -70,6 +70,4 @@ public class AudienceDefaultCloudUrlTest {
         Assert.assertEquals(AzureActiveDirectoryEnvironment.PRODUCTION_CLOUD_URL, audience.getCloudUrl());
 
     }
-
-
 }

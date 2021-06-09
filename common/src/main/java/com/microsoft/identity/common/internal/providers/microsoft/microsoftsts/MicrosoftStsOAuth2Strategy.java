@@ -37,6 +37,7 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -337,7 +338,7 @@ public class MicrosoftStsOAuth2Strategy
         }
 
         final MicrosoftStsTokenRequest tokenRequest = new MicrosoftStsTokenRequest();
-        tokenRequest.setCodeVerifier(request.getPkceChallenge().getCodeVerifier());
+        tokenRequest.setCodeVerifier(request.getPkceCodeVerifier());
         tokenRequest.setCode(response.getCode());
         tokenRequest.setRedirectUri(request.getRedirectUri());
         tokenRequest.setClientId(request.getClientId());
