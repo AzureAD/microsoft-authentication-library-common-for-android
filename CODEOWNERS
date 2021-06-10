@@ -56,3 +56,9 @@
 /common/src/main/java/com/microsoft/identity/common/internal/telemetry/             @shahzaibj @iambmelt
 /common/src/main/java/com/microsoft/identity/common/internal/eststelemetry          @shahzaibj @iambmelt
 /common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt
+
+# Lab Api
+/keyvault                                                                           @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
+/labapi                                                                             @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
+/LabApiUtilities                                                                    @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
+/testutils/src/main/java/com/microsoft/identity/internal/testutils/labutils         @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
