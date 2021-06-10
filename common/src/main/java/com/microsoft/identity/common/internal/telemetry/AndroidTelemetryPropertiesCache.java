@@ -40,6 +40,6 @@ public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
     private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
 
     public AndroidTelemetryPropertiesCache(@NonNull final Context context) {
-        super(new SharedPreferenceStringStorage(context, SHARED_PREFS_NAME);
+        super(new SharedPreferenceStringStorage(context, SHARED_PREFS_NAME));
     }
 }
