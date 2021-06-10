@@ -137,7 +137,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final SsoCredentialResolver resolver;
         if (sSsoKeyMap.get("CONSTANT_KEY") != null) {
             Logger.info(TAG + ":onCreateView", "Setting up for sso challenge handling");
-            SsoCredentialResolver origResolver = sSsoKeyMap.get("CONSTANT_KEY");
+            final SsoCredentialResolver origResolver = sSsoKeyMap.get("CONSTANT_KEY");
             resolver = new SsoCredentialResolver() {
                 @Override
                 public String getInterruptCredential(String newNonce) {
