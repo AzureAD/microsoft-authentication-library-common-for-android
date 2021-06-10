@@ -60,7 +60,10 @@ public abstract class AuthorizationFragment extends Fragment {
 
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
 
-    public static Map<String, WebViewAuthorizationFragment.SsoCredentialResolver> sSsoKeyMap = Collections.synchronizedMap(new WeakHashMap<>());
+    public static Map<String, WebViewAuthorizationFragment.SsoCredentialResolver> sSsoKeyMap =
+            Collections.<String, WebViewAuthorizationFragment.SsoCredentialResolver>synchronizedMap(
+                    new WeakHashMap<String, WebViewAuthorizationFragment.SsoCredentialResolver>()
+            );
 
     /**
      * The bundle containing values for initializing this fragment.
