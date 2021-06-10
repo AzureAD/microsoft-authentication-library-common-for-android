@@ -25,6 +25,7 @@
 package com.microsoft.identity.common.java.util;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC",
+        justification = "get() invokes await and is a blocking call. making it synchronized will create a deadlock.")
 public class ResultFuture<T> implements Future<T> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);
