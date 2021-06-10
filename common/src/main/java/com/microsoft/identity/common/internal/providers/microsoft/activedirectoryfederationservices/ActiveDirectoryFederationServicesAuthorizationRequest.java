@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 
 /**
  * Active Directory Federation Services Authorization Request.

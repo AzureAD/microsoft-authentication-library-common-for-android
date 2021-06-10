@@ -36,6 +36,7 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 
 import java.util.List;
 import java.util.Set;

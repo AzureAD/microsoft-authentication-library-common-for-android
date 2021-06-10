@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MAJOR] Migrate AuthRequests to common4j (#1394)
 - [MINOR] Migrate Device, ObjectMapper, ClockSkewManager and IHasExtraParameters to common4j (#1383)
 - [MINOR] Migrate eSTS Telemetry to common4j (#1372)
 - [PATCH] Fix/Suppress SpotBugs issue (#1367)

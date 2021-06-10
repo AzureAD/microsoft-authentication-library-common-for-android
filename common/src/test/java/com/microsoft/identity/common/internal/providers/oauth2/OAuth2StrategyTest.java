@@ -31,6 +31,7 @@ import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 
 import org.junit.Assert;
 import org.junit.Test;
