@@ -92,11 +92,6 @@ public class AzureActiveDirectoryWebViewClientTest {
                     public void setPKeyAuthStatus(boolean status) {
                         return;
                     }
-
-                    @Override
-                    public String getSsoNonceResponse(URL url) {
-                        return null;
-                    }
                 },
                 new OnPageLoadedCallback() {
                     @Override

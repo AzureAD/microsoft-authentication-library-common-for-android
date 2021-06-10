@@ -42,6 +42,4 @@ public interface IAuthorizationCompletionCallback {
     void onChallengeResponseReceived(int returnCode, Intent responseIntent);
 
     void setPKeyAuthStatus(boolean status);
-
-    String getSsoNonceResponse(URL url);
 }
