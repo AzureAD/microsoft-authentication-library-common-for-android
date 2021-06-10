@@ -22,15 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui;
 
+import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
@@ -81,48 +85,52 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
                     return getGenericAuthorizationStrategy(parameters, context);
                 }
             }
+
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
-                    context,
+            return getBrowserAuthorizationStrategy(context,
                     parameters.getActivity(),
                     parameters.getFragment(),
-                    isBrokerRequest
-            );
+                    isBrokerRequest,
+                    parameters.getBrowserSafeList());
 
-            // Suppressing unchecked warnings due to generic type not provided for parameters
-            @SuppressWarnings(WarningType.unchecked_warning)
-            List<BrowserDescriptor > browserSafeList = parameters.getBrowserSafeList();
-
-            browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, browserSafeList);
-
-            // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
-            @SuppressWarnings(WarningType.unchecked_warning)
-            GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
-
-            return genericAuthorizationStrategy;
         } else {
             Logger.info(TAG, "Use browser for authorization.");
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
-                    context,
+            return getBrowserAuthorizationStrategy(context,
                     parameters.getActivity(),
                     parameters.getFragment(),
-                    isBrokerRequest
-            );
-
-            browserAuthorizationStrategySetBrowserSafeList(browserAuthorizationStrategy, parameters.getBrowserSafeList());
-
-            // Suppressing unchecked warnings due to casting of BrowserAuthorizationStrategy to GenericAuthorizationStrategy
-            @SuppressWarnings(WarningType.unchecked_warning)
-            GenericAuthorizationStrategy genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
-
-            return genericAuthorizationStrategy;
+                    isBrokerRequest,
+                    parameters.getBrowserSafeList());
         }
     }
 
-    // Suppressing unchecked warnings due to casting browserSafeList generic type List<BrowserDescriptor> as generic type was not provided for browserAuthorizationStrategy.
     @SuppressWarnings(WarningType.unchecked_warning)
-    private void browserAuthorizationStrategySetBrowserSafeList(BrowserAuthorizationStrategy browserAuthorizationStrategy, List<BrowserDescriptor> browserSafeList) {
-        browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+    private GenericAuthorizationStrategy getBrowserAuthorizationStrategy(@NonNull final Context applicationContext,
+                                                                         @NonNull final Activity activity,
+                                                                         @Nullable final Fragment fragment,
+                                                                         @NonNull final boolean isBrokerRequest,
+                                                                         @NonNull final List<BrowserDescriptor> browserSafeList) {
+        GenericAuthorizationStrategy genericAuthorizationStrategy = null;
+
+        if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask()) {
+            final CurrentTaskBrowserAuthorizationStrategy currentTaskBrowserAuthorizationStrategy =
+                    new CurrentTaskBrowserAuthorizationStrategy(applicationContext,
+                            activity,
+                            fragment);
+            currentTaskBrowserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+
+            genericAuthorizationStrategy = (GenericAuthorizationStrategy) currentTaskBrowserAuthorizationStrategy;
+        } else {
+            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+                    applicationContext,
+                    activity,
+                    fragment,
+                    isBrokerRequest
+            );
+            browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+            genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+        }
+
+        return genericAuthorizationStrategy;
     }
 
     // Suppressing unchecked warnings due to casting of EmbeddedWebViewAuthorizationStrategy to GenericAuthorizationStrategy

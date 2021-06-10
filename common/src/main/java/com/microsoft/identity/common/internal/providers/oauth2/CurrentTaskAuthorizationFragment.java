@@ -36,14 +36,13 @@ import androidx.fragment.app.FragmentTransaction;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.internal.util.FindBugsConstants;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.WeakHashMap;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
@@ -56,11 +55,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
  * - handles how AuthorizationFragments communicates with the outside world.
  * - handles basic lifecycle operations.
  */
-public abstract class AuthorizationFragment extends Fragment {
+public abstract class CurrentTaskAuthorizationFragment extends Fragment {
 
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
-
-    public static Map<String, WebViewAuthorizationFragment.SsoCredentialResolver> sSsoKeyMap = Collections.synchronizedMap(new WeakHashMap<>());
 
     /**
      * The bundle containing values for initializing this fragment.
@@ -68,14 +65,9 @@ public abstract class AuthorizationFragment extends Fragment {
     private Bundle mInstanceState;
 
     /**
-     * Determines if authentication result has been sent.
-     */
-    protected boolean mAuthResultSent = false;
-
-    /**
      * Listens to an operation cancellation event.
      */
-    private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             cancelAuthorization(intent.getBooleanExtra(REQUEST_CANCELLED_BY_USER, false));
@@ -86,6 +78,7 @@ public abstract class AuthorizationFragment extends Fragment {
         mInstanceState = instanceStateBundle;
     }
 
+    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         final String methodName = "#onCreate";
@@ -95,12 +88,6 @@ public abstract class AuthorizationFragment extends Fragment {
         // if another incoming request is launched by the app
         LocalBroadcastManager.getInstance(getContext()).registerReceiver(mCancelRequestReceiver,
                 new IntentFilter(CANCEL_INTERACTIVE_REQUEST));
-
-        if (savedInstanceState == null && mInstanceState == null) {
-            Logger.warn(TAG, "No stored state. Unable to handle response");
-            finish();
-            return;
-        }
 
         if (savedInstanceState == null) {
             Logger.verbose(TAG + methodName, "Extract state from the intent bundle.");
@@ -112,6 +99,7 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     }
 
+    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     void finish() {
         final FragmentActivity activity = getActivity();
         if (activity instanceof AuthorizationActivity) {
@@ -131,6 +119,7 @@ public abstract class AuthorizationFragment extends Fragment {
 
     /**
      * Get the state form the provided bundle and act on it as needed
+     *
      * @param state a bundle containing data provided when the activity was created
      */
     void extractState(@NonNull final Bundle state) {
@@ -138,10 +127,10 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     /**
-     * When authorization fragment is launched.  It will be launched on a new thread. (TODO: verify this)
+     * When authorization fragment is launched.  It may be launched on a new thread.
      * Initialize based on value provided in intent.
      */
-    private static String setDiagnosticContextForNewThread(String correlationId) {
+    private static String setDiagnosticContextForNewThread(@NonNull final String correlationId) {
         final String methodName = ":setDiagnosticContextForAuthorizationActivity";
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
@@ -149,37 +138,16 @@ public abstract class AuthorizationFragment extends Fragment {
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
-                "Initializing diagnostic context for AuthorizationActivity"
+                "Initializing diagnostic context for CurrentTaskAuthorizationActivity"
         );
 
         return correlationId;
     }
 
-    @Override
-    public void onStop() {
-        final String methodName = ":onStop";
-        if (!mAuthResultSent && getActivity().isFinishing()) {
-            Logger.info(TAG + methodName,
-                    "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
-            );
-            Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
-        }
-        super.onStop();
-    }
 
+    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     @Override
     public void onDestroy() {
-        final String methodName = "#onDestroy";
-        Logger.info(TAG + methodName, "");
-        if (!mAuthResultSent) {
-            Logger.info(TAG + methodName,
-                    "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
-            );
-            Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
-        }
-
         LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
         super.onDestroy();
     }
@@ -192,6 +160,7 @@ public abstract class AuthorizationFragment extends Fragment {
         return false;
     }
 
+    @SuppressFBWarnings(FindBugsConstants.NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE)
     void sendResult(int resultCode, final Intent resultIntent) {
         Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
 
@@ -200,7 +169,6 @@ public abstract class AuthorizationFragment extends Fragment {
         resultIntent.putExtra(RESULT_CODE, resultCode);
 
         LocalBroadcastManager.getInstance(getContext()).sendBroadcast(resultIntent);
-        mAuthResultSent = true;
     }
 
     void cancelAuthorization(boolean isCancelledByUser) {
@@ -218,4 +186,5 @@ public abstract class AuthorizationFragment extends Fragment {
         Telemetry.emit(new UiEndEvent().isUserCancelled());
         finish();
     }
+
 }
