@@ -186,7 +186,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
             view.stopLoading();
             final Map<String, String> oldHeaders = mSsoTokenHandler.getHeaders();
             // I do not love this being a HashMap, but I don't dare change the type because of the djinni layer.
-            Map<String, String> headers = new HashMap<>(oldHeaders);
+            final Map<String, String> headers = new HashMap<>(oldHeaders);
             final String newHeaderName = mSsoTokenHandler.getHeaderName();
             final String newCredential = mSsoTokenHandler.getInterruptCredential(ssoNonce);
             if (headers != null && newHeaderName != null && newCredential != null) {
