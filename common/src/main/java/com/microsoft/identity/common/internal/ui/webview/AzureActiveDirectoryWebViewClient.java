@@ -38,7 +38,6 @@ import android.webkit.WebView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.arch.core.util.Function;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -55,15 +54,11 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,6 +85,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     public static final String ERROR_DESCRIPTION = "error_description";
     private final String mRedirectUrl;
     private final WebViewAuthorizationFragment.SsoCredentialResolver mSsoTokenHandler;
+    public static final Pattern SSO_PATTERN = Pattern.compile(".*[&?]sso_nonce=([^&]*).*");
 
     public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
@@ -168,7 +164,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
      */
     private boolean handleUrl(final WebView view, final String url) {
         final String formattedURL = url.toLowerCase(Locale.US);
-        final String ssoNonce = isSsoTokenRedirect(url);
+        final String ssoNonce = extractSsoNonceQueryParam(url);
         if (isPkeyAuthUrl(formattedURL)) {
             Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
             try {
@@ -182,7 +178,10 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 returnError(exception.getErrorCode(), exception.getMessage());
                 view.stopLoading();
             }
-        } else if (ssoNonce != null) {
+        } else if (isRedirectUrl(formattedURL)) {
+            Logger.info(TAG, "Navigation starts with the redirect uri.");
+            processRedirectUrl(view, url);
+        } else if (ssoNonce != null && mSsoTokenHandler != null) {
             Logger.info(TAG, "SSO Token redirect.");
             view.stopLoading();
             final Map<String, String> oldHeaders = mSsoTokenHandler.getHeaders();
@@ -202,9 +201,6 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 returnError(ErrorStrings.UNKNOWN_ERROR,
                         "Unknown failure leading to missing SSO challenge");
             }
-        } else if (isRedirectUrl(formattedURL)) {
-            Logger.info(TAG, "Navigation starts with the redirect uri.");
-            processRedirectUrl(view, url);
         } else if (isWebsiteRequestUrl(formattedURL)) {
             Logger.info(TAG, "It is an external website request");
             processWebsiteRequest(view, url);
@@ -236,16 +232,15 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         return true;
     }
 
-    private String isSsoTokenRedirect(String url) {
+    private String extractSsoNonceQueryParam(String url) {
             URI realUrl = URI.create(url);
             String query = realUrl.getQuery();
             if (query == null) {
                 return null;
             }
 
-            Pattern ssoPattern = Pattern.compile(".*[&?]sso_nonce=([^&]*).*");
-            if(realUrl.getQuery().contains("sso_nonce=")) {
-                final Matcher matcher = ssoPattern.matcher(query);
+        if(realUrl.getQuery().contains("sso_nonce=")) {
+                final Matcher matcher = SSO_PATTERN.matcher(query);
                 if(matcher.matches()) {
                     if (matcher.groupCount() != 1) {
                         Logger.warn(TAG, "too many sso_nonce query parameters");
