@@ -20,26 +20,52 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common;
 
 import android.content.Context;
 
-import com.microsoft.identity.common.SharedPreferenceStringStorage;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
-import com.microsoft.identity.common.java.telemetry.TelemetryPropertiesCache;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * Telemetry properties cache for Android.
- * Use Shared Preference as storage.
- * */
-public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
+ * An implementation of {@link IKeyPairStorage} for storing String.
+ * Implemented with SharedPreference.
+ */
+public class SharedPreferenceStringStorage implements IKeyPairStorage<String> {
 
-    private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
+    final ISharedPreferencesFileManager mSharedPrefs;
 
-    public AndroidTelemetryPropertiesCache(@NonNull final Context context) {
-        super(new SharedPreferenceStringStorage(context, SHARED_PREFS_NAME);
+    public SharedPreferenceStringStorage(@NonNull final Context context,
+                                         @NonNull final String sharedPrefFileName) {
+        mSharedPrefs = SharedPreferencesFileManager.getSharedPreferences(
+                context,
+                sharedPrefFileName,
+                -1,
+                null
+        );
+    }
+
+    @Override
+    public String get(@NonNull String key) {
+        return mSharedPrefs.getString(key);
+    }
+
+    @Override
+    public void put(@NonNull String key, @Nullable String value) {
+        mSharedPrefs.putString(key, value);
+    }
+
+    @Override
+    public void remove(@NonNull String key) {
+        mSharedPrefs.remove(key);
+    }
+
+    @Override
+    public void clear() {
+        mSharedPrefs.clear();
     }
 }
