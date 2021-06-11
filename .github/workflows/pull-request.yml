@@ -21,4 +21,14 @@ jobs:
         with:
           changeLogPath: 'changelog.txt'
           skipLabel: 'No-Changelog'
-      
+
+  checkstyle_job:
+    runs-on: ubuntu-latest
+    name: Checkstyle job
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Run check style
+      uses: nikitasavinov/checkstyle-action@0.3.1
+      with:
+          checkstyle_config: config/checkstyle/checkstyle.xml

@@ -20,6 +20,7 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+
 package com.microsoft.identity.internal.testutils.authorities;
 
 import androidx.annotation.Nullable;
@@ -32,6 +33,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.internal.testutils.strategies.ResourceOwnerPasswordCredentialsTestStrategy;
 
+@SuppressWarnings("checkstyle:AbbreviationAsWordInName")
 public class AADTestAuthority extends AzureActiveDirectoryAuthority {
 
     private static final String TAG = AADTestAuthority.class.getSimpleName();
@@ -40,11 +42,9 @@ public class AADTestAuthority extends AzureActiveDirectoryAuthority {
         // using organizations audience as common does not support ropc
         super(new AnyOrganizationalAccount());
     }
-
     public AADTestAuthority(final AzureActiveDirectoryAudience signInAudience) {
         super(signInAudience);
     }
-
     @Override
     public OAuth2Strategy createOAuth2Strategy(@Nullable final OAuth2StrategyParameters parameters) {
         final MicrosoftStsOAuth2Configuration config = createOAuth2Configuration();

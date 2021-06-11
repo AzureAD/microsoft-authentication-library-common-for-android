@@ -31,12 +31,21 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import java.io.Serializable;
 import java.util.List;
 
+import lombok.Builder;
+import lombok.Value;
+
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-public class BrokerResult implements Serializable {
+@Builder
+@Value
+public final class BrokerResult implements Serializable {
 
-    private class SerializedNames {
+    /**
+     * Bad of different names for constant definitions.
+     */
+    private static final class SerializedNames {
+        private SerializedNames() { }
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
@@ -94,593 +103,285 @@ public class BrokerResult implements Serializable {
 
     // Success parameters
     /**
-     * Access token from the response
+     * Access token from the response.
      */
     @Nullable
     @SerializedName(SerializedNames.ACCESS_TOKEN)
-    private String mAccessToken;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String accessToken;
 
     /**
-     * ID token from the response
+     * ID token from the response.
      */
     @Nullable
     @SerializedName(SerializedNames.ID_TOKEN)
-    private String mIdToken;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String idToken;
 
     /**
-     * Refresh Token  from the response
+     * Refresh Token  from the response.
      */
     @Nullable
     @SerializedName(SerializedNames.REFRESH_TOKEN)
-    private String mRefreshToken;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String refreshToken;
 
     /**
      * Home account id of the user.
      */
     @Nullable
     @SerializedName(SerializedNames.HOME_ACCOUNT_ID)
-    private String mHomeAccountId;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String homeAccountId;
 
     /**
-     * Local account id or user id of the User
+     * Local account id or user id of the User.
      */
     @Nullable
     @SerializedName(SerializedNames.LOCAL_ACCOUNT_ID)
-    private String mLocalAccountId;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String localAccountId;
 
     /**
      * Username of the User.
      */
     @Nullable
     @SerializedName(SerializedNames.USERNAME)
-    private String mUserName;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String userName;
 
     /**
-     * Client id of the application
+     * Client id of the application.
      */
     @Nullable
     @SerializedName(SerializedNames.CLIENT_ID)
-    private String mClientId;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String clientId;
 
     /**
      * Information to uniquely identify the family that the client application belongs to.
      */
     @Nullable
     @SerializedName(SerializedNames.FAMILY_ID)
-    private String mFamilyId;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String familyId;
 
 
     /**
-     * Scopes requested
+     * Scopes requested.
      */
     @Nullable
     @SerializedName(SerializedNames.SCOPES)
-    private String mScope;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String scope;
 
     /**
-     * Token type from the response
+     * Token type from the response.
      */
     @Nullable
     @SerializedName(SerializedNames.TOKEN_TYPE)
-    private String mTokenType;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String tokenType;
 
     /**
-     * Client Info from the response
+     * Client Info from the response.
      */
     @Nullable
     @SerializedName(SerializedNames.CLIENT_INFO)
-    private String mClientInfo;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String clientInfo;
 
     /**
      * Authority from the response.
      */
     @Nullable
     @SerializedName(SerializedNames.AUTHORITY)
-    private String mAuthority;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String authority;
 
     /**
      * Environment used to cache token.
      */
     @Nullable
     @SerializedName(SerializedNames.ENVIRONMENT)
-    private String mEnvironment;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String environment;
 
     /**
-     * Tenant id
+     * Tenant id.
      */
     @Nullable
     @SerializedName(SerializedNames.TENANT_ID)
-    private String mTenantId;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String tenantId;
 
     /**
      * Expires on value for the token.
      */
     @Nullable
     @SerializedName(SerializedNames.EXPIRES_ON)
-    private long mExpiresOn;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final long expiresOn;
 
     /**
-     * Extended expires on value for the token
+     * Extended expires on value for the token.
      */
     @Nullable
     @SerializedName(SerializedNames.EXTENDED_EXPIRES_ON)
-    private long mExtendedExpiresOn;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final long extendedExpiresOn;
 
     /**
-     * Access token cache at time in millis
+     * Access token cache at time in millis.
      */
     @Nullable
     @SerializedName(SerializedNames.CACHED_AT)
-    private long mCachedAt;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final long cachedAt;
 
     /**
-     * Client telemetry SPE ring
+     * Client telemetry SPE ring.
      */
     @Nullable
     @SerializedName(SerializedNames.SPE_RING)
-    private String mSpeRing;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String speRing;
 
     /**
-     * Refresh token age from client telemetry
+     * Refresh token age from client telemetry.
      */
     @Nullable
     @SerializedName(SerializedNames.REFRESH_TOKEN_AGE)
-    private String mRefreshTokenAge;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String refreshTokenAge;
 
     /**
      * Boolean to indicate if the request succeeded without exceptions.
      */
     @NonNull
     @SerializedName(SerializedNames.SUCCESS)
-    private boolean mSuccess;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final boolean success;
 
     /**
-     * boolean to indicate if the result was returned from cache
+     * boolean to indicate if the result was returned from cache.
      */
     @SerializedName(SerializedNames.SERVICED_FROM_CACHE)
-    private boolean mServicedFromCache;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final boolean servicedFromCache;
 
     // Exception parameters
 
     /**
-     * Error code corresponding to any of the {@link com.microsoft.identity.common.exception.ErrorStrings}
+     * Error code corresponding to any of the {@link com.microsoft.identity.common.exception.ErrorStrings}.
      */
     @Nullable
     @SerializedName(SerializedNames.BROKER_ERROR_CODE)
-    private String mErrorCode;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String errorCode;
 
     /**
-     * Error message
+     * Error message.
      */
     @Nullable
     @SerializedName(SerializedNames.BROKER_ERROR_MESSAGE)
-    private String mErrorMessage;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String errorMessage;
 
     /**
-     * Correlation id of the request
+     * Correlation id of the request.
      */
     @Nullable
     @SerializedName(SerializedNames.CORRELATION_ID)
-    private String mCorrelationId;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String correlationId;
 
     /**
-     * Sub error code from the error response
+     * Sub error code from the error response.
      */
     @Nullable
     @SerializedName(SerializedNames.OAUTH_SUB_ERROR)
-    private String mSubErrorCode;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String subErrorCode;
 
     /**
-     * Http Status code of the error response
+     * Http Status code of the error response.
      */
     @Nullable
     @SerializedName(SerializedNames.HTTP_RESPONSE_CODE)
-    private int mHttpStatusCode;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final int httpStatusCode;
 
     /**
-     * Response headers or the error response in json format
+     * Response headers or the error response in json format.
      */
     @Nullable
     @SerializedName(SerializedNames.HTTP_HEADERS)
-    private String mHttpResponseHeaders;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String httpResponseHeaders;
 
     /**
-     * Response body of the error response
+     * Response body of the error response.
      */
     @Nullable
     @SerializedName(SerializedNames.HTTP_RESPONSE_BODY)
-    private String mHttpResponseBody;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String httpResponseBody;
 
     /**
-     * Client telemetry error code
+     * Client telemetry error code.
      */
     @Nullable
     @SerializedName(SerializedNames.CLI_TELEM_ERRORCODE)
-    private String mCliTelemErrorCode;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String cliTelemErrorCode;
 
     /**
-     * Client telemetry sub error code
+     * Client telemetry sub error code.
      */
     @Nullable
     @SerializedName(SerializedNames.CLI_TELEM_SUB_ERROR_CODE)
-    private String mCliTelemSubErrorCode;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String cliTelemSubErrorCode;
 
-
+    /**
+     * Telemetry data.
+     */
     @Nullable
     @SerializedName(SerializedNames.TENANT_PROFILE_CACHE_RECORDS)
-    private final List<ICacheRecord> mTenantProfileData;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final List<ICacheRecord> tenantProfileData;
 
+    /**
+     * Broker exception type.
+     */
     @Nullable
     @SerializedName(SerializedNames.BROKER_EXCEPTION_TYPE)
-    private final String mExceptionType;
+    @SuppressWarnings("checkstyle:MemberName") //NOPMD
+    private final String exceptionType;
 
-    private BrokerResult(@NonNull final Builder builder) {
-        mAccessToken = builder.mAccessToken;
-        mIdToken = builder.mIdToken;
-        mRefreshToken = builder.mRefreshToken;
-        mHomeAccountId = builder.mHomeAccountId;
-        mLocalAccountId = builder.mLocalAccountId;
-        mUserName = builder.mUserName;
-        mTokenType = builder.mTokenType;
-        mClientId = builder.mClientId;
-        mFamilyId = builder.mFamilyId;
-        mScope = builder.mScope;
-        mClientInfo = builder.mClientInfo;
-        mAuthority = builder.mAuthority;
-        mEnvironment = builder.mEnvironment;
-        mTenantId = builder.mTenantId;
-        mExpiresOn = builder.mExpiresOn;
-        mExtendedExpiresOn = builder.mExtendedExpiresOn;
-        mCachedAt = builder.mCachedAt;
-        mSpeRing = builder.mSpeRing;
-        mRefreshTokenAge = builder.mRefreshTokenAge;
-        mSuccess = builder.mSuccess;
-        mTenantProfileData = builder.mTenantProfileData;
-        mServicedFromCache = builder.mServicedFromCache;
-
-        mErrorCode = builder.mErrorCode;
-        mErrorMessage = builder.mErrorMessage;
-        mCorrelationId = builder.mCorrelationId;
-        mSubErrorCode = builder.mSubErrorCode;
-        mHttpStatusCode = builder.mHttpStatusCode;
-        mHttpResponseBody = builder.mHttpResponseBody;
-        mHttpResponseHeaders = builder.mHttpResponseHeaders;
-        mCliTelemErrorCode = builder.mCliTelemErrorCode;
-        mCliTelemSubErrorCode = builder.mCliTelemSubErrorCode;
-        mExceptionType = builder.mExceptionType;
-    }
-
-    public String getExceptionType() {
-        return mExceptionType;
-    }
-
-    public List<ICacheRecord> getTenantProfileData() {
-        return mTenantProfileData;
-    }
-
-    public String getCliTelemSubErrorCode() {
-        return mCliTelemSubErrorCode;
-    }
-
-    public String getCliTelemErrorCode() {
-        return mCliTelemErrorCode;
-    }
-
-    public String getHttpResponseBody() {
-        return mHttpResponseBody;
-    }
-
-    public String getHttpResponseHeaders() {
-        return mHttpResponseHeaders;
-    }
-
-    public int getHttpStatusCode() {
-        return mHttpStatusCode;
-    }
-
-    public String getSubErrorCode() {
-        return mSubErrorCode;
-    }
-
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
-
-    public String getErrorMessage() {
-        return mErrorMessage;
-    }
-
-    public String getErrorCode() {
-        return mErrorCode;
-    }
-
-    public boolean isSuccess() {
-        return mSuccess;
-    }
-
-    public boolean isServicedFromCache() { return mServicedFromCache; }
-
-    public String getRefreshTokenAge() {
-        return mRefreshTokenAge;
-    }
-
-    public String getSpeRing() {
-        return mSpeRing;
-    }
-
-    public long getCachedAt() {
-        return mCachedAt;
-    }
-
-    public long getExtendedExpiresOn() {
-        return mExtendedExpiresOn;
-    }
-
-    public long getExpiresOn() {
-        return mExpiresOn;
-    }
-
-    public String getTenantId() {
-        return mTenantId;
-    }
-
-    public String getEnvironment() {
-        return mEnvironment;
-    }
-
-    public String getAuthority() {
-        return mAuthority;
-    }
-
-    public String getClientInfo() {
-        return mClientInfo;
-    }
-
-    public String getClientId() {
-        return mClientId;
-    }
-
-    public String getFamilyId() {
-        return mFamilyId;
-    }
-
-    public String getScope() {
-        return mScope;
-    }
-
-    public String getTokenType() {
-        return mTokenType;
-    }
-
-    public String getUserName() {
-        return mUserName;
-    }
-
-    public String getLocalAccountId() {
-        return mLocalAccountId;
-    }
-
-    public String getHomeAccountId() {
-        return mHomeAccountId;
-    }
-
-    public String getRefreshToken() {
-        return mRefreshToken;
-    }
-
-    public String getIdToken() {
-        return mIdToken;
-    }
-
-    public String getAccessToken() {
-        return mAccessToken;
-    }
-
-    public static class Builder {
-        private String mAccessToken;
-        private String mIdToken;
-        private String mRefreshToken;
-        private String mHomeAccountId;
-        private String mLocalAccountId;
-        private String mUserName;
-        private String mTokenType;
-        private String mClientId;
-        private String mFamilyId;
-        private String mScope;
-        private String mClientInfo;
-        private String mAuthority;
-        private String mEnvironment;
-        private String mTenantId;
-        private long mExpiresOn;
-        private long mExtendedExpiresOn;
-        private long mCachedAt;
-        private String mSpeRing;
-        private String mRefreshTokenAge;
-        private boolean mSuccess;
-        private String mNegotiatedBrokerProtocolVersion;
-        private List<ICacheRecord> mTenantProfileData;
-        private boolean mServicedFromCache;
-
-        // Exception parameters
-        private String mErrorCode;
-        private String mErrorMessage;
-        private String mCorrelationId;
-        private String mSubErrorCode;
-        private int mHttpStatusCode;
-        private String mHttpResponseHeaders;
-        private String mHttpResponseBody;
-        private String mCliTelemErrorCode;
-        private String mCliTelemSubErrorCode;
-        private String mExceptionType;
-
-        public Builder accessToken(@Nullable final String accessToken) {
-            this.mAccessToken = accessToken;
+    /**
+     * Builder class to alter method names of setters.
+     */
+    public static class BrokerResultBuilder {
+        /**
+         * Synonym for errorCode.
+         * @param errorCode the error code to set.
+         * @return the builder.
+         */
+        public BrokerResultBuilder oauthSubErrorCode(String errorCode) {
+            this.subErrorCode = errorCode;
             return this;
         }
 
-        public Builder idToken(@Nullable final String idToken) {
-            this.mIdToken = idToken;
-            return this;
-        }
-
-        public Builder refreshToken(@Nullable final String refreshToken) {
-            this.mRefreshToken = refreshToken;
-            return this;
-        }
-
-        public Builder homeAccountId(@Nullable final String homeAccountId) {
-            this.mHomeAccountId = homeAccountId;
-            return this;
-        }
-
-        public Builder localAccountId(@Nullable final String localAccountId) {
-            this.mLocalAccountId = localAccountId;
-            return this;
-        }
-
-        public Builder userName(@Nullable final String userName) {
-            this.mUserName = userName;
-            return this;
-        }
-
-        public Builder tokenType(@Nullable final String tokenType) {
-            this.mTokenType = tokenType;
-            return this;
-        }
-
-        public Builder clientId(@Nullable final String clientId) {
-            this.mClientId = clientId;
-            return this;
-        }
-
-        public Builder familyId(@Nullable final String familyId) {
-            this.mFamilyId = familyId;
-            return this;
-        }
-
-        public Builder scope(@Nullable final String scope) {
-            this.mScope = scope;
-            return this;
-        }
-
-        public Builder clientInfo(@Nullable final String clientInfo) {
-            this.mClientInfo = clientInfo;
-            return this;
-        }
-
-        public Builder authority(@Nullable final String authority) {
-            this.mAuthority = authority;
-            return this;
-        }
-
-        public Builder environment(@Nullable final String environment) {
-            this.mEnvironment = environment;
-            return this;
-        }
-
-        public Builder tenantId(@Nullable final String tenantId) {
-            this.mTenantId = tenantId;
-            return this;
-        }
-
-        public Builder expiresOn(long mExpiresOn) {
-            this.mExpiresOn = mExpiresOn;
-            return this;
-        }
-
-        public Builder extendedExpiresOn(long extendedExpiresOn) {
-            this.mExtendedExpiresOn = extendedExpiresOn;
-            return this;
-        }
-
-        public Builder cachedAt(long cachedAt) {
-            this.mCachedAt = cachedAt;
-            return this;
-        }
-
-        public Builder speRing(final String speRing) {
-            this.mSpeRing = speRing;
-            return this;
-        }
-
-        public Builder refreshTokenAge(final String refreshTokenAge) {
-            this.mRefreshTokenAge = refreshTokenAge;
-            return this;
-        }
-
-        public Builder success(boolean success) {
-            this.mSuccess = success;
-            return this;
-        }
-
-        public Builder servicedFromCache(boolean servicedFromCache) {
-            this.mServicedFromCache = servicedFromCache;
-            return this;
-        }
-
-        public Builder negotiatedBrokerProtocolVersion(final String negotiatedBrokerProtocolVersion) {
-            this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
-            return this;
-        }
-
-        public Builder errorCode(final String errorCode) {
-            this.mErrorCode = errorCode;
-            return this;
-        }
-
-        public Builder errorMessage(final String errorMessage) {
-            this.mErrorMessage = errorMessage;
-            return this;
-        }
-
-        public Builder correlationId(final String correlationId) {
-            this.mCorrelationId = correlationId;
-            return this;
-        }
-
-        public Builder oauthSubErrorCode(final String subErrorCode) {
-            this.mSubErrorCode = subErrorCode;
-            return this;
-        }
-
-        public Builder httpStatusCode(int httpStatusCode) {
-            this.mHttpStatusCode = httpStatusCode;
-            return this;
-        }
-
-        public Builder httpResponseHeaders(final String httpResponseHeaders) {
-            this.mHttpResponseHeaders = httpResponseHeaders;
-            return this;
-        }
-
-        public Builder httpResponseBody(final String httpResponseBody) {
-            this.mHttpResponseBody = httpResponseBody;
-            return this;
-        }
-
-        public Builder cliTelemErrorCode(final String cliTelemErrorCode) {
-            this.mCliTelemErrorCode = cliTelemErrorCode;
-            return this;
-        }
-
-        public Builder cliTelemSubErrorCode(final String cliTelemSubErrorCode) {
-            this.mCliTelemSubErrorCode = cliTelemSubErrorCode;
-            return this;
-        }
-
-        public BrokerResult build() {
-            return new BrokerResult(this);
-        }
-
-        public Builder tenantProfileRecords(final List<ICacheRecord> cacheRecordWithTenantProfileData) {
-            this.mTenantProfileData = cacheRecordWithTenantProfileData;
-            return this;
-        }
-
-        public Builder exceptionType(String exceptionType) {
-            this.mExceptionType = exceptionType;
+        /**
+         * Set the tenant profile data.
+         * @param cacheRecordWithTenantProfileData a list of cache records containing the tenant profile data.
+         * @return the builder.
+         */
+        public BrokerResultBuilder tenantProfileRecords(final List<ICacheRecord> cacheRecordWithTenantProfileData) {
+            this.tenantProfileData = cacheRecordWithTenantProfileData;
             return this;
         }
     }
-
 }

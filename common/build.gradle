@@ -265,18 +265,16 @@ task sourcesJar(type: Jar) {
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
 
-def configDir = new File(buildscript.sourceFile.parentFile.parentFile, 'config')
-ext.checkstyleConfigDir = "$configDir/checkstyle"
 
 checkstyle {
     ignoreFailures = false
+    maxWarnings = 0
     reportsDir = file("$project.buildDir/outputs/")
 }
 
 task checkstyle(type: Checkstyle) {
     configFile file("${project.rootDir}/config/checkstyle/checkstyle.xml")
-
-    configProperties.checkstyleConfigDir = checkstyleConfigDir
+    configProperties.checkstyleConfigDir = "${project.rootDir}/config/checkstyle"
     configProperties.checkstyleSuppressionsPath = file("${project.rootDir}/config/checkstyle/suppressions.xml").absolutePath
     source 'src'
     include '**/*.java'
@@ -376,6 +374,6 @@ afterEvaluate {
 
 tasks.whenTaskAdded { task ->
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
-        task.dependsOn 'lint', 'sourcesJar', 'pmd'
+        task.dependsOn 'lint', 'sourcesJar', 'checkstyle', 'pmd'
     }
 }
