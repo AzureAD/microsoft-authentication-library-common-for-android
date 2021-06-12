@@ -39,6 +39,7 @@ import org.junit.Assert;
  */
 public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
+    private final static boolean RECOVERY_EMAIL_PROMPT_EXPECTED = false;
     private final static String TAG = GoogleLoginComponentHandler.class.getSimpleName();
     private final static String RECOVERY_EMAIL_BUTTON_TEXT = "Confirm your recovery email";
     private final static String RECOVERY_EMAIL_INPUT_RESOURCE_ID = "knowledge-preregistered-email-response";
@@ -90,15 +91,17 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
     }
 
     public void handleRecoveryEmail() {
-        Logger.i(TAG, "Handle Google Recovery Email UI..");
-        final UiObject confirmationEmailButton = UiAutomatorUtils.obtainUiObjectWithText(this.RECOVERY_EMAIL_BUTTON_TEXT);
-        if (confirmationEmailButton.exists()){
-            try {
-                confirmationEmailButton.click();
-                UiAutomatorUtils.handleInput(this.RECOVERY_EMAIL_INPUT_RESOURCE_ID, this.RECOVERY_EMAIL);
-                handleNextButton();
-            } catch (final UiObjectNotFoundException e) {
-                throw new AssertionError(e);
+        if(this.RECOVERY_EMAIL_PROMPT_EXPECTED) {
+            Logger.i(TAG, "Handle Google Recovery Email UI..");
+            final UiObject confirmationEmailButton = UiAutomatorUtils.obtainUiObjectWithText(this.RECOVERY_EMAIL_BUTTON_TEXT);
+            if (confirmationEmailButton.exists()) {
+                try {
+                    confirmationEmailButton.click();
+                    UiAutomatorUtils.handleInput(this.RECOVERY_EMAIL_INPUT_RESOURCE_ID, this.RECOVERY_EMAIL);
+                    handleNextButton();
+                } catch (final UiObjectNotFoundException e) {
+                    throw new AssertionError(e);
+                }
             }
         }
     }

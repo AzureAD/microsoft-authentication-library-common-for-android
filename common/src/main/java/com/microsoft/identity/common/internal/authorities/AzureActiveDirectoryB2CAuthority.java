@@ -96,7 +96,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
 
     /**
      * This method attempts to split the Authority URI
-     * and returns the last item, which is the policy name.
+     * and return the last item, which is the policy name.
      * The authority format for Azure AD B2C is: https://{azureADB2CHostname}/tfp/{tenant}/{policyName}
      *
      * @return a String with the Policy name
