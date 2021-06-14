@@ -107,14 +107,6 @@ public class EstsTelemetry {
                 "Creating Last Request Telemetry Cache"
         );
 
-        final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                SharedPreferencesFileManager.getSharedPreferences(
-                        context,
-                        LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES,
-                        -1,
-                        null
-                );
-
         return new LastRequestTelemetryCache(
                 new SharedPreferenceStringStorage(context, LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES));
     }
