@@ -140,10 +140,10 @@ dependencies {
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
-    implementation "org.apache.httpcomponents:httpclient:$rootProject.ext.apacheHttpVersion"
     implementation "net.jcip:jcip-annotations:1.0"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation 'org.json:json:20180813'
+    implementation "cz.msebera.android:httpclient:$rootProject.ext.httpClientVersion"
 
     testCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
     testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
