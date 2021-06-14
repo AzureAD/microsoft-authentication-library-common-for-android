@@ -172,7 +172,7 @@ dependencies {
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
 
     // For powermockito!
-    testImplementation "org.apache.httpcomponents:httpclient:$rootProject.ext.apacheHttpVersion"
+    testImplementation "cz.msebera.android:httpclient:$rootProject.ext.httpClientVersion"
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
