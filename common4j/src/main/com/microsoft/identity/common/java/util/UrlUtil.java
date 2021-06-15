@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import org.apache.http.client.utils.URIBuilder;
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
 
 import java.net.URISyntaxException;
 import java.net.URL;
