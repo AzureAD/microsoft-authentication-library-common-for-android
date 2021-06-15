@@ -26,6 +26,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -38,7 +39,7 @@ public class CodeMarkerManager {
     private boolean enableCodeMarker = false;
     // MAX_SIZE_CODE_MARKER is the maximum number of markers this utility can have.
     private static final int MAX_SIZE_CODE_MARKER = 1000;
-    private final List<CodeMarker> codeMarkers = new ArrayList<>();
+    private final List<CodeMarker> codeMarkers = Collections.synchronizedList(new ArrayList<CodeMarker>());
     //baseMilliSeconds is the time in milliseconds when first code marker was captured.
     private long baseMilliSeconds = 0;
     private String scenarioCode = null;
@@ -121,7 +122,7 @@ public class CodeMarkerManager {
      * This method clears all the existing markers as well as the scenario code which might have been set earlier.
      */
     public void clearAll() {
-        codeMarkers.clear();
+        clearMarkers();
         scenarioCode = null;
     }
 
