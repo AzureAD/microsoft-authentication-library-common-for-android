@@ -58,11 +58,16 @@ public class SSLSocketFactoryWrapper extends SSLSocketFactory {
             Collections.unmodifiableList(Arrays.asList("SSLv2Hello", "SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2", "TLSv1.3"));
 
     // Gets TLS version of the latest-established socket connection. For testing only.
-    // NOTE: This onMethod thing doesn't generate javadoc, but this method is only exposed for testing only.
-    @Getter(value = AccessLevel.PACKAGE, onMethod_={@Synchronized})
-    @Setter(value = AccessLevel.PACKAGE, onMethod_={@Synchronized})
     @Accessors(prefix = "s")
-    static String sLastHandshakeTLSversion = "";
+    private static String sLastHandshakeTLSversion = "";
+
+    static void setLastHandshakeTLSversion(@Nullable final String lastHandshakeTLSversion){
+        sLastHandshakeTLSversion = lastHandshakeTLSversion;
+    }
+
+    static synchronized String getLastHandshakeTLSversion(){
+        return sLastHandshakeTLSversion;
+    }
 
     // Required/recommended cipher for TLS 1.3
     // See: https://datatracker.ietf.org/doc/html/rfc8446#section-9.1
