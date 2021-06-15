@@ -150,7 +150,7 @@ dependencies {
 
     implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
-    implementation "cz.msebera.android:httpclient:$rootProject.ext.msebraApacheHttpClientVersion"
+    implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
@@ -171,9 +171,6 @@ dependencies {
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
-
-    // For powermockito!
-    testImplementation "cz.msebera.android:httpclient:$rootProject.ext.msebraApacheHttpClientVersion"
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
