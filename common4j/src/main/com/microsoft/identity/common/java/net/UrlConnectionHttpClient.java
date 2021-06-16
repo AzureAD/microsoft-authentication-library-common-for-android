@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
-import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
@@ -46,12 +45,16 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NonNull;
@@ -67,13 +70,12 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.CLI
  * There are two ways to supply timeout values to this class, one method takes suppliers, the other
  * one integers.  If you use both of these, the suppliers method will take precendence over the method
  * using integers.
- *
+ * <p>
  * TODO: add telemetry for exceptions/intermediary failures in this class.
  */
 @AllArgsConstructor
 @Builder
 @ThreadSafe
-@Immutable
 public class UrlConnectionHttpClient extends AbstractHttpClient {
 
     private static final Object TAG = UrlConnectionHttpClient.class.getName();
@@ -96,19 +98,20 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private final Supplier<Integer> readTimeoutMsSupplier = null;
     @Builder.Default
     private final int streamBufferSize = DEFAULT_STREAM_BUFFER_SIZE;
+    @Builder.Default
+    private final List<String> supportedSslProtocol = SSLSocketFactoryWrapper.SUPPORTED_SSL_PROTOCOLS;
+
+
+    private SSLSocketFactoryWrapper sDefault;
+
+    private synchronized SSLSocketFactoryWrapper getDefaultWrapper(){
+        if (sDefault == null){
+            sDefault = new SSLSocketFactoryWrapper((SSLSocketFactory) SSLSocketFactory.getDefault(), supportedSslProtocol);
+        }
+        return sDefault;
+    }
 
     private static final transient AtomicReference<UrlConnectionHttpClient> defaultReference = new AtomicReference<>(null);
-
-    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
-                        justification = "This is caused by lombok-generated code inserting a check")
-    public UrlConnectionHttpClient(@NonNull final UrlConnectionHttpClient client) {
-        this(client.retryPolicy,
-                client.connectTimeoutMs,
-                client.readTimeoutMs,
-                client.connectTimeoutMsSupplier,
-                client.readTimeoutMsSupplier,
-                client.streamBufferSize);
-    }
 
     /**
      * Obtain a static default instance of the HTTP Client class.
@@ -183,16 +186,18 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      * @param requestUrl     The recipient {@link URL}.
      * @param requestHeaders Headers used to send the http request.
      * @param requestContent Optional request body, if applicable.
-     * @return HttpResponse      The response for this request.
+     * @param sslContext     an optional {@link SSLContext} object.
+     * @return HttpResponse  The response for this request.
      * @throws IOException If an error is encountered while servicing this request.
      */
     @Override
     public HttpResponse method(@NonNull final HttpClient.HttpMethod httpMethod,
                                @NonNull final URL requestUrl,
                                @NonNull final Map<String, String> requestHeaders,
-                               final byte[] requestContent) throws IOException {
+                               final byte[] requestContent,
+                               final SSLContext sslContext) throws IOException {
         recordHttpTelemetryEventStart(httpMethod.name(), requestUrl, requestHeaders.get(CLIENT_REQUEST_ID));
-        final HttpRequest request = constructHttpRequest(httpMethod, requestUrl, requestHeaders, requestContent);
+        final HttpRequest request = constructHttpRequest(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
         return retryPolicy.attempt(new Callable<HttpResponse>() {
             public HttpResponse call() throws IOException {
                 return executeHttpSend(request, new Consumer<HttpResponse>() {
@@ -208,7 +213,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     private static HttpRequest constructHttpRequest(@NonNull HttpClient.HttpMethod httpMethod,
                                                     @NonNull URL requestUrl,
                                                     @NonNull Map<String, String> requestHeaders,
-                                                    byte[] requestContent) {
+                                                    byte[] requestContent,
+                                                    final SSLContext sslContext) {
 
         // Apply special backcompat behaviors for PATCH, if reqd
         if (HttpClient.HttpMethod.PATCH == httpMethod) {
@@ -226,7 +232,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 requestHeaders,
                 httpMethod.name(), // HttpURLConnection doesn't natively support PATCH
                 requestContent,
-                null
+                null,
+                sslContext
         );
     }
 
@@ -315,6 +322,7 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
     }
 
     private HttpURLConnection setupConnection(HttpRequest request) throws IOException {
+        final String methodName = ":setupConnection";
         final HttpURLConnection urlConnection = HttpUrlConnectionFactory.createHttpURLConnection(request.getRequestUrl());
 
         // Apply request headers and update the headers with default attributes first
@@ -324,8 +332,21 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
             urlConnection.setRequestProperty(entry.getKey(), entry.getValue());
         }
 
-        urlConnection.setRequestMethod(request.getRequestMethod());
+        if (urlConnection instanceof HttpsURLConnection) {
+            final SSLSocketFactory factory =
+                    request.getSslContext() != null ?
+                            new SSLSocketFactoryWrapper(request.getSslContext().getSocketFactory(), supportedSslProtocol) :
+                            getDefaultWrapper();
+            ((HttpsURLConnection) urlConnection).setSSLSocketFactory(factory);
+        } else if ("https".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
+            throw new IllegalStateException("Trying to initiate a HTTPS request, but didn't get back HttpsURLConnection");
+        } else if ("http".equalsIgnoreCase(request.getRequestUrl().getProtocol())) {
+            Logger.warn(TAG + methodName, "Making a request for non-https URL.");
+        } else {
+            Logger.warn(TAG + methodName, "gets a request from an unexpected protocol: " + request.getRequestUrl().getProtocol());
+        }
 
+        urlConnection.setRequestMethod(request.getRequestMethod());
         urlConnection.setConnectTimeout(getConnectTimeoutMs());
         urlConnection.setReadTimeout(getReadTimeoutMs());
         urlConnection.setInstanceFollowRedirects(true);
@@ -379,4 +400,5 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
                 || statusCode == HttpURLConnection.HTTP_GATEWAY_TIMEOUT
                 || statusCode == HttpURLConnection.HTTP_UNAVAILABLE;
     }
+
 }

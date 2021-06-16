@@ -1,3 +1,4 @@
+
 //  Copyright (c) Microsoft Corporation.
 //  All rights reserved.
 //
@@ -20,12 +21,12 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.result;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.internal.util.BiConsumer;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +36,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+@SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC",
+        justification = "get() invokes await and is a blocking call. making it synchronized will create a deadlock.")
 public class ResultFuture<T> implements Future<T> {
 
     private final CountDownLatch mCountDownLatch = new CountDownLatch(1);

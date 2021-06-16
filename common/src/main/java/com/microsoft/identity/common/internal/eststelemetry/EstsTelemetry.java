@@ -27,6 +27,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.SharedPreferenceStringStorage;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -106,35 +107,8 @@ public class EstsTelemetry {
                 "Creating Last Request Telemetry Cache"
         );
 
-        final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                SharedPreferencesFileManager.getSharedPreferences(
-                        context,
-                        LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES,
-                        -1,
-                        null
-                );
-
-        return new LastRequestTelemetryCache(new IKeyPairStorage<String>() {
-            @Override
-            public String get(@lombok.NonNull String key) {
-                return sharedPreferencesFileManager.getString(key);
-            }
-
-            @Override
-            public void put(@lombok.NonNull String key, String value) {
-                sharedPreferencesFileManager.putString(key, value);
-            }
-
-            @Override
-            public void remove(@lombok.NonNull String key) {
-                sharedPreferencesFileManager.remove(key);
-            }
-
-            @Override
-            public void clear() {
-                sharedPreferencesFileManager.clear();
-            }
-        });
+        return new LastRequestTelemetryCache(
+                new SharedPreferenceStringStorage(context, LAST_REQUEST_TELEMETRY_SHARED_PREFERENCES));
     }
 
     /**
