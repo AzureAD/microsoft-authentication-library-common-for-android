@@ -140,7 +140,9 @@ public class OpenIdProviderConfigurationClient {
                     "Using request URL: " + configUrl
             );
 
-            final HttpResponse providerConfigResponse = httpClient.get(configUrl, new HashMap<String, String>());
+            final HttpResponse providerConfigResponse = httpClient.get(configUrl,
+                    new HashMap<String, String>(),
+                    null);
 
             final int statusCode = providerConfigResponse.getStatusCode();
 

@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ported.Pair;
 
-import org.apache.http.client.utils.URIBuilder;
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
 
 import java.io.Serializable;
 import java.net.URI;
