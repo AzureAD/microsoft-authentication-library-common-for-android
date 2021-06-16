@@ -27,7 +27,9 @@ import java.util.List;
 import java.util.Objects;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
+import lombok.NonNull;
 
 @AllArgsConstructor
 public class Pair<T, U> {
@@ -35,7 +37,9 @@ public class Pair<T, U> {
     public final U second;
 
     @Override
-    public boolean equals(@Nullable Object obj) {
+    @SuppressFBWarnings(value = "NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION",
+            justification = "Equals function should be able to take in a null object.")
+    public boolean equals(@Nullable final Object obj) {
         if (obj == null){
             return false;
         }
@@ -48,10 +52,15 @@ public class Pair<T, U> {
         return Objects.equals(castedObj.first, first) && Objects.equals(castedObj.second, second);
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), first, second);
+    }
+
     /**
      * Add this item to a list if a copy of the same key-value pair doesn't exist.
      * */
-    public void addToListIfNotExist(final List<Pair<T, U>> listToBeAdded) {
+    public void addToListIfNotExist(@NonNull final List<Pair<T, U>> listToBeAdded) {
         if (!listToBeAdded.contains(this)) {
             listToBeAdded.add(this);
         }
