@@ -34,7 +34,8 @@ public enum HomeUpn {
         this.value = value;
     }
 
-    public String getValue() {
+    @Override
+    public String toString() {
         return value;
     }
 }

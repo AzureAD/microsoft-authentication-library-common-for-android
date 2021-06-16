@@ -33,7 +33,8 @@ public enum GuestHomeAzureEnvironment {
         this.value = value;
     }
 
-    public String getValue() {
+    @Override
+    public String toString() {
         return value;
     }
 }

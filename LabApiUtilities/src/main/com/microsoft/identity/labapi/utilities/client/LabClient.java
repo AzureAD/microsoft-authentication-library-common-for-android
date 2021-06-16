@@ -100,34 +100,37 @@ public class LabClient implements ILabClient {
         try {
             final ConfigApi api = new ConfigApi();
             return api.apiConfigGet(
-                    query.getUserType() != null ? query.getUserType().getValue() : null,
-                    query.getUserRole() != null ? query.getUserRole().getValue() : null,
-                    query.getMfa() != null ? query.getMfa().getValue() : null,
-                    query.getProtectionPolicy() != null ? query.getProtectionPolicy().getValue() : null,
-                    query.getHomeDomain() != null ? query.getHomeDomain().getValue() : null,
-                    query.getHomeUpn() != null ? query.getHomeUpn().getValue() : null,
-                    query.getB2cProvider() != null ? query.getB2cProvider().getValue() : null,
-                    query.getFederationProvider() != null ? query.getFederationProvider().getValue() : null,
-                    query.getAzureEnvironment() != null ? query.getAzureEnvironment().getValue() : null,
-                    query.getGuestHomeAzureEnvironment() != null ? query.getGuestHomeAzureEnvironment().getValue() : null,
-                    query.getAppType() != null ? query.getAppType().getValue() : null,
-                    query.getPublicClient() != null ? query.getPublicClient().getValue() : null,
-                    query.getSignInAudience() != null ? query.getSignInAudience().getValue() : null,
-                    query.getGuestHomedIn() != null ? query.getGuestHomedIn().getValue() : null,
-                    query.getHasAltId() != null ? query.getHasAltId().getValue() : null,
-                    query.getAltIdSource() != null ? query.getAltIdSource().getValue() : null,
-                    query.getAltIdType() != null ? query.getAltIdType().getValue() : null,
-                    query.getPasswordPolicyValidityPeriod() != null ? query.getPasswordPolicyValidityPeriod().getValue() : null,
-                    query.getPasswordPolicyNotificationDays() != null ? query.getPasswordPolicyNotificationDays().getValue() : null,
-                    query.getTokenLifetimePolicy() != null ? query.getTokenLifetimePolicy().getValue() : null,
-                    query.getTokenType() != null ? query.getTokenType().getValue() : null,
-                    query.getTokenLifetime() != null ? query.getTokenLifetime().getValue() : null
+                    valueOf(query.getUserType()),
+                    valueOf(query.getUserRole()),
+                    valueOf(query.getMfa()),
+                    valueOf(query.getProtectionPolicy()),
+                    valueOf(query.getHomeDomain()),
+                    valueOf(query.getHomeUpn()),
+                    valueOf(query.getB2cProvider()),
+                    valueOf(query.getFederationProvider()),
+                    valueOf(query.getAzureEnvironment()),
+                    valueOf(query.getGuestHomeAzureEnvironment()),
+                    valueOf(query.getAppType()),
+                    valueOf(query.getPublicClient()),
+                    valueOf(query.getSignInAudience()),
+                    valueOf(query.getGuestHomedIn()),
+                    valueOf(query.getHasAltId()),
+                    valueOf(query.getAltIdSource()),
+                    valueOf(query.getAltIdType()),
+                    valueOf(query.getPasswordPolicyValidityPeriod()),
+                    valueOf(query.getPasswordPolicyNotificationDays()),
+                    valueOf(query.getTokenLifetimePolicy()),
+                    valueOf(query.getTokenType()),
+                    valueOf(query.getTokenLifetime())
             );
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
         }
     }
 
+    private String valueOf(final Object obj) {
+        return obj == null ? null : obj.toString();
+    }
 
     @Override
     public LabAccount createTempUser(@NonNull final TempUserType tempUserType) throws LabApiException {
@@ -139,7 +142,7 @@ public class LabClient implements ILabClient {
         final TempUser tempUser;
 
         try {
-            tempUser = createTempUserApi.apiCreateTempUserPost(tempUserType.getValue());
+            tempUser = createTempUserApi.apiCreateTempUserPost(valueOf(tempUserType));
         } catch (final ApiException e) {
             throw new LabApiException(LabError.FAILED_TO_CREATE_TEMP_USER, e);
         }

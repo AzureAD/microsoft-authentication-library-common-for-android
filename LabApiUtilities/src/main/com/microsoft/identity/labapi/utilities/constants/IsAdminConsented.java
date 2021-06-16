@@ -25,13 +25,14 @@ package com.microsoft.identity.labapi.utilities.constants;
 public enum IsAdminConsented {
     YES(LabConstants.IsAdminConsented.YES),
     NO(LabConstants.IsAdminConsented.NO);
-    String constant;
+    String value;
 
-    IsAdminConsented(String constant) {
-        this.constant = constant;
+    IsAdminConsented(final String value) {
+        this.value = value;
     }
 
-    public String getValue() {
-        return constant;
+    @Override
+    public String toString() {
+        return value;
     }
 }
