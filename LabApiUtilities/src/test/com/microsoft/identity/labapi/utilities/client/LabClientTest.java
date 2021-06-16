@@ -92,7 +92,7 @@ public class LabClientTest {
         final LabClient labClient = new LabClient(authenticationClient);
 
         try {
-            final LabAccount labAccount = labClient.createTempUser(TempUserType.BASIC);
+            final LabAccount labAccount = labClient.createTempAccount(TempUserType.BASIC);
             Assert.assertNotNull(labAccount);
             Assert.assertNotNull(labAccount.getUsername());
             Assert.assertNotNull(labAccount.getPassword());

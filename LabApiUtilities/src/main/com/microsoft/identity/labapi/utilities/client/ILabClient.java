@@ -57,7 +57,7 @@ public interface ILabClient {
      * @return a {@link LabAccount} object
      * @throws LabApiException if an error occurs while trying to fetch account from lab
      */
-    LabAccount createTempUser(TempUserType tempUserType) throws LabApiException;
+    LabAccount createTempAccount(TempUserType tempUserType) throws LabApiException;
 
     /**
      * Get the value of a secret from Lab Api. This primarily includes secrets like passwords for

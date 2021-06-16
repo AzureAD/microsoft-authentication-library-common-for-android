@@ -133,7 +133,7 @@ public class LabClient implements ILabClient {
     }
 
     @Override
-    public LabAccount createTempUser(@NonNull final TempUserType tempUserType) throws LabApiException {
+    public LabAccount createTempAccount(@NonNull final TempUserType tempUserType) throws LabApiException {
         Configuration.getDefaultApiClient().setAccessToken(
                 mLabApiAuthenticationClient.getAccessToken()
         );
