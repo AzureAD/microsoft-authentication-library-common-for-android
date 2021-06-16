@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.app.Activity;
-import android.util.Pair;
 
 import androidx.fragment.app.Fragment;
 
@@ -31,6 +30,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
+import com.microsoft.identity.common.java.util.ported.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;

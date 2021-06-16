@@ -28,7 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Pair;
+import com.microsoft.identity.common.java.util.ported.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

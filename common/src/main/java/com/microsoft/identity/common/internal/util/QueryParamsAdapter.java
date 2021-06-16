@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.text.TextUtils;
-import android.util.Pair;
+import com.microsoft.identity.common.java.util.ported.Pair;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

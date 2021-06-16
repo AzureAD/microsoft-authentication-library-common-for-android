@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
-import android.util.Pair;
+import com.microsoft.identity.common.java.util.ported.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;

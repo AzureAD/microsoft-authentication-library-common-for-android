@@ -23,10 +23,38 @@
 
 package com.microsoft.identity.common.java.util.ported;
 
+import java.util.List;
+import java.util.Objects;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class Pair<T, U> {
     public final T first;
     public final U second;
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj == null){
+            return false;
+        }
+
+        if (!(obj instanceof Pair)) {
+            return false;
+        }
+
+        final Pair<?, ?> castedObj = (Pair<?, ?>) obj;
+        return Objects.equals(castedObj.first, first) && Objects.equals(castedObj.second, second);
+    }
+
+    /**
+     * Add this item to a list if a copy of the same key-value pair doesn't exist.
+     * */
+    public void addToListIfNotExist(final List<Pair<T, U>> listToBeAdded) {
+        if (!listToBeAdded.contains(this)) {
+            listToBeAdded.add(this);
+        }
+    }
+
 }

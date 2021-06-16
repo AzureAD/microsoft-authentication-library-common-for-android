@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
-import android.util.Pair;
+import com.microsoft.identity.common.java.util.ported.Pair;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
