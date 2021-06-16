@@ -52,9 +52,16 @@ public class Pair<T, U> {
         return Objects.equals(castedObj.first, first) && Objects.equals(castedObj.second, second);
     }
 
+    /**
+     * Compute a hash code using the hash codes of the underlying objects
+     *
+     * @return a hashcode of the Pair
+     */
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), first, second);
+        int result = (first != null ? first.hashCode() : 0);
+        result = 31 * result + (second != null ? second.hashCode() : 0);
+        return result;
     }
 
     /**
