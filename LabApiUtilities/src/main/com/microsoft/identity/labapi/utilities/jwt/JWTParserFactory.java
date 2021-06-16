@@ -20,20 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
-
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+package com.microsoft.identity.labapi.utilities.jwt;
 
 /**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
+ * An {@link IJWTParserFactory} that can return an implementation of an {@link IJWTParser}.
+ * Currently it only returns a default implementation that is using Nimbus.
  */
-public interface IAccessTokenSupplier {
+public enum JWTParserFactory implements IJWTParserFactory {
 
-    /**
-     * Obtain a valid access token.
-     *
-     * @return a String representing an access token
-     */
-    String getAccessToken() throws LabApiException;
+    INSTANCE;
+
+    @Override
+    public IJWTParser getJwtParser() {
+        return new NimbusJWTParser();
+    }
 }

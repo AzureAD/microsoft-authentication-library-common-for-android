@@ -20,20 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.jwt;
 
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import java.util.Map;
 
 /**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
+ * A JWT Parser that parses a JWT and returns the claims.
  */
-public interface IAccessTokenSupplier {
+public interface IJWTParser {
 
     /**
-     * Obtain a valid access token.
+     * Parse a JWT and returns the claims inside the token. A {@link RuntimeException} is thrown if
+     * the parsing fails.
      *
-     * @return a String representing an access token
+     * @param jwt the JWT to parse
+     * @return a Map containing the JWT claims
      */
-    String getAccessToken() throws LabApiException;
+    Map<String, ?> parseJWT(String jwt);
 }

@@ -20,27 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication.exception;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.experimental.Accessors;
+public enum HomeDomain {
+    NONE(LabConstants.HomeDomain.NONE),
+    MSIDLAB2(LabConstants.HomeDomain.LAB_2),
+    MSIDLAB3(LabConstants.HomeDomain.LAB_3),
+    MSIDLAB4(LabConstants.HomeDomain.LAB_4);
 
-/**
- * An Exception that should be thrown by all Lab Api operations if they encounter an error.
- */
-@Getter
-@Accessors(prefix = "m")
-public class LabApiException extends Exception {
-    private final LabError mErrorCode;
+    final String value;
 
-    public LabApiException(@NonNull final LabError error) {
-        super(error.name());
-        mErrorCode = error;
+    HomeDomain(final String value) {
+        this.value = value;
     }
 
-    public LabApiException(@NonNull final LabError error, @NonNull final Throwable throwable) {
-        super(error.name(), throwable);
-        mErrorCode = error;
+    @Override
+    public String toString() {
+        return value;
     }
 }

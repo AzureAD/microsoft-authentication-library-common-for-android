@@ -22,11 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.Constants;
-import com.microsoft.identity.labapi.utilities.IJWTParser;
-import com.microsoft.identity.labapi.utilities.JWTParserFactory;
+import com.microsoft.identity.labapi.utilities.jwt.IJWTParser;
+import com.microsoft.identity.labapi.utilities.jwt.JWTParserFactory;
 import com.microsoft.identity.labapi.utilities.TestBuildConfig;
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -55,8 +54,8 @@ public class KeyVaultAuthenticationClientTest {
             Assert.assertNotNull(accessToken);
             Assert.assertNotEquals("", accessToken);
             Assert.assertEquals(
-                    Constants.KEY_VAULT_TOKEN_AUDIENCE,
-                    ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
+                    LabAuthenticationConstants.KEY_VAULT_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(LabAuthenticationConstants.AUDIENCE_CLAIM)).get(0)
             );
         } catch (final LabApiException e) {
             throw new AssertionError(e);
@@ -73,8 +72,8 @@ public class KeyVaultAuthenticationClientTest {
             Assert.assertNotNull(accessToken);
             Assert.assertNotEquals("", accessToken);
             Assert.assertEquals(
-                    Constants.KEY_VAULT_TOKEN_AUDIENCE,
-                    ((List<String>) jwtParser.parseJWT(accessToken).get(Constants.AUDIENCE_CLAIM)).get(0)
+                    LabAuthenticationConstants.KEY_VAULT_TOKEN_AUDIENCE,
+                    ((List<String>) jwtParser.parseJWT(accessToken).get(LabAuthenticationConstants.AUDIENCE_CLAIM)).get(0)
             );
         } catch (final LabApiException e) {
             throw new AssertionError(e);

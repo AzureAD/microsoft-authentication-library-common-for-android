@@ -20,18 +20,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities;
+package com.microsoft.identity.labapi.utilities.constants;
 
-/**
- * An {@link IJWTParserFactory} that can return an implementation of an {@link IJWTParser}.
- * Currently it only returns a default implementation that is using Nimbus.
- */
-public enum JWTParserFactory implements IJWTParserFactory {
+public enum AltIdSource {
+    NONE(LabConstants.AltIdSource.NONE),
+    ON_PREM(LabConstants.AltIdSource.ON_PREM);
 
-    INSTANCE;
+    final String value;
+
+    AltIdSource(final String value) {
+        this.value = value;
+    }
 
     @Override
-    public IJWTParser getJwtParser() {
-        return new NimbusJWTParser();
+    public String toString() {
+        return value;
     }
 }
