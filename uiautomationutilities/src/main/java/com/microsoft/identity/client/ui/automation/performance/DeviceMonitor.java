@@ -106,6 +106,8 @@ public class DeviceMonitor {
             throw new IllegalArgumentException("The performanceProfile does not have a monitor.");
         }
 
+        loadProcessInfo();
+
         return classOfT.cast(monitor.getStats(processInfo));
     }
 
@@ -159,13 +161,19 @@ public class DeviceMonitor {
 
         final long memTotal = Long.parseLong(commandResult[0].trim().split("\\s+")[1]);
         final long memFree = Long.parseLong(commandResult[1].trim().split("\\s+")[1]);
+        final long memAvailable = Long.parseLong(commandResult[2].trim().split("\\s+")[1]);
 
+        command = "nproc";
+        commandResult = AdbShellUtils.executeShellCommand(command).trim().split("\n");
+
+        final int numCpuCores = Integer.parseInt(commandResult[0]);
 
         processInfo = ProcessInfo.builder()
-                .cpuUsage(Double.parseDouble(cpuUsage))
+                .cpuUsage(Double.parseDouble(cpuUsage) / numCpuCores)
                 .freeSystemMemory(memFree)
+                .availableSystemMemory(memAvailable)
                 .totalSystemMemory(memTotal)
-                .usedSystemMemory(memTotal - memFree)
+                .usedSystemMemory(memTotal - memAvailable)
                 .memoryUsage(Double.parseDouble(memoryUsage))
                 .packageName(packageName)
                 .pid(pid)

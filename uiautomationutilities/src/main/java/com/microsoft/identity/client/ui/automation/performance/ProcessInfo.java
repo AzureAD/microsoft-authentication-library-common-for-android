@@ -41,6 +41,7 @@ public class ProcessInfo {
     private long mTotalSystemMemory;
     private long mUsedSystemMemory;
     private long mFreeSystemMemory;
+    private long mAvailableSystemMemory;
     private int mUid;
     private double mCpuUsage;
     private double mMemoryUsage;
