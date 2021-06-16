@@ -62,7 +62,7 @@ public class LabClient implements ILabClient {
         // usually we only need one such account, and hence over here we are just picking the first
         // element of the list.
         final ConfigInfo configInfo = configInfos.get(0);
-        return createAccount(configInfo);
+        return getLabAccountObject(configInfo);
     }
 
     @Override
@@ -72,13 +72,13 @@ public class LabClient implements ILabClient {
         final List<LabAccount> labAccounts = new ArrayList<>(configInfos.size());
 
         for (final ConfigInfo configInfo : configInfos) {
-            labAccounts.add(createAccount(configInfo));
+            labAccounts.add(getLabAccountObject(configInfo));
         }
 
         return labAccounts;
     }
 
-    private LabAccount createAccount(@NonNull final ConfigInfo configInfo) throws LabApiException {
+    private LabAccount getLabAccountObject(@NonNull final ConfigInfo configInfo) throws LabApiException {
         // for guest accounts the UPN is located under homeUpn field
         String username = configInfo.getUserInfo().getHomeUPN();
         if (username == null || username.equals("") || username.equalsIgnoreCase("None")) {
