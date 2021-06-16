@@ -20,21 +20,17 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities;
-
-import java.util.Map;
+package com.microsoft.identity.labapi.utilities.jwt;
 
 /**
- * A JWT Parser that parses a JWT and returns the claims.
+ * A factory that can return an implementation of an {@link IJWTParser}.
  */
-public interface IJWTParser {
+public interface IJWTParserFactory {
 
     /**
-     * Parse a JWT and returns the claims inside the token. A {@link RuntimeException} is thrown if
-     * the parsing fails.
+     * Obtain an instance of an {@link IJWTParser}.
      *
-     * @param jwt the JWT to parse
-     * @return a Map containing the JWT claims
+     * @return the JWT Parser to use.
      */
-    Map<String, ?> parseJWT(String jwt);
+    IJWTParser getJwtParser();
 }
