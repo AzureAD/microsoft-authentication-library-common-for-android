@@ -28,6 +28,6 @@ package com.microsoft.identity.client.ui.automation.performance;
 public class MemoryMonitor implements PerformanceProfileMonitor<Long> {
     @Override
     public Long getStats(ProcessInfo processInfo) {
-        return (long) (processInfo.getMemoryUsage() * processInfo.getTotalSystemMemory());
+        return (long) (processInfo.getMemoryUsage() * processInfo.getUsedSystemMemory()) / 100;
     }
 }
