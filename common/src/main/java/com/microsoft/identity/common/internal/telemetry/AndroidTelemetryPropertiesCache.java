@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.telemetry;
 
 import android.content.Context;
 
+import com.microsoft.identity.common.SharedPreferenceStringStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 import com.microsoft.identity.common.java.telemetry.TelemetryPropertiesCache;
@@ -39,29 +40,6 @@ public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
     private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
 
     public AndroidTelemetryPropertiesCache(@NonNull final Context context) {
-        super(new IKeyPairStorage<String>() {
-            final SharedPreferencesFileManager mSharedPrefs =
-                    SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFS_NAME, -1, null);
-
-            @Override
-            public String get(@NonNull String key) {
-                return mSharedPrefs.getString(key);
-            }
-
-            @Override
-            public void put(@NonNull String key, String value) {
-                mSharedPrefs.putString(key, value);
-            }
-
-            @Override
-            public void remove(@NonNull String key) {
-                mSharedPrefs.remove(key);
-            }
-
-            @Override
-            public void clear() {
-                mSharedPrefs.clear();
-            }
-        });
+        super(new SharedPreferenceStringStorage(context, SHARED_PREFS_NAME));
     }
 }

@@ -35,7 +35,7 @@ import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResu
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.testutils.MicrosoftStsRopcTokenRequest;
 import com.microsoft.identity.internal.testutils.labutils.LabConfig;

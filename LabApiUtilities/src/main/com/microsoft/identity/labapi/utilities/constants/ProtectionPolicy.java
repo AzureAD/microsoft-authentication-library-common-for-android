@@ -20,27 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import net.jcip.annotations.Immutable;
-import net.jcip.annotations.ThreadSafe;
+public enum ProtectionPolicy {
+    NONE(LabConstants.ProtectionPolicy.NONE),
+    CA(LabConstants.ProtectionPolicy.CA),
+    CADJ(LabConstants.ProtectionPolicy.CADJ),
+    MAM(LabConstants.ProtectionPolicy.MAM),
+    MDM(LabConstants.ProtectionPolicy.MDM),
+    MAM_CA(LabConstants.ProtectionPolicy.MAM_CA),
+    MDM_CA(LabConstants.ProtectionPolicy.MDM_CA),
+    TRUE_MAM_CA(LabConstants.ProtectionPolicy.TRUE_MAM_CA),
+    MAM_SPO(LabConstants.ProtectionPolicy.MAM_SPO),
+    BLOCKED(LabConstants.ProtectionPolicy.BLOCKED);
 
-import java.io.IOException;
-import java.util.concurrent.Callable;
+    final String value;
 
-import lombok.SneakyThrows;
+    ProtectionPolicy(final String value) {
+        this.value = value;
+    }
 
-/**
- * Deprecated
- *
- * @see com.microsoft.identity.common.java.net.NoRetryPolicy
- */
-@ThreadSafe
-@Immutable
-public class NoRetryPolicy implements RetryPolicy<HttpResponse> {
     @Override
-    @SneakyThrows
-    public HttpResponse attempt(Callable<HttpResponse> supplier) throws IOException {
-        return supplier.call();
+    public String toString() {
+        return value;
     }
 }

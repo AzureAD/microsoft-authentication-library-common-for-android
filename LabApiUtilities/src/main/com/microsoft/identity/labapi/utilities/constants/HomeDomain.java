@@ -20,12 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.net;
+package com.microsoft.identity.labapi.utilities.constants;
 
-/**
- * Deprecated
- *
- * @see com.microsoft.identity.common.java.net.IRetryPolicy
- */
-public interface RetryPolicy<T> extends com.microsoft.identity.common.java.net.IRetryPolicy<T> {
+public enum HomeDomain {
+    NONE(LabConstants.HomeDomain.NONE),
+    MSIDLAB2(LabConstants.HomeDomain.LAB_2),
+    MSIDLAB3(LabConstants.HomeDomain.LAB_3),
+    MSIDLAB4(LabConstants.HomeDomain.LAB_4);
+
+    final String value;
+
+    HomeDomain(final String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }
