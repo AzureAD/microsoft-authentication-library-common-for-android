@@ -20,11 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft;
+package com.microsoft.identity.common.java.providers.microsoft;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
 import java.util.Date;
 
@@ -261,7 +261,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @return The ext expires on to get.
      */
     public Date getExtExpiresOn() {
-        return mExtExpiresOn;
+        return new Date(mExtExpiresOn.getTime());
     }
 
     /**
@@ -270,7 +270,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @param extExpiresOn The expires on to set.
      */
     public void setExtExpiresOn(final Date extExpiresOn) {
-        mExtExpiresOn = extExpiresOn;
+        mExtExpiresOn = new Date(extExpiresOn.getTime());
     }
 
     /**

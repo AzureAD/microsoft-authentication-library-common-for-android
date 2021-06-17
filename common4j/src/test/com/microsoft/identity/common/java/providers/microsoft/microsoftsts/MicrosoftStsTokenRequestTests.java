@@ -20,35 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-/**
- * Enum for representing different authorization status values.
- */
-public enum AuthorizationStatus {
-    /**
-     * Code is successfully returned.
-     */
-    SUCCESS,
+import com.microsoft.identity.common.java.util.ObjectMapper;
 
-    /**
-     * User press device back button.
-     */
-    USER_CANCEL,
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
 
-    /**
-     * Sdk cancelled Auth floe
-     */
-    SDK_CANCEL,
+import java.util.UUID;
 
-    /**
-     * Returned URI contains error.
-     */
-    FAIL,
+@RunWith(JUnit4.class)
+public final class MicrosoftStsTokenRequestTests {
 
-    /**
-     * AuthenticationActivity detects the invalid request.
-     */
-    INVALID_REQUEST
-    //TODO:  Investigate how chrome tab returns http timeout error
+    @Test
+    public void testCorrelationIdSerializedCorrectly(){
+        UUID correlationId = UUID.randomUUID();
+        MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
+        request.setCorrelationId(correlationId);
+
+        String jsonRequest = ObjectMapper.serializeObjectToJsonString(request);
+
+        MicrosoftStsTokenRequest deserializedRequest = ObjectMapper.deserializeJsonStringToObject(jsonRequest, MicrosoftStsTokenRequest.class);
+
+        Assert.assertEquals(correlationId, deserializedRequest.getCorrelationId());
+    }
 }

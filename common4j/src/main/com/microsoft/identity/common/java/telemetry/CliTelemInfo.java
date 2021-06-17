@@ -20,15 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry;
+package com.microsoft.identity.common.java.telemetry;
 
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.Serializable;
 import java.util.regex.Pattern;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 public class CliTelemInfo implements Serializable {
 
@@ -99,7 +99,7 @@ public class CliTelemInfo implements Serializable {
     @Nullable
     public static CliTelemInfo fromXMsCliTelemHeader(final String headerValue) {
         // if the header isn't present, do nothing
-        if (StringExtensions.isNullOrBlank(headerValue)) {
+        if (StringUtil.isNullOrEmpty(headerValue)) {
             return null;
         }
 

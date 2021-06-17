@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 
 /**
  * Sub class of {@link MicrosoftAuthorizationResponse} which encapsulates additional parameters
