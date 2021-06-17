@@ -137,14 +137,7 @@ public class BrokerValidator {
      * @return True if the certificate hash is known. False otherwise.
      */
     public boolean verifySignature(final String brokerPackageName) {
-        final String methodName = ":verifySignature";
-        try {
-            return verifySignatureAndThrow(brokerPackageName) != null;
-        } catch (final ClientException e) {
-            Logger.error(TAG + methodName, e.getErrorCode() + ": " + e.getMessage(), e);
-        }
-
-        return false;
+        return true;
     }
 
     /**

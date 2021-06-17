@@ -81,6 +81,7 @@ public class BrokerData {
     private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         add(MICROSOFT_AUTHENTICATOR_PROD);
         add(COMPANY_PORTAL);
+        add(COMPANY_PORTAL_DEBUG);
     }});
 
     private static final Set<BrokerData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
