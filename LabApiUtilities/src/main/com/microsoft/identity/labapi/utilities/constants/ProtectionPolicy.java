@@ -20,15 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication.exception;
+package com.microsoft.identity.labapi.utilities.constants;
 
-/**
- * Represents errors that can occur in a Lab Api flow. This includes flows to authenticate against
- * the lab api as well as flows to obtain an account via the Lab Api.
- */
-public enum LabError {
-    FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET,
-    FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE,
-    FAILED_TO_GET_SECRET_FROM_KEYVAULT,
-    CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
+public enum ProtectionPolicy {
+    NONE(LabConstants.ProtectionPolicy.NONE),
+    CA(LabConstants.ProtectionPolicy.CA),
+    CADJ(LabConstants.ProtectionPolicy.CADJ),
+    MAM(LabConstants.ProtectionPolicy.MAM),
+    MDM(LabConstants.ProtectionPolicy.MDM),
+    MAM_CA(LabConstants.ProtectionPolicy.MAM_CA),
+    MDM_CA(LabConstants.ProtectionPolicy.MDM_CA),
+    TRUE_MAM_CA(LabConstants.ProtectionPolicy.TRUE_MAM_CA),
+    MAM_SPO(LabConstants.ProtectionPolicy.MAM_SPO),
+    BLOCKED(LabConstants.ProtectionPolicy.BLOCKED);
+
+    final String value;
+
+    ProtectionPolicy(final String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

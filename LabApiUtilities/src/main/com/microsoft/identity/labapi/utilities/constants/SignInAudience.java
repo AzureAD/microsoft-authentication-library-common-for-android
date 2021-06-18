@@ -20,29 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.JWTParser;
+public enum SignInAudience {
+    AZURE_AD_MY_ORG(LabConstants.SignInAudience.AZURE_AD_MY_ORG),
+    AZURE_AD_MULTIPLE_ORGS(LabConstants.SignInAudience.AZURE_AD_MULTIPLE_ORGS),
+    AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT(LabConstants.SignInAudience.AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT);
 
-import java.text.ParseException;
-import java.util.HashMap;
-import java.util.Map;
+    final String value;
 
-/**
- * A JWT Parser that uses Nimbus to parse the JWT.
- */
-public class NimbusJWTParser implements IJWTParser {
+    SignInAudience(final String value) {
+        this.value = value;
+    }
+
     @Override
-    public Map<String, ?> parseJWT(String rawJwt) {
-        try {
-            final JWT jwt = JWTParser.parse(rawJwt);
-            final JWTClaimsSet claimsSet;
-            claimsSet = jwt.getJWTClaimsSet();
-            return new HashMap<>(claimsSet.getClaims());
-        } catch (final ParseException e) {
-            throw new RuntimeException(e);
-        }
+    public String toString() {
+        return value;
     }
 }

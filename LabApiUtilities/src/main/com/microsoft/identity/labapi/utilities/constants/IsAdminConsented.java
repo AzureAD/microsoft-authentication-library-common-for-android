@@ -20,20 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+public enum IsAdminConsented {
+    YES(LabConstants.IsAdminConsented.YES),
+    NO(LabConstants.IsAdminConsented.NO);
+    String value;
 
-/**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
- */
-public interface IAccessTokenSupplier {
+    IsAdminConsented(final String value) {
+        this.value = value;
+    }
 
-    /**
-     * Obtain a valid access token.
-     *
-     * @return a String representing an access token
-     */
-    String getAccessToken() throws LabApiException;
+    @Override
+    public String toString() {
+        return value;
+    }
 }

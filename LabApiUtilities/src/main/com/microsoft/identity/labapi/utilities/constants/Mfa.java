@@ -20,20 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+public enum Mfa {
+    NONE(LabConstants.Mfa.NONE),
+    MFA_ON_ALL(LabConstants.Mfa.MFA_ON_ALL),
+    AUTO_MFA_ON_ALL(LabConstants.Mfa.AUTO_MFA_ON_ALL);
 
-/**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
- */
-public interface IAccessTokenSupplier {
+    final String value;
 
-    /**
-     * Obtain a valid access token.
-     *
-     * @return a String representing an access token
-     */
-    String getAccessToken() throws LabApiException;
+    Mfa(final String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }
