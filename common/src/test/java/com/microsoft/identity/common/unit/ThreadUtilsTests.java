@@ -169,6 +169,49 @@ public class ThreadUtilsTests {
     }
 
     @Test
+    public void capacityFiveTestUnboundedExceptionsErrorsAndCancellations() throws Exception {
+        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, -1, 5, TimeUnit.SECONDS, "testPool");
+        final CountDownLatch latch = new CountDownLatch(5);
+        final CountDownLatch goLatch = new CountDownLatch(1);
+        final CountDownLatch stopLatch = new CountDownLatch(5);
+        final Future<?> result = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
+        final Future<?> result2 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
+        final Future<?> result3 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
+        final Future<?> result4 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
+        final Future<?> result5 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
+
+        goLatch.countDown();
+        Assert.assertTrue(stopLatch.await(5, TimeUnit.MINUTES));
+
+        for (int i = 0; i < 100; i++) {
+            CountDownLatch newLatch = new CountDownLatch(1);
+            CountDownLatch newGoLatch = new CountDownLatch(1);
+            CountDownLatch newStopLatch = new CountDownLatch(1);
+            List<Future> futures = new ArrayList<>();
+            for (int j = 0; j < 1000; j++) {
+                if (j%4 == 0) {
+                    s.submit(hangThreadLatch(newLatch, newGoLatch, newStopLatch));
+                } else if (j%4 == 1) {
+                    s.submit(exceptionTaskLatched(newLatch, newGoLatch, newStopLatch));
+                } else if (j%4 == 2) {
+                    s.submit(errorTaskLatched(newLatch, newGoLatch, newStopLatch));
+                } else {
+                    Future f = s.submit(hangThread());
+                    futures.add(f);
+                }
+            }
+            Assert.assertTrue(newLatch.await(60, TimeUnit.SECONDS));
+            for (Future f: futures) {
+                f.cancel(true);
+            }
+            newGoLatch.countDown();
+            Assert.assertTrue(newStopLatch.await(60, TimeUnit.SECONDS));
+        }
+
+        s.shutdownNow();
+    }
+
+    @Test
     public void capacityFiveTestUnboundedExceptions() throws Exception {
         final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, -1, 5, TimeUnit.SECONDS, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
@@ -315,6 +358,23 @@ public class ThreadUtilsTests {
         result.cancel(true);
         s.shutdownNow();
     }
+    private Runnable errorTaskLatched(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
+        return new Runnable() {
+            @Override
+            public void run() {
+                latch.countDown();
+                try {
+                    goLatch.await();
+                    throw new Error("KABOOM!");
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    stopLatch.countDown();
+                }
+            }
+        };
+    }
+
     private Runnable exceptionTaskLatched(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
         return new Runnable() {
             @Override
