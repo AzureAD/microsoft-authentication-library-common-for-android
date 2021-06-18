@@ -72,35 +72,6 @@ public class ThreadUtils {
     public static ExecutorService getNamedSingleThreadExecutor(final String poolName) {
         return Executors.newSingleThreadExecutor(getNamedThreadFactory(poolName, System.getSecurityManager()));
     }
-    /**
-     * Construct a thread pool with specified name and optionally bounded size.
-     *
-     * @param corePool      The smallest number of threads to keep alive in the pool.
-     * @param maxPool       The maximum number of threads to allow in the thread pool, after which RejectedExecutionException will occur.
-     * @param queueSize     The number of items to keep in the queue.  If this is < 0, the queue is unbounded.
-     * @param keepAliveTime The amount of time to keep excess (greater than corePool size) threads alive before terminating them.
-     * @param keepAliveUnit The time unit on that time.
-     * @param poolName      The name of the thread pool in use.
-     * @return An executor service with the specified properties.
-     */
-    public static ExecutorService getNamedThreadPoolExecutor(final int corePool, final int maxPool,
-                                                             final int queueSize, final long keepAliveTime,
-                                                             @NonNull final TimeUnit keepAliveUnit,
-                                                             @NonNull final String poolName) {
-        if (queueSize > 0) {
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                                          new ArrayBlockingQueue<Runnable>(queueSize),
-                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
-        } else if (queueSize == 0) {
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                                          new SynchronousQueue<Runnable>(),
-                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
-        } else { // (queueSize < 0)
-            return new ThreadPoolExecutor(corePool, maxPool, keepAliveTime, keepAliveUnit,
-                                          new LinkedBlockingQueue<Runnable>(),
-                                          getNamedThreadFactory(poolName, System.getSecurityManager()));
-        }
-    }
 
     //Nice thought, but if you're using executors, you're using ThreadGroup whether you want to or not.
     @SuppressWarnings("PMD.AvoidThreadGroup")

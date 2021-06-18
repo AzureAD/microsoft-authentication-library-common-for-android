@@ -91,12 +91,12 @@ import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    public static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
     //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
-    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedFixedPoolExecutor(10, "interactive");
-    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedSingleThreadExecutor("silent");
-    );
+    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedFixedPoolExecutor(INTERACTIVE_REQUEST_THREAD_POOL_SIZE, "interactive");
+    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedFixedPoolExecutor(SILENT_REQUEST_THREAD_POOL_SIZE, "silent");
+
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();

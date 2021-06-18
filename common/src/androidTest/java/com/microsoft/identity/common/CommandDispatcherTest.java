@@ -44,12 +44,11 @@ import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -298,6 +297,58 @@ public class CommandDispatcherTest {
         Assert.assertFalse(CommandDispatcher.isCommandOutstanding(testCommand));
     }
 
+    /**
+     * This test insures that the silent request pool can actually run all of the commands that
+     * it is supposed to be able to in parallel.
+     * @throws Exception
+     */
+    @Test
+    public void testSubmitSilentUncacheableCanRunMax() throws Exception {
+        final CountDownLatch testLatch = new CountDownLatch(5);
+        CountDownLatch canSubmitLatch = new CountDownLatch(1);
+        CountDownLatch executionStartLatch = new CountDownLatch(5);
+        List<FinalizableResultFuture<CommandResult>> futures = new ArrayList<>();
+
+        for (int i = 0; i < CommandDispatcher.SILENT_REQUEST_THREAD_POOL_SIZE; i++) {
+            final TestCommand testCommand = new LatchedTestCommand(
+                    getEmptyTestParams(),
+                    new CommandCallback<String, Exception>() {
+                        @Override
+                        public void onCancel() {
+                            testLatch.countDown();
+                            Assert.fail();
+                        }
+
+                        @Override
+                        public void onError(Exception error) {
+                            testLatch.countDown();
+                            Assert.fail();
+                        }
+
+                        @Override
+                        public void onTaskCompleted(String s) {
+                            testLatch.countDown();
+                            Assert.assertEquals(TEST_RESULT_STR, s);
+                        }
+                    }, INTEGER.getAndIncrement(), canSubmitLatch, executionStartLatch) {
+                @Override
+                public boolean isEligibleForCaching() {
+                    return false;
+                }
+            };
+            FinalizableResultFuture<CommandResult> f = CommandDispatcher.submitSilentReturningFuture(testCommand);
+            futures.add(f);
+        }
+        executionStartLatch.await();
+        canSubmitLatch.countDown();
+        testLatch.await();
+        for (FinalizableResultFuture<CommandResult> f : futures) {
+            Assert.assertTrue(f.isDone());
+            Assert.assertEquals(TEST_RESULT_STR, f.get().getResult());
+            f.isCleanedUp();
+        }
+    }
+
     @Test
     public void testSubmitSilentWithException() {
         final CountDownLatch testLatch = new CountDownLatch(1);
@@ -520,21 +571,21 @@ public class CommandDispatcherTest {
 
     public static class LatchedTestCommand extends TestCommand {
         final CountDownLatch testStartLatch;
-        final CountDownLatch exeutionStartLatch;
+        final CountDownLatch executionStartLatch;
 
         public LatchedTestCommand(@NonNull final CommandParameters parameters,
                                   @NonNull final CommandCallback callback,
                                   final int value,
                                   @NonNull final CountDownLatch testStartLatch,
-                                  @NonNull final CountDownLatch exeutionStartLatch) {
+                                  @NonNull final CountDownLatch executionStartLatch) {
             super(parameters, callback, value);
             this.testStartLatch = testStartLatch;
-            this.exeutionStartLatch = exeutionStartLatch;
+            this.executionStartLatch = executionStartLatch;
         }
 
         @Override
         public String execute() {
-            exeutionStartLatch.countDown();
+            executionStartLatch.countDown();
             try {
                 testStartLatch.await();
             } catch (InterruptedException e) {
