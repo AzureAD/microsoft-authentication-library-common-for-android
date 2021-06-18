@@ -20,20 +20,31 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import lombok.NonNull;
 
-/**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
- */
-public interface IAccessTokenSupplier {
+public enum UserType {
+    CLOUD(LabConstants.UserType.CLOUD),
+    B2C(LabConstants.UserType.B2C),
+    FEDERATED(LabConstants.UserType.FEDERATED),
+    GUEST(LabConstants.UserType.GUEST),
+    MSA(LabConstants.UserType.MSA),
+    ON_PREM(LabConstants.UserType.ON_PREM);
 
-    /**
-     * Obtain a valid access token.
-     *
-     * @return a String representing an access token
-     */
-    String getAccessToken() throws LabApiException;
+    final String value;
+
+    UserType(final String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
+
+    public static UserType fromName(@NonNull final String name) {
+        return valueOf(UserType.class, name.toUpperCase());
+    }
+
 }

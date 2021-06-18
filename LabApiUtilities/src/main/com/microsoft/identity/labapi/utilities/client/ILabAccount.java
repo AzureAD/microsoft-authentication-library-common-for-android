@@ -20,20 +20,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.client;
 
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.constants.UserType;
 
 /**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
+ * An interface describing the properties that should be available on an Account provided by the
+ * Lab Api.
  */
-public interface IAccessTokenSupplier {
+public interface ILabAccount {
 
     /**
-     * Obtain a valid access token.
+     * Get the username (UPN) of this account.
      *
-     * @return a String representing an access token
+     * @return a String representing the account's username
      */
-    String getAccessToken() throws LabApiException;
+    String getUsername();
+
+    /**
+     * Get the password used for signing in with this account.
+     *
+     * @return a String representing the account's password
+     */
+    String getPassword();
+
+    /**
+     * Get the {@link UserType} of this account.
+     *
+     * @return the {@link UserType} representing account's user type
+     */
+    UserType getUserType();
 }

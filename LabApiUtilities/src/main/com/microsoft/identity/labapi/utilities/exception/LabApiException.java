@@ -20,20 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
+package com.microsoft.identity.labapi.utilities.exception;
 
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 /**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
+ * An Exception that should be thrown by all Lab Api operations if they encounter an error.
  */
-public interface IAccessTokenSupplier {
+@Getter
+@Accessors(prefix = "m")
+public class LabApiException extends Exception {
+    private final LabError mErrorCode;
 
-    /**
-     * Obtain a valid access token.
-     *
-     * @return a String representing an access token
-     */
-    String getAccessToken() throws LabApiException;
+    public LabApiException(@NonNull final LabError error) {
+        super(error.name());
+        mErrorCode = error;
+    }
+
+    public LabApiException(@NonNull final LabError error, @NonNull final Throwable throwable) {
+        super(error.name(), throwable);
+        mErrorCode = error;
+    }
 }

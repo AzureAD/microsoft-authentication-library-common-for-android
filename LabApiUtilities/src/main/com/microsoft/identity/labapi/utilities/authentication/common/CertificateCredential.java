@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication.common;
 
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import java.io.IOException;
 import java.security.KeyStore;
@@ -41,7 +41,7 @@ import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 
-import static com.microsoft.identity.labapi.utilities.authentication.exception.LabError.CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
+import static com.microsoft.identity.labapi.utilities.exception.LabError.CERTIFICATE_NOT_FOUND_IN_KEY_STORE;
 
 /**
  * Represents a certificate credential used for creating a client assertion.

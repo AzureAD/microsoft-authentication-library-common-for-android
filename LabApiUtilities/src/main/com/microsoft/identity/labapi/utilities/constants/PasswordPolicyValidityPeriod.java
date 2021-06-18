@@ -20,12 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities;
+package com.microsoft.identity.labapi.utilities.constants;
 
-public class Constants {
+public enum PasswordPolicyValidityPeriod {
+    SIXTY(LabConstants.PasswordPolicyValidityPeriod.SIXTY);
 
-    public static final String AUDIENCE_CLAIM = "aud";
-    public static final String KEY_VAULT_TOKEN_AUDIENCE = "https://vault.azure.net";
-    public static final String LAB_API_TOKEN_AUDIENCE = "https://msidlab.com";
+    final String value;
 
+    PasswordPolicyValidityPeriod(final String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
+    }
 }

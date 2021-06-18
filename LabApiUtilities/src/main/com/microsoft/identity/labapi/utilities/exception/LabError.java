@@ -20,20 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.authentication;
-
-import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+package com.microsoft.identity.labapi.utilities.exception;
 
 /**
- * An interface describing an access token accessor i.e. anyone that has the ability to return a
- * valid (unexpired) access token.
+ * Represents errors that can occur in a Lab Api flow. This includes flows to authenticate against
+ * the lab api as well as flows to obtain an account via the Lab Api.
  */
-public interface IAccessTokenSupplier {
-
-    /**
-     * Obtain a valid access token.
-     *
-     * @return a String representing an access token
-     */
-    String getAccessToken() throws LabApiException;
+public enum LabError {
+    FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CLIENT_SECRET,
+    FAILED_TO_GET_TOKEN_FOR_KEYVAULT_USING_CERTIFICATE,
+    FAILED_TO_GET_SECRET_FROM_KEYVAULT,
+    CERTIFICATE_NOT_FOUND_IN_KEY_STORE,
+    FAILED_TO_GET_ACCOUNT_FROM_LAB,
+    FAILED_TO_GET_SECRET_FROM_LAB,
+    FAILED_TO_CREATE_TEMP_USER;
 }
