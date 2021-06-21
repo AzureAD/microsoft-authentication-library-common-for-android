@@ -228,10 +228,9 @@ public abstract class BaseController {
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
             if (!StringExtensions.isNullOrBlank(interactiveTokenCommandParameters.getLoginHint()) &&
-                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
-                if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
-                    ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
-                }
+                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT &&
+                    builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
             }
         }
 
