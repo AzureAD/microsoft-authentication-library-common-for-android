@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class LastRequestTelemetry extends RequestTelemetry {
 
@@ -62,7 +63,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
     public String getHeaderStringForFields() {
         // the first one contains the api id anc correlation id part
         // the second one contains the error codes
-        final AbstractMap.SimpleEntry<String, String> headerSegments = getHeaderStringForFailedRequests();
+        final Map.Entry<String, String> headerSegments = getHeaderStringForFailedRequests();
 
         final StringBuilder sb = new StringBuilder();
         sb.append(silentSuccessfulCount)
@@ -118,7 +119,7 @@ public class LastRequestTelemetry extends RequestTelemetry {
         return super.copySharedValues(requestTelemetry);
     }
 
-    private AbstractMap.SimpleEntry<String, String> getHeaderStringForFailedRequests() {
+    private Map.Entry<String, String> getHeaderStringForFailedRequests() {
         if (failedRequests == null) {
             return new AbstractMap.SimpleEntry<>("", "");
         }

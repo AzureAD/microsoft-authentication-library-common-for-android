@@ -36,13 +36,6 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.net.HttpClient;
-import com.microsoft.identity.common.java.net.HttpConstants;
-import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
@@ -65,6 +58,13 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpConstants;
+import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -72,7 +72,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -299,7 +298,7 @@ public class MicrosoftStsOAuth2Strategy
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            final AbstractMap.SimpleEntry<String, String> uidUtidKeyValuePair = StringUtil.getTenantInfo(homeAccountId);
+            final Map.Entry<String, String> uidUtidKeyValuePair = StringUtil.getTenantInfo(homeAccountId);
 
             if (!StringExtensions.isNullOrBlank(uidUtidKeyValuePair.getKey())
                     && !StringExtensions.isNullOrBlank(uidUtidKeyValuePair.getValue())) {

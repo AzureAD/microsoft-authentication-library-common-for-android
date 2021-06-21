@@ -47,7 +47,6 @@ import com.microsoft.identity.common.logging.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,8 +107,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
     }
 
     @Override
-    public List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
-        final List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+    public List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
+        final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         synchronized (sLock) { // To prevent multiple threads from potentially running migration
             final boolean hasMigrated = getMigrationStatus();

@@ -92,10 +92,10 @@ public class TokenCacheItemMigrationAdapter {
      * @param cacheItems The cache items to migrate.
      * @return The result.
      */
-    public static List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
+    public static List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final Collection<ADALTokenCacheItem> cacheItems) {
-        final List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
 
@@ -259,10 +259,10 @@ public class TokenCacheItemMigrationAdapter {
         );
     }
 
-    private static List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
+    private static List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final List<ADALTokenCacheItem> filteredTokens) {
-        final List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
         final int tokenCount = filteredTokens.size();
 
         // Create a CountDownLatch to parallelize these requests
@@ -275,7 +275,7 @@ public class TokenCacheItemMigrationAdapter {
                 public void run() {
                     final ADALTokenCacheItem targetCacheItemToRenew = filteredTokens.get(subIndex);
 
-                    final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
+                    final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
                             redirects.get(targetCacheItemToRenew.getClientId()),
                             targetCacheItemToRenew
                     );
@@ -307,10 +307,10 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     @Nullable
-    public static AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+    public static Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
             @NonNull final ITokenCacheItem targetCacheItemToRenew) {
-        AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
+        Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
 
         if (!StringExtensions.isNullOrBlank(redirectUri)) {
             try {

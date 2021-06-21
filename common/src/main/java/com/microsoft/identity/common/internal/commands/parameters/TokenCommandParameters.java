@@ -29,10 +29,10 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import lombok.EqualsAndHashCode;
@@ -63,7 +63,7 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private final boolean forceRefresh;
 
-    private final List<AbstractMap.SimpleEntry<String, String>> extraOptions;
+    private final List<Map.Entry<String, String>> extraOptions;
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);

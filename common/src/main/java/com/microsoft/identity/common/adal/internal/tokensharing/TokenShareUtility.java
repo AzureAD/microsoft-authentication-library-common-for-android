@@ -48,7 +48,6 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
 
-import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -190,10 +189,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
         final String methodName = "saveOrgIdFamilyRefreshToken";
 
-        final Future<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
-                sBackgroundExecutor.submit(new Callable<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>>() {
+        final Future<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
-                    public AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                    public Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(ssoStateSerializerBlob);
 
                         // We're going to 'hijack' this token and set our own clientId for renewal
@@ -223,7 +222,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
+        final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
 
         saveResult(resultKeyValuePair);
     }
@@ -244,7 +243,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @SuppressWarnings("unchecked")
-    private void saveResult(@Nullable final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair)
+    private void saveResult(@Nullable final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair)
             throws ClientException {
         // If an error is encountered while requesting new tokens, null is returned
         // Check the result, before proceeding to save into the cache...
@@ -265,10 +264,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
         final String methodName = "saveMsaFamilyRefreshToken";
 
-        final Future<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
-                sBackgroundExecutor.submit(new Callable<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>>() {
+        final Future<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
-                    public AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                    public Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
                                 refreshToken,
                                 CONSUMERS_ENDPOINT
@@ -290,7 +289,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
+        final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
 
         saveResult(resultKeyValuePair);
     }

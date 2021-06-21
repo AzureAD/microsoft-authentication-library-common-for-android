@@ -31,10 +31,10 @@ import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectProm
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,7 +74,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     @Expose()
     private final boolean handleNullTaskAffinity;
 
-    private final List<AbstractMap.SimpleEntry<String, String>> extraQueryStringParameters;
+    private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
     private final List<String> extraScopesToConsent;
 
@@ -82,7 +82,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
         return handleNullTaskAffinity;
     }
 
-    public List<AbstractMap.SimpleEntry<String, String>> getExtraQueryStringParameters() {
+    public List<Map.Entry<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
     }
 

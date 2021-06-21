@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -125,7 +126,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
             redirectUri = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         }
 
-        final List<AbstractMap.SimpleEntry<String, String>> extraQP = getExtraQueryParamAsList(
+        final List<Map.Entry<String, String>> extraQP = getExtraQueryParamAsList(
                 intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
         );
 
@@ -283,8 +284,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper to get Extra QP as a List (V2 format) from String (adal format)
      */
-    private List<AbstractMap.SimpleEntry<String, String>> getExtraQueryParamAsList(@Nullable final String extraQueryParamString) {
-        final List<AbstractMap.SimpleEntry<String, String>> extraQPList = new ArrayList<>();
+    private List<Map.Entry<String, String>> getExtraQueryParamAsList(@Nullable final String extraQueryParamString) {
+        final List<Map.Entry<String, String>> extraQPList = new ArrayList<>();
         if (!StringUtil.isEmpty(extraQueryParamString)) {
             final String[] extraQueryParams = extraQueryParamString.split("&");
 
@@ -293,7 +294,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     String[] split = param.split("=");
                     final String name = split[0];
                     final String value = (split.length > 1) ? split[1] : null;
-                    final AbstractMap.SimpleEntry<String, String> extraQPKeyValuePair = new AbstractMap.SimpleEntry<>(name, value);
+                    final Map.Entry<String, String> extraQPKeyValuePair = new AbstractMap.SimpleEntry<>(name, value);
                     extraQPList.add(extraQPKeyValuePair);
                 }
             }
@@ -306,7 +307,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * TODO : Refactor to remove this code and move the logic to better place
      */
     public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
-                                                                               final List<AbstractMap.SimpleEntry<String, String>> extraQP) {
+                                                                               final List<Map.Entry<String, String>> extraQP) {
 
         final AzureActiveDirectoryAuthority requestAuthority
                 = (AzureActiveDirectoryAuthority) Authority.getAuthorityFromAuthorityUrl(authority);
@@ -314,8 +315,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (extraQP != null) {
             AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
 
-            Iterator<AbstractMap.SimpleEntry<String, String>> itr = extraQP.iterator();
-            AbstractMap.SimpleEntry<String, String> parameter;
+            Iterator<Map.Entry<String, String>> itr = extraQP.iterator();
+            Map.Entry<String, String> parameter;
             while (itr.hasNext() && (parameter = itr.next()) != null) {
                 if (StringUtil.isEmpty(parameter.getKey())) {
                     Logger.warn(TAG, "The extra query parameter.first is empty.");

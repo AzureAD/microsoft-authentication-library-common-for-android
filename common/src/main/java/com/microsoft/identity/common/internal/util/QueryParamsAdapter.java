@@ -36,12 +36,13 @@ import java.lang.reflect.Type;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class to serialize and deserialize query parameters from List<Pair<String, String>> to json String
  * and vice versa
  */
-public class QueryParamsAdapter extends TypeAdapter<List<AbstractMap.SimpleEntry<String, String>>> {
+public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, String>>> {
 
     private static final Gson mGson;
 
@@ -55,10 +56,10 @@ public class QueryParamsAdapter extends TypeAdapter<List<AbstractMap.SimpleEntry
     }
 
     @Override
-    public void write(final JsonWriter out, final List<AbstractMap.SimpleEntry<String, String>> queryParams) throws IOException {
+    public void write(final JsonWriter out, final List<Map.Entry<String, String>> queryParams) throws IOException {
         out.beginObject();
 
-        for(final AbstractMap.SimpleEntry<String, String> keyValuePair : queryParams){
+        for(final Map.Entry<String, String> keyValuePair : queryParams){
             out.name(keyValuePair.getKey());
             out.value(keyValuePair.getValue());
         }
@@ -66,29 +67,29 @@ public class QueryParamsAdapter extends TypeAdapter<List<AbstractMap.SimpleEntry
     }
 
     @Override
-    public List<AbstractMap.SimpleEntry<String, String>> read(final JsonReader in) throws IOException {
+    public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException {
         in.beginObject();
-        final List<AbstractMap.SimpleEntry<String, String>> result = new ArrayList<>();
+        final List<Map.Entry<String, String>> result = new ArrayList<>();
         while (in.hasNext()){
             final String key = in.nextName();
             final String value = in.nextString();
-            final AbstractMap.SimpleEntry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(key, value);
+            final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(key, value);
             result.add(keyValuePair);
         }
         in.endObject();
         return result;
     }
 
-    public static String _toJson(final List<AbstractMap.SimpleEntry<String, String>> extraQueryStringParameters) {
-        final Type listType = new TypeToken<List<AbstractMap.SimpleEntry<String, String>>>(){}.getType();
+    public static String _toJson(final List<Map.Entry<String, String>> extraQueryStringParameters) {
+        final Type listType = new TypeToken<List<Map.Entry<String, String>>>(){}.getType();
         return mGson.toJson(extraQueryStringParameters, listType);
     }
 
-    public static List<AbstractMap.SimpleEntry<String, String>> _fromJson(final String jsonString) {
+    public static List<Map.Entry<String, String>> _fromJson(final String jsonString) {
         if (TextUtils.isEmpty(jsonString)) {
             return new ArrayList<>();
         }
-        final Type listType = new TypeToken<List<AbstractMap.SimpleEntry<String, String>>>(){}.getType();
+        final Type listType = new TypeToken<List<Map.Entry<String, String>>>(){}.getType();
         return mGson.fromJson(jsonString, listType);
     }
 
