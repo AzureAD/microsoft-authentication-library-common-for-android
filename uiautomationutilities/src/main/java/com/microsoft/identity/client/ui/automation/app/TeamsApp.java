@@ -63,7 +63,7 @@ public class TeamsApp extends App implements IFirstPartyApp {
                 Logger.i(TAG, "Adding First Account which is in TSL..");
                 // This case handles UI if our account (supplied username) is expected to be in TSL
                 final UiObject email = UiAutomatorUtils.obtainUiObjectWithResourceIdAndText(
-                        "com.microsoft.teams:id/email",
+                        "com.microsoft.teams:id/title",
                         username
                 );
 
