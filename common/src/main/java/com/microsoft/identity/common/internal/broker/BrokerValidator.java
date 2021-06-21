@@ -133,12 +133,12 @@ public class BrokerValidator {
     /**
      * Provides a Set of valid Broker apps based on whether debug broker should be trusted or not.
      *
-     * @return a Set of {@link BrokerData}
+     * @return a Set of {@link AppData}
      */
-    public Set<BrokerData> getValidBrokers() {
-        final Set<BrokerData> validBrokers = sShouldTrustDebugBrokers
-                ? BrokerData.getAllBrokers()
-                : BrokerData.getProdBrokers();
+    public Set<AppData> getValidBrokers() {
+        final Set<AppData> validBrokers = sShouldTrustDebugBrokers
+                ? AppData.getAllBrokers()
+                : AppData.getProdBrokers();
 
         return validBrokers;
     }
@@ -148,7 +148,7 @@ public class BrokerValidator {
      * @return an iterator of access to valid broker signatures.
      */
     public Iterator<String> getValidBrokerSignatures() {
-        final Iterator<BrokerData> itr = getValidBrokers().iterator();
+        final Iterator<AppData> itr = getValidBrokers().iterator();
         return new Iterator<String>() {
             @Override
             public void remove() {
@@ -174,10 +174,10 @@ public class BrokerValidator {
      * @return a boolean indicating if the app is a valid broker
      */
     public boolean isValidBrokerPackage(@NonNull final String packageName) {
-        final Set<BrokerData> validBrokers = getValidBrokers();
+        final Set<AppData> validBrokers = getValidBrokers();
 
-        for (final BrokerData brokerData : validBrokers) {
-            if (brokerData.packageName.equals(packageName) && verifySignature(packageName)) {
+        for (final AppData appData : validBrokers) {
+            if (appData.packageName.equals(packageName) && verifySignature(packageName)) {
                 return true;
             }
         }

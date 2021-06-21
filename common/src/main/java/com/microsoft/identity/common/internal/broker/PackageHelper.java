@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.internal.broker;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
@@ -141,8 +140,8 @@ public class PackageHelper {
                 && !StringExtensions.isNullOrBlank(signatureDigest)) {
             // If the caller is the Authenticator, then use the broker redirect URI.
             if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)
-                    && (signatureDigest.equals(BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash)
-                    || signatureDigest.equals(BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash))) {
+                    && (signatureDigest.equals(AppData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash)
+                    || signatureDigest.equals(AppData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash))) {
                 return AuthenticationConstants.Broker.BROKER_REDIRECT_URI;
             }
 
