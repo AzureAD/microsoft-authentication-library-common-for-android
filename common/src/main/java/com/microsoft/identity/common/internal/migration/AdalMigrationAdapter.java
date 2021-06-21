@@ -26,7 +26,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -48,6 +47,7 @@ import com.microsoft.identity.common.logging.Logger;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -108,8 +108,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
     }
 
     @Override
-    public List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
-        final List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+    public List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
+        final List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         synchronized (sLock) { // To prevent multiple threads from potentially running migration
             final boolean hasMigrated = getMigrationStatus();

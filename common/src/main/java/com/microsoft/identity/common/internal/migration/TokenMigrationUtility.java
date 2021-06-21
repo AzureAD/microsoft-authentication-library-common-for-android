@@ -22,14 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
-
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.AbstractMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,11 +63,11 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
 
                 // Iterate over the adapted accounts/tokens, incrementing if successfully added to
                 // the cache.
-                for (final KeyValuePair<T, U> accountTokenKeyValuePair : adapter.adapt(credentials)) {
+                for (final AbstractMap.SimpleEntry<T, U> accountTokenKeyValuePair : adapter.adapt(credentials)) {
                     try {
                         destination.setSingleSignOnState(
-                                accountTokenKeyValuePair.key,
-                                accountTokenKeyValuePair.value
+                                accountTokenKeyValuePair.getKey(),
+                                accountTokenKeyValuePair.getValue()
                         );
                         accountsAdded ++;
                     } catch (ClientException e) {

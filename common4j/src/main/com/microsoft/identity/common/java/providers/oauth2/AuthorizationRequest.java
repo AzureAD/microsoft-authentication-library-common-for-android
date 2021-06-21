@@ -26,13 +26,13 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -121,7 +121,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     /**
      * Extra query parameters.
      */
-    private final transient List<KeyValuePair<String, String>> mExtraQueryParams;
+    private final transient List<AbstractMap.SimpleEntry<String, String>> mExtraQueryParams;
 
     /**
      * Constructor of AuthorizationRequest.
@@ -134,7 +134,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         mScope = builder.mScope;
 
         // Suppressing unchecked warning of casting List to List<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
-        @SuppressWarnings(WarningType.unchecked_warning) final List<KeyValuePair<String, String>> extraQueryParams = builder.mExtraQueryParams;
+        @SuppressWarnings(WarningType.unchecked_warning) final List<AbstractMap.SimpleEntry<String, String>> extraQueryParams = builder.mExtraQueryParams;
         mExtraQueryParams = extraQueryParams;
 
         // Suppressing unchecked warning of casting HashMap to HashMap<Pair<String,String>>. This warning is raised as the generic type was not provided during constructing builder object.
@@ -164,7 +164,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
         /**
          * Extra query parameters.
          */
-        public List<KeyValuePair<String, String>> mExtraQueryParams;
+        public List<AbstractMap.SimpleEntry<String, String>> mExtraQueryParams;
 
         public B setResponseType(String responseType) {
             mResponseType = responseType;
@@ -191,7 +191,7 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
             return self();
         }
 
-        public B setExtraQueryParams(List<KeyValuePair<String, String>> extraQueryParams) {
+        public B setExtraQueryParams(List<AbstractMap.SimpleEntry<String, String>> extraQueryParams) {
             mExtraQueryParams = extraQueryParams;
             return self();
         }
@@ -262,13 +262,13 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
     }
 
     protected void appendParameterToBuilder(@NonNull final URIBuilder builder,
-                                            @Nullable final List<KeyValuePair<String, String>> params) {
+                                            @Nullable final List<AbstractMap.SimpleEntry<String, String>> params) {
         if (params == null) {
             return;
         }
 
-        for (KeyValuePair<String, String> entry : params) {
-            builder.addParameter(entry.key, entry.value);
+        for (AbstractMap.SimpleEntry<String, String> entry : params) {
+            builder.addParameter(entry.getKey(), entry.getValue());
         }
     }
 }

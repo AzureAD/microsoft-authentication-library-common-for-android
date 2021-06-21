@@ -24,7 +24,6 @@ package com.microsoft.identity.common.internal.migration;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,6 +58,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,10 +92,10 @@ public class TokenCacheItemMigrationAdapter {
      * @param cacheItems The cache items to migrate.
      * @return The result.
      */
-    public static List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
+    public static List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final Collection<ADALTokenCacheItem> cacheItems) {
-        final List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
 
@@ -259,10 +259,10 @@ public class TokenCacheItemMigrationAdapter {
         );
     }
 
-    private static List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
+    private static List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final List<ADALTokenCacheItem> filteredTokens) {
-        final List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
         final int tokenCount = filteredTokens.size();
 
         // Create a CountDownLatch to parallelize these requests
@@ -275,7 +275,7 @@ public class TokenCacheItemMigrationAdapter {
                 public void run() {
                     final ADALTokenCacheItem targetCacheItemToRenew = filteredTokens.get(subIndex);
 
-                    final KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
+                    final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
                             redirects.get(targetCacheItemToRenew.getClientId()),
                             targetCacheItemToRenew
                     );
@@ -307,10 +307,10 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     @Nullable
-    public static KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+    public static AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
             @NonNull final ITokenCacheItem targetCacheItemToRenew) {
-        KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
+        AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
 
         if (!StringExtensions.isNullOrBlank(redirectUri)) {
             try {
@@ -365,7 +365,7 @@ public class TokenCacheItemMigrationAdapter {
                             ).getPreferredCacheHostName()
                     );
 
-                    resultKeyValuePair = new KeyValuePair<>(account, msStsRt);
+                    resultKeyValuePair = new AbstractMap.SimpleEntry<>(account, msStsRt);
                 } else {
                     Logger.warn(
                             TAG,

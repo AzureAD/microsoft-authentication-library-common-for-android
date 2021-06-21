@@ -22,11 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
-
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Map;
 
@@ -45,5 +44,5 @@ public interface IMigrationAdapter<T extends BaseAccount, U extends RefreshToken
      * @return The adapter cache items in the format specified by T/U generic types. Paired as
      * Account/RefreshToken.
      */
-    List<KeyValuePair<T, U>> adapt(Map<String, String> cacheItems);
+    List<AbstractMap.SimpleEntry<T, U>> adapt(Map<String, String> cacheItems);
 }

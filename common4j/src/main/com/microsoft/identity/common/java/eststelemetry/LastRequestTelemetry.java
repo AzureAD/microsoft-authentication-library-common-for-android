@@ -25,8 +25,8 @@ package com.microsoft.identity.common.java.eststelemetry;
 import lombok.NonNull;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,14 +62,14 @@ public class LastRequestTelemetry extends RequestTelemetry {
     public String getHeaderStringForFields() {
         // the first one contains the api id anc correlation id part
         // the second one contains the error codes
-        final KeyValuePair<String, String> headerSegments = getHeaderStringForFailedRequests();
+        final AbstractMap.SimpleEntry<String, String> headerSegments = getHeaderStringForFailedRequests();
 
         final StringBuilder sb = new StringBuilder();
         sb.append(silentSuccessfulCount)
                 .append(SchemaConstants.SEPARATOR_PIPE)
-                .append(headerSegments.key)
+                .append(headerSegments.getKey())
                 .append(SchemaConstants.SEPARATOR_PIPE)
-                .append(headerSegments.value);
+                .append(headerSegments.getValue());
 
         return sb.toString();
     }
@@ -118,15 +118,15 @@ public class LastRequestTelemetry extends RequestTelemetry {
         return super.copySharedValues(requestTelemetry);
     }
 
-    private KeyValuePair<String, String> getHeaderStringForFailedRequests() {
+    private AbstractMap.SimpleEntry<String, String> getHeaderStringForFailedRequests() {
         if (failedRequests == null) {
-            return new KeyValuePair<>("", "");
+            return new AbstractMap.SimpleEntry<>("", "");
         }
 
         final FailedRequest[] failedRequestsArray = failedRequests.toArray(new FailedRequest[0]);
 
         if (failedRequestsArray == null) {
-            return new KeyValuePair<>("", "");
+            return new AbstractMap.SimpleEntry<>("", "");
         }
 
         final StringBuilder apiIdCorrelationIdSegmentBuilder = new StringBuilder();
@@ -142,6 +142,6 @@ public class LastRequestTelemetry extends RequestTelemetry {
             }
         }
 
-        return new KeyValuePair<>(apiIdCorrelationIdSegmentBuilder.toString(), errorSegmentBuilder.toString());
+        return new AbstractMap.SimpleEntry<>(apiIdCorrelationIdSegmentBuilder.toString(), errorSegmentBuilder.toString());
     }
 }

@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -50,6 +48,7 @@ import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -191,10 +190,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
         final String methodName = "saveOrgIdFamilyRefreshToken";
 
-        final Future<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
-                sBackgroundExecutor.submit(new Callable<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+        final Future<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
-                    public KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                    public AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(ssoStateSerializerBlob);
 
                         // We're going to 'hijack' this token and set our own clientId for renewal
@@ -224,7 +223,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
+        final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
 
         saveResult(resultKeyValuePair);
     }
@@ -245,14 +244,14 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @SuppressWarnings("unchecked")
-    private void saveResult(@Nullable final KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair)
+    private void saveResult(@Nullable final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair)
             throws ClientException {
         // If an error is encountered while requesting new tokens, null is returned
         // Check the result, before proceeding to save into the cache...
         if (null != resultKeyValuePair) {
             mTokenCache.setSingleSignOnState(
-                    resultKeyValuePair.key, // The account
-                    resultKeyValuePair.value // The refresh token
+                    resultKeyValuePair.getKey(), // The account
+                    resultKeyValuePair.getValue() // The refresh token
             );
         }
     }
@@ -266,10 +265,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
         final String methodName = "saveMsaFamilyRefreshToken";
 
-        final Future<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
-                sBackgroundExecutor.submit(new Callable<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+        final Future<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
-                    public KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                    public AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
                                 refreshToken,
                                 CONSUMERS_ENDPOINT
@@ -291,7 +290,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
+        final AbstractMap.SimpleEntry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
 
         saveResult(resultKeyValuePair);
     }
