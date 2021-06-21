@@ -30,7 +30,7 @@ import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     @Expose()
     private final boolean handleNullTaskAffinity;
 
-    private final List<Pair<String, String>> extraQueryStringParameters;
+    private final List<KeyValuePair<String, String>> extraQueryStringParameters;
 
     private final List<String> extraScopesToConsent;
 
@@ -82,7 +82,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
         return handleNullTaskAffinity;
     }
 
-    public List<Pair<String, String>> getExtraQueryStringParameters() {
+    public List<KeyValuePair<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
     }
 

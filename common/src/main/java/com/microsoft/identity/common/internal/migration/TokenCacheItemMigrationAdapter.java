@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.migration;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -92,10 +92,10 @@ public class TokenCacheItemMigrationAdapter {
      * @param cacheItems The cache items to migrate.
      * @return The result.
      */
-    public static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
+    public static List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final Collection<ADALTokenCacheItem> cacheItems) {
-        final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
 
@@ -259,10 +259,10 @@ public class TokenCacheItemMigrationAdapter {
         );
     }
 
-    private static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
+    private static List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final List<ADALTokenCacheItem> filteredTokens) {
-        final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
         final int tokenCount = filteredTokens.size();
 
         // Create a CountDownLatch to parallelize these requests
@@ -275,14 +275,14 @@ public class TokenCacheItemMigrationAdapter {
                 public void run() {
                     final ADALTokenCacheItem targetCacheItemToRenew = filteredTokens.get(subIndex);
 
-                    final Pair<MicrosoftAccount, MicrosoftRefreshToken> renewedPair = renewToken(
+                    final KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
                             redirects.get(targetCacheItemToRenew.getClientId()),
                             targetCacheItemToRenew
                     );
 
-                    if (null != renewedPair) {
+                    if (null != renewedKeyValuePair) {
                         result.add(
-                                renewedPair
+                                renewedKeyValuePair
                         );
                     }
 
@@ -307,10 +307,10 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     @Nullable
-    public static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+    public static KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
             @NonNull final ITokenCacheItem targetCacheItemToRenew) {
-        Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = null;
+        KeyValuePair<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
 
         if (!StringExtensions.isNullOrBlank(redirectUri)) {
             try {
@@ -365,7 +365,7 @@ public class TokenCacheItemMigrationAdapter {
                             ).getPreferredCacheHostName()
                     );
 
-                    resultPair = new Pair<>(account, msStsRt);
+                    resultKeyValuePair = new KeyValuePair<>(account, msStsRt);
                 } else {
                     Logger.warn(
                             TAG,
@@ -386,7 +386,7 @@ public class TokenCacheItemMigrationAdapter {
             }
         }
 
-        return resultPair;
+        return resultKeyValuePair;
     }
 
     @NonNull

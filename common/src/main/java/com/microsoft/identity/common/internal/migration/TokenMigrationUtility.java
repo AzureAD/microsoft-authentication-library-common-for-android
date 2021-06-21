@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.exception.ClientException;
@@ -64,11 +64,11 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
 
                 // Iterate over the adapted accounts/tokens, incrementing if successfully added to
                 // the cache.
-                for (final Pair<T, U> accountTokenPair : adapter.adapt(credentials)) {
+                for (final KeyValuePair<T, U> accountTokenKeyValuePair : adapter.adapt(credentials)) {
                     try {
                         destination.setSingleSignOnState(
-                                accountTokenPair.first,
-                                accountTokenPair.second
+                                accountTokenKeyValuePair.key,
+                                accountTokenKeyValuePair.value
                         );
                         accountsAdded ++;
                     } catch (ClientException e) {

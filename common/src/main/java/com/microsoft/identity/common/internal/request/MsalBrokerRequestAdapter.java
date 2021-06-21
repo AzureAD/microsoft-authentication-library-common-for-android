@@ -28,7 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -209,8 +209,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
 
-        List<Pair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
-        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
+        List<KeyValuePair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
+        List<KeyValuePair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
                 brokerRequest.getAuthority(),
@@ -323,7 +323,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         final String negotiatedBrokerProtocolVersion = bundle.getString(NEGOTIATED_BP_VERSION_KEY);
-        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
+        List<KeyValuePair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
 
         final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
                 .builder()

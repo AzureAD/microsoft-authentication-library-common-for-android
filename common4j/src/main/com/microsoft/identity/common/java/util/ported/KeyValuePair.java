@@ -24,53 +24,42 @@
 package com.microsoft.identity.common.java.util.ported;
 
 import java.util.List;
-import java.util.Objects;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
+/**
+ * NOTE: There are classes that are using this that allows key to be null.
+ * Forcing non-null on lombok will throw an exception at runtime (and immediately break those).
+ *
+ * TODO: Address those places and mark key with @NonNull.
+ * */
 @AllArgsConstructor
-public class Pair<T, U> {
-    public final T first;
-    public final U second;
+@EqualsAndHashCode
+public class KeyValuePair<T, U> {
 
-    @Override
-    @SuppressFBWarnings(value = "NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION",
-            justification = "Equals function should be able to take in a null object.")
-    public boolean equals(@Nullable final Object obj) {
-        if (obj == null){
-            return false;
-        }
+    @Nullable
+    public final T key;
 
-        if (!(obj instanceof Pair)) {
-            return false;
-        }
-
-        final Pair<?, ?> castedObj = (Pair<?, ?>) obj;
-        return Objects.equals(castedObj.first, first) && Objects.equals(castedObj.second, second);
-    }
+    @Nullable
+    public final U value;
 
     /**
-     * Compute a hash code using the hash codes of the underlying objects
-     *
-     * @return a hashcode of the Pair
-     */
-    @Override
-    public int hashCode() {
-        int result = (first != null ? first.hashCode() : 0);
-        result = 31 * result + (second != null ? second.hashCode() : 0);
-        return result;
+     * A convenience method to create a pair.
+     * */
+    public static <T, U> KeyValuePair<T, U> create(@Nullable final T key,
+                                                   @Nullable final U value){
+        return new KeyValuePair<>(key, value);
     }
 
     /**
      * Add this item to a list if a copy of the same key-value pair doesn't exist.
      * */
-    public void addToListIfNotExist(@NonNull final List<Pair<T, U>> listToBeAdded) {
+    public void addToListIfNotExist(@NonNull final List<KeyValuePair<T, U>> listToBeAdded) {
         if (!listToBeAdded.contains(this)) {
             listToBeAdded.add(this);
         }
     }
-
 }

@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -53,9 +53,9 @@ public class AuthorizationRequestTests {
     public static final String MOCK_VALUE_2 = "MOCK_VALUE_2";
     public static final String MOCK_HEADER_1 = "MOCK_HEADER_1";
     public static final String MOCK_HEADER_2 = "MOCK_HEADER_2";
-    public static final List<Pair<String, String>> MOCK_EXTRA_QUERY_PARAMS = new ArrayList<Pair<String, String>>(){{
-        add(new Pair<>(MOCK_QUERY_1, MOCK_VALUE_1));
-        add(new Pair<>(MOCK_QUERY_2, MOCK_VALUE_2));
+    public static final List<KeyValuePair<String, String>> MOCK_EXTRA_QUERY_PARAMS = new ArrayList<KeyValuePair<String, String>>(){{
+        add(new KeyValuePair<>(MOCK_QUERY_1, MOCK_VALUE_1));
+        add(new KeyValuePair<>(MOCK_QUERY_2, MOCK_VALUE_2));
     }};
     public static final HashMap<String, String> MOCK_REQUEST_HEADERS =  new HashMap<String, String>(){{
         put(MOCK_HEADER_1, MOCK_VALUE_1);

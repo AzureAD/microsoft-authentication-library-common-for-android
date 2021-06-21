@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -64,7 +64,7 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private final boolean forceRefresh;
 
-    private final List<Pair<String, String>> extraOptions;
+    private final List<KeyValuePair<String, String>> extraOptions;
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);

@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -299,21 +299,21 @@ public class MicrosoftStsOAuth2Strategy
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            final Pair<String, String> uidUtidPair = StringUtil.getTenantInfo(homeAccountId);
+            final KeyValuePair<String, String> uidUtidKeyValuePair = StringUtil.getTenantInfo(homeAccountId);
 
-            if (!StringExtensions.isNullOrBlank(uidUtidPair.first)
-                    && !StringExtensions.isNullOrBlank(uidUtidPair.second)) {
-                builder.setUid(uidUtidPair.first);
-                builder.setUtid(uidUtidPair.second);
+            if (!StringExtensions.isNullOrBlank(uidUtidKeyValuePair.key)
+                    && !StringExtensions.isNullOrBlank(uidUtidKeyValuePair.value)) {
+                builder.setUid(uidUtidKeyValuePair.key);
+                builder.setUtid(uidUtidKeyValuePair.value);
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ uid: [" + uidUtidPair.first + "]"
+                        "Builder w/ uid: [" + uidUtidKeyValuePair.key + "]"
                 );
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ utid: [" + uidUtidPair.second + "]"
+                        "Builder w/ utid: [" + uidUtidKeyValuePair.value + "]"
                 );
             }
         }

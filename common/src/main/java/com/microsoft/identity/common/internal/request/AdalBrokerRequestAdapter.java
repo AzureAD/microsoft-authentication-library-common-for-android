@@ -51,7 +51,7 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
-import com.microsoft.identity.common.java.util.ported.Pair;
+import com.microsoft.identity.common.java.util.ported.KeyValuePair;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
@@ -125,7 +125,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
             redirectUri = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         }
 
-        final List<Pair<String, String>> extraQP = getExtraQueryParamAsList(
+        final List<KeyValuePair<String, String>> extraQP = getExtraQueryParamAsList(
                 intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
         );
 
@@ -283,8 +283,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper to get Extra QP as a List (V2 format) from String (adal format)
      */
-    private List<Pair<String, String>> getExtraQueryParamAsList(@Nullable final String extraQueryParamString) {
-        final List<Pair<String, String>> extraQPList = new ArrayList<>();
+    private List<KeyValuePair<String, String>> getExtraQueryParamAsList(@Nullable final String extraQueryParamString) {
+        final List<KeyValuePair<String, String>> extraQPList = new ArrayList<>();
         if (!StringUtil.isEmpty(extraQueryParamString)) {
             final String[] extraQueryParams = extraQueryParamString.split("&");
 
@@ -293,8 +293,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     String[] split = param.split("=");
                     final String name = split[0];
                     final String value = (split.length > 1) ? split[1] : null;
-                    final Pair<String, String> extraQPPair = new Pair<>(name, value);
-                    extraQPList.add(extraQPPair);
+                    final KeyValuePair<String, String> extraQPKeyValuePair = new KeyValuePair<>(name, value);
+                    extraQPList.add(extraQPKeyValuePair);
                 }
             }
         }
@@ -306,7 +306,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * TODO : Refactor to remove this code and move the logic to better place
      */
     public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
-                                                                               final List<Pair<String, String>> extraQP) {
+                                                                               final List<KeyValuePair<String, String>> extraQP) {
 
         final AzureActiveDirectoryAuthority requestAuthority
                 = (AzureActiveDirectoryAuthority) Authority.getAuthorityFromAuthorityUrl(authority);
@@ -314,12 +314,12 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (extraQP != null) {
             AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
 
-            Iterator<Pair<String, String>> itr = extraQP.iterator();
-            Pair<String, String> parameter;
+            Iterator<KeyValuePair<String, String>> itr = extraQP.iterator();
+            KeyValuePair<String, String> parameter;
             while (itr.hasNext() && (parameter = itr.next()) != null) {
-                if (StringUtil.isEmpty(parameter.first)) {
+                if (StringUtil.isEmpty(parameter.key)) {
                     Logger.warn(TAG, "The extra query parameter.first is empty.");
-                } else if (MicrosoftAuthorizationRequest.INSTANCE_AWARE.equalsIgnoreCase(parameter.first)) {
+                } else if (MicrosoftAuthorizationRequest.INSTANCE_AWARE.equalsIgnoreCase(parameter.key)) {
                     Logger.info(TAG,
                             "Set the extra query parameter mMultipleCloudAware" +
                                     " for MicrosoftStsAuthorizationRequest."
@@ -328,18 +328,18 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     Logger.infoPII(
                             TAG,
                             "Set the mMultipleCloudAware to " +
-                                    (parameter.second == null ? "null" : parameter.second)
+                                    (parameter.value == null ? "null" : parameter.value)
                     );
 
                     requestAuthority.mMultipleCloudsSupported =
-                            null != parameter.second &&
-                                    Boolean.TRUE.toString().equalsIgnoreCase(parameter.second);
+                            null != parameter.value &&
+                                    Boolean.TRUE.toString().equalsIgnoreCase(parameter.value);
                     itr.remove();
-                } else if (AzureActiveDirectorySlice.SLICE_PARAMETER.equalsIgnoreCase(parameter.first)) {
-                    slice.setSlice(parameter.second);
+                } else if (AzureActiveDirectorySlice.SLICE_PARAMETER.equalsIgnoreCase(parameter.key)) {
+                    slice.setSlice(parameter.value);
                     itr.remove();
-                } else if (AzureActiveDirectorySlice.DC_PARAMETER.equalsIgnoreCase(parameter.first)) {
-                    slice.setDataCenter(parameter.second);
+                } else if (AzureActiveDirectorySlice.DC_PARAMETER.equalsIgnoreCase(parameter.key)) {
+                    slice.setDataCenter(parameter.value);
                     itr.remove();
                 }
             }
