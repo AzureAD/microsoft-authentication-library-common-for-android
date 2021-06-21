@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.java.util.ported.KeyValuePair;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,9 +30,11 @@ import org.junit.runners.JUnit4;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(JUnit4.class)
 public class AuthorizationRequestTests {
@@ -53,9 +53,9 @@ public class AuthorizationRequestTests {
     public static final String MOCK_VALUE_2 = "MOCK_VALUE_2";
     public static final String MOCK_HEADER_1 = "MOCK_HEADER_1";
     public static final String MOCK_HEADER_2 = "MOCK_HEADER_2";
-    public static final List<KeyValuePair<String, String>> MOCK_EXTRA_QUERY_PARAMS = new ArrayList<KeyValuePair<String, String>>(){{
-        add(new KeyValuePair<>(MOCK_QUERY_1, MOCK_VALUE_1));
-        add(new KeyValuePair<>(MOCK_QUERY_2, MOCK_VALUE_2));
+    public static final List<Map.Entry<String, String>> MOCK_EXTRA_QUERY_PARAMS = new ArrayList<Map.Entry<String, String>>(){{
+        add(new AbstractMap.SimpleEntry<>(MOCK_QUERY_1, MOCK_VALUE_1));
+        add(new AbstractMap.SimpleEntry<>(MOCK_QUERY_2, MOCK_VALUE_2));
     }};
     public static final HashMap<String, String> MOCK_REQUEST_HEADERS =  new HashMap<String, String>(){{
         put(MOCK_HEADER_1, MOCK_VALUE_1);
