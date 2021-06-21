@@ -38,8 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 public class SharedPreferencesBrokerApplicationMetadataCache
-        extends SharedPreferencesFileManagerSimpleCacheImpl<BrokerApplicationMetadata>
-        //extends SharedPreferencesSimpleCacheImpl<BrokerApplicationMetadata>
+        extends SharedPreferencesSimpleCacheImpl<BrokerApplicationMetadata>
         implements IBrokerApplicationMetadataCache {
 
     private static final String TAG = SharedPreferencesBrokerApplicationMetadataCache.class.getSimpleName();
