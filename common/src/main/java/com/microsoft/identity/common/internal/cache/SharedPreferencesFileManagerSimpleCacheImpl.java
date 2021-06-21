@@ -81,7 +81,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     }
 
     @SneakyThrows
-    private <V> V execWithTiming(@NonNull NamedRunnable<V> runnable) {
+    private <V> V execWithTiming(@NonNull final NamedRunnable<V> runnable) {
         final long startTimeMillis = SystemClock.elapsedRealtime();
         final V v = runnable.call();
         final long execTime = SystemClock.elapsedRealtime() - startTimeMillis;
