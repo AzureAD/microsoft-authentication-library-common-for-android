@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "IdentityPerfTestApp": {
+      "commandName": "Project",
+      "commandLineArgs": "C:\\testdata\\basefiles\\ C:\\testdata\\targetfiles\\ 123456 123456 Pixel2 API28 MSALTestApp sender_email.example.com samplepassword email1@example.com,email2@example.com"
+    }
+  }
+}
