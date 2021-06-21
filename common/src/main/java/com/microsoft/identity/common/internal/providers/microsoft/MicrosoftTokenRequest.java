@@ -31,6 +31,19 @@ import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
 
 import java.util.UUID;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
+
+@SuperBuilder
+@AllArgsConstructor
+@Getter
+@Setter
+@Accessors(prefix = "m")
 public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraParameters {
 
     public static final String CODE_VERIFIER = "code_verifier";
@@ -46,6 +59,7 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     public static final String DEVICE_CODE = "device_code";
 
     public MicrosoftTokenRequest() {
+        super();
         mClientInfoEnabled = "1";
     }
 
@@ -88,6 +102,7 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
     @SerializedName(MICROSOFT_ENROLLMENT_ID)
     private String mMicrosoftEnrollmentId;
 
+    @Nullable
     @Expose()
     @SerializedName(DEVICE_CODE)
     private String mDeviceCode;
@@ -96,105 +111,4 @@ public class MicrosoftTokenRequest extends TokenRequest implements IHasExtraPara
 
     // Sent as part of headers if available, so marking it transient.
     private transient String mBrokerVersion;
-
-    public String getCodeVerifier() {
-        return this.mCodeVerifier;
-    }
-
-    public void setCodeVerifier(String codeVerifier) {
-        this.mCodeVerifier = codeVerifier;
-    }
-
-    public String getClientInfoEnabled() {
-        return this.mClientInfoEnabled;
-    }
-
-    public void setCorrelationId(UUID correlationId) {
-        mCorrelationId = correlationId;
-    }
-
-    public UUID getCorrelationId() {
-        return mCorrelationId;
-    }
-
-    public String getIdTokenVersion() {
-        return mIdTokenVersion;
-    }
-
-    public void setIdTokenVersion(final String mIdTokenVersion) {
-        this.mIdTokenVersion = mIdTokenVersion;
-    }
-
-    public String getClaims() {
-        return mClaims;
-    }
-
-    public void setClaims(final String claims) {
-        this.mClaims = claims;
-    }
-
-    public String getInstanceAware() {
-        return mInstanceAware;
-    }
-
-    public void setInstanceAware(final String instanceAware) {
-        this.mInstanceAware = instanceAware;
-    }
-
-    public String getClientAppName() {
-        return mClientAppName;
-    }
-
-    public void setClientAppName(String clientAppName) {
-        this.mClientAppName = clientAppName;
-    }
-
-    public String getTokenScope() {
-        return mTokenScope;
-    }
-
-    public void setTokenScope(String tokenScope) {
-        this.mTokenScope = tokenScope;
-    }
-
-    public String getClientAppVersion() {
-        return mClientAppVersion;
-    }
-
-    public void setClientAppVersion(final String clientAppVersion) {
-        this.mClientAppVersion = clientAppVersion;
-    }
-
-    public String getMamVersion() {
-        return mMamVersion;
-    }
-
-    public void setMamversion(final String mamVersion) {
-        this.mMamVersion = mamVersion;
-    }
-
-    public String getBrokerVersion() {
-        return mBrokerVersion;
-    }
-
-    public void setBrokerVersion(final String brokerVersion) {
-        this.mBrokerVersion = brokerVersion;
-    }
-
-    public String getMicrosoftEnrollmentId() {
-        return mMicrosoftEnrollmentId;
-    }
-
-    public void setMicrosoftEnrollmentId(String microsoftEnrollmentId) {
-        this.mMicrosoftEnrollmentId = microsoftEnrollmentId;
-    }
-
-    @Nullable
-    public String getDeviceCode() {
-        return mDeviceCode;
-    }
-
-    public void setDeviceCode(final String deviceCode) {
-        this.mDeviceCode = deviceCode;
-    }
 }
