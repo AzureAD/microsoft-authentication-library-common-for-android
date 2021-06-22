@@ -60,6 +60,14 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     private final String mKeySingleEntry;
     private final Gson mGson = new Gson();
 
+    /**
+     * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl. Convenience class for persisting
+     * lists of arbitrarily-typed data.
+     *
+     * @param context   The current app's {@link Context}.
+     * @param prefsName The name of the underlying {@link android.content.SharedPreferences} file.
+     * @param singleKey The name of key under which all entries will be cached.
+     */
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey) {
