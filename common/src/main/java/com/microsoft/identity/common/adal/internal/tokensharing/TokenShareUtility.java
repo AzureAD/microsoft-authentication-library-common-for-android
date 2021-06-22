@@ -224,7 +224,7 @@ public class TokenShareUtility implements ITokenShareInternal {
 
         final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> result = resultFuture.get();
 
-        saveResult(resultKeyValuePair);
+        saveResult(result);
     }
 
     @Override
@@ -243,14 +243,14 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @SuppressWarnings("unchecked")
-    private void saveResult(@Nullable final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair)
+    private void saveResult(@Nullable final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> result)
             throws ClientException {
         // If an error is encountered while requesting new tokens, null is returned
         // Check the result, before proceeding to save into the cache...
-        if (null != resultKeyValuePair) {
+        if (null != result) {
             mTokenCache.setSingleSignOnState(
-                    resultKeyValuePair.getKey(), // The account
-                    resultKeyValuePair.getValue() // The refresh token
+                    result.getKey(), // The account
+                    result.getValue() // The refresh token
             );
         }
     }
