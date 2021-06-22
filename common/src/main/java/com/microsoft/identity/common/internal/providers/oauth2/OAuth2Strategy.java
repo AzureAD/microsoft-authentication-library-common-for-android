@@ -37,6 +37,8 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -45,9 +47,8 @@ import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -57,6 +58,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Locale;
@@ -131,7 +133,7 @@ public abstract class OAuth2Strategy
     public @NonNull
     Future<AuthorizationResult> requestAuthorization(
             final GenericAuthorizationRequest request,
-            final GenericAuthorizationStrategy authorizationStrategy) throws ClientException {
+            final GenericAuthorizationStrategy authorizationStrategy) throws ClientException, URISyntaxException {
         validateAuthorizationRequest(request);
 
         // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
@@ -217,7 +219,8 @@ public abstract class OAuth2Strategy
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                null
         );
 
         // Record the clock skew between *this device* and EVO...
@@ -258,8 +261,8 @@ public abstract class OAuth2Strategy
                     uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.SLICE_PARAMETER, slice.getSlice());
                 }
 
-                if (!TextUtils.isEmpty(slice.getDC())) {
-                    uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDC());
+                if (!TextUtils.isEmpty(slice.getDataCenter())) {
+                    uriBuilder.appendQueryParameter(AzureActiveDirectorySlice.DC_PARAMETER, slice.getDataCenter());
                 }
 
                 mTokenEndpoint = uriBuilder.build().toString();
@@ -288,7 +291,8 @@ public abstract class OAuth2Strategy
         final HttpResponse response = httpClient.post(
                 ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                null
         );
 
         // Create the authorization result

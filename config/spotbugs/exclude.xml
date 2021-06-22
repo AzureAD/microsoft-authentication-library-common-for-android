@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <FindBugsFilter>
 <Match>
-  <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+    <!-- This warns because the same constructor argument has a NonNull check in both subclass and superclass -->
+    <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
+</Match>
+<Match>
+    <!-- This warns when there's a transient field in a serializable class -->
+    <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
 </Match>
 </FindBugsFilter>

@@ -35,6 +35,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.MalformedURLException;
@@ -138,10 +139,9 @@ public class AzureActiveDirectoryAuthority extends Authority {
                     TAG + methodName,
                     "Setting slice parameters..."
             );
-            com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice slice =
-                    new com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice();
+            final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
             slice.setSlice(mSlice.getSlice());
-            slice.setDataCenter(mSlice.getDC());
+            slice.setDataCenter(mSlice.getDataCenter());
             config.setSlice(slice);
         }
 

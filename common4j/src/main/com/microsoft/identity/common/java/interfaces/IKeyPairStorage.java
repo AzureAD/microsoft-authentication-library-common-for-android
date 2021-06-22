@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
@@ -41,7 +42,7 @@ public interface IKeyPairStorage<T> {
      * @param key A key associated to the value.
      * @param value value to be persisted.
      */
-    void put(@NonNull String key, T value);
+    void put(@NonNull String key, @Nullable T value);
 
     /**
      * Removes a value from the storage.
