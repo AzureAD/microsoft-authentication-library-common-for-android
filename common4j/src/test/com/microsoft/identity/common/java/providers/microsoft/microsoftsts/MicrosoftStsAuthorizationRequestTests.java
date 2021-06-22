@@ -27,8 +27,6 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.ported.Pair;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -38,6 +36,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -58,9 +57,9 @@ public class MicrosoftStsAuthorizationRequestTests {
     private static final String DEFAULT_TEST_SCOPE_ENCODED = "scope1+scope2";
     private static final String DEFAULT_TEST_AUTHORIZATION_ENDPOINT = "https://login.microsoftonline.com/common/oAuth2/v2.0/authorize";
     private static final UUID DEFAULT_TEST_CORRELATION_ID = UUID.randomUUID();
-    private static final List<Pair<String, String>> DEFAULT_TEST_EXTRA_QP = new ArrayList<Pair<String, String>>() {{
-        add(new Pair<>("extra", "1"));
-        add(new Pair<>("haschrome", "1"));
+    private static final List<Map.Entry<String, String>> DEFAULT_TEST_EXTRA_QP = new ArrayList<Map.Entry<String, String>>() {{
+        add(new AbstractMap.SimpleEntry<>("extra", "1"));
+        add(new AbstractMap.SimpleEntry<>("haschrome", "1"));
     }};
 
     public static final String MOCK_FLIGHT_QUERY_1 = "MOCK_FLIGHT_QUERY_1";
@@ -176,8 +175,8 @@ public class MicrosoftStsAuthorizationRequestTests {
         final int expectedCount = 1;
         final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl());
-        final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
-        extraQueryParameter.add(new Pair<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
+        final List<Map.Entry<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
         requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
 
@@ -190,9 +189,9 @@ public class MicrosoftStsAuthorizationRequestTests {
         final int expectedCount = 1;
         final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl());
-        final List<Pair<String, String>> extraQueryParameter = new LinkedList<>();
-        extraQueryParameter.add(new Pair<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
-        extraQueryParameter.add(new Pair<>(CONSTANT_INSTANCE_AWARE, Boolean.TRUE.toString()));
+        final List<Map.Entry<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>(CONSTANT_LOGIN_HINT, DEFAULT_TEST_LOGIN_HINT));
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>(CONSTANT_INSTANCE_AWARE, Boolean.TRUE.toString()));
         requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
         final String actualCodeRequestUrl = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
 
