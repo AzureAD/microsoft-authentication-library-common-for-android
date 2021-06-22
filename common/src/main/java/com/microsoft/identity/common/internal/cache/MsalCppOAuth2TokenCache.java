@@ -192,20 +192,23 @@ public class MsalCppOAuth2TokenCache
     @VisibleForTesting // private by default for production code
     public synchronized AccountDeletionRecord forceRemoveAccount(@NonNull final String homeAccountId,
                                                                  @Nullable final String environment,
-                                                                 @NonNull final String realm) throws ClientException {
+                                                                 @Nullable final String realm) throws ClientException {
         validateNonNull(homeAccountId, "homeAccountId");
-        validateNonNull(realm, "realm");
 
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
+        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
 
         final List<AccountRecord> removedAccounts = new ArrayList<>();
 
         for (final AccountRecord accountRecord : getAllAccounts()) {
-            boolean matches = accountRecord.getHomeAccountId().equals(homeAccountId)
-                    && accountRecord.getRealm().equals(realm);
+            boolean matches = accountRecord.getHomeAccountId().equals(homeAccountId);
 
             if (mustMatchOnEnvironment) {
                 matches = matches && accountRecord.getEnvironment().equals(environment);
+            }
+
+            if (mustMatchOnRealm) {
+                matches = matches && accountRecord.getRealm().equals(realm);
             }
 
             if (matches) {
@@ -246,12 +249,14 @@ public class MsalCppOAuth2TokenCache
         validateNonNull(homeAccountId, "homeAccountId");
         validateNonNull(realm, "realm");
 
+        final String normalizedRealm = realm == "" ? null : realm;
+
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
                 environment,
                 CredentialType.RefreshToken,
                 null,
-                realm,
+                normalizedRealm,
                 null,
                 SCHEME_BEARER
         );
@@ -265,7 +270,7 @@ public class MsalCppOAuth2TokenCache
                     environment,
                     clientId,
                     homeAccountId,
-                    realm,
+                    normalizedRealm,
                     CredentialType.AccessToken,
                     CredentialType.AccessToken_With_AuthScheme,
                     CredentialType.IdToken,
@@ -273,7 +278,7 @@ public class MsalCppOAuth2TokenCache
             );
         } else {
             // Remove was called, but no RTs exist for the account. Force remove it.
-            return forceRemoveAccount(homeAccountId, environment, realm);
+            return forceRemoveAccount(homeAccountId, environment, normalizedRealm);
         }
     }
 
