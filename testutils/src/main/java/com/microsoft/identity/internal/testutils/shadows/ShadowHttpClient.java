@@ -61,11 +61,11 @@ public class ShadowHttpClient {
                                   @NonNull Map<String, String> requestHeaders,
                                   @Nullable byte[] requestContent,
                                   @Nullable final SSLContext sslContext) throws IOException {
-        final HttpRequestInterceptor interceptor = MockHttpClient.intercept(httpMethod, requestUrl, requestHeaders, requestContent);
+        final HttpRequestInterceptor interceptor = MockHttpClient.getInterceptor(httpMethod, requestUrl, requestHeaders, requestContent);
         if (interceptor == null) {
             return UrlConnectionHttpClient.getDefaultInstance().method(httpMethod, requestUrl, requestHeaders, requestContent, sslContext);
         } else {
-            return interceptor.intercept(httpMethod, requestUrl, requestHeaders, requestContent);
+            return interceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
         }
     }
 
