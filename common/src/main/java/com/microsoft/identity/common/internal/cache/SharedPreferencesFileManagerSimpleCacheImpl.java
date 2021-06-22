@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
+import android.os.Build;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -35,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 
@@ -82,10 +85,29 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
 
     @SneakyThrows
     private <V> V execWithTiming(@NonNull final NamedRunnable<V> runnable) {
-        final long startTimeMillis = SystemClock.elapsedRealtime();
+        final TimeUnit timeUnit;
+        final long startTime;
+        final long execTime;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            startTime = SystemClock.elapsedRealtimeNanos();
+            timeUnit = TimeUnit.NANOSECONDS;
+        } else {
+            startTime = SystemClock.elapsedRealtime();
+            timeUnit = TimeUnit.MILLISECONDS;
+        }
+
         final V v = runnable.call();
-        final long execTime = SystemClock.elapsedRealtime() - startTimeMillis;
-        Logger.verbose(TAG + TIMING_TAG, runnable.getName() + "::" + execTime);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            execTime = SystemClock.elapsedRealtimeNanos() - startTime;
+        } else {
+            execTime = SystemClock.elapsedRealtime();
+        }
+
+        Log.e(TAG + TIMING_TAG,
+                runnable.getName() + " finished in: " + execTime + " " + timeUnit.name());
+
         return v;
     }
 
