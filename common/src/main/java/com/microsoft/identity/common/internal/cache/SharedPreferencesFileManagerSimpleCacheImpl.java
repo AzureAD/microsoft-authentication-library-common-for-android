@@ -25,7 +25,6 @@ package com.microsoft.identity.common.internal.cache;
 import android.content.Context;
 import android.os.Build;
 import android.os.SystemClock;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -38,8 +37,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-
-import lombok.SneakyThrows;
 
 /**
  * A simple metadata store definition that uses SharedPreferencesFileManager to persist, read,

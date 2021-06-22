@@ -24,12 +24,15 @@ package com.microsoft.identity.common.internal.cache;
 
 import java.lang.reflect.Type;
 
+/**
+ * Interface returning {@link Type} tokens for serialization hints to Gson.
+ */
 public interface IListTypeToken {
 
     /**
      * Gets the Type token associated with a List.
      *
-     * @return The type.
+     * @return The {@link Type}.
      */
     Type getListTypeToken();
 
