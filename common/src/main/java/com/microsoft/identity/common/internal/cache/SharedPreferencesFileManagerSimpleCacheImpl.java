@@ -83,30 +83,31 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
         String getName();
     }
 
-    @SneakyThrows
     private <V> V execWithTiming(@NonNull final NamedRunnable<V> runnable) {
-        final TimeUnit timeUnit;
         final long startTime;
         final long execTime;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             startTime = SystemClock.elapsedRealtimeNanos();
-            timeUnit = TimeUnit.NANOSECONDS;
         } else {
-            startTime = SystemClock.elapsedRealtime();
-            timeUnit = TimeUnit.MILLISECONDS;
+            startTime = System.nanoTime();
         }
 
-        final V v = runnable.call();
+        V v = null;
+        try {
+            v = runnable.call();
+        } catch (final Exception e) {
+            Logger.error(TAG + TIMING_TAG, "Error during operation", e);
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             execTime = SystemClock.elapsedRealtimeNanos() - startTime;
         } else {
-            execTime = SystemClock.elapsedRealtime();
+            execTime = System.nanoTime() - startTime;
         }
 
-        Log.e(TAG + TIMING_TAG,
-                runnable.getName() + " finished in: " + execTime + " " + timeUnit.name());
+        Logger.verbose(TAG + TIMING_TAG,
+                runnable.getName() + " finished in: " + execTime + " " + TimeUnit.NANOSECONDS.name());
 
         return v;
     }
