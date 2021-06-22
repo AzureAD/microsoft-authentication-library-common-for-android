@@ -222,7 +222,7 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
+        final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> result = resultFuture.get();
 
         saveResult(resultKeyValuePair);
     }
