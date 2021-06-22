@@ -56,7 +56,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     private static final String EMTPY_ARRAY = "[]";
     private static final String TIMING_TAG = "execWithTiming";
 
-    private ISharedPreferencesFileManager mSharedPrefsFileManager;
+    private final ISharedPreferencesFileManager mSharedPrefsFileManager;
     private final String mKeySingleEntry;
     private final Gson mGson = new Gson();
 
