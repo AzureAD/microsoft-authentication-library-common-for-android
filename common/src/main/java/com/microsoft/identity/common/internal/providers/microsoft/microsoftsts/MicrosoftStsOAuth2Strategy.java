@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,13 +36,6 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.net.HttpClient;
-import com.microsoft.identity.common.java.net.HttpConstants;
-import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
@@ -66,6 +58,13 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpConstants;
+import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -299,21 +298,21 @@ public class MicrosoftStsOAuth2Strategy
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            final Pair<String, String> uidUtidPair = StringUtil.getTenantInfo(homeAccountId);
+            final Map.Entry<String, String> uidUtidKeyValuePair = StringUtil.getTenantInfo(homeAccountId);
 
-            if (!StringExtensions.isNullOrBlank(uidUtidPair.first)
-                    && !StringExtensions.isNullOrBlank(uidUtidPair.second)) {
-                builder.setUid(uidUtidPair.first);
-                builder.setUtid(uidUtidPair.second);
+            if (!StringExtensions.isNullOrBlank(uidUtidKeyValuePair.getKey())
+                    && !StringExtensions.isNullOrBlank(uidUtidKeyValuePair.getValue())) {
+                builder.setUid(uidUtidKeyValuePair.getKey());
+                builder.setUtid(uidUtidKeyValuePair.getValue());
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ uid: [" + uidUtidPair.first + "]"
+                        "Builder w/ uid: [" + uidUtidKeyValuePair.getKey() + "]"
                 );
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ utid: [" + uidUtidPair.second + "]"
+                        "Builder w/ utid: [" + uidUtidKeyValuePair.getValue() + "]"
                 );
             }
         }
