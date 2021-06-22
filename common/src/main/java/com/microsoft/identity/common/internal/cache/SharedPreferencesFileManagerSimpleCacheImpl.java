@@ -102,6 +102,9 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
         try {
             v = runnable.call();
         } catch (final Exception e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
             Logger.error(TAG + TIMING_TAG, "Error during operation", e);
         }
 
