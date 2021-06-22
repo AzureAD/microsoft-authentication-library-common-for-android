@@ -106,16 +106,16 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
                 Thread.currentThread().interrupt();
             }
             Logger.error(TAG + TIMING_TAG, "Error during operation", e);
-        }
+        } finally {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                execTime = SystemClock.elapsedRealtimeNanos() - startTime;
+            } else {
+                execTime = System.nanoTime() - startTime;
+            }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            execTime = SystemClock.elapsedRealtimeNanos() - startTime;
-        } else {
-            execTime = System.nanoTime() - startTime;
+            Logger.verbose(TAG + TIMING_TAG,
+                    runnable.getName() + " finished in: " + execTime + " " + TimeUnit.NANOSECONDS.name());
         }
-
-        Logger.verbose(TAG + TIMING_TAG,
-                runnable.getName() + " finished in: " + execTime + " " + TimeUnit.NANOSECONDS.name());
 
         return v;
     }
