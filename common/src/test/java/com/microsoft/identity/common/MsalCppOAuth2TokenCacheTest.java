@@ -183,6 +183,36 @@ public class MsalCppOAuth2TokenCacheTest {
     }
 
     @Test
+    public void removeAccountWithHomeAccountIdTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+        mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
+
+        // Call remove
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                "",
+                ""
+        );
+
+        // Check the receipt
+        Assert.assertEquals(generatedAccount, deletionRecord.get(0));
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
+    }
+
+    @Test
     public void removeAccountNoRTTest() throws ClientException {
         // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
@@ -199,6 +229,35 @@ public class MsalCppOAuth2TokenCacheTest {
 
         // Check the receipt
         Assert.assertEquals(generatedAccount, deletionRecord.get(0));
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
+    }
+
+    @Test
+    public void forceRemoveAccountWithHomeAccountIdTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+
+        // Do not save any credentials for this account...
+
+        final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
+                generatedAccount.getHomeAccountId(),
+                "",
+                ""
+        );
+
+        Assert.assertEquals(1, deletionRecord.size());
 
         // Try to restore it
         final AccountRecord restoredAccount = mCppCache.getAccount(
