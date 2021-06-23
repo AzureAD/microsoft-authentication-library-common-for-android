@@ -20,27 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
+package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
-
-public class AzureActiveDirectoryTokenRequest extends TokenRequest {
-
-    @SerializedName("resource")
-    private String mResourceId;
+/**
+ * Enum for representing different authorization status values.
+ */
+public enum AuthorizationStatus {
+    /**
+     * Code is successfully returned.
+     */
+    SUCCESS,
 
     /**
-     * @return mResourceId of AzureActiveDirectoryTokenRequest
+     * User press device back button.
      */
-    public String getResourceId() {
-        return mResourceId;
-    }
+    USER_CANCEL,
 
     /**
-     * @param resourceId String of resource ID
+     * Sdk cancelled Auth floe
      */
-    public void setResourceId(String resourceId) {
-        mResourceId = resourceId;
-    }
+    SDK_CANCEL,
+
+    /**
+     * Returned URI contains error.
+     */
+    FAIL,
+
+    /**
+     * AuthenticationActivity detects the invalid request.
+     */
+    INVALID_REQUEST
+    //TODO:  Investigate how chrome tab returns http timeout error
 }
