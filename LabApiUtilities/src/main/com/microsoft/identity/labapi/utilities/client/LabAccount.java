@@ -41,4 +41,5 @@ public class LabAccount implements ILabAccount {
     private final String mUsername;
     private final String mPassword;
     private final UserType mUserType;
+    private final String mHomeTenantId;
 }
