@@ -284,6 +284,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
     public void setExtExpiresOn(final Date extExpiresOn) {
         if (extExpiresOn == null) {
             mExtExpiresOn = null;
+            return;
         }
 
         mExtExpiresOn = new Date(extExpiresOn.getTime());
