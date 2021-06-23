@@ -115,7 +115,8 @@ public class MockHttpClient {
             final Map<String, String> requestHeaders,
             final byte[] requestContent
     ) {
-
+    // this is also not quite right, but will work given the current usage model, where getInterceptor is always called
+    sTotalRequests.incrementAndGet()
         // for each pair of HttpMethod and url regex
         for (HttpRequestMatcher matcher : interceptors.keySet()) {
             if (matcher.matches(method, url, requestHeaders, requestContent)) {
@@ -127,7 +128,6 @@ public class MockHttpClient {
                         if (sSaveRequests.get()) {
                             sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null, null));
                         }
-                        sTotalRequests.incrementAndGet();
                         return httpRequestInterceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
                     }
                 };
