@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * @param <T> The type of metadata that will be persisted.
  */
-public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCache<T> {
+public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCache<T>, IListTypeToken {
 
     private static final String TAG = SharedPreferencesSimpleCacheImpl.class.getSimpleName();
 
@@ -66,13 +66,6 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
         );
         mKeySingleEntry = singleKey;
     }
-
-    /**
-     * The List-type token for Gson, used for correctly deserializing JSON stored on disk.
-     *
-     * @return The List type to which the target JSON should be deserialized.
-     */
-    protected abstract Type getListTypeToken();
 
     @Override
     public boolean insert(T t) {
