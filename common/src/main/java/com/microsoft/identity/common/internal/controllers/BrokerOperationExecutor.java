@@ -29,6 +29,8 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.CodeMarkerManager;
+import com.microsoft.identity.common.PerfConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.exception.ClientException;
@@ -69,30 +71,34 @@ public class BrokerOperationExecutor {
         /**
          * Gets a BrokerOperationBundle bundle to pass to each IpcStrategies.
          */
-        @NonNull BrokerOperationBundle getBundle();
+        @NonNull
+        BrokerOperationBundle getBundle();
 
         /**
          * Extracts the result object from a bundle returned by an IpcStrategy.
          * If the broker returns an error, this will throw an exception.
          */
-        @NonNull T extractResultBundle(final @Nullable Bundle resultBundle) throws BaseException;
+        @NonNull
+        T extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException;
 
         /**
          * Returns method name (for logging/telemetry purpose).
          */
-        @NonNull String getMethodName();
+        @NonNull
+        String getMethodName();
 
         /**
          * ID of the telemetry API event associated to this strategy task.
          * If this value returns null, no telemetry event will be emitted.
          */
-        @Nullable String getTelemetryApiId();
+        @Nullable
+        String getTelemetryApiId();
 
         /**
          * A method that will be invoked before the success event is emitted.
          * If the calling operation wants to put any value in the success event, put it here.
          */
-        void putValueInSuccessEvent(final @NonNull ApiEndEvent event,final @NonNull T result);
+        void putValueInSuccessEvent(@NonNull final ApiEndEvent event, @NonNull final T result);
     }
 
     private final List<IIpcStrategy> mStrategies;
@@ -109,8 +115,9 @@ public class BrokerOperationExecutor {
      * It will return a result immediately if any of the strategy succeeds, or throw an exception if all of the strategies fails.
      */
     public <T extends CommandParameters, U> U execute(@Nullable final T parameters,
-                                                      @NonNull final BrokerOperation<U> operation)
-            throws BaseException {
+                                                      @NonNull final BrokerOperation<U> operation) throws BaseException {
+        final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
+        codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_OPERATION_EXECUTION_START);
         final String methodName = ":execute";
 
         emitOperationStartEvent(parameters, operation);
@@ -126,7 +133,9 @@ public class BrokerOperationExecutor {
         final List<BrokerCommunicationException> communicationExceptionStack = new ArrayList<>();
         for (final IIpcStrategy strategy : mStrategies) {
             try {
+                codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_START);
                 final U result = performStrategy(strategy, operation);
+                codeMarkerManager.markCode(PerfConstants.CodeMarkerConstants.BROKER_PROCESS_END);
                 emitOperationSuccessEvent(operation, result);
                 return result;
             } catch (final BrokerCommunicationException communicationException) {
