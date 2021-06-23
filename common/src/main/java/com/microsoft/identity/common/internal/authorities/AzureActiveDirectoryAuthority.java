@@ -90,6 +90,16 @@ public class AzureActiveDirectoryAuthority extends Authority {
         getAzureActiveDirectoryCloud();
     }
 
+    /**
+     * Gets the {@link AzureActiveDirectoryCloud} associated to this Authority.
+     *
+     * @return The {@link AzureActiveDirectoryCloud} or null, if the provided URL is not associated
+     * with any cloud.
+     */
+    public AzureActiveDirectoryCloud getCloud() {
+        return mAzureActiveDirectoryCloud;
+    }
+
     public Map<String, String> getFlightParameters() {
         return this.mFlightParameters;
     }
