@@ -249,7 +249,7 @@ public class MsalCppOAuth2TokenCache
         validateNonNull(homeAccountId, "homeAccountId");
         validateNonNull(realm, "realm");
 
-        final String normalizedRealm = realm == "" ? null : realm;
+        final String normalizedRealm = realm.equals("") ? null : realm;
 
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
