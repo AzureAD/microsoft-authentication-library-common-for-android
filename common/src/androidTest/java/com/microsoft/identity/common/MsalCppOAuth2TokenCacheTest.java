@@ -244,11 +244,9 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         mCppCache.saveAccountRecord(generatedAccount);
         mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
 
-        // Get another generated account with a different realm
-        final AccountRecord generatedAccount2 = mTestBundle.mGeneratedAccount;
-        generatedAccount2.setRealm(REALM2);
-
-        mCppCache.saveAccountRecord(generatedAccount2);
+        // Save the second account with a different realm
+        generatedAccount.setRealm(REALM2);
+        mCppCache.saveAccountRecord(generatedAccount);
 
         // Call remove
         final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
@@ -257,10 +255,10 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 ""
         );
 
-        // Check the receipt
+        // Check the receipt, should delete both
         Assert.assertEquals(2, deletionRecord.size());
 
-        // Try to restore it
+        // Try to restore them
         final AccountRecord restoredAccount = mCppCache.getAccount(
                 generatedAccount.getHomeAccountId(),
                 generatedAccount.getEnvironment(),
@@ -273,7 +271,7 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
                 REALM2
         );
 
-        // Make sure it doesn't exist....
+        // Make sure they don't exist....
         Assert.assertNull(restoredAccount);
         Assert.assertNull(restoredAccount2);
     }
