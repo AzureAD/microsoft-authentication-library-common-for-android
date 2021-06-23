@@ -20,6 +20,7 @@ V.Next
 - [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
 - [PATCH] Adding codemarkers for usage in the Test cases of brokered and non-brokered Acquire Token silently scenarios. (#1185)
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
+- [PATCH] Avoid unnecessary BAM-cache reload (#1426)
 - [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
 
 Version 3.4.3
