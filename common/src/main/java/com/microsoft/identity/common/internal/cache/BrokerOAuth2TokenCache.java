@@ -687,11 +687,7 @@ public class BrokerOAuth2TokenCache
                 );
             }
 
-            final OAuth2TokenCache targetCache = getTokenCacheForClient(
-                    clientId,
-                    account.getEnvironment(),
-                    mCallingProcessUid
-            );
+            final OAuth2TokenCache targetCache = getTokenCacheForClient(appMetadata);
 
             final boolean appIsUnknownUseFociAsFallback = null == targetCache;
 
