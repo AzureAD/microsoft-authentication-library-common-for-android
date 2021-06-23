@@ -201,6 +201,16 @@ public class MsalCppOAuth2TokenCacheTest {
 
         // Check the receipt, should remove nothing
         Assert.assertEquals(0, deletionRecord.size());
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it still exists....
+        Assert.assertNotNull(restoredAccount);
     }
 
     @Test
