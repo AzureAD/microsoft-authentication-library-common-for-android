@@ -20,11 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft;
+package com.microsoft.identity.common.java.providers.microsoft;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
 import java.util.Date;
 
@@ -46,6 +46,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
      * Get the string representation of the remaining lifetime of the refresh token.
+     *
      * @return the string representation of the remaining lifetime of the refresh token, may be null.
      */
     public String getRefreshTokenExpiresIn() {
@@ -54,6 +55,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
      * Set the string representation of the remaining lifetime of the refresh token.
+     *
      * @param mRefreshTokenExpiresIn the string representation of the remaining lifetime of the refresh
      *                               token, may be null.
      */
@@ -75,16 +77,22 @@ public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
      * Get the session key JWE associated with this result, or null if none.
+     *
      * @return the session key JWE associated with this result, or null if none.
      */
-    public String getSessionKeyJwe() { return mSessionKeyJwe; }
+    public String getSessionKeyJwe() {
+        return mSessionKeyJwe;
+    }
 
     /**
      * Set the session key JWE associated with this result, or null if none.
+     *
      * @param sesionKey the session key JWE associated with this result, or null if none.
      * @return
      */
-    public String setSessionKeyJwe(String sesionKey) { return mSessionKeyJwe; }
+    public String setSessionKeyJwe(String sesionKey) {
+        return mSessionKeyJwe;
+    }
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
@@ -261,7 +269,11 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @return The ext expires on to get.
      */
     public Date getExtExpiresOn() {
-        return mExtExpiresOn;
+        if (mExtExpiresOn == null) {
+            return null;
+        }
+
+        return new Date(mExtExpiresOn.getTime());
     }
 
     /**
@@ -270,7 +282,12 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @param extExpiresOn The expires on to set.
      */
     public void setExtExpiresOn(final Date extExpiresOn) {
-        mExtExpiresOn = extExpiresOn;
+        if (extExpiresOn == null) {
+            mExtExpiresOn = null;
+            return;
+        }
+
+        mExtExpiresOn = new Date(extExpiresOn.getTime());
     }
 
     /**

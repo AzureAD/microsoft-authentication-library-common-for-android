@@ -58,29 +58,29 @@ import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.IResult;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
@@ -228,10 +228,9 @@ public abstract class BaseController {
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
             if (!StringExtensions.isNullOrBlank(interactiveTokenCommandParameters.getLoginHint()) &&
-                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
-                if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
-                    ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
-                }
+                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT &&
+                    builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
             }
         }
 
