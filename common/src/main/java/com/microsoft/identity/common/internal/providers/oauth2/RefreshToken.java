@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.oauth2;
 
 import com.microsoft.identity.common.internal.dto.IRefreshTokenRecord;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
 public abstract class RefreshToken implements IRefreshTokenRecord {
 

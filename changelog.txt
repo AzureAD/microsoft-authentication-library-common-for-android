@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Migrate Requests/Responses (#1424)
 - [MAJOR] Add SSL context support to UrlConnectionHttpClient(#1396)
 - [MAJOR] Migrate AuthRequests to common4j (#1394)
 - [MINOR] Migrate Device, ObjectMapper, ClockSkewManager and IHasExtraParameters to common4j (#1383)
