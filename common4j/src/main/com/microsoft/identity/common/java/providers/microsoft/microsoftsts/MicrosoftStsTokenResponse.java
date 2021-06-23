@@ -49,7 +49,4 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
     public void setExpiresNotBefore(final String expiresNotBefore) {
         mExpiresNotBefore = expiresNotBefore;
     }
-
-
-
 }

@@ -46,6 +46,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
      * Get the string representation of the remaining lifetime of the refresh token.
+     *
      * @return the string representation of the remaining lifetime of the refresh token, may be null.
      */
     public String getRefreshTokenExpiresIn() {
@@ -54,6 +55,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
      * Set the string representation of the remaining lifetime of the refresh token.
+     *
      * @param mRefreshTokenExpiresIn the string representation of the remaining lifetime of the refresh
      *                               token, may be null.
      */
@@ -75,16 +77,22 @@ public class MicrosoftTokenResponse extends TokenResponse {
 
     /**
      * Get the session key JWE associated with this result, or null if none.
+     *
      * @return the session key JWE associated with this result, or null if none.
      */
-    public String getSessionKeyJwe() { return mSessionKeyJwe; }
+    public String getSessionKeyJwe() {
+        return mSessionKeyJwe;
+    }
 
     /**
      * Set the session key JWE associated with this result, or null if none.
+     *
      * @param sesionKey the session key JWE associated with this result, or null if none.
      * @return
      */
-    public String setSessionKeyJwe(String sesionKey) { return mSessionKeyJwe; }
+    public String setSessionKeyJwe(String sesionKey) {
+        return mSessionKeyJwe;
+    }
 
     /**
      * Information to uniquely identify the tenant and the user _within_ that tenant.
@@ -261,7 +269,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @return The ext expires on to get.
      */
     public Date getExtExpiresOn() {
-        if (mExtExpiresOn == null){
+        if (mExtExpiresOn == null) {
             return null;
         }
 
