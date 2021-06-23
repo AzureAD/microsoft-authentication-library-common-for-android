@@ -250,7 +250,7 @@ public class MsalCppOAuth2TokenCache
         validateNonNull(environment, "environment");
         validateNonNull(realm, "realm");
         
-        final String normalizedEnvironment = environment.equals("") ? null : realm;
+        final String normalizedEnvironment = environment.equals("") ? null : environment;
         final String normalizedRealm = realm.equals("") ? null : realm;
 
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
