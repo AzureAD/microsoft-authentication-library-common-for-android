@@ -244,7 +244,7 @@ public class MsalCppOAuth2TokenCacheTest {
     }
 
     @Test
-    public void removeTwoAccountsWithDifferentRealmsTest() throws ClientException {
+    public void removeTwoAccountsWithDifferentRealmsAndEnvironmentsTest() throws ClientException {
         // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
 
@@ -252,7 +252,8 @@ public class MsalCppOAuth2TokenCacheTest {
         mCppCache.saveAccountRecord(generatedAccount);
         mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
 
-        // Save the second account with a different realm
+        // Save the second account with a different realm and environment
+        generatedAccount.setEnvironment("login.chinacloudapi.cn");
         generatedAccount.setRealm(REALM2);
         mCppCache.saveAccountRecord(generatedAccount);
 
@@ -275,7 +276,7 @@ public class MsalCppOAuth2TokenCacheTest {
 
         final AccountRecord restoredAccount2 = mCppCache.getAccount(
                 generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
+                "login.chinacloudapi.cn",
                 REALM2
         );
 
