@@ -233,7 +233,7 @@ public class MsalCppOAuth2TokenCache
      * @return {@link AccountDeletionRecord}
      */
     public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
-                                                            @Nullable final String environment,
+                                                            @NonNull final String environment,
                                                             @NonNull final String realm) throws ClientException {
         // TODO This API is potentially problematic for TFW/TFL...
         // Normally on Android, apps are 'sandboxed' such that each app has their own cache
@@ -247,13 +247,15 @@ public class MsalCppOAuth2TokenCache
         // accommodations need to come later for Teams then we can reevaluate the logic here.
 
         validateNonNull(homeAccountId, "homeAccountId");
+        validateNonNull(environment, "environment");
         validateNonNull(realm, "realm");
-
+        
+        final String normalizedEnvironment = environment.equals("") ? null : realm;
         final String normalizedRealm = realm.equals("") ? null : realm;
 
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
-                environment,
+                normalizedEnvironment,
                 CredentialType.RefreshToken,
                 null,
                 normalizedRealm,
@@ -267,7 +269,7 @@ public class MsalCppOAuth2TokenCache
 
             // Remove the account
             return removeAccount(
-                    environment,
+                    normalizedEnvironment,
                     clientId,
                     homeAccountId,
                     normalizedRealm,
@@ -278,7 +280,7 @@ public class MsalCppOAuth2TokenCache
             );
         } else {
             // Remove was called, but no RTs exist for the account. Force remove it.
-            return forceRemoveAccount(homeAccountId, environment, normalizedRealm);
+            return forceRemoveAccount(homeAccountId, normalizedEnvironment, normalizedRealm);
         }
     }
 
