@@ -71,14 +71,14 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey) {
-        Logger.verbose(TAG + "::ctor", "Init");
-        mSharedPrefsFileManager = SharedPreferencesFileManager.getSharedPreferences(
+        this(SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 prefsName,
                 Context.MODE_PRIVATE,
                 null // File is not encrypted
+                ),
+                singleKey
         );
-        mKeySingleEntry = singleKey;
     }
 
     /**
