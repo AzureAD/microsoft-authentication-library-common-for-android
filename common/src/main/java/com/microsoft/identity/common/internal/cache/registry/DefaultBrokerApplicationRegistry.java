@@ -28,7 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesSimpleCacheImpl;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManagerSimpleCacheImpl;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -39,7 +39,7 @@ import java.util.List;
  * broker.
  */
 public class DefaultBrokerApplicationRegistry
-        extends SharedPreferencesSimpleCacheImpl<BrokerApplicationRegistryData>
+        extends SharedPreferencesFileManagerSimpleCacheImpl<BrokerApplicationRegistryData>
         implements IBrokerApplicationRegistry {
 
     private static final String TAG = DefaultBrokerApplicationRegistry.class.getSimpleName();
@@ -52,7 +52,7 @@ public class DefaultBrokerApplicationRegistry
     }
 
     @Override
-    protected Type getListTypeToken() {
+    public Type getListTypeToken() {
         return new TypeToken<List<BrokerApplicationRegistryData>>() {
         }.getType();
     }
