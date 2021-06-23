@@ -20,10 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.common.java.providers.oauth2;
 
-public interface IErrorResponse {
+public interface IResult {
 
-    String getError();
-    String getErrorDescription();
+    boolean getSuccess();
+    IErrorResponse getErrorResponse();
+    ISuccessResponse getSuccessResponse();
 }

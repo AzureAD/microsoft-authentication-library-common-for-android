@@ -35,6 +35,7 @@ import androidx.fragment.app.FragmentTransaction;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 
 import java.lang.ref.WeakReference;
 import java.net.URISyntaxException;

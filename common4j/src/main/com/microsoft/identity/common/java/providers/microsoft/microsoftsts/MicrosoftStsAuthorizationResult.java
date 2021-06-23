@@ -20,12 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 
 /**
  * Sub class of {@link MicrosoftAuthorizationResult}.

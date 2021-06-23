@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+
 public class AccessToken {
     /**
      * A buffer of ten minutes (in milliseconds) for token expiration.
