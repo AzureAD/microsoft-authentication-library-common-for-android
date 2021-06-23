@@ -612,6 +612,7 @@ public abstract class BaseController {
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
+        final String environment = parameters.getAccount().getEnvironment();
 
         AccountRecord targetAccount;
 
@@ -633,7 +634,7 @@ public abstract class BaseController {
             targetAccount = parameters
                     .getOAuth2TokenCache()
                     .getAccountByLocalAccountId(
-                            null,
+                            environment,
                             clientId,
                             localAccountId
                     );
