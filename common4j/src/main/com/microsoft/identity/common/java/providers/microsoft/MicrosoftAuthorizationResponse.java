@@ -20,10 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft;
+package com.microsoft.identity.common.java.providers.microsoft;
 
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 
 /**
  * Sub class of {@link AuthorizationResponse} which encapsulates additional parameters

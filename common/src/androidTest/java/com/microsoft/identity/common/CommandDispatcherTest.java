@@ -39,10 +39,10 @@ import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCom
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 
 import org.junit.After;
 import org.junit.Assert;
