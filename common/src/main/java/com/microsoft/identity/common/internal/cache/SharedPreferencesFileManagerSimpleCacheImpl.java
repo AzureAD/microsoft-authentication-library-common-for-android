@@ -66,21 +66,32 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
      *
      * @param context   The current app's {@link Context}.
      * @param prefsName The name of the underlying {@link android.content.SharedPreferences} file.
-     * @param singleKey The name of key under which all entries will be cached.
+     * @param singleKey The name of the key under which all entries will be cached.
      */
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey) {
-        Logger.verbose(
-                TAG + "::ctor",
-                "Init"
-        );
+        Logger.verbose(TAG + "::ctor", "Init");
         mSharedPrefsFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 prefsName,
                 Context.MODE_PRIVATE,
                 null // File is not encrypted
         );
+        mKeySingleEntry = singleKey;
+    }
+
+    /**
+     * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl from the provided
+     * {@link SharedPreferencesFileManager}, using the provided singleKey for the underlying collection.
+     *
+     * @param sharedPreferencesFileManager The underlying {@link SharedPreferencesFileManager} to use.
+     * @param singleKey                    The name of the key under which all entries will be cached.
+     */
+    public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final SharedPreferencesFileManager sharedPreferencesFileManager,
+                                                       @NonNull final String singleKey) {
+        Logger.verbose(TAG + "::ctor", "Init");
+        mSharedPrefsFileManager = sharedPreferencesFileManager;
         mKeySingleEntry = singleKey;
     }
 
