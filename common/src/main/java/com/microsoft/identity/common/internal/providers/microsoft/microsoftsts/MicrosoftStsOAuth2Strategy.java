@@ -24,6 +24,15 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
 
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -38,21 +47,16 @@ import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
@@ -81,7 +85,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
-import static com.microsoft.identity.common.internal.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)

@@ -32,6 +32,10 @@ import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationS
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
 import org.junit.Assert;
 import org.junit.Test;

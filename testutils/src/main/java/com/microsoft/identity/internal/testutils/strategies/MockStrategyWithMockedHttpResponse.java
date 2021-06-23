@@ -24,8 +24,8 @@ package com.microsoft.identity.internal.testutils.strategies;
 
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.internal.testutils.mocks.MockSuccessAuthorizationResultMockedTests;
 

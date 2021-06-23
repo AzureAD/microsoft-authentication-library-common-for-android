@@ -20,11 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
 /**
  * {@link TokenResponse} subclass for the Microsoft STS (V2).
@@ -49,7 +49,4 @@ public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
     public void setExpiresNotBefore(final String expiresNotBefore) {
         mExpiresNotBefore = expiresNotBefore;
     }
-
-
-
 }

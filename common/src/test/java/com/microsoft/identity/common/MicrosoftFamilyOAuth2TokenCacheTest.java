@@ -34,8 +34,8 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.shadows.ShadowStorageHelper;
 
 import org.junit.After;
