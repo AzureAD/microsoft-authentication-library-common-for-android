@@ -55,6 +55,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM2;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
@@ -185,6 +186,26 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
+    public void removeNoMatchingAccount() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+        mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
+
+        // Call remove with a different realm
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                REALM2
+        );
+
+        // Check the receipt, should remove nothing
+        Assert.assertEquals(0, deletionRecord.size());
+    }
+
+    @Test
     public void removeAccountWithHomeAccountIdTest() throws ClientException {
         // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
@@ -212,6 +233,49 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         // Make sure it doesn't exist....
         Assert.assertNull(restoredAccount);
+    }
+
+    @Test
+    public void removeTwoAccountsWithDifferentRealmsTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+        mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
+
+        // Get another generated account with a different realm
+        final AccountRecord generatedAccount2 = mTestBundle.mGeneratedAccount;
+        generatedAccount2.setRealm(REALM2);
+
+        mCppCache.saveAccountRecord(generatedAccount2);
+
+        // Call remove
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                "",
+                ""
+        );
+
+        // Check the receipt
+        Assert.assertEquals(2, deletionRecord.size());
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                REALM
+        );
+
+        final AccountRecord restoredAccount2 = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                REALM2
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
+        Assert.assertNull(restoredAccount2);
     }
 
     @Test
@@ -244,7 +308,7 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void forceRemoveAccountWithHomeAccountIdTest() throws ClientException {
+    public void forceRemoveAccountTest() throws ClientException {
         // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
 
@@ -255,8 +319,8 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
                 generatedAccount.getHomeAccountId(),
-                "",
-                ""
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
         );
 
         Assert.assertEquals(1, deletionRecord.size());
@@ -273,7 +337,7 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
     }
 
     @Test
-    public void forceRemoveAccountTest() throws ClientException {
+    public void forceRemoveAccountWithHomeAccountIdTest() throws ClientException {
         // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
 
@@ -284,8 +348,8 @@ public class MsalCppOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
 
         final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
                 generatedAccount.getHomeAccountId(),
-                generatedAccount.getEnvironment(),
-                generatedAccount.getRealm()
+                "",
+                ""
         );
 
         Assert.assertEquals(1, deletionRecord.size());
