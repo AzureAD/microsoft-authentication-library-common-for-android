@@ -88,8 +88,11 @@ public class LabClient implements ILabClient {
 
         final String password = getPassword(configInfo);
 
-        return new LabAccount(username, password, UserType.fromName(
-                configInfo.getUserInfo().getUserType())
+        return new LabAccount(
+                username,
+                password,
+                UserType.fromName(configInfo.getUserInfo().getUserType()),
+                configInfo.getUserInfo().getHomeTenantID()
         );
     }
 
@@ -150,7 +153,7 @@ public class LabClient implements ILabClient {
         final String password = getPassword(tempUser);
 
         // all temp users created by Lab Api are currently cloud users
-        return new LabAccount(tempUser.getUpn(), password, UserType.CLOUD);
+        return new LabAccount(tempUser.getUpn(), password, UserType.CLOUD, tempUser.getTenantId());
     }
 
     @Override

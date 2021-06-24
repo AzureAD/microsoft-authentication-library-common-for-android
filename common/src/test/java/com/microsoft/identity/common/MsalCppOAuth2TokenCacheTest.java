@@ -53,6 +53,7 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.HOME_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.LOCAL_ACCOUNT_ID;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM;
+import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.REALM2;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SECRET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
@@ -183,6 +184,108 @@ public class MsalCppOAuth2TokenCacheTest {
     }
 
     @Test
+    public void removeNoMatchingAccount() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+        mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
+
+        // Call remove with a different realm
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                REALM2
+        );
+
+        // Check the receipt, should remove nothing
+        Assert.assertEquals(0, deletionRecord.size());
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it still exists....
+        Assert.assertNotNull(restoredAccount);
+    }
+
+    @Test
+    public void removeAccountWithHomeAccountIdTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+        mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
+
+        // Call remove
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                "",
+                ""
+        );
+
+        // Check the receipt
+        Assert.assertEquals(generatedAccount, deletionRecord.get(0));
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
+    }
+
+    @Test
+    public void removeTwoAccountsWithDifferentRealmsAndEnvironmentsTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+        mCppCache.saveCredentials(null, mTestBundle.mGeneratedRefreshToken);
+
+        // Save the second account with a different realm and environment
+        generatedAccount.setEnvironment("login.chinacloudapi.cn");
+        generatedAccount.setRealm(REALM2);
+        mCppCache.saveAccountRecord(generatedAccount);
+
+        // Call remove
+        final AccountDeletionRecord deletionRecord = mCppCache.removeAccount(
+                generatedAccount.getHomeAccountId(),
+                "",
+                ""
+        );
+
+        // Check the receipt, should delete both
+        Assert.assertEquals(2, deletionRecord.size());
+
+        // Try to restore them
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                REALM
+        );
+
+        final AccountRecord restoredAccount2 = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                "login.chinacloudapi.cn",
+                REALM2
+        );
+
+        // Make sure they don't exist....
+        Assert.assertNull(restoredAccount);
+        Assert.assertNull(restoredAccount2);
+    }
+
+    @Test
     public void removeAccountNoRTTest() throws ClientException {
         // Get the generated account
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
@@ -225,6 +328,35 @@ public class MsalCppOAuth2TokenCacheTest {
                 generatedAccount.getHomeAccountId(),
                 generatedAccount.getEnvironment(),
                 generatedAccount.getRealm()
+        );
+
+        Assert.assertEquals(1, deletionRecord.size());
+
+        // Try to restore it
+        final AccountRecord restoredAccount = mCppCache.getAccount(
+                generatedAccount.getHomeAccountId(),
+                generatedAccount.getEnvironment(),
+                generatedAccount.getRealm()
+        );
+
+        // Make sure it doesn't exist....
+        Assert.assertNull(restoredAccount);
+    }
+
+    @Test
+    public void forceRemoveAccountWithHomeAccountIdTest() throws ClientException {
+        // Get the generated account
+        final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
+
+        // Save it to the cache
+        mCppCache.saveAccountRecord(generatedAccount);
+
+        // Do not save any credentials for this account...
+
+        final AccountDeletionRecord deletionRecord = mCppCache.forceRemoveAccount(
+                generatedAccount.getHomeAccountId(),
+                "",
+                ""
         );
 
         Assert.assertEquals(1, deletionRecord.size());
