@@ -26,7 +26,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import lombok.NonNull;
@@ -42,14 +42,14 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
     private static final Gson mGson = new Gson();
 
     // Storage for request telemetry data
-    private final IKeyPairStorage<String> mStorage;
+    private final INameValueStorage<String> mStorage;
 
     /**
      * Constructor of LastRequestTelemetryCache.
      *
      * @param keyPairStorage IKeyPairStorage
      */
-    public LastRequestTelemetryCache(@NonNull final IKeyPairStorage<String> keyPairStorage) {
+    public LastRequestTelemetryCache(@NonNull final INameValueStorage<String> keyPairStorage) {
         Logger.verbose(TAG, "Init: " + TAG);
         mStorage = keyPairStorage;
     }

@@ -23,25 +23,25 @@
 package com.microsoft.identity.common.internal.util;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * Adapts {@link ISharedPreferencesFileManager} to {@link IKeyPairStorage}
+ * Adapts {@link ISharedPreferencesFileManager} to {@link INameValueStorage <Long>}
  * */
-@AllArgsConstructor
-public abstract class AbstractSharedPrefKeyPairStorage<T> implements IKeyPairStorage<T> {
-    protected ISharedPreferencesFileManager mManager;
-
-    @Override
-    public void remove(@NonNull String key) {
-        mManager.remove(key);
+public class SharedPrefLongNameValueStorage extends AbstractSharedPrefNameValueStorage<Long> {
+    public SharedPrefLongNameValueStorage(ISharedPreferencesFileManager mManager) {
+        super(mManager);
     }
 
     @Override
-    public void clear() {
-        mManager.clear();
+    public Long get(@NonNull String name) {
+        return mManager.getLong(name);
+    }
+
+    @Override
+    public void put(@NonNull String name, Long value) {
+        mManager.putLong(name, value);
     }
 }
