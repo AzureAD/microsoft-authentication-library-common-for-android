@@ -22,50 +22,19 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.platform;
 
-import lombok.NonNull;
-
 /**
- * An interface representing metadata of the device.
- * The implementation of its child varies from platform to platform.
+ * An abstract class to share some functionality between different implementations of
+ * {@link IDeviceMetadata} interface.
  */
-public interface IDeviceMetadata {
+public abstract class AbstractDeviceMetadata implements IDeviceMetadata {
 
-    /**
-     * Get the CPU name of this device.
-     *
-     * @return a String representing the CPU name
-     */
-    @NonNull
-    String getCpu();
+    private static final String SEPARATOR = ":";
 
-    /**
-     * Get the OS of this device. This would include the OS name and version.
-     *
-     * @return a String representing the OS information
-     */
-    @NonNull
-    String getOs();
-
-    /**
-     * Get the model name of this device.
-     *
-     * @return a String representing the device's model
-     */
-    @NonNull
-    String getDeviceModel();
-
-    /**
-     * Get the manufacturer of this device.
-     *
-     * @return a String representing this device's manufacturer
-     */
-    @NonNull
-    String getManufacturer();
-
-    /**
-     * Get all metadata about this device.
-     *
-     * @return a String containing all metadata about this device
-     */
-    String getAllMetadata();
+    @Override
+    public String getAllMetadata() {
+        return getDeviceModel() + SEPARATOR +
+                getManufacturer() + SEPARATOR +
+                getCpu() + SEPARATOR +
+                getOs();
+    }
 }
