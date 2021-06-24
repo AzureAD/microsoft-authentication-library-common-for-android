@@ -83,7 +83,7 @@ public class MockHttpClient {
     /**
      * Installs a mock http client instance to use in providing the request interceptors.
      * <p>
-     * Invoke the uninstall() method to remove all the set interceptors
+     * Invoke the uninstall() method to remove all the set interceptors.
      *
      * @return the mock http client object
      * @see MockHttpClient#uninstall()
