@@ -28,10 +28,8 @@ package com.microsoft.identity.common.java.interfaces;
 public interface ICommonComponents {
 
     /**
-     * Returns an {@link IHttpCache} implementation.
-     *
-     * @return The {@link IHttpCache}.
+     * Flushes the underlying http cache, if it exists.
      */
-    IHttpCache getHttpCache();
+    void flushHttpCache();
 
 }
