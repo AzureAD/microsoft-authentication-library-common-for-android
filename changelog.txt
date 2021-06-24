@@ -23,6 +23,7 @@ V.Next
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 - [PATCH] Avoid unnecessary BAM-cache reload (#1426)
 - [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
+- [MINOR] Add a method to IDeviceMetadata to get all metadata as a String (#1433)
 
 Version 3.4.3
 ----------
