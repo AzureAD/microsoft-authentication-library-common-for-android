@@ -14,7 +14,7 @@ plugins {
 
 def desugarCode = false
 
-if(project.hasProperty("sugar")){
+if (project.hasProperty("sugar")) {
     desugarCode = sugar.toBoolean()
 }
 
@@ -137,20 +137,19 @@ sourceSets {
 
 dependencies {
     compileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
-
+    compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "net.jcip:jcip-annotations:1.0"
-    implementation "com.google.code.gson:gson:2.8.5"
+    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation 'org.json:json:20180813'
-
-    compileOnly "org.projectlombok:lombok:1.18.12"
-    annotationProcessor "org.projectlombok:lombok:1.18.12"
+    implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
 
     testCompileOnly 'com.github.spotbugs:spotbugs-annotations:3.1.12'
-
-    testImplementation "junit:junit:4.13"
-    testImplementation "org.mockito:mockito-core:3.9.0"
-    testCompileOnly "org.projectlombok:lombok:1.18.12"
-    testAnnotationProcessor "org.projectlombok:lombok:1.18.12"
+    testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testImplementation "junit:junit:$rootProject.ext.junitVersion"
+    testImplementation "org.mockito:mockito-core:$rootProject.ext.mockitoCoreVersion"
 }
 
 sourceCompatibility = "1.7"

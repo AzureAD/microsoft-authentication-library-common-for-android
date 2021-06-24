@@ -22,19 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import android.util.Base64;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.util.Base64;
 
 import org.json.JSONException;
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.util.Map;
 
 /**
@@ -70,7 +68,7 @@ public class ClientInfo implements Serializable {
         }
 
         // decode the client info first
-        final String decodedClientInfo = new String(Base64.decode(rawClientInfo, Base64.URL_SAFE), Charset.forName(StringExtensions.ENCODING_UTF8));
+        final String decodedClientInfo = Base64.decode(rawClientInfo);
         final Map<String, String> clientInfoItems;
         try {
             clientInfoItems = JsonExtensions.extractJsonObjectIntoMap(decodedClientInfo);

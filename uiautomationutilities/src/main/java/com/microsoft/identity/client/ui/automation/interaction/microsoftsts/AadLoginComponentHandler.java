@@ -134,8 +134,8 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void confirmEnrollPageReceived() {
-        final UiObject enrollBtn = UiAutomatorUtils.obtainUiObjectWithText("Enroll now");
-        Assert.assertTrue("Enroll Page appears.", enrollBtn.exists());
+        final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access");
+        Assert.assertTrue("Enroll Page appears.", enrollmentHeader.exists());
     }
 
     @Override

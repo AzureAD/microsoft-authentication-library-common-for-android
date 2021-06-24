@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
+import com.microsoft.identity.common.java.util.ResultFuture;
+
 import java.util.concurrent.CountDownLatch;
 
 /**

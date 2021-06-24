@@ -22,12 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 
 import lombok.NonNull;
 
 public class StringUtil {
+    private static String TAG = StringUtil.class.getSimpleName();
+
     /**
      * The constant ENCODING_UTF8.
      */
@@ -56,5 +60,18 @@ public class StringUtil {
         }
 
         return URLDecoder.decode(source, ENCODING_UTF8);
+    }
+
+    /**
+     * Get a string from the given exception.
+     *
+     * @param exception an exception object to extract a stack trace string from.
+     * @return A stack trace string
+     */
+    public static String getStackTraceAsString(@NonNull final Exception exception) {
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
+        exception.printStackTrace(pw);
+        return pw.toString();
     }
 }

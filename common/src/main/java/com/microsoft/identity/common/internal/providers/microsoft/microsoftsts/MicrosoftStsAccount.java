@@ -61,7 +61,7 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
 
     @Override
     public String getAuthorityType() {
-        return AUTHORITY_TYPE_V1_V2;
+        return AUTHORITY_TYPE_MS_STS;
     }
 
     @Override
