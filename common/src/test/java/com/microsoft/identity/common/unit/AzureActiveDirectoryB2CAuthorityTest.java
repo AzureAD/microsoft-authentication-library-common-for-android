@@ -30,23 +30,25 @@ import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.robolectric.RobolectricTestRunner;
+import org.robolectric.ParameterizedRobolectricTestRunner;
 
-@RunWith(Parameterized.class)
+import java.util.Arrays;
+import java.util.List;
+
+@RunWith(ParameterizedRobolectricTestRunner.class)
 public class AzureActiveDirectoryB2CAuthorityTest {
 
     private static final String POLICY_NAME = "policyName";
     private static final String TENANT_NAME = "tenantName";
     private static final String TENANT_ID = "tenantID";
     private static final String AAD_B2C_HOSTNAME = "azureADB2CHostname";
-    private static final String[] B2C_AUTHORITY_URLS = new String[]{
+    private static final List<String> B2C_AUTHORITY_URLS = Arrays.asList(
             "https://" + AAD_B2C_HOSTNAME + "/tfp/" + TENANT_NAME + "/" + POLICY_NAME,
             "https://" + TENANT_NAME + ".b2clogin.com/tfp/" + TENANT_ID + "/" + POLICY_NAME
-    };
+    );
 
-    @Parameterized.Parameters(name = "{0}")
-    public static String[] data() {
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+    public static Iterable<String> data() {
         return B2C_AUTHORITY_URLS;
     }
 

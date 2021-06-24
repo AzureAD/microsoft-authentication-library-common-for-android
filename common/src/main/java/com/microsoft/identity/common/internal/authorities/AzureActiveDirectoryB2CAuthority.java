@@ -102,12 +102,8 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
      * @return a String with the Policy name
      */
     public String getB2CPolicyName(){
-        try {
-            final String authorityUriString = this.getAuthorityUri().toString();
-            final String[] authorityUriParts = authorityUriString.split("/");
-            return authorityUriParts[authorityUriParts.length - 1];
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Authority URL is not a URL.", e);
-        }
+        final String authorityUriString = this.getAuthorityUri().toString();
+        final String[] authorityUriParts = authorityUriString.split("/");
+        return authorityUriParts[authorityUriParts.length - 1];
     }
 }
