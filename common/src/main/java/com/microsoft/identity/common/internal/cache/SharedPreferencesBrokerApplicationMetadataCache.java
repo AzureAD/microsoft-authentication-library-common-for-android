@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Set;
 
 public class SharedPreferencesBrokerApplicationMetadataCache
-        extends SharedPreferencesSimpleCacheImpl<BrokerApplicationMetadata>
+        extends SharedPreferencesFileManagerSimpleCacheImpl<BrokerApplicationMetadata>
         implements IBrokerApplicationMetadataCache {
 
     private static final String TAG = SharedPreferencesBrokerApplicationMetadataCache.class.getSimpleName();
@@ -196,7 +196,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
     }
 
     @Override
-    protected Type getListTypeToken() {
+    public Type getListTypeToken() {
         return new TypeToken<List<BrokerApplicationMetadata>>() {
         }.getType();
     }

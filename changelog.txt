@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
 - [MINOR] Migrate Requests/Responses (#1424)
 - [MAJOR] Add SSL context support to UrlConnectionHttpClient(#1396)
 - [MAJOR] Migrate AuthRequests to common4j (#1394)
@@ -20,6 +21,8 @@ V.Next
 - [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
 - [PATCH] Adding codemarkers for usage in the Test cases of brokered and non-brokered Acquire Token silently scenarios. (#1185)
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
+- [PATCH] Avoid unnecessary BAM-cache reload (#1426)
+- [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
 
 Version 3.4.3
 ----------
