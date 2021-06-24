@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
 public class AzureActiveDirectoryTokenRequest extends TokenRequest {
 

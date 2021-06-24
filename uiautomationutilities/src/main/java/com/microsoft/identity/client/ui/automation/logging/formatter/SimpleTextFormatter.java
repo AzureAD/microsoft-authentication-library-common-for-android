@@ -20,10 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.oauth2;
+package com.microsoft.identity.client.ui.automation.logging.formatter;
 
-public interface IErrorResponse {
+import com.microsoft.identity.client.ui.automation.logging.LogLevel;
 
-    String getError();
-    String getErrorDescription();
+/**
+ * A log formatter that returns a log message as it is without adding any additional logging parameters.
+ */
+public class SimpleTextFormatter implements ILogFormatter {
+
+    @Override
+    public String format(LogLevel logLevel, String tag, String message, Throwable throwable) {
+        return message;
+    }
+
 }

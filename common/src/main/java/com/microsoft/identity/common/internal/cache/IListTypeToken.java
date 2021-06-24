@@ -20,28 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.migration;
+package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
-
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Type;
 
 /**
- * Describes an object which adapts a Map of credentials (keys/values) to a List of Account/RT Pairs.
- *
- * @param <T> The account type.
- * @param <U> The refresh token type.
+ * Interface returning {@link Type} tokens for serialization hints to Gson.
  */
-public interface IMigrationAdapter<T extends BaseAccount, U extends RefreshToken> {
+public interface IListTypeToken {
 
     /**
-     * Adapts a Map of credentials (keys/values) to a List of Account/RT Pairs.
+     * Gets the Type token associated with a List.
      *
-     * @param cacheItems The cache items to adapt.
-     * @return The adapter cache items in the format specified by T/U generic types. Paired as
-     * Account/RefreshToken.
+     * @return The {@link Type}.
      */
-    List<Map.Entry<T, U>> adapt(Map<String, String> cacheItems);
+    Type getListTypeToken();
+
 }

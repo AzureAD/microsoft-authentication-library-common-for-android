@@ -20,13 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
-package com.microsoft.identity.common.java.util.ported;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 
-import lombok.AllArgsConstructor;
-
-@AllArgsConstructor
-public class Pair<T, U> {
-    public final T first;
-    public final U second;
+public class MicrosoftStsTokenRequest extends MicrosoftTokenRequest {
+    public MicrosoftStsTokenRequest() {
+        super();
+    }
 }

@@ -20,36 +20,35 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
-
-import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+package com.microsoft.identity.common.java.providers.oauth2;
 
 /**
- * {@link TokenResponse} subclass for the Microsoft STS (V2).
+ * Enum for representing different authorization status values.
  */
-public class MicrosoftStsTokenResponse extends MicrosoftTokenResponse {
-
-    @SerializedName("not_before")
-    private String mExpiresNotBefore;
+public enum AuthorizationStatus {
+    /**
+     * Code is successfully returned.
+     */
+    SUCCESS,
 
     /**
-     * Gets expires not before as String ( epoch time in seconds)
-     * @return
+     * User press device back button.
      */
-    public String getExpiresNotBefore() {
-        return mExpiresNotBefore;
-    }
+    USER_CANCEL,
 
     /**
-     * Sets expires not before as String ( epoch time in seconds)
-     * @param expiresNotBefore
+     * Sdk cancelled Auth floe
      */
-    public void setExpiresNotBefore(final String expiresNotBefore) {
-        mExpiresNotBefore = expiresNotBefore;
-    }
+    SDK_CANCEL,
 
+    /**
+     * Returned URI contains error.
+     */
+    FAIL,
 
-
+    /**
+     * AuthenticationActivity detects the invalid request.
+     */
+    INVALID_REQUEST
+    //TODO:  Investigate how chrome tab returns http timeout error
 }

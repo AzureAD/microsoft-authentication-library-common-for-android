@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 
 public class MicrosoftStsAccessToken extends AccessToken {
 

@@ -20,13 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.unit;
+package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 
-import junit.framework.Assert;
-
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -34,12 +32,10 @@ import org.junit.runners.JUnit4;
 import java.util.UUID;
 
 @RunWith(JUnit4.class)
-public final class TokenRequestTest {
-
+public final class MicrosoftStsTokenRequestTests {
 
     @Test
     public void testCorrelationIdSerializedCorrectly(){
-
         UUID correlationId = UUID.randomUUID();
         MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setCorrelationId(correlationId);
@@ -49,8 +45,5 @@ public final class TokenRequestTest {
         MicrosoftStsTokenRequest deserializedRequest = ObjectMapper.deserializeJsonStringToObject(jsonRequest, MicrosoftStsTokenRequest.class);
 
         Assert.assertEquals(correlationId, deserializedRequest.getCorrelationId());
-
     }
-
-
 }

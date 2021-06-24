@@ -20,28 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.migration;
+package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+public interface IErrorResponse {
 
-import java.util.List;
-import java.util.Map;
-
-/**
- * Describes an object which adapts a Map of credentials (keys/values) to a List of Account/RT Pairs.
- *
- * @param <T> The account type.
- * @param <U> The refresh token type.
- */
-public interface IMigrationAdapter<T extends BaseAccount, U extends RefreshToken> {
-
-    /**
-     * Adapts a Map of credentials (keys/values) to a List of Account/RT Pairs.
-     *
-     * @param cacheItems The cache items to adapt.
-     * @return The adapter cache items in the format specified by T/U generic types. Paired as
-     * Account/RefreshToken.
-     */
-    List<Map.Entry<T, U>> adapt(Map<String, String> cacheItems);
+    String getError();
+    String getErrorDescription();
 }

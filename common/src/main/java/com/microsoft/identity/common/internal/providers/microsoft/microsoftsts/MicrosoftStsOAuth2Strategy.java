@@ -23,7 +23,15 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
-import android.util.Pair;
+
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,35 +45,30 @@ import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.net.HttpClient;
-import com.microsoft.identity.common.java.net.HttpConstants;
-import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.internal.platform.IDevicePopManager;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpConstants;
+import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -82,7 +85,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
-import static com.microsoft.identity.common.internal.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
+import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -299,21 +302,21 @@ public class MicrosoftStsOAuth2Strategy
         if (null != account) {
             final String homeAccountId = account.getHomeAccountId();
 
-            final Pair<String, String> uidUtidPair = StringUtil.getTenantInfo(homeAccountId);
+            final Map.Entry<String, String> uidUtidKeyValuePair = StringUtil.getTenantInfo(homeAccountId);
 
-            if (!StringExtensions.isNullOrBlank(uidUtidPair.first)
-                    && !StringExtensions.isNullOrBlank(uidUtidPair.second)) {
-                builder.setUid(uidUtidPair.first);
-                builder.setUtid(uidUtidPair.second);
+            if (!StringExtensions.isNullOrBlank(uidUtidKeyValuePair.getKey())
+                    && !StringExtensions.isNullOrBlank(uidUtidKeyValuePair.getValue())) {
+                builder.setUid(uidUtidKeyValuePair.getKey());
+                builder.setUtid(uidUtidKeyValuePair.getValue());
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ uid: [" + uidUtidPair.first + "]"
+                        "Builder w/ uid: [" + uidUtidKeyValuePair.getKey() + "]"
                 );
 
                 Logger.infoPII(
                         TAG + methodName,
-                        "Builder w/ utid: [" + uidUtidPair.second + "]"
+                        "Builder w/ utid: [" + uidUtidKeyValuePair.getValue() + "]"
                 );
             }
         }

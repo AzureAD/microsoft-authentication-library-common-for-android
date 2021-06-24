@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import android.util.Pair;
-
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
@@ -34,6 +32,7 @@ import com.microsoft.identity.common.logging.Logger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import lombok.EqualsAndHashCode;
@@ -64,7 +63,7 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private final boolean forceRefresh;
 
-    private final List<Pair<String, String>> extraOptions;
+    private final List<Map.Entry<String, String>> extraOptions;
 
     public Set<String> getScopes() {
         return this.scopes == null ? null : new HashSet<>(this.scopes);

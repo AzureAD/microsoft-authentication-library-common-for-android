@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.mocks;
 
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.internal.testutils.TestConstants;
 
 public class MockTokenResponse {
