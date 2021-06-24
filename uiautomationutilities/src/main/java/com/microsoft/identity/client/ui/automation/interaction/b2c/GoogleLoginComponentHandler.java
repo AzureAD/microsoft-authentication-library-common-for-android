@@ -91,13 +91,13 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
     }
 
     public void handleRecoveryEmail() {
-        if(this.RECOVERY_EMAIL_PROMPT_EXPECTED) {
+        if(RECOVERY_EMAIL_PROMPT_EXPECTED) {
             Logger.i(TAG, "Handle Google Recovery Email UI..");
-            final UiObject confirmationEmailButton = UiAutomatorUtils.obtainUiObjectWithText(this.RECOVERY_EMAIL_BUTTON_TEXT);
+            final UiObject confirmationEmailButton = UiAutomatorUtils.obtainUiObjectWithText(RECOVERY_EMAIL_BUTTON_TEXT);
             if (confirmationEmailButton.exists()) {
                 try {
                     confirmationEmailButton.click();
-                    UiAutomatorUtils.handleInput(this.RECOVERY_EMAIL_INPUT_RESOURCE_ID, this.RECOVERY_EMAIL);
+                    UiAutomatorUtils.handleInput(RECOVERY_EMAIL_INPUT_RESOURCE_ID, RECOVERY_EMAIL);
                     handleNextButton();
                 } catch (final UiObjectNotFoundException e) {
                     throw new AssertionError(e);
