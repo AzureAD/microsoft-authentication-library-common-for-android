@@ -20,35 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.eststelemetry;
+package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
-public class SentFailedRequestsMap implements INameValueStorage<Set<FailedRequest>> {
-    private final ConcurrentHashMap<String, Set<FailedRequest>> sentFailedRequestsMap = new ConcurrentHashMap<>();
+/**
+ * An interface for a NameValue storage.
+ * */
+public interface INameValueStorage<T> {
+    /**
+     * Gets a value from the storage.
+     *
+     * @param name A name associated to the value.
+     */
+    T get(@NonNull String name);
 
-    @Override
-    public Set<FailedRequest> get(@NonNull String name) {
-        return sentFailedRequestsMap.get(name);
-    }
+    /**
+     * Puts a value into the storage.
+     *
+     * @param name A name associated to the value.
+     * @param value value to be persisted.
+     */
+    void put(@NonNull String name, @Nullable T value);
 
-    @Override
-    public void put(@NonNull String name, Set<FailedRequest> value) {
-        sentFailedRequestsMap.put(name, value);
-    }
+    /**
+     * Removes a value from the storage.
+     *
+     * @param name A name associated to the value.
+     */
+    void remove(@NonNull String name);
 
-    @Override
-    public void remove(@NonNull String name) {
-        sentFailedRequestsMap.remove(name);
-    }
-
-    @Override
-    public void clear() {
-        sentFailedRequestsMap.clear();
-    }
+    /**
+     * Clear all data from the storage.
+     */
+    void clear();
 }
