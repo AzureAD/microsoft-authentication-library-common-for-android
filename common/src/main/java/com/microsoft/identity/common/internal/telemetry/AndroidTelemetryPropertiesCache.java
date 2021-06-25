@@ -25,8 +25,6 @@ package com.microsoft.identity.common.internal.telemetry;
 import android.content.Context;
 
 import com.microsoft.identity.common.SharedPreferenceStringStorage;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 import com.microsoft.identity.common.java.telemetry.TelemetryPropertiesCache;
 
 import lombok.NonNull;

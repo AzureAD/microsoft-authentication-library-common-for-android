@@ -26,30 +26,30 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * An interface for a KeyPair storage.
+ * An interface for a NameValue storage.
  * */
-public interface IKeyPairStorage<T> {
+public interface INameValueStorage<T> {
     /**
      * Gets a value from the storage.
      *
-     * @param key A key associated to the value.
+     * @param name A name associated to the value.
      */
-    T get(@NonNull String key);
+    T get(@NonNull String name);
 
     /**
      * Puts a value into the storage.
      *
-     * @param key A key associated to the value.
+     * @param name A name associated to the value.
      * @param value value to be persisted.
      */
-    void put(@NonNull String key, @Nullable T value);
+    void put(@NonNull String name, @Nullable T value);
 
     /**
      * Removes a value from the storage.
      *
-     * @param key A key associated to the value.
+     * @param name A name associated to the value.
      */
-    void remove(@NonNull String key);
+    void remove(@NonNull String name);
 
     /**
      * Clear all data from the storage.
