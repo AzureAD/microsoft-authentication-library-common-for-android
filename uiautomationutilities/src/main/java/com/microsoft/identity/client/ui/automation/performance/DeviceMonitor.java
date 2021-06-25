@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.performance;
 
+import android.os.Build;
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
@@ -49,6 +51,34 @@ public class DeviceMonitor {
     }
 
     /**
+     * Get the device name string
+     *
+     * @return
+     */
+    public static String getDeviceName() {
+        String manufacturer = Build.MANUFACTURER;
+        String model = Build.MODEL;
+        if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
+            return capitalize(model);
+        } else {
+            return capitalize(manufacturer) + " " + model;
+        }
+    }
+
+
+    private static String capitalize(String s) {
+        if (s == null || s.length() == 0) {
+            return "";
+        }
+        char first = s.charAt(0);
+        if (Character.isUpperCase(first)) {
+            return s;
+        } else {
+            return Character.toUpperCase(first) + s.substring(1);
+        }
+    }
+
+    /**
      * Gets the current application's uid
      *
      * @return the application uid
@@ -66,12 +96,21 @@ public class DeviceMonitor {
     }
 
     /**
+     * Get the total System memory
+     *
+     * @return
+     */
+    public static Long getTotalMemory() {
+        return processInfo.getTotalSystemMemory();
+    }
+
+    /**
      * Get the current CPU usage
      *
      * @return the current cpu usage as a percentage e.g. 3.3%
      */
-    public static String getCpuUsage() {
-        return getStats(PerformanceProfile.CPU, String.class);
+    public static Double getCpuUsage() {
+        return getStats(PerformanceProfile.CPU, Double.class);
     }
 
     /**
@@ -163,10 +202,7 @@ public class DeviceMonitor {
         final long memFree = Long.parseLong(commandResult[1].trim().split("\\s+")[1]);
         final long memAvailable = Long.parseLong(commandResult[2].trim().split("\\s+")[1]);
 
-        command = "nproc";
-        commandResult = AdbShellUtils.executeShellCommand(command).trim().split("\n");
-
-        final int numCpuCores = Integer.parseInt(commandResult[0]);
+        final int numCpuCores = Runtime.getRuntime().availableProcessors();
 
         processInfo = ProcessInfo.builder()
                 .cpuUsage(Double.parseDouble(cpuUsage) / numCpuCores)
@@ -179,4 +215,5 @@ public class DeviceMonitor {
                 .pid(pid)
                 .uid(getApplicationUid()).build();
     }
+
 }

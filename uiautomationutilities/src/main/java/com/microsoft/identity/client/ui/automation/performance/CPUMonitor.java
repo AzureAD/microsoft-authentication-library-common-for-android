@@ -25,9 +25,9 @@ package com.microsoft.identity.client.ui.automation.performance;
 /**
  * Collects data regarding the cpu usage for the current process
  */
-public class CPUMonitor implements PerformanceProfileMonitor<String> {
+public class CPUMonitor implements PerformanceProfileMonitor<Double> {
     @Override
-    public String getStats(ProcessInfo processInfo) {
-        return processInfo.getCpuUsage() + "%";
+    public Double getStats(ProcessInfo processInfo) {
+        return processInfo.getCpuUsage();
     }
 }
