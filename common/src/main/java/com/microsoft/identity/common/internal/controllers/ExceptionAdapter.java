@@ -31,6 +31,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
@@ -244,6 +245,16 @@ public class ExceptionAdapter {
         Throwable e = exception;
         if (exception instanceof ExecutionException){
             e = exception.getCause();
+        }
+
+        if (e instanceof TerminalException) {
+            String errorCode = ((TerminalException) e).getErrorCode();
+            e = e.getCause();
+            return new ClientException(
+                    errorCode,
+                    "An unhandled exception occurred with message: " + e.getMessage(),
+                    e
+            );
         }
 
         if (e instanceof IOException) {

@@ -26,8 +26,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.internal.providers.oauth2.IErrorResponse;
 
-public class BaseException extends Exception {
+public class BaseException extends Exception implements IErrorInformation {
 
     public static final String sName =  BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;

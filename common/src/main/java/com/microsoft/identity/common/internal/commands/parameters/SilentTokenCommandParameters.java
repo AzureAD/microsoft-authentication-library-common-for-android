@@ -23,6 +23,9 @@
 package com.microsoft.identity.common.internal.commands.parameters;
 
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2CAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
@@ -51,12 +54,21 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             Logger.warn(TAG, "The account set on silent operation parameters is NULL.");
             // if the authority is B2C, then we do not need check if matches with the account enviroment
             // as B2C only exists in one cloud and can use custom domains
-        } else if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
-            throw new ArgumentException(
-                    ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    ArgumentException.AUTHORITY_ARGUMENT_NAME,
-                    "Authority passed to silent parameters does not match with the cloud associated to the account."
-            );
+        } else {
+            try {
+                if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
+                    throw new ArgumentException(
+                            ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                            ArgumentException.AUTHORITY_ARGUMENT_NAME,
+                            "Authority passed to silent parameters does not match with the cloud associated to the account."
+                    );
+                }
+            } catch (final IOException e) {
+                throw new TerminalException(
+                        "Unable to perform cloud discovery in order to validate request authority",
+                        e,
+                        ClientException.IO_ERROR);
+            }
         }
     }
 
@@ -64,7 +76,7 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
         return getAuthority() instanceof AzureActiveDirectoryB2CAuthority;
     }
 
-    private boolean authorityMatchesAccountEnvironment() {
+    private boolean authorityMatchesAccountEnvironment() throws IOException {
         final String methodName = ":authorityMatchesAccountEnvironment";
         try {
             if (!AzureActiveDirectory.isInitialized()) {
