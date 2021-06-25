@@ -20,41 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.labapi.utilities.client;
-
-import com.microsoft.identity.labapi.utilities.constants.UserType;
+package com.microsoft.identity.common.java.interfaces;
 
 /**
- * An interface describing the properties that should be available on an Account provided by the
- * Lab Api.
+ * Common components, shared between Android, Linux.
  */
-public interface ILabAccount {
+public interface ICommonComponents {
 
     /**
-     * Get the username (UPN) of this account.
-     *
-     * @return a String representing the account's username
+     * Flushes the underlying http cache, if it exists.
      */
-    String getUsername();
+    void flushHttpCache();
 
-    /**
-     * Get the password used for signing in with this account.
-     *
-     * @return a String representing the account's password
-     */
-    String getPassword();
-
-    /**
-     * Get the {@link UserType} of this account.
-     *
-     * @return the {@link UserType} representing account's user type
-     */
-    UserType getUserType();
-
-    /**
-     * Get the home tenant id of this account.
-     *
-     * @return a String representing the account's home tenant id
-     */
-    String getHomeTenantId();
 }
