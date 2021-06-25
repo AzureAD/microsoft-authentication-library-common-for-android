@@ -22,37 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
-
 /**
- * An interface for a KeyPair storage.
- * */
-public interface IKeyPairStorage<T> {
-    /**
-     * Gets a value from the storage.
-     *
-     * @param key A key associated to the value.
-     */
-    T get(@NonNull String key);
+ * Common components, shared between Android, Linux.
+ */
+public interface ICommonComponents {
 
     /**
-     * Puts a value into the storage.
-     *
-     * @param key A key associated to the value.
-     * @param value value to be persisted.
+     * Flushes the underlying http cache, if it exists.
      */
-    void put(@NonNull String key, @Nullable T value);
+    void flushHttpCache();
 
-    /**
-     * Removes a value from the storage.
-     *
-     * @param key A key associated to the value.
-     */
-    void remove(@NonNull String key);
-
-    /**
-     * Clear all data from the storage.
-     */
-    void clear();
 }

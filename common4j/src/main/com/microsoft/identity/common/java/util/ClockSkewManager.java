@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -35,9 +35,9 @@ public class ClockSkewManager implements IClockSkewManager {
         private static final String KEY_SKEW = "skew";
     }
 
-    private final IKeyPairStorage<Long> mClockSkewStorage;
+    private final INameValueStorage<Long> mClockSkewStorage;
 
-    public ClockSkewManager(@NonNull final IKeyPairStorage<Long> storage) {
+    public ClockSkewManager(@NonNull final INameValueStorage<Long> storage) {
         mClockSkewStorage = storage;
     }
 

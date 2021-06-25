@@ -23,6 +23,7 @@ V.Next
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 - [PATCH] Avoid unnecessary BAM-cache reload (#1426)
 - [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
+- [MINOR] Creates ICommonComponents for sharing interfaces across Android, Linux (including non-brokered components) (#1431)
 - [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
 
 Version 3.4.3
