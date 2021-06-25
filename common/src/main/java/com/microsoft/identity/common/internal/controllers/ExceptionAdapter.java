@@ -248,7 +248,7 @@ public class ExceptionAdapter {
         }
 
         if (e instanceof TerminalException) {
-            String errorCode = ((TerminalException) e).getErrorCode();
+            final String errorCode = ((TerminalException) e).getErrorCode();
             e = e.getCause();
             return new ClientException(
                     errorCode,
