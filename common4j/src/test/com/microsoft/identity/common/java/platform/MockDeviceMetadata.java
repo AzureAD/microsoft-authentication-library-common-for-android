@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.platform;
 
-public class MockDeviceMetadata implements IDeviceMetadata {
+public class MockDeviceMetadata extends AbstractDeviceMetadata {
 
     public static final String TEST_CPU = "TestCPU";
     public static final String TEST_OS = "TestOS";
