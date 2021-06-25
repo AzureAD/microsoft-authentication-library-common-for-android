@@ -24,6 +24,13 @@ package com.microsoft.identity.common.internal.cache;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * A representation of a broker-enabled app; adding a property for FoCI id to supplement properties
+ * defined on {@link AbstractApplicationMetadata}.
+ * <p>
+ * Please note that two applications are "the same" if their client_id, environment, and app UID
+ * (user) are the same. An app may not simultaneously be both FoCI & non-FoCI.
+ */
 public class BrokerApplicationMetadata extends AbstractApplicationMetadata {
 
     private static final class SerializedNames extends AbstractApplicationMetadata.SerializedNames {
@@ -41,6 +48,13 @@ public class BrokerApplicationMetadata extends AbstractApplicationMetadata {
         this.mFoci = mFoci;
     }
 
+    /**
+     * Tests if two instances of {@link BrokerApplicationMetadata} are equivalent. Please note that
+     * family id (FoCI status) is not considered when determine "app equality".
+     *
+     * @param o The object to compare for equality.
+     * @return True if the apps are equal.
+     */
     @Override
     public boolean equals(Object o) {
         // This class intentionally no longer includes foci state to determine equality.
@@ -48,6 +62,12 @@ public class BrokerApplicationMetadata extends AbstractApplicationMetadata {
         return super.equals(o);
     }
 
+    /**
+     * Returns a hash code value for the object. Please note that family id (FoCI status) is not a
+     * valued hashed by this function.
+     *
+     * @return A hash code value for this object.
+     */
     @Override
     public int hashCode() {
         // This class intentionally no longer includes foci state to determine equality.
