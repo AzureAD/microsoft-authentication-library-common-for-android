@@ -28,6 +28,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
@@ -60,6 +61,17 @@ public class ThreadUtils {
         }
     }
 
+    public static ExecutorService getNamedFixedPoolExecutor(final int poolSize, final String poolName) {
+        return Executors.newFixedThreadPool(poolSize, getNamedThreadFactory(poolName, System.getSecurityManager()));
+    }
+
+    public static ExecutorService getNamedCachedPoolExecutor(final String poolName) {
+        return Executors.newCachedThreadPool(getNamedThreadFactory(poolName, System.getSecurityManager()));
+    }
+
+    public static ExecutorService getNamedSingleThreadExecutor(final String poolName) {
+        return Executors.newSingleThreadExecutor(getNamedThreadFactory(poolName, System.getSecurityManager()));
+    }
     /**
      * Construct a thread pool with specified name and optionally bounded size.
      *

@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 public class ThreadUtilsTests {
     @Test
     public void basicPoolTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(10, "testPool");
         final Future<String> result = s.submit(new Callable<String>() {
             @Override
             public String call() {
@@ -48,7 +48,22 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityOneTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(1, "testPool");
+        final Future<?> result = s.submit(hangThread());
+        final Future<?> result2 = s.submit(hangThread());
+        s.submit(new Runnable() {
+            @Override
+            public void run() {
+             }
+        });
+        Assert.assertTrue("Execution should have been rejected", caught);
+        result.cancel(true);
+        result2.cancel(true);
+        s.shutdownNow();
+    }
+    @Test
+    public void capacitySingleTest() throws Exception {
+        final ExecutorService s = ThreadUtils.getNamedSingleThreadExecutor("testPool");
         final Future<?> result = s.submit(hangThread());
         final Future<?> result2 = s.submit(hangThread());
         boolean caught = false;

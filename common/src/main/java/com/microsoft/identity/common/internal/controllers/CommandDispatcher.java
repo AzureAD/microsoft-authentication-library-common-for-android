@@ -94,11 +94,8 @@ public class CommandDispatcher {
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
     //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
-    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, INTERACTIVE_REQUEST_THREAD_POOL_SIZE, -1, 0, TimeUnit.MINUTES, "interactive"
-    );
-    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 1, TimeUnit.MINUTES, "silent"
+    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedFixedPoolExecutor(10, "interactive");
+    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedSingleThreadExecutor("silent");
     );
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
