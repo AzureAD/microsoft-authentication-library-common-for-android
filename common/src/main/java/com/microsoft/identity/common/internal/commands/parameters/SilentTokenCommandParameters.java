@@ -55,19 +55,12 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             // if the authority is B2C, then we do not need check if matches with the account enviroment
             // as B2C only exists in one cloud and can use custom domains
         } else {
-            try {
-                if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
-                    throw new ArgumentException(
-                            ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                            ArgumentException.AUTHORITY_ARGUMENT_NAME,
-                            "Authority passed to silent parameters does not match with the cloud associated to the account."
-                    );
-                }
-            } catch (final IOException e) {
-                throw new TerminalException(
-                        "Unable to perform cloud discovery in order to validate request authority",
-                        e,
-                        ClientException.IO_ERROR);
+            if (!isAuthorityB2C() && !authorityMatchesAccountEnvironment()) {
+                throw new ArgumentException(
+                        ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
+                        ArgumentException.AUTHORITY_ARGUMENT_NAME,
+                        "Authority passed to silent parameters does not match with the cloud associated to the account."
+                );
             }
         }
     }
@@ -76,7 +69,12 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
         return getAuthority() instanceof AzureActiveDirectoryB2CAuthority;
     }
 
-    private boolean authorityMatchesAccountEnvironment() throws IOException {
+    /**
+     * Note - this method may throw a variety of RuntimeException if we cannot perform cloud
+     * discovery to determine the set of cloud aliases.
+     * @return true if the authority matches the cloud environment that the account is homed in.
+     */
+    private boolean authorityMatchesAccountEnvironment() {
         final String methodName = ":authorityMatchesAccountEnvironment";
         try {
             if (!AzureActiveDirectory.isInitialized()) {
@@ -84,12 +82,15 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             }
             final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
             return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Logger.error(
                     TAG + methodName,
                     "Unable to perform cloud discovery",
                     e);
-            return false;
+            throw new TerminalException(
+                    "Unable to perform cloud discovery in order to validate request authority",
+                    e,
+                    ClientException.IO_ERROR);
         }
     }
 
