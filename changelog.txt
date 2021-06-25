@@ -5,6 +5,7 @@ Version 3.4.4
 - [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
+- [PATCH] Avoid unnecessary BAM-cache reload (#1439, cherry-picked from #1426)
 
 Version 3.4.3
 ----------
