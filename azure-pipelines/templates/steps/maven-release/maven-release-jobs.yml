@@ -49,9 +49,6 @@ jobs:
     clean: true
     submodules: ${{ parameters.checkoutSubmodules }}
     persistCredentials: True
-  - template: ../credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: ${{ parameters.project }}
 - job: sdl_maven
   displayName: SDL and Maven Tasks
   cancelTimeoutInMinutes: 1

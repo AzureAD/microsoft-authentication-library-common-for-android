@@ -26,9 +26,6 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: app
   - task: PowerShell@2
     displayName: Generate Assemble Task Name for building Azure Sample App
     inputs:
@@ -72,6 +69,4 @@ jobs:
     inputs:
       PathtoPublish: $(Build.SourcesDirectory)/MsalVersion.txt
       ArtifactName: MsalVersion
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...

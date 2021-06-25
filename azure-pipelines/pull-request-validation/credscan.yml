@@ -1,0 +1,25 @@
+# File: azure-pipelines\pull-request-validation\credscan.yml
+# Description: Run Credscan and PoliCheck
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  branches:
+    include:
+    - dev
+    - master
+    - release/*
+  batch: True
+
+jobs:
+- job: Phase_1
+  displayName: Phase 1
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: azure-pipelines/templates/steps/credscan-policheck.yml
+...
