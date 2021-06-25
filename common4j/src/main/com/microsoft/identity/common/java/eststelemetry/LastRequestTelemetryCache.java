@@ -47,7 +47,7 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
     /**
      * Constructor of LastRequestTelemetryCache.
      *
-     * @param keyPairStorage IKeyPairStorage
+     * @param keyPairStorage INameValueStorage
      */
     public LastRequestTelemetryCache(@NonNull final INameValueStorage<String> keyPairStorage) {
         Logger.verbose(TAG, "Init: " + TAG);
