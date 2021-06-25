@@ -26,7 +26,7 @@ import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.IBaseException;
 import com.microsoft.identity.common.java.exception.IServiceException;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
@@ -50,16 +50,16 @@ public class EstsTelemetry {
 
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private LastRequestTelemetryCache mLastRequestTelemetryCache;
-    private final IKeyPairStorage<CurrentRequestTelemetry> mTelemetryMap;
-    private final IKeyPairStorage<Set<FailedRequest>> mSentFailedRequests;
+    private final INameValueStorage<CurrentRequestTelemetry> mTelemetryMap;
+    private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     EstsTelemetry() {
         this(new TelemetryMap(), new SentFailedRequestsMap());
     }
 
     // Exposed for testing only.
-    EstsTelemetry(@NonNull final IKeyPairStorage<CurrentRequestTelemetry> telemetryMap,
-                  @NonNull final IKeyPairStorage<Set<FailedRequest>> sentFailedRequestsMap) {
+    EstsTelemetry(@NonNull final INameValueStorage<CurrentRequestTelemetry> telemetryMap,
+                  @NonNull final INameValueStorage<Set<FailedRequest>> sentFailedRequestsMap) {
         mTelemetryMap = telemetryMap;
         mSentFailedRequests = sentFailedRequestsMap;
     }

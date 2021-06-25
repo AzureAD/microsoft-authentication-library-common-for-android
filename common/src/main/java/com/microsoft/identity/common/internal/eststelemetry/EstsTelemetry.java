@@ -29,13 +29,10 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.SharedPreferenceStringStorage;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
 import com.microsoft.identity.common.java.eststelemetry.LastRequestTelemetryCache;
 import com.microsoft.identity.common.java.eststelemetry.RequestTelemetry;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Map;
