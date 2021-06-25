@@ -87,6 +87,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
@@ -156,7 +157,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * A background worker to service async tasks.
      */
-    private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
+    private static final ExecutorService sThreadExecutor = Executors.newFixedThreadPool(5);
 
     /**
      * Properties used by the self-signed certificate.
