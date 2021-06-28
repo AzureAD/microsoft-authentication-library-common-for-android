@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
 import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;

@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.migration;
 
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.logging.Logger;

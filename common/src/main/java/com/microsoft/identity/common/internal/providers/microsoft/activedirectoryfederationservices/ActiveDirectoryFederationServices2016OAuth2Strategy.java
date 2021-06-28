@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.java.net.HttpResponse;

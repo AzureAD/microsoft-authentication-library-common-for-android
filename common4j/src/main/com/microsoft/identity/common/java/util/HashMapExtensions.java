@@ -20,28 +20,36 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.util;
 
-package com.microsoft.identity.common.exception;
+import com.microsoft.identity.common.java.net.HttpResponse;
 
-import androidx.annotation.NonNull;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-/**
- *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
- */
-final public class DeviceRegistrationRequiredException extends BaseException {
+import java.util.HashMap;
+import java.util.Iterator;
 
-    public static final String sName =  DeviceRegistrationRequiredException.class.getName();
-    private static final long serialVersionUID = 5804977362169696152L;
+public class HashMapExtensions {
 
-    public DeviceRegistrationRequiredException(@NonNull final String errorCode,
-                                               @NonNull final String errorDescription,
-                                               @NonNull final String userName) {
-        super(errorCode, errorDescription);
-        super.setUsername(userName);
+    /**
+     * get key value pairs from response.
+     *
+     * @param webResponse {@link HttpResponse} to convert to a map
+     * @return HashMap
+     * @throws JSONException
+     */
+    public static HashMap<String, String> getJsonResponse(HttpResponse webResponse) throws JSONException {
+        final HashMap<String, String> response = new HashMap<>();
+        if (webResponse != null && !StringUtil.isNullOrEmpty(webResponse.getBody())) {
+            JSONObject jsonObject = new JSONObject(webResponse.getBody());
+            Iterator<?> i = jsonObject.keys();
+            while (i.hasNext()) {
+                String key = (String) i.next();
+                response.put(key, jsonObject.getString(key));
+            }
+        }
+        return response;
     }
 
-    @Override
-    public String getExceptionName(){
-        return sName;
-    }
 }
