@@ -33,7 +33,7 @@ import java.util.Iterator;
 public class HashMapExtensions {
 
     /**
-     * get key value pairs from response.
+     * Get key value pairs from response.
      *
      * @param webResponse {@link HttpResponse} to convert to a map
      * @return HashMap
