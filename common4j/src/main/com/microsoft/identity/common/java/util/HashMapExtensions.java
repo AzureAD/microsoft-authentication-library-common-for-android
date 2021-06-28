@@ -43,7 +43,7 @@ public class HashMapExtensions {
         final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !StringUtil.isNullOrEmpty(webResponse.getBody())) {
             JSONObject jsonObject = new JSONObject(webResponse.getBody());
-            Iterator<?> i = jsonObject.keys();
+            final Iterator<?> i = jsonObject.keys();
             while (i.hasNext()) {
                 String key = (String) i.next();
                 response.put(key, jsonObject.getString(key));
