@@ -1607,7 +1607,6 @@ public class BrokerOAuth2TokenCache
                         context,
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
-                        Context.MODE_PRIVATE,
                         storageHelper
                 );
 
@@ -1625,7 +1624,6 @@ public class BrokerOAuth2TokenCache
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        Context.MODE_PRIVATE,
                         storageHelper
                 );
 
