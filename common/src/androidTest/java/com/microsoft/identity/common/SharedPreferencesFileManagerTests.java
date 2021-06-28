@@ -25,6 +25,7 @@ package com.microsoft.identity.common;
 import androidx.test.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
@@ -94,6 +95,19 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
 
     @Test
     public void testGetString() {
+        mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
+        assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+    }
+
+    @Test
+    public void testGetStringWithKeyChange() {
+        mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
+        assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+        AuthenticationSettings.INSTANCE.setSecretKey(null);
+        // If we change the secret key out from underneath the file manager, it shouldn't read
+        // something that's the same as what it wrote.
+        assertFalse(sTEST_VALUE.equals(mSharedPreferencesFileManager.getString(sTEST_KEY)));
+        // When we put a new value in, we should be able to read it.
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
     }
