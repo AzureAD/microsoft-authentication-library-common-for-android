@@ -1,6 +1,6 @@
 V.Next
 ----------
-- [MAJOR] Migrate Exceptions (#1442)
+- [MAJOR] Migrate Exceptions from common to common4j (#1442)
 - [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
 - [MINOR] Migrate Requests/Responses (#1424)
 - [MAJOR] Add SSL context support to UrlConnectionHttpClient(#1396)
