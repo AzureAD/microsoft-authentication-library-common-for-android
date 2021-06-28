@@ -18,6 +18,7 @@ V.Next
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
 - [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
+- [PATCH] Fix for misconfigured ADALOAuth2TokenCache (#1444)
 
 Version 3.4.3
 ----------
