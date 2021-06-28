@@ -24,6 +24,8 @@ package com.microsoft.identity.common.exception;
 
 import javax.annotation.Nullable;
 
+import lombok.NonNull;
+
 /**
  * An interface that indicates that there is structured data that can be exctracted from the
  * containing class.  Specifically, this indicates the presence of a string that represents
@@ -35,6 +37,6 @@ public interface IErrorInformation {
      * Get the error code associated with this operation.  May not be null.
      * @return the associated error code.
      */
-    @Nullable
+    @NonNull
     String getErrorCode();
 }

@@ -38,7 +38,7 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 public class TerminalException extends RuntimeException implements IErrorInformation {
 
-    final String mErrorCode;
+    private final String mErrorCode;
     /**
      * Construct a TerminalException with a message and cause.
      * @param message the exception message.
@@ -47,7 +47,7 @@ public class TerminalException extends RuntimeException implements IErrorInforma
      */
     public TerminalException(final @Nullable String message,
                              final @NonNull Throwable cause,
-                             final @Nullable String errorCode) {
+                             final @NonNull String errorCode) {
         super(message, cause);
         this.mErrorCode = errorCode;
     }
@@ -55,10 +55,10 @@ public class TerminalException extends RuntimeException implements IErrorInforma
     /**
      * Construct a TerminalException with a cause.
      * @param cause the causing exception.  Should not be null.
-     * @param errorCode the error code.  May be null.  This should be an error string from {@link ClientException}.
+     * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
      */
     public TerminalException(final @NonNull Throwable cause,
-                             final @Nullable String errorCode) {
+                             final @NonNull String errorCode) {
         super(cause);
         this.mErrorCode = errorCode;
     }
