@@ -52,7 +52,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void exceptionPropagationTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 10, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(10, "testPool");
         final Future<String> result = s.submit(new Callable<String>() {
             @Override
             public String call() {
@@ -78,32 +78,11 @@ public class ThreadUtilsTests {
             public void run() {
              }
         });
-        Assert.assertTrue("Execution should have been rejected", caught);
         result.cancel(true);
         result2.cancel(true);
         s.shutdownNow();
     }
-    @Test
-    public void capacitySingleTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedSingleThreadExecutor("testPool");
-        final Future<?> result = s.submit(hangThread());
-        final Future<?> result2 = s.submit(hangThread());
-        boolean caught = false;
-        try {
-            s.submit(new Runnable() {
-                @Override
-                public void run() {
 
-                }
-            });
-        } catch (RejectedExecutionException e) {
-            caught = true;
-        }
-        Assert.assertTrue("Execution should have been rejected", caught);
-        result.cancel(true);
-        result2.cancel(true);
-        s.shutdownNow();
-    }
 
     @Test
     public void capacityFiveUnboundedLooped() throws Exception {
@@ -114,7 +93,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityFiveTestUnbounded() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(5, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
         final CountDownLatch goLatch = new CountDownLatch(1);
         final CountDownLatch stopLatch = new CountDownLatch(5);
@@ -144,7 +123,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityFiveTestUnboundedExceptionsAndCancellations() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(5, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
         final CountDownLatch goLatch = new CountDownLatch(1);
         final CountDownLatch stopLatch = new CountDownLatch(5);
@@ -185,7 +164,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityFiveTestUnboundedExceptionsErrorsAndCancellations() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(5, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
         final CountDownLatch goLatch = new CountDownLatch(1);
         final CountDownLatch stopLatch = new CountDownLatch(5);
@@ -228,7 +207,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityFiveTestUnboundedExceptions() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, -1, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(5, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
         final CountDownLatch goLatch = new CountDownLatch(1);
         final CountDownLatch stopLatch = new CountDownLatch(5);
@@ -262,7 +241,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityFiveTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 0, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(5, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
         final CountDownLatch goLatch = new CountDownLatch(1);
         final CountDownLatch stopLatch = new CountDownLatch(5);
@@ -272,18 +251,6 @@ public class ThreadUtilsTests {
         final Future<?> result4 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
         final Future<?> result5 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
         Assert.assertTrue(latch.await(10, TimeUnit.SECONDS));
-        boolean caught = false;
-        try {
-            s.submit(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            });
-        } catch (RejectedExecutionException e) {
-            caught = true;
-        }
-        Assert.assertTrue("Execution should have been rejected", caught);
         goLatch.countDown();
         Assert.assertTrue(stopLatch.await(5, TimeUnit.MINUTES));
         ((ThreadPoolExecutor)s).purge();
@@ -309,7 +276,7 @@ public class ThreadUtilsTests {
 
     @Test
     public void capacityFiveTestExceptions() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 0, 5, TimeUnit.SECONDS, "testPool");
+        final ExecutorService s = ThreadUtils.getNamedFixedPoolExecutor(5, "testPool");
         final CountDownLatch latch = new CountDownLatch(5);
         final CountDownLatch goLatch = new CountDownLatch(1);
         final CountDownLatch stopLatch = new CountDownLatch(5);
@@ -319,18 +286,6 @@ public class ThreadUtilsTests {
         final Future<?> result4 = s.submit(exceptionTaskLatched(latch, goLatch, stopLatch));
         final Future<?> result5 = s.submit(hangThreadLatch(latch, goLatch, stopLatch));
         Assert.assertTrue(latch.await(10, TimeUnit.SECONDS));
-        boolean caught = false;
-        try {
-            s.submit(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            });
-        } catch (RejectedExecutionException e) {
-            caught = true;
-        }
-        Assert.assertTrue("Execution should have been rejected", caught);
         goLatch.countDown();
         Assert.assertTrue(stopLatch.await(5, TimeUnit.MINUTES));
         ((ThreadPoolExecutor)s).purge();
@@ -354,26 +309,7 @@ public class ThreadUtilsTests {
         s.shutdownNow();
     }
 
-    @Test
-    public void capacityZeroTest() throws Exception {
-        final ExecutorService s = ThreadUtils.getNamedThreadPoolExecutor(1, 1, 0, 5, TimeUnit.SECONDS, "testPool");
-        final Future<?> result = s.submit(hangThread());
-        boolean caught = false;
-        try {
-            s.submit(new Runnable() {
-                @Override
-                public void run() {
-
-                }
-            });
-        } catch (RejectedExecutionException e) {
-            caught = true;
-        }
-        Assert.assertTrue("Execution should have been rejected", caught);
-        result.cancel(true);
-        s.shutdownNow();
-    }
-    private Runnable errorTaskLatched(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
+      private Runnable errorTaskLatched(final CountDownLatch latch, final CountDownLatch goLatch, final CountDownLatch stopLatch) {
         return new Runnable() {
             @Override
             public void run() {
@@ -390,7 +326,7 @@ public class ThreadUtilsTests {
         };
     }
 
-    private Runnable exceptionTaskLatched(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
+    private Runnable exceptionTaskLatched(final CountDownLatch latch, final CountDownLatch goLatch, final CountDownLatch stopLatch) {
         return new Runnable() {
             @Override
             public void run() {
@@ -407,7 +343,7 @@ public class ThreadUtilsTests {
         };
     }
 
-    private Runnable hangThreadLatch(CountDownLatch latch, CountDownLatch goLatch, CountDownLatch stopLatch) {
+    private Runnable hangThreadLatch(final CountDownLatch latch, final CountDownLatch goLatch, final CountDownLatch stopLatch) {
         return new Runnable() {
             @Override
             public void run() {
