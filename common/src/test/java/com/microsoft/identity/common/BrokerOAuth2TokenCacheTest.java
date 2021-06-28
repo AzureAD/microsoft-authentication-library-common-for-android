@@ -27,7 +27,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;

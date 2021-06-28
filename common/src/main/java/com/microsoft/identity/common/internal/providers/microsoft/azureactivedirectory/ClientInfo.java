@@ -26,8 +26,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.util.Base64;
 
 import org.json.JSONException;

@@ -33,8 +33,8 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
