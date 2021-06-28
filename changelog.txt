@@ -26,7 +26,7 @@ V.Next
 - [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
 - [MINOR] Add a method to IDeviceMetadata to get all metadata as a String (#1433)
 - [MINOR] Creates ICommonComponents for sharing interfaces across Android, Linux (including non-brokered components) (#1431)
-- [PATCH] Fix for misconfigured ADALOAuth2TokenCache (#1444)
+- [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
 
 Version 3.4.3
 ----------
