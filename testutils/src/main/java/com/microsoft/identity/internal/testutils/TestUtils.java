@@ -61,7 +61,7 @@ public class TestUtils {
     public static SharedPreferencesFileManager getSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
 
-        return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, Context.MODE_PRIVATE, null);
+        return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, null);
     }
 
     /**
@@ -73,7 +73,7 @@ public class TestUtils {
     public static SharedPreferencesFileManager getEncryptedSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
         final StorageHelper storageHelper = new StorageHelper(context);
-        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, Context.MODE_PRIVATE, storageHelper);
+        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, storageHelper);
         return barePreferences;
     }
 

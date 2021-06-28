@@ -44,7 +44,6 @@ public class SharedPreferenceStringStorage implements INameValueStorage<String> 
         mSharedPrefs = SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 sharedPrefFileName,
-                Context.MODE_PRIVATE,
                 null
         );
     }

@@ -101,7 +101,6 @@ public class SharedPreferencesAccountCredentialCacheTest {
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 testContext,
                 sAccountCredentialSharedPreferences,
-                Context.MODE_PRIVATE,
                 new StorageHelper(testContext) // Use encrypted storage for tests...
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
