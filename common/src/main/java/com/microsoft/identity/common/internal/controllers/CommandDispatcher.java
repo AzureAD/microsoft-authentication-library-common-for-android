@@ -163,7 +163,7 @@ public class CommandDispatcher {
         sInteractiveExecutor.shutdownNow();
         Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
         f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+        f.set(null, ThreadUtils.getNamedFixedPoolExecutor(SILENT_REQUEST_THREAD_POOL_SIZE, "silent"));
         f.setAccessible(false);
 
         f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");
