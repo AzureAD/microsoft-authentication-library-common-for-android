@@ -100,7 +100,7 @@ public class SharedPreferencesAccountCredentialCacheTest extends AndroidSecretKe
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 testContext,
                 sAccountCredentialSharedPreferences,
-                -1,
+                Context.MODE_PRIVATE,
                 new StorageHelper(testContext) // Use encrypted storage for tests...
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
