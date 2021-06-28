@@ -264,7 +264,7 @@ public class MsalOAuth2TokenCacheTest {
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 mContext,
                 "test_prefs",
-                -1,
+                Context.MODE_PRIVATE,
                 new StorageHelper(mContext)
         );
 

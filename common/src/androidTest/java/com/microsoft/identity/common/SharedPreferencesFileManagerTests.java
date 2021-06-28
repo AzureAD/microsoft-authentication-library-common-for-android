@@ -45,6 +45,8 @@ import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
+import android.content.Context;
+
 @RunWith(Parameterized.class)
 public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHelper {
 
@@ -60,12 +62,12 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
                 SharedPreferencesFileManager.getSharedPreferences(
                         InstrumentationRegistry.getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        -1, null
+                        Context.MODE_PRIVATE, null
                 ),
                 SharedPreferencesFileManager.getSharedPreferences(
                         InstrumentationRegistry.getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        -1,
+                        Context.MODE_PRIVATE,
                         new StorageHelper(InstrumentationRegistry.getTargetContext())
                 )
         });

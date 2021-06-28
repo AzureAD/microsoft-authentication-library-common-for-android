@@ -143,7 +143,7 @@ public class MsalOAuth2TokenCache
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        -1,
+                        Context.MODE_PRIVATE,
                         storageHelper
                 );
         final IAccountCredentialCache accountCredentialCache =
