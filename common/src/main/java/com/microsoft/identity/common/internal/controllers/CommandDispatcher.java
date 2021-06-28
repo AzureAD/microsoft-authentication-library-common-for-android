@@ -37,23 +37,21 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
+import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
-import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -63,6 +61,9 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -76,6 +77,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
@@ -85,7 +91,6 @@ import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
-
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
     //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
@@ -125,7 +130,7 @@ public class CommandDispatcher {
     private static void cleanMap(BaseCommand command) {
         ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> newMap = new ConcurrentHashMap<>();
         for (Map.Entry<BaseCommand, FinalizableResultFuture<CommandResult>> e : sExecutingCommandMap.entrySet()) {
-            if (! (command == e.getKey())) {
+            if (!(command == e.getKey())) {
                 newMap.put(e.getKey(), e.getValue());
             }
         }
@@ -187,8 +192,9 @@ public class CommandDispatcher {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
-                                                                                         @NonNull final BaseCommand command) {
-
+                                                                                     @NonNull final BaseCommand command) {
+        final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
+        codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_START);
         final String methodName = ":submitSilent";
 
         final CommandParameters commandParameters = command.getParameters();
@@ -233,11 +239,11 @@ public class CommandDispatcher {
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
-
+                    codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_EXECUTOR_START);
                     try {
                         //initializing again since the request is transferred to a different thread pool
                         initializeDiagnosticContext(correlationId, commandParameters.getSdkType() == null ?
-                                SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
                                 commandParameters.getSdkVersion());
 
                         initTelemetryForCommand(command);
@@ -250,28 +256,16 @@ public class CommandDispatcher {
                         if (command.getParameters() instanceof SilentTokenCommandParameters) {
                             EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
                         }
-
-                        //Check cache to see if the same command completed in the last 30 seconds
-                        // Disabling throttling ADO:1383033
-                        // commandResult = sCommandResultCache.get(command);
-                        //If nothing in cache, execute the command and cache the result
-//                        if (commandResult == null) {
+                        
+                        codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
+                        try {
                             commandResult = executeCommand(command);
-                            // Disabling throttling ADO:1383033
-                            // cacheCommandResult(command, commandResult);
-                            Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
-                                    + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
-                                    + " is cacheable : " + command.isEligibleForCaching());
-//                        } else {
-//                            Logger.info(
-//                                    TAG + methodName,
-//                                    "Silent command result returned from cache for correlation id : "
-//                                            + correlationId + " having status : " + commandResult.getStatus().getLogStatus()
-//                            );
-//                            // Added to keep the original correlation id intact, and to not let it mutate with the cascading requests hitting the cache.
-//                            commandResult = new CommandResult(commandResult.getStatus(),
-//                                    commandResult.getResult(), commandResult.getCorrelationId());
-//                        }
+                        } finally {
+                            codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END);
+                        }
+                        Logger.info(TAG + methodName, "Completed silent request as owner for correlation id : **"
+                                + correlationId + ", with the status : " + commandResult.getStatus().getLogStatus()
+                                + " is cacheable : " + command.isEligibleForCaching());
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -299,6 +293,7 @@ public class CommandDispatcher {
                         }
                         DiagnosticContext.clear();
                     }
+                    codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
             });
             return finalFuture;
@@ -463,15 +458,16 @@ public class CommandDispatcher {
      * to us does not have a taskAffinity and as a result it's possible that other apps or the home
      * screen could be in the task stack ahead of the app that launched the interactive
      * authorization UI.
+     *
      * @param command The BaseCommand.
      */
-    private static void optionallyReorderTasks(@SuppressWarnings(WarningType.rawtype_warning)final BaseCommand command){
+    private static void optionallyReorderTasks(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command) {
         final String methodName = ":optionallyReorderTasks";
-        if(command instanceof InteractiveTokenCommand){
-            InteractiveTokenCommand interactiveTokenCommand = (InteractiveTokenCommand)command;
-            InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters)interactiveTokenCommand.getParameters();
+        if (command instanceof InteractiveTokenCommand) {
+            InteractiveTokenCommand interactiveTokenCommand = (InteractiveTokenCommand) command;
+            InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) interactiveTokenCommand.getParameters();
 
-            if(interactiveTokenCommandParameters.getHandleNullTaskAffinity() && !interactiveTokenCommand.getHasTaskAffinity()) {
+            if (interactiveTokenCommandParameters.getHandleNullTaskAffinity() && !interactiveTokenCommand.getHasTaskAffinity()) {
                 //If an interactive command doesn't have a task affinity bring the
                 //task that launched the command to the foreground
                 //In order for this to work the app has to have requested the re-order tasks permission

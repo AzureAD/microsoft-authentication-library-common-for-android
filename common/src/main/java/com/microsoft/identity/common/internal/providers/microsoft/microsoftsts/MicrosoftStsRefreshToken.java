@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 
 public class MicrosoftStsRefreshToken extends MicrosoftRefreshToken {
 

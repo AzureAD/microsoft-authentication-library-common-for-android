@@ -40,6 +40,8 @@ public class DeviceTest {
     final String NOT_SET = "NOT_SET";
     final String TEST_VERSION = "TEST_VERSION";
 
+    final static String METADATA_SEPARATOR = ":";
+
     @After
     public void tearDown() {
         Device.clearDeviceMetadata();
@@ -105,6 +107,16 @@ public class DeviceTest {
     public void testGetModel(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, Device.getModel());
+    }
+
+    @Test
+    public void testGetAllMetadata(){
+        final AbstractDeviceMetadata deviceMetadata = new MockDeviceMetadata();
+        final String expectedResult = MockDeviceMetadata.TEST_DEVICE_MODEL + METADATA_SEPARATOR +
+                MockDeviceMetadata.TEST_MANUFACTURER + METADATA_SEPARATOR +
+                MockDeviceMetadata.TEST_CPU + METADATA_SEPARATOR +
+                MockDeviceMetadata.TEST_OS;
+        Assert.assertEquals(expectedResult, deviceMetadata.getAllMetadata());
     }
 }
 

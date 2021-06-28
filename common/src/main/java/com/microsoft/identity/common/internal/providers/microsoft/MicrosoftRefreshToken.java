@@ -27,10 +27,11 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 
 public class MicrosoftRefreshToken extends RefreshToken {
 

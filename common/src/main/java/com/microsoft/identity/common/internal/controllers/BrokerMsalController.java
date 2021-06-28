@@ -35,10 +35,10 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
@@ -62,7 +62,6 @@ import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCom
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -76,6 +75,7 @@ import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;

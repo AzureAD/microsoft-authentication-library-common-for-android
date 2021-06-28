@@ -26,8 +26,8 @@ import android.content.Context;
 import android.os.Debug;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.io.BufferedReader;
 import java.io.Closeable;

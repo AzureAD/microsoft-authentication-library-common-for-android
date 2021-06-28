@@ -22,15 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.ipc;
 
-import android.accounts.AccountManager;
 import android.content.Intent;
-import android.os.BaseBundle;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;

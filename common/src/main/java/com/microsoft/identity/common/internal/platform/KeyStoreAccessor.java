@@ -30,7 +30,7 @@ import android.security.keystore.KeyProperties;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.logging.Logger;
 

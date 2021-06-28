@@ -26,6 +26,7 @@ import android.content.Intent;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 
 /**
  * Abstract Factory class which can be extended to construct provider specific {@link AuthorizationResult}.

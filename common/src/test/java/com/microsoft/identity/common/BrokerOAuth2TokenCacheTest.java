@@ -27,7 +27,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
@@ -47,9 +47,9 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.shadows.ShadowStorageHelper;
 
 import org.junit.After;

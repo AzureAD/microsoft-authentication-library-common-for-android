@@ -25,15 +25,20 @@ package com.microsoft.identity.internal.testutils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpClient.HttpMethod;
+import com.microsoft.identity.common.java.net.HttpRequest;
 import com.microsoft.identity.common.java.net.HttpResponse;
 
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 /**
@@ -48,7 +53,19 @@ public class MockHttpClient {
      */
     private static final Map<HttpRequestMatcher, HttpRequestInterceptor> interceptors = new HashMap<>();
 
+    private static final AtomicBoolean sSaveRequests = new AtomicBoolean(false);
 
+    private static final AtomicLong sTotalRequests = new AtomicLong(0);
+
+    public MockHttpClient(final boolean saveRequests) {
+        sSaveRequests.set(saveRequests);
+    }
+
+    private static final List<HttpRequest> sInterceptedRequests = Collections.synchronizedList(new ArrayList<>());
+
+    public MockHttpClient() {
+        this(false);
+    }
     /**
      * Installs a mock http client instance to use in providing the request interceptors.
      * <p>
@@ -58,9 +75,32 @@ public class MockHttpClient {
      * @see MockHttpClient#uninstall()
      */
     public static MockHttpClient install() {
-        return new MockHttpClient();
+        sTotalRequests.set(0);
+        sInterceptedRequests.clear();
+        return new MockHttpClient(false);
     }
 
+    /**
+     * Installs a mock http client instance to use in providing the request interceptors.
+     * <p>
+     * Invoke the uninstall() method to remove all the set interceptors.
+     *
+     * @return the mock http client object
+     * @see MockHttpClient#uninstall()
+     */
+    public static MockHttpClient installCapturing() {
+        sTotalRequests.set(0);
+        sInterceptedRequests.clear();
+        return new MockHttpClient(true);
+    }
+
+    public long getTotalRequests() {
+        return sTotalRequests.get();
+    }
+
+    public List<HttpRequest> getInterceptedRequests() {
+        return new ArrayList<>(sInterceptedRequests);
+    }
 
     /**
      * Will return the http request interceptor that is configured to intercept the request
@@ -69,17 +109,28 @@ public class MockHttpClient {
      * @param url    the request url to intercept
      * @return the http request interceptor configured for the http method and request url
      */
-    public static HttpRequestInterceptor intercept(
+    public static HttpRequestInterceptor getInterceptor (
             @NonNull final HttpMethod method,
             @NonNull final URL url,
             final Map<String, String> requestHeaders,
             final byte[] requestContent
     ) {
+        // this is also not quite right, but will work given the current usage model, where getInterceptor is always called
+        sTotalRequests.incrementAndGet();
         // for each pair of HttpMethod and url regex
         for (HttpRequestMatcher matcher : interceptors.keySet()) {
             if (matcher.matches(method, url, requestHeaders, requestContent)) {
                 // return the http interceptor
-                return interceptors.get(matcher);
+                final HttpRequestInterceptor httpRequestInterceptor = interceptors.get(matcher);
+                return new HttpRequestInterceptor() {
+                    @Override
+                    public HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod, @NonNull  URL requestUrl, @NonNull Map<String, String> requestHeaders, @Nullable byte[] requestContent) throws IOException {
+                        if (sSaveRequests.get()) {
+                            sInterceptedRequests.add(new HttpRequest(url, requestHeaders, method.name(), requestContent, null, null));
+                        }
+                        return httpRequestInterceptor.performIntercept(httpMethod, requestUrl, requestHeaders, requestContent);
+                    }
+                };
             }
         }
         return null;
@@ -95,7 +146,7 @@ public class MockHttpClient {
     public void intercept(@NonNull final HttpResponse httpResponse) {
         intercept(HttpRequestMatcher.builder().build(), new HttpRequestInterceptor() {
             @Override
-            public HttpResponse intercept(
+            public HttpResponse performIntercept(
                     @NonNull HttpMethod httpMethod,
                     @NonNull URL requestUrl,
                     @NonNull Map<String, String> requestHeaders,
@@ -199,7 +250,7 @@ public class MockHttpClient {
                 matcher,
                 new HttpRequestInterceptor() {
                     @Override
-                    public HttpResponse intercept(
+                    public HttpResponse performIntercept(
                             @NonNull HttpMethod httpMethod,
                             @NonNull URL requestUrl,
                             @NonNull Map<String, String> requestHeaders,
