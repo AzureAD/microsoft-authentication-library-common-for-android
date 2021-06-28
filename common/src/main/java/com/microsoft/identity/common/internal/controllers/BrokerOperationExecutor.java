@@ -41,6 +41,7 @@ import com.microsoft.identity.common.internal.commands.parameters.CommandParamet
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
@@ -188,11 +189,13 @@ public class BrokerOperationExecutor {
 
     private <U> void emitOperationFailureEvent(@NonNull final BrokerOperation<U> operation,
                                                final BaseException exception) {
-        if (operation.getTelemetryApiId() != null) {
+        final String telemetryApiId = operation.getTelemetryApiId();
+
+        if (!StringUtil.isNullOrEmpty(telemetryApiId)) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(exception)
-                            .putApiId(operation.getTelemetryApiId())
+                            .putApiId(telemetryApiId)
             );
         }
     }
