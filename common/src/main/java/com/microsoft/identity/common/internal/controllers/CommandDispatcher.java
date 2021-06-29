@@ -91,15 +91,12 @@ import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry
 public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
-    private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
+    public static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
     private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
     //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
-    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, INTERACTIVE_REQUEST_THREAD_POOL_SIZE, -1, 0, TimeUnit.MINUTES, "interactive"
-    );
-    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 1, TimeUnit.MINUTES, "silent"
-    );
+    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedFixedPoolExecutor(INTERACTIVE_REQUEST_THREAD_POOL_SIZE, "interactive");
+    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedFixedPoolExecutor(SILENT_REQUEST_THREAD_POOL_SIZE, "silent");
+
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -166,7 +163,7 @@ public class CommandDispatcher {
         sInteractiveExecutor.shutdownNow();
         Field f = CommandDispatcher.class.getDeclaredField("sSilentExecutor");
         f.setAccessible(true);
-        f.set(null, Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE));
+        f.set(null, ThreadUtils.getNamedFixedPoolExecutor(SILENT_REQUEST_THREAD_POOL_SIZE, "silent"));
         f.setAccessible(false);
 
         f = CommandDispatcher.class.getDeclaredField("sInteractiveExecutor");

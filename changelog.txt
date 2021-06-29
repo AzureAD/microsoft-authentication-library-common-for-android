@@ -28,6 +28,7 @@ V.Next
 - [MINOR] Creates ICommonComponents for sharing interfaces across Android, Linux (including non-brokered components) (#1431)
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
 - [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
+- [PATCH] Restore thread naming capability (#1443)
 
 Version 3.4.3
 ----------
