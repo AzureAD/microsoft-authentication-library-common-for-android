@@ -27,7 +27,7 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.java.net.HttpResponse;

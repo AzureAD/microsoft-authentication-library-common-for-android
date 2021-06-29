@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.cert.Certificate;
 import java.util.Date;

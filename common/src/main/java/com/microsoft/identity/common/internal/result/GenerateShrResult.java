@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.result;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import lombok.Getter;
 import lombok.Setter;

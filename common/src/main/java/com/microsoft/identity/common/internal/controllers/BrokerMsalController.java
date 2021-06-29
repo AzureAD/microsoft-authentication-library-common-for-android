@@ -35,10 +35,10 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
