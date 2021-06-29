@@ -14,8 +14,8 @@ pool:
   name: Hosted Windows 2019 with VS2019
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: build_test
+  displayName: Build & Test
   steps:
   - checkout: self
     clean: true

@@ -16,8 +16,8 @@ resources:
     endpoint: ANDROID_GITHUB
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: assemble_external_release_azure_sample_app_apk
+  displayName: Assemble External Release Azure Sample App APK
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019

@@ -16,8 +16,8 @@ resources:
     ref: master
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: vsts_release
+  displayName: Publish common to internal feed
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019

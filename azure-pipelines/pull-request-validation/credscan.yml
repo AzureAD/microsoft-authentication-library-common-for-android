@@ -11,15 +11,5 @@ trigger:
   batch: True
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
-  cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted Windows 2019 with VS2019
-  steps:
-  - checkout: self
-    clean: true
-    submodules: recursive
-    persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
+- template: ../templates/steps/credscan-policheck.yml
 ...

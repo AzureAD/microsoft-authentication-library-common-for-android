@@ -27,8 +27,8 @@ schedules:
   always: true
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: assemble_local_debug_azure_sample_app_apk
+  displayName: Assemble Local Debug Azure Sample App APK
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019

@@ -13,8 +13,8 @@ parameters:
   - Latest
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: assemble_publish
+  displayName: Assemble and publish Snapshot/Latest Release
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 1
   pool:
