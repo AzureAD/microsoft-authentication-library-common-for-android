@@ -75,6 +75,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
      * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
      * @param operatingMode the mode in which to operate this
      */
+    @Deprecated
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final int operatingMode,
