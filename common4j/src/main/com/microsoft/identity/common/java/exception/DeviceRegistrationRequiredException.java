@@ -21,28 +21,27 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.java.exception;
+
+import lombok.NonNull;
 
 /**
- * This exception indicates that UI is required for authentication to succeed.
+ *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
  */
+final public class DeviceRegistrationRequiredException extends BaseException {
 
-public final class UiRequiredException extends ServiceException {
+    public static final String sName =  DeviceRegistrationRequiredException.class.getName();
+    private static final long serialVersionUID = 5804977362169696152L;
 
-    public static final String sName = UiRequiredException.class.getName();
-    private static final long serialVersionUID = 3039442374738287255L;
-
-    public UiRequiredException(final String errorCode, final String errorMessage) {
-        super(errorCode, errorMessage, null);
-    }
-
-    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
-        super(errorCode, errorMessage, throwable);
+    public DeviceRegistrationRequiredException(@NonNull final String errorCode,
+                                               @NonNull final String errorDescription,
+                                               @NonNull final String userName) {
+        super(errorCode, errorDescription);
+        super.setUsername(userName);
     }
 
     @Override
     public String getExceptionName(){
         return sName;
     }
-
 }

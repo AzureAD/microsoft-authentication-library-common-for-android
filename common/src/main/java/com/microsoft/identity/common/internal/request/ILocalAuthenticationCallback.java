@@ -23,8 +23,12 @@
 
 package com.microsoft.identity.common.internal.request;
 
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
 
 /**
  * Callback passed with token acquisition. {@link ILocalAuthenticationResult} or {@link Exception} will be returned back via callback.
@@ -44,10 +48,10 @@ public interface ILocalAuthenticationCallback {
      *
      * @param exception The {@link BaseException} contains the error code, error message and cause if applicable. The exception
      *                  returned in the callback could be
-     *                  {@link com.microsoft.identity.common.exception.ClientException},
-     *                  {@link com.microsoft.identity.common.exception.ArgumentException},
-     *                  {@link com.microsoft.identity.common.exception.ServiceException} or
-     *                  {@link com.microsoft.identity.common.exception.UiRequiredException}.
+     *                  {@link ClientException},
+     *                  {@link ArgumentException},
+     *                  {@link ServiceException} or
+     *                  {@link UiRequiredException}.
      */
     void onError(final BaseException exception);
 

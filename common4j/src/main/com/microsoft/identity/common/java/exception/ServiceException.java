@@ -20,21 +20,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.java.exception;
 
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
-import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
-import com.microsoft.identity.common.java.exception.IServiceException;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.util.HashMapExtensions;
 
 import org.json.JSONException;
 
 import java.util.HashMap;
 import java.util.List;
 
-public class ServiceException extends BaseException implements IServiceException {
+import edu.umd.cs.findbugs.annotations.Nullable;
+
+public class ServiceException extends BaseException {
 
     public static final String sName =  ServiceException.class.getName();
     private static final long serialVersionUID = 5139563940871615046L;
@@ -157,7 +155,7 @@ public class ServiceException extends BaseException implements IServiceException
     }
 
     /**
-     * Set the http response {@link HttpWebResponse}.
+     * Set the http response {@link HttpResponse}.
      *
      * @param response HttpWebResponse
      */

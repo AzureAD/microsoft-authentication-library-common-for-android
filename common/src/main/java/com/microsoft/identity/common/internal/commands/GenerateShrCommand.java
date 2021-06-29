@@ -24,9 +24,9 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.UiRequiredException;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
@@ -37,7 +37,7 @@ import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
-import static com.microsoft.identity.common.exception.ErrorStrings.NO_ACCOUNT_FOUND;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.NO_ACCOUNT_FOUND;
 
 /**
  * Command class to perform generation of AT-less SHRs on behalf of a user.

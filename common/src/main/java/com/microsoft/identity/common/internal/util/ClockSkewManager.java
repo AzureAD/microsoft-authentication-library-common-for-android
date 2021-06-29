@@ -56,7 +56,6 @@ public class ClockSkewManager extends com.microsoft.identity.common.java.util.Cl
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
-                        -1,
                         null
                 )
         ));
