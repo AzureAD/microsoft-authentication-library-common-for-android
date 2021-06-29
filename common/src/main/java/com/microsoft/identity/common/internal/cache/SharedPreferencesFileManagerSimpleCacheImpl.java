@@ -58,11 +58,12 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
 
     private final ISharedPreferencesFileManager mSharedPrefsFileManager;
     private final String mKeySingleEntry;
+    private final boolean mForceReinsertionOfDuplicates;
     private final Gson mGson = new Gson();
 
     /**
      * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl. Convenience class for persisting
-     * lists of arbitrarily-typed data.
+     * lists of arbitrarily-typed data. Duplicate reinsertion is disabled (backcompat) by default.
      *
      * @param context   The current app's {@link Context}.
      * @param prefsName The name of the underlying {@link android.content.SharedPreferences} file.
@@ -76,7 +77,33 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
                 prefsName,
                 null // File is not encrypted
                 ),
-                singleKey
+                singleKey,
+                false
+        );
+    }
+
+    /**
+     * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl. Convenience class for persisting
+     * lists of arbitrarily-typed data.
+     *
+     * @param context                      The current app's {@link Context}.
+     * @param prefsName                    The name of the underlying {@link android.content.SharedPreferences} file.
+     * @param singleKey                    The name of the key under which all entries will be cached.
+     * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
+     *                                     replaces the existing value with the newly-provided one.
+     */
+    public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
+                                                       @NonNull final String prefsName,
+                                                       @NonNull final String singleKey,
+                                                       final boolean forceReinsertionOfDuplicates) {
+        this(SharedPreferencesFileManager.getSharedPreferences(
+                context,
+                prefsName,
+                Context.MODE_PRIVATE,
+                null // File is not encrypted
+                ),
+                singleKey,
+                forceReinsertionOfDuplicates
         );
     }
 
@@ -86,12 +113,16 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
      *
      * @param sharedPreferencesFileManager The underlying {@link SharedPreferencesFileManager} to use.
      * @param singleKey                    The name of the key under which all entries will be cached.
+     * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
+     *                                     replaces the existing value with the newly-provided one.
      */
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final SharedPreferencesFileManager sharedPreferencesFileManager,
-                                                       @NonNull final String singleKey) {
+                                                       @NonNull final String singleKey,
+                                                       final boolean forceReinsertionOfDuplicates) {
         Logger.verbose(TAG + "::ctor", "Init");
         mSharedPrefsFileManager = sharedPreferencesFileManager;
         mKeySingleEntry = singleKey;
+        mForceReinsertionOfDuplicates = forceReinsertionOfDuplicates;
     }
 
     private interface NamedRunnable<V> extends Callable<V> {
@@ -141,6 +172,15 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
             @Override
             public Boolean call() {
                 final Set<T> allMetadata = new HashSet<>(getAll());
+
+                if (mForceReinsertionOfDuplicates) {
+                    // This is a bit of workaround for Set's default behavior
+                    // where items already within the Set are not replaced if they are
+                    // inserted but already exist.
+                    // This makes it behave more like a Map.
+                    allMetadata.remove(t);
+                }
+
                 allMetadata.add(t);
                 final String json = mGson.toJson(allMetadata);
                 mSharedPrefsFileManager.putString(mKeySingleEntry, json);
