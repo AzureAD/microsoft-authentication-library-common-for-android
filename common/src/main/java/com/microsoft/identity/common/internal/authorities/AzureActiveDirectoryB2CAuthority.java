@@ -27,7 +27,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;

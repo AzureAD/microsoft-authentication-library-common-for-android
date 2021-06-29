@@ -20,15 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.java.exception;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import com.microsoft.identity.common.java.util.StringUtil;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.exception.IBaseException;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
-public class BaseException extends Exception implements IBaseException {
+public class BaseException extends Exception {
 
     public static final String sName =  BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;
@@ -106,7 +105,7 @@ public class BaseException extends Exception implements IBaseException {
      */
     @Override
     public String getMessage() {
-        if (!StringExtensions.isNullOrBlank(super.getMessage())) {
+        if (!StringUtil.isNullOrEmpty(super.getMessage())) {
             return super.getMessage();
         }
 

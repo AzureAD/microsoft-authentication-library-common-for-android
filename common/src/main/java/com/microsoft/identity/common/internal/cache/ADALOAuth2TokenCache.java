@@ -39,7 +39,7 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -119,7 +119,6 @@ public class ADALOAuth2TokenCache
                 SharedPreferencesFileManager.getSharedPreferences(
                         getContext(),
                         fileName,
-                        -1,
                         new StorageHelper(getContext())
                 );
     }

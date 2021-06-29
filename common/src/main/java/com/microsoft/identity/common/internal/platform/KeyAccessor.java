@@ -22,11 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.cert.Certificate;
-
-import lombok.NonNull;
 
 /**
  * Interface for utilizing keys.

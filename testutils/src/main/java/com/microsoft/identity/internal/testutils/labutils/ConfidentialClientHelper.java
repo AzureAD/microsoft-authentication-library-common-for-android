@@ -23,7 +23,7 @@
 package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.providers.oauth2.AccessToken;

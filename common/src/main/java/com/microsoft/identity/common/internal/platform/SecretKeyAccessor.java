@@ -26,7 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
@@ -50,14 +50,14 @@ import lombok.Builder;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
 
 @Builder
 @Accessors(prefix = "m")

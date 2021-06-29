@@ -26,7 +26,7 @@ import android.os.IInterface;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
 
 import org.robolectric.annotation.Implements;
