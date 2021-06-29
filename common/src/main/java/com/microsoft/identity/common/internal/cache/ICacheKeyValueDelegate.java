@@ -60,6 +60,14 @@ public interface ICacheKeyValueDelegate {
     String generateCacheValue(final Credential credential);
 
     /**
+     * Generate cache Key for authority validation metadata.
+     *
+     * @param environment Environment
+     * @return String
+     */
+    String generateAuthorityValidationMetadataKey(final String environment);
+
+    /**
      * Get the account credential from cache value.
      *
      * @param string String

@@ -73,6 +73,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
      */
     public static final String CACHE_VALUE_SEPARATOR = "-";
     private static final String FOCI_PREFIX = "foci-";
+    public static final String AUTHORITY_VALIDATION_METADATA_CACHE_GUID = "33DD5583-1098-4617-AF07-2D327BC4C0E4";
 
     private final Gson mGson;
 
@@ -206,6 +207,12 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         final String result = generateCacheValueInternal(credential);
 
         return result;
+    }
+
+    @Override
+    public String generateAuthorityValidationMetadataKey(final String environment)
+    {
+        return AUTHORITY_VALIDATION_METADATA_CACHE_GUID + CACHE_VALUE_SEPARATOR + environment;
     }
 
     @Override

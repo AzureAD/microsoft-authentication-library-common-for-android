@@ -330,4 +330,20 @@ public class MsalCppOAuth2TokenCache
         return accountRecords.get(0);
     }
 
+    /**
+     * Read the metadata used for authority validation.
+     *
+     * @return Authority validation metadata string
+     */
+    public String getAuthorityValidationMetadata(@NonNull String environment) {
+        return getAccountCredentialCache().getAuthorityValidationMetadata(environment);
+    }
+
+    /**
+     * Save the metadata used for authority validation.
+     */
+    public void saveAuthorityValidationMetadata(@NonNull String environment, @NonNull String valueData) {
+        getAccountCredentialCache().saveAuthorityValidationMetadata(environment, valueData);
+    }
+
 }

@@ -200,6 +200,24 @@ public interface IAccountCredentialCache {
     boolean removeCredential(final Credential credentialToRemove);
 
     /**
+     * This function is only used in the authority validation in MSAL CPP
+     * Returns the saved string value from the cache.
+     *
+     * @param environment Environment.
+     * @return The string of the cached value, or null of not exist.
+     */
+    String getAuthorityValidationMetadata(final String environment);
+
+    /**
+     * This function is only used in the authority validation in MSAL CPP
+     * Save the key/cacheValue to the cache.
+     *
+     * @param environment Environment.
+     * @param cacheValue Value.
+     */
+    void saveAuthorityValidationMetadata(final String environment, final String cacheValue);
+
+    /**
      * Clear the contents of the cache.
      */
     void clearAll();
