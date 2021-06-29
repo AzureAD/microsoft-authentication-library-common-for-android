@@ -74,7 +74,6 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
         this(SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 prefsName,
-                Context.MODE_PRIVATE,
                 null // File is not encrypted
                 ),
                 singleKey
