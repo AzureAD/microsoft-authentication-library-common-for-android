@@ -75,11 +75,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
      * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
      * @param operatingMode the mode in which to operate this
      */
+    @Deprecated
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final int operatingMode,
                                                                     final IStorageHelper storageHelper) {
-        String key = name + "/" + context.getPackageName() + "/" + operatingMode;
+        String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if(cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key, new SharedPreferencesFileManager(context, name, operatingMode, storageHelper));
@@ -88,6 +89,20 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             }
         }
         return cachedFileManager;
+    }
+
+    /**
+     * Constructs an instance of SharedPreferencesFileManager. Operating mode is always MODE_PRIVATE.
+     *
+     * @param context Interface to global information about an application environment.
+     * @param name The desired {@link android.content.SharedPreferences} file. It will be created if it does not exist.
+     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @return The SharedPreferencesFileManager instance.
+     */
+    public static SharedPreferencesFileManager getSharedPreferences(final Context context,
+                                                                    final String name,
+                                                                    final IStorageHelper storageHelper) {
+        return getSharedPreferences(context, name, Context.MODE_PRIVATE, storageHelper);
     }
 
     /**

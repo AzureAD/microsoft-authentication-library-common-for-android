@@ -26,17 +26,17 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
-import static com.microsoft.identity.common.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.IO_ERROR;
-import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 
 /**
  * Factory class for constructing asymmetric keys.

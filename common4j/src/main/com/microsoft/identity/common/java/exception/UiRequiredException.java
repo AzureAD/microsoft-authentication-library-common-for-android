@@ -21,20 +21,28 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.java.eststelemetry;
+package com.microsoft.identity.common.java.exception;
 
-import com.microsoft.identity.common.java.exception.IBaseException;
+/**
+ * This exception indicates that UI is required for authentication to succeed.
+ */
 
-import lombok.Builder;
+public final class UiRequiredException extends ServiceException {
 
-@Builder
-public class MockException implements IBaseException {
+    public static final String sName = UiRequiredException.class.getName();
+    private static final long serialVersionUID = 3039442374738287255L;
 
-    @Builder.Default
-    String errorCode = "ERROR_CODE";
+    public UiRequiredException(final String errorCode, final String errorMessage) {
+        super(errorCode, errorMessage, null);
+    }
+
+    public UiRequiredException(final String errorCode, final String errorMessage, final Throwable throwable) {
+        super(errorCode, errorMessage, throwable);
+    }
 
     @Override
-    public String getErrorCode() {
-        return errorCode;
+    public String getExceptionName(){
+        return sName;
     }
+
 }

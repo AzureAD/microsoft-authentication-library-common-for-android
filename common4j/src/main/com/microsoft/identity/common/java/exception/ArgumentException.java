@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.java.exception;
 
 public class ArgumentException extends BaseException {
 
@@ -37,7 +37,6 @@ public class ArgumentException extends BaseException {
     public final static String AUTHENTICATION_SCHEME_ARGUMENT_NAME = "authentication_scheme";
 
     public final static String ILLEGAL_ARGUMENT_ERROR_CODE = "illegal_argument_exception";
-
 
     private String mOperationName;
     private String mArgumentName;
