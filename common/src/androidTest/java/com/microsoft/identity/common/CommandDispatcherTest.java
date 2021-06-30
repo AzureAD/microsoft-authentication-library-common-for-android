@@ -46,9 +46,7 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -328,7 +326,7 @@ public class CommandDispatcherTest {
     public void testSubmitSilentWithTerminalException() {
         final String errorCode = "anError";
         final CountDownLatch testLatch = new CountDownLatch(1);
-        CommandDispatcher.submitSilent(new IErrorExceptionCommand(getEmptyTestParams(),
+        CommandDispatcher.submitSilent(new CommandThrowingIErrorInformationException(getEmptyTestParams(),
                 new CommandCallback<String, Exception>() {
                     @Override
                     public void onCancel() {
@@ -506,11 +504,11 @@ public class CommandDispatcherTest {
         }
     }
 
-    static class IErrorExceptionCommand extends BaseCommand<String> {
+    static class CommandThrowingIErrorInformationException extends BaseCommand<String> {
         final String mErrorCode;
 
-        public IErrorExceptionCommand(@NonNull final CommandParameters parameters,
-                                @NonNull final CommandCallback callback, String errorCode) {
+        public CommandThrowingIErrorInformationException(@NonNull final CommandParameters parameters,
+                                                         @NonNull final CommandCallback callback, String errorCode) {
             super(parameters, getTestController(), callback, "test_id");
             mErrorCode = errorCode;
         }
