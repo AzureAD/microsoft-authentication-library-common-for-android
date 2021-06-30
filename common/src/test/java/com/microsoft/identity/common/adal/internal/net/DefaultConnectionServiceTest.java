@@ -25,7 +25,11 @@ package com.microsoft.identity.common.adal.internal.net;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkInfo;
 import android.os.Build;
+import android.telephony.TelephonyManager;
 
 import androidx.test.core.app.ApplicationProvider;
 
@@ -36,6 +40,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
+import org.robolectric.shadows.ShadowConnectivityManager;
+import org.robolectric.shadows.ShadowNetworkInfo;
 import org.robolectric.util.ReflectionHelpers;
 
 import static org.junit.Assert.assertFalse;
@@ -74,6 +80,42 @@ public class DefaultConnectionServiceTest {
     }
 
     @Test
+    public void testDifferentNetworkAvailabilityStates() {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) mContext
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+        final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
+
+        NetworkInfo wifiNetworkInfo = ShadowNetworkInfo.newInstance(
+                NetworkInfo.DetailedState.CONNECTED,
+                ConnectivityManager.TYPE_WIFI,
+                0,
+                true,
+                NetworkInfo.State.CONNECTED);
+
+        NetworkInfo mobileDataNetworkInfo = ShadowNetworkInfo.newInstance(
+                NetworkInfo.DetailedState.CONNECTED,
+                ConnectivityManager.TYPE_MOBILE,
+                0,
+                true,
+                NetworkInfo.State.CONNECTED);
+
+
+        ShadowConnectivityManager shadowConnectivityManager = shadowOf(connectivityManager);
+
+        shadowConnectivityManager.setActiveNetworkInfo(wifiNetworkInfo);
+
+        assertTrue(defaultConnectionService.isConnectionAvailable());
+
+        shadowConnectivityManager.setActiveNetworkInfo(mobileDataNetworkInfo);
+
+        assertTrue(defaultConnectionService.isConnectionAvailable());
+
+        shadowOf(mobileDataNetworkInfo).setConnectionStatus(NetworkInfo.State.DISCONNECTED);
+
+        assertFalse(defaultConnectionService.isConnectionAvailable());
+    }
+
+    @Test
     public void testNetworkDisabledFromOptimizations() {
         final DefaultConnectionService defaultConnectionService = new DefaultConnectionService(mContext);
         ReflectionHelpers.setStaticField(Build.VERSION.class, "SDK_INT", Build.VERSION_CODES.M);
@@ -88,4 +130,5 @@ public class DefaultConnectionServiceTest {
 
         assertFalse(defaultConnectionService.isNetworkDisabledFromOptimizations());
     }
+
 }
