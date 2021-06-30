@@ -20,28 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
-package com.microsoft.identity.common.exception;
-
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.platform;
 
 /**
- *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
+ * An abstract class to share some functionality between different implementations of
+ * {@link IDeviceMetadata} interface.
  */
-final public class DeviceRegistrationRequiredException extends BaseException {
+public abstract class AbstractDeviceMetadata implements IDeviceMetadata {
 
-    public static final String sName =  DeviceRegistrationRequiredException.class.getName();
-    private static final long serialVersionUID = 5804977362169696152L;
-
-    public DeviceRegistrationRequiredException(@NonNull final String errorCode,
-                                               @NonNull final String errorDescription,
-                                               @NonNull final String userName) {
-        super(errorCode, errorDescription);
-        super.setUsername(userName);
-    }
+    private static final String SEPARATOR = ":";
 
     @Override
-    public String getExceptionName(){
-        return sName;
+    public String getAllMetadata() {
+        return getDeviceModel() + SEPARATOR +
+                getManufacturer() + SEPARATOR +
+                getCpu() + SEPARATOR +
+                getOs();
     }
 }

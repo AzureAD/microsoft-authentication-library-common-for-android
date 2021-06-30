@@ -27,7 +27,7 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.IDeviceCertificate;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -38,7 +38,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE;
-import static com.microsoft.identity.common.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.DEVICE_CERTIFICATE_REQUEST_INVALID;
 
 /**
  * Factory method to get new PKeyAuthChallenge object.
