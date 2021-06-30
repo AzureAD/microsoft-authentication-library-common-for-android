@@ -484,20 +484,6 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     }
 
     @Override
-    public String getAuthorityValidationMetadata(final String environment)
-    {
-        final String cacheKey = mCacheValueDelegate.generateAuthorityValidationMetadataKey(environment);
-        return mSharedPreferencesFileManager.getString(cacheKey);
-    }
-
-    @Override
-    public void saveAuthorityValidationMetadata(final String environment, final String cacheValue)
-    {
-        final String cacheKey = mCacheValueDelegate.generateAuthorityValidationMetadataKey(environment);
-        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
-    }
-
-    @Override
     public void clearAll() {
         Logger.info(TAG, "Clearing all SharedPreferences entries...");
         mSharedPreferencesFileManager.clear();
@@ -570,21 +556,9 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         return type;
     }
 
-    /**
-     * Inspects whether the cache key is for MSAL CPP only.
-     *
-     * @param cacheKey The cache key to inspect.
-     * @return The CredentialType or null if a proper type cannot be resolved.
-     */
-    public boolean isAuthorityValidationMetadata(@NonNull final String cacheKey)
-    {
-        return cacheKey.contains(CacheKeyValueDelegate.AUTHORITY_VALIDATION_METADATA_CACHE_GUID);
-    }
-
     private boolean isAccount(@NonNull final String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
-        boolean isAccount = (null == getCredentialTypeForCredentialCacheKey(cacheKey) &&
-                !isAuthorityValidationMetadata(cacheKey));
+        boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(TAG, "isAccount? [" + isAccount + "]");
         return isAccount;
     }

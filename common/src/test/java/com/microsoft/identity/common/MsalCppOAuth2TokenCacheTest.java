@@ -522,14 +522,4 @@ public class MsalCppOAuth2TokenCacheTest {
                 mTestBundle.mGeneratedRefreshToken
         );
     }
-
-    @Test
-    public void saveAuthorityValidationMetadataSuccess() throws ClientException {
-        String environment = "login.microsoftonline.com";
-        String metadata = "{metadata}";
-        mCppCache.saveAuthorityValidationMetadata(environment, metadata);
-        String res = mCppCache.getAuthorityValidationMetadata(environment);
-        Assert.assertEquals(metadata, res);
-    }
-
 }
