@@ -1,3 +1,6 @@
+VNext
+----------
+
 Version 3.4.4
 ----------
 - [MINOR] Introduce support for authorization activities to be performed in the Android Task as the Activity that was provided for an interactive request.
