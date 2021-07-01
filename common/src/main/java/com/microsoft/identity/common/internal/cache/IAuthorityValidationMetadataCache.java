@@ -22,18 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import androidx.annotation.NonNull;
+import com.microsoft.identity.common.java.exception.ClientException;
+
 /**
  * Cache the authority validation metadata that is only used in MSAL CPP.
  */
-public interface IDefaultAuthorityValidationMetadataCache {
-
-    /**
-     * Generate cache Key for authority validation metadata.
-     *
-     * @param environment Environment
-     * @return String
-     */
-    public String generateAuthorityValidationMetadataKey(final String environment);
+public interface IAuthorityValidationMetadataCache {
 
     /**
      * This function is only used in the authority validation in MSAL CPP
@@ -42,7 +37,7 @@ public interface IDefaultAuthorityValidationMetadataCache {
      * @param environment Environment.
      * @param cacheValue Value.
      */
-    public void saveAuthorityValidationMetadata(final String environment, final String cacheValue);
+    public void saveAuthorityValidationMetadata(@NonNull final String environment, @NonNull final String cacheValue) throws ClientException;
 
     /**
      * This function is only used in the authority validation in MSAL CPP
@@ -51,7 +46,7 @@ public interface IDefaultAuthorityValidationMetadataCache {
      * @param environment Environment.
      * @return The string of the cached value, or null if not exist.
      */
-    public String getAuthorityValidationMetadata(final String environment);
+    public String getAuthorityValidationMetadata(@NonNull final String environment) throws ClientException;
 
     /**
      * API to clear all cache.

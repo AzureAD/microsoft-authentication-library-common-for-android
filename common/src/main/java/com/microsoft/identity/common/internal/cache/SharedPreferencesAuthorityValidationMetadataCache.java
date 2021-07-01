@@ -23,12 +23,15 @@
 package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.java.exception.ClientException;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE;
 
-public class SharedPreferencesAuthorityValidationMetadataCache implements IDefaultAuthorityValidationMetadataCache {
+public class SharedPreferencesAuthorityValidationMetadataCache implements IAuthorityValidationMetadataCache {
 
     private static final String CACHE_VALUE_SEPARATOR = "-";
     private static final String AUTHORITY_VALIDATION_METADATA_CACHE_GUID = "33DD5583-1098-4617-AF07-2D327BC4C0E4";
@@ -40,13 +43,9 @@ public class SharedPreferencesAuthorityValidationMetadataCache implements IDefau
     private static final String DEFAULT_CPP_AUTHORITY_VALIDATION_METADATA_SHARED_PREFERENCES =
             "com.microsoft.identity.client.cpp_authority_validation_metadata";
 
-    private final ICacheKeyValueDelegate mCacheKeyValueDelegate;
-
     private final ISharedPreferencesFileManager mCppAuthorityValidationMetadataSharedPreferencesFileManager;
 
     public SharedPreferencesAuthorityValidationMetadataCache(final Context context) {
-        mCacheKeyValueDelegate = new CacheKeyValueDelegate();
-
         // We don't need to encrypt this cache file, since the cache file does not contain any
         // secrets and other apps do not have access to this cache file.
         final IStorageHelper storageHelper = null;
@@ -58,20 +57,31 @@ public class SharedPreferencesAuthorityValidationMetadataCache implements IDefau
                 );
     }
 
-    @Override
-    public String generateAuthorityValidationMetadataKey(final String environment) {
+    /**
+     * Generate cache Key for authority validation metadata.
+     *
+     * @param environment Environment
+     * @return String
+     */
+    private String generateAuthorityValidationMetadataKey(@NonNull final String environment) throws ClientException {
+        if (null == environment) {
+            throw new ClientException(ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY);
+        }
         return AUTHORITY_VALIDATION_METADATA_CACHE_GUID + CACHE_VALUE_SEPARATOR + environment;
     }
 
     @Override
-    public void saveAuthorityValidationMetadata(final String environment, final String cacheValue) {
+    public void saveAuthorityValidationMetadata(@NonNull final String environment, @NonNull final String cacheValue) throws ClientException {
+        if (null == cacheValue) {
+            throw new ClientException(VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE);
+        }
         final String cacheKey = generateAuthorityValidationMetadataKey(environment);
         mCppAuthorityValidationMetadataSharedPreferencesFileManager.putString(cacheKey, cacheValue);
     }
 
     @Override
     @Nullable
-    public String getAuthorityValidationMetadata(final String environment) {
+    public String getAuthorityValidationMetadata(@NonNull final String environment) throws ClientException {
         final String cacheKey = generateAuthorityValidationMetadataKey(environment);
         return mCppAuthorityValidationMetadataSharedPreferencesFileManager.getString(cacheKey);
     }

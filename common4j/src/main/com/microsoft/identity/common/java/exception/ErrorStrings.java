@@ -477,4 +477,14 @@ public final class ErrorStrings {
      * Use this message for when Device Code Flow fails with an error code that doesn't match any of the pre-defined Device Code Flow codes.
      */
     public final static String DEVICE_CODE_FLOW_DEFAULT_ERROR_MESSAGE = "Device Code Flow has failed with an unexpected error. The error code shown was received from the result object.";
+
+    /**
+     * When doing MSAL CPP authority validation metadata cashing, the key environment cannot be null
+     */
+    public final static String ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY = "When using the environment as the key of authority validation metadata, it cannot be null";
+
+    /**
+     * When doing MSAL CPP authority validation metadata cashing, the value cannot be null
+     */
+    public final static String VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE = "When writing authority validation metadata, the value cannot be null";
 }

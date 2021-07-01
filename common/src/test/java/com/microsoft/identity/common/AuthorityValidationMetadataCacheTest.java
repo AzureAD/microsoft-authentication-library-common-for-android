@@ -24,7 +24,7 @@ package com.microsoft.identity.common;
 
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
-import com.microsoft.identity.common.internal.cache.IDefaultAuthorityValidationMetadataCache;
+import com.microsoft.identity.common.internal.cache.IAuthorityValidationMetadataCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAuthorityValidationMetadataCache;
 import com.microsoft.identity.common.java.exception.ClientException;
 import org.junit.After;
@@ -33,11 +33,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE;
 
 @RunWith(RobolectricTestRunner.class)
 public class AuthorityValidationMetadataCacheTest {
 
-    private IDefaultAuthorityValidationMetadataCache mAuthorityValidationMetadataCache;
+    private IAuthorityValidationMetadataCache mAuthorityValidationMetadataCache;
     private Context mContext;
 
     @Before
@@ -56,10 +58,37 @@ public class AuthorityValidationMetadataCacheTest {
     public void saveAuthorityValidationMetadataSuccess() throws ClientException {
         String environment = "login.microsoftonline.com";
         String metadata = "{metadata}";
-        String ReadedMetadata = mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(environment);
-        Assert.assertEquals(ReadedMetadata, null);
+        String readMetadata = mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(environment);
+        Assert.assertEquals(readMetadata, null);
         mAuthorityValidationMetadataCache.saveAuthorityValidationMetadata(environment, metadata);
-        ReadedMetadata = mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(environment);
-        Assert.assertEquals(ReadedMetadata, metadata);
+        readMetadata = mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(environment);
+        Assert.assertEquals(readMetadata, metadata);
+    }
+
+    @Test
+    public void readAuthorityValidationMetadataWithNullKey(){
+        try {
+            mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(null);
+        }
+        catch (ClientException ex) {
+            Assert.assertEquals(ex.getErrorCode(), ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY);
+            return;
+        }
+        // Should not run to here.
+        Assert.assertTrue(false);
+    }
+
+    @Test
+    public void writeAuthorityValidationMetadataWithNullValue(){
+        String environment = "login.microsoftonline.com";
+        try {
+            mAuthorityValidationMetadataCache.saveAuthorityValidationMetadata(environment, null);
+        }
+        catch (ClientException ex) {
+            Assert.assertEquals(ex.getErrorCode(), VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE);
+            return;
+        }
+        // Should not run to here.
+        Assert.assertTrue(false);
     }
 }
