@@ -22,11 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.IStorageEncryptionManager;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 
-import lombok.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Common components, shared between Android, Linux.
@@ -38,5 +37,5 @@ public interface ICommonComponents {
      */
     void flushHttpCache();
 
-    IStorageEncryptionManager getStorageEncryptionManager(@NonNull final ITelemetryCallback telemetryCallback);
+    IStorageEncryptionManager getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
 }
