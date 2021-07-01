@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Add helper for Automation Tests to account for passwordPageExpected (#1449)
 - [MAJOR] Migrate Exceptions from common to common4j (#1442)
 - [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
 - [MINOR] Migrate Requests/Responses (#1424)
