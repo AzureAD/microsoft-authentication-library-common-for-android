@@ -84,15 +84,11 @@ public class WebViewUtil {
      */
     @SuppressWarnings("deprecation")
     public static void removeSessionCookiesFromWebView(final Context context) {
-        final CookieManager cookieManager = getCookieManager(context);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            cookieManager.removeAllCookies(null);
-            cookieManager.flush();
-        } else {
-            final android.webkit.CookieSyncManager syncManager = android.webkit.CookieSyncManager.createInstance(context);
-            cookieManager.removeSessionCookie();
-            syncManager.sync();
-        }
+        final String pkgName = context.getPackageName();
+        Logger.warn(
+                TAG + ":removeSessionCookiesFromWebView",
+                "Clear cookies called from: " + pkgName + " -- ignoring."
+        );
     }
 
     private static CookieManager getCookieManager(final Context context) {
