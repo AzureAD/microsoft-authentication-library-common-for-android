@@ -225,11 +225,11 @@ public abstract class StorageEncryptionManager implements IStorageEncryptionMana
                 "Tried all decryption keys and decryption still fails.");
 
         for (final ISecretKeyLoader keyLoader : keysForDecryption) {
+            if (keyLoader == null){
+                throw new IllegalStateException("KeyLoader must not be null.");
+            }
+            
             try {
-                if (keyLoader == null){
-                    throw new IllegalStateException("KeyLoader must not be null.");
-                }
-
                 final byte[] result = decryptWithSecretKey(dataBytes, keyLoader);
                 Logger.verbose(TAG + methodName, "Finished decryption with key:" + keyLoader.getAlias());
                 return result;

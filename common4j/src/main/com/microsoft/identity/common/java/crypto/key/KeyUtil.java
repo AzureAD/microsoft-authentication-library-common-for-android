@@ -36,6 +36,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import lombok.NonNull;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+
 public class KeyUtil {
 
     private static final Object TAG = KeyUtil.class.getSimpleName();
@@ -86,7 +88,7 @@ public class KeyUtil {
     public static String getKeyThumbPrint(final @NonNull SecretKey key) {
         final String methodName = ":getKeyThumbPrint";
         try {
-            final byte[] thumbprintBytes = "012345678910111213141516".getBytes();
+            final byte[] thumbprintBytes = "012345678910111213141516".getBytes(ENCODING_UTF8);
 
             final Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
             thumbprintMac.init(getHMacKey(key));
