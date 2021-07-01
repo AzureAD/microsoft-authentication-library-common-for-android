@@ -47,7 +47,9 @@ public class SharedPreferencesAuthorityValidationMetadataCache implements IDefau
     public SharedPreferencesAuthorityValidationMetadataCache(final Context context) {
         mCacheKeyValueDelegate = new CacheKeyValueDelegate();
 
-        final IStorageHelper storageHelper = new StorageHelper(context);
+        // We don't need to encrypt this cache file, since the cache file does not contain any
+        // secrets and other apps do not have access to this cache file.
+        final IStorageHelper storageHelper = null;
         mCppAuthorityValidationMetadataSharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
