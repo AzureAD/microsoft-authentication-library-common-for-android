@@ -564,7 +564,7 @@ class DevicePopManager implements IDevicePopManager {
         try {
             final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
 
-            if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
+            if (keyEntry == null) {
                 Logger.warn(
                         TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
