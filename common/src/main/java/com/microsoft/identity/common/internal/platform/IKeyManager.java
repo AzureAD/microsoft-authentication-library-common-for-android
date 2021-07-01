@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.KeyStore;
@@ -106,5 +107,4 @@ public interface IKeyManager<K extends KeyStore.Entry> {
      * @throws ClientException If the underlying key material cannot be inspected.
      */
     SecureHardwareState getSecureHardwareState() throws ClientException;
-
 }

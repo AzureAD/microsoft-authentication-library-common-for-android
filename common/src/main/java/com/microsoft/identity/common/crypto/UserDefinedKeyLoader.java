@@ -20,42 +20,45 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.crypto;
 
-import java.security.KeyStore;
+import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 
-/**
- * Interface for cryptoSuite definitions.  Designed to span the Cipher enum in use in DevicePopManager
- * to allow for inclusion of symmetric cipher definitions and include the name of a MAC algorithm.
- */
-public interface CryptoSuite {
-    /**
-     * @return the name of the cipher used for this crypto suite.  Should be suitable for use in Cipher.getInstance();
-     */
-    Algorithm cipher();
+import javax.crypto.SecretKey;
+
+import lombok.NonNull;
+
+public class UserDefinedKeyLoader extends AES256KeyLoader {
 
     /**
-     * @return the name of the MAC used for this crypto suite.  Should be suitable for use in Mac.getInstance();
+     * Indicate that the token item is encrypted with the user provided key.
      */
-    String macName();
+    public static final String KEY_IDENTIFIER = "U001";
 
-    /**
-     * @return true if this suite uses an asymmetric key.
-     */
-    boolean isAsymmetric();
+    private final String mAlias;
+    private final SecretKey mKey;
 
-    /**
-     * @return the class of entry that is used by the a KeyStore to store this credential.
-     */
-    Class<? extends KeyStore.Entry> keyClass();
+    public UserDefinedKeyLoader(@NonNull final String alias,
+                                @NonNull final byte[] rawBytes){
+        mAlias = alias;
+        mKey = generateKeyFromRawBytes(rawBytes);
+    }
 
-    /**
-     * @return the key size for this instance.
-     */
-    int keySize();
+    @Override
+    @NonNull
+    public String getAlias() {
+        return mAlias;
+    }
 
-    /**
-     * @return the signing algorithm desired by this suite.
-     */
-    IDevicePopManager.SigningAlgorithm signingAlgorithm();
+    @Override
+    @NonNull
+    public SecretKey getKey() {
+        return mKey;
+    }
+
+    @Override
+    @NonNull
+    public String getKeyIdentifier() {
+        return KEY_IDENTIFIER;
+    }
 }

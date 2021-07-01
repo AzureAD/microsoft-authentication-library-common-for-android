@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import com.microsoft.identity.common.java.crypto.Algorithm;
+
 import lombok.NonNull;
 
 /**

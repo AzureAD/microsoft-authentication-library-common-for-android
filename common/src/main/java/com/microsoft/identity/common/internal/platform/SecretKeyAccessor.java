@@ -26,6 +26,9 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.nio.charset.Charset;
@@ -179,7 +182,7 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     }
 
     @Override
-    public byte[] getThumprint() throws ClientException {
+    public byte[] getThumbprint() throws ClientException {
         return mKeyManager.getThumbprint();
     }
 
@@ -194,7 +197,7 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     }
 
     @Override
-    public KeyAccessor generateDerivedKey(final byte[] label, final byte[] ctx, final CryptoSuite suite) throws ClientException {
+    public IKeyAccessor generateDerivedKey(final byte[] label, final byte[] ctx, final CryptoSuite suite) throws ClientException {
         throw new UnsupportedOperationException("This operation is not supported by inaccessible keys");
     }
 

@@ -20,15 +20,30 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+package com.microsoft.identity.common.shadows;
 
-package com.microsoft.identity.common.adal.internal.cache;
+import com.microsoft.identity.common.crypto.AndroidSdkStorageEncryptionManager;
+import com.microsoft.identity.common.crypto.UserDefinedKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 
-import android.content.Context;
+import org.robolectric.annotation.Implements;
 
-/**
- * Temporary interface.
- * For injecting telemetry into common (until common's telemetry is properly wired up).
- * */
-public interface IWpjTelemetryCallback {
-    void logEvent(Context context, final String operation, final Boolean isFailed, final String reason);
+import java.util.ArrayList;
+import java.util.List;
+
+@Implements(AndroidSdkStorageEncryptionManager.class)
+public class ShadowAndroidSdkStorageEncryptionManager {
+
+    final byte[] encryptionKey = new byte[]{22, 78, -69, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};
+    final AES256KeyLoader mUserDefinedKey = new UserDefinedKeyLoader("MOCK_ALIAS", encryptionKey);
+
+    public  AES256KeyLoader getKeyLoaderForEncryption() {
+        return mUserDefinedKey;
+    }
+
+    public List<AES256KeyLoader> getKeyLoaderForDecryption(byte[] cipherText) {
+        return new ArrayList<AES256KeyLoader>() {{
+            add(mUserDefinedKey);
+        }};
+    }
 }

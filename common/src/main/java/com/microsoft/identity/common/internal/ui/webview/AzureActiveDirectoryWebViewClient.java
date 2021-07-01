@@ -51,6 +51,7 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyA
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;

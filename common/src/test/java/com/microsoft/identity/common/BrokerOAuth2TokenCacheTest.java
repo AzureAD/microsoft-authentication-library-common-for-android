@@ -26,7 +26,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.crypto.AndroidSdkStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
@@ -50,7 +50,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.M
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.shadows.ShadowStorageHelper;
+import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
 import org.junit.Before;
@@ -89,7 +89,7 @@ import static org.mockito.Mockito.when;
 
 @SuppressWarnings("rawtypes")
 @RunWith(RobolectricTestRunner.class)
-@Config(shadows = {ShadowStorageHelper.class})
+@Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
 public class BrokerOAuth2TokenCacheTest {
 
     private static final int TEST_APP_UID = 1337;
@@ -289,7 +289,8 @@ public class BrokerOAuth2TokenCacheTest {
         return SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 getBrokerUidSequesteredFilename(appUid),
-                new StorageHelper(context)
+                -1,
+                new AndroidSdkStorageEncryptionManager(context, null)
         );
     }
 
@@ -297,7 +298,8 @@ public class BrokerOAuth2TokenCacheTest {
         return SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                new StorageHelper(context)
+                -1,
+                new AndroidSdkStorageEncryptionManager(context, null)
         );
     }
 

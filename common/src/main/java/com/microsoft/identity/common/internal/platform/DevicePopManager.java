@@ -36,6 +36,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;

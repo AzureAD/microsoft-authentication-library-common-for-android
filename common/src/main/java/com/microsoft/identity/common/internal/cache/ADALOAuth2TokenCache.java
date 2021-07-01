@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.crypto.IStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -115,11 +117,13 @@ public class ADALOAuth2TokenCache
     protected void initializeSharedPreferencesFileManager(final String fileName) {
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
+
         mISharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         getContext(),
                         fileName,
-                        new StorageHelper(getContext())
+                        new AndroidCommonComponents(getContext()).
+                                getStorageEncryptionManager(null)
                 );
     }
 

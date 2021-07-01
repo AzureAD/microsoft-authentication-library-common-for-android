@@ -29,7 +29,7 @@ import static junit.framework.Assert.assertTrue;
 import androidx.test.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.crypto.AndroidSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
@@ -64,7 +64,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
                 SharedPreferencesFileManager.getSharedPreferences(
                         InstrumentationRegistry.getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        new StorageHelper(InstrumentationRegistry.getTargetContext())
+                        new AndroidSdkStorageEncryptionManager(InstrumentationRegistry.getTargetContext(), null)
                 )
         });
     }

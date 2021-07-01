@@ -24,17 +24,19 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import java.util.UUID;
 
+import lombok.NonNull;
+
 /**
  * This generates a non-guessable value for the state parameter in an authorization request per the specification: https://tools.ietf.org/html/rfc6749#section-10.10
  */
 public class DefaultStateGenerator extends StateGenerator {
     @Override
+    @NonNull
     public String generate() {
         final UUID stateUUID1 = UUID.randomUUID();
         final UUID stateUUID2 = UUID.randomUUID();
-        final String state = stateUUID1.toString() + "-" + stateUUID2.toString();
 
-        return state;
+        return stateUUID1.toString() + "-" + stateUUID2.toString();
     }
 
 }

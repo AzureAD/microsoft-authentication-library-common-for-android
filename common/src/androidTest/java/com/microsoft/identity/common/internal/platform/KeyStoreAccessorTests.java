@@ -27,6 +27,9 @@ import android.os.Build;
 
 import androidx.test.InstrumentationRegistry;
 
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
@@ -39,7 +42,7 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessfulRawKey() throws Exception {
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
         byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         byte[] out = accessor.encrypt(in);
@@ -51,7 +54,7 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessful() throws Exception {
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         byte[] out = accessor.encrypt(in);
@@ -64,7 +67,7 @@ public class KeyStoreAccessorTests {
     @Test
     public void testAsymmetricBasicFunctionalitySuccessful() throws Exception {
         Context context = InstrumentationRegistry.getTargetContext();
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA);
+        IKeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, SigningAlgorithm.SHA_256_WITH_RSA);
         byte[] in = new byte[245];
         RANDOM.nextBytes(in);
         byte[] out = accessor.encrypt(in);
@@ -76,7 +79,7 @@ public class KeyStoreAccessorTests {
 
     @Test(expected = ClientException.class)
     public void testBasicFunctionalityDecryptDoesSomething() throws Exception {
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
         byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         byte[] out = accessor.encrypt(in);
@@ -88,7 +91,7 @@ public class KeyStoreAccessorTests {
     public void testBasicFunctionalityUnsupportedSign() throws Exception {
         boolean exception = false;
         try {
-            final KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
             final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             final byte[] out = accessor.sign(in);
@@ -107,7 +110,7 @@ public class KeyStoreAccessorTests {
     public void testBasicFunctionalityUnsupportedVerify() throws Exception {
         boolean exception = false;
         try {
-            final KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+            final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
             final byte[] in = new byte[1024];
             RANDOM.nextBytes(in);
             accessor.verify(in, in);
@@ -123,7 +126,7 @@ public class KeyStoreAccessorTests {
     }
     @Test
     public void testBasicFunctionalitySignAndVerifySupportedIfRaw() throws Exception {
-        KeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
         byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
         byte[] out = accessor.sign(in);

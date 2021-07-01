@@ -40,6 +40,7 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.DateUtilities;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
@@ -91,6 +92,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
+@Deprecated
 public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -199,7 +201,7 @@ public class StorageHelper implements IStorageHelper {
 
     private final Context mContext;
     private final SecureRandom mRandom;
-    private IWpjTelemetryCallback mTelemetryCallback;
+    private ITelemetryCallback mTelemetryCallback;
 
     /**
      * Public and private keys that are generated in AndroidKeyStore.
@@ -226,7 +228,7 @@ public class StorageHelper implements IStorageHelper {
      *                TODO: Remove this suppression: https://android-developers.blogspot.com/2013/08/some-securerandom-thoughts.html
      */
     @SuppressLint("TrulyRandom")
-    public StorageHelper(@NonNull final Context context, @Nullable final IWpjTelemetryCallback telemetryCallback) {
+    public StorageHelper(@NonNull final Context context, @Nullable final ITelemetryCallback telemetryCallback) {
         mContext = context.getApplicationContext();
         mRandom = new SecureRandom();
         mTelemetryCallback = telemetryCallback;
@@ -344,11 +346,11 @@ public class StorageHelper implements IStorageHelper {
             try {
                 final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
                 if (key == null) {
-                    mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                    mTelemetryCallback.logEvent(methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
                 }
             } catch (final Exception e) {
                 // Best effort.
-                mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+                mTelemetryCallback.logEvent(methodName, false, "KEY_DECRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
             }
         }
 
@@ -398,7 +400,7 @@ public class StorageHelper implements IStorageHelper {
             Logger.info(TAG + methodName, message);
 
             if (mTelemetryCallback != null) {
-                mTelemetryCallback.logEvent(mContext,
+                mTelemetryCallback.logEvent(
                         AuthenticationConstants.TelemetryEvents.DECRYPTION_ERROR,
                         true,
                         message);
@@ -582,11 +584,11 @@ public class StorageHelper implements IStorageHelper {
                 try {
                     final SecretKey key = loadSecretKey(KeyType.KEYSTORE_ENCRYPTED_KEY);
                     if (key == null) {
-                        mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
+                        mTelemetryCallback.logEvent(methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_NOT_INITIALIZED");
                     }
                 } catch (final Exception e) {
                     // Best effort.
-                    mTelemetryCallback.logEvent(mContext, methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
+                    mTelemetryCallback.logEvent(methodName, false, "KEY_ENCRYPTION_KEYSTORE_KEY_FAILED_TO_LOAD");
                 }
             }
 
@@ -1034,7 +1036,7 @@ public class StorageHelper implements IStorageHelper {
                           @NonNull final String reason) {
         Logger.verbose(TAG + methodName, operationName + ": " + reason);
         if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, isFailed, reason);
+            mTelemetryCallback.logEvent(operationName, isFailed, reason);
         }
     }
 
@@ -1042,7 +1044,7 @@ public class StorageHelper implements IStorageHelper {
                               @NonNull final String operationName) {
         Logger.verbose(TAG + methodName, operationName + " started.");
         if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, false, "");
+            mTelemetryCallback.logEvent(operationName, false, "");
         }
     }
 
@@ -1051,7 +1053,7 @@ public class StorageHelper implements IStorageHelper {
                                 @NonNull final String reason) {
         Logger.verbose(TAG + methodName, operationName + " successfully finished: " + reason);
         if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, false, reason);
+            mTelemetryCallback.logEvent(operationName, false, reason);
         }
     }
 
@@ -1061,7 +1063,7 @@ public class StorageHelper implements IStorageHelper {
                               @Nullable Exception e) {
         Logger.error(TAG + methodName, operationName + " failed: " + reason, e);
         if (mTelemetryCallback != null) {
-            mTelemetryCallback.logEvent(mContext, operationName, true, reason);
+            mTelemetryCallback.logEvent(operationName, true, reason);
         }
     }
 
