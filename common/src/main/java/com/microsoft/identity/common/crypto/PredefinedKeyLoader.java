@@ -28,7 +28,7 @@ import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
-public class UserDefinedKeyLoader extends AES256KeyLoader {
+public class PredefinedKeyLoader extends AES256KeyLoader {
 
     /**
      * Indicate that the token item is encrypted with the user provided key.
@@ -38,8 +38,8 @@ public class UserDefinedKeyLoader extends AES256KeyLoader {
     private final String mAlias;
     private final SecretKey mKey;
 
-    public UserDefinedKeyLoader(@NonNull final String alias,
-                                @NonNull final byte[] rawBytes){
+    public PredefinedKeyLoader(@NonNull final String alias,
+                               @NonNull final byte[] rawBytes){
         mAlias = alias;
         mKey = generateKeyFromRawBytes(rawBytes);
     }

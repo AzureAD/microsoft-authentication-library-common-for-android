@@ -33,7 +33,6 @@ import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.crypto.IStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -1552,14 +1551,13 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(context, bindingProcessUid);
         }
 
-        final IStorageEncryptionManager storageEncryptionManager = new AndroidCommonComponents(context).
-                getStorageEncryptionManager(null);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
-                        storageEncryptionManager
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, false);
@@ -1572,13 +1570,12 @@ public class BrokerOAuth2TokenCache
                 "Initializing foci cache"
         );
 
-        final IStorageEncryptionManager storageEncryptionManager = new AndroidCommonComponents(context).
-                getStorageEncryptionManager(null);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        storageEncryptionManager
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, true);

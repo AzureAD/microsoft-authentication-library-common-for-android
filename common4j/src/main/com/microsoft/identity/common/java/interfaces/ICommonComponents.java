@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.java.crypto.IStorageEncryptionManager;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -37,5 +37,5 @@ public interface ICommonComponents {
      */
     void flushHttpCache();
 
-    IStorageEncryptionManager getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
+    IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
 }

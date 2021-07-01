@@ -27,6 +27,7 @@ import android.content.Context;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -42,7 +43,12 @@ import lombok.NonNull;
 public class AndroidSdkStorageEncryptionManager extends StorageEncryptionManager {
     private static final String TAG = AndroidSdkStorageEncryptionManager.class.getSimpleName();
 
-    private final UserDefinedKeyLoader mUserDefinedKey;
+    /**
+     * Alias persisting the keypair in AndroidKeyStore.
+     */
+    /* package */ static final String KEY_STORE_ALIAS = "AdalKey";
+
+    private final PredefinedKeyLoader mUserDefinedKey;
     private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
 
     public AndroidSdkStorageEncryptionManager(@NonNull final Context context,
@@ -50,11 +56,11 @@ public class AndroidSdkStorageEncryptionManager extends StorageEncryptionManager
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
             mUserDefinedKey = null;
         } else {
-            mUserDefinedKey = new UserDefinedKeyLoader("USER_DEFINED_KEY",
+            mUserDefinedKey = new PredefinedKeyLoader("USER_DEFINED_KEY",
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
-        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(context, telemetryCallback);
+        mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(KEY_STORE_ALIAS, context, telemetryCallback);
     }
 
     @Override
@@ -67,18 +73,18 @@ public class AndroidSdkStorageEncryptionManager extends StorageEncryptionManager
     }
 
     @Override
-    public @NonNull List<AES256KeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
+    public @NonNull List<ISecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodName = "getKeyLoaderForDecryption";
 
         if (mUserDefinedKey != null &&
-                isEncryptedByThisKeyIdentifier(cipherText, UserDefinedKeyLoader.KEY_IDENTIFIER)) {
-            return new ArrayList<AES256KeyLoader>() {{
+                isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.KEY_IDENTIFIER)) {
+            return new ArrayList<ISecretKeyLoader>() {{
                 add(mUserDefinedKey);
             }};
         }
 
         if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
-            return new ArrayList<AES256KeyLoader>() {{
+            return new ArrayList<ISecretKeyLoader>() {{
                 add(mKeyStoreKeyLoader);
             }};
         }

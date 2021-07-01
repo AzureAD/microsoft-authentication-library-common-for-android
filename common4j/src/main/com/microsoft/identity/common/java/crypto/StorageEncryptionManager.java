@@ -67,7 +67,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.UNEXP
  * Encrypted Data             = [getEncodeVersionLengthPrefix()][ENCODE_VERSION][Base64EncodedEncryptedData]
  * Base64EncodedEncryptedData = Base64.encodedURLUnsafe([KeyIdentifier][encryptedData][iv][MACDigest])
  */
-public abstract class StorageEncryptionManager implements IStorageEncryptionManager {
+public abstract class StorageEncryptionManager implements IKeyAccessor {
     private static final String TAG = StorageEncryptionManager.class.getSimpleName() + "#";
 
     /**
@@ -108,18 +108,6 @@ public abstract class StorageEncryptionManager implements IStorageEncryptionMana
      */
     /* package */ StorageEncryptionManager(@NonNull final IVGenerator generator) {
         mGenerator = generator;
-    }
-
-    @Override
-    public String encrypt(@NonNull String plainText) throws ClientException{
-        final byte[] result = encrypt(plainText.getBytes(ENCODING_UTF8));
-        return new String(result, ENCODING_UTF8);
-    }
-
-    @Override
-    public String decrypt(@NonNull String cipherText) throws ClientException {
-        final byte[] result = decrypt(cipherText.getBytes(ENCODING_UTF8));
-        return new String(result, ENCODING_UTF8);
     }
 
     @Override
@@ -204,7 +192,7 @@ public abstract class StorageEncryptionManager implements IStorageEncryptionMana
         final String methodName = ":decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
-        final List<AES256KeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
+        final List<ISecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
 
         if (keysForDecryption == null || keysForDecryption.size() == 0) {
             if (keysForDecryption == null){
@@ -517,7 +505,7 @@ public abstract class StorageEncryptionManager implements IStorageEncryptionMana
      * @return a SecretKey loader.
      */
     @NonNull
-    public abstract AES256KeyLoader getKeyLoaderForEncryption() throws ClientException;
+    public abstract ISecretKeyLoader getKeyLoaderForEncryption() throws ClientException;
 
     /**
      * Identify the encrypted blob and return a list of potential candidate key loaders for decryption.
@@ -526,5 +514,5 @@ public abstract class StorageEncryptionManager implements IStorageEncryptionMana
      * @return a prioritized list of SecretKey (earlier keys is more likely to be the correct one).
      **/
     @NonNull
-    abstract public List<AES256KeyLoader> getKeyLoaderForDecryption(@NonNull final byte[] cipherText) throws ClientException;
+    abstract public List<ISecretKeyLoader> getKeyLoaderForDecryption(@NonNull final byte[] cipherText) throws ClientException;
 }

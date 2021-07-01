@@ -48,12 +48,13 @@ import javax.security.auth.x500.X500Principal;
 public class AndroidWrappedKeyLoaderTest {
 
     final Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+    final String MOCK_KEY_ALIAS = "MOCK_KEY_ALIAS";
 
     @Before
     public void setUp() throws Exception {
         // Everything is on clean slate.
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
-        AndroidKeyStoreUtil.deleteKey(AndroidWrappedKeyLoader.KEY_STORE_CERT_ALIAS);
+        AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
         FileUtil.deleteFile(context, AndroidWrappedKeyLoader.KEY_FILE_PATH);
     }
 
@@ -96,7 +97,7 @@ public class AndroidWrappedKeyLoaderTest {
 
     @Test
     public void testGenerateKey() throws ClientException {
-        final AndroidWrappedKeyLoader loader = new AndroidWrappedKeyLoader(context, null);
+        final AndroidWrappedKeyLoader loader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
         final SecretKey secretKey = loader.generateRandomKey();
 
         Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
@@ -121,12 +122,12 @@ public class AndroidWrappedKeyLoaderTest {
     @Test
     public void testLoadKey() throws ClientException {
         // Nothing exists. This load key function should generate a key if the key hasn't exist.
-        Assert.assertNull(AndroidKeyStoreUtil.readKey(AndroidWrappedKeyLoader.KEY_STORE_CERT_ALIAS));
+        Assert.assertNull(AndroidKeyStoreUtil.readKey(MOCK_KEY_ALIAS));
         Assert.assertNull(FileUtil.readFromFile(context,
                 AndroidWrappedKeyLoader.KEY_FILE_PATH,
                 AndroidWrappedKeyLoader.KEY_FILE_SIZE));
 
-        final AndroidWrappedKeyLoader loader = new AndroidWrappedKeyLoader(context, null);
+        final AndroidWrappedKeyLoader loader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
         final SecretKey secretKey = loader.getKey();
         Assert.assertNotNull(loader.mCachedKey);
 
@@ -139,7 +140,7 @@ public class AndroidWrappedKeyLoaderTest {
     public void testLoadDeletedKeyStoreKey() throws ClientException {
         final AndroidWrappedKeyLoader loader = initKeyLoaderWithKeyEntry();
 
-        AndroidKeyStoreUtil.deleteKey(AndroidWrappedKeyLoader.KEY_STORE_CERT_ALIAS);
+        AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
         // Cached key should not be wiped - yet, since we delete directly in keychain.
         Assert.assertNotNull(loader.mCachedKey);
 
@@ -162,7 +163,7 @@ public class AndroidWrappedKeyLoaderTest {
     }
 
     private AndroidWrappedKeyLoader initKeyLoaderWithKeyEntry() throws ClientException {
-        final AndroidWrappedKeyLoader loader = new AndroidWrappedKeyLoader(context, null);
+        final AndroidWrappedKeyLoader loader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
         final SecretKey key = loader.getKey();
         Assert.assertNotNull(key);
         Assert.assertNotNull(loader.mCachedKey);

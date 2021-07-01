@@ -68,11 +68,6 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     /* package */ static final String KEYSTORE_KEY_ALIAS = "KEYSTORE_KEY";
 
     /**
-     * Cert alias persisting the keypair in AndroidKeyStore.
-     */
-    /* package */ static final String KEY_STORE_CERT_ALIAS = "AdalKey";
-
-    /**
      * Algorithm for key wrapping.
      */
     private static final String WRAP_ALGORITHM = "RSA/ECB/PKCS1Padding";
@@ -97,11 +92,15 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private final Context mContext;
     private final ITelemetryCallback mTelemetryCallback;
 
+    private final String mAlias;
+
     // Visible for testing.
     /* package */ SecretKey mCachedKey = null;
 
-    public AndroidWrappedKeyLoader(@NonNull final Context context,
+    public AndroidWrappedKeyLoader(@NonNull final String alias,
+                                   @NonNull final Context context,
                                    @Nullable final ITelemetryCallback telemetryCallback) {
+        mAlias = alias;
         mContext = context;
         mTelemetryCallback = telemetryCallback;
     }
@@ -208,7 +207,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      * Wipe all the data associated from this key.
      */
     private void deleteSecretKeyFromStorage() throws ClientException {
-        AndroidKeyStoreUtil.deleteKey(KEY_STORE_CERT_ALIAS);
+        AndroidKeyStoreUtil.deleteKey(mAlias);
         FileUtil.deleteFile(mContext, KEY_FILE_PATH);
         mCachedKey = null;
     }
@@ -226,7 +225,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_START);
             final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
                     WRAP_KEY_ALGORITHM,
-                    getSpecForKeyStoreKey(mContext));
+                    getSpecForKeyStoreKey(mContext, mAlias));
             logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
             return keyPair;
         } catch (final ClientException e) {
@@ -247,7 +246,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         try {
             logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_START);
 
-            final KeyPair keyPair = AndroidKeyStoreUtil.readKey(KEY_STORE_CERT_ALIAS);
+            final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
             if (keyPair == null) {
                 logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore is empty.");
             }
@@ -269,10 +268,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      */
     @SuppressWarnings("deprecation")
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context) {
+    private static AlgorithmParameterSpec getSpecForKeyStoreKey(@NonNull final Context context,
+                                                                @NonNull final String alias) {
         // Generate a self-signed cert.
         final String certInfo = String.format(Locale.ROOT, "CN=%s, OU=%s",
-                KEY_STORE_CERT_ALIAS,
+                alias,
                 context.getPackageName());
 
         final Calendar start = Calendar.getInstance();
@@ -281,7 +281,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         end.add(Calendar.YEAR, certValidYears);
 
         return new KeyPairGeneratorSpec.Builder(context)
-                .setAlias(KEY_STORE_CERT_ALIAS)
+                .setAlias(alias)
                 .setSubject(new X500Principal(certInfo))
                 .setSerialNumber(BigInteger.ONE)
                 .setStartDate(start.getTime())

@@ -30,10 +30,7 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.crypto.IStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -55,7 +52,6 @@ import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
@@ -141,13 +137,12 @@ public class MsalOAuth2TokenCache
 
         // Init the new-schema cache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
-        final IStorageEncryptionManager storageEncryptionManager = new AndroidCommonComponents(context).
-                getStorageEncryptionManager(null);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        storageEncryptionManager
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
         final IAccountCredentialCache accountCredentialCache =
                 new SharedPreferencesAccountCredentialCache(

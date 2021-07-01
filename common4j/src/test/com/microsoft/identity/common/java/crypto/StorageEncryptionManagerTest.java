@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -40,37 +41,37 @@ public class StorageEncryptionManagerTest {
 
     // Value extracted from the legacy StorageHelper.
     // Data Set 1
-    final String textToEncrypt = "TEST_TEXT_TO_ENCRYPT";
+    final byte[] textToEncrypt = "TEST_TEXT_TO_ENCRYPT".getBytes(ENCODING_UTF8);
     final byte[] encryptionKey = new byte[]{22, 78, -69, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};
     final byte[] encryptionKey_Malformed = new byte[]{22, 78, -75, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};
     final byte[] iv = new byte[]{15, -63, 107, 116, -73, -68, 101, 37, -1, 21, -27, 53, 106, -106, 10, -78};
-    final String expectedEncryptedText = "cE1VTAwMeHz7BCCH/27kWvMYYMsGamVenQk6w+YJ14JnFBi6fJ1D8FrdLe8ZSX/FeU1apYKsj9d1fNoMD4kR62XfPMytA3P2XpXEQtkblP6F6A5R74F";
+    final byte[] expectedEncryptedText = "cE1VTAwMeHz7BCCH/27kWvMYYMsGamVenQk6w+YJ14JnFBi6fJ1D8FrdLe8ZSX/FeU1apYKsj9d1fNoMD4kR62XfPMytA3P2XpXEQtkblP6F6A5R74F".getBytes(ENCODING_UTF8);
     final String keyIdentifier_1 = "U001";
-    final String expectedEncryptedText_WithMalformedEncodeVersion = "cD1VTAwMeHz7BCCH/27kWvMYYMsGamVenQk6w+YJ14JnFBi6fJ1D8FrdLe8ZSX/FeU1apYKsj9d1fNoMD4kR62XfPMytA3P2XpXEQtkblP6F6A5R74F";
+    final byte[] expectedEncryptedText_WithMalformedEncodeVersion = "cD1VTAwMeHz7BCCH/27kWvMYYMsGamVenQk6w+YJ14JnFBi6fJ1D8FrdLe8ZSX/FeU1apYKsj9d1fNoMD4kR62XfPMytA3P2XpXEQtkblP6F6A5R74F".getBytes(ENCODING_UTF8);
 
     // Data Set 2
-    final String textToEncrypt_2 = "SECOND_TEXT_TO_ENCRYPT";
+    final byte[] textToEncrypt_2 = "SECOND_TEXT_TO_ENCRYPT".getBytes(ENCODING_UTF8);
     final byte[] encryptionKey_2 = new byte[]{122, 75, 49, 112, 36, 126, 5, 35, 46, 45, -61, -61, 55, 105, 9, -123, 115, 27, 35, -54, -49, 14, -16, 49, -74, -88, -29, -15, -33, -13, 100, 118};
     final byte[] iv_2 = new byte[]{63, 54, -115, 111, -46, 66, -40, -9, -53, -56, -8, -65, 112, -101, -116, -1};
-    final String expectedEncryptedText_2 = "cE1QTAwMTDvTopC+ds4Wgm7IbhnZl1pEVWU+vt7dp0h098822NjPzaNb9JC2PfLyPi/cJuM/wKGYN9YpvRP+BA+i0DlGdCb7nOQ/fmYfjpNq9aj26Kh";
+    final byte[] expectedEncryptedText_2 = "cE1QTAwMTDvTopC+ds4Wgm7IbhnZl1pEVWU+vt7dp0h098822NjPzaNb9JC2PfLyPi/cJuM/wKGYN9YpvRP+BA+i0DlGdCb7nOQ/fmYfjpNq9aj26Kh".getBytes(ENCODING_UTF8);
     final String keyIdentifier_2 = "A001";
 
     @Test
     public void testEncrypt() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey, keyIdentifier_1));
-        Assert.assertEquals(expectedEncryptedText, manager.encrypt(textToEncrypt));
+        Assert.assertArrayEquals(expectedEncryptedText, manager.encrypt(textToEncrypt));
 
         final StorageEncryptionManager manager_2 = new MockStorageEncryptionManager(iv_2, new MockAES256KeyLoader(encryptionKey_2, keyIdentifier_2));
-        Assert.assertEquals(expectedEncryptedText_2, manager_2.encrypt(textToEncrypt_2));
+        Assert.assertArrayEquals(expectedEncryptedText_2, manager_2.encrypt(textToEncrypt_2));
     }
 
     @Test
     public void testDecrypt() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey, keyIdentifier_1));
-        Assert.assertEquals(textToEncrypt, manager.decrypt(expectedEncryptedText));
+        Assert.assertArrayEquals(textToEncrypt, manager.decrypt(expectedEncryptedText));
 
         final StorageEncryptionManager manager_2 = new MockStorageEncryptionManager(iv_2, new MockAES256KeyLoader(encryptionKey_2, keyIdentifier_2));
-        Assert.assertEquals(textToEncrypt_2, manager_2.decrypt(expectedEncryptedText_2));
+        Assert.assertArrayEquals(textToEncrypt_2, manager_2.decrypt(expectedEncryptedText_2));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -90,7 +91,7 @@ public class StorageEncryptionManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testDecryptNullKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<AES256KeyLoader>() {{
+                new ArrayList<ISecretKeyLoader>() {{
                     add(null);
                 }});
         manager.decrypt(expectedEncryptedText);
@@ -124,20 +125,20 @@ public class StorageEncryptionManagerTest {
 
         // Key order doesn't matter.
         final StorageEncryptionManager manager_failFirst = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<AES256KeyLoader>(){{
+                new ArrayList<ISecretKeyLoader>(){{
                     add(failingKeyLoader);
                     add(successKeyLoader);
                 }});
 
-        Assert.assertEquals(textToEncrypt, manager_failFirst.decrypt(expectedEncryptedText));
+        Assert.assertArrayEquals(textToEncrypt, manager_failFirst.decrypt(expectedEncryptedText));
 
         final StorageEncryptionManager manager_failSecond = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<AES256KeyLoader>(){{
+                new ArrayList<ISecretKeyLoader>(){{
                     add(successKeyLoader);
                     add(failingKeyLoader);
                 }});
 
-        Assert.assertEquals(textToEncrypt, manager_failSecond.decrypt(expectedEncryptedText));
+        Assert.assertArrayEquals(textToEncrypt, manager_failSecond.decrypt(expectedEncryptedText));
     }
 
     @Test
@@ -146,7 +147,7 @@ public class StorageEncryptionManagerTest {
         final AES256KeyLoader decryptKeyLoader_2 = new MockAES256KeyLoader();
 
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<AES256KeyLoader>(){{
+                new ArrayList<ISecretKeyLoader>(){{
                     add(decryptKeyLoader);
                     add(decryptKeyLoader_2);
                 }});
@@ -175,14 +176,14 @@ public class StorageEncryptionManagerTest {
     @Test
     public void testDecryptUnencryptedText() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey, keyIdentifier_1));
-        Assert.assertEquals(textToEncrypt, manager.decrypt(textToEncrypt));
+        Assert.assertArrayEquals(textToEncrypt, manager.decrypt(textToEncrypt));
     }
 
     @Test
     public void testIsEncryptedByThisKeyIdentifier_True() throws ClientException {
        Assert.assertTrue(
                StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                       expectedEncryptedText.getBytes(ENCODING_UTF8),
+                       expectedEncryptedText,
                        keyIdentifier_1));
 
     }
@@ -191,7 +192,7 @@ public class StorageEncryptionManagerTest {
     public void testIsEncryptedByThisKeyIdentifier_False() throws ClientException {
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        expectedEncryptedText.getBytes(ENCODING_UTF8),
+                        expectedEncryptedText,
                         keyIdentifier_2));
     }
 
@@ -199,7 +200,7 @@ public class StorageEncryptionManagerTest {
     public void testIsEncryptedByThisKeyIdentifier_StringNotEncrypted() throws ClientException {
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        textToEncrypt.getBytes(ENCODING_UTF8),
+                        textToEncrypt,
                         keyIdentifier_1));
     }
 
@@ -220,7 +221,7 @@ public class StorageEncryptionManagerTest {
     public void testIsEncryptedByThisKeyIdentifier_EncodeVersionNotSupported() {
         Assert.assertFalse(
                 StorageEncryptionManager.isEncryptedByThisKeyIdentifier(
-                        expectedEncryptedText_WithMalformedEncodeVersion.getBytes(ENCODING_UTF8),
+                        expectedEncryptedText_WithMalformedEncodeVersion,
                         keyIdentifier_1));
     }
 
@@ -228,9 +229,9 @@ public class StorageEncryptionManagerTest {
     public void testDecryptedTruncatedString() {
         try {
             final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey, keyIdentifier_1));
-            final byte[] encryptedByteArray = expectedEncryptedText.getBytes(ENCODING_UTF8);
+            final byte[] encryptedByteArray = expectedEncryptedText;
             final byte[] truncatedByteArray = Arrays.copyOf(encryptedByteArray, encryptedByteArray.length / 2);
-            manager.decrypt(new String(truncatedByteArray, ENCODING_UTF8));
+            manager.decrypt(truncatedByteArray);
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
@@ -239,7 +240,7 @@ public class StorageEncryptionManagerTest {
 
         try {
             final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey, keyIdentifier_1));
-            manager.decrypt(expectedEncryptedText.substring(0, 25));
+            manager.decrypt(new String(expectedEncryptedText, ENCODING_UTF8).substring(0, 25).getBytes(ENCODING_UTF8));
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);

@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.util.ArrayList;
@@ -33,21 +34,21 @@ import lombok.NonNull;
 
 public class MockStorageEncryptionManager extends StorageEncryptionManager {
 
-    private final AES256KeyLoader mEncryptKey;
-    private final List<AES256KeyLoader> mDecryptKey;
+    private final ISecretKeyLoader mEncryptKey;
+    private final List<ISecretKeyLoader> mDecryptKey;
 
     MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final AES256KeyLoader key) throws ClientException {
+                                 @Nullable final ISecretKeyLoader key) throws ClientException {
         this(iv,
                 key,
-                new ArrayList<AES256KeyLoader>() {{
+                new ArrayList<ISecretKeyLoader>() {{
                     add(key);
                 }});
     }
 
     MockStorageEncryptionManager(@NonNull final byte[] iv,
-                                 @Nullable final AES256KeyLoader encryptKey,
-                                 @Nullable final List<AES256KeyLoader> decryptKey) throws ClientException {
+                                 @Nullable final ISecretKeyLoader encryptKey,
+                                 @Nullable final List<ISecretKeyLoader> decryptKey) throws ClientException {
         super(new IVGenerator() {
             @Override
             public byte[] generate() {
@@ -59,12 +60,12 @@ public class MockStorageEncryptionManager extends StorageEncryptionManager {
     }
 
     @Override
-    public @NonNull AES256KeyLoader getKeyLoaderForEncryption() throws ClientException {
+    public @NonNull ISecretKeyLoader getKeyLoaderForEncryption() throws ClientException {
         return mEncryptKey;
     }
 
     @Override
-    public @NonNull List<AES256KeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
+    public @NonNull List<ISecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) throws ClientException {
         return mDecryptKey;
     }
 }
