@@ -76,6 +76,20 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
+        if (parameters.getPrompt() == PromptParameter.WHEN_REQUIRED ) {
+            if (parameters.isConsentPageExpected()) {
+                final UiResponse consentPageResponse = parameters.getConsentPageResponse();
+                if (consentPageResponse == UiResponse.ACCEPT) {
+                    loginComponentHandler.acceptConsent();
+                } else {
+                    loginComponentHandler.declineConsent();
+                }
+            }
+            if(parameters.isPasswordPageExpected()) {
+                loginComponentHandler.handlePasswordField(password);
+            }
+        }
+
         if (parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
