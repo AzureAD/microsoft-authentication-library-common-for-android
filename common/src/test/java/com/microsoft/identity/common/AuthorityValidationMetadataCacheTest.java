@@ -33,8 +33,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY;
-import static com.microsoft.identity.common.java.exception.ErrorStrings.VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE;
 
 @RunWith(RobolectricTestRunner.class)
 public class AuthorityValidationMetadataCacheTest {
@@ -65,30 +63,25 @@ public class AuthorityValidationMetadataCacheTest {
         Assert.assertEquals(readMetadata, metadata);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void readAuthorityValidationMetadataWithNullKey(){
-        try {
-            mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(null);
-        }
-        catch (ClientException ex) {
-            Assert.assertEquals(ex.getErrorCode(), ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY);
-            return;
-        }
-        // Should not run to here.
-        Assert.assertTrue(false);
+        mAuthorityValidationMetadataCache.getAuthorityValidationMetadata(null);
     }
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
+    public void readAuthorityValidationMetadataWithEmptyKey(){
+        mAuthorityValidationMetadataCache.getAuthorityValidationMetadata("");
+    }
+
+    @Test(expected = IllegalArgumentException.class)
     public void writeAuthorityValidationMetadataWithNullValue(){
         String environment = "login.microsoftonline.com";
-        try {
-            mAuthorityValidationMetadataCache.saveAuthorityValidationMetadata(environment, null);
-        }
-        catch (ClientException ex) {
-            Assert.assertEquals(ex.getErrorCode(), VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE);
-            return;
-        }
-        // Should not run to here.
-        Assert.assertTrue(false);
+        mAuthorityValidationMetadataCache.saveAuthorityValidationMetadata(environment, null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void writeAuthorityValidationMetadataWithEmptyValue(){
+        String environment = "login.microsoftonline.com";
+        mAuthorityValidationMetadataCache.saveAuthorityValidationMetadata(environment, "");
     }
 }

@@ -26,8 +26,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.internal.util.StringUtil;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE;
 
@@ -48,12 +47,11 @@ public class SharedPreferencesAuthorityValidationMetadataCache implements IAutho
     public SharedPreferencesAuthorityValidationMetadataCache(final Context context) {
         // We don't need to encrypt this cache file, since the cache file does not contain any
         // secrets and other apps do not have access to this cache file.
-        final IStorageHelper storageHelper = null;
         mCppAuthorityValidationMetadataSharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         DEFAULT_CPP_AUTHORITY_VALIDATION_METADATA_SHARED_PREFERENCES,
-                        storageHelper
+                        null
                 );
     }
 
@@ -63,17 +61,17 @@ public class SharedPreferencesAuthorityValidationMetadataCache implements IAutho
      * @param environment Environment
      * @return String
      */
-    private String generateAuthorityValidationMetadataKey(@NonNull final String environment) throws ClientException {
-        if (null == environment) {
-            throw new ClientException(ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY);
+    private static String generateAuthorityValidationMetadataKey(@NonNull final String environment){
+        if (StringUtil.isEmpty(environment)) {
+            throw new IllegalArgumentException(ENVIRONMENT_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_KEY);
         }
         return AUTHORITY_VALIDATION_METADATA_CACHE_GUID + CACHE_VALUE_SEPARATOR + environment;
     }
 
     @Override
-    public void saveAuthorityValidationMetadata(@NonNull final String environment, @NonNull final String cacheValue) throws ClientException {
-        if (null == cacheValue) {
-            throw new ClientException(VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE);
+    public void saveAuthorityValidationMetadata(@NonNull final String environment, @NonNull final String cacheValue){
+        if (StringUtil.isEmpty(cacheValue)) {
+            throw new IllegalArgumentException(VALUE_CANNOT_BE_NULL_AS_A_AUTHORITY_VALIDATION_METADATA_VALUE);
         }
         final String cacheKey = generateAuthorityValidationMetadataKey(environment);
         mCppAuthorityValidationMetadataSharedPreferencesFileManager.putString(cacheKey, cacheValue);
@@ -81,7 +79,7 @@ public class SharedPreferencesAuthorityValidationMetadataCache implements IAutho
 
     @Override
     @Nullable
-    public String getAuthorityValidationMetadata(@NonNull final String environment) throws ClientException {
+    public String getAuthorityValidationMetadata(@NonNull final String environment){
         final String cacheKey = generateAuthorityValidationMetadataKey(environment);
         return mCppAuthorityValidationMetadataSharedPreferencesFileManager.getString(cacheKey);
     }
