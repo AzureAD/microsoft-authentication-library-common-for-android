@@ -47,7 +47,6 @@ public class ClockSkewManager implements IClockSkewManager {
         mClockSkewPreferences = SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
-                Context.MODE_PRIVATE,
                 null
         );
     }
