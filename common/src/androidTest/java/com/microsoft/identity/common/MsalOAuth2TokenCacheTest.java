@@ -260,7 +260,6 @@ public class MsalOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 "test_prefs",
-                -1,
                 new StorageHelper(context)
         );
 
