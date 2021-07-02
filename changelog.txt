@@ -29,7 +29,7 @@ V.Next
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
 - [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
 - [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
-- [MAJOR] Relocate SSOStatesSerializer out of internal namespace (#1448)
+- [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
 
 Version 3.4.3
 ----------
