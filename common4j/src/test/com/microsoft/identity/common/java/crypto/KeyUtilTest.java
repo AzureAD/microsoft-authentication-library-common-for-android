@@ -29,6 +29,9 @@ import org.junit.Test;
 
 import javax.crypto.SecretKey;
 
+/**
+ * Tests for {@link KeyUtil}
+ */
 public class KeyUtilTest {
 
     final byte[] encryptionKey = new byte[]{22, 78, -69, -66, 84, -65, 119, -9, -34, -80, 60, 67, -12, -117, 86, -47, -84, -24, -18, 121, 70, 32, -110, 51, -93, -10, -93, -110, 124, -68, -42, -119};

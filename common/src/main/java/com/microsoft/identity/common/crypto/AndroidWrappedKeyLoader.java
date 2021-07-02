@@ -94,8 +94,11 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     private final String mAlias;
 
-    // Visible for testing.
-    /* package */ SecretKey mCachedKey = null;
+    private SecretKey mCachedKey = null;
+
+    /* package */ SecretKey getCachedKey(){
+        return mCachedKey;
+    }
 
     public AndroidWrappedKeyLoader(@NonNull final String alias,
                                    @NonNull final Context context,
@@ -113,7 +116,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     @Override
     @NonNull
-    public String getKeyIdentifier() {
+    public String getKeyTypeIdentifier() {
         return KEY_IDENTIFIER;
     }
 

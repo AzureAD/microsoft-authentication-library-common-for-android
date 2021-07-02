@@ -32,26 +32,45 @@ import lombok.NonNull;
  * A wrapper class around Base64 operation.
  * */
 public class Base64 {
+
+    /**
+     * URL-encodes the given byte array.
+     * URL unsafe characters in the result will be replaced.
+     */
     @NonNull
     public static String encode(@NonNull final byte[] bytesToEncode) {
         return Base64URL.encode(bytesToEncode).toString();
     }
 
+    /**
+     * Encodes the given byte array.
+     * The result might contain URL unsafe characters.
+     */
     @NonNull
     public static String encodeURLUnsafe(@NonNull final byte[] bytesToEncode) {
         return com.nimbusds.jose.util.Base64.encode(bytesToEncode).toString();
     }
 
+    /**
+     * URL-encodes the given string.
+     * URL unsafe characters in the result will be replaced.
+     */
     @NonNull
     public static String encode(@NonNull final String stringToEncode) {
         return Base64URL.encode(stringToEncode).toString();
     }
 
+    /**
+     * Decodes a URL-safe string.
+     */
     @NonNull
     public static String decode(@NonNull final String encodedString) {
         return Base64URL.from(encodedString).decodeToString();
     }
 
+    /**
+     * Decodes a string which might contain URL unsafe characters.
+     */
     @NonNull
     public static byte[] decodeURLUnsafeToByteArray(@NonNull final String encodedString) {
         return com.nimbusds.jose.util.Base64.from(encodedString).decode();

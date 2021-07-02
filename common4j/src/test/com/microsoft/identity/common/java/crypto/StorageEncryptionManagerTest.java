@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
@@ -91,7 +91,7 @@ public class StorageEncryptionManagerTest {
     @Test(expected = IllegalStateException.class)
     public void testDecryptNullKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<ISecretKeyLoader>() {{
+                new ArrayList<AbstractSecretKeyLoader>() {{
                     add(null);
                 }});
         manager.decrypt(expectedEncryptedText);
@@ -113,7 +113,7 @@ public class StorageEncryptionManagerTest {
             Assert.fail();
         } catch (ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressed()[0]).getErrorCode(),
+            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(),
                     MockAES256KeyLoaderWithGetKeyError.FAIL_TO_LOAD_KEY_ERROR);
         }
     }
@@ -125,7 +125,7 @@ public class StorageEncryptionManagerTest {
 
         // Key order doesn't matter.
         final StorageEncryptionManager manager_failFirst = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<ISecretKeyLoader>(){{
+                new ArrayList<AbstractSecretKeyLoader>(){{
                     add(failingKeyLoader);
                     add(successKeyLoader);
                 }});
@@ -133,7 +133,7 @@ public class StorageEncryptionManagerTest {
         Assert.assertArrayEquals(textToEncrypt, manager_failFirst.decrypt(expectedEncryptedText));
 
         final StorageEncryptionManager manager_failSecond = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<ISecretKeyLoader>(){{
+                new ArrayList<AbstractSecretKeyLoader>(){{
                     add(successKeyLoader);
                     add(failingKeyLoader);
                 }});
@@ -147,7 +147,7 @@ public class StorageEncryptionManagerTest {
         final AES256KeyLoader decryptKeyLoader_2 = new MockAES256KeyLoader();
 
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, null,
-                new ArrayList<ISecretKeyLoader>(){{
+                new ArrayList<AbstractSecretKeyLoader>(){{
                     add(decryptKeyLoader);
                     add(decryptKeyLoader_2);
                 }});
@@ -156,7 +156,7 @@ public class StorageEncryptionManagerTest {
             /** This one is encrypted by {@link StorageEncryptionManagerTest#encryptionKey} */
             manager.decrypt(expectedEncryptedText);
             Assert.fail();
-        } catch (ClientException e){
+        } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
         }
     }
@@ -167,9 +167,9 @@ public class StorageEncryptionManagerTest {
             final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey_Malformed, keyIdentifier_1));
             manager.decrypt(expectedEncryptedText);
             Assert.fail();
-        } catch (ClientException e){
+        } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressed()[0]).getErrorCode(), HMAC_MISMATCH);
+            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), HMAC_MISMATCH);
         }
     }
 
@@ -233,18 +233,18 @@ public class StorageEncryptionManagerTest {
             final byte[] truncatedByteArray = Arrays.copyOf(encryptedByteArray, encryptedByteArray.length / 2);
             manager.decrypt(truncatedByteArray);
             Assert.fail();
-        } catch (ClientException e){
+        } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressed()[0]).getErrorCode(), HMAC_MISMATCH);
+            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), HMAC_MISMATCH);
         }
 
         try {
             final StorageEncryptionManager manager = new MockStorageEncryptionManager(iv, new MockAES256KeyLoader(encryptionKey, keyIdentifier_1));
             manager.decrypt(new String(expectedEncryptedText, ENCODING_UTF8).substring(0, 25).getBytes(ENCODING_UTF8));
             Assert.fail();
-        } catch (ClientException e){
+        } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
-            Assert.assertEquals(((ClientException)e.getSuppressed()[0]).getErrorCode(), DATA_MALFORMED);
+            Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), DATA_MALFORMED);
         }
     }
 }

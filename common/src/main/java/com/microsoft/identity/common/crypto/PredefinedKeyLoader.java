@@ -58,7 +58,7 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
 
     @Override
     @NonNull
-    public String getKeyIdentifier() {
+    public String getKeyTypeIdentifier() {
         return KEY_IDENTIFIER;
     }
 }

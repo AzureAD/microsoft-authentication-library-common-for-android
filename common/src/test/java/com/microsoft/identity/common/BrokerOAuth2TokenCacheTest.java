@@ -26,7 +26,7 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.crypto.AndroidSdkStorageEncryptionManager;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
@@ -290,7 +290,7 @@ public class BrokerOAuth2TokenCacheTest {
                 context,
                 getBrokerUidSequesteredFilename(appUid),
                 -1,
-                new AndroidSdkStorageEncryptionManager(context, null)
+                new AndroidAuthSdkStorageEncryptionManager(context, null)
         );
     }
 
@@ -299,7 +299,7 @@ public class BrokerOAuth2TokenCacheTest {
                 context,
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                 -1,
-                new AndroidSdkStorageEncryptionManager(context, null)
+                new AndroidAuthSdkStorageEncryptionManager(context, null)
         );
     }
 

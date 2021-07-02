@@ -22,24 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.crypto.key;
 
-import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.logging.Logger;
-
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
-import javax.crypto.spec.SecretKeySpec;
-
-import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
 
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
-
-public abstract class AES256KeyLoader implements ISecretKeyLoader {
-    private static final Object TAG = AES256KeyLoader.class.getSimpleName();
+public abstract class AES256KeyLoader extends AbstractSecretKeyLoader {
+    private static final String TAG = AES256KeyLoader.class.getSimpleName();
 
     /**
      * Key size
@@ -70,62 +56,8 @@ public abstract class AES256KeyLoader implements ISecretKeyLoader {
         return CIPHER_ALGORITHM;
     }
 
-    /**
-     * generate a random AES-256 secret key.
-     *
-     * @return SecretKey.
-     */
-    @NonNull
-    protected SecretKey generateRandomKey() throws ClientException {
-        final String methodName = ":generateRandomKey";
-
-        try {
-            final KeyGenerator keygen = KeyGenerator.getInstance(AES_ALGORITHM);
-            keygen.init(KEY_SIZE, new SecureRandom());
-            return keygen.generateKey();
-        } catch (NoSuchAlgorithmException e) {
-            final ClientException clientException = new ClientException(
-                    NO_SUCH_ALGORITHM,
-                    e.getMessage(),
-                    e
-            );
-
-            Logger.error(
-                    TAG + methodName,
-                    clientException.getErrorCode(),
-                    e
-            );
-
-            throw clientException;
-        }
+    @Override
+    protected int getKeySize() {
+        return KEY_SIZE;
     }
-
-    /**
-     * generate a random AES-256 secret key from rawbytes.
-     * <p>
-     * If a non AES-256 rawBytes is provided, this will still return a SecretKey,
-     * but an exception would be thrown in {@link StorageEncryptionManager}
-     * during encryption/decryption.
-     *
-     * @return SecretKey.
-     */
-    @NonNull
-    protected SecretKey generateKeyFromRawBytes(@NonNull final byte[] rawBytes) {
-        return new SecretKeySpec(rawBytes, AES_ALGORITHM);
-    }
-
-    /**
-     * Serializes a {@link SecretKey} into a {@link String}.
-     */
-    public String serializeSecretKey(@NonNull final SecretKey key) {
-        return Base64.encodeToString(key.getEncoded(), Base64.DEFAULT);
-    }
-
-    /**
-     * Deserializes a {@link String} into a {@link SecretKey}.
-     */
-    public SecretKey deserializeSecretKey(@NonNull final String serializedKey) {
-        return generateKeyFromRawBytes(Base64.decode(serializedKey, Base64.DEFAULT));
-    }
-
 }

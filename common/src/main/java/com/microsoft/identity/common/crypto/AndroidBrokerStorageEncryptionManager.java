@@ -32,7 +32,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
-import com.microsoft.identity.common.java.crypto.key.ISecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -60,10 +60,10 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
      * A {@link SharedPreferences} key for storing decryption failure event.
      * see {@link AndroidBrokerStorageEncryptionManager#handleDecryptionFailure}
      */
-    private static final String CURRENT_ACTIVE_BROKER_SHAREDPREF_KEY = "current_active_broker";
+    private static final String CURRENT_ACTIVE_BROKER_SHARED_PREF_KEY = "current_active_broker";
 
-    protected final String LEGACY_AUTHENTICATOR_APP_KEY = "LEGACY_AUTHENTICATOR_APP_KEY";
-    protected final String LEGACY_COMPANY_PORTAL_KEY = "LEGACY_COMPANY_PORTAL_KEY";
+    protected final String LEGACY_AUTHENTICATOR_APP_KEY_ALIAS = "LEGACY_AUTHENTICATOR_APP_KEY";
+    protected final String LEGACY_COMPANY_PORTAL_KEY_ALIAS = "LEGACY_COMPANY_PORTAL_KEY";
 
     private final Context mContext;
     private final ITelemetryCallback mTelemetryCallback;
@@ -76,10 +76,10 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         mContext = context;
         mTelemetryCallback = telemetryCallback;
 
-        mLegacyAuthAppKeyLoader = new PredefinedKeyLoader(LEGACY_AUTHENTICATOR_APP_KEY,
+        mLegacyAuthAppKeyLoader = new PredefinedKeyLoader(LEGACY_AUTHENTICATOR_APP_KEY_ALIAS,
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(AZURE_AUTHENTICATOR_APP_PACKAGE_NAME));
 
-        mLegacyCPKeyLoader = new PredefinedKeyLoader(LEGACY_COMPANY_PORTAL_KEY,
+        mLegacyCPKeyLoader = new PredefinedKeyLoader(LEGACY_COMPANY_PORTAL_KEY_ALIAS,
                 AuthenticationSettings.INSTANCE.getBrokerSecretKeys().get(COMPANY_PORTAL_APP_PACKAGE_NAME));
 
         mKeyStoreKeyLoader = new AndroidWrappedKeyLoader(KEY_STORE_ALIAS, context, telemetryCallback);
@@ -91,7 +91,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
     }
 
     @Override
-    public @NonNull ISecretKeyLoader getKeyLoaderForEncryption() {
+    public @NonNull AbstractSecretKeyLoader getKeyLoaderForEncryption() {
         if (StorageHelper.sShouldEncryptWithKeyStoreKey) {
             return mKeyStoreKeyLoader;
         }
@@ -100,7 +100,8 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
             return mLegacyAuthAppKeyLoader;
         }
 
-        if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
+        if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName()) ||
+                BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
             return mLegacyCPKeyLoader;
         }
 
@@ -108,19 +109,19 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
     }
 
     @Override
-    public @NonNull List<ISecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
+    public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodName = ":getKeyLoaderForDecryption";
         final String packageName = getPackageName();
 
         if (isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.KEY_IDENTIFIER)) {
             if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
                     BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-                return new ArrayList<ISecretKeyLoader>() {{
+                return new ArrayList<AbstractSecretKeyLoader>() {{
                     add(mLegacyCPKeyLoader);
                     add(mLegacyAuthAppKeyLoader);
                 }};
             } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-                return new ArrayList<ISecretKeyLoader>() {{
+                return new ArrayList<AbstractSecretKeyLoader>() {{
                     add(mLegacyAuthAppKeyLoader);
                     add(mLegacyCPKeyLoader);
                 }};
@@ -130,7 +131,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         }
 
         if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
-            return new ArrayList<ISecretKeyLoader>() {{
+            return new ArrayList<AbstractSecretKeyLoader>() {{
                 add(mKeyStoreKeyLoader);
             }};
         }
@@ -146,7 +147,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         final SharedPreferences sharedPreferences = PreferenceManager.
                 getDefaultSharedPreferences(mContext);
         final String previousActiveBroker = sharedPreferences.getString(
-                CURRENT_ACTIVE_BROKER_SHAREDPREF_KEY,
+                CURRENT_ACTIVE_BROKER_SHARED_PREF_KEY,
                 ""
         );
         final String activeBroker = mContext.getPackageName();
@@ -166,7 +167,7 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
                         message);
             }
 
-            sharedPreferences.edit().putString(CURRENT_ACTIVE_BROKER_SHAREDPREF_KEY, activeBroker).apply();
+            sharedPreferences.edit().putString(CURRENT_ACTIVE_BROKER_SHARED_PREF_KEY, activeBroker).apply();
         }
     }
 }

@@ -24,6 +24,12 @@ package com.microsoft.identity.common.java.crypto;
 
 /**
  * An interface for generating IV.
+ * https://en.wikipedia.org/wiki/Initialization_vector
+ *
+ * In general, this should always be randomized.
+ * We extract an interface such that we can inject a constant here
+ * so that the resulted encrypted string are not randomized in test cases.
+ *
  * See {@link StorageEncryptionManager} for more info.
  */
 public interface IVGenerator {

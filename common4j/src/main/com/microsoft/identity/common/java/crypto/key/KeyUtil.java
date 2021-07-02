@@ -38,9 +38,12 @@ import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 
+/**
+ * Utility class for Key operations.
+ */
 public class KeyUtil {
 
-    private static final Object TAG = KeyUtil.class.getSimpleName();
+    private static final String TAG = KeyUtil.class.getSimpleName();
 
     /**
      * A string to return when the this class fails to derive thumbprint.
@@ -62,18 +65,17 @@ public class KeyUtil {
      */
     private static final String HMAC_KEYSPEC_ALGORITHM = "AES";
 
-
     /**
-     * Derive a thumbprint from the given ISecretKeyLoader.
+     * Derive a thumbprint from the given {@link AbstractSecretKeyLoader}.
      *
      * @param keyLoader ISecretKeyLoader to obtain the key (calculate the thumbprint from).
      * @return a thumbprint. Will return {@link KeyUtil#UNKNOWN_THUMBPRINT} if it fails to derived one.
      */
-    public static String getKeyThumbPrint(final @NonNull ISecretKeyLoader keyLoader) {
+    public static String getKeyThumbPrint(final @NonNull AbstractSecretKeyLoader keyLoader) {
         final String methodName = ":getKeyThumbPrint";
         try {
             return getKeyThumbPrint(keyLoader.getKey());
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             Logger.warn(TAG + methodName, "failed to load key:" + e.getMessage());
             return UNKNOWN_THUMBPRINT;
         }
@@ -95,7 +97,7 @@ public class KeyUtil {
             byte[] thumbPrintFinal = thumbprintMac.doFinal(thumbprintBytes);
 
             return Base64.encode(thumbPrintFinal);
-        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
+        } catch (final NoSuchAlgorithmException | InvalidKeyException e) {
             Logger.warn(TAG + methodName, "failed to calculate thumbprint:" + e.getMessage());
             return UNKNOWN_THUMBPRINT;
         }

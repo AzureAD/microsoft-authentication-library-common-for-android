@@ -27,7 +27,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.crypto.AndroidSdkStorageEncryptionManager;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
@@ -265,7 +265,7 @@ public class MsalOAuth2TokenCacheTest {
                 mContext,
                 "test_prefs",
                 -1,
-                new AndroidSdkStorageEncryptionManager(mContext, null)
+                new AndroidAuthSdkStorageEncryptionManager(mContext, null)
         );
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();

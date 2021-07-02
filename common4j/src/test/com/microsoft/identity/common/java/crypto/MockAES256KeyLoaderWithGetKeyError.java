@@ -31,11 +31,12 @@ import lombok.NonNull;
 
 public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
     public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
-    public String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
+    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
+    public static String MOCK_ERROR = "MOCK_ERROR";
 
     @Override
     public @NonNull String getAlias() {
-        return "MOCK_ERROR";
+        return MOCK_ERROR;
     }
 
     @Override
@@ -44,7 +45,7 @@ public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
     }
 
     @Override
-    public @NonNull String getKeyIdentifier() {
+    public @NonNull String getKeyTypeIdentifier() {
         return MOCK_KEY_IDENTIFIER;
     }
 }

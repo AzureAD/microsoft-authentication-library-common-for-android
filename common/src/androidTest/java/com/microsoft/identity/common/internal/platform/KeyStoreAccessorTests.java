@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.platform;
 import android.content.Context;
 import android.os.Build;
 
-import androidx.test.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
@@ -42,11 +42,11 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessfulRawKey() throws Exception {
-        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
-        byte[] in = new byte[1024];
+        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
-        byte[] out = accessor.encrypt(in);
-        byte[] around = accessor.decrypt(out);
+        final byte[] out = accessor.encrypt(in);
+        final byte[] around = accessor.decrypt(out);
         Assert.assertArrayEquals(in, around);
         Assert.assertNull(accessor.getCertificateChain());
         Assert.assertEquals(SecureHardwareState.FALSE, accessor.getSecureHardwareState());
@@ -54,11 +54,11 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testSymmetricBasicFunctionalitySuccessful() throws Exception {
-        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
-        byte[] in = new byte[1024];
+        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
-        byte[] out = accessor.encrypt(in);
-        byte[] around = accessor.decrypt(out);
+        final byte[] out = accessor.encrypt(in);
+        final byte[] around = accessor.decrypt(out);
         Assert.assertArrayEquals(in, around);
         Assert.assertNull(accessor.getCertificateChain());
         Assert.assertTrue(accessor.getSecureHardwareState() instanceof SecureHardwareState);
@@ -66,25 +66,25 @@ public class KeyStoreAccessorTests {
 
     @Test
     public void testAsymmetricBasicFunctionalitySuccessful() throws Exception {
-        Context context = InstrumentationRegistry.getTargetContext();
-        IKeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, SigningAlgorithm.SHA_256_WITH_RSA);
-        byte[] in = new byte[245];
+        final Context context = ApplicationProvider.getApplicationContext();
+        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(context, IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING, SigningAlgorithm.SHA_256_WITH_RSA);
+        final byte[] in = new byte[245];
         RANDOM.nextBytes(in);
-        byte[] out = accessor.encrypt(in);
-        byte[] around = accessor.decrypt(out);
+        final byte[] out = accessor.encrypt(in);
+        final byte[] around = accessor.decrypt(out);
         Assert.assertArrayEquals(in, around);
-        byte[] signed = accessor.sign(in);
+        final byte[] signed = accessor.sign(in);
         Assert.assertTrue(accessor.verify(in, signed));
     }
 
     @Test(expected = ClientException.class)
     public void testBasicFunctionalityDecryptDoesSomething() throws Exception {
-        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
-        byte[] in = new byte[1024];
+        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, false);
+        final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
-        byte[] out = accessor.encrypt(in);
+        final byte[] out = accessor.encrypt(in);
         out[700] ^= out[700]; //I don't care what value it is as long as it's changed.
-        byte[] around = accessor.decrypt(out);
+        final byte[] around = accessor.decrypt(out);
     }
 
     @Test
@@ -126,10 +126,10 @@ public class KeyStoreAccessorTests {
     }
     @Test
     public void testBasicFunctionalitySignAndVerifySupportedIfRaw() throws Exception {
-        IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
-        byte[] in = new byte[1024];
+        final IKeyAccessor accessor = KeyStoreAccessor.newInstance(SymmetricCipher.AES_GCM_NONE_HMACSHA256, true);
+        final byte[] in = new byte[1024];
         RANDOM.nextBytes(in);
-        byte[] out = accessor.sign(in);
+        final byte[] out = accessor.sign(in);
         Assert.assertTrue(accessor.verify(in, out));
     }
 

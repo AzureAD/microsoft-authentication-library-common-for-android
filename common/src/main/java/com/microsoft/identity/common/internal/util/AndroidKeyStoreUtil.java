@@ -74,7 +74,7 @@ public class AndroidKeyStoreUtil {
     /**
      * KeyStore type for Android.
      * {@see https://developer.android.com/training/articles/keystore#UsingAndroidKeyStore}
-     * */
+     */
     private static final String ANDROID_KEY_STORE_TYPE = "AndroidKeyStore";
 
     private AndroidKeyStoreUtil() {
@@ -92,7 +92,7 @@ public class AndroidKeyStoreUtil {
     public static synchronized KeyPair generateKeyPair(
             @NonNull final String algorithm,
             @NonNull final AlgorithmParameterSpec algorithmSpec) throws ClientException {
-        final String methodName = ":generateKeyPairFromKeyStore";
+        final String methodName = ":generateKeyPair";
 
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
             final Exception exception;
@@ -134,22 +134,22 @@ public class AndroidKeyStoreUtil {
                 // To avoid app crashing, re-throw as checked exception
                 errCode = ANDROID_KEYSTORE_UNAVAILABLE;
                 exception = e;
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 errCode = IO_ERROR;
                 exception = e;
-            } catch (CertificateException e) {
+            } catch (final CertificateException e) {
                 errCode = CERTIFICATE_LOAD_FAILURE;
                 exception = e;
-            } catch (NoSuchAlgorithmException e) {
+            } catch (final NoSuchAlgorithmException e) {
                 errCode = NO_SUCH_ALGORITHM;
                 exception = e;
-            } catch (InvalidAlgorithmParameterException e) {
+            } catch (final InvalidAlgorithmParameterException e) {
                 errCode = INVALID_ALG_PARAMETER;
                 exception = e;
-            } catch (NoSuchProviderException e) {
+            } catch (final NoSuchProviderException e) {
                 errCode = NO_SUCH_PROVIDER;
                 exception = e;
-            } catch (KeyStoreException e) {
+            } catch (final KeyStoreException e) {
                 errCode = ANDROID_KEYSTORE_UNAVAILABLE;
                 exception = e;
             } finally {
@@ -208,19 +208,19 @@ public class AndroidKeyStoreUtil {
             // handle it as regular KeyStoreException
             errCode = ANDROID_KEYSTORE_UNAVAILABLE;
             exception = e;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             errCode = IO_ERROR;
             exception = e;
-        } catch (CertificateException e) {
+        } catch (final CertificateException e) {
             errCode = CERTIFICATE_LOAD_FAILURE;
             exception = e;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
-        } catch (KeyStoreException e) {
+        } catch (final KeyStoreException e) {
             errCode = ANDROID_KEYSTORE_UNAVAILABLE;
             exception = e;
-        } catch (UnrecoverableKeyException e) {
+        } catch (final UnrecoverableKeyException e) {
             errCode = INVALID_KEY_MISSING;
             exception = e;
         }
@@ -267,16 +267,16 @@ public class AndroidKeyStoreUtil {
             keyStore.load(null);
             keyStore.deleteEntry(aliasOfKeyToDelete);
             return;
-        } catch (KeyStoreException e) {
+        } catch (final KeyStoreException e) {
             errCode = ANDROID_KEYSTORE_UNAVAILABLE;
             exception = e;
-        }  catch (CertificateException e) {
+        } catch (final CertificateException e) {
             errCode = CERTIFICATE_LOAD_FAILURE;
             exception = e;
-        }catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             errCode = IO_ERROR;
             exception = e;
         }
@@ -317,16 +317,16 @@ public class AndroidKeyStoreUtil {
             final Cipher wrapCipher = Cipher.getInstance(wrapAlgorithm);
             wrapCipher.init(Cipher.WRAP_MODE, keyToWrap.getPublic());
             return wrapCipher.wrap(key);
-        } catch (NoSuchPaddingException e) {
+        } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
-        } catch (InvalidKeyException e) {
+        } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
-        } catch (IllegalBlockSizeException e) {
+        } catch (final IllegalBlockSizeException e) {
             errCode = INVALID_BLOCK_SIZE;
             exception = e;
         }
@@ -378,13 +378,13 @@ public class AndroidKeyStoreUtil {
             // To avoid app crashing from 2), re-throw it as checked exception
             errCode = ANDROID_KEYSTORE_UNAVAILABLE;
             exception = e;
-        } catch (NoSuchPaddingException e) {
+        } catch (final NoSuchPaddingException e) {
             errCode = NO_SUCH_PADDING;
             exception = e;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
-        } catch (InvalidKeyException e) {
+        } catch (final InvalidKeyException e) {
             errCode = INVALID_KEY;
             exception = e;
         }

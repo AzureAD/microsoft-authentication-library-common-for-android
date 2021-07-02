@@ -31,6 +31,7 @@ import lombok.NonNull;
 
 public class MockAES256KeyLoader extends AES256KeyLoader {
     public static String DEFAULT_MOCK_KEY_IDENTIFIER = "MOCK_ID";
+    public static String MOCK_ALIAS = "MOCK_ALIAS";
 
     private final SecretKey mKey;
     private final String mKeyIdentifier;
@@ -48,7 +49,7 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
 
     @Override
     public @NonNull String getAlias() {
-        return "MOCK";
+        return MOCK_ALIAS;
     }
 
     @Override
@@ -57,7 +58,7 @@ public class MockAES256KeyLoader extends AES256KeyLoader {
     }
 
     @Override
-    public @NonNull String getKeyIdentifier() {
+    public @NonNull String getKeyTypeIdentifier() {
         return mKeyIdentifier;
     }
 }

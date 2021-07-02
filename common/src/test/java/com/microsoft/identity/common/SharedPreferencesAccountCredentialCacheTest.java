@@ -28,7 +28,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
-import com.microsoft.identity.common.crypto.AndroidSdkStorageEncryptionManager;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
@@ -102,7 +102,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
                 testContext,
                 sAccountCredentialSharedPreferences,
                 -1,
-                new AndroidSdkStorageEncryptionManager(testContext, null) // Use encrypted storage for tests...
+                new AndroidAuthSdkStorageEncryptionManager(testContext, null) // Use encrypted storage for tests...
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
                 mDelegate,

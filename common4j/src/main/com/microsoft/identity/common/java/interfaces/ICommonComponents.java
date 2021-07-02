@@ -37,5 +37,8 @@ public interface ICommonComponents {
      */
     void flushHttpCache();
 
+    /**
+     * Get an encryption manager for storage layer.
+     */
     IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
 }
