@@ -37,11 +37,13 @@ import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.arch.core.util.Function;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
 import com.microsoft.identity.common.internal.ui.webview.OnPageCommitVisibleCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
@@ -49,7 +51,11 @@ import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URL;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -128,6 +134,31 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final String methodName = "#onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
+        final SsoCredentialResolver resolver;
+        if (sSsoKeyMap.get("CONSTANT_KEY") != null) {
+            Logger.info(TAG + ":onCreateView", "Setting up for sso challenge handling");
+            final SsoCredentialResolver origResolver = sSsoKeyMap.get("CONSTANT_KEY");
+            resolver = new SsoCredentialResolver() {
+                @Override
+                public String getInterruptCredential(String newNonce) {
+                    return origResolver.getInterruptCredential(newNonce);
+                }
+
+                @Override
+                public Map<String, String> getHeaders() {
+                    return mRequestHeaders;
+                }
+
+                @Override
+                public String getHeaderName() {
+                    return origResolver.getHeaderName();
+                }
+
+            };
+            sSsoKeyMap.put("CONSTANT_KEY", resolver);
+        } else {
+            resolver = null;
+        }
 
         final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
                 getActivity(),
@@ -155,7 +186,8 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                         }
                     }
                 },
-                mRedirectUri);
+                mRedirectUri,
+                resolver);
         setUpWebView(view, webViewClient);
 
         mWebView.post(new Runnable() {
@@ -242,14 +274,21 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
             return requestHeaders;
         } catch (Exception e) {
+            Logger.warn(TAG + ":getRequestHeaders", "Unable to extract request headers: " + e.getMessage());
             return null;
         }
+    }
+
+    public interface SsoCredentialResolver {
+        String getInterruptCredential(String newNonce);
+        Map<String, String> getHeaders();
+        String getHeaderName();
     }
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
         public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
-            Logger.info(TAG, null, "onChallengeResponseReceived:" + returnCode);
+            Logger.info(TAG, null, "onChallengeResponseReceived: " + returnCode);
             sendResult(returnCode, responseIntent);
             finish();
         }

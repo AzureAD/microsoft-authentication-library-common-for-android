@@ -41,6 +41,10 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CANCELLED_BY_USER;
@@ -55,6 +59,11 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 public abstract class AuthorizationFragment extends Fragment {
 
     private static final String TAG = AuthorizationFragment.class.getSimpleName();
+
+    public static Map<String, WebViewAuthorizationFragment.SsoCredentialResolver> sSsoKeyMap =
+            Collections.<String, WebViewAuthorizationFragment.SsoCredentialResolver>synchronizedMap(
+                    new WeakHashMap<String, WebViewAuthorizationFragment.SsoCredentialResolver>()
+            );
 
     /**
      * The bundle containing values for initializing this fragment.

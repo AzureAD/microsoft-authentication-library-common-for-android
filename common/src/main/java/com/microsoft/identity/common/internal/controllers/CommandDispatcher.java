@@ -91,7 +91,7 @@ public class CommandDispatcher {
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
-    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet(
+    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet<>(
             Arrays.asList(
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
