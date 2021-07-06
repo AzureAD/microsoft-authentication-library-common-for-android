@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -75,21 +76,16 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     @Override
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodName = "getKeyLoaderForDecryption";
-
         if (mPredefinedKeyLoader != null &&
                 isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
-            final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
-            keyLoaders.add(mPredefinedKeyLoader);
-            return keyLoaders;
+            return Collections.<AbstractSecretKeyLoader>singletonList(mPredefinedKeyLoader);
         }
 
         if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
-            final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
-            keyLoaders.add(mKeyStoreKeyLoader);
-            return keyLoaders;
+            return Collections.<AbstractSecretKeyLoader>singletonList(mKeyStoreKeyLoader);
         }
 
         Logger.warn(TAG + methodName, "Cannot find a matching key to decrypt the given blob");
-        return new ArrayList<>();
+        return Collections.emptyList();
     }
 }
