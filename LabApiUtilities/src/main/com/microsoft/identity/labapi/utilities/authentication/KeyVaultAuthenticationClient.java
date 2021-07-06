@@ -25,8 +25,8 @@ package com.microsoft.identity.labapi.utilities.authentication;
 import com.microsoft.identity.labapi.utilities.authentication.common.CertificateCredential;
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabError;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import lombok.NonNull;
 

@@ -25,8 +25,8 @@ package com.microsoft.identity.labapi.utilities.authentication;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
 import com.microsoft.identity.internal.test.keyvault.api.SecretsApi;
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabError;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabError;
 
 import lombok.NonNull;
 

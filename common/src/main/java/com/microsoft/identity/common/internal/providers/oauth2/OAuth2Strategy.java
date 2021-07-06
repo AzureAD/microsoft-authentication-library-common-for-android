@@ -32,13 +32,23 @@ import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.net.HttpClient;
@@ -46,11 +56,7 @@ import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.platform.Device;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
@@ -219,7 +225,8 @@ public abstract class OAuth2Strategy
         final HttpResponse response = httpClient.post(
                 requestUrl,
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                null
         );
 
         // Record the clock skew between *this device* and EVO...
@@ -290,7 +297,8 @@ public abstract class OAuth2Strategy
         final HttpResponse response = httpClient.post(
                 ((MicrosoftStsOAuth2Configuration) mConfig).getDeviceAuthorizationEndpoint(),
                 headers,
-                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME)
+                requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
+                null
         );
 
         // Create the authorization result

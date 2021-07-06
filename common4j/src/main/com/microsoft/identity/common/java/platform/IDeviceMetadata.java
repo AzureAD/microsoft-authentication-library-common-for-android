@@ -29,15 +29,43 @@ import lombok.NonNull;
  * The implementation of its child varies from platform to platform.
  */
 public interface IDeviceMetadata {
+
+    /**
+     * Get the CPU name of this device.
+     *
+     * @return a String representing the CPU name
+     */
     @NonNull
     String getCpu();
 
+    /**
+     * Get the OS of this device. This would include the OS name and version.
+     *
+     * @return a String representing the OS information
+     */
     @NonNull
     String getOs();
 
+    /**
+     * Get the model name of this device.
+     *
+     * @return a String representing the device's model
+     */
     @NonNull
     String getDeviceModel();
 
+    /**
+     * Get the manufacturer of this device.
+     *
+     * @return a String representing this device's manufacturer
+     */
     @NonNull
     String getManufacturer();
+
+    /**
+     * Get all metadata about this device.
+     *
+     * @return a String containing all metadata about this device
+     */
+    String getAllMetadata();
 }

@@ -27,14 +27,12 @@ import android.os.Build;
 
 import androidx.test.InstrumentationRegistry;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.security.SecureRandom;
-import java.security.Security;
-import java.util.Arrays;
 
 public class KeyStoreAccessorTests {
     private static final SecureRandom RANDOM = new SecureRandom();

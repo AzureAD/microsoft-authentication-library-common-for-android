@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 
 import java.util.Date;
 

@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
-import org.apache.http.client.utils.URIBuilder;
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
 
 import java.net.URI;
 import java.net.URISyntaxException;

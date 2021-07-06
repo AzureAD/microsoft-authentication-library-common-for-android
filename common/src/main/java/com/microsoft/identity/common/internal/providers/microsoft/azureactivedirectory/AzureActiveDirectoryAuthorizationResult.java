@@ -22,8 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStatus;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 
 /**
  * Sub class of {@link MicrosoftAuthorizationResult}.

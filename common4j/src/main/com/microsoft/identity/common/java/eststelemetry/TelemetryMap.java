@@ -22,29 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.NonNull;
 
-public class TelemetryMap implements IKeyPairStorage<CurrentRequestTelemetry>{
+public class TelemetryMap implements INameValueStorage<CurrentRequestTelemetry> {
 
     private final ConcurrentHashMap<String, CurrentRequestTelemetry> telemetryMap = new ConcurrentHashMap<>();
 
     @Override
-    public CurrentRequestTelemetry get(@NonNull String key) {
-        return telemetryMap.get(key);
+    public CurrentRequestTelemetry get(@NonNull String name) {
+        return telemetryMap.get(name);
     }
 
     @Override
-    public void put(@NonNull String key, CurrentRequestTelemetry value) {
-        telemetryMap.put(key, value);
+    public void put(@NonNull String name, CurrentRequestTelemetry value) {
+        telemetryMap.put(name, value);
     }
 
     @Override
-    public void remove(@NonNull String key) {
-        telemetryMap.remove(key);
+    public void remove(@NonNull String name) {
+        telemetryMap.remove(name);
     }
 
     @Override

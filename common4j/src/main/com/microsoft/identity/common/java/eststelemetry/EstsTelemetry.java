@@ -24,9 +24,9 @@ package com.microsoft.identity.common.java.eststelemetry;
 
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
-import com.microsoft.identity.common.java.exception.IBaseException;
-import com.microsoft.identity.common.java.exception.IServiceException;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
@@ -50,16 +50,16 @@ public class EstsTelemetry {
 
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private LastRequestTelemetryCache mLastRequestTelemetryCache;
-    private final IKeyPairStorage<CurrentRequestTelemetry> mTelemetryMap;
-    private final IKeyPairStorage<Set<FailedRequest>> mSentFailedRequests;
+    private final INameValueStorage<CurrentRequestTelemetry> mTelemetryMap;
+    private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     EstsTelemetry() {
         this(new TelemetryMap(), new SentFailedRequestsMap());
     }
 
     // Exposed for testing only.
-    EstsTelemetry(@NonNull final IKeyPairStorage<CurrentRequestTelemetry> telemetryMap,
-                  @NonNull final IKeyPairStorage<Set<FailedRequest>> sentFailedRequestsMap) {
+    EstsTelemetry(@NonNull final INameValueStorage<CurrentRequestTelemetry> telemetryMap,
+                  @NonNull final INameValueStorage<Set<FailedRequest>> sentFailedRequestsMap) {
         mTelemetryMap = telemetryMap;
         mSentFailedRequests = sentFailedRequestsMap;
     }
@@ -264,7 +264,7 @@ public class EstsTelemetry {
     @Nullable
     private String getErrorCodeFromCommandResult(@NonNull final ICommandResult commandResult) {
         if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR) {
-            final IBaseException baseException = (IBaseException) commandResult.getResult();
+            final BaseException baseException = (BaseException) commandResult.getResult();
             return baseException.getErrorCode();
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.CANCEL) {
             return "user_cancel";
@@ -284,16 +284,16 @@ public class EstsTelemetry {
         }
 
         if (commandResult.getStatus() == ICommandResult.ResultStatus.ERROR) {
-            IBaseException baseException = (IBaseException) commandResult.getResult();
-            if (!(baseException instanceof IServiceException)) {
+            BaseException baseException = (BaseException) commandResult.getResult();
+            if (!(baseException instanceof ServiceException)) {
                 // Telemetry not logged by server as the exception is a local exception
                 // (request did not reach token endpoint)
                 return false;
             } else {
-                final IServiceException serviceException = (IServiceException) baseException;
+                final ServiceException serviceException = (ServiceException) baseException;
                 final int statusCode = serviceException.getHttpStatusCode();
                 // for these status codes, headers aren't logged by ests
-                return !(statusCode == IServiceException.DEFAULT_STATUS_CODE ||
+                return !(statusCode == ServiceException.DEFAULT_STATUS_CODE ||
                         statusCode == 429 ||
                         statusCode >= 500);
             }
