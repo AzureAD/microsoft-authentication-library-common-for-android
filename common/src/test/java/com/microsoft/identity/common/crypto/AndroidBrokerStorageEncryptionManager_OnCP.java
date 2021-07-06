@@ -28,7 +28,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 
 @Implements(AndroidBrokerStorageEncryptionManager.class)
 public class AndroidBrokerStorageEncryptionManager_OnCP {
-
     protected String getPackageName(){
         return COMPANY_PORTAL_APP_PACKAGE_NAME;
     }

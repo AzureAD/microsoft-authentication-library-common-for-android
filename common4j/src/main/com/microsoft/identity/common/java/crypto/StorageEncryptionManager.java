@@ -189,14 +189,6 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         final String methodName = ":decrypt";
         Logger.verbose(TAG + methodName, "Starting decryption");
 
-        final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
-
-        if (keysForDecryption == null || keysForDecryption.size() == 0) {
-            if (keysForDecryption == null){
-                throw new IllegalStateException("KeyLoader list must not be null.");
-            }
-        }
-
         final byte[] dataBytes;
         try {
             dataBytes = stripEncodeVersionFromCipherText(cipherText);
@@ -204,6 +196,11 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
             Logger.verbose(TAG + methodName,
                     "Failed to strip encode version from cipherText, string might not be encrypted. Exception: ", e.getMessage());
             return cipherText;
+        }
+
+        final List<AbstractSecretKeyLoader> keysForDecryption = getKeyLoaderForDecryption(cipherText);
+        if (keysForDecryption == null || keysForDecryption.size() == 0) {
+            throw new IllegalStateException("KeyLoader list must not be null or empty.");
         }
 
         final ClientException exceptionToThrowIfAllFails = new ClientException(ErrorStrings.DECRYPTION_FAILED,
@@ -345,6 +342,9 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
 
     /**
      * A function which is triggered every time a decryption failed.
+     *
+     * @param keyAlias  Alias of the key (from {@link AbstractSecretKeyLoader#getAlias()}
+     * @param exception the root cause of the failure.
      */
     protected void handleDecryptionFailure(@NonNull final String keyAlias,
                                            @NonNull final Exception exception) {

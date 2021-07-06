@@ -113,31 +113,31 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         final String methodName = ":getKeyLoaderForDecryption";
         final String packageName = getPackageName();
 
-        if (isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.KEY_IDENTIFIER)) {
+        final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
+
+        if (isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
             if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
                     BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-                return new ArrayList<AbstractSecretKeyLoader>() {{
-                    add(mLegacyCPKeyLoader);
-                    add(mLegacyAuthAppKeyLoader);
-                }};
+                keyLoaders.add(mLegacyCPKeyLoader);
+                keyLoaders.add(mLegacyAuthAppKeyLoader);
+                return keyLoaders;
             } else if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
-                return new ArrayList<AbstractSecretKeyLoader>() {{
-                    add(mLegacyAuthAppKeyLoader);
-                    add(mLegacyCPKeyLoader);
-                }};
+                keyLoaders.add(mLegacyAuthAppKeyLoader);
+                keyLoaders.add(mLegacyCPKeyLoader);
+                return keyLoaders;
             } else {
+                Logger.warn(TAG + methodName, "Unexpected Broker package name. Cannot load key.");
                 throw new IllegalStateException("Unexpected Broker package name. Cannot load key.");
             }
         }
 
         if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
-            return new ArrayList<AbstractSecretKeyLoader>() {{
-                add(mKeyStoreKeyLoader);
-            }};
+            keyLoaders.add(mKeyStoreKeyLoader);
+            return keyLoaders;
         }
 
         Logger.warn(TAG + methodName, "Cannot find a matching key to decrypt the given blob");
-        return new ArrayList<>();
+        return keyLoaders;
     }
 
     @Override

@@ -48,15 +48,15 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
      */
     /* package */ static final String KEY_STORE_ALIAS = "AdalKey";
 
-    private final PredefinedKeyLoader mUserDefinedKey;
+    private final PredefinedKeyLoader mPredefinedKeyLoader;
     private final AndroidWrappedKeyLoader mKeyStoreKeyLoader;
 
     public AndroidAuthSdkStorageEncryptionManager(@NonNull final Context context,
                                                   @Nullable final ITelemetryCallback telemetryCallback) {
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null) {
-            mUserDefinedKey = null;
+            mPredefinedKeyLoader = null;
         } else {
-            mUserDefinedKey = new PredefinedKeyLoader("USER_DEFINED_KEY",
+            mPredefinedKeyLoader = new PredefinedKeyLoader("USER_DEFINED_KEY",
                     AuthenticationSettings.INSTANCE.getSecretKeyData());
         }
 
@@ -65,8 +65,8 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
 
     @Override
     public @NonNull AES256KeyLoader getKeyLoaderForEncryption() {
-        if (mUserDefinedKey != null) {
-            return mUserDefinedKey;
+        if (mPredefinedKeyLoader != null) {
+            return mPredefinedKeyLoader;
         }
 
         return mKeyStoreKeyLoader;
@@ -76,17 +76,17 @@ public class AndroidAuthSdkStorageEncryptionManager extends StorageEncryptionMan
     public @NonNull List<AbstractSecretKeyLoader> getKeyLoaderForDecryption(@NonNull byte[] cipherText) {
         final String methodName = "getKeyLoaderForDecryption";
 
-        if (mUserDefinedKey != null &&
-                isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.KEY_IDENTIFIER)) {
-            return new ArrayList<AbstractSecretKeyLoader>() {{
-                add(mUserDefinedKey);
-            }};
+        if (mPredefinedKeyLoader != null &&
+                isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
+            final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
+            keyLoaders.add(mPredefinedKeyLoader);
+            return keyLoaders;
         }
 
         if (isEncryptedByThisKeyIdentifier(cipherText, AndroidWrappedKeyLoader.KEY_IDENTIFIER)) {
-            return new ArrayList<AbstractSecretKeyLoader>() {{
-                add(mKeyStoreKeyLoader);
-            }};
+            final ArrayList<AbstractSecretKeyLoader> keyLoaders = new ArrayList<>();
+            keyLoaders.add(mKeyStoreKeyLoader);
+            return keyLoaders;
         }
 
         Logger.warn(TAG + methodName, "Cannot find a matching key to decrypt the given blob");

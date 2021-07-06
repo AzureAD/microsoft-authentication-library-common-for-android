@@ -20,12 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.util;
-
-import android.content.Context;
+package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -52,25 +50,17 @@ public class FileUtil {
     /**
      * Write a data blob to a file.
      *
-     * @param data             a data blob to be written.
-     * @param context          a {@link Context} object.
-     * @param relativeFilePath a relative path (under the calling app's directory) to a file to write to.
+     * @param data a data blob to be written.
+     * @param file file to write to.
      */
     public static void writeDataToFile(@NonNull final byte[] data,
-                                       @NonNull final Context context,
-                                       @NonNull final String relativeFilePath) throws ClientException {
+                                       @NonNull final File file) throws ClientException {
         final String methodName = ":writeKeyData";
 
         Logger.verbose(TAG + methodName, "Writing data to a file");
 
-        final Exception exception;
-        final String errCode;
         try {
-            final File keyFile = new File(
-                    context.getDir(context.getPackageName(), Context.MODE_PRIVATE),
-                    relativeFilePath);
-
-            final OutputStream out = new FileOutputStream(keyFile);
+            final OutputStream out = new FileOutputStream(file);
             try {
                 out.write(data);
             } finally {
@@ -96,31 +86,22 @@ public class FileUtil {
     /**
      * Read a data blob from a file.
      *
-     * @param context          a {@link Context} object.
-     * @param relativeFilePath a relative path (under the calling app's directory) to a file to read from.
-     * @param dataSize         expected size of the resulted data blob.
+     * @param file     file to load.
+     * @param dataSize expected size of the resulted data blob.
      * @return A data blob, if exists.
      */
     @Nullable
-    public static byte[] readFromFile(@NonNull final Context context,
-                                      @NonNull final String relativeFilePath,
+    public static byte[] readFromFile(@NonNull final File file,
                                       @NonNull final int dataSize) throws ClientException {
         final String methodName = ":readKeyData";
 
-        final File keyFile = new File(
-                context.getDir(context.getPackageName(), Context.MODE_PRIVATE),
-                relativeFilePath);
-
-        if (!keyFile.exists()) {
+        if (!file.exists()) {
             return null;
         }
 
-        final Exception exception;
-        final String errCode;
-
         try {
             Logger.verbose(TAG + methodName, "Reading data from a file");
-            final InputStream in = new FileInputStream(keyFile);
+            final InputStream in = new FileInputStream(file);
 
             try {
                 final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
@@ -153,19 +134,14 @@ public class FileUtil {
     /**
      * Delete the wrapped key file (if exists).
      *
-     * @param context          a {@link Context} object.
-     * @param relativeFilePath a relative path (under the calling app's directory) to delete.
+     * @param file file to delete.
      */
-    public static void deleteFile(@NonNull final Context context,
-                                  @NonNull final String relativeFilePath) {
+    public static void deleteFile(@NonNull final File file) {
         final String methodName = ":deleteKeyFile";
 
-        final File keyFile = new File(
-                context.getDir(context.getPackageName(),
-                        Context.MODE_PRIVATE), relativeFilePath);
-        if (keyFile.exists()) {
+        if (file.exists()) {
             Logger.verbose(TAG + methodName, "Delete File");
-            if (!keyFile.delete()) {
+            if (!file.delete()) {
                 Logger.verbose(TAG + methodName, "Failed to delete file.");
             }
         }

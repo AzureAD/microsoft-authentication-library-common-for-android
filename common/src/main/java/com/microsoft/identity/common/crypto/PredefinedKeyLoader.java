@@ -28,12 +28,15 @@ import javax.crypto.SecretKey;
 
 import lombok.NonNull;
 
+/**
+ * For loading an AES-256 key from a provided rawbytes array.
+ */
 public class PredefinedKeyLoader extends AES256KeyLoader {
 
     /**
      * Indicate that the token item is encrypted with the user provided key.
      */
-    public static final String KEY_IDENTIFIER = "U001";
+    public static final String USER_PROVIDED_KEY_IDENTIFIER = "U001";
 
     private final String mAlias;
     private final SecretKey mKey;
@@ -59,6 +62,6 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public String getKeyTypeIdentifier() {
-        return KEY_IDENTIFIER;
+        return USER_PROVIDED_KEY_IDENTIFIER;
     }
 }

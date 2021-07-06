@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
+import com.microsoft.identity.common.logging.Logger;
 
 import lombok.NonNull;
 
@@ -40,6 +41,7 @@ import lombok.NonNull;
  * Android components for Common.
  */
 public class AndroidCommonComponents implements ICommonComponents {
+    private static String TAG = AndroidCommonComponents.class.getSimpleName();
 
     protected final Context mContext;
 
@@ -57,10 +59,14 @@ public class AndroidCommonComponents implements ICommonComponents {
     //       and shouldn't need process to decide which one to return.
     @Override
     public IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback) {
+        final String methodName = ":getStorageEncryptionManager";
+
         if (ProcessUtil.isBrokerProcess(mContext)) {
+            Logger.info(TAG + methodName, "Returning AndroidBrokerStorageEncryptionManager");
             return new AndroidBrokerStorageEncryptionManager(mContext, telemetryCallback);
         }
 
+        Logger.info(TAG + methodName, "Returning AndroidAuthSdkStorageEncryptionManager");
         return new AndroidAuthSdkStorageEncryptionManager(mContext, telemetryCallback);
     }
 }

@@ -31,13 +31,14 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
-import com.microsoft.identity.common.internal.util.FileUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
+import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -96,7 +97,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     private SecretKey mCachedKey = null;
 
-    /* package */ SecretKey getCachedKey(){
+    /* package */ SecretKey getCachedKey() {
         return mCachedKey;
     }
 
@@ -127,8 +128,8 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
-        // If key doesn't exist, generate a new one.
         if (mCachedKey == null) {
+            // If key doesn't exist, generate a new one.
             mCachedKey = readSecretKeyFromStorage();
         }
 
@@ -141,7 +142,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     @Override
     protected SecretKey generateRandomKey() throws ClientException {
-        final String methodName = ":generateKey";
+        final String methodName = ":generateRandomKey";
 
         final SecretKey key = super.generateRandomKey();
         saveSecretKeyToStorage(key);
@@ -165,16 +166,15 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Nullable
     /* package */ SecretKey readSecretKeyFromStorage() throws ClientException {
         final String methodName = ":readSecretKeyFromStorage";
-        final KeyPair keyPair;
         try {
-            keyPair = readKeyStoreKeyPair();
+            final KeyPair keyPair = readKeyStoreKeyPair();
             if (keyPair == null) {
                 Logger.warn(TAG + methodName, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
                 return null;
             }
 
-            final byte[] wrappedSecretKey = FileUtil.readFromFile(mContext, KEY_FILE_PATH, KEY_FILE_SIZE);
+            final byte[] wrappedSecretKey = FileUtil.readFromFile(getKeyFile(), KEY_FILE_SIZE);
             if (wrappedSecretKey == null) {
                 Logger.warn(TAG + methodName, "Key file is empty");
                 deleteSecretKeyFromStorage();
@@ -187,7 +187,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                     KeyUtil.getKeyThumbPrint(key));
 
             return key;
-        } catch (ClientException e) {
+        } catch (final ClientException e) {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
             Logger.warn(TAG + methodName, "Error when loading key from Keystore, " +
@@ -203,7 +203,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private void saveSecretKeyToStorage(@NonNull SecretKey unencryptedKey) throws ClientException {
         final KeyPair keyPair = generateKeyStoreKeyPair();
         final byte[] keyWrapped = AndroidKeyStoreUtil.wrap(unencryptedKey, keyPair, WRAP_ALGORITHM);
-        FileUtil.writeDataToFile(keyWrapped, mContext, KEY_FILE_PATH);
+        FileUtil.writeDataToFile(keyWrapped, getKeyFile());
     }
 
     /**
@@ -211,9 +211,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
      */
     private void deleteSecretKeyFromStorage() throws ClientException {
         AndroidKeyStoreUtil.deleteKey(mAlias);
-        FileUtil.deleteFile(mContext, KEY_FILE_PATH);
+        FileUtil.deleteFile(getKeyFile());
         mCachedKey = null;
     }
+
 
     /**
      * Generate the key in {@link KeyStore}.
@@ -225,14 +226,14 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             throws ClientException {
         final String methodName = ":generateKeyStoreKeyPair";
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_START);
+            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
             final KeyPair keyPair = AndroidKeyStoreUtil.generateKeyPair(
                     WRAP_KEY_ALGORITHM,
                     getSpecForKeyStoreKey(mContext, mAlias));
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
+            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
             return keyPair;
         } catch (final ClientException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
             throw e;
         }
     }
@@ -247,17 +248,17 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
             throws ClientException {
         final String methodName = ":readKeyStoreKeyPair";
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_START);
+            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
 
             final KeyPair keyPair = AndroidKeyStoreUtil.readKey(mAlias);
             if (keyPair == null) {
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore is empty.");
+                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
             }
 
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore KeyPair is loaded.");
+            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
             return keyPair;
         } catch (final ClientException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, e.toString(), e);
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
             throw e;
         }
     }
@@ -291,6 +292,16 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
                 .setEndDate(end.getTime())
                 .build();
     }
+
+    /**
+     * Get the file that stores the wrapped key.
+     */
+    private File getKeyFile() {
+        return new File(
+                mContext.getDir(mContext.getPackageName(), Context.MODE_PRIVATE),
+                AndroidWrappedKeyLoader.KEY_FILE_PATH);
+    }
+
 
     /**
      * Since Common isn't wired to telemetry yet at the point of implementation (July 18, 2019)

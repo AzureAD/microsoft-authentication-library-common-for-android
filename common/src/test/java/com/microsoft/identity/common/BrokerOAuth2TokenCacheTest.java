@@ -289,7 +289,6 @@ public class BrokerOAuth2TokenCacheTest {
         return SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 getBrokerUidSequesteredFilename(appUid),
-                -1,
                 new AndroidAuthSdkStorageEncryptionManager(context, null)
         );
     }
@@ -298,7 +297,6 @@ public class BrokerOAuth2TokenCacheTest {
         return SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                -1,
                 new AndroidAuthSdkStorageEncryptionManager(context, null)
         );
     }

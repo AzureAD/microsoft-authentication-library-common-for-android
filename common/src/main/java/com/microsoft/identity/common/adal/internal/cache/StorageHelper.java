@@ -728,7 +728,7 @@ public class StorageHelper implements IStorageHelper {
             applyKeyStoreLocaleWorkarounds(currentLocale);
 
             try {
-                logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_START);
+                logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_START);
 
                 final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
                 keyStore.load(null);
@@ -748,10 +748,10 @@ public class StorageHelper implements IStorageHelper {
 
                 final KeyPair keyPair = generator.generateKeyPair();
 
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, "");
+                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, "");
                 return keyPair;
             } catch (final GeneralSecurityException | IOException e) {
-                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
+                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
                 throw e;
             } catch (final IllegalStateException e) {
                 // There is an issue with AndroidKeyStore when attempting to generate keypair
@@ -763,7 +763,7 @@ public class StorageHelper implements IStorageHelper {
                 // The thrown exception in this case is:
                 // java.lang.IllegalStateException: could not generate key in keystore
                 // To avoid app crashing, re-throw as checked exception
-                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_WRITE_END, e.toString(), e);
+                logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_WRITE_END, e.toString(), e);
                 throw new KeyStoreException(e);
             } finally {
                 // Reset to our default locale after generating keys
@@ -792,7 +792,7 @@ public class StorageHelper implements IStorageHelper {
         Logger.verbose(TAG + methodName, "Reading Key entry");
 
         try {
-            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_START);
+            logFlowStart(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_START);
 
             final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE);
             keyStore.load(null);
@@ -801,16 +801,16 @@ public class StorageHelper implements IStorageHelper {
             final Key privateKey = keyStore.getKey(KEY_STORE_CERT_ALIAS, null);
 
             if (cert == null || privateKey == null) {
-                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore is empty.");
+                logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore is empty.");
                 Logger.verbose(TAG + methodName, "Key entry doesn't exist.");
                 return null;
             }
 
             final KeyPair keyPair = new KeyPair(cert.getPublicKey(), (PrivateKey) privateKey);
-            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, "KeyStore KeyPair is loaded.");
+            logFlowSuccess(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, "KeyStore KeyPair is loaded.");
             return keyPair;
         } catch (final GeneralSecurityException | IOException e) {
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, e.toString(), e);
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
             throw e;
         } catch (final RuntimeException e) {
             // There is an issue in android keystore that resets keystore
@@ -819,7 +819,7 @@ public class StorageHelper implements IStorageHelper {
             // in this case getEntry throws
             // java.lang.RuntimeException: error:0D07207B:asn1 encoding routines:ASN1_get_object:header too long
             // handle it as regular KeyStoreException
-            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYCHAIN_READ_END, e.toString(), e);
+            logFlowError(methodName, AuthenticationConstants.TelemetryEvents.KEYSTORE_READ_END, e.toString(), e);
             throw new KeyStoreException(e);
         }
     }

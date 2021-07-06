@@ -28,15 +28,16 @@ import android.security.KeyPairGeneratorSpec;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.internal.util.FileUtil;
 import com.microsoft.identity.common.internal.util.AndroidKeyStoreUtil;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.FileUtil;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.security.KeyPair;
 import java.security.spec.AlgorithmParameterSpec;
@@ -55,7 +56,13 @@ public class AndroidWrappedKeyLoaderTest {
         // Everything is on clean slate.
         AuthenticationSettings.INSTANCE.clearSecretKeysForTestCases();
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
-        FileUtil.deleteFile(context, AndroidWrappedKeyLoader.KEY_FILE_PATH);
+        FileUtil.deleteFile(getKeyFile());
+    }
+
+    private File getKeyFile() {
+        return new File(
+                context.getDir(context.getPackageName(), Context.MODE_PRIVATE),
+                AndroidWrappedKeyLoader.KEY_FILE_PATH);
     }
 
     @Test
@@ -123,9 +130,7 @@ public class AndroidWrappedKeyLoaderTest {
     public void testLoadKey() throws ClientException {
         // Nothing exists. This load key function should generate a key if the key hasn't exist.
         Assert.assertNull(AndroidKeyStoreUtil.readKey(MOCK_KEY_ALIAS));
-        Assert.assertNull(FileUtil.readFromFile(context,
-                AndroidWrappedKeyLoader.KEY_FILE_PATH,
-                AndroidWrappedKeyLoader.KEY_FILE_SIZE));
+        Assert.assertNull(FileUtil.readFromFile(getKeyFile(), AndroidWrappedKeyLoader.KEY_FILE_SIZE));
 
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
         final SecretKey secretKey = keyLoader.getKey();
@@ -153,7 +158,8 @@ public class AndroidWrappedKeyLoaderTest {
     public void testLoadDeletedKeyFile() throws ClientException {
         final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
 
-        FileUtil.deleteFile(context, AndroidWrappedKeyLoader.KEY_FILE_PATH);
+        FileUtil.deleteFile(getKeyFile());
+
         // Cached key should not be wiped - yet, since we delete the file directly.
         Assert.assertNotNull(keyLoader.getCachedKey());
 

@@ -25,7 +25,6 @@ package com.microsoft.identity.common.java.crypto;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
@@ -36,13 +35,25 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 @AllArgsConstructor
 public class KeyAccessorStringAdapter {
 
-    public IKeyAccessor mKeyAcccesor;
+    private final IKeyAccessor mKeyAcccesor;
 
-    public String encrypt(@NonNull String plainText) throws ClientException{
+    /**
+     * Encrypt a plaintext string, returning an encrypted UTF-8 encoded string.
+     *
+     * @param plainText the plaintext to encrypt.
+     * @return the encrypted UTF-8 string.
+     */
+    public String encrypt(@NonNull String plainText) throws ClientException {
         final byte[] result = mKeyAcccesor.encrypt(plainText.getBytes(ENCODING_UTF8));
         return new String(result, ENCODING_UTF8);
     }
 
+    /**
+     * Decrypt a UTF-8 ciphertext, returning the decrypted values.
+     *
+     * @param cipherText the UTF-8 ciphertext to decrypt.
+     * @return the decrypted string.
+     */
     public String decrypt(@NonNull String cipherText) throws ClientException {
         final byte[] result = mKeyAcccesor.decrypt(cipherText.getBytes(ENCODING_UTF8));
         return new String(result, ENCODING_UTF8);
