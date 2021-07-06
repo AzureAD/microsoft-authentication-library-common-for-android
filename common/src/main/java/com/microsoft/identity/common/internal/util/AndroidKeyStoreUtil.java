@@ -80,6 +80,17 @@ public class AndroidKeyStoreUtil {
     private AndroidKeyStoreUtil() {
     }
 
+    private static KeyStore mKeyStore;
+
+    private static synchronized KeyStore getKeyStore()
+            throws KeyStoreException, CertificateException, NoSuchAlgorithmException, IOException {
+        if (mKeyStore == null){
+            mKeyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
+            mKeyStore.load(null);
+        }
+        return mKeyStore;
+    }
+
     /**
      * Generates a {@link KeyPair} with the given algorithm and {@link AlgorithmParameterSpec}
      * inside a {@link KeyStore} of the given type.
@@ -105,10 +116,6 @@ public class AndroidKeyStoreUtil {
             applyKeyStoreLocaleWorkarounds(currentLocale);
 
             try {
-                // Load the given keystore as a provider for KeyPairGenerator.
-                final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
-                keyStore.load(null);
-
                 Logger.verbose(TAG + methodName, "Generating KeyPair from KeyStore");
 
                 // Generate a key with the given algorithm spec
@@ -134,12 +141,6 @@ public class AndroidKeyStoreUtil {
                 // To avoid app crashing, re-throw as checked exception
                 errCode = ANDROID_KEYSTORE_UNAVAILABLE;
                 exception = e;
-            } catch (final IOException e) {
-                errCode = IO_ERROR;
-                exception = e;
-            } catch (final CertificateException e) {
-                errCode = CERTIFICATE_LOAD_FAILURE;
-                exception = e;
             } catch (final NoSuchAlgorithmException e) {
                 errCode = NO_SUCH_ALGORITHM;
                 exception = e;
@@ -148,9 +149,6 @@ public class AndroidKeyStoreUtil {
                 exception = e;
             } catch (final NoSuchProviderException e) {
                 errCode = NO_SUCH_PROVIDER;
-                exception = e;
-            } catch (final KeyStoreException e) {
-                errCode = ANDROID_KEYSTORE_UNAVAILABLE;
                 exception = e;
             } finally {
                 // Reset to our default locale after generating keys
@@ -174,6 +172,21 @@ public class AndroidKeyStoreUtil {
     }
 
     /**
+     * Check if key of the given alias can be loaded in AndroidKeyStore.
+     *
+     * @return true if it does, false otherwise.
+     */
+    public static synchronized boolean canLoadKey(@NonNull final String keyAlias) {
+        final String methodName = ":hasKey";
+        try {
+            return getKeyStore().containsAlias(keyAlias);
+        } catch (final KeyStoreException | CertificateException | NoSuchAlgorithmException | IOException e) {
+            Logger.error(TAG + methodName, "Failed to check keystore key", e);
+            return false;
+        }
+    }
+
+    /**
      * Read KeyPair from AndroidKeyStore.
      *
      * @return KeyPair. Null if there isn't any.
@@ -187,9 +200,7 @@ public class AndroidKeyStoreUtil {
         final Exception exception;
         final String errCode;
         try {
-            final KeyStore keyStore = KeyStore.getInstance(ANDROID_KEY_STORE_TYPE);
-            keyStore.load(null);
-
+            final KeyStore keyStore = getKeyStore();
             final Certificate cert = keyStore.getCertificate(keyAlias);
             final Key privateKey = keyStore.getKey(keyAlias, null);
             if (cert == null || privateKey == null) {

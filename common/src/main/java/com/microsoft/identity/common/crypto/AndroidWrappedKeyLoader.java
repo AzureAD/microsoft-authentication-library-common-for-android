@@ -25,7 +25,6 @@ package com.microsoft.identity.common.crypto;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import android.security.KeyChain;
 import android.security.KeyPairGeneratorSpec;
 
 import androidx.annotation.RequiresApi;
@@ -36,6 +35,7 @@ import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
+import com.microsoft.identity.common.java.util.CachedData;
 import com.microsoft.identity.common.java.util.FileUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -96,16 +96,20 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     private final String mAlias;
 
-    private SecretKey mCachedKey = null;
+    private final CachedData<SecretKey> mKeyCache = new CachedData<SecretKey>() {
+        @Override
+        public SecretKey getData() {
+            if (!AndroidKeyStoreUtil.canLoadKey(mAlias) || !getKeyFile().exists()) {
+                this.clear();
+            }
+            return super.getData();
+        }
+    };
 
     // Exposed for testing only.
-    /* package */ SecretKey getCachedKey() {
-        return mCachedKey;
-    }
-
-    // Exposed for testing only.
-    /* package */ void clearCachedKey() {
-        mCachedKey = null;
+    @NonNull
+    /* package */ CachedData<SecretKey> getKeyCache() {
+        return mKeyCache;
     }
 
     public AndroidWrappedKeyLoader(@NonNull final String alias,
@@ -135,16 +139,19 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @Override
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
-        if (mCachedKey == null) {
-            mCachedKey = readSecretKeyFromStorage();
+        SecretKey key = mKeyCache.getData();
+
+        if (key == null) {
+            key = readSecretKeyFromStorage();
         }
 
         // If key doesn't exist, generate a new one.
-        if (mCachedKey == null) {
-            mCachedKey = generateRandomKey();
+        if (key == null) {
+            key = generateRandomKey();
         }
 
-        return mCachedKey;
+        mKeyCache.setData(key);
+        return key;
     }
 
     @Override
@@ -219,7 +226,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     private void deleteSecretKeyFromStorage() throws ClientException {
         AndroidKeyStoreUtil.deleteKey(mAlias);
         FileUtil.deleteFile(getKeyFile());
-        mCachedKey = null;
+        mKeyCache.clear();
     }
 
 

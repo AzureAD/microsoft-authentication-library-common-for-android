@@ -141,11 +141,12 @@ public class AndroidWrappedKeyLoaderTest {
 
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
         final SecretKey secretKey = keyLoader.getKey();
-        Assert.assertNotNull(keyLoader.getCachedKey());
 
+        final SecretKey key = keyLoader.getKeyCache().getData();
+        Assert.assertNotNull(key);
         Assert.assertEquals(AES256KeyLoader.AES_ALGORITHM, secretKey.getAlgorithm());
-        Assert.assertArrayEquals(secretKey.getEncoded(), keyLoader.getCachedKey().getEncoded());
-        Assert.assertEquals(secretKey.getFormat(), keyLoader.getCachedKey().getFormat());
+        Assert.assertArrayEquals(secretKey.getEncoded(), key.getEncoded());
+        Assert.assertEquals(secretKey.getFormat(), key.getFormat());
     }
 
     @Test
@@ -203,12 +204,11 @@ public class AndroidWrappedKeyLoaderTest {
     }
 
 
-    // 3s With Google Pixel XL, OS Version 29 (100 loop)
-    @Ignore
+    // 1s With Google Pixel XL, OS Version 29 (100 loop)
     @Test
+    @Ignore
     public void testPerf_WithCachedKey() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
-        keyLoader.clearCachedKey();
+        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
 
         long timeStartLoop = System.nanoTime();
         for (int i = 0; i < TEST_LOOP; i++) {
@@ -219,15 +219,15 @@ public class AndroidWrappedKeyLoaderTest {
         System.out.println("Time: " + (timeFinishLoop - timeStartLoop));
     }
 
-    // 25s With Google Pixel XL, OS Version 29 (100 loop)
-    @Ignore
+    // 23s With Google Pixel XL, OS Version 29 (100 loop)
     @Test
+    @Ignore
     public void testPerf_NoCachedKey() throws ClientException {
-        final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
+        final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
 
         long timeStartLoopNotCached = System.nanoTime();
         for (int i = 0; i < 100; i++) {
-            keyLoader.clearCachedKey();
+            keyLoader.getKeyCache().clear();
             keyLoader.getKey();
         }
         long timeFinishLoopNotCached = System.nanoTime();
@@ -243,13 +243,10 @@ public class AndroidWrappedKeyLoaderTest {
         final AndroidWrappedKeyLoader keyLoader = initKeyLoaderWithKeyEntry();
 
         AndroidKeyStoreUtil.deleteKey(MOCK_KEY_ALIAS);
-        // Cached key should not be wiped - yet, since we delete directly in keychain.
-        Assert.assertNotNull(keyLoader.getCachedKey());
 
-        // Once we force load the key again, the cached key should be wiped.
-        final SecretKey storedSecretKey = keyLoader.readSecretKeyFromStorage();
-        Assert.assertNull(keyLoader.getCachedKey());
-        Assert.assertNull(storedSecretKey);
+        // Cached key also be wiped.
+        final SecretKey key = keyLoader.getKeyCache().getData();
+        Assert.assertNull(key);
     }
 
     @Test
@@ -258,20 +255,16 @@ public class AndroidWrappedKeyLoaderTest {
 
         FileUtil.deleteFile(getKeyFile());
 
-        // Cached key should not be wiped - yet, since we delete the file directly.
-        Assert.assertNotNull(keyLoader.getCachedKey());
-
-        // Once we force load the key again, the cached key should be wiped.
-        final SecretKey storedSecretKey = keyLoader.readSecretKeyFromStorage();
-        Assert.assertNull(keyLoader.getCachedKey());
-        Assert.assertNull(storedSecretKey);
+        // Cached key also be wiped.
+        final SecretKey key = keyLoader.getKeyCache().getData();
+        Assert.assertNull(key);
     }
 
     private AndroidWrappedKeyLoader initKeyLoaderWithKeyEntry() throws ClientException {
         final AndroidWrappedKeyLoader keyLoader = new AndroidWrappedKeyLoader(MOCK_KEY_ALIAS, context, null);
         final SecretKey key = keyLoader.getKey();
         Assert.assertNotNull(key);
-        Assert.assertNotNull(keyLoader.getCachedKey());
+        Assert.assertNotNull(keyLoader.getKeyCache().getData());
         return keyLoader;
     }
 }
