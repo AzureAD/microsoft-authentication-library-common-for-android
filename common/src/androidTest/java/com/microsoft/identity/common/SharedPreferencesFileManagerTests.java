@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+
 import androidx.test.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
@@ -41,10 +45,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-
 @RunWith(Parameterized.class)
 public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHelper {
 
@@ -60,12 +60,11 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
                 SharedPreferencesFileManager.getSharedPreferences(
                         InstrumentationRegistry.getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        -1, null
+                        null
                 ),
                 SharedPreferencesFileManager.getSharedPreferences(
                         InstrumentationRegistry.getTargetContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        -1,
                         new StorageHelper(InstrumentationRegistry.getTargetContext())
                 )
         });

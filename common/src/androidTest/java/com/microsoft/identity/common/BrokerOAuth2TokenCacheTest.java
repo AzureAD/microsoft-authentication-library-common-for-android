@@ -297,7 +297,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         return SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 getBrokerUidSequesteredFilename(appUid),
-                -1,
                 new StorageHelper(context)
         );
     }
@@ -306,7 +305,6 @@ public class BrokerOAuth2TokenCacheTest extends AndroidSecretKeyEnabledHelper {
         return SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                -1,
                 new StorageHelper(context)
         );
     }
