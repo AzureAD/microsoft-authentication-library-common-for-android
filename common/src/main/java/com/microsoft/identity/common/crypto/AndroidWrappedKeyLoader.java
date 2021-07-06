@@ -25,6 +25,7 @@ package com.microsoft.identity.common.crypto;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
+import android.security.KeyChain;
 import android.security.KeyPairGeneratorSpec;
 
 import androidx.annotation.RequiresApi;
@@ -97,8 +98,14 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
 
     private SecretKey mCachedKey = null;
 
+    // Exposed for testing only.
     /* package */ SecretKey getCachedKey() {
         return mCachedKey;
+    }
+
+    // Exposed for testing only.
+    /* package */ void clearCachedKey() {
+        mCachedKey = null;
     }
 
     public AndroidWrappedKeyLoader(@NonNull final String alias,
@@ -129,10 +136,10 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
     @NonNull
     public synchronized SecretKey getKey() throws ClientException {
         if (mCachedKey == null) {
-            // If key doesn't exist, generate a new one.
             mCachedKey = readSecretKeyFromStorage();
         }
 
+        // If key doesn't exist, generate a new one.
         if (mCachedKey == null) {
             mCachedKey = generateRandomKey();
         }
@@ -169,7 +176,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         try {
             final KeyPair keyPair = readKeyStoreKeyPair();
             if (keyPair == null) {
-                Logger.warn(TAG + methodName, "key does not exist in keystore");
+                Logger.info(TAG + methodName, "key does not exist in keystore");
                 deleteSecretKeyFromStorage();
                 return null;
             }
@@ -190,7 +197,7 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         } catch (final ClientException e) {
             // Reset KeyPair info so that new request will generate correct KeyPairs.
             // All tokens with previous SecretKey are not possible to decrypt.
-            Logger.warn(TAG + methodName, "Error when loading key from Keystore, " +
+            Logger.warn(TAG + methodName, "Error when loading key from Storage, " +
                     "wipe all existing key data ");
             deleteSecretKeyFromStorage();
             throw e;
