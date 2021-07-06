@@ -93,6 +93,12 @@ public class PromptHandlerParameters {
     private final boolean consentPageExpected;
 
     /**
+     * Denotes whether or not the password page is expected to appear during an interactive token
+     * request.
+     */
+    private final boolean passwordPageExpected;
+
+    /**
      * Denotes whether or not the speed bump page is expected to appear during an interactive token
      * request.
      */
