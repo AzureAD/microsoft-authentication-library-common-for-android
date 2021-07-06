@@ -82,7 +82,7 @@ public class PackageHelper {
      * @param packageInfo package for which signature should be returned
      * @return signature for package
      */
-    public String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
+    public static String getCurrentSignatureForPackage(final PackageInfo packageInfo) {
         try {
             final Signature [] signatures = getSignatures(packageInfo);
             if (signatures != null && signatures.length > 0) {
