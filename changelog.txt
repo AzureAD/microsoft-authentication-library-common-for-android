@@ -9,6 +9,7 @@ Version 3.4.4
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
 - [PATCH] Avoid unnecessary BAM-cache reload (#1439, cherry-picked from #1426)
+- [PATCH] Concurrency fix: revert thread pool construction changes in CommandDispatcher (#1434)
 
 Version 3.4.3
 ----------
