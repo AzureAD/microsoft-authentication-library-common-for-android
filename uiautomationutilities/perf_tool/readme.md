@@ -38,7 +38,7 @@
 - Open the Location of the perf tool (Location details given above) in Visual studio.
 - Build Solution by clicking on the Build -> Build Solution. Make sure Release build is chosen for deployment.
 - Bundle following files into one zip file named "PerfRunnables.zip":
-	- a. Files "PerfIdentity.exe", "PerfIdentity.runtimeconfig.json", "PerfIdentity.dll" and "PerfIdentity.deps.json" from location  "bin\Release\netcoreapp3.1" and file "PerfDataConfiguration.xml" from root location of the project
+	- a. Files `PerfIdentity.exe`, `PerfIdentity.runtimeconfig.json`, `PerfIdentity.dll` and `PerfIdentity.deps.json` from location  `bin\Release\netcoreapp3.1` and file `PerfDataConfiguration.xml` from root location of the project
 - Go to the pipeline and then from the left side options, Open Library page and upload the file "PerfRunnables.zip" after deleting previous one (if exists)
 - Go to the pipeline definition and make change in the task "Download Perf runnable package" by selecting the file name which was uploaded in the "secure file" drop down.
 - Save the build definition. 
