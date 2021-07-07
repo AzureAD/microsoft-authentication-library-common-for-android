@@ -10,6 +10,29 @@
 
 **Pipeline information:** https://dev.azure.com/IdentityDivision/IDDP/_build?definitionId=1254
 
+### Contents:
+- [Definition of terms](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#definition-of-terms)
+
+- [Steps to add a new marker and see it in the report](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#steps-to-add-a-new-marker-and-see-it-in-the-report)
+
+- [Steps to deploy latest version of C# tool to pipeline](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#steps-to-deploy-latest-version-of-c-tool-to-pipeline)
+
+- [Steps to baseline a build number](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#steps-to-baseline-a-build-number)
+ 
+- [Steps to run on the pipeline](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#steps-to-run-on-the-pipeline)
+
+- [Steps to run on the pipeline when Basefiles are not available or are corrupted](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#steps-to-run-on-the-pipeline-when-basefiles-are-not-available-or-are-corrupted)
+
+- [Steps to run on local machine](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#steps-to-run-on-local-machine)
+
+- [Where is the raw Perfdata.txt stored in local run as well as in pipeline run](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#where-is-the-raw-perfdatatxt-stored-in-local-run-as-well-as-in-pipeline-run)
+
+- [Where to find the intermediate files or output files](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#where-to-find-the-intermediate-files-or-output-files)
+
+- [Arguments to the tool](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#arguments-to-the-tool)
+
+- [Email report](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#email-report)
+
 ### Definition of terms:
 [**PerfMarker / CodeMarker:**](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java#L36) A marker in code that results in an event to capture timestamp and other details as needed (Memory, Thread ID, CorrelationID etc. and write to file). The data generated from a CodeMarker can be used for Perf, logging, Telemetry etc.
 
@@ -108,12 +131,12 @@
 - Run the application. Arguments definition can be seen in `command.cs` file.
 
 
-#### Where is the raw Perfdata.txt stored in local run as well as in pipeline run
+### Where is the raw Perfdata.txt stored in local run as well as in pipeline run
 - In local run, the Perfdata txt files can be stored on any directory which should be given to the C# tool as an argument. e.g. `C:\testdata\basefiles` and `C:\testdata\targetfiles`
 - On pipeline, we can find the txt files from artifact "Perf -> basefiles" or "Perf -> targetfiles"
 
 
-#### Where to find the intermediate files or output files
+### Where to find the intermediate files or output files
 - If output directory is default i.e. "." then the output files will be created in the directory where the applicaiton is running.
 - Default directory of output files: `bin\Release\netcoreapp3.1`
 
