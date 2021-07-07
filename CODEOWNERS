@@ -11,12 +11,23 @@
 # Area Owners
 #---------------------
 
+# Interfaces
+/common4j/src/main/java/com/microsoft/identity/common/java/interfaces/              @rpdome @iambmelt @AdamBJohnsonx
+
 # Automation
-/common/src/test/                                                                   @shahzaibj @rpdome
-/common/src/androidTest/                                                            @shahzaibj @rpdome
-/common4j/src/test/                                                                 @shahzaibj @rpdome
-/uiautomationutilities/src/                                                         @shahzaibj @rpdome
-/testutils/                                                                         @shahzaibj @rpdome
+/common/src/test/                                                                   @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx
+/common/src/androidTest/                                                            @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx
+/common4j/src/test/                                                                 @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx
+/uiautomationutilities/src/                                                         @shahzaibj @shoatman @AdamBJohnsonx @iamgusain
+/testutils/                                                                         @shahzaibj @shoatman @AdamBJohnsonx @iamgusain
+/common4j/src/test/com/microsoft/identity/common/java/eststelemetry                 @shahzaibj @rpdome
+/common4j/src/test/com/microsoft/identity/common/java/logging                       @shahzaibj @rpdome @iambmelt @AdamBJohnsonx
+/common4j/src/test/com/microsoft/identity/common/java/net                           @rpdome @AdamBJohnsonx
+/common4j/src/test/com/microsoft/identity/common/java/platform                      @shahzaibj @rpdome @AdamBJohnsonx
+/common4j/src/test/com/microsoft/identity/common/java/providers                     @rpdome @iambmelt @shoatman
+/common4j/src/test/com/microsoft/identity/common/java/telemetry                     @shahzaibj @rpdome @iambmelt
+/common4j/src/test/com/microsoft/identity/common/java/util                          @rpdome @iambmelt @AdamBJohnsonx
+
 
 # AuthSchemes
 /common/src/main/java/com/microsoft/identity/common/internal/authscheme             @iambmelt @AdamBJohnsonx
@@ -31,7 +42,8 @@
 /common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman @iamgusain
 
 # Commands
-/common/src/main/java/com/microsoft/identity/common/internal/commands               @shoatman @iambmelt @AdamBJohnsonx 
+/common/src/main/java/com/microsoft/identity/common/internal/commands               @shoatman @iambmelt @AdamBJohnsonx
+/common4j/src/main/java/com/microsoft/identity/common/java/commands                 @shoatman @iambmelt @AdamBJohnsonx
 
 # DTOs
 /common/src/main/java/com/microsoft/identity/common/internal/dto                    @iambmelt @AdamBJohnsonx 
@@ -45,17 +57,23 @@
 
 # Networking
 /common/src/main/java/com/microsoft/identity/common/internal/net                    @AdamBJohnsonx @rpdome
+/common4j/src/main/java/com/microsoft/identity/common/java/net                      @AdamBJohnsonx @rpdome
 
 # Platform
-/common/src/main/java/com/microsoft/identity/common/internal/platform               @iambmelt @AdamBJohnsonx 
+/common/src/main/java/com/microsoft/identity/common/internal/platform               @iambmelt @AdamBJohnsonx
+/common4j/src/main/java/com/microsoft/identity/common/java/platform                 @iambmelt @AdamBJohnsonx
 
 # Pipelines
 /azure-pipelines/                                                                   @shoatman @shahzaibj @p3dr0rv
 
 # Telemetry
 /common/src/main/java/com/microsoft/identity/common/internal/telemetry/             @shahzaibj @iambmelt
+/common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt @rpdome
 /common/src/main/java/com/microsoft/identity/common/internal/eststelemetry          @shahzaibj @iambmelt
-/common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt
+/common4j/src/main/com/microsoft/identity/common/java/eststelemetry/                @shahzaibj @iambmelt @rpdome
+
+# Providers
+/common4j/src/main/com/microsoft/identity/common/java/providers/                    @rpdome @iambmelt @shoatman
 
 # Lab Api
 /keyvault                                                                           @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
