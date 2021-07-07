@@ -129,3 +129,6 @@
 - Email ID of the sender's account. Example value: `idlab1@msidlab4.onmicrosoft.com`
 - Password of the sender's account.
 - Email To list separated by comma
+
+### Email report:
+- At the moment the email report is quite simple, it's constructed within the [View.cs](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/View.cs) and then the [ReportHelper sends the email](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/ReportHelper.cs#L138-L158) using the credentials passed as arguments to the tool
