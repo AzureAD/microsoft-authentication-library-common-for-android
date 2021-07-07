@@ -26,6 +26,9 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+/**
+ * An in-memory storage for caching the data.
+ */
 @Getter
 @Setter
 @Accessors(prefix = "m")

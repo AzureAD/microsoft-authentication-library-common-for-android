@@ -74,14 +74,14 @@ public class StorageEncryptionManagerTest {
     public void testEncryptNoKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null);
         manager.encrypt(TEXT_TO_BE_ENCRYPTED_WITH_PREDEFINED_KEY);
-        Assert.fail();
+        Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = IllegalStateException.class)
     public void testDecryptNoKeyLoader() throws ClientException {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, null, null);
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-        Assert.fail();
+        Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = IllegalStateException.class)
@@ -91,7 +91,7 @@ public class StorageEncryptionManagerTest {
                     add(null);
                 }});
         manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-        Assert.fail();
+        Assert.fail("decrypt() should throw an exception but it succeeds.");
     }
 
     @Test(expected = ClientException.class)
@@ -106,7 +106,7 @@ public class StorageEncryptionManagerTest {
         final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoaderWithGetKeyError());
         try {
             manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-            Assert.fail();
+            Assert.fail("decrypt() should throw an exception but it succeeds.");
         } catch (ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
             Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(),
@@ -149,9 +149,9 @@ public class StorageEncryptionManagerTest {
                 }});
 
         try {
-            /** This one is encrypted by {@link StorageEncryptionManagerTest#encryptionKey} */
+            /* This one is encrypted by {@link StorageEncryptionManagerTest#encryptionKey} */
             manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-            Assert.fail();
+            Assert.fail("decrypt() should throw an exception but it succeeds.");
         } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
         }
@@ -162,7 +162,7 @@ public class StorageEncryptionManagerTest {
         try {
             final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY_MALFORMED, PREDEFINED_KEY_IDENTIFIER));
             manager.decrypt(TEXT_ENCRYPTED_BY_PREDEFINED_KEY);
-            Assert.fail();
+            Assert.fail("decrypt() should throw an exception but it succeeds.");
         } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
             Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), HMAC_MISMATCH);
@@ -228,7 +228,7 @@ public class StorageEncryptionManagerTest {
             final byte[] encryptedByteArray = TEXT_ENCRYPTED_BY_PREDEFINED_KEY;
             final byte[] truncatedByteArray = Arrays.copyOf(encryptedByteArray, encryptedByteArray.length / 2);
             manager.decrypt(truncatedByteArray);
-            Assert.fail();
+            Assert.fail("decrypt() should throw an exception but it succeeds.");
         } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
             Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), HMAC_MISMATCH);
@@ -237,7 +237,7 @@ public class StorageEncryptionManagerTest {
         try {
             final StorageEncryptionManager manager = new MockStorageEncryptionManager(PREDEFINED_KEY_IV, new MockAES256KeyLoader(PREDEFINED_KEY, PREDEFINED_KEY_IDENTIFIER));
             manager.decrypt(new String(TEXT_ENCRYPTED_BY_PREDEFINED_KEY, ENCODING_UTF8).substring(0, 25).getBytes(ENCODING_UTF8));
-            Assert.fail();
+            Assert.fail("decrypt() should throw an exception but it succeeds.");
         } catch (final ClientException e){
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.DECRYPTION_FAILED);
             Assert.assertEquals(((ClientException)e.getSuppressedException().get(0)).getErrorCode(), DATA_MALFORMED);
