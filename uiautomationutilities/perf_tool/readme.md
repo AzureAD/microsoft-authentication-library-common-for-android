@@ -1,5 +1,7 @@
 # Perf tool walk through
 
+**Design document:** https://identitydivision.visualstudio.com/DevEx/_git/AuthLibrariesApiReview?path=%2FPerfMeasurement%2FPerfMeasurementForClientLibs.md
+
 **Recording:** https://msit.microsoftstream.com/video/8930a1ff-0400-9887-b080-f1eb55ce8803
 
 **Source code of C# tool:** 
@@ -8,25 +10,31 @@
 
 **Pipeline information:** https://dev.azure.com/IdentityDivision/IDDP/_build?definitionId=1254
 
-### Steps to modify the code to add a new marker and see it in the report:
-- If a new scenario has to be created, write a new test case in MSAL native codebase, see existing test case [TestCasePerf.java](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerf.java) for non-brokered auth and [TestCasePerfBrokered.java](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerfBrokered.java) for brokered auth.
+### Definition of terms:
+[**PerfMarker / CodeMarker:**](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java#L36) A marker in code that results in an event to capture timestamp and other details as needed (Memory, Thread ID, CorrelationID etc. and write to file). The data generated from a CodeMarker can be used for Perf, logging, Telemetry etc.
+
+[**Measurement:**](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml#L4) A pair of markers identified for a transaction. E.g. If can have marker M1 at the beginning of a silent request and another when we successfully received a token say M2. Now M1 and M2 can be paired together if we were interested in measuring time between these. Pairing is an outside concept and has no impact from a code perspective.
+
+[**Scenario:**](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml#L18-L25) An E2E scenario that we would be interested in measuring. E.g. Silent Token refresh on a 4G network when requesting a token for graph. A scenario can be associated with one or more measurements.
+
+
+### Steps to add a new marker and see it in the report:
+- If a new scenario has to be created, come up with a scenario code comprised of 3 digits and add it to the codemarker definitions in file [PerfConstants.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java), for example some of the existing scenario codes are 100 and 200.
+- In the common codebase, and add codemarkers (e.g. start of the activity to be measured and the end of the activity to be measured) at desired places. See example in [CommandDispatcher.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/controllers/CommandDispatcher.java#L197). Example events lines are given as follows:
+	- `CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_START);`
+	- `CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);`
+- Write a new test case that targets the flow where code markers have been added, see existing test case [TestCasePerf.java](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerf.java) for non-brokered auth and [TestCasePerfBrokered.java](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerfBrokered.java) for brokered auth.
 - In the new test case, before performing the particular scenario, add following code snippet
 	- Enable the Code marker: `CodeMarkerManager.getInstance().setEnableCodeMarker(true);`
-	- Setting up scenario code with a 3 digit code. For example some of the existing codes are 100 and 200, choose a new one and set it up as: `CodeMarkerManager.getInstance().setPrefixScenarioCode("100");`
+	- Setup the scenario code defined in step #1: `CodeMarkerManager.getInstance().setPrefixScenarioCode("100");`
 	- If we are having more than one iterations of same scenario, i.e. running same code multiple times, 
 		- Make sure to clear the previous run's markers in the start of the iteration as follows: `CodeMarkerManager.getInstance().clearMarkers();`
-		- Also write the content to the file using fileAppender.
+		- Also write the content to the file using [FileAppender](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/src/main/java/com/microsoft/identity/client/ui/automation/logging/appender/FileAppender.java) such as [here](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerf.java#L119-L124)
 	- Also add followings after performing the particular scenario:
 		- Clear the codemarkers: `CodeMarkerManager.getInstance().clearMarkers();`
 		- Disable the codemarkers: `CodeMarkerManager.getInstance().setEnableCodeMarker(false);`
-- In the common codebase, Add the codemarker definitions in file [PerfConstants.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java) and add codemarker events (e.g. start of the activity to be measured and the end of the activity to be measured) at desired places. See example in `CommandDispatcher.java`. Example events lines are given as follows:
-	- `CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_START);`
-	- `CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);`
 - In the C# tool code, open the file [PerfDataConfiguration.xml](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml) and perform following actions:
 	- In tag `MeasurementsConfigurations`, add a new `MeasurementsConfiguration` with giving the startMarker and endMarker as given in the step 2. 
-
-	**IMPORTANT:** A startmarker or endmarker should be combination of the scenario code and the codemarker provided in the common code. For example if the scenario code is `300` and a couple of code markers are `10088` and `10089` then the startMarker and endMarker can be `30010088` and `30010089`.
-
 	- In tag, `Scenarios`, add a new scenario with the Measurement ID of the MesurementConfiguration just added in previous sub-step.
 - Push the common code and msal native code to dev branch by raising PRs.
 - Push the C# changes of its repo (i.e. common) into dev branch by raising a PR.
