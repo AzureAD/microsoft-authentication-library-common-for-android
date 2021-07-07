@@ -86,7 +86,7 @@
 - On local windows machine go to your target codemarker files location and download the codemarker files named as "PerfData*.txt" from the android device from location "/sdcard" : (Note: make sure that the test case has completed before running the download command)
 - Open the Perf C# tool in visual studio by opening the solution file `PerfIdentity.sln`
 - Build the project by clicking on Build -> Build Solution
-- Copy PerfDataConfiguration.xml into the build folder e.g. `bin\Release\netcoreapp3.1`
+- Copy `PerfDataConfiguration.xml` into the build folder e.g. `bin\Release\netcoreapp3.1`
 - Run the application. Arguments definition can be seen in command.cs file.
 
 
