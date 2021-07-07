@@ -43,7 +43,7 @@ public class TerminalException extends RuntimeException implements IErrorInforma
      * Construct a TerminalException with a message and cause.
      * @param message the exception message.
      * @param cause the causing exception.  Should not be null.
-     * @param errorCode the error code.  May be null.  This should be an error string from {@link ClientException}.
+     * @param errorCode the error code.  May not be null.  This should be an error string from {@link ClientException}.
      */
     public TerminalException(final @Nullable String message,
                              final @NonNull Throwable cause,
