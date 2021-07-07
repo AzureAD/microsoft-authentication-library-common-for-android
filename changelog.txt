@@ -29,6 +29,7 @@ V.Next
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
 - [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
 - [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
+- [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
 
 Version 3.4.3
 ----------
