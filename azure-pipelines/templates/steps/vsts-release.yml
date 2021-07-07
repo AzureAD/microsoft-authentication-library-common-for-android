@@ -38,7 +38,7 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
+  - template: credscan-policheck.yml
     parameters:
       policheckCmdLineArgsDir: ${{ parameters.projectName }}
   - task: CmdLine@1
