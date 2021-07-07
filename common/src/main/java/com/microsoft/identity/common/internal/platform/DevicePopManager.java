@@ -1173,7 +1173,7 @@ class DevicePopManager implements IDevicePopManager {
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox,
-                                       final boolean enableImport, boolean trySetAttestationChallenge)
+                                       final boolean enableImport, final boolean trySetAttestationChallenge)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
@@ -1234,7 +1234,9 @@ class DevicePopManager implements IDevicePopManager {
     private void initialize(@NonNull final Context context,
                             @NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
-                            final boolean useStrongbox, boolean enableImport, boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
+                            final boolean useStrongbox,
+                            final boolean enableImport,
+                            final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
