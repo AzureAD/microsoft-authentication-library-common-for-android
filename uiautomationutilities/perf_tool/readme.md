@@ -87,7 +87,7 @@
 - Open the Perf C# tool in visual studio by opening the solution file `PerfIdentity.sln`
 - Build the project by clicking on Build -> Build Solution
 - Copy `PerfDataConfiguration.xml` into the build folder e.g. `bin\Release\netcoreapp3.1`
-- Run the application. Arguments definition can be seen in command.cs file.
+- Run the application. Arguments definition can be seen in `command.cs` file.
 
 
 #### Where is the raw Perfdata.txt stored in local run as well as in pipeline run
