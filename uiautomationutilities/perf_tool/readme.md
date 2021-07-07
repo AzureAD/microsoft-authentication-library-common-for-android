@@ -121,14 +121,14 @@
 ### Arguments to the tool:
 - Directory where PerfData base files are present. Example value: `C:\testdata\basefiles`
 - Directory where PerfData target files are present. Example value: `C:\testdata\targetfiles`
-- Build id of the base task.
+- Build id of the base task - configured using the `baseBuildID` variable
 - Build id which should be written in the final Email report and used for going to artifact url. Example value: `1234`
 - Device model to be written in the final Email report. Example value: `Pixel2`
 - Device OS to be written in the final Email report. Example value: `API28`
 - App name to be written in the Email report. Example value: `MSALTestApp`
-- Email ID of the sender's account. Example value: `idlab1@msidlab4.onmicrosoft.com`
-- Password of the sender's account.
-- Email To list separated by comma
+- Email ID of the sender's account. Example value: `idlab1@msidlab4.onmicrosoft.com` - configured using the `senderEmail` variable
+- Password of the sender's account - picked from a key vault using the task `Azure Key Vault: Download Password for email user`
+- Email To list separated by comma - configured using the `recipientEmails` variable
 
 ### Email report:
-- At the moment the email report is quite simple, it's constructed within the [View.cs](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/View.cs) and then the [ReportHelper sends the email](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/ReportHelper.cs#L138-L158) using the credentials passed as arguments to the tool
+- At the moment the email report is quite simple, it's constructed within the [View.cs](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/View.cs) and then the [ReportHelper sends the email](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/ReportHelper.cs#L138-L158) using the credentials passed as arguments to the tool. The email to send the report from is configured on the pipeline as `senderEmail`, the password to the `senderEmail` is picked from a key vault using the task `Azure Key Vault: Download Password for email user` and the list of emails to get the report are configured using the variable `recipientEmails`
