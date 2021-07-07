@@ -36,10 +36,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -96,6 +96,8 @@ import javax.security.auth.x500.X500Principal;
 import lombok.SneakyThrows;
 
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
+import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.java.exception.ClientException.BAD_KEY_SIZE;
 import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
@@ -114,8 +116,6 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 import static com.microsoft.identity.common.java.exception.ClientException.SIGNING_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
-import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
-import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
@@ -141,6 +141,16 @@ class DevicePopManager implements IDevicePopManager {
      * Log message when private key material cannot be found.
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
+
+    /**
+     * Error message from underlying KeyStore that StrongBox HAL is unavailable.
+     */
+    public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
+
+    /**
+     * Error message from underlying KeyStore that
+     */
+    public static final String FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN = "Failed to generate attestation certificate chain";
 
     /**
      * Manager class for interacting with key storage mechanism.
@@ -1052,16 +1062,19 @@ class DevicePopManager implements IDevicePopManager {
             KeyPair kp = null;
             boolean tryStrongBox = true;
             boolean tryImport = true;
+            boolean trySetAttestationChallenge = true;
             boolean generated = false;
             while (!generated) {
                 try {
-                    kp = generateNewKeyPair(context, tryStrongBox, tryImport);
+                    kp = generateNewKeyPair(context, tryStrongBox, tryImport, trySetAttestationChallenge);
                     generated = true;
                 } catch (final ProviderException e) {
                     // This mechanism is terrible.  But there are stern warnings that even attempting to
                     // mention these classes in a catch clause might cause failures. So we're going to look
                     // at the exception names.
-                    if (tryStrongBox && e.getClass().getSimpleName().equals("StrongBoxUnavailableException")) {
+
+
+                    if (tryStrongBox && e.getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION)) {
                         Logger.error(
                                 TAG,
                                 "StrongBox unsupported - skipping hardware flags.",
@@ -1076,8 +1089,22 @@ class DevicePopManager implements IDevicePopManager {
                                 e
                         );
                         tryImport = false;
+
+                        if (null != e.getCause() && e.getCause().getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION)) {
+                            // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
+                            // the cause of the surfaced SecureKeyImportUnavailableException.
+                            tryStrongBox = false;
+                        }
+
+                        continue;
+                    } else if (trySetAttestationChallenge && FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN.equalsIgnoreCase(e.getMessage())) {
+                        trySetAttestationChallenge = false;
+
                         continue;
                     }
+
+                    // We were unsuccessful, cleanup after ourselves and throw...
+                    clearAsymmetricKey();
                     throw e;
                 }
             }
@@ -1136,6 +1163,7 @@ class DevicePopManager implements IDevicePopManager {
      *
      * @param context      The application Context.
      * @param useStrongbox True if StrongBox should be used, false otherwise.
+     * @param trySetAttestationChallenge
      * @return The newly generated KeyPair.
      * @throws InvalidAlgorithmParameterException If the designated crypto algorithm is not
      *                                            supported for the designated parameters.
@@ -1145,7 +1173,7 @@ class DevicePopManager implements IDevicePopManager {
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private KeyPair generateNewKeyPair(@NonNull final Context context, final boolean useStrongbox,
-                                       final boolean enableImport)
+                                       final boolean enableImport, boolean trySetAttestationChallenge)
             throws InvalidAlgorithmParameterException, NoSuchAlgorithmException,
             NoSuchProviderException, StrongBoxUnavailableException {
         synchronized (isLocaleCalendarNonGregorian(Locale.getDefault()) ? LOCALE_CHANGE_LOCK : new Object()) {
@@ -1158,7 +1186,9 @@ class DevicePopManager implements IDevicePopManager {
                         context,
                         RSA_KEY_SIZE,
                         useStrongbox,
-                        enableImport);
+                        enableImport,
+                        trySetAttestationChallenge
+                );
                 final KeyPair keyPair = kpg.generateKeyPair();
 
                 return keyPair;
@@ -1173,7 +1203,8 @@ class DevicePopManager implements IDevicePopManager {
     private KeyPairGenerator getInitializedRsaKeyPairGenerator(@NonNull final Context context,
                                                                final int keySize,
                                                                final boolean useStrongbox,
-                                                               final boolean enableImport)
+                                                               final boolean enableImport,
+                                                               final boolean trySetAttestationChallenge)
             throws InvalidAlgorithmParameterException, NoSuchProviderException, NoSuchAlgorithmException {
         // Create the KeyPairGenerator
         final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance(
@@ -1182,7 +1213,7 @@ class DevicePopManager implements IDevicePopManager {
         );
 
         // Initialize it!
-        initialize(context, keyPairGenerator, keySize, useStrongbox, enableImport);
+        initialize(context, keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
 
         return keyPairGenerator;
     }
@@ -1195,20 +1226,21 @@ class DevicePopManager implements IDevicePopManager {
      * @param keySize          The RSA keysize.
      * @param useStrongbox     True if StrongBox should be used, false otherwise. Please note that
      *                         StrongBox may not be supported on all devices.
-     * @param enableImport
+     * @param enableImport     True if imports to the underlying KeyStore are allowed.
+     * @param trySetAttestationChallenge True if we should attempt to generate an attestation challenge cert.
      * @throws InvalidAlgorithmParameterException
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void initialize(@NonNull final Context context,
                             @NonNull final KeyPairGenerator keyPairGenerator,
                             final int keySize,
-                            final boolean useStrongbox, boolean enableImport) throws InvalidAlgorithmParameterException {
+                            final boolean useStrongbox, boolean enableImport, boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
         } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
-            initialize23(keyPairGenerator, keySize, useStrongbox);
+            initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
         } else {
-            initialize28(keyPairGenerator, keySize, useStrongbox, enableImport);
+            initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
         }
     }
 
@@ -1216,7 +1248,8 @@ class DevicePopManager implements IDevicePopManager {
     @RequiresApi(api = Build.VERSION_CODES.M)
     private void initialize23(@NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
-                              final boolean useStrongbox) throws InvalidAlgorithmParameterException {
+                              final boolean useStrongbox,
+                              final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         KeyGenParameterSpec.Builder builder;
         builder = new KeyGenParameterSpec.Builder(
                 mKeyManager.getKeyAlias(),
@@ -1242,7 +1275,7 @@ class DevicePopManager implements IDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder = setAttestationChallenge(builder);
         }
 
@@ -1285,7 +1318,8 @@ class DevicePopManager implements IDevicePopManager {
     private void initialize28(@NonNull final KeyPairGenerator keyPairGenerator,
                               final int keySize,
                               final boolean useStrongbox,
-                              final boolean enableImport) throws InvalidAlgorithmParameterException {
+                              final boolean enableImport,
+                              final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         int purposes = KeyProperties.PURPOSE_SIGN
                 | KeyProperties.PURPOSE_VERIFY
                 | KeyProperties.PURPOSE_ENCRYPT
@@ -1312,7 +1346,7 @@ class DevicePopManager implements IDevicePopManager {
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
                 );
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        if (trySetAttestationChallenge && Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             builder = setAttestationChallenge(builder);
         }
 
