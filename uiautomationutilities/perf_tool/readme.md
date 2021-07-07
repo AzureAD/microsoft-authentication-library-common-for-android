@@ -17,6 +17,12 @@
 
 [**Scenario:**](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml#L18-L25) An E2E scenario that we would be interested in measuring. E.g. Silent Token refresh on a 4G network when requesting a token for graph. A scenario can be associated with one or more measurements.
 
+**Base build:** This is a build against which we compare performance of future builds. It would typically be the last release. It is configured on the Perf pipeline using the `baseBuildID` variable
+
+**Basefiles:** These are the code marker files during the run of the base build and help us compare the current run against the base run
+
+**Targetfiles:** These are the code marker files generated during the current run
+
 
 ### Steps to add a new marker and see it in the report:
 - If a new scenario has to be created, come up with a scenario code comprised of 3 digits and add it to the codemarker definitions in file [PerfConstants.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java), for example some of the existing scenario codes are 100 and 200.
