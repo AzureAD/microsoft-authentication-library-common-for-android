@@ -79,7 +79,7 @@
 ### Steps to run on local machine:
 - Checkout msal native code recursively. 
 - Open the msal native code in Android studio and point the dependency builds to local variants.
-- Run one of the Test case having the codemarkers enabled. e.g. "TestCasePerf.java", "TestCasePerfBrokerHost.java" on an Android device.
+- Run one of the Test case having the codemarkers enabled. e.g. `TestCasePerf.java`, `TestCasePerfBrokerHost.java` on an Android device.
 - On local windows machine create directories to keep your base and target codemarker files. e.g. `C:\testdata\basefiles` and `C:\testdata\targetfiles`
 - Download base files from any of the build run by going to the artifacts, clicking on Perf and then clicking on basefiles. For example go to "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=705958&view=results", click on artifact button "2 published; 1 consumed", click on Perf and then download basefiles. 
 - Extract and put the raw basefiles in your local base file folder of your machine.
