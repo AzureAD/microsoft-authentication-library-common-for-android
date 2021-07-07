@@ -6,7 +6,7 @@
 
 **Source code of C# tool:** 
 - Repo: https://github.com/AzureAD/microsoft-authentication-library-common-for-android
-- Location: /uiautomationutilities/perf_tool
+- Location: https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool
 
 **Pipeline information:** https://dev.azure.com/IdentityDivision/IDDP/_build?definitionId=1254
 
@@ -48,13 +48,17 @@
 
 
 ### Steps to deploy latest version of C# tool to pipeline:
-- Take a checkout of C# tool repo (Details above)
-- Open the Location of the perf tool (Location details given above) in Visual studio.
+- Install a recent version of [Visual Studio](https://visualstudio.microsoft.com/)
+- Ensure that you have the following tools selected while installing Visual Studio:
+	- .NET desktop environment
+	- Desktop development using C++
+	- .NET Core cross-platform development
+- Open the [location of the perf tool](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool) in Visual studio. You can this by opening [PerfIdentity.sln](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/PerfIdentity.sln) from Visual studio
 - Build Solution by clicking on the Build -> Build Solution. Make sure Release build is chosen for deployment.
-- Bundle following files into one zip file named "PerfRunnables.zip":
+- Bundle following files into one zip file named `PerfRunnables.zip`:
 	- a. Files `PerfIdentity.exe`, `PerfIdentity.runtimeconfig.json`, `PerfIdentity.dll` and `PerfIdentity.deps.json` from location  `bin\Release\netcoreapp3.1` and file `PerfDataConfiguration.xml` from root location of the project
-- Go to the pipeline and then from the left side options, Open Library page and upload the file "PerfRunnables.zip" after deleting previous one (if exists)
-- Go to the pipeline definition and make change in the task "Download Perf runnable package" by selecting the file name which was uploaded in the "secure file" drop down.
+- Go to the pipeline and then from the left side options, Open Library page and upload the file `PerfRunnables.zip` after deleting previous one (if exists)
+- Go to the pipeline definition and make change in the task `Download Perf runnable package` by selecting the file name which was uploaded in the `secure file` drop down.
 - Save the build definition. 
 
 
@@ -63,31 +67,31 @@
 - From the list of the runs, Click the particular run which we want to choose as the baseline.
 - From the URL, find the numberic value of the buildId and note it. For example buildId will be 708340 for following URL: https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId=708340&view=results
 - Go to the run page of the pipeline again.
-- Go to the definition of the pipeline by clicking on the "Edit" button on the top right.
+- Go to the definition of the pipeline by clicking on the `Edit` button on the top right.
 - Click on variables.
-- Change the value of the variable baseBuildID with the value we have noted in the steps above.
+- Change the value of the variable `baseBuildID` with the value we have noted in the steps above.
 - Save the pipeline definition.
 	
 ### Steps to run on the pipeline:
 - Go to the pipeline
-- Click on "Run pipeline"
-- Click on "Run"
+- Click on `Run pipeline`
+- Choose the right branch (default dev) and click on `Run`
 	
 ### Steps to run on the pipeline when Basefiles are not available or are corrupted.
-- First try to change the baseline build  to such a build which has target files available in the artifacts (as given steps in another section) and it should work. If this does not work then follow next steps.
+- First try to change the baseline build to such a build which has target files available in the artifacts (as given steps in another section) and it should work. If this does not work then follow next steps.
 - If you have handful perfData txt files which you want to make basefiles, zip these files. The file names should start with PerfData and extension should be txt.
 - Upload this zip file in the library by following these steps:
 	- Go to the pipeline
 	- Click on Library on the left menu.
 	- Click on Secure files
-	- Upload the zip file here by clicking "+ Secure file" and following steps.
+	- Upload the zip file here by clicking `+ Secure file` and following steps.
 - Go to the pipeline and click on Edit
-- Temporarily disable "Download Base file(s)" task
-- Enable "Download Perf Base files" task
-- Enable "Unzip Perfbase files" task
+- Temporarily disable `Download Base file(s)` task
+- Enable `Download Perf Base files` task
+- Enable `Unzip Perfbase files` task
 - In task Download PerfBase files choose a secure File (the zip file which was uploaded in previous steps) which will be considered as a bundle of the basefiles.
 - Save and run the pipeline.
-- After the successful run, make sure to disable "Download Perf Base files" and "Unzip Perfbase files" and also make sure to enable "Download Base file(s)"
+- After the successful run, make sure to disable `Download Perf Base files` and `Unzip Perfbase files` and also make sure to enable `Download Base file(s)`
 
 
 ### Steps to run on local machine:
