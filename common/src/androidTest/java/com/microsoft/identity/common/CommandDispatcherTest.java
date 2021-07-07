@@ -27,6 +27,8 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
@@ -44,9 +46,7 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -322,6 +322,32 @@ public class CommandDispatcherTest {
                 }));
     }
 
+    @Test
+    public void testSubmitSilentWithTerminalException() {
+        final String errorCode = "anError";
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CommandDispatcher.submitSilent(new CommandThrowingIErrorInformationException(getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.assertEquals(ClientException.class, error.getClass());
+                        Assert.assertEquals(errorCode, ((ClientException) error).getErrorCode());
+                        testLatch.countDown();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+                }, errorCode));
+    }
     /**
      * This test takes a while to run.  But it should always work.  Just put it here in order
      * to save anyone else from having to write it.  Effectively all of these results are non
@@ -470,6 +496,26 @@ public class CommandDispatcherTest {
         @Override
         public String execute() {
             throw new RuntimeException("An unexpected exception!");
+        }
+
+        @Override
+        public boolean isEligibleForEstsTelemetry() {
+            return false;
+        }
+    }
+
+    static class CommandThrowingIErrorInformationException extends BaseCommand<String> {
+        final String mErrorCode;
+
+        public CommandThrowingIErrorInformationException(@NonNull final CommandParameters parameters,
+                                                         @NonNull final CommandCallback callback, String errorCode) {
+            super(parameters, getTestController(), callback, "test_id");
+            mErrorCode = errorCode;
+        }
+
+        @Override
+        public String execute() {
+            throw new TerminalException("An unexpected exception!", new Exception("Exception"), mErrorCode);
         }
 
         @Override
