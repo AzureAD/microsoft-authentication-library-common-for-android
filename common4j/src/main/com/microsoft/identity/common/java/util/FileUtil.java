@@ -92,7 +92,7 @@ public class FileUtil {
      */
     @Nullable
     public static byte[] readFromFile(@NonNull final File file,
-                                      @NonNull final int dataSize) throws ClientException {
+                                      final int dataSize) throws ClientException {
         final String methodName = ":readKeyData";
 
         if (!file.exists()) {
