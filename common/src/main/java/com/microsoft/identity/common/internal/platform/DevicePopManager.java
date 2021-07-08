@@ -1091,7 +1091,7 @@ class DevicePopManager implements IDevicePopManager {
                         );
                         tryImport = false;
 
-                        if (null != e.getCause() && e.getCause().getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION)) {
+                        if (tryStrongBox && null != e.getCause() && e.getCause().getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION)) {
                             // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
                             // the cause of the surfaced SecureKeyImportUnavailableException.
                             tryStrongBox = false;
