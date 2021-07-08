@@ -55,7 +55,7 @@ jobs:
     name: Gradle1
     displayName: Assemble Release
     inputs:
-      tasks: $ {{ parameters.gradleTasks }}
+      tasks: ${{ parameters.gradleTasks }}
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
