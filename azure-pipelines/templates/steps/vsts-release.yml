@@ -45,7 +45,7 @@ jobs:
     displayName: Set MVN Access Token in Environment
     inputs:
       filename: echo
-      arguments: '##vso[task.setvariable variable=$(parameters.accessTokenName)]$(mvnAccessToken)'
+      arguments: '##vso[task.setvariable variable=${{ parameters.accessTokenName }}]$(mvnAccessToken)'
   - task: Gradle@2
     displayName: ${{ parameters.versionType }} version update
     inputs:
