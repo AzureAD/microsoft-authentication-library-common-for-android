@@ -1075,12 +1075,7 @@ class DevicePopManager implements IDevicePopManager {
                     // at the exception names.
 
 
-                    if (tryStrongBox && e.getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION)) {
-                        Logger.error(
-                                TAG,
-                                "StrongBox unsupported - skipping hardware flags.",
-                                e
-                        );
+                    if (tryStrongBox && isStrongBoxUnavailableException(e)) {
                         tryStrongBox = false;
                         continue;
                     } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
@@ -1091,7 +1086,7 @@ class DevicePopManager implements IDevicePopManager {
                         );
                         tryImport = false;
 
-                        if (tryStrongBox && null != e.getCause() && e.getCause().getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION)) {
+                        if (tryStrongBox && null != e.getCause() && isStrongBoxUnavailableException(e.getCause())) {
                             // On some devices (notably, Huawei Mate 9 Pro), StrongBox errors are
                             // the cause of the surfaced SecureKeyImportUnavailableException.
                             tryStrongBox = false;
@@ -1133,6 +1128,16 @@ class DevicePopManager implements IDevicePopManager {
         throw new UnsupportedOperationException(
                 "Failed to generate valid KeyPair. Attempted " + MAX_RETRIES + " times."
         );
+    }
+
+    private static boolean isStrongBoxUnavailableException(@NonNull final Throwable t) {
+        final boolean isStrongBoxException = t.getClass().getSimpleName().equals(STRONG_BOX_UNAVAILABLE_EXCEPTION);
+
+        if (isStrongBoxException) {
+            Logger.error(TAG + ":isStrongBoxUnavailableException", "StrongBox not supported.", t);
+        }
+
+        return isStrongBoxException;
     }
 
     private SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp) {
