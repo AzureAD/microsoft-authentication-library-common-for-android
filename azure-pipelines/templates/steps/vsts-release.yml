@@ -55,7 +55,7 @@ jobs:
     name: Gradle1
     displayName: Assemble Release
     inputs:
-      tasks: $(parameters.gradleTasks)
+      tasks: $ {{ parameters.gradleTasks }}
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
@@ -67,20 +67,20 @@ jobs:
   - task: Gradle@2
     displayName: Publish
     inputs:
-      tasks: $(parameters.projectName):publish
+      tasks: ${{ parameters.projectName }}:publish
       publishJUnitResults: false
   - task: CopyFiles@2
     name: CopyFiles1
     displayName: Copy Files to Artifact Staging Directory
     inputs:
-      SourceFolder: $(parameters.projectName)\build\
+      SourceFolder: ${{ parameters.projectName }}\build\
       TargetFolder: $(build.artifactstagingdirectory)
   - task: PublishPipelineArtifact@1
     name: PublishPipelineArtifacts1
     displayName: 'Publish Artifact: ${{ parameters.projectName }} Release'
     inputs:
-      ArtifactName: $(parameters.projectName)Release
-      TargetPath: $(Build.SourcesDirectory)/$(parameters.folderName)/build/
+      ArtifactName: ${{ parameters.projectName }}Release
+      TargetPath: $(Build.SourcesDirectory)/${{ parameters.folderName }}/build/
   - task: ComponentGovernanceComponentDetection@0
     displayName: Component Detection
 ...
