@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
+import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -32,6 +33,8 @@ import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.CredentialType;
+
+import org.mockito.Mockito;
 
 import java.util.Map;
 
@@ -62,6 +65,13 @@ public class TestUtils {
         final Context context = ApplicationProvider.getApplicationContext();
 
         return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, Context.MODE_PRIVATE, null);
+    }
+
+    public static Activity getMockActivity(final Context context) {
+        final Activity mockedActivity = Mockito.mock(Activity.class);
+        Mockito.when(mockedActivity.getApplicationContext()).thenReturn(context);
+
+        return mockedActivity;
     }
 
     /**

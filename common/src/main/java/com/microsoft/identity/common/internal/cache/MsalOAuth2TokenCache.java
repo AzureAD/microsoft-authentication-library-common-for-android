@@ -693,6 +693,9 @@ public class MsalOAuth2TokenCache
                 account.getAuthorityType()
         );
 
+        // 'Preloading' our credentials to avoid repeated expensive cache hits
+        final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
+
         // Load the AccessTokens
         final List<Credential> accessTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 account.getHomeAccountId(),
@@ -701,7 +704,8 @@ public class MsalOAuth2TokenCache
                 clientId,
                 account.getRealm(),
                 target,
-                authScheme.getName()
+                authScheme.getName(),
+                allCredentials
         );
 
         // Load the RefreshTokens
@@ -716,7 +720,8 @@ public class MsalOAuth2TokenCache
                 isMultiResourceCapable
                         ? null // wildcard (*)
                         : target,
-                null // not applicable
+                null, // not applicable
+                allCredentials
         );
 
         if (refreshTokens.isEmpty()) {
@@ -757,7 +762,8 @@ public class MsalOAuth2TokenCache
                 clientId,
                 account.getRealm(),
                 null, // wildcard (*),
-                null // not applicable
+                null, // not applicable
+                allCredentials
         );
 
         // Load the v1 IdTokens
@@ -768,7 +774,8 @@ public class MsalOAuth2TokenCache
                 clientId,
                 account.getRealm(),
                 null, // wildcard (*)
-                null // not applicable
+                null, // not applicable
+                allCredentials
         );
 
         final CacheRecord.CacheRecordBuilder result = CacheRecord.builder();
@@ -892,6 +899,8 @@ public class MsalOAuth2TokenCache
                                                            @NonNull AccountRecord accountRecord) {
         final List<IdTokenRecord> result = new ArrayList<>();
 
+        final List<Credential> allCredentials = mAccountCredentialCache.getCredentials();
+
         final List<Credential> idTokens = mAccountCredentialCache.getCredentialsFilteredBy(
                 accountRecord.getHomeAccountId(),
                 accountRecord.getEnvironment(),
@@ -899,7 +908,8 @@ public class MsalOAuth2TokenCache
                 clientId, // If null, behaves as wildcard
                 accountRecord.getRealm(),
                 null, // wildcard (*),
-                null // not applicable
+                null, // not applicable
+                allCredentials
         );
 
         idTokens.addAll(
@@ -910,7 +920,8 @@ public class MsalOAuth2TokenCache
                         clientId,
                         accountRecord.getRealm(),
                         null, // wildcard (*)
-                        null // not applicable
+                        null, // not applicable
+                        allCredentials
                 )
         );
 

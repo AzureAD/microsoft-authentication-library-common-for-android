@@ -58,6 +58,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -81,9 +82,12 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAKeyGenParameterSpec;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
@@ -153,7 +157,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * A background worker to service async tasks.
      */
-    private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
+    private static final ExecutorService sThreadExecutor = Executors.newFixedThreadPool(5);
 
     /**
      * Properties used by the self-signed certificate.
@@ -250,14 +254,14 @@ class DevicePopManager implements IDevicePopManager {
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
         mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
-                                                   .keyStore(instance)
-                                                   .thumbprintSupplier(new Supplier<byte[]>() {
-                                                       @SneakyThrows(ClientException.class)
-                                                       @Override
-                                                       public byte[] get() {
-                                                           return getAsymmetricKeyThumbprint().getBytes(UTF8);
-                                                       }
-                                                   })
+                .keyStore(instance)
+                .thumbprintSupplier(new Supplier<byte[]>() {
+                    @SneakyThrows(ClientException.class)
+                    @Override
+                    public byte[] get() {
+                        return getAsymmetricKeyThumbprint().getBytes(UTF8);
+                    }
+                })
                 .build();
     }
 
@@ -302,6 +306,7 @@ class DevicePopManager implements IDevicePopManager {
 
     /**
      * Given an RSA private key entry, get the RSA thumbprint.
+     *
      * @param entry the entry to compute the thumbprint for.
      * @return A String that would be identicative of this specific key.
      * @throws JOSEException If there is a computation problem.
@@ -799,7 +804,7 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
         return mKeyManager.getCertificateChain();
-   }
+    }
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {
@@ -807,8 +812,8 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
-            final net.minidev.json.JSONObject jwkJson = getDevicePopJwkMinifiedJson();
-            return jwkJson.getAsString(SignedHttpRequestJwtClaims.JWK);
+            final Map<String, Object> jwkMap = getDevicePopJwkMinifiedJson();
+            return jwkMap.get(SignedHttpRequestJwtClaims.JWK).toString();
         } catch (final UnrecoverableEntryException e) {
             exception = e;
             errCode = INVALID_PROTECTION_PARAMS;
@@ -1203,7 +1208,7 @@ class DevicePopManager implements IDevicePopManager {
                             final boolean useStrongbox, boolean enableImport) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox);
         } else {
             initialize28(keyPairGenerator, keySize, useStrongbox, enableImport);
@@ -1444,15 +1449,15 @@ class DevicePopManager implements IDevicePopManager {
      * @throws NoSuchAlgorithmException    If the KeyStore is unable to use the designated alg.
      * @throws KeyStoreException           If the KeyStore experiences an error during read.
      */
-    private net.minidev.json.JSONObject getDevicePopJwkMinifiedJson()
+    private Map<String, Object> getDevicePopJwkMinifiedJson()
             throws UnrecoverableEntryException, NoSuchAlgorithmException, KeyStoreException {
         final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
         final KeyPair rsaKeyPair = getKeyPairForEntry(keyEntry);
         final RSAKey rsaKey = getRsaKeyForKeyPair(rsaKeyPair);
         final RSAKey publicRsaKey = rsaKey.toPublicJWK();
-        final net.minidev.json.JSONObject jwkContents = publicRsaKey.toJSONObject();
-        final net.minidev.json.JSONObject wrappedJwk = new net.minidev.json.JSONObject();
-        wrappedJwk.appendField(SignedHttpRequestJwtClaims.JWK, jwkContents);
+        final Map<String, Object> jwkContents = publicRsaKey.toJSONObject();
+        final Map<String, Object> wrappedJwk = new HashMap<>();
+        wrappedJwk.put(SignedHttpRequestJwtClaims.JWK, jwkContents);
 
         return wrappedJwk;
     }

@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONException;
 
@@ -59,6 +60,8 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class AzureActiveDirectory
         extends IdentityProvider<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryOAuth2Configuration> {
+
+    private static final String TAG = AzureActiveDirectory.class.getSimpleName();
 
     // Constants used to parse cloud discovery document metadata
     private static final String TENANT_DISCOVERY_ENDPOINT = "tenant_discovery_endpoint";
@@ -172,6 +175,7 @@ public class AzureActiveDirectory
     }
 
     public static synchronized void performCloudDiscovery() throws IOException {
+        final String methodName = ":performCloudDiscovery";
         Uri instanceDiscoveryRequestUri = Uri.parse(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT);
 
         instanceDiscoveryRequestUri = instanceDiscoveryRequestUri
@@ -182,20 +186,24 @@ public class AzureActiveDirectory
 
         final HttpResponse response =
                 httpClient.get(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
+        Logger.info(TAG + methodName, "Response received.");
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
-            Log.d("Discovery", "Error getting cloud information");
+            Logger.warn(TAG + methodName, "Error getting cloud information");
         } else {
             // Our request was successful. Flush the HTTP cache to disk. Should only happen once
             // per app launch. Instance Discovery Metadata will be cached in-memory
             // until the app is killed.
             HttpCache.flush();
 
+            Logger.info(TAG + methodName, "Parsing response.");
             AzureActiveDirectoryInstanceResponse instanceResponse =
                     ObjectMapper.deserializeJsonStringToObject(
                             response.getBody(),
                             AzureActiveDirectoryInstanceResponse.class
                     );
+            Logger.info(TAG + methodName, "Discovered ["
+                    + instanceResponse.getClouds().size() + "] clouds.");
 
             for (final AzureActiveDirectoryCloud cloud : instanceResponse.getClouds()) {
                 cloud.setIsValidated(true); // Mark the deserialized Clouds as validated

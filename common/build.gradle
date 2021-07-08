@@ -127,6 +127,8 @@ android {
 }
 
 dependencies {
+
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.2.3'
     //Commenting out until the next major version of common/msal/etc...
     //Java 8 - Desugaring
     //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"

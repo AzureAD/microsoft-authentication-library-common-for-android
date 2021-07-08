@@ -49,6 +49,7 @@ import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.net.ObjectMapper;
@@ -84,14 +85,8 @@ public class CommandDispatcher {
     private static final String TAG = CommandDispatcher.class.getSimpleName();
 
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
-    //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
-    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, INTERACTIVE_REQUEST_THREAD_POOL_SIZE, -1, 0, TimeUnit.MINUTES, "interactive"
-    );
-    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 1, TimeUnit.MINUTES, "silent"
-    );
+    private static final ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -536,8 +531,8 @@ public class CommandDispatcher {
             final LocalBroadcastManager localBroadcastManager =
                     LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
-            // only send broadcast to cancel if within broker
-            if (command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+            //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
+            if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
                 localBroadcastManager.sendBroadcast(
                         new Intent(CANCEL_INTERACTIVE_REQUEST)
