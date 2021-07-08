@@ -148,7 +148,8 @@ class DevicePopManager implements IDevicePopManager {
     public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
 
     /**
-     * Error message from underlying KeyStore that
+     * Error message from underlying KeyStore that an attestation certificate could not be
+     * generated, typically due to lack of API support via {@link KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])}.
      */
     public static final String FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN = "Failed to generate attestation certificate chain";
 
