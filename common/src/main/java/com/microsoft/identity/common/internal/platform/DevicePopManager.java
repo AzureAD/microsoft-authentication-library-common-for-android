@@ -1079,11 +1079,7 @@ class DevicePopManager implements IDevicePopManager {
                         tryStrongBox = false;
                         continue;
                     } else if (tryImport && e.getClass().getSimpleName().equals("SecureKeyImportUnavailableException")) {
-                        Logger.error(
-                                TAG,
-                                "Import unsupported - skipping import flags.",
-                                e
-                        );
+                        Logger.error(TAG, "Import unsupported - skipping import flags.", e);
                         tryImport = false;
 
                         if (tryStrongBox && null != e.getCause() && isStrongBoxUnavailableException(e.getCause())) {
@@ -1094,6 +1090,7 @@ class DevicePopManager implements IDevicePopManager {
 
                         continue;
                     } else if (trySetAttestationChallenge && FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN.equalsIgnoreCase(e.getMessage())) {
+                        Logger.error(TAG, "Failed to generate attestation cert - skipping flag.", e);
                         trySetAttestationChallenge = false;
 
                         continue;
