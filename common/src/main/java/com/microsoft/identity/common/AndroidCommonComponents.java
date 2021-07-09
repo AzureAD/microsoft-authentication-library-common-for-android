@@ -38,7 +38,7 @@ import com.microsoft.identity.common.logging.Logger;
 import lombok.NonNull;
 
 /**
- * Android components for Common.
+ * Android implementations of platform-dependent components in Common.
  */
 public class AndroidCommonComponents implements ICommonComponents {
     private static String TAG = AndroidCommonComponents.class.getSimpleName();

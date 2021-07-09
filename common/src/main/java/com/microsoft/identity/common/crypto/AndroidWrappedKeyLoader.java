@@ -112,6 +112,13 @@ public class AndroidWrappedKeyLoader extends AES256KeyLoader {
         return mKeyCache;
     }
 
+    /**
+     * Default constructor
+     *
+     * @param alias             Alias(name) of this key
+     * @param context           Android's {@link Context}
+     * @param telemetryCallback a callback object for emitting telemetry events to Broker.
+     */
     public AndroidWrappedKeyLoader(@NonNull final String alias,
                                    @NonNull final Context context,
                                    @Nullable final ITelemetryCallback telemetryCallback) {
