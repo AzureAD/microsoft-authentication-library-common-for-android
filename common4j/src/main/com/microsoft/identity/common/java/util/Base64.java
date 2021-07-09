@@ -22,40 +22,57 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.java.logging.Logger;
 import com.nimbusds.jose.util.Base64URL;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
+import java.security.InvalidParameterException;
+
 import lombok.NonNull;
 
 /**
  * A wrapper class around Base64 operation.
  * */
 public class Base64 {
-    private static final String TAG = Base64.class.getSimpleName();
 
+    /**
+     * URL-encodes the given byte array.
+     * URL unsafe characters in the result will be replaced.
+     */
     @NonNull
     public static String encode(@NonNull final byte[] bytesToEncode) {
         return Base64URL.encode(bytesToEncode).toString();
     }
 
-    @Nullable
-    public static String encode(@Nullable final String stringToEncode) {
-        if (StringUtil.isNullOrEmpty(stringToEncode)) {
-            Logger.warn(TAG, "Failed to encode string because the input is empty.");
-            return null;
-        }
+    /**
+     * Encodes the given byte array.
+     * The result might contain URL unsafe characters.
+     */
+    @NonNull
+    public static String encodeURLUnsafe(@NonNull final byte[] bytesToEncode) {
+        return com.nimbusds.jose.util.Base64.encode(bytesToEncode).toString();
+    }
 
+    /**
+     * URL-encodes the given string.
+     * URL unsafe characters in the result will be replaced.
+     */
+    @NonNull
+    public static String encode(@NonNull final String stringToEncode) {
         return Base64URL.encode(stringToEncode).toString();
     }
 
-    @Nullable
-    public static String decode(@Nullable final String encodedString) {
-        if (StringUtil.isNullOrEmpty(encodedString)) {
-            Logger.warn(TAG, "Failed to decode string because the input is empty.");
-            return null;
-        }
-
+    /**
+     * Decodes a URL-safe string.
+     */
+    @NonNull
+    public static String decode(@NonNull final String encodedString) {
         return Base64URL.from(encodedString).decodeToString();
+    }
+
+    /**
+     * Decodes a string which might contain URL unsafe characters.
+     */
+    @NonNull
+    public static byte[] decodeURLUnsafeToByteArray(@NonNull final String encodedString) {
+        return com.nimbusds.jose.util.Base64.from(encodedString).decode();
     }
 }

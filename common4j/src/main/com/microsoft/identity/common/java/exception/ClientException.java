@@ -111,6 +111,8 @@ public class ClientException extends BaseException {
      */
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
 
+    public static final String NO_SUCH_PROVIDER = "no_such_provider";
+
     /**
      * JWT returned by the server is not valid, empty or malformed.
      */
@@ -289,6 +291,21 @@ public class ClientException extends BaseException {
      * Tokens missing
      */
     public static final String TOKENS_MISSING = "tokens_missing";
+
+    /**
+     * The HMAC being verified doesn't have the expected length.
+     */
+    public static final String UNEXPECTED_HMAC_LENGTH = "unexpected_hmac_length";
+
+    /**
+     * The HMAC being verified doesn't match with the expected one.
+     */
+    public static final String HMAC_MISMATCH = "hmac_mismatch";
+
+    /**
+     * The data is malformed.
+     */
+    public static final String DATA_MALFORMED = "data_malformed";
 
     /**
      * Constructor of ClientException.

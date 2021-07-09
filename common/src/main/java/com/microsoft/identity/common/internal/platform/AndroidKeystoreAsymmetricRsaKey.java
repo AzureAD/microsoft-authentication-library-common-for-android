@@ -28,6 +28,8 @@ import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.cert.Certificate;
@@ -42,7 +44,7 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
     public static final IDevicePopManager.Cipher RSA_ECB_PKCS_1_PADDING = IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public static final IDevicePopManager.SigningAlgorithm SHA_256_WITH_RSA = DevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
+    public static final SigningAlgorithm SHA_256_WITH_RSA = SigningAlgorithm.SHA_256_WITH_RSA;
 
     /**
      * The {@link IDevicePopManager} to which we will delegate most cryptographic actions.
