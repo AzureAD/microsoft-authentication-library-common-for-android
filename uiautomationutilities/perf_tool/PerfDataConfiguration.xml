@@ -8,6 +8,7 @@
     <MeasurementConfiguration Id="400653" StartMarker="20010012"    EndMarker="20010020" startskip="0" EndSkip="0" Name="Executor process in acquire token silently"></MeasurementConfiguration>
     <MeasurementConfiguration Id="400654" StartMarker="20010013"    EndMarker="20010014" startskip="0" EndSkip="0" Name="Command execution in acquire token silently"></MeasurementConfiguration>
     <MeasurementConfiguration Id="400655" StartMarker="20010111"    EndMarker="20010120" startskip="0" EndSkip="0" Name="Perform Broker execution in acquire token silently"></MeasurementConfiguration>
+    <MeasurementConfiguration Id="400656" StartMarker="30030001"    EndMarker="30030002" startskip="0" EndSkip="0" Name="Generate AT-PoP Asymmetric KeyPair"></MeasurementConfiguration>
   </MeasurementsConfigurations>
 
   <ScenarioMeasurementsMapping>
@@ -20,6 +21,7 @@
             <Measurements>
               <Measurement Id="400649" IsPrimary="false"></Measurement>
               <Measurement Id="400651" IsPrimary="false"></Measurement>
+              <Measurement Id="400656" IsPrimary="false"></Measurement>
             </Measurements>
           </Scenario>
           <Scenario>

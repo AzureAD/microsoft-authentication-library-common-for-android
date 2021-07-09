@@ -36,6 +36,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
@@ -95,6 +96,8 @@ import javax.security.auth.x500.X500Principal;
 
 import lombok.SneakyThrows;
 
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
@@ -167,6 +170,12 @@ class DevicePopManager implements IDevicePopManager {
      * A background worker to service async tasks.
      */
     private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
+
+    /**
+     * Reference to our perf-marker object.
+     */
+    private static final CodeMarkerManager sCodeMarkerManager = CodeMarkerManager.getInstance();
+
 
     /**
      * Properties used by the self-signed certificate.
@@ -348,6 +357,7 @@ class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
+            sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
             final KeyPair keyPair = generateNewRsaKeyPair(context, RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
@@ -366,6 +376,8 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final JOSEException e) {
             exception = e;
             errCode = THUMBPRINT_COMPUTATION_FAILURE;
+        } finally {
+            sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END);
         }
 
         final ClientException clientException = new ClientException(

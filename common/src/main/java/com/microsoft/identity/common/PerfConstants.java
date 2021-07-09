@@ -38,11 +38,16 @@ public class PerfConstants {
         public static final String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START = "10013";
         public static final String ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END = "10014";
         public static final String ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END = "10020";
+
+        // AT/PoP Code Markers...
+        public static final String GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START = "30001";
+        public static final String GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END = "30002";
     }
 
     public static class ScenarioConstants {
         public static final String SCENARIO_NON_BROKERED_ACQUIRE_TOKEN_SILENTLY = "100";
         public static final String SCENARIO_BROKERED_ACQUIRE_TOKEN_SILENTLY = "200";
+        public static final String SCENARIO_GENERATE_AT_POP_ASYMMETRIC_KEYPAIR = "300";
     }
 
     public static class CodeMarkerParameters {
