@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.platform;
 import android.os.Build;
 import android.security.keystore.KeyInfo;
 
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.logging.Logger;

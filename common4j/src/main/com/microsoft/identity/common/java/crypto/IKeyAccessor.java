@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
@@ -29,7 +29,7 @@ import java.security.cert.Certificate;
 /**
  * Interface for utilizing keys.
  */
-public interface KeyAccessor {
+public interface IKeyAccessor {
     /**
      * Encrypt a plaintext blob, returning an encrypted byte array.
      * @param plaintext the plaintext to encrypt.
@@ -62,7 +62,7 @@ public interface KeyAccessor {
     /**
      * @return a thumbprint for this key.
      */
-    byte[] getThumprint() throws ClientException;
+    byte[] getThumbprint() throws ClientException;
 
 
     /**
@@ -84,5 +84,5 @@ public interface KeyAccessor {
      * @return A {link KeyAccessor} that provides access to operations using the derived key.
      * @throws ClientException if an underlying issue prevents the key generation.
      */
-    KeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException;
- }
+    IKeyAccessor generateDerivedKey(byte[] label, byte[] ctx, CryptoSuite suite) throws ClientException;
+}

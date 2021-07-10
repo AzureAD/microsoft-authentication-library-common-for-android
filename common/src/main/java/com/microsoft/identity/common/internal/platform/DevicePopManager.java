@@ -40,6 +40,8 @@ import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.JOSEException;
@@ -585,7 +587,7 @@ class DevicePopManager implements IDevicePopManager {
         try {
             final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
 
-            if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
+            if (keyEntry == null) {
                 Logger.warn(
                         TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
