@@ -269,11 +269,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @return The ext expires on to get.
      */
     public Date getExtExpiresOn() {
-        if (mExtExpiresOn == null) {
-            return null;
-        }
-
-        return new Date(mExtExpiresOn.getTime());
+        return mExtExpiresOn == null ? null : new Date(mExtExpiresOn.getTime());
     }
 
     /**
@@ -282,12 +278,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @param extExpiresOn The expires on to set.
      */
     public void setExtExpiresOn(final Date extExpiresOn) {
-        if (extExpiresOn == null) {
-            mExtExpiresOn = null;
-            return;
-        }
-
-        mExtExpiresOn = new Date(extExpiresOn.getTime());
+        mExtExpiresOn = extExpiresOn == null ? null : new Date(extExpiresOn.getTime());
     }
 
     /**

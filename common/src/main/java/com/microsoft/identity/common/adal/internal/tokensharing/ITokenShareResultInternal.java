@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 
 public interface ITokenShareResultInternal {
 

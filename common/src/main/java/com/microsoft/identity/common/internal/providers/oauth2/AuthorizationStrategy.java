@@ -32,7 +32,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;

@@ -40,6 +40,22 @@ public class AuthenticationConstants {
     public static final Charset ENCODING_UTF8 = Charset.forName(ENCODING_UTF8_STRING);
 
     /**
+     * The Constant ASCII.
+     */
+    public static final String ENCODING_ASCII_STRING = "ASCII";
+
+    /**
+     * The Constant CHARSET_ASCII.
+     */
+    public static final Charset CHARSET_ASCII = Charset.forName(ENCODING_ASCII_STRING);
+
+    /**
+     * A constant for PMD to be happy with.
+     */
+    public static final String ONE_POINT_ZERO = "1.0";
+    public static final String TWO_POINT_ZERO = "2.0";
+
+    /**
      * Represents the constants value for Active Directory.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -50,6 +66,26 @@ public class AuthenticationConstants {
         public static final String CLIENT_REQUEST_ID = "client-request-id";
     }
 
+    /**
+     * Represents the constants value for Active Directory.
+     */
+    @NoArgsConstructor(access = AccessLevel.PRIVATE)
+    public static final class OAuth2 {
+        /**
+         * String of AAD version.
+         */
+        public static final String AAD_VERSION = "ver";
+
+        /**
+         * Constant for  v1 endpoint
+         */
+        public static final String AAD_VERSION_V1 = ONE_POINT_ZERO;
+
+        /**
+         * Constsnt for v2 endpoint
+         */
+        public static final String AAD_VERSION_V2 = TWO_POINT_ZERO;
+    }
     /**
      * Sdk platform and Sdk version fields.
      */

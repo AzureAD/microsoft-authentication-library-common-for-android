@@ -24,13 +24,11 @@
 package com.microsoft.identity.common.internal.result;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 
-import java.util.Date;
 import java.util.List;
 
 /**
