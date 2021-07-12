@@ -24,12 +24,12 @@ package com.microsoft.identity.common.internal.platform;
 
 import android.os.Build;
 
-import com.microsoft.identity.common.java.platform.IDeviceMetadata;
+import com.microsoft.identity.common.java.platform.AbstractDeviceMetadata;
 
 /**
  * Provides device metadata in Android.
  **/
-public class AndroidDeviceMetadata implements IDeviceMetadata {
+public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     @Override
     public String getCpu() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {

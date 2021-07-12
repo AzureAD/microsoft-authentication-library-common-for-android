@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.java.exception;
 
 /**
  * MSAL internal exception for user cancelling the flow.

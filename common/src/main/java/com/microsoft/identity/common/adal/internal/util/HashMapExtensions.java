@@ -135,26 +135,6 @@ public final class HashMapExtensions {
     }
 
     /**
-     * get key value pairs from response.
-     *
-     * @param webResponse {@link HttpResponse} to convert to a map
-     * @return HashMap
-     * @throws JSONException
-     */
-    public static HashMap<String, String> getJsonResponse(HttpResponse webResponse) throws JSONException {
-        final HashMap<String, String> response = new HashMap<>();
-        if (webResponse != null && !TextUtils.isEmpty(webResponse.getBody())) {
-            JSONObject jsonObject = new JSONObject(webResponse.getBody());
-            Iterator<?> i = jsonObject.keys();
-            while (i.hasNext()) {
-                String key = (String) i.next();
-                response.put(key, jsonObject.getString(key));
-            }
-        }
-        return response;
-    }
-
-    /**
      * Parse json String into HashMap<String, String>.
      *
      * @param jsonString

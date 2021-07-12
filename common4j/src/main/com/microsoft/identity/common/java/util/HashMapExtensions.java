@@ -20,57 +20,36 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.util;
 
-package com.microsoft.identity.common.java.eststelemetry;
+import com.microsoft.identity.common.java.net.HttpResponse;
 
-import com.microsoft.identity.common.java.exception.IServiceException;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 
-import lombok.Builder;
-import lombok.experimental.SuperBuilder;
+public class HashMapExtensions {
 
-@SuperBuilder
-class MockServiceException implements IServiceException {
-
-    @Builder.Default
-    String errorCode = "ERROR_CODE";
-
-    @Builder.Default
-    String oAuthSubErrorCode = "OAUTH_SUBERROR_CODE";
-
-    @Builder.Default
-    int httpStatusCode = 0;
-
-    @Builder.Default
-    HashMap<String, String> httpResponseBody = new HashMap<>();
-
-    @Builder.Default
-    HashMap<String, List<String>> httpResponseHeaders = new HashMap<>();
-
-    @Override
-    public String getErrorCode() {
-        return errorCode;
+    /**
+     * Get key value pairs from response.
+     *
+     * @param webResponse {@link HttpResponse} to convert to a map
+     * @return HashMap
+     * @throws JSONException
+     */
+    public static HashMap<String, String> getJsonResponse(HttpResponse webResponse) throws JSONException {
+        final HashMap<String, String> response = new HashMap<>();
+        if (webResponse != null && !StringUtil.isNullOrEmpty(webResponse.getBody())) {
+            final JSONObject jsonObject = new JSONObject(webResponse.getBody());
+            final Iterator<?> i = jsonObject.keys();
+            while (i.hasNext()) {
+                String key = (String) i.next();
+                response.put(key, jsonObject.getString(key));
+            }
+        }
+        return response;
     }
 
-    @Override
-    public String getOAuthSubErrorCode() {
-        return oAuthSubErrorCode;
-    }
-
-    @Override
-    public int getHttpStatusCode() {
-        return httpStatusCode;
-    }
-
-    @Override
-    public HashMap<String, String> getHttpResponseBody() {
-        return httpResponseBody;
-    }
-
-    @Override
-    public HashMap<String, List<String>> getHttpResponseHeaders() {
-        return httpResponseHeaders;
-    }
 }

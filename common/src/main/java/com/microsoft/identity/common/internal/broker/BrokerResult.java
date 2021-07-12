@@ -27,6 +27,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.io.Serializable;
 import java.util.List;
@@ -243,7 +244,7 @@ public class BrokerResult implements Serializable {
     // Exception parameters
 
     /**
-     * Error code corresponding to any of the {@link com.microsoft.identity.common.exception.ErrorStrings}
+     * Error code corresponding to any of the {@link ErrorStrings}
      */
     @Nullable
     @SerializedName(SerializedNames.BROKER_ERROR_CODE)
