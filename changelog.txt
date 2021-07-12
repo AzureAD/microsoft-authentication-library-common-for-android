@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MAJOR] Migrate StorageHelper to common4j (#1450)
 - [MAJOR] Migrate Exceptions from common to common4j (#1442)
 - [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
 - [MINOR] Migrate Requests/Responses (#1424)
@@ -29,6 +30,7 @@ V.Next
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
 - [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
 - [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
+- [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
 
 Version 3.4.3
 ----------

@@ -20,27 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.shadows;
+package com.microsoft.identity.common.java.crypto;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-
-import org.robolectric.annotation.Implements;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
+import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import javax.crypto.SecretKey;
 
-@Implements(StorageHelper.class)
-public class ShadowStorageHelper {
+import lombok.NonNull;
 
-    /**
-     * Fake saving key to key store as Android Key Store is not available in Robolectric
-     */
-    public void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
-        return;
+public class MockAES256KeyLoaderWithGetKeyError extends AES256KeyLoader  {
+    public static String FAIL_TO_LOAD_KEY_ERROR = "FAIL_TO_LOAD_KEY_ERROR";
+    public static String MOCK_KEY_IDENTIFIER = "MOCK_ERROR_ID";
+    public static String MOCK_ERROR = "MOCK_ERROR";
+
+    @Override
+    public @NonNull String getAlias() {
+        return MOCK_ERROR;
     }
 
+    @Override
+    public @NonNull SecretKey getKey() throws ClientException {
+        throw new ClientException(FAIL_TO_LOAD_KEY_ERROR);
+    }
+
+    @Override
+    public @NonNull String getKeyTypeIdentifier() {
+        return MOCK_KEY_IDENTIFIER;
+    }
 }

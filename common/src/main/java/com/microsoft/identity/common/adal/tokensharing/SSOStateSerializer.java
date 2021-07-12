@@ -21,12 +21,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package com.microsoft.identity.common.adal.internal.tokensharing;
+package com.microsoft.identity.common.adal.tokensharing;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.adal.internal.tokensharing.TokenCacheItemSerializationAdapater;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 
@@ -41,7 +42,7 @@ import java.util.List;
  * deserialization details. It provides a serializer to serialize the
  * TokenCacheItem and a deserializer to return the TokenCacheItem.
  */
-final class SSOStateSerializer {
+public final class SSOStateSerializer {
     /**
      * The version number of {@link SSOStateSerializer }.
      */
@@ -146,7 +147,7 @@ final class SSOStateSerializer {
      * @param item ADALTokenCacheItem to convert to serialized json
      * @return String
      */
-    static String serialize(final ADALTokenCacheItem item) {
+    public static String serialize(final ADALTokenCacheItem item) {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer(item);
         return ssoStateSerializer.internalSerialize();
     }
@@ -161,7 +162,7 @@ final class SSOStateSerializer {
      * @return ADALTokenCacheItem
      * @throws ClientException
      */
-    static ADALTokenCacheItem deserialize(final String serializedBlob) throws ClientException {
+    public static ADALTokenCacheItem deserialize(final String serializedBlob) throws ClientException {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer();
         return ssoStateSerializer.internalDeserialize(serializedBlob);
     }

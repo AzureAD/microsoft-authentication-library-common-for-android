@@ -21,14 +21,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package com.microsoft.identity.common.adal.internal.cache;
-
-import android.content.Context;
+package com.microsoft.identity.common.java.telemetry;
 
 /**
  * Temporary interface.
- * For injecting telemetry into common (until common's telemetry is properly wired up).
+ * For injecting telemetry into common (until broker's telemetry is properly wired up).
  * */
-public interface IWpjTelemetryCallback {
-    void logEvent(Context context, final String operation, final Boolean isFailed, final String reason);
+public interface ITelemetryCallback {
+    void logEvent(final String operation, final Boolean isFailed, final String reason);
 }
