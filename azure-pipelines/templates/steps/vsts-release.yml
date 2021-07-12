@@ -53,7 +53,7 @@ jobs:
       publishJUnitResults: false
   - task: Gradle@1
     name: Gradle1
-    displayName: Assemble Release
+    displayName: Assemble ${{ parameters.versionType }}
     inputs:
       tasks: ${{ parameters.gradleTasks }}
       publishJUnitResults: false
