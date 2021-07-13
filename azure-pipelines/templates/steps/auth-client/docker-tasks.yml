@@ -2,7 +2,7 @@
 # Description: Template to run Instrumented test for Supported API levels
 
 parameters:
-- name: acrImage
+- name: azureContainerRegistryImage
   default: authclient.azurecr.io/samples/dbi-instrumented-api30
 - name: androidProject
   default: self
@@ -29,7 +29,7 @@ steps:
       docker pull $DOCKERIMAGE
     fi
   env:
-    DOCKERIMAGE: ${{ parameters.acrImage }}
+    DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
   displayName: Pulling Image from ACR
 - script: |
     docker --version
@@ -42,7 +42,7 @@ steps:
     echo =============================================
     docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE sh scripts/run-instrumented-tests.sh
   env:
-    DOCKERIMAGE: ${{ parameters.acrImage }}
+    DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
   displayName: 'Build and test inside docker container'
 - task: PublishTestResults@2
   condition: succeededOrFailed()
@@ -52,7 +52,7 @@ steps:
     searchFolder: '$(System.DefaultWorkingDirectory)'
     displayName: 'Publish Test Results'
     mergeTestResults: false
-    testRunTitle: '${{ parameters.androidProject }} ${{ parameters.acrImage }}'
+    testRunTitle: '${{ parameters.androidProject }} ${{ parameters.azureContainerRegistryImage }}'
 - script: |
     echo =============================================
     echo Kill all running containers if existing
@@ -76,6 +76,6 @@ steps:
     echo =============================================
     docker system df
   env:
-    DOCKERIMAGE: ${{ parameters.acrImage }}
+    DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
   condition: always()
   displayName: 'Cleanup'
