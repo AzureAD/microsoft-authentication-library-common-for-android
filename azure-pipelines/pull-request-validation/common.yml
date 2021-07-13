@@ -17,8 +17,8 @@ resources:
     ref: dev
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: build_test
+  displayName: Build & Test
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019
@@ -27,9 +27,6 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: common
   - template: ../templates/steps/automation-cert.yml
   - task: Gradle@1
     name: Gradle1
@@ -46,6 +43,4 @@ jobs:
     displayName: Run Unit tests
     inputs:
       tasks: common:testLocalDebugUnitTest
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...
