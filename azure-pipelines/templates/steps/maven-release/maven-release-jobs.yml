@@ -39,19 +39,6 @@ parameters:
 
 
 jobs:
-- job: credscan_policheck
-  displayName: CredScan and Policheck
-  cancelTimeoutInMinutes: 1
-  pool:
-    name: Hosted Windows 2019 with VS2019
-  steps:
-  - checkout: self
-    clean: true
-    submodules: ${{ parameters.checkoutSubmodules }}
-    persistCredentials: True
-  - template: ../credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: ${{ parameters.project }}
 - job: sdl_maven
   displayName: SDL and Maven Tasks
   cancelTimeoutInMinutes: 1
