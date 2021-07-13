@@ -38,14 +38,16 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: ${{ parameters.projectName }}
   - task: CmdLine@1
     displayName: Set MVN Access Token in Environment
     inputs:
       filename: echo
       arguments: '##vso[task.setvariable variable=${{ parameters.accessTokenName }}]$(mvnAccessToken)'
+  - task: Gradle@2
+    displayName: Run unit tests
+    condition: eq(variables['parameters.runUnitTests'], 'true')
+    inputs:
+      tasks: testDebugUnitTest
   - task: Gradle@2
     displayName: ${{ parameters.versionType }} version update
     inputs:
@@ -59,11 +61,6 @@ jobs:
       publishJUnitResults: false
       jdkArchitecture: x86
       sqAnalysisBreakBuildIfQualityGateFailed: false
-  - task: Gradle@2
-    displayName: Run unit tests
-    condition: eq(variables['parameters.runUnitTests'], 'true')
-    inputs:
-      tasks: testDebugUnitTest
   - task: Gradle@2
     displayName: Publish
     inputs:
