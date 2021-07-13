@@ -4,7 +4,7 @@
 # Variable: 'mvnAccessToken' was defined in the Variables tab
 # Variable: 'folderName' refers to the project folder
 # Variable: 'gradleTasks' list all the gradle tasks to be used.
-# Variable: 'accessTokenName' refers to the name of the access Token in this project.
+# Variable: 'accessTokenName'  secret used to access the private azure devops maven feed.
 # Variable: 'runUnitTest' boolean: refers to whether the pipeline will run unit tests or not.
 # https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
 # Variable: 'versionType' type of version (Latest, Snapshot)
