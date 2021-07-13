@@ -20,42 +20,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.util;
 
-import java.security.KeyStore;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 /**
- * Interface for cryptoSuite definitions.  Designed to span the Cipher enum in use in DevicePopManager
- * to allow for inclusion of symmetric cipher definitions and include the name of a MAC algorithm.
+ * An in-memory storage for caching the data.
  */
-public interface CryptoSuite {
-    /**
-     * @return the name of the cipher used for this crypto suite.  Should be suitable for use in Cipher.getInstance();
-     */
-    Algorithm cipher();
+@Getter
+@Setter
+@Accessors(prefix = "m")
+public abstract class CachedData<T> {
 
-    /**
-     * @return the name of the MAC used for this crypto suite.  Should be suitable for use in Mac.getInstance();
-     */
-    String macName();
+    private T mData;
 
-    /**
-     * @return true if this suite uses an asymmetric key.
-     */
-    boolean isAsymmetric();
-
-    /**
-     * @return the class of entry that is used by the a KeyStore to store this credential.
-     */
-    Class<? extends KeyStore.Entry> keyClass();
-
-    /**
-     * @return the key size for this instance.
-     */
-    int keySize();
-
-    /**
-     * @return the signing algorithm desired by this suite.
-     */
-    IDevicePopManager.SigningAlgorithm signingAlgorithm();
+    public void clear(){
+        mData = null;
+    }
 }
