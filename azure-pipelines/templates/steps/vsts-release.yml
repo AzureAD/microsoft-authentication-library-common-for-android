@@ -78,6 +78,4 @@ jobs:
     inputs:
       ArtifactName: ${{ parameters.projectName }}Release
       TargetPath: $(Build.SourcesDirectory)/${{ parameters.folderName }}/build/
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...
