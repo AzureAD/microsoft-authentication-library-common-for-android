@@ -77,7 +77,7 @@ jobs:
       TargetFolder: $(build.artifactstagingdirectory)
   - task: PublishPipelineArtifact@1
     name: PublishPipelineArtifacts1
-    displayName: 'Publish Artifact: ${{ parameters.projectName }} Release'
+    displayName: 'Publish Artifact: ${{ parameters.projectName }} ${{ parameters.versionType }}'
     inputs:
       ArtifactName: ${{ parameters.projectName }}Release
       TargetPath: $(Build.SourcesDirectory)/${{ parameters.folderName }}/build/
