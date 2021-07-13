@@ -28,7 +28,7 @@ parameters:
 
 jobs:
 - job: Phase_1
-  displayName: Phase 1
+  displayName: Initiating Release Process
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 1
   pool:
