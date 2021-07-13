@@ -522,7 +522,7 @@ public class MicrosoftStsOAuth2Strategy
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             //An error occurred
             tokenErrorResponse = ObjectMapper.deserializeJsonStringToObject(
-                    response.getBody(),
+                    getBodyFromUnsuccessfulResponse(response.getBody()),
                     MicrosoftTokenErrorResponse.class
             );
             tokenErrorResponse.setStatusCode(response.getStatusCode());
@@ -572,6 +572,11 @@ public class MicrosoftStsOAuth2Strategy
 
     protected String getBodyFromSuccessfulResponse(@NonNull final String responseBody) throws ClientException {
         return responseBody;
+    }
+
+    protected String getBodyFromUnsuccessfulResponse(@NonNull final String responseBody) throws ClientException {
+        final String EMPTY_JSON_OBJECT = "{}";
+        return responseBody.isEmpty() ? EMPTY_JSON_OBJECT : responseBody;
     }
 
     @Override

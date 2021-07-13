@@ -23,7 +23,6 @@
 
 package com.microsoft.identity.common.internal.controllers;
 
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -31,16 +30,16 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.PerfConstants;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -156,9 +155,7 @@ public class BrokerOperationExecutor {
         // This means that we've tried every strategies... log everything...
         for (final BrokerCommunicationException e : communicationExceptionStack) {
             Logger.error(TAG + methodName, e.getMessage(), e);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                exception.addSuppressed(e);
-            }
+            exception.addSuppressedException(e);
         }
 
         emitOperationFailureEvent(operation, exception);

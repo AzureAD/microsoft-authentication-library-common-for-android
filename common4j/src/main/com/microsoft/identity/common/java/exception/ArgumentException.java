@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
+import com.microsoft.identity.common.java.exception.BaseException;
+
 public class ArgumentException extends BaseException {
 
     public static final String sName =  ArgumentException.class.getName();
