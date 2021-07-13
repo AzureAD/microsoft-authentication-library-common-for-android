@@ -5,6 +5,15 @@
     <Bug pattern="RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE" />
 </Match>
 <Match>
+    <!-- This warns when there's a null check on NonNull parameters.
+         Given that we haven't enforced this strictly with AndroidX Nonnull,
+         (which doesn't really do anything), we'll ignore this for now.
+         Once we migrated everything to Lombok's Nonnull (which will throw an
+         exception), we can remove this.
+    -->
+   <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE" />
+ </Match>
+<Match>
     <!-- This warns when there's a transient field in a serializable class -->
     <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
 </Match>

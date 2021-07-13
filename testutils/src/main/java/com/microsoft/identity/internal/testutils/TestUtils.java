@@ -28,7 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.CredentialType;
@@ -61,7 +61,7 @@ public class TestUtils {
     public static SharedPreferencesFileManager getSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
 
-        return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, Context.MODE_PRIVATE, null);
+        return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, null);
     }
 
     /**
@@ -72,8 +72,12 @@ public class TestUtils {
      */
     public static SharedPreferencesFileManager getEncryptedSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
-        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, Context.MODE_PRIVATE, storageHelper);
+        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(
+                context,
+                sharedPrefName,
+                Context.MODE_PRIVATE,
+                new AndroidCommonComponents(context).
+                        getStorageEncryptionManager(null));
         return barePreferences;
     }
 

@@ -27,7 +27,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.java.exception.BaseException;
 
 public interface IBrokerResultAdapter {
 

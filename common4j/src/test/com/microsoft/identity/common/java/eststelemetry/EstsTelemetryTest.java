@@ -25,8 +25,8 @@ package com.microsoft.identity.common.java.eststelemetry;
 import com.microsoft.identity.common.java.InMemoryStorage;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
-import com.microsoft.identity.common.java.exception.IBaseException;
-import com.microsoft.identity.common.java.exception.IServiceException;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
@@ -202,9 +202,14 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final IBaseException exception = MockException.builder().build();
+
+        final BaseException exception = new ServiceException(
+                "ERROR_CODE",
+                "ERROR_MESSAGE",
+                null);
+
         final ICommandResult mockCommandResult =
-                MockCommandResult.<IBaseException>builder()
+                MockCommandResult.<BaseException>builder()
                         .correlationId(correlationId)
                         .result(exception)
                         .resultStatus(ICommandResult.ResultStatus.ERROR)
@@ -235,11 +240,15 @@ public class EstsTelemetryTest {
                 .correlationId(correlationId)
                 .willReachTokenEndpoint(true)
                 .build();
-        final IServiceException exception = MockServiceException.builder()
-                .httpStatusCode(400)
-                .build();
+
+        final ServiceException exception = new ServiceException(
+                "ERROR_CODE",
+                "ERROR_MESSAGE",
+                400,
+                null);
+
         final ICommandResult mockCommandResult =
-                MockCommandResult.<IBaseException>builder()
+                MockCommandResult.<ServiceException>builder()
                         .correlationId(correlationId)
                         .result(exception)
                         .resultStatus(ICommandResult.ResultStatus.ERROR)

@@ -25,14 +25,8 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
 import android.net.NetworkInfo;
-import android.net.NetworkRequest;
 import android.os.Build;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.PowerManagerWrapper;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;

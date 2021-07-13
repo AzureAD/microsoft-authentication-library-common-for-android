@@ -1,5 +1,8 @@
 V.Next
 ----------
+- [MAJOR] Migrate StorageHelper to common4j (#1450)
+- [MAJOR] Migrate Exceptions from common to common4j (#1442)
+- [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
 - [MINOR] Migrate Requests/Responses (#1424)
 - [MAJOR] Add SSL context support to UrlConnectionHttpClient(#1396)
 - [MAJOR] Migrate AuthRequests to common4j (#1394)
@@ -22,6 +25,12 @@ V.Next
 - [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 - [PATCH] Avoid unnecessary BAM-cache reload (#1426)
 - [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
+- [MINOR] Add a method to IDeviceMetadata to get all metadata as a String (#1433)
+- [MINOR] Creates ICommonComponents for sharing interfaces across Android, Linux (including non-brokered components) (#1431)
+- [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
+- [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
+- [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
+- [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
 
 Version 3.4.3
 ----------

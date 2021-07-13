@@ -22,13 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+
 import java.security.KeyStore;
 
 /**
  * An extension of the KeyAccessor interface that provides access to the key
  * manager that created the key.
  */
-public interface IManagedKeyAccessor<K extends KeyStore.Entry> extends KeyAccessor {
+public interface IManagedKeyAccessor<K extends KeyStore.Entry> extends IKeyAccessor {
     /**
      * If this key is managed, return a manager instance that can be used
      * to perform operations on it.

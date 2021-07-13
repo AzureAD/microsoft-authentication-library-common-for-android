@@ -27,7 +27,7 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.java.net.HttpResponse;

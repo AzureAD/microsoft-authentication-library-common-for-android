@@ -26,16 +26,16 @@ import android.content.Context;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * An implementation of {@link IKeyPairStorage} for storing String.
+ * An implementation of {@link INameValueStorage} for storing String.
  * Implemented with SharedPreference.
  */
-public class SharedPreferenceStringStorage implements IKeyPairStorage<String> {
+public class SharedPreferenceStringStorage implements INameValueStorage<String> {
 
     final ISharedPreferencesFileManager mSharedPrefs;
 
@@ -44,24 +44,23 @@ public class SharedPreferenceStringStorage implements IKeyPairStorage<String> {
         mSharedPrefs = SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 sharedPrefFileName,
-                -1,
                 null
         );
     }
 
     @Override
-    public String get(@NonNull String key) {
-        return mSharedPrefs.getString(key);
+    public String get(@NonNull String name) {
+        return mSharedPrefs.getString(name);
     }
 
     @Override
-    public void put(@NonNull String key, @Nullable String value) {
-        mSharedPrefs.putString(key, value);
+    public void put(@NonNull String name, @Nullable String value) {
+        mSharedPrefs.putString(name, value);
     }
 
     @Override
-    public void remove(@NonNull String key) {
-        mSharedPrefs.remove(key);
+    public void remove(@NonNull String name) {
+        mSharedPrefs.remove(name);
     }
 
     @Override

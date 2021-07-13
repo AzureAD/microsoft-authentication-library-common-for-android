@@ -50,4 +50,11 @@ public interface ILabAccount {
      * @return the {@link UserType} representing account's user type
      */
     UserType getUserType();
+
+    /**
+     * Get the home tenant id of this account.
+     *
+     * @return a String representing the account's home tenant id
+     */
+    String getHomeTenantId();
 }

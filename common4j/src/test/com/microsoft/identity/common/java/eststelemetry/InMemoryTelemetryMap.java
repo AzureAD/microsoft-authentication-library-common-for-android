@@ -22,30 +22,30 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import lombok.NonNull;
 
-class InMemoryTelemetryMap implements IKeyPairStorage<CurrentRequestTelemetry> {
+class InMemoryTelemetryMap implements INameValueStorage<CurrentRequestTelemetry> {
 
     final ConcurrentMap<String, CurrentRequestTelemetry> mMap = new ConcurrentHashMap<>();
 
     @Override
-    public CurrentRequestTelemetry get(final String key) {
-        return mMap.get(key);
+    public CurrentRequestTelemetry get(final String name) {
+        return mMap.get(name);
     }
 
     @Override
-    public void put(final String key, final CurrentRequestTelemetry value) {
-        mMap.put(key, value);
+    public void put(final String name, final CurrentRequestTelemetry value) {
+        mMap.put(name, value);
     }
 
     @Override
-    public void remove(@NonNull String key) {
-        mMap.remove(key);
+    public void remove(@NonNull String name) {
+        mMap.remove(name);
     }
 
     @Override

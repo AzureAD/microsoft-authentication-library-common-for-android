@@ -28,12 +28,12 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -178,7 +178,7 @@ public class BrokerOperationExecutorTests {
         } catch (final BaseException e) {
             Assert.assertTrue(e instanceof ClientException);
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.BROKER_BIND_SERVICE_FAILED);
-            Assert.assertEquals(e.getSuppressed().length, strategyList.size());
+            Assert.assertEquals(e.getSuppressedException().size(), strategyList.size());
         }
     }
 
