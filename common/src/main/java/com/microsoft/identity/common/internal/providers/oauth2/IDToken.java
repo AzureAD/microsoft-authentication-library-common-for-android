@@ -25,8 +25,8 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;

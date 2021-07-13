@@ -31,7 +31,7 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
@@ -46,7 +46,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
 /**

@@ -36,7 +36,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
@@ -96,24 +98,24 @@ import javax.security.auth.x500.X500Principal;
 import lombok.SneakyThrows;
 
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
-import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
-import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
-import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
-import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
+import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_KEY_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.INTERRUPTED_OPERATION;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY_MISSING;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.java.exception.ClientException.JSON_CONSTRUCTION_FAILED;
+import static com.microsoft.identity.common.java.exception.ClientException.JWT_SIGNING_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.SIGNING_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
@@ -562,7 +564,7 @@ class DevicePopManager implements IDevicePopManager {
         try {
             final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
 
-            if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
+            if (keyEntry == null) {
                 Logger.warn(
                         TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
