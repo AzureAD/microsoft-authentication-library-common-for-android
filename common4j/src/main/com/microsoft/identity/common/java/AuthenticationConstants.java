@@ -50,13 +50,7 @@ public class AuthenticationConstants {
     public static final Charset CHARSET_ASCII = Charset.forName(ENCODING_ASCII_STRING);
 
     /**
-     * A constant for PMD to be happy with.
-     */
-    public static final String ONE_POINT_ZERO = "1.0";
-    public static final String TWO_POINT_ZERO = "2.0";
-
-    /**
-     * Represents the constants value for Active Directory.
+     * Represents the constants value for Azure Active Directory.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class AAD {
@@ -64,28 +58,23 @@ public class AuthenticationConstants {
          * String of client request id.
          */
         public static final String CLIENT_REQUEST_ID = "client-request-id";
-    }
 
-    /**
-     * Represents the constants value for Active Directory.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class OAuth2 {
         /**
          * String of AAD version.
          */
         public static final String AAD_VERSION = "ver";
 
         /**
-         * Constant for  v1 endpoint
+         * Constant for v1 endpoint
          */
-        public static final String AAD_VERSION_V1 = ONE_POINT_ZERO;
+        public static final String AAD_VERSION_V1 = "1.0";
 
         /**
-         * Constsnt for v2 endpoint
+         * Constant for v2 endpoint
          */
-        public static final String AAD_VERSION_V2 = TWO_POINT_ZERO;
+        public static final String AAD_VERSION_V2 = "2.0";
     }
+
     /**
      * Sdk platform and Sdk version fields.
      */

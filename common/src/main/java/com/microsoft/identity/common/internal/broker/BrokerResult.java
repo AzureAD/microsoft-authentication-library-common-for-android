@@ -357,9 +357,9 @@ public class BrokerResult {
     }
 
     public List<ICacheRecord> getTenantProfileData() {
-        return mTenantProfileData == null ?
-                null :
-                new ArrayList<>(mTenantProfileData);
+        return mTenantProfileData == null
+                ? null
+                : new ArrayList<>(mTenantProfileData);
     }
 
     public String getCliTelemSubErrorCode() {

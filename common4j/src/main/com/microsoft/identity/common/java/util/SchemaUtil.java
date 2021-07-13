@@ -158,10 +158,10 @@ public final class SchemaUtil {
                 idToken = new IDToken(idTokenString);
                 final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
                 final String aadVersion = (String) idTokenClaims.get(
-                        AuthenticationConstants.OAuth2.AAD_VERSION
+                        AuthenticationConstants.AAD.AAD_VERSION
                 );
 
-                if (AuthenticationConstants.OAuth2.AAD_VERSION_V1.equalsIgnoreCase(aadVersion)) {
+                if (AuthenticationConstants.AAD.AAD_VERSION_V1.equalsIgnoreCase(aadVersion)) {
                     idTokenVersion = CredentialType.V1IdToken.name();
                 }
             } catch (ServiceException e) {
