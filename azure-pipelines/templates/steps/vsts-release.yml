@@ -11,12 +11,10 @@
 
 parameters:
 - name: versionType
-  default: Latest
+  default: ''
   values:
   - Snapshot
   - Latest
-- name: folderName
-  default: none
 - name: projectName
   default: none
 - name: gradleTasks
@@ -77,5 +75,5 @@ jobs:
     displayName: 'Publish Artifact: ${{ parameters.projectName }} ${{ parameters.versionType }}'
     inputs:
       ArtifactName: ${{ parameters.projectName }}Release
-      TargetPath: $(Build.SourcesDirectory)/${{ parameters.folderName }}/build/
+      TargetPath: $(Build.SourcesDirectory)/${{ parameters.projectName }}/build/
 ...
