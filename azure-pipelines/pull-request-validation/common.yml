@@ -40,7 +40,7 @@ jobs:
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
-      workingDirectory: $(Build.SourcesDirectory)/common-android-root
+      cwd: $(Build.SourcesDirectory)/common-android-root
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:

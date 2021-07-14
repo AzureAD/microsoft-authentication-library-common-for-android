@@ -31,7 +31,7 @@ jobs:
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common4j
-      workingDirectory: $(Build.SourcesDirectory)/common-java-root
+      cwd: $(Build.SourcesDirectory)/common-java-root
       spotbugsCommand: spotbugsMain
   - task: Gradle@2
     displayName: Run the unit tests.
