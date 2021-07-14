@@ -123,7 +123,6 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile = SharedPreferencesFileManager.getSharedPreferences(
                 mContext,
                 TEST_CACHE_FILENAME,
-                -1,
                 null
         );
         mFileManagerReencrypter = new DefaultSharedPrefsFileManagerReencrypter();

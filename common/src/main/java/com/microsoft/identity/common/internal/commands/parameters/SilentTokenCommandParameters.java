@@ -23,6 +23,8 @@
 package com.microsoft.identity.common.internal.commands.parameters;
 
 import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2CAuthority;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
@@ -64,6 +66,11 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
         return getAuthority() instanceof AzureActiveDirectoryB2CAuthority;
     }
 
+    /**
+     * Note - this method may throw a variety of RuntimeException if we cannot perform cloud
+     * discovery to determine the set of cloud aliases.
+     * @return true if the authority matches the cloud environment that the account is homed in.
+     */
     private boolean authorityMatchesAccountEnvironment() {
         final String methodName = ":authorityMatchesAccountEnvironment";
         try {
@@ -72,12 +79,15 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             }
             final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
             return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Logger.error(
                     TAG + methodName,
                     "Unable to perform cloud discovery",
                     e);
-            return false;
+            throw new TerminalException(
+                    "Unable to perform cloud discovery in order to validate request authority",
+                    e,
+                    ClientException.IO_ERROR);
         }
     }
 

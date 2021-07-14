@@ -119,7 +119,6 @@ public class ADALOAuth2TokenCache
                 SharedPreferencesFileManager.getSharedPreferences(
                         getContext(),
                         fileName,
-                        -1,
                         new StorageHelper(getContext())
                 );
     }
