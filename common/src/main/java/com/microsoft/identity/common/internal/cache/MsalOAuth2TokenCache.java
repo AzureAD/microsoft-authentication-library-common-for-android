@@ -141,7 +141,6 @@ public class MsalOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalOAuth2TokenCache.
      */
-    @Deprecated
     public static MsalOAuth2TokenCache<
             MicrosoftStsOAuth2Strategy,
             MicrosoftStsAuthorizationRequest,
