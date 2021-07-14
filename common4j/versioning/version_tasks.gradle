@@ -4,7 +4,7 @@ def getVersionFile() {
     if(file.exists()){
         return file;
     }else{
-        return new File("$rootDir/common4j/versioning/version.properties")
+        return new File("$rootDir/../common4j/versioning/version.properties")
     }
 
 }

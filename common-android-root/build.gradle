@@ -1,0 +1,63 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
+
+buildscript {
+    apply from: rootProject.file("../gradle/versions.gradle")
+    
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:${rootProject.ext.gradleVersion}"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    /*
+    Order of repositories is important.
+     */
+    repositories {
+        /*
+        This is the project main repository and contains all of the packages we publish.
+        This azure devops feed also has an upstream to Maven Central as well as several other
+        internal azure devops respositories
+
+        NOTE: This repository is not currently available to our public CI (Travis)
+         */
+        maven {
+            name "vsts-maven-adal-android"
+            url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
+            credentials {
+                username project.vstsUsername
+                password project.vstsPassword
+            }
+        }
+        //Required for google published packages not published to maven central
+        google()
+        /*
+        Required for Android Studio / Android Tools (for example: linter) packages not published
+        to maven central.
+
+        NOTE: When building in Travis packages will be pulled from here
+         */
+        mavenCentral()
+        /*
+        Required since the DUO sdk is not published to any of the other large android
+        repositories... which is odd.
+
+        NOTE: This is required for Travis.
+         */
+        maven {
+            url 'https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1'
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
