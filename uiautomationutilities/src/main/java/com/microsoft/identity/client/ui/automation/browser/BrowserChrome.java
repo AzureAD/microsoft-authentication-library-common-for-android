@@ -38,6 +38,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
  */
 public class BrowserChrome extends App implements IBrowser {
 
+    private static final boolean LITE_MODE_EXPECTED = false;
     private static final String TAG = BrowserChrome.class.getSimpleName();
     public static final String CHROME_PACKAGE_NAME = "com.android.chrome";
     public static final String CHROME_APP_NAME = "Google Chrome";
@@ -50,6 +51,9 @@ public class BrowserChrome extends App implements IBrowser {
     public void handleFirstRun() {
         Logger.i(TAG, "Handle First Run of Browser..");
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/terms_accept");
+        if (LITE_MODE_EXPECTED){
+            UiAutomatorUtils.handleButtonClickForObjectWithText("Next");
+        }
         UiAutomatorUtils.handleButtonClick("com.android.chrome:id/negative_button");
     }
 
