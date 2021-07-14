@@ -1,12 +1,12 @@
 def getVersionFile() {
-    
-    File file = new File("$rootDir/common/common/versioning/version.properties")
-    if(file.exists()){
-        return file;
-    }else{
+    System.out.println("Root project: " + rootProject.name)
+    if (rootProject.name == "android_auth") {
+        return new File("$rootDir/common/common/versioning/version.properties")
+    } else if (rootProject.name == "com.microsoft.identity.java") {
         return new File("$rootDir/../common/versioning/version.properties")
+    } else {
+        return new File("$rootDir/common/versioning/version.properties")
     }
-
 }
 
 def getVersionProps() {

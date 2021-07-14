@@ -3,7 +3,7 @@ project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") 
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
 
 buildscript {
-    apply from: rootProject.file("../gradle/versions.gradle")
+    apply from: rootProject.file("gradle/versions.gradle")
     
     repositories {
         google()
