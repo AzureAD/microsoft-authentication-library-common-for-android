@@ -57,6 +57,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.internal.matchers.And;
 import org.powermock.api.mockito.PowerMockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -261,8 +262,8 @@ public class MsalOAuth2TokenCacheTest {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
 
-        mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
-                mContext,
+        final AndroidCommonComponents components = new AndroidCommonComponents(mContext);
+        mSharedPreferencesFileManager = components.getEncryptedFileStore(
                 "test_prefs",
                 new AndroidAuthSdkStorageEncryptionManager(mContext, null)
         );
@@ -275,7 +276,7 @@ public class MsalOAuth2TokenCacheTest {
         );
 
         mOauth2TokenCache = new MsalOAuth2TokenCache<>(
-                mContext,
+                components,
                 accountCredentialCache,
                 mockCredentialAdapter
         );

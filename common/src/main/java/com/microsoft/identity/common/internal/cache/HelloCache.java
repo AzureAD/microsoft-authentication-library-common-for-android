@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -49,7 +50,7 @@ public class HelloCache {
 
     private static final String SHARED_PREFERENCE_NAME = "com.microsoft.common.ipc.hello.cache";
 
-    private final SharedPreferencesFileManager mFileManager;
+    private final ISharedPreferencesFileManager mFileManager;
     private final Context mContext;
     private final String mProtocolName;
     private final String mTargetAppPackageName;
@@ -69,15 +70,16 @@ public class HelloCache {
 
     /**
      * Default constructor.
-     *
-     * @param context              application context.
+     *  @param context              application context.
      * @param protocolName         name of the protocol that invokes hello().
      * @param targetAppPackageName package name of the app that this client will hello() with.
+     * @param components
      */
     public HelloCache(final @NonNull Context context,
                       final @NonNull String protocolName,
-                      final @NonNull String targetAppPackageName) {
-        mFileManager = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFERENCE_NAME, null);
+                      final @NonNull String targetAppPackageName,
+                      final @NonNull ICommonComponents components) {
+        mFileManager = components.getFileStore(SHARED_PREFERENCE_NAME);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;

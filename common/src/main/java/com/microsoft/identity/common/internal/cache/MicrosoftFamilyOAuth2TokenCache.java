@@ -39,6 +39,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.logging.Logger;
@@ -65,7 +66,7 @@ public class MicrosoftFamilyOAuth2TokenCache
      *
      * @param context The Application Context of the consuming app.
      */
-    public MicrosoftFamilyOAuth2TokenCache(final Context context,
+    public MicrosoftFamilyOAuth2TokenCache(final ICommonComponents context,
                                            final IAccountCredentialCache accountCredentialCache,
                                            final IAccountCredentialAdapter<
                                                    GenericOAuth2Strategy,

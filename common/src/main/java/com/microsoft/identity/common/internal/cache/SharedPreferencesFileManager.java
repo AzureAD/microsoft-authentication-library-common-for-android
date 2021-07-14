@@ -48,9 +48,6 @@ import java.util.concurrent.ConcurrentMap;
  * Convenience class for accessing {@link SharedPreferences}.
  */
 public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
-    public interface Predicate<T> {
-        boolean test(T value);
-    }
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
@@ -102,7 +99,16 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        return getSharedPreferences(context, name, Context.MODE_PRIVATE, encryptionManager);
+        String key = name + "/" + context.getPackageName() + "/" + (Context.MODE_PRIVATE == -1 ? Context.MODE_PRIVATE : Context.MODE_PRIVATE);
+        SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
+        if (cachedFileManager == null) {
+            cachedFileManager = objectCache.putIfAbsent(key,
+                    new SharedPreferencesFileManager(context, name, Context.MODE_PRIVATE, encryptionManager));
+            if (cachedFileManager == null) {
+                cachedFileManager = objectCache.get(key);
+            }
+        }
+        return cachedFileManager;
     }
 
     /**

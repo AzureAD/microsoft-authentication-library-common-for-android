@@ -30,6 +30,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashSet;
@@ -65,10 +66,48 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
      * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl. Convenience class for persisting
      * lists of arbitrarily-typed data. Duplicate reinsertion is disabled (backcompat) by default.
      *
+     * @param components   The current app's {@link Context}.
+     * @param prefsName The name of the underlying {@link android.content.SharedPreferences} file.
+     * @param singleKey The name of the key under which all entries will be cached.
+     */
+    public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final ICommonComponents components,
+                                                       @NonNull final String prefsName,
+                                                       @NonNull final String singleKey) {
+        this(components.getFileStore(prefsName),
+                singleKey,
+                false
+        );
+    }
+
+    /**
+     * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl. Convenience class for persisting
+     * lists of arbitrarily-typed data.
+     *
+     * @param components                      The current app's {@link Context}.
+     * @param prefsName                    The name of the underlying {@link android.content.SharedPreferences} file.
+     * @param singleKey                    The name of the key under which all entries will be cached.
+     * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
+     *                                     replaces the existing value with the newly-provided one.
+     */
+    public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final ICommonComponents components,
+                                                       @NonNull final String prefsName,
+                                                       @NonNull final String singleKey,
+                                                       final boolean forceReinsertionOfDuplicates) {
+        this(components.getFileStore(prefsName),
+                singleKey,
+                forceReinsertionOfDuplicates
+        );
+    }
+
+    /**
+     * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl. Convenience class for persisting
+     * lists of arbitrarily-typed data. Duplicate reinsertion is disabled (backcompat) by default.
+     *
      * @param context   The current app's {@link Context}.
      * @param prefsName The name of the underlying {@link android.content.SharedPreferences} file.
      * @param singleKey The name of the key under which all entries will be cached.
      */
+    @Deprecated
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey) {
@@ -92,6 +131,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
      * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
      *                                     replaces the existing value with the newly-provided one.
      */
+    @Deprecated
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey,
@@ -99,7 +139,6 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
         this(SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 prefsName,
-                Context.MODE_PRIVATE,
                 null // File is not encrypted
                 ),
                 singleKey,
@@ -109,14 +148,14 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
 
     /**
      * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl from the provided
-     * {@link SharedPreferencesFileManager}, using the provided singleKey for the underlying collection.
+     * {@link ISharedPreferencesFileManager}, using the provided singleKey for the underlying collection.
      *
-     * @param sharedPreferencesFileManager The underlying {@link SharedPreferencesFileManager} to use.
+     * @param sharedPreferencesFileManager The underlying {@link ISharedPreferencesFileManager} to use.
      * @param singleKey                    The name of the key under which all entries will be cached.
      * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
      *                                     replaces the existing value with the newly-provided one.
      */
-    public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final SharedPreferencesFileManager sharedPreferencesFileManager,
+    protected SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager,
                                                        @NonNull final String singleKey,
                                                        final boolean forceReinsertionOfDuplicates) {
         Logger.verbose(TAG + "::ctor", "Init");

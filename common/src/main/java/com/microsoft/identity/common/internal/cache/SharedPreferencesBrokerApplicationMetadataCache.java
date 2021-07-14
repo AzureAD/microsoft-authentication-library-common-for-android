@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -47,6 +48,11 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
     private static final String KEY_CACHE_LIST = "app-meta-cache";
 
+    public SharedPreferencesBrokerApplicationMetadataCache(@NonNull final ICommonComponents components) {
+        super(components, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
+    }
+
+    @Deprecated
     public SharedPreferencesBrokerApplicationMetadataCache(@NonNull final Context context) {
         super(context, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
     }

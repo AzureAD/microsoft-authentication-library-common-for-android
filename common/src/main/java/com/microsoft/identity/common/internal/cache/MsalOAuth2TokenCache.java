@@ -41,6 +41,7 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
@@ -96,11 +97,11 @@ public class MsalOAuth2TokenCache
     /**
      * Constructor of MsalOAuth2TokenCache.
      *
-     * @param context                  Context
+     * @param commonComponents         {@link ICommonComponents}
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
-    public MsalOAuth2TokenCache(final Context context,
+    public MsalOAuth2TokenCache(final ICommonComponents commonComponents,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<
                                         GenericOAuth2Strategy,
@@ -108,7 +109,7 @@ public class MsalOAuth2TokenCache
                                         GenericTokenResponse,
                                         GenericAccount,
                                         GenericRefreshToken> accountCredentialAdapter) {
-        super(context);
+        super(commonComponents);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mAccountCredentialAdapter = accountCredentialAdapter;
@@ -122,12 +123,31 @@ public class MsalOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalOAuth2TokenCache.
      */
+    @Deprecated
     public static MsalOAuth2TokenCache<
             MicrosoftStsOAuth2Strategy,
             MicrosoftStsAuthorizationRequest,
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> create(@NonNull final Context context) {
+        return create(new AndroidCommonComponents(context));
+    }
+
+    /**
+     * Factory method for creating an instance of MsalOAuth2TokenCache
+     * <p>
+     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     *
+     * @param context The Application Context
+     * @return An instance of the MsalOAuth2TokenCache.
+     */
+    @Deprecated
+    public static MsalOAuth2TokenCache<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            MicrosoftRefreshToken> create(@NonNull final ICommonComponents components) {
         final String methodName = ":create";
 
         Logger.verbose(
@@ -138,10 +158,9 @@ public class MsalOAuth2TokenCache
         // Init the new-schema cache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                SharedPreferencesFileManager.getSharedPreferences(
-                        context,
+                components.getEncryptedFileStore(
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        new AndroidCommonComponents(context).
+                        components.
                                 getStorageEncryptionManager(null)
                 );
         final IAccountCredentialCache accountCredentialCache =
@@ -153,7 +172,7 @@ public class MsalOAuth2TokenCache
                 new MicrosoftStsAccountCredentialAdapter();
 
         return new MsalOAuth2TokenCache<>(
-                context,
+                components,
                 accountCredentialCache,
                 accountCredentialAdapter
         );

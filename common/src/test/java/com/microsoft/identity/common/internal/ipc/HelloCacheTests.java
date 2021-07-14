@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
@@ -219,7 +220,7 @@ public class HelloCacheTests {
 
         class HelloCacheMock extends HelloCache {
             public HelloCacheMock(@NonNull Context context, @NonNull String protocolName, @NonNull String targetAppPackageName) {
-                super(context, protocolName, targetAppPackageName);
+                super(context, protocolName, targetAppPackageName, new AndroidCommonComponents(context));
             }
 
             @NonNull @Override public String getVersionCode() throws PackageManager.NameNotFoundException {

@@ -208,7 +208,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @NonNull
     private Map<String, AccountRecord> getAccountsWithKeys() {
         Logger.verbose(TAG, "Loading Accounts + keys...");
-        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return isAccount(value);
@@ -272,7 +272,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private Map<String, Credential> getCredentialsWithKeys() {
         Logger.verbose(TAG, "Loading Credentials with keys...");
         final Map<String, Credential> credentials = new HashMap<>();
-        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return isCredential(value);

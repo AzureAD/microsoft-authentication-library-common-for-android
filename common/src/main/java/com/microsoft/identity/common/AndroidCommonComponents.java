@@ -28,19 +28,25 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.internal.util.SharedPrefLongNameValueStorage;
+import com.microsoft.identity.common.internal.util.SharedPrefStringNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
  * Android implementations of platform-dependent components in Common.
  */
-public class AndroidCommonComponents implements ICommonComponents {
+public class AndroidCommonComponents implements ICommonComponents<Context> {
     private static String TAG = AndroidCommonComponents.class.getSimpleName();
 
     protected final Context mContext;
@@ -68,5 +74,41 @@ public class AndroidCommonComponents implements ICommonComponents {
 
         Logger.info(TAG + methodName, "Returning AndroidAuthSdkStorageEncryptionManager");
         return new AndroidAuthSdkStorageEncryptionManager(mContext, telemetryCallback);
+    }
+
+    @Override
+    public <T> INameValueStorage<T> getNameValueStore(String storeName, Class<T> clazz) {
+        return getEncryptedNameValueStore(storeName, null, clazz);
+    }
+
+    @Override
+    public <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz) {
+        final ISharedPreferencesFileManager mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+        if (Long.class.isAssignableFrom(clazz)) {
+            @SuppressWarnings("unchecked")
+            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPrefLongNameValueStorage(mgr);
+            return store;
+        } else if (String.class.isAssignableFrom(clazz)) {
+            @SuppressWarnings("unchecked")
+            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPrefStringNameValueStorage(mgr);
+            return store;
+        }
+        throw new UnsupportedOperationException("Only Long and String are natively supported as types");
+    }
+
+    @Override
+    public ISharedPreferencesFileManager getEncryptedFileStore(String storeName, IKeyAccessor helper) {
+        return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+    }
+
+    @Override
+    public ISharedPreferencesFileManager getFileStore(String storeName) {
+        return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
+    }
+
+    @Deprecated
+    @Override
+    public Context getPlatformContext() {
+        return mContext;
     }
 }

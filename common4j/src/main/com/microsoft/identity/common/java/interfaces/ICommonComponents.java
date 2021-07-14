@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 
@@ -30,7 +31,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 /**
  * Common components, shared between Android, Linux.
  */
-public interface ICommonComponents {
+public interface ICommonComponents<T> {
 
     /**
      * Flushes the underlying http cache, if it exists.
@@ -41,4 +42,44 @@ public interface ICommonComponents {
      * Get an encryption manager for storage layer.
      */
     IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
+
+    /**
+     * Retrieve a name-value store with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store.
+     * @param clazz     The class of values in the name value store.
+     * @return a INameValueStorage instance based around data stored with the same storeName.
+     */
+    <T> INameValueStorage<T> getNameValueStore(String storeName, Class<T> clazz);
+
+    /**
+     * Retrieve a name-value store with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     * @param helper    The key manager for the encryption.  May be null.
+     * @param clazz     The class of values in the name value store. May not be null.
+     * @return a INameValueStorage instance based around data stored with the same storeName.
+     */
+    <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz);
+
+    /**
+     * Get a generic encrypted ISharedPreferencesFileManager with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     * @param helper    The key manager for the encryption.  May not be null.
+     */
+    ISharedPreferencesFileManager getEncryptedFileStore(String storeName, IKeyAccessor helper);
+
+    /**
+     * Get a generic encrypted ISharedPreferencesFileManager with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     */
+    ISharedPreferencesFileManager getFileStore(String storeName);
+
+    /**
+     * Unwrap the platform context being shadowed by this interface.
+     * @return the underlying implementation of the platform context that this is hiding.
+     */
+    T getPlatformContext();
 }

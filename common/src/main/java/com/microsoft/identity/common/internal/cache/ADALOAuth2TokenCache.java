@@ -54,6 +54,7 @@ import com.microsoft.identity.common.internal.providers.microsoft.azureactivedir
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
@@ -116,12 +117,11 @@ public class ADALOAuth2TokenCache
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
 
+        final ICommonComponents components = getComponents();
         mISharedPreferencesFileManager =
-                SharedPreferencesFileManager.getSharedPreferences(
-                        getContext(),
+                components.getEncryptedFileStore(
                         fileName,
-                        new AndroidCommonComponents(getContext()).
-                                getStorageEncryptionManager(null)
+                        components.getStorageEncryptionManager(null)
                 );
     }
 

@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
@@ -38,6 +39,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.logging.Logger;
@@ -76,12 +78,28 @@ public class MsalCppOAuth2TokenCache
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
+    @Deprecated
     // Suppressing unchecked warnings due to casting of IAccountCredentialAdapter with the generics in the call to the constructor of parent class
     @SuppressWarnings(WarningType.unchecked_warning)
     private MsalCppOAuth2TokenCache(final Context context,
                                     final IAccountCredentialCache accountCredentialCache,
                                     final IAccountCredentialAdapter accountCredentialAdapter) {
-        super(context, accountCredentialCache, accountCredentialAdapter);
+        super(new AndroidCommonComponents(context), accountCredentialCache, accountCredentialAdapter);
+    }
+
+    /**
+     * Constructor of MsalOAuth2TokenCache.
+     *
+     * @param commonComponents         {@link ICommonComponents}
+     * @param accountCredentialCache   IAccountCredentialCache
+     * @param accountCredentialAdapter IAccountCredentialAdapter
+     */
+    // Suppressing unchecked warnings due to casting of IAccountCredentialAdapter with the generics in the call to the constructor of parent class
+    @SuppressWarnings(WarningType.unchecked_warning)
+    private MsalCppOAuth2TokenCache(final ICommonComponents commonComponents,
+                                    final IAccountCredentialCache accountCredentialCache,
+                                    final IAccountCredentialAdapter accountCredentialAdapter) {
+        super(commonComponents, accountCredentialCache, accountCredentialAdapter);
     }
 
     /**

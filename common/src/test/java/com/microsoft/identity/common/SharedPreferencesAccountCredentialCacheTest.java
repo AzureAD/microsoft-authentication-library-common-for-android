@@ -31,6 +31,7 @@ import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
@@ -92,14 +93,13 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
     private SharedPreferencesAccountCredentialCache mSharedPreferencesAccountCredentialCache;
     private CacheKeyValueDelegate mDelegate;
-    private SharedPreferencesFileManager mSharedPreferencesFileManager;
+    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Before
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
-                testContext,
+        mSharedPreferencesFileManager = new AndroidCommonComponents(testContext).getEncryptedFileStore(
                 sAccountCredentialSharedPreferences,
                 new AndroidAuthSdkStorageEncryptionManager(testContext, null) // Use encrypted storage for tests...
         );
