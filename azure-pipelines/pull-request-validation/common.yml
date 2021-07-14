@@ -32,6 +32,7 @@ jobs:
     name: Gradle1
     displayName: Assemble Release
     inputs:
+      cwd: $(Build.SourcesDirectory)/common-android-root
       tasks: clean common:assembleLocal
       publishJUnitResults: false
       jdkArchitecture: x86
@@ -39,8 +40,10 @@ jobs:
   - template: ../templates/steps/spotbugs.yml
     parameters:
       project: common
+      workingDirectory: $(Build.SourcesDirectory)/common-android-root
   - task: Gradle@2
     displayName: Run Unit tests
     inputs:
+      cwd: $(Build.SourcesDirectory)/common-android-root
       tasks: common:testLocalDebugUnitTest
 ...

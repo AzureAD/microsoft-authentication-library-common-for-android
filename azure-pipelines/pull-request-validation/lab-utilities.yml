@@ -26,13 +26,16 @@ jobs:
         name: Gradle1
         displayName: Assembles the outputs of this project.
         inputs:
+          cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:clean LabApiUtilities:assemble
       - template: ../templates/steps/spotbugs.yml
         parameters:
           project: LabApiUtilities
+          workingDirectory: $(Build.SourcesDirectory)/common-java-root
           spotbugsCommand: spotbugsMain
       - task: Gradle@2
         displayName: Run the unit tests.
         inputs:
+          cwd: $(Build.SourcesDirectory)/common-java-root
           tasks: LabApiUtilities:test -Psugar=true
 ...

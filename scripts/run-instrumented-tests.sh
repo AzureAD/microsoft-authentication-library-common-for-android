@@ -9,5 +9,6 @@ gradle -version
 echo =============================================
 echo Running instrumented tests
 echo =============================================
+cd common-android-root
 gradle common:connectedLocalDebugAndroidTest -i -Psugar=true
 
