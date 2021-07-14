@@ -22,15 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
-import android.util.Pair;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.adal.tokensharing.SSOStateSerializer;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.ICacheRecord;
@@ -59,7 +58,7 @@ import java.util.concurrent.Future;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID;
 import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.RAW;
 import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.SSO_STATE_SERIALIZER_BLOB;
-import static com.microsoft.identity.common.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
+import static com.microsoft.identity.common.java.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
@@ -191,10 +190,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     public void saveOrgIdFamilyRefreshToken(@NonNull final String ssoStateSerializerBlob) throws Exception {
         final String methodName = "saveOrgIdFamilyRefreshToken";
 
-        final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
-                sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+        final Future<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
-                    public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                    public Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = SSOStateSerializer.deserialize(ssoStateSerializerBlob);
 
                         // We're going to 'hijack' this token and set our own clientId for renewal
@@ -224,9 +223,9 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
+        final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> result = resultFuture.get();
 
-        saveResult(resultPair);
+        saveResult(result);
     }
 
     @Override
@@ -245,14 +244,14 @@ public class TokenShareUtility implements ITokenShareInternal {
     }
 
     @SuppressWarnings("unchecked")
-    private void saveResult(@Nullable final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair)
+    private void saveResult(@Nullable final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> result)
             throws ClientException {
         // If an error is encountered while requesting new tokens, null is returned
         // Check the result, before proceeding to save into the cache...
-        if (null != resultPair) {
+        if (null != result) {
             mTokenCache.setSingleSignOnState(
-                    resultPair.first, // The account
-                    resultPair.second // The refresh token
+                    result.getKey(), // The account
+                    result.getValue() // The refresh token
             );
         }
     }
@@ -266,10 +265,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     public void saveMsaFamilyRefreshToken(@NonNull final String refreshToken) throws Exception {
         final String methodName = "saveMsaFamilyRefreshToken";
 
-        final Future<Pair<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
-                sBackgroundExecutor.submit(new Callable<Pair<MicrosoftAccount, MicrosoftRefreshToken>>() {
+        final Future<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> resultFuture =
+                sBackgroundExecutor.submit(new Callable<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>>() {
                     @Override
-                    public Pair<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
+                    public Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> call() throws ClientException {
                         final ADALTokenCacheItem cacheItemToRenew = createTokenCacheItem(
                                 refreshToken,
                                 CONSUMERS_ENDPOINT
@@ -291,9 +290,9 @@ public class TokenShareUtility implements ITokenShareInternal {
                     }
                 });
 
-        final Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = resultFuture.get();
+        final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = resultFuture.get();
 
-        saveResult(resultPair);
+        saveResult(resultKeyValuePair);
     }
 
     private ADALTokenCacheItem createTokenCacheItem(@NonNull final String refreshToken,

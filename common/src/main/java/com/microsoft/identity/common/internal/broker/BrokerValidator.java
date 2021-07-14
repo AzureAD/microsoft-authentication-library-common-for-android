@@ -33,8 +33,8 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -46,6 +46,10 @@ import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
@@ -104,11 +108,11 @@ public class BrokerValidator {
 
             return signatureHash;
         } catch (NameNotFoundException e) {
-            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
+            throw new ClientException(APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
-            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM, e.getMessage(), e);
+            throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
         } catch (final IOException | GeneralSecurityException e) {
-            throw new ClientException(ErrorStrings.BROKER_VERIFICATION_FAILED, e.getMessage(), e);
+            throw new ClientException(BROKER_VERIFICATION_FAILED, e.getMessage(), e);
         }
     }
 

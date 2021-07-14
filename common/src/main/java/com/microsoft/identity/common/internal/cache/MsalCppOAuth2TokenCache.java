@@ -31,22 +31,22 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.BaseAccount;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
 import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.microsoft.identity.common.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
 /**
@@ -192,20 +192,23 @@ public class MsalCppOAuth2TokenCache
     @VisibleForTesting // private by default for production code
     public synchronized AccountDeletionRecord forceRemoveAccount(@NonNull final String homeAccountId,
                                                                  @Nullable final String environment,
-                                                                 @NonNull final String realm) throws ClientException {
+                                                                 @Nullable final String realm) throws ClientException {
         validateNonNull(homeAccountId, "homeAccountId");
-        validateNonNull(realm, "realm");
 
         final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
+        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
 
         final List<AccountRecord> removedAccounts = new ArrayList<>();
 
         for (final AccountRecord accountRecord : getAllAccounts()) {
-            boolean matches = accountRecord.getHomeAccountId().equals(homeAccountId)
-                    && accountRecord.getRealm().equals(realm);
+            boolean matches = accountRecord.getHomeAccountId().equals(homeAccountId);
 
             if (mustMatchOnEnvironment) {
                 matches = matches && accountRecord.getEnvironment().equals(environment);
+            }
+
+            if (mustMatchOnRealm) {
+                matches = matches && accountRecord.getRealm().equals(realm);
             }
 
             if (matches) {
@@ -230,7 +233,7 @@ public class MsalCppOAuth2TokenCache
      * @return {@link AccountDeletionRecord}
      */
     public synchronized AccountDeletionRecord removeAccount(@NonNull final String homeAccountId,
-                                                            @Nullable final String environment,
+                                                            @NonNull final String environment,
                                                             @NonNull final String realm) throws ClientException {
         // TODO This API is potentially problematic for TFW/TFL...
         // Normally on Android, apps are 'sandboxed' such that each app has their own cache
@@ -244,14 +247,18 @@ public class MsalCppOAuth2TokenCache
         // accommodations need to come later for Teams then we can reevaluate the logic here.
 
         validateNonNull(homeAccountId, "homeAccountId");
+        validateNonNull(environment, "environment");
         validateNonNull(realm, "realm");
+        
+        final String normalizedEnvironment = environment.equals("") ? null : environment;
+        final String normalizedRealm = realm.equals("") ? null : realm;
 
         final List<Credential> credentials = getAccountCredentialCache().getCredentialsFilteredBy(
                 homeAccountId,
-                environment,
+                normalizedEnvironment,
                 CredentialType.RefreshToken,
                 null,
-                realm,
+                normalizedRealm,
                 null,
                 SCHEME_BEARER
         );
@@ -262,10 +269,10 @@ public class MsalCppOAuth2TokenCache
 
             // Remove the account
             return removeAccount(
-                    environment,
+                    normalizedEnvironment,
                     clientId,
                     homeAccountId,
-                    realm,
+                    normalizedRealm,
                     CredentialType.AccessToken,
                     CredentialType.AccessToken_With_AuthScheme,
                     CredentialType.IdToken,
@@ -273,7 +280,7 @@ public class MsalCppOAuth2TokenCache
             );
         } else {
             // Remove was called, but no RTs exist for the account. Force remove it.
-            return forceRemoveAccount(homeAccountId, environment, realm);
+            return forceRemoveAccount(homeAccountId, normalizedEnvironment, normalizedRealm);
         }
     }
 

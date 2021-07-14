@@ -22,13 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.HashMap;
 
 import lombok.NonNull;
 
-public class InMemoryStorage<T> implements IKeyPairStorage<T> {
+public class InMemoryStorage<T> implements INameValueStorage<T> {
 
     final HashMap<String, T> mMap = new HashMap<>();
 
@@ -37,18 +37,18 @@ public class InMemoryStorage<T> implements IKeyPairStorage<T> {
     }
 
     @Override
-    public T get(final String key) {
-        return mMap.get(key);
+    public T get(final String name) {
+        return mMap.get(name);
     }
 
     @Override
-    public void put(final String key, final T value) {
-        mMap.put(key, value);
+    public void put(final String name, final T value) {
+        mMap.put(name, value);
     }
 
     @Override
-    public void remove(@NonNull String key) {
-        mMap.remove(key);
+    public void remove(@NonNull String name) {
+        mMap.remove(name);
     }
 
     @Override

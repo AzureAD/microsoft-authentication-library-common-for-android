@@ -26,6 +26,7 @@ package com.microsoft.identity.common.exception;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.java.exception.BaseException;
 
 import lombok.Getter;
 

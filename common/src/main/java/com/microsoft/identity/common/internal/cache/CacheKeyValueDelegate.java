@@ -39,7 +39,7 @@ import com.microsoft.identity.common.internal.dto.Credential;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Field;

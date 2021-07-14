@@ -26,7 +26,7 @@ import com.microsoft.identity.labapi.utilities.authentication.common.Certificate
 import com.microsoft.identity.labapi.utilities.authentication.common.ClientCertificateMetadata;
 import com.microsoft.identity.labapi.utilities.authentication.common.KeyStoreConfiguration;
 import com.microsoft.identity.labapi.utilities.authentication.common.MicrosoftClientAssertion;
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 import org.junit.Assert;
 import org.junit.Test;

@@ -28,7 +28,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
@@ -88,6 +88,16 @@ public class AzureActiveDirectoryAuthority extends Authority {
         mAuthorityTypeString = "AAD";
         mMultipleCloudsSupported = false;
         getAzureActiveDirectoryCloud();
+    }
+
+    /**
+     * Gets the {@link AzureActiveDirectoryCloud} associated to this Authority.
+     *
+     * @return The {@link AzureActiveDirectoryCloud} or null, if the provided URL is not associated
+     * with any cloud.
+     */
+    public AzureActiveDirectoryCloud getCloud() {
+        return mAzureActiveDirectoryCloud;
     }
 
     public Map<String, String> getFlightParameters() {

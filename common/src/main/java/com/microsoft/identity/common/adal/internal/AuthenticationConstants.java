@@ -1833,13 +1833,11 @@ public final class AuthenticationConstants {
     public static final class TelemetryEvents {
         public static final String DECRYPTION_ERROR = "decryption_error_v2";
 
-        public static final String KEYCHAIN_WRITE_START = "keychain_write_v2_start";
-
-        public static final String KEYCHAIN_WRITE_END = "keychain_write_v2_end";
-
-        public static final String KEYCHAIN_READ_START = "keychain_read_v2_start";
-
-        public static final String KEYCHAIN_READ_END = "keychain_read_v2_end";
+        // The event names have been wrong. It should be keystore, not keychain.
+        public static final String KEYSTORE_WRITE_START = "keychain_write_v2_start";
+        public static final String KEYSTORE_WRITE_END = "keychain_write_v2_end";
+        public static final String KEYSTORE_READ_START = "keychain_read_v2_start";
+        public static final String KEYSTORE_READ_END = "keychain_read_v2_end";
 
         public static final String KEY_RETRIEVAL_START = "key_retrieval_v2_start";
 

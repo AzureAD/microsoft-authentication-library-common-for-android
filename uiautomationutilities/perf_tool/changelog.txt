@@ -1,0 +1,6 @@
+11-Jan-2021
+--------------
+- First release
+- The C# program Generates an html report based on the perf text codemarker files from two different builds.
+- Document: https://microsoft.sharepoint.com/teams/ADAL/_layouts/15/Doc.aspx?sourcedoc={0339bdd6-b5e5-4d94-b4c9-ea47127f5023}&action=edit&wd=target%28Platforms%2FAndroid.one%7C28086b2a-f539-bc47-b229-1610fc61c903%2FPerf%20tool%20for%20MSAL%20native%7C70105fa5-fe02-4349-969e-ded5131a9715%2F%29&wdorigin=703
+

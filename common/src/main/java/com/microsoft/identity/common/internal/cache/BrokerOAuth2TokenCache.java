@@ -28,11 +28,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.WarningType;
 import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
 import com.microsoft.identity.common.internal.dto.AccountRecord;
@@ -42,9 +43,9 @@ import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -278,23 +279,10 @@ public class BrokerOAuth2TokenCache
             );
         } else {
             // Save to the processUid cache... or create a new one
-            MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
-                    idTokenRecord.getClientId(),
-                    idTokenRecord.getEnvironment(),
+            final MsalOAuth2TokenCache targetCache = initializeProcessUidCache(
+                    getContext(),
                     mCallingProcessUid
             );
-
-            if (null == targetCache) {
-                Logger.warn(
-                        TAG + methodName,
-                        "Existing cache not found. A new one will be created."
-                );
-
-                targetCache = initializeProcessUidCache(
-                        getContext(),
-                        mCallingProcessUid
-                );
-            }
 
             result = targetCache.save(
                     accountRecord,
@@ -398,32 +386,13 @@ public class BrokerOAuth2TokenCache
                         + "]"
         );
 
-        OAuth2TokenCache targetCache;
+        final OAuth2TokenCache targetCache;
 
         if (isFoci) {
             targetCache = mFociCache;
         } else {
-
-            // Suppressing unchecked warning as the generic type was not provided for oAuth2Strategy and request of type GenericAuthorizationRequest
-            @SuppressWarnings(WarningType.unchecked_warning) final String environment = oAuth2Strategy.getIssuerCacheIdentifier(request);
-
             // Try to find an existing cache for this application
-            targetCache = getTokenCacheForClient(
-                    request.getClientId(),
-                    environment,
-                    mCallingProcessUid
-            );
-
-            if (null == targetCache) {// No existing cache could be found... Make a new one!
-                Logger.warn(
-                        TAG + methodName,
-                        "Existing cache not found. A new one will be created."
-                );
-                targetCache = initializeProcessUidCache(
-                        getContext(),
-                        mCallingProcessUid
-                );
-            }
+            targetCache = initializeProcessUidCache(getContext(), mCallingProcessUid);
         }
 
         // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method save
@@ -466,22 +435,7 @@ public class BrokerOAuth2TokenCache
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
-                targetCache = getTokenCacheForClient(
-                        request.getClientId(),
-                        oAuth2Strategy.getIssuerCacheIdentifier(request),
-                        mCallingProcessUid
-                );
-
-                if (null == targetCache) {
-                    Logger.warn(
-                            TAG + methodName,
-                            "Existing cache not found. A new one will be created."
-                    );
-                    targetCache = initializeProcessUidCache(
-                            getContext(),
-                            mCallingProcessUid
-                    );
-                }
+                targetCache = initializeProcessUidCache(getContext(), mCallingProcessUid);
             }
 
             final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
@@ -687,11 +641,7 @@ public class BrokerOAuth2TokenCache
                 );
             }
 
-            final OAuth2TokenCache targetCache = getTokenCacheForClient(
-                    clientId,
-                    account.getEnvironment(),
-                    mCallingProcessUid
-            );
+            final OAuth2TokenCache targetCache = getTokenCacheForClient(appMetadata);
 
             final boolean appIsUnknownUseFociAsFallback = null == targetCache;
 
@@ -1327,16 +1277,12 @@ public class BrokerOAuth2TokenCache
                                                String realm,
                                                CredentialType... typesToRemove) {
         // This API not needed for now...
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
     public void clearAll() {
-        throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
-        );
+        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
     }
 
     /**
@@ -1605,14 +1551,13 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(context, bindingProcessUid);
         }
 
-        final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
-                        -1,
-                        storageHelper
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, false);
@@ -1624,13 +1569,13 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Initializing foci cache"
         );
-        final IStorageHelper storageHelper = new StorageHelper(context);
+
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        -1,
-                        storageHelper
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, true);
@@ -1743,32 +1688,13 @@ public class BrokerOAuth2TokenCache
         final int uid = Integer.valueOf(uidStr);
 
         if (isFrt) {
-            Logger.verbose(
-                    TAG + methodName,
-                    "Saving tokens to foci cache."
-            );
+            Logger.verbose(TAG + methodName, "Saving tokens to foci cache.");
 
             targetCache = mFociCache;
         } else {
             // If there is an existing cache for this client id, use it. Otherwise, create a new
             // one based on the supplied uid.
-            targetCache = getTokenCacheForClient(
-                    refreshToken.getClientId(),
-                    refreshToken.getEnvironment(),
-                    mCallingProcessUid
-            );
-
-            if (null == targetCache) {
-                Logger.verbose(
-                        TAG + methodName,
-                        "Existing cache could not be found. Creating a new one..."
-                );
-
-                targetCache = initializeProcessUidCache(
-                        getContext(),
-                        uid
-                );
-            }
+            targetCache = initializeProcessUidCache(getContext(), uid);
         }
         try {
             targetCacheSetSingleSignOnState(account, refreshToken, targetCache);
@@ -1789,9 +1715,6 @@ public class BrokerOAuth2TokenCache
     // Suppressing unchecked warning as the generic type was not provided for targetCache
     @SuppressWarnings(WarningType.unchecked_warning)
     private void targetCacheSetSingleSignOnState(@NonNull GenericAccount account, @NonNull GenericRefreshToken refreshToken, MsalOAuth2TokenCache targetCache) throws ClientException {
-        targetCache.setSingleSignOnState(
-                account,
-                refreshToken
-        );
+        targetCache.setSingleSignOnState(account, refreshToken);
     }
 }

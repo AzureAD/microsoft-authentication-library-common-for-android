@@ -22,10 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
-import android.util.Pair;
-
 import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.logging.Logger;
@@ -64,11 +62,11 @@ public class TokenMigrationUtility<T extends BaseAccount, U extends RefreshToken
 
                 // Iterate over the adapted accounts/tokens, incrementing if successfully added to
                 // the cache.
-                for (final Pair<T, U> accountTokenPair : adapter.adapt(credentials)) {
+                for (final Map.Entry<T, U> accountTokenKeyValuePair : adapter.adapt(credentials)) {
                     try {
                         destination.setSingleSignOnState(
-                                accountTokenPair.first,
-                                accountTokenPair.second
+                                accountTokenKeyValuePair.getKey(),
+                                accountTokenKeyValuePair.getValue()
                         );
                         accountsAdded ++;
                     } catch (ClientException e) {
