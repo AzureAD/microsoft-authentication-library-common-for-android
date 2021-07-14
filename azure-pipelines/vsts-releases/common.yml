@@ -16,8 +16,8 @@ resources:
     ref: master
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: vsts_release
+  displayName: Publish common to internal feed
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019
@@ -31,9 +31,6 @@ jobs:
     inputs:
       filename: echo
       arguments: '##vso[task.setvariable variable=ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN]$(mvnAccessToken)'
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: common
   - task: Gradle@1
     name: Gradle1
     displayName: Assemble Release
@@ -59,6 +56,4 @@ jobs:
     inputs:
       ArtifactName: CommonRelease
       TargetPath: $(Build.SourcesDirectory)/common/build/
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...

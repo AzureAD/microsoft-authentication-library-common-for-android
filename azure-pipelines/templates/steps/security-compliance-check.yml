@@ -1,0 +1,32 @@
+# File: azure-pipelines\templates\steps\security-compliance-check.yml
+# https://docs.microsoft.com/en-us/azure/security/develop/yaml-configuration#credential-scanner-task
+# https://microsoft.sharepoint.com/sites/globalreadiness/SitePages/PoliCheck.aspx
+# https://docs.opensource.microsoft.com/tools/cg/index.html
+jobs:
+- job: credscan_policheck
+  displayName: Run Credentials Scanner and Policheck
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-credscan.CredScan@3
+    displayName: 'Run Credential Scanner'
+    inputs:
+      debugMode: false
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-policheck.PoliCheck@2
+    displayName: 'Run PoliCheck'
+    inputs:
+      targetType: F
+      result: PoliCheck.xml
+      optionsFC: 1
+      optionsXS: 1
+      optionsSEV: '1|2'
+      optionsPE: '1|2|3|4'
+  - task: securedevelopmentteam.vss-secure-development-tools.build-task-publishsecurityanalysislogs.PublishSecurityAnalysisLogs@3
+    displayName: 'Publish Security Analysis Logs'
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: Component Detection

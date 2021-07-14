@@ -39,7 +39,11 @@ import org.junit.Assert;
  */
 public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandler {
 
+    private final static boolean RECOVERY_EMAIL_PROMPT_EXPECTED = false;
     private final static String TAG = GoogleLoginComponentHandler.class.getSimpleName();
+    private final static String RECOVERY_EMAIL_BUTTON_TEXT = "Confirm your recovery email";
+    private final static String RECOVERY_EMAIL_INPUT_RESOURCE_ID = "knowledge-preregistered-email-response";
+    private final static  String RECOVERY_EMAIL = "msidlabint@microsoft.com";
 
     @Override
     protected String getHandlerName() {
@@ -83,6 +87,22 @@ public class GoogleLoginComponentHandler extends AbstractB2CLoginComponentHandle
             nextBtn.click();
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
+        }
+    }
+
+    public void handleRecoveryEmail() {
+        if(RECOVERY_EMAIL_PROMPT_EXPECTED) {
+            Logger.i(TAG, "Handle Google Recovery Email UI..");
+            final UiObject confirmationEmailButton = UiAutomatorUtils.obtainUiObjectWithText(RECOVERY_EMAIL_BUTTON_TEXT);
+            if (confirmationEmailButton.exists()) {
+                try {
+                    confirmationEmailButton.click();
+                    UiAutomatorUtils.handleInput(RECOVERY_EMAIL_INPUT_RESOURCE_ID, RECOVERY_EMAIL);
+                    handleNextButton();
+                } catch (final UiObjectNotFoundException e) {
+                    throw new AssertionError(e);
+                }
+            }
         }
     }
 }
