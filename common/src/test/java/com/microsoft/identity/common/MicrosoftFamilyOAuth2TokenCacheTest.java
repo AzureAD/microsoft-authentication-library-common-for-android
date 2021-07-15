@@ -80,7 +80,7 @@ public class MicrosoftFamilyOAuth2TokenCacheTest extends MsalOAuth2TokenCacheTes
     public void setUp() throws Exception {
         super.setUp();
         mOauth2TokenCache = new MicrosoftFamilyOAuth2TokenCache<>(
-                ApplicationProvider.getApplicationContext(),
+                new AndroidCommonComponents(ApplicationProvider.getApplicationContext()),
                 accountCredentialCache,
                 mockCredentialAdapter
         );

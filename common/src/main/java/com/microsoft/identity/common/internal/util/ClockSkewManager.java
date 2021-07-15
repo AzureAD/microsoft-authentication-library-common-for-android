@@ -27,8 +27,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -51,13 +53,16 @@ public class ClockSkewManager extends com.microsoft.identity.common.java.util.Cl
         super(new SharedPrefLongNameValueStorage(manager));
     }
 
-    public ClockSkewManager(@NonNull final Context context) {
-        super(new SharedPrefLongNameValueStorage(
-                SharedPreferencesFileManager.getSharedPreferences(
-                        context,
-                        PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
-                        null
+    public ClockSkewManager(@NonNull final ICommonComponents components) {
+        super(components.getNameValueStore(
+                PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
+                Long.class
                 )
-        ));
+        );
+    }
+
+    @Deprecated
+    public ClockSkewManager(@NonNull final Context context) {
+        this(new AndroidCommonComponents(context));
     }
 }

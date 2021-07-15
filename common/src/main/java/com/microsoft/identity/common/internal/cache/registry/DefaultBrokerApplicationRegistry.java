@@ -29,6 +29,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManagerSimpleCacheImpl;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -47,6 +48,11 @@ public class DefaultBrokerApplicationRegistry
     private static final String DEFAULT_APP_REGISTRY_CACHE_NAME = "com.microsoft.identity.app-registry";
     private static final String KEY_APP_REGISTRY = "app-registry";
 
+    public DefaultBrokerApplicationRegistry(@NonNull final ICommonComponents components) {
+        super(components, DEFAULT_APP_REGISTRY_CACHE_NAME, KEY_APP_REGISTRY);
+    }
+
+    @Deprecated
     public DefaultBrokerApplicationRegistry(@NonNull final Context context) {
         super(context, DEFAULT_APP_REGISTRY_CACHE_NAME, KEY_APP_REGISTRY);
     }

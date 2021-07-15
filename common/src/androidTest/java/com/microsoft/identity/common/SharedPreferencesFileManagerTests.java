@@ -31,7 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,13 +57,10 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     @Parameterized.Parameters
     public static Iterable<ISharedPreferencesFileManager> testParams() {
         return Arrays.asList(new ISharedPreferencesFileManager[]{
-                SharedPreferencesFileManager.getSharedPreferences(
-                        ApplicationProvider.getApplicationContext(),
-                        sTEST_SHARED_PREFS_NAME,null
-                ),
-                SharedPreferencesFileManager.getSharedPreferences(
-                        ApplicationProvider.getApplicationContext(),
-                        sTEST_SHARED_PREFS_NAME,
+                new AndroidCommonComponents(ApplicationProvider.getApplicationContext())
+                        .getFileStore(sTEST_SHARED_PREFS_NAME),
+                new AndroidCommonComponents(ApplicationProvider.getApplicationContext())
+                        .getEncryptedFileStore(sTEST_SHARED_PREFS_NAME,
                         new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null)
                 )
         });
@@ -126,7 +123,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return true;
@@ -149,7 +146,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return true;
@@ -173,7 +170,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return false;
@@ -197,7 +194,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return value.equals("2");
