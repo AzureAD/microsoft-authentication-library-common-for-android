@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Common components, shared between Android, Linux.
@@ -40,5 +44,24 @@ public interface ICommonComponents {
     /**
      * Get an encryption manager for storage layer.
      */
+    @NonNull
     IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
+
+    /**
+     * Gets clock skew manager.
+     */
+    @NonNull
+    IClockSkewManager getClockSkewManager();
+
+    /**
+     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     * */
+    @NonNull
+    IDevicePopManager getDefaultDevicePopManager() throws ClientException;
+
+    /**
+     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     * */
+    @NonNull
+    IDevicePopManager getDevicePopManager(@NonNull final String alias) throws ClientException;
 }

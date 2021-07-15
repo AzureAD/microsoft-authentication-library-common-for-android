@@ -47,6 +47,7 @@ import com.microsoft.identity.common.internal.ui.webview.OnPageCommitVisibleCall
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
@@ -163,7 +164,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
             public void run() {
                 Logger.info(TAG + methodName, "Launching embedded WebView for acquiring auth code.");
                 Logger.infoPII(TAG + methodName, "The start url is " + mAuthorizationRequestUrl);
-                mWebView.loadUrl(mAuthorizationRequestUrl, mRequestHeaders);
+                mWebView.loadUrl("https://login.microsoftonline.com/organizations/oAuth2/v2.0/authorize?prompt=select_account&client-request-id=6abae31d-3a08-4b95-8299-7d7ace789a59&x-client-CPU=arm64-v8a&x-client-DM=Pixel+XL&x-client-OS=29&x-client-SKU=MSAL.Android&x-client-Ver=1.5.9&login_hint=&instance_aware=false&code_challenge=iGjnawmjUbXXZHjybOkopPBiwOa30ovHH6WX9Cv7ZAE&code_challenge_method=S256&claims=%7B%7D&client_id=4b0db8c2-9f26-4417-8bde-3f0e3656f8e0&redirect_uri=msauth%3A%2F%2Fcom.msft.identity.client.sample.local%2F1wIqXSqBj7w%252Bh11ZifsnqwgyKrY%253D&scope=user.read++openid+offline_access+profile&state=1254%3A0ea28b21-8a94-4e5d-a0ff-3a5d3cc07720-9536ce32-aabc-4b0e-98f8-e55cf00e7cfe", mRequestHeaders);
 
                 // The first page load could take time, and we do not want to just show a blank page.
                 // Therefore, we'll show a spinner here, and hides it when mAuthorizationRequestUrl is successfully loaded.
@@ -248,9 +249,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
-        public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
-            Logger.info(TAG, null, "onChallengeResponseReceived:" + returnCode);
-            sendResult(returnCode, responseIntent);
+        public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
+            Logger.info(TAG, null, "onChallengeResponseReceived:" + response.getResultCode());
+            sendResult(response);
             finish();
         }
 

@@ -23,10 +23,7 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.app.ActivityManager;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -35,12 +32,10 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -64,6 +59,8 @@ import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
 import java.lang.reflect.Field;
@@ -83,11 +80,13 @@ import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.AC
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry.createLastRequestTelemetryCacheOnAndroid;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
 public class CommandDispatcher {
 
@@ -570,15 +569,11 @@ public class CommandDispatcher {
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
         synchronized (sLock) {
-            final LocalBroadcastManager localBroadcastManager =
-                    LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
             //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
             if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
-                localBroadcastManager.sendBroadcast(
-                        new Intent(CANCEL_INTERACTIVE_REQUEST)
-                );
+                LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new DataBag());
             }
 
             sInteractiveExecutor.execute(new Runnable() {
@@ -601,26 +596,26 @@ public class CommandDispatcher {
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                        final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                             @Override
-                            public void onReceive(Context context, Intent intent) {
-                                completeInteractive(intent);
+                            public void onReceive(@NonNull DataBag dataBag) {
+                                completeInteractive(dataBag);
                             }
                         };
 
                         CommandResult commandResult;
                         Handler handler = new Handler(Looper.getMainLooper());
 
-                        localBroadcastManager.registerReceiver(
-                                resultReceiver,
-                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                        LocalBroadcaster.INSTANCE.registerCallback(
+                                RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
 
                         sCommand = command;
 
                         //Try executing request
                         commandResult = executeCommand(command);
                         sCommand = null;
-                        localBroadcastManager.unregisterReceiver(resultReceiver);
+
+                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
 
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -640,14 +635,14 @@ public class CommandDispatcher {
         }
     }
 
-    private static void completeInteractive(final Intent resultIntent) {
+    private static void completeInteractive(final DataBag dataBag) {
         final String methodName = ":completeInteractive";
 
-        int requestCode = resultIntent.getIntExtra(REQUEST_CODE, 0);
-        int resultCode = resultIntent.getIntExtra(RESULT_CODE, 0);
+        int requestCode = dataBag.getIntMap().getOrDefault(REQUEST_CODE, -1);
+        int resultCode = dataBag.getIntMap().getOrDefault(RESULT_CODE, -1);
 
         if (sCommand != null) {
-            sCommand.notify(requestCode, resultCode, resultIntent);
+            sCommand.onFinishInteractiveSession(requestCode, resultCode, dataBag);
         } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }
@@ -663,8 +658,8 @@ public class CommandDispatcher {
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
-        rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
+        rc.put(PRODUCT, sdkType);
+        rc.put(VERSION, sdkVersion);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,

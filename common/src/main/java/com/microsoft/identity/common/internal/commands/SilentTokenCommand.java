@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
@@ -34,6 +32,7 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.util.ported.DataBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -112,7 +111,9 @@ public class SilentTokenCommand extends TokenCommand {
     }
 
     @Override
-    public void notify(int requestCode, int resultCode, Intent data) {
+    public void onFinishInteractiveSession(int requestCode,
+                                           int resultCode,
+                                           @NonNull final DataBag data) {
         throw new UnsupportedOperationException();
     }
 

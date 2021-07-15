@@ -24,15 +24,34 @@ package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.Expose;
 
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+
 /**
  * Class to encapsulate Authorization Result errors.
  */
+@Getter
+@Setter
+@Accessors(prefix = "m")
 public class AuthorizationErrorResponse implements IErrorResponse{
 
+    /**
+     * error returned due to Authorization request failure.
+     */
     @Expose()
     private String mError;
+
+    /**
+     * error description returned due to Authorization request failure
+     * */
     @Expose()
     private String mErrorDescription;
+
+    /**
+     * Set when the account needs to be workplace joined to access the resource.
+     */
+    private String mUpnToWpj;
 
     /**
      * Constructor of {@link AuthorizationErrorResponse}.
@@ -42,44 +61,6 @@ public class AuthorizationErrorResponse implements IErrorResponse{
      */
     public AuthorizationErrorResponse(final String error, final String errorDescription) {
         mError = error;
-        mErrorDescription = errorDescription;
-    }
-
-    /**
-     * Getter method for error.
-     *
-     * @return error
-     */
-    public String getError() {
-        return mError;
-    }
-
-
-    /**
-     * Setter method for error.
-     *
-     * @param error error returned due to Authorization request failure.
-     */
-    public void setError(final String error) {
-        mError = error;
-    }
-
-    /**
-     * Getter method for error description.
-     *
-     * @return errorDescription
-     */
-    public String getErrorDescription() {
-        return mErrorDescription;
-    }
-
-
-    /**
-     * Setter method for error description.
-     *
-     * @param errorDescription error description returned due to Authorization request failure.
-     */
-    public void setErrorDescription(final String errorDescription) {
         mErrorDescription = errorDescription;
     }
 

@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
@@ -32,6 +30,7 @@ import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.DataBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Date;
@@ -112,7 +111,9 @@ public class DeviceCodeFlowCommand extends TokenCommand {
     }
 
     @Override
-    void notify(int requestCode, int resultCode, Intent data) {
-        getDefaultController().completeAcquireToken(requestCode, resultCode, data);
+    void onFinishInteractiveSession(final int requestCode,
+                                    final int resultCode,
+                                    @NonNull final DataBag data) {
+        throw new UnsupportedOperationException();
     }
 }

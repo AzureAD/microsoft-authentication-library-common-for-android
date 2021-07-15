@@ -28,33 +28,53 @@ import org.junit.Test;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Map;
 
 public class UrlUtilTest {
 
     @Test
     public void testAppendEmptyPathUrl() throws MalformedURLException, URISyntaxException {
-        Assert.assertEquals("https://www.test.com",
+        Assert.assertEquals(new URL("https://www.test.com"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com"), null));
 
-        Assert.assertEquals("https://www.test.com",
+        Assert.assertEquals(new URL("https://www.test.com"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com"), ""));
     }
 
     @Test
     public void testAppendPathStringWithExtraSlashes() throws MalformedURLException, URISyntaxException {
-        Assert.assertEquals("https://www.test.com/this/is/a/path",
+        Assert.assertEquals(new URL("https://www.test.com/this/is/a/path"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com"), "//this/is/a//path"));
     }
 
     @Test
     public void testAppendPathStringWithoutStartingSlash() throws MalformedURLException, URISyntaxException {
-        Assert.assertEquals( "https://www.test.com/path",
+        Assert.assertEquals( new URL("https://www.test.com/path"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com"), "path"));
     }
 
     @Test
     public void testAppendPathStringToUrlWithPath() throws MalformedURLException, URISyntaxException {
-        Assert.assertEquals("https://www.test.com/path/another/path",
+        Assert.assertEquals(new URL("https://www.test.com/path/another/path"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com/path"), "/another/path"));
+    }
+
+    @Test
+    public void testGettingParameterFromUrl() {
+        final Map<String, String> queryParams = UrlUtil.getUrlParameters(
+                "https://www.test.com/path/another/path?param1=value1&param2=value2");
+        Assert.assertEquals(2, queryParams.size());
+        Assert.assertEquals("value1", queryParams.get("param1"));
+        Assert.assertEquals("value2", queryParams.get("param2"));
+    }
+
+    @Test
+    public void testGettingParameterFromUrlContainingUrl() {
+        final Map<String, String> queryParams = UrlUtil.getUrlParameters(
+                "msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=test%40test.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator");
+        Assert.assertEquals(3, queryParams.size());
+        Assert.assertEquals("1", queryParams.get("wpj"));
+        Assert.assertEquals("test@test.onmicrosoft.com", queryParams.get("username"));
+        Assert.assertEquals("https://play.google.com/store/apps/details?id=com.azure.authenticator", queryParams.get("app_link"));
     }
 }

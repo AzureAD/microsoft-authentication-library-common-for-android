@@ -24,16 +24,16 @@ package com.microsoft.identity.common.internal.commands;
 
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.util.ported.DataBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -63,14 +63,14 @@ public class InteractiveTokenCommand extends TokenCommand {
         checkAndRecordTaskInformation(parameters);
     }
 
-    private void checkAndRecordTaskInformation(@NonNull final InteractiveTokenCommandParameters parameters){
+    private void checkAndRecordTaskInformation(@NonNull final InteractiveTokenCommandParameters parameters) {
         final String methodName = ":checkAndRecordTaskInformation";
         final Context applicationContext = parameters.getAndroidApplicationContext();
         final PackageManager packageManager = applicationContext.getPackageManager();
         try {
             final ComponentName componentName = parameters.getActivity().getComponentName();
             final ActivityInfo startActivityInfo = componentName != null ? packageManager.getActivityInfo(componentName, 0) : null;
-            if (startActivityInfo == null || startActivityInfo.taskAffinity == null){
+            if (startActivityInfo == null || startActivityInfo.taskAffinity == null) {
                 mHasTaskAffinity = false;
                 mTaskId = parameters.getActivity().getTaskId();
             }
@@ -82,11 +82,11 @@ public class InteractiveTokenCommand extends TokenCommand {
         }
     }
 
-    public boolean getHasTaskAffinity(){
+    public boolean getHasTaskAffinity() {
         return mHasTaskAffinity;
     }
 
-    public int getTaskId(){
+    public int getTaskId() {
         return mTaskId;
     }
 
@@ -110,8 +110,10 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public void notify(int requestCode, int resultCode, final Intent data) {
-        getDefaultController().completeAcquireToken(requestCode, resultCode, data);
+    public void onFinishInteractiveSession(int requestCode,
+                                           int resultCode,
+                                           @NonNull final DataBag data) {
+        getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
     }
 
     @Override

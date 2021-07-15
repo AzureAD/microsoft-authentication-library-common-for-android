@@ -1,0 +1,25 @@
+Changes
+
+1. Migrate from `LocalBroadcastManager` to our own `LocalBroadcaster`.
+2. Replace Intent/Bundle with `DataBag` (a class with maps)
+3. Draw a clear line between "Authorization Request" and "Broker Interactive session" - to improve readability.
+   3.1 The result returned from broker will have a separate set of return code (AuthenticationConstants.BrokerResponse).
+   3.2 The result returned from broker will has its own broadcast alias (RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT)
+   3.3 Due to 4.2, the returned result will no longer take a long trip via CommandDispatcher -> InteractiveTokenCommand -> BrokerMsalController. We will register/unregister the broadcast event in `BrokerMsalController.acquireToken()` directly. 
+   3.4 Renamed `BaseController.notify()` to `BaseController.onFinishInteractiveSession()`, because that's what it really does.
+   3.5 Renamed `BaseController.completeAcquireToken()` to `BaseController.onFinishAuthorizationSession()`, because Authorization is a subset of acquireToken.
+4. Consolidate the shared logic in `MicrosoftStsAuthorizationResultFactory` and `AzureActiveDirectoryAuthorizationResultFactory` into the base class `AuthorizationResultFactory`
+5. (Try to) consolidate the 'redirect URL interpreter' logic from `BrowserAuthorizationFragment` and `AzureActiveDirectoryWebViewClient` into `RawAuthorizationResult`.
+   - The idea is... you pass in the result URL in the factory method, we'll intepret it.
+   - This will also abstract out the bundle/dataBag from those classes - you don't need to know how the data is packed/sent throughout the code, we'll do that for you.
+   - eSTS error in redirect uri is now handled in only one place - `AzureActiveDirectoryWebViewClient`. The current logic is associating those error with the error code that should be used for client-side error (this logic is not consistent in all path).
+
+
+
+Other smaller changes
+1. Migrate IDevicePopManager to common4j.
+   - DevicePopManager will take context in via its constructor, as the method interface is now java-only.
+2. Add IDevicePopManager and ClockSkewManager to ICommonComponents.
+3. Delete android-common's `Device` class, along with its global IDevicePopManager.
+4. OAuth2StrategyParameters now takes ICommonComponents instead of Context.
+5. Turns `AuthorizationStrategy` into `AndroidAuthorizationStrategy` and `IAuthorizationStrategy` (because we'll need one for Linux).

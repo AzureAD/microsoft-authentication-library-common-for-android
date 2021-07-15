@@ -32,12 +32,13 @@ public enum AuthorizationStatus {
     SUCCESS,
 
     /**
-     * User press device back button.
+     * User press device back button,
+     * or the authz session was cancelled in order to proceed with the flow (not an error).
      */
     USER_CANCEL,
 
     /**
-     * Sdk cancelled Auth floe
+     * Sdk cancelled Auth flow
      */
     SDK_CANCEL,
 

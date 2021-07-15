@@ -24,14 +24,25 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.net.Uri;
 
+import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccessToken;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
@@ -44,32 +55,26 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.platform.Device;
-import com.microsoft.identity.common.internal.platform.IDevicePopManager;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpConstants;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -83,10 +88,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField.X_MS_CLITELEM;
-import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-import static com.microsoft.identity.common.internal.controllers.BaseController.logResult;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.CHALLENGE_REQUEST_HEADER;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
 import static com.microsoft.identity.common.java.providers.oauth2.TokenRequest.GrantTypes.CLIENT_CREDENTIALS;
 
 // Suppressing rawtype warnings due to the generic type AuthorizationStrategy, AuthorizationResult, AuthorizationResultFactory and MicrosoftAuthorizationRequest
@@ -97,7 +103,7 @@ public class MicrosoftStsOAuth2Strategy
                 MicrosoftStsAccount,
                 MicrosoftStsAuthorizationRequest,
                 MicrosoftStsAuthorizationRequest.Builder,
-                AuthorizationStrategy,
+                IAuthorizationStrategy,
                 MicrosoftStsOAuth2Configuration,
                 OAuth2StrategyParameters,
                 MicrosoftStsAuthorizationResponse,
@@ -118,7 +124,7 @@ public class MicrosoftStsOAuth2Strategy
      * @param parameters OAuth2StrategyParameters
      */
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
-                                      @NonNull final OAuth2StrategyParameters parameters) {
+                                      @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
     }
@@ -283,7 +289,7 @@ public class MicrosoftStsOAuth2Strategy
         }
 
 
-        builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
+        builder.setLibraryName(DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
         builder.setLibraryVersion(Device.getProductVersion());
         builder.setFlightParameters(mConfig.getFlightParameters());
         builder.setMultipleCloudAware(mConfig.getMultipleCloudsSupported());
@@ -359,23 +365,16 @@ public class MicrosoftStsOAuth2Strategy
             tokenRequest.setGrantType(TokenRequest.GrantTypes.AUTHORIZATION_CODE);
         }
 
-        if (SCHEME_POP.equals(authScheme.getName())) {
-            if (null == mStrategyParameters.getContext()) {
-                throw new ClientException(
-                        MicrosoftStsOAuth2Strategy.class.getSimpleName()
-                                + "Cannot execute PoP request sans Context"
-                );
-            }
-
-
+        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
             // Add a token_type
             tokenRequest.setTokenType(TokenRequest.TokenType.POP);
 
-            final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
+            final IDevicePopManager devicePopManager =
+                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
 
             // Generate keys if they don't already exist...
             if (!devicePopManager.asymmetricKeyExists()) {
-                final String thumbprint = devicePopManager.generateAsymmetricKey(mStrategyParameters.getContext());
+                final String thumbprint = devicePopManager.generateAsymmetricKey();
 
                 Logger.verbosePII(
                         TAG,
@@ -422,13 +421,14 @@ public class MicrosoftStsOAuth2Strategy
         final MicrosoftStsTokenRequest request = new MicrosoftStsTokenRequest();
         request.setGrantType(TokenRequest.GrantTypes.REFRESH_TOKEN);
 
-        if (SCHEME_POP.equals(authScheme.getName())) {
+        if (PopAuthenticationSchemeInternal.SCHEME_POP.equals(authScheme.getName())) {
             request.setTokenType(TokenRequest.TokenType.POP);
 
-            final IDevicePopManager devicePopManager = Device.getDevicePoPManagerInstance();
+            final IDevicePopManager devicePopManager =
+                    mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
 
             if (!devicePopManager.asymmetricKeyExists()) {
-                devicePopManager.generateAsymmetricKey(mStrategyParameters.getContext());
+                devicePopManager.generateAsymmetricKey();
             }
 
             request.setRequestConfirmation(devicePopManager.getRequestConfirmation());
@@ -475,8 +475,8 @@ public class MicrosoftStsOAuth2Strategy
         final Map<String, String> headers = new TreeMap<>();
         headers.put("client-request-id", DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         headers.putAll(Device.getPlatformIdParameters());
-        headers.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, DiagnosticContext.INSTANCE.getRequestContext().get(AuthenticationConstants.SdkPlatformFields.PRODUCT));
-        headers.put(AuthenticationConstants.SdkPlatformFields.VERSION, Device.getProductVersion());
+        headers.put(PRODUCT, DiagnosticContext.INSTANCE.getRequestContext().get(PRODUCT));
+        headers.put(VERSION, Device.getProductVersion());
 
         headers.put(AuthenticationConstants.AAD.APP_PACKAGE_NAME, request.getClientAppName());
         headers.put(AuthenticationConstants.AAD.APP_VERSION, request.getClientAppVersion());
@@ -544,7 +544,7 @@ public class MicrosoftStsOAuth2Strategy
 
         final TokenResult result = new TokenResult(tokenResponse, tokenErrorResponse);
 
-        logResult(TAG, result);
+        BaseController.logResult(TAG, result);
 
         if (null != response.getHeaders()) {
             final Map<String, List<String>> responseHeaders = response.getHeaders();
@@ -628,20 +628,20 @@ public class MicrosoftStsOAuth2Strategy
         final String tokensMissingMessage = "Missing required tokens of type: {0}";
 
         // PRT interrupt flow do not return AT.
-        if (!StringUtil.containsSubString(request.getScope(), AuthenticationConstants.OAuth2Scopes.CLAIMS_UPDATE_RESOURCE) &&
-                StringUtil.isEmpty(response.getAccessToken())) {
+        if (!StringUtil.containsSubString(request.getScope(), CLAIMS_UPDATE_RESOURCE) &&
+                StringUtil.isNullOrEmpty(response.getAccessToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens = tokens.concat("access_token");
         }
 
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
-                StringUtil.isEmpty(response.getIdToken())) {
+                StringUtil.isNullOrEmpty(response.getIdToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens =  tokens.concat(" id_token");
         }
 
         if (!CLIENT_CREDENTIALS.equalsIgnoreCase(request.getGrantType()) &&
-                StringUtil.isEmpty(response.getRefreshToken())) {
+                StringUtil.isNullOrEmpty(response.getRefreshToken())) {
             clientException = ClientException.TOKENS_MISSING;
             tokens =  tokens.concat(" refresh_token");
         }
@@ -654,7 +654,7 @@ public class MicrosoftStsOAuth2Strategy
 
     private String buildCloudSpecificTokenEndpoint(
             @NonNull final MicrosoftStsAuthorizationResponse response) {
-        if (!StringUtil.isEmpty(response.getCloudInstanceHostName())) {
+        if (!StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
             final String updatedTokenEndpoint =
                     Uri.parse(mTokenEndpoint)
                             .buildUpon()
@@ -669,7 +669,7 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     private String getCloudSpecificTokenEndpoint(final MicrosoftAuthorizationResponse response) {
-        if (StringUtil.isEmpty(response.getCloudInstanceHostName())) {
+        if (StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
             return mTokenEndpoint;
         }
         return buildCloudSpecificTokenEndpoint((MicrosoftStsAuthorizationResponse) response);
@@ -686,7 +686,7 @@ public class MicrosoftStsOAuth2Strategy
 
         IDevicePopManager devicePopManager = null;
         try {
-            devicePopManager = Device.getDevicePoPManagerInstance();
+            devicePopManager = mStrategyParameters.getPlatformComponents().getDefaultDevicePopManager();
         } catch (final ClientException e) {
             Logger.error(
                     TAG,
@@ -748,6 +748,6 @@ public class MicrosoftStsOAuth2Strategy
     }
 
     public static boolean authSchemeIsPoP(@NonNull final AbstractAuthenticationScheme scheme) {
-        return SCHEME_POP.equals(scheme.getName());
+        return PopAuthenticationSchemeInternal.SCHEME_POP.equals(scheme.getName());
     }
 }

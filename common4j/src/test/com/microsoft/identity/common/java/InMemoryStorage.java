@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import lombok.NonNull;
 
@@ -42,6 +43,11 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
     }
 
     @Override
+    public @NonNull T getOrDefault(@NonNull String name, @NonNull T defaultValue) {
+        return mMap.getOrDefault(name, defaultValue);
+    }
+
+    @Override
     public void put(final String name, final T value) {
         mMap.put(name, value);
     }
@@ -54,5 +60,10 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
     @Override
     public void clear() {
         mMap.clear();
+    }
+
+    @Override
+    public @NonNull Set<String> keySet() {
+        return mMap.keySet();
     }
 }

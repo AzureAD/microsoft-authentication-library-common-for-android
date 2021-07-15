@@ -33,11 +33,14 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import org.json.JSONException;
@@ -78,8 +81,13 @@ public class AzureActiveDirectory
     private static final HttpClient httpClient = UrlConnectionHttpClient.getDefaultInstance();
 
     @Override
-    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config) {
-        return new AzureActiveDirectoryOAuth2Strategy(config, new OAuth2StrategyParameters());
+    public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,
+                                                                   @NonNull final ICommonComponents commonComponents) throws ClientException {
+        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
+                .platformComponents(commonComponents)
+                .build();
+
+        return new AzureActiveDirectoryOAuth2Strategy(config, parameters);
     }
 
     public static synchronized boolean hasCloudHost(@NonNull final URL authorityUrl) {
