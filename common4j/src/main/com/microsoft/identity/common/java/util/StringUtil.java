@@ -29,13 +29,11 @@ import java.net.URLDecoder;
 
 import lombok.NonNull;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
+
 public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
-
-    /**
-     * The constant ENCODING_UTF8.
-     */
-    public static final String ENCODING_UTF8 = "UTF-8";
 
     /**
      * Checks if string is null or empty.
@@ -59,7 +57,7 @@ public class StringUtil {
             return "";
         }
 
-        return URLDecoder.decode(source, ENCODING_UTF8);
+        return URLDecoder.decode(source, ENCODING_UTF8_STRING);
     }
 
     /**
@@ -73,5 +71,13 @@ public class StringUtil {
         final PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
         return pw.toString();
+    }
+
+    public static String fromByteArray(@NonNull final byte[] bytes){
+        return new String(bytes, ENCODING_UTF8);
+    }
+
+    public static byte[] toByteArray(@NonNull final String string){
+        return string.getBytes(ENCODING_UTF8);
     }
 }

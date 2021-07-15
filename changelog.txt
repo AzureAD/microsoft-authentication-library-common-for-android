@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] Adds new cache encryption key migration API for OneAuth (#1464)
+- [MAJOR] Migrate StorageHelper to common4j (#1450)
 - [MAJOR] Migrate Exceptions from common to common4j (#1442)
 - [MINOR] Add authority validation metadata cache for CPP (#1445)
 - [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
@@ -30,6 +32,8 @@ V.Next
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
 - [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
 - [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
+- [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
+- [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
 
 Version 3.4.3
 ----------

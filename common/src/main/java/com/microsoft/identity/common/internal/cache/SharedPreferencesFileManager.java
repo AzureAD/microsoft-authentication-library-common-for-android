@@ -24,20 +24,19 @@ package com.microsoft.identity.common.internal.cache;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.text.TextUtils;
 import android.util.LruCache;
 
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.AbstractMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -61,29 +60,30 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     private final String mSharedPreferencesFileName;
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
-    private final IStorageHelper mStorageHelper;
+    private final KeyAccessorStringAdapter mEncryptionManager;
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
-            new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f , 1);
+            new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
      *
-     * @param context Interface to global information about an application environment.
-     * @param name    The desired {@link android.content.SharedPreferences} file. It will be created
-     *                if it does not exist.
-     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
-     * @param operatingMode the mode in which to operate this
+     * @param context           Interface to global information about an application environment.
+     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created
+     *                          if it does not exist.
+     * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
+     * @param operatingMode     the mode in which to operate this
      */
     @Deprecated
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final int operatingMode,
-                                                                    final IStorageHelper storageHelper) {
+                                                                    final IKeyAccessor encryptionManager) {
         String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
-        if(cachedFileManager == null) {
-            cachedFileManager = objectCache.putIfAbsent(key, new SharedPreferencesFileManager(context, name, operatingMode, storageHelper));
+        if (cachedFileManager == null) {
+            cachedFileManager = objectCache.putIfAbsent(key,
+                    new SharedPreferencesFileManager(context, name, operatingMode, encryptionManager));
             if (cachedFileManager == null) {
                 cachedFileManager = objectCache.get(key);
             }
@@ -94,15 +94,15 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     /**
      * Constructs an instance of SharedPreferencesFileManager. Operating mode is always MODE_PRIVATE.
      *
-     * @param context Interface to global information about an application environment.
-     * @param name The desired {@link android.content.SharedPreferences} file. It will be created if it does not exist.
-     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param context           Interface to global information about an application environment.
+     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created if it does not exist.
+     * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      * @return The SharedPreferencesFileManager instance.
      */
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
-                                                                    final IStorageHelper storageHelper) {
-        return getSharedPreferences(context, name, Context.MODE_PRIVATE, storageHelper);
+                                                                    final IKeyAccessor encryptionManager) {
+        return getSharedPreferences(context, name, Context.MODE_PRIVATE, encryptionManager);
     }
 
     /**
@@ -139,35 +139,35 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
      * Constructs an instance of SharedPreferencesFileManager.
      * The default operating mode is {@link Context#MODE_PRIVATE}
      *
-     * @param context       Interface to global information about an application environment.
-     * @param name          The desired {@link android.content.SharedPreferences} file. It will be created
-     *                      if it does not exist.
-     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param context                  Interface to global information about an application environment.
+     * @param name                     The desired {@link android.content.SharedPreferences} file. It will be created
+     *                                 if it does not exist.
+     * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
             final Context context,
             final String name,
-            final IStorageHelper storageHelper) {
-        this(context, name, -1, storageHelper);
+            final IKeyAccessor encryptionManager) {
+        this(context, name, -1, encryptionManager);
     }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager.
      *
-     * @param context       Interface to global information about an application enviroment.
-     * @param name          The desired {@link SharedPreferences} file. It will be created
-     *                      if it does not exist.
-     * @param operatingMode Operating mode {@link Context#getSharedPreferences(String, int)}.
-     * @param storageHelper The {@link IStorageHelper} to handle encryption/decryption of values.
+     * @param context                  Interface to global information about an application enviroment.
+     * @param name                     The desired {@link SharedPreferences} file. It will be created
+     *                                 if it does not exist.
+     * @param operatingMode            Operating mode {@link Context#getSharedPreferences(String, int)}.
+     * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
             final Context context,
             final String name,
             final int operatingMode,
-            final IStorageHelper storageHelper) {
-        if (operatingMode == -1 && storageHelper == null) {
+            final IKeyAccessor encryptionManager) {
+        if (operatingMode == -1 && encryptionManager == null) {
             Logger.verbose(TAG, "Init: ");
-        } else if (storageHelper == null) {
+        } else if (encryptionManager == null) {
             Logger.verbose(TAG, "Init with operating mode: " + TAG);
         } else if (operatingMode == -1) {
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
@@ -176,7 +176,12 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         }
         mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
-        mStorageHelper = storageHelper;
+
+        if (encryptionManager != null) {
+            mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
+        } else {
+            mEncryptionManager = null;
+        }
     }
 
     @Override
@@ -191,7 +196,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             }
             final SharedPreferences.Editor editor = mSharedPreferences.edit();
 
-            if (null == mStorageHelper) {
+            if (null == mEncryptionManager || StringUtil.isNullOrEmpty(value)) {
                 editor.putString(key, value);
             } else {
                 final String encryptedValue = encrypt(value);
@@ -212,10 +217,10 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             }
             String restoredValue = mSharedPreferences.getString(key, null);
 
-            if (null != mStorageHelper && !StringExtensions.isNullOrBlank(restoredValue)) {
+            if (null != mEncryptionManager && !StringUtil.isNullOrEmpty(restoredValue)) {
                 restoredValue = decrypt(restoredValue);
 
-                if (StringExtensions.isNullOrBlank(restoredValue)) {
+                if (StringUtil.isNullOrEmpty(restoredValue)) {
                     logWarningAndRemoveKey(key);
                 }
             }
@@ -233,7 +238,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public long getLong(final String key) {
         final String result = getString(key);
 
-        if (!TextUtils.isEmpty(result)) {
+        if (!StringUtil.isNullOrEmpty(result)) {
             return Long.parseLong(result);
         }
 
@@ -261,7 +266,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         // Suppressing unchecked warnings due to casting Map<String,?> to Map<String,String>
         @SuppressWarnings(WarningType.unchecked_warning) final Map<String, String> entries = (Map<String, String>) mSharedPreferences.getAll();
 
-        if (null != mStorageHelper) {
+        if (null != mEncryptionManager) {
             final Iterator<Map.Entry<String, String>> iterator = entries.entrySet().iterator();
 
             while (iterator.hasNext()) {
@@ -269,7 +274,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 //This is slightly wasteful, but we have no better key iterator and decryption
                 //is probably more painful than the additional file read when we miss in the cache.
                 String decryptedValue = getString(entry.getKey());
-                if (!TextUtils.isEmpty(decryptedValue)) {
+                if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                     entry.setValue(decryptedValue);
                 }
             }
@@ -298,9 +303,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 do {
                     Map.Entry<String, String> nextElement = iterator.next();
                     if (keyFilter.test(nextElement.getKey())) {
-                        if (mStorageHelper != null) {
+                        if (mEncryptionManager != null) {
                             String decryptedValue = getString(nextElement.getKey());
-                            if (!TextUtils.isEmpty(decryptedValue)) {
+                            if (!StringUtil.isNullOrEmpty(decryptedValue)) {
                                 nextEntry = new AbstractMap.SimpleEntry<String, String>(nextElement.getKey(), decryptedValue);
                             }
                         } else {
@@ -326,7 +331,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
 
     @Override
     public final boolean contains(final String key) {
-        return !TextUtils.isEmpty(getString(key));
+        return !StringUtil.isNullOrEmpty(getString(key));
     }
 
     @Override
@@ -379,9 +384,9 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
         String result;
         try {
             result = encrypt
-                    ? mStorageHelper.encrypt(inputText)
-                    : mStorageHelper.decrypt(inputText);
-        } catch (GeneralSecurityException | IOException e) {
+                    ? mEncryptionManager.encrypt(inputText)
+                    : mEncryptionManager.decrypt(inputText);
+        } catch (ClientException e) {
             Logger.error(
                     TAG + ":" + methodName,
                     "Failed to " + (encrypt ? "encrypt" : "decrypt") + " value",

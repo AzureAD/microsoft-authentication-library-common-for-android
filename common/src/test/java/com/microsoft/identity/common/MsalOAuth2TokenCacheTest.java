@@ -27,30 +27,30 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.PrimaryRefreshTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.shadows.ShadowStorageHelper;
+import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -80,11 +80,11 @@ import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCa
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.SESSION_KEY;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.TARGET;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.USERNAME;
-import static com.microsoft.identity.common.internal.dto.CredentialType.AccessToken;
-import static com.microsoft.identity.common.internal.dto.CredentialType.IdToken;
-import static com.microsoft.identity.common.internal.dto.CredentialType.PrimaryRefreshToken;
-import static com.microsoft.identity.common.internal.dto.CredentialType.RefreshToken;
-import static com.microsoft.identity.common.internal.dto.CredentialType.V1IdToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.AccessToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.IdToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.PrimaryRefreshToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.RefreshToken;
+import static com.microsoft.identity.common.java.dto.CredentialType.V1IdToken;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -93,7 +93,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(shadows = {ShadowStorageHelper.class})
+@Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
 public class MsalOAuth2TokenCacheTest {
 
     private static final String JUNK_KEY = "9ac15f53-27ad-471a-ad57-033cdacb0ee9";
@@ -264,7 +264,7 @@ public class MsalOAuth2TokenCacheTest {
         mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
                 mContext,
                 "test_prefs",
-                new StorageHelper(mContext)
+                new AndroidAuthSdkStorageEncryptionManager(mContext, null)
         );
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();

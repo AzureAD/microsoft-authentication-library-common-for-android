@@ -27,8 +27,8 @@ schedules:
   always: true
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: assemble_local_debug_azure_sample_app_apk
+  displayName: Assemble Local Debug Azure Sample App APK
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019
@@ -37,9 +37,6 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: adal
   - task: PowerShell@2
     displayName: Setup Android Complete
     inputs:
@@ -99,6 +96,4 @@ jobs:
     inputs:
       PathtoPublish: c:/temp/android_auth/AzureSample/outputs/apk/local/debug/AzureSample-local-debug.apk
       ArtifactName: AzureSampleLocalDebug
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...

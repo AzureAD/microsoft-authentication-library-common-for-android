@@ -29,6 +29,10 @@ import android.security.keystore.KeyProperties;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.Algorithm;
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+
 import java.security.KeyStore;
 
 /**
@@ -86,7 +90,7 @@ public enum SymmetricCipher implements CryptoSuite {
     }
 
     @Override
-    public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
+    public SigningAlgorithm signingAlgorithm() {
         return null;
     }
 

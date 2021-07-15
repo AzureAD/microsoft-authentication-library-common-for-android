@@ -25,6 +25,8 @@ package com.microsoft.identity.common.java.exception;
 
 import lombok.NonNull;
 
+import com.microsoft.identity.common.java.exception.BaseException;
+
 /**
  *  Internal exception thrown when a device needs to registered to access the required resource (MAM)
  */

@@ -178,7 +178,7 @@ public class BrokerOperationExecutorTests {
         } catch (final BaseException e) {
             Assert.assertTrue(e instanceof ClientException);
             Assert.assertEquals(e.getErrorCode(), ErrorStrings.BROKER_BIND_SERVICE_FAILED);
-            Assert.assertEquals(e.getSuppressed().length, strategyList.size());
+            Assert.assertEquals(e.getSuppressedException().size(), strategyList.size());
         }
     }
 

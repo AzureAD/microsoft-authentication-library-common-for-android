@@ -40,7 +40,6 @@ public abstract class AndroidSecretKeyEnabledHelper extends AndroidTestHelper {
     @Override
     public void setUp() throws Exception {
         super.setUp();
-
         if (AuthenticationSettings.INSTANCE.getSecretKeyData() == null && Build.VERSION.SDK_INT < MIN_SDK_VERSION) {
             setSecretKeyData();
         }

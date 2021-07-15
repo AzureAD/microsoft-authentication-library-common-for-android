@@ -28,27 +28,29 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -343,6 +345,8 @@ public class BrokerOAuth2TokenCache
     @SuppressWarnings("unchecked")
     private List<ICacheRecord> loadAggregatedAccountData(final @NonNull AbstractAuthenticationScheme authScheme,
                                                          final @NonNull ICacheRecord cacheRecord) {
+        final String methodName = ":loadAggregatedAccountData";
+
         final String clientId = cacheRecord.getAccessToken().getClientId();
         final String target = cacheRecord.getAccessToken().getTarget();
         final String environment = cacheRecord.getAccessToken().getEnvironment();
@@ -352,6 +356,13 @@ public class BrokerOAuth2TokenCache
                 environment,
                 mCallingProcessUid
         );
+
+        if (cache == null){
+            Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
+                    "environment:" + environment +
+                    "processUid: " + mCallingProcessUid);
+            return null;
+        }
 
         return cache.loadWithAggregatedAccountData(
                 clientId,
@@ -1038,11 +1049,19 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<AccountRecord> getAllTenantAccountsForAccountByClientId(@NonNull final String clientId,
                                                                         @NonNull final AccountRecord accountRecord) {
+        final String methodName = ":getAllTenantAccountsForAccountByClientId";
         final OAuth2TokenCache cache = getTokenCacheForClient(
                 clientId,
                 accountRecord.getEnvironment(),
                 mCallingProcessUid
         );
+
+        if (cache == null) {
+            Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
+                    "environment:" + accountRecord.getEnvironment() +
+                    "processUid: " + mCallingProcessUid);
+            return Collections.emptyList();
+        }
 
         // Suppressing unchecked warnings due to casting List to List<AccountRecord> as the generic type for cache was not provided
         @SuppressWarnings(WarningType.unchecked_warning)
@@ -1107,6 +1126,7 @@ public class BrokerOAuth2TokenCache
     @Override
     public List<IdTokenRecord> getIdTokensForAccountRecord(@NonNull final String clientId,
                                                            @NonNull final AccountRecord accountRecord) {
+        final String methodName = ":getIdTokensForAccountRecord";
         final List<IdTokenRecord> result;
         final String accountEnv = accountRecord.getEnvironment();
 
@@ -1123,6 +1143,13 @@ public class BrokerOAuth2TokenCache
                     accountEnv,
                     mCallingProcessUid
             );
+
+            if (cache == null) {
+                Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
+                        "environment:" + accountRecord.getEnvironment() +
+                        "processUid: " + mCallingProcessUid);
+                return Collections.emptyList();
+            }
 
             // Suppressing unchecked warning as the generic type was not provided for cache
             @SuppressWarnings(WarningType.unchecked_warning)
@@ -1550,13 +1577,13 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(context, bindingProcessUid);
         }
 
-        final IStorageHelper storageHelper = new StorageHelper(context);
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
-                        storageHelper
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, false);
@@ -1568,12 +1595,13 @@ public class BrokerOAuth2TokenCache
                 TAG + methodName,
                 "Initializing foci cache"
         );
-        final IStorageHelper storageHelper = new StorageHelper(context);
+
         final ISharedPreferencesFileManager sharedPreferencesFileManager =
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        storageHelper
+                        new AndroidCommonComponents(context).
+                                getStorageEncryptionManager(null)
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, true);
@@ -1683,7 +1711,7 @@ public class BrokerOAuth2TokenCache
 
         MsalOAuth2TokenCache targetCache;
 
-        final int uid = Integer.valueOf(uidStr);
+        final int uid = Integer.parseInt(uidStr);
 
         if (isFrt) {
             Logger.verbose(TAG + methodName, "Saving tokens to foci cache.");

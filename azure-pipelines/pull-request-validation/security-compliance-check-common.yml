@@ -1,0 +1,15 @@
+# File: azure-pipelines\pull-request-validation\security-compliance-check-common.yml
+# Description: Run Credscan and PoliCheck
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger:
+  branches:
+    include:
+    - dev
+    - master
+    - release/*
+  batch: True
+
+jobs:
+- template: ../templates/steps/security-compliance-check.yml
+...

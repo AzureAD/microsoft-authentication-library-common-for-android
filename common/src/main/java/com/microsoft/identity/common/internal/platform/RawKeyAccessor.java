@@ -22,7 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -62,7 +65,7 @@ import static com.microsoft.identity.common.internal.platform.KeyStoreAccessor.U
 @Builder
 @Getter
 @Accessors(prefix = "m")
-public class RawKeyAccessor implements KeyAccessor {
+public class RawKeyAccessor implements IKeyAccessor {
     private static final SecureRandom mRandom = new SecureRandom();
 
     /**
@@ -187,7 +190,7 @@ public class RawKeyAccessor implements KeyAccessor {
     }
 
     @Override
-    public byte[] getThumprint() throws ClientException {
+    public byte[] getThumbprint() throws ClientException {
         final SecretKey keySpec = new SecretKeySpec(mKey, mSuite.cipher().name());
         final Cipher cipher;
         final String errCode;
@@ -254,7 +257,7 @@ public class RawKeyAccessor implements KeyAccessor {
      * @throws ClientException if something goes wrong during generation.
      */
     @Override
-    public KeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
+    public IKeyAccessor generateDerivedKey(@NonNull final byte[] label, @NonNull final byte[] ctx,
                                           @NonNull final CryptoSuite suite) throws ClientException{
         try {
             return new RawKeyAccessor(suite, SP800108KeyGen.generateDerivedKey(mKey, label, ctx), null);

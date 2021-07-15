@@ -24,8 +24,13 @@ package com.microsoft.identity.common.java.exception;
 
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.NonNull;
+import lombok.experimental.Accessors;
 
 public class BaseException extends Exception {
 
@@ -51,6 +56,17 @@ public class BaseException extends Exception {
     // The username of the account that owns the flow.
     @Nullable
     private String mUsername;
+
+    /**
+     * {@link Exception#addSuppressed(Throwable)} requires API19 in Android, so we're creating our own.
+     */
+    @Getter
+    @Accessors(prefix = "m")
+    private final List<Exception> mSuppressedException = new ArrayList<>();
+
+    public void addSuppressedException(@NonNull final Exception e){
+        mSuppressedException.add(e);
+    }
 
     /**
      * Default constructor.
