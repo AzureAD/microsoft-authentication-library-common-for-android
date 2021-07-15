@@ -1,11 +1,14 @@
 def getVersionFile() {
     System.out.println("Root project: " + rootProject.name)
-    if (rootProject.name == "android_auth") {
-        return new File("$rootDir/common/common4j/versioning/version.properties")
+    if (rootProject.name == "com.microsoft.identity.android") {
+        // using common android root project
+        return new File("$rootDir/common4j/versioning/version.properties")
     } else if (rootProject.name == "com.microsoft.identity.java") {
+        // using common java root project
         return new File("$rootDir/../common4j/versioning/version.properties")
     } else {
-        return new File("$rootDir/common4j/versioning/version.properties")
+        // using either android-complete or msal / broker etc.
+        return new File("$rootDir/common/common4j/versioning/version.properties")
     }
 }
 
