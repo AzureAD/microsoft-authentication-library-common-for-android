@@ -40,7 +40,7 @@ public class ClientCertificateMetadata {
      */
     public ClientCertificateMetadata(String alias, char[] password) {
         mAlias = alias;
-        mPassword = password == null ? null : password.clone();
+        mPassword = password == null ? null : Arrays.copyOf(password, password.length);
     }
 
     /**
@@ -58,7 +58,7 @@ public class ClientCertificateMetadata {
      * @return char[]
      */
     public char[] getPassword() {
-        return mPassword == null ? null : mPassword.clone();
+        return mPassword == null ? null : Arrays.copyOf(mPassword, mPassword.length);
     }
 
 }

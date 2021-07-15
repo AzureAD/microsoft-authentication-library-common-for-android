@@ -45,7 +45,7 @@ public class KeyStoreConfiguration {
     public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
         mKeyStoreType = keyStoreType;
         mKeyStoreProvider = keyStoreProvider;
-        mKeyStorePassword = keyStorePassword == null ? null : keyStorePassword.clone();
+        mKeyStorePassword = keyStorePassword == null ? null : Arrays.copyOf(keyStorePassword, keyStorePassword.length);
     }
 
     /**
@@ -72,6 +72,6 @@ public class KeyStoreConfiguration {
      * @return String
      */
     public char[] getKeyStorePassword() {
-        return mKeyStorePassword == null ? null : mKeyStorePassword.clone();
+        return mKeyStorePassword == null ? null : Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
     }
 }
