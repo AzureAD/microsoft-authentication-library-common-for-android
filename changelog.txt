@@ -34,6 +34,20 @@ V.Next
 - [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
 - [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
 
+Version 3.4.5
+----------
+- [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
+
+Version 3.4.4
+----------
+- [MINOR] Introduce support for authorization activities to be performed in the Android Task as the Activity that was provided for an interactive request.
+- [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
+- [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
+- [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
+- [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
+- [PATCH] Avoid unnecessary BAM-cache reload (#1439, cherry-picked from #1426)
+- [PATCH] Concurrency fix: revert thread pool construction changes in CommandDispatcher (#1434)
+
 Version 3.4.3
 ----------
 - [PATCH] Revert connection detection change, disable throttling cache (#1351, #1353)
