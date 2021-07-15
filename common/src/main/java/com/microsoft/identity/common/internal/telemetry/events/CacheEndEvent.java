@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import com.microsoft.identity.common.internal.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;

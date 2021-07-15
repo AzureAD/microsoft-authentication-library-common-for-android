@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java;
 
 /**
- * Class to hold names of compile time warning types
+ * Class to hold names of compile time warning types.
  */
 public class WarningType {
     public static final String rawtype_warning = "rawtypes";

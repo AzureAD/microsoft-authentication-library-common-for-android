@@ -26,14 +26,13 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
-import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
-import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftClientAssertion;
+import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
+import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
+import com.microsoft.identity.common.java.providers.keys.KeyStoreConfiguration;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftClientAssertion;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.test.keyvault.Configuration;
-import com.microsoft.identity.internal.testutils.BuildConfig;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
