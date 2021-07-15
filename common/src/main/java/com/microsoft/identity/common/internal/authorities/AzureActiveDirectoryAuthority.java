@@ -186,7 +186,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
     }
 
     /**
-     * Checks if current authority cloud has same preferred network host name as the passed in authority cloud
+     * Checks if current authority cloud has same preferred network host name as the passed in authority cloud.
      *
      * @param authorityToCheck authority to check against
      * @return true if preferred network host name matches for both authorities, otherwise false

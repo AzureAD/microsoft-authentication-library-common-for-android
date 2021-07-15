@@ -35,34 +35,34 @@ import static org.junit.Assert.assertTrue;
 public class AzureActiveDirectoryAuthorityTests {
     @Test
     public void isSamePreferredNetworkHostAsAuthority_Returns_True_For_Authority_With_ValidAliases_For_SameCloud() throws IOException {
-        String[] cloudAliasesWW = new String[]{"https://login.microsoftonline.com", "https://login.windows.net", "https://login.microsoft.com", "https://sts.windows.net"};
-        String[] cloudAliasesCN = new String[]{"https://login.chinacloudapi.cn", "https://login.partner.microsoftonline.cn"};
-        String[] cloudAliasesUSGov = new String[]{"https://login.microsoftonline.us", "https://login.usgovcloudapi.net"};
+        final String[] cloudAliasesWW = new String[]{"https://login.microsoftonline.com", "https://login.windows.net", "https://login.microsoft.com", "https://sts.windows.net"};
+        final String[] cloudAliasesCN = new String[]{"https://login.chinacloudapi.cn", "https://login.partner.microsoftonline.cn"};
+        final String[] cloudAliasesUSGov = new String[]{"https://login.microsoftonline.us", "https://login.usgovcloudapi.net"};
 
-        AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesWW[0]));
-        for (String cloudUrl : cloudAliasesWW) {
-            AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
+        final  AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesWW[0]));
+        for (final  String cloudUrl : cloudAliasesWW) {
+            final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
             assertTrue(authorityWW.isSamePreferredNetworkHostAsAuthority(authority));
         }
 
-        AzureActiveDirectoryAuthority authorityCN = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesCN[0]));
-        for (String cloudUrl : cloudAliasesCN) {
-            AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
+        final  AzureActiveDirectoryAuthority authorityCN = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesCN[0]));
+        for (final String cloudUrl : cloudAliasesCN) {
+            final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
             assertTrue(authorityCN.isSamePreferredNetworkHostAsAuthority(authority));
         }
 
-        AzureActiveDirectoryAuthority authorityUSGov = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesUSGov[0]));
-        for (String cloudUrl : cloudAliasesUSGov) {
-            AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
+        final AzureActiveDirectoryAuthority authorityUSGov = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesUSGov[0]));
+        for (final String cloudUrl : cloudAliasesUSGov) {
+            final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
             assertTrue(authorityUSGov.isSamePreferredNetworkHostAsAuthority(authority));
         }
     }
 
     @Test
     public void isSamePreferredNetworkHostAsAuthority_Returns_False_For_Authorities_From_Different_Clouds() throws IOException {
-        AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.microsoftonline.com"));
-        AzureActiveDirectoryAuthority authorityCN = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.partner.microsoftonline.cn"));
-        AzureActiveDirectoryAuthority authorityUSGov = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.microsoftonline.us"));
+        final AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.microsoftonline.com"));
+        final AzureActiveDirectoryAuthority authorityCN = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.partner.microsoftonline.cn"));
+        final AzureActiveDirectoryAuthority authorityUSGov = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.microsoftonline.us"));
         assertFalse(authorityWW.isSamePreferredNetworkHostAsAuthority(authorityCN));
         assertFalse(authorityCN.isSamePreferredNetworkHostAsAuthority(authorityUSGov));
         assertFalse(authorityUSGov.isSamePreferredNetworkHostAsAuthority(authorityWW));
