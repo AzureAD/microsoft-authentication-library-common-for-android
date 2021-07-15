@@ -20,15 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.migration;
 
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallback;
 
 /**
  * Interface describing an object that can reencrypt instances of
  * {@link ISharedPreferencesFileManager}.
  */
-@Deprecated
 public interface ISharedPrefsFileManagerReencrypter {
 
     /**
@@ -113,11 +113,11 @@ public interface ISharedPrefsFileManagerReencrypter {
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      */
-    void reencrypt(ISharedPreferencesFileManager fileManager,
-                   IStringEncrypter encrypter,
-                   IStringDecrypter decrypter,
-                   ReencryptionParams params
-    ) throws Exception;
+    IMigrationOperationResult reencrypt(ISharedPreferencesFileManager fileManager,
+                                        IStringEncrypter encrypter,
+                                        IStringDecrypter decrypter,
+                                        ReencryptionParams params
+    );
 
     /**
      * Performs reencryption of the provided {@link ISharedPreferencesFileManager} asynchronously,
@@ -138,6 +138,6 @@ public interface ISharedPrefsFileManagerReencrypter {
                         IStringEncrypter encrypter,
                         IStringDecrypter decrypter,
                         ReencryptionParams params,
-                        TaskCompletedCallbackWithError<Void, Exception> callback
+                        TaskCompletedCallback<IMigrationOperationResult> callback
     );
 }

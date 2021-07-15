@@ -22,7 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.content.Context;
+
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -30,6 +34,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
 
 /**
  * A static class holding device data.
@@ -38,6 +43,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
         justification = "This class kept its original name to avoid breaking change during the refactoring process." +
                 "Once the process is done, this class will be removed entirely. ")
 public final class Device extends com.microsoft.identity.common.java.platform.Device {
+
+    private static final String TAG = Device.class.getSimpleName();
 
     private static IDevicePopManager sDevicePoPManager;
 
@@ -61,6 +68,27 @@ public final class Device extends com.microsoft.identity.common.java.platform.De
                     "Failed to initialize DevicePoPManager = " + e.getMessage(),
                     e
             );
+        }
+    }
+
+    /**
+     * Determines if requests made on this device can successfully use AT/PoP APIs.
+     * @param context The current application's {@link Context}.
+     * @return True if AT/PoP requests can be made from this device. False otherwise.
+     */
+    public static boolean isDevicePoPSupported(@NonNull final Context context) {
+        final String methodName = ":isDevicePoPSupported";
+
+        try {
+            final IDevicePopManager popManager = getDevicePoPManagerInstance();
+            final String thumbprint = popManager.generateAsymmetricKey(context);
+            // If we were able to successfully generate a thumbprint, we are in good shape
+            final boolean thumbprintExists =  !StringUtil.isEmpty(thumbprint);
+            Logger.info(TAG + methodName, "AT/PoP is supported.");
+            return thumbprintExists;
+        } catch (final ClientException e) {
+            Logger.warn(TAG + methodName, "AT/PoP is not supported.");
+            return false;
         }
     }
 
