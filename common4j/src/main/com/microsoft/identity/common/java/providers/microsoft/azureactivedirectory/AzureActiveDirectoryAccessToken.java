@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft.azureactivedirect
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
+import com.microsoft.identity.common.java.util.CopyUtil;
 
 import java.util.Date;
 
@@ -41,22 +42,22 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
     public AzureActiveDirectoryAccessToken(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);
-        mExpiresOn = response.getExpiresOn() == null ? null : new Date(response.getExpiresOn().getTime());
-        mExtendedExpiresOn = response.getExtExpiresOn() == null ? null : new Date(response.getExtExpiresOn().getTime());
+        mExpiresOn = CopyUtil.copyIfNotNull(response.getExpiresOn());
+        mExtendedExpiresOn = CopyUtil.copyIfNotNull(response.getExtExpiresOn());
     }
 
     /**
      * @return mExpiresOn of AzureActiveDirectoryAccessToken
      */
     public Date getExpiresOn() {
-        return mExpiresOn == null ? null : new Date(mExpiresOn.getTime());
+        return CopyUtil.copyIfNotNull(mExpiresOn);
     }
 
     /**
      * @return mExtendedExpiresOn of AzureActiveDirectoryAccessToken
      */
     public Date getExtendedExpiresOn() {
-        return mExtendedExpiresOn == null ? null : new Date(mExtendedExpiresOn.getTime());
+        return CopyUtil.copyIfNotNull(mExtendedExpiresOn);
     }
 
     //TODO: Need to add override for IsExpired() to address extended token expires on

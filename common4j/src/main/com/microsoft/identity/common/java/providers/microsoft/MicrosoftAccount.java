@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CopyUtil;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
@@ -294,7 +295,7 @@ public abstract class MicrosoftAccount extends BaseAccount {
      */
     @Nullable
     public synchronized Date getPasswordExpiresOn() {
-        return mPasswordExpiresOn == null ? null : new Date(mPasswordExpiresOn.getTime());
+        return CopyUtil.copyIfNotNull(mPasswordExpiresOn);
     }
 
     /**

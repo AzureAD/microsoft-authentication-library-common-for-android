@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.keys;
 
+import com.microsoft.identity.common.java.util.CopyUtil;
+
 import java.util.Arrays;
 
 /**
@@ -45,7 +47,7 @@ public class KeyStoreConfiguration {
     public KeyStoreConfiguration(String keyStoreType, String keyStoreProvider, char[] keyStorePassword) {
         mKeyStoreType = keyStoreType;
         mKeyStoreProvider = keyStoreProvider;
-        mKeyStorePassword = keyStorePassword == null ? null : Arrays.copyOf(keyStorePassword, keyStorePassword.length);
+        mKeyStorePassword = CopyUtil.copyIfNotNull(keyStorePassword);
     }
 
     /**
@@ -72,6 +74,6 @@ public class KeyStoreConfiguration {
      * @return String
      */
     public char[] getKeyStorePassword() {
-        return mKeyStorePassword == null ? null : Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
+        return CopyUtil.copyIfNotNull(mKeyStorePassword);
     }
 }

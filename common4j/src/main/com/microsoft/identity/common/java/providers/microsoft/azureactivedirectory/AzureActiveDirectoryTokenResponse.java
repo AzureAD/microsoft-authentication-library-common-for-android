@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.util.CopyUtil;
 
 import java.util.Date;
 
@@ -117,7 +118,7 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      * @return The expires on to get.
      */
     public Date getExpiresOn() {
-        return mExpiresOn == null ? null : new Date(mExpiresOn.getTime());
+        return CopyUtil.copyIfNotNull(mExpiresOn);
     }
 
     /**
@@ -126,7 +127,7 @@ public class AzureActiveDirectoryTokenResponse extends MicrosoftTokenResponse {
      * @param expiresOn The expires on to set.
      */
     public void setExpiresOn(final Date expiresOn) {
-        mExpiresOn = expiresOn == null ? null : new Date(expiresOn.getTime());
+        mExpiresOn = CopyUtil.copyIfNotNull(expiresOn);
     }
 
     //CHECKSTYLE:OFF

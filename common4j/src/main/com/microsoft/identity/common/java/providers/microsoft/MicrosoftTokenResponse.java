@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.providers.microsoft;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.util.CopyUtil;
 
 import java.util.Date;
 
@@ -269,7 +270,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @return The ext expires on to get.
      */
     public Date getExtExpiresOn() {
-        return mExtExpiresOn == null ? null : new Date(mExtExpiresOn.getTime());
+        return CopyUtil.copyIfNotNull(mExtExpiresOn);
     }
 
     /**
@@ -278,7 +279,7 @@ public class MicrosoftTokenResponse extends TokenResponse {
      * @param extExpiresOn The expires on to set.
      */
     public void setExtExpiresOn(final Date extExpiresOn) {
-        mExtExpiresOn = extExpiresOn == null ? null : new Date(extExpiresOn.getTime());
+        mExtExpiresOn = CopyUtil.copyIfNotNull(extExpiresOn);
     }
 
     /**

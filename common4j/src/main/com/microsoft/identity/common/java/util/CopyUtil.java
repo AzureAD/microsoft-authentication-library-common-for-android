@@ -20,47 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.keys;
-
-import com.microsoft.identity.common.java.util.CopyUtil;
+package com.microsoft.identity.common.java.util;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Date;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
- * Configuration information for the client certificate to be used.
+ * For making copies of mutable objects - if not null
  */
-public class ClientCertificateMetadata {
-    private final String mAlias;
-    private final char[] mPassword;
+public class CopyUtil {
 
-    /**
-     * Constructor of ClientCertificateMetadata.
-     *
-     * @param alias    String
-     * @param password char[]
-     */
-    public ClientCertificateMetadata(String alias, char[] password) {
-        mAlias = alias;
-        mPassword = CopyUtil.copyIfNotNull(password);
+    @Nullable
+    public static Date copyIfNotNull(@Nullable final Date date) {
+        return date == null ? null : new Date(date.getTime());
     }
 
-    /**
-     * Get alias.
-     *
-     * @return String
-     */
-    public String getAlias() {
-        return mAlias;
+    @Nullable
+    public static char[] copyIfNotNull(@Nullable final char[] array) {
+        return array == null ? null : Arrays.copyOf(array, array.length);
     }
-
-    /**
-     * Get password.
-     *
-     * @return char[]
-     */
-    public char[] getPassword() {
-        return CopyUtil.copyIfNotNull(mPassword);
-    }
-
 }
