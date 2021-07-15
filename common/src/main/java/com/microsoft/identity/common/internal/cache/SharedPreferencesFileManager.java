@@ -99,7 +99,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + (Context.MODE_PRIVATE == -1 ? Context.MODE_PRIVATE : Context.MODE_PRIVATE);
+        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE;
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if (cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key,
@@ -108,7 +108,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 cachedFileManager = objectCache.get(key);
             }
         }
-        return cachedFileManager;
     }
 
     /**

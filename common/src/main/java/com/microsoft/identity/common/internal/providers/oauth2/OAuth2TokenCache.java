@@ -308,9 +308,9 @@ public abstract class OAuth2TokenCache
     protected abstract Set<String> getAllClientIds();
 
     /**
-     * Gets the Context used to initialize this OAuth2TokenCache.
+     * Gets the set of common components that this cache was created with.
      *
-     * @return The Context.
+     * @return The set of common components that this cache was created with.
      */
     protected final ICommonComponents getComponents() {
         return mCommonComponents;
