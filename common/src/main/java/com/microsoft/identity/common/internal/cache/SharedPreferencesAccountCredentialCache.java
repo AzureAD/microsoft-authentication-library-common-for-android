@@ -33,6 +33,7 @@ import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.internal.dto.IAccountRecord;
 import com.microsoft.identity.common.internal.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;

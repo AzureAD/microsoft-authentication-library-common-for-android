@@ -31,8 +31,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.cache.Predicate;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
 import org.junit.Before;

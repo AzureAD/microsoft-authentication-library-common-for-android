@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.util.ported;
 
 /**
  * This is an analoge of java.util.Function.Predicate, and exposes a single method evaluating a

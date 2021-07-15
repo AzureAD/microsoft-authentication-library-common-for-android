@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
+import com.microsoft.identity.common.java.util.ported.Predicate;
+
 import java.util.Iterator;
 import java.util.Map;
 

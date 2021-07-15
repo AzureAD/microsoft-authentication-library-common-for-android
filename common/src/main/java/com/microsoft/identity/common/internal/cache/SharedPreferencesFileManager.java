@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.AbstractMap;
