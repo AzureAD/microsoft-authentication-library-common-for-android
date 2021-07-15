@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.cache;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 /**
  * Cache the authority validation metadata that is only used in MSAL CPP.
@@ -51,5 +52,6 @@ public interface IAuthorityValidationMetadataCache {
      * API to clear all cache.
      * Note: This method is intended to be only used for testing purposes.
      */
+    @VisibleForTesting(otherwise=VisibleForTesting.NONE)
     public void clearCache();
 }
