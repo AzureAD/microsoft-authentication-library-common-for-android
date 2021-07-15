@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.result;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import lombok.Getter;
@@ -42,7 +43,7 @@ public class GenerateShrResult {
 
         /**
          * Indicates that the supplied home_account_id does not match any
-         * {@link com.microsoft.identity.common.internal.dto.AccountRecord} in our [broker] local
+         * {@link AccountRecord} in our [broker] local
          * cache.
          */
         public static final String NO_ACCOUNT_FOUND = ErrorStrings.NO_ACCOUNT_FOUND;

@@ -32,8 +32,8 @@ import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.dto.CredentialType;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.dto.CredentialType;
 
 import java.util.Map;
 
