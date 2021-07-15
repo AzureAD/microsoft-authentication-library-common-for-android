@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 
 import org.junit.Test;
 

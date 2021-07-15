@@ -43,11 +43,7 @@ public class KeyStoreConfiguration {
     private final char[] mKeyStorePassword;
 
     public char[] getKeyStorePassword() {
-        if (mKeyStorePassword == null) {
-            return null;
-        }
-
-        return Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
+        return mKeyStorePassword == null ? null : Arrays.copyOf(mKeyStorePassword, mKeyStorePassword.length);
     }
 
     public KeyStoreConfiguration(@NonNull final String keyStoreType,
@@ -55,6 +51,6 @@ public class KeyStoreConfiguration {
                                  final char[] keyStorePassword) {
         this.mKeyStoreType = keyStoreType;
         this.mKeyStoreProvider = keyStoreProvider;
-        mKeyStorePassword = keyStorePassword != null ? Arrays.copyOf(keyStorePassword, keyStorePassword.length) : null;
+        this.mKeyStorePassword = keyStorePassword == null ? null : Arrays.copyOf(keyStorePassword, keyStorePassword.length);
     }
 }
