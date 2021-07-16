@@ -30,11 +30,11 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.dto.CredentialType;
-
-import org.mockito.Mockito;
 
 import java.util.Map;
 
@@ -75,7 +75,7 @@ public class TestUtils {
      */
     public static SharedPreferencesFileManager getEncryptedSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
+        final IKeyAccessor storageHelper = new AndroidAuthSdkStorageEncryptionManager(context, null);
         final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, storageHelper);
         return barePreferences;
     }
