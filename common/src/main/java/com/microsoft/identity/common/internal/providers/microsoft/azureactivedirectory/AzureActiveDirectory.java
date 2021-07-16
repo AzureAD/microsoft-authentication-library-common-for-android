@@ -32,6 +32,7 @@ import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.authorities.Environment;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
@@ -184,14 +185,9 @@ public class AzureActiveDirectory
                 .build();
 
         final HttpResponse response =
-<<<<<<< HEAD
                 httpClient.get(new URL(instanceDiscoveryRequestUri.toString()),
                         new HashMap<String, String>(),
                         null);
-=======
-                httpClient.get(new URL(instanceDiscoveryRequestUri.toString()), new HashMap<String, String>());
-        Logger.info(TAG + methodName, "Response received.");
->>>>>>> master
 
         if (response.getStatusCode() >= HttpURLConnection.HTTP_BAD_REQUEST) {
             Logger.warn(TAG + methodName, "Error getting cloud information");

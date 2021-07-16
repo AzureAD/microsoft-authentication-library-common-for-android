@@ -38,6 +38,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.CodeMarkerManager;
+import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -57,6 +58,7 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
@@ -97,7 +99,7 @@ public class CommandDispatcher {
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
-    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet(
+    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet<>(
             Arrays.asList(
                     ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
                     BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
@@ -311,7 +313,7 @@ public class CommandDispatcher {
                 "Starting request for correlation id : ##" + correlationId
                         + ", with PublicApiId : " + publicApiId);
 
-        if (Logger.getAllowPii()) {
+        if (Logger.isAllowPii()) {
             Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
             Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
