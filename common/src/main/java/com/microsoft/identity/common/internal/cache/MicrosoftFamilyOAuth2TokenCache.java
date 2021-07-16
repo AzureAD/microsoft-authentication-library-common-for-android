@@ -27,19 +27,22 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -55,7 +58,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericTokenResponse extends TokenResponse,
                 GenericAccount extends BaseAccount,
-                GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
+                GenericRefreshToken extends RefreshToken>
         extends MsalOAuth2TokenCache<GenericOAuth2Strategy, GenericAuthorizationRequest, GenericTokenResponse, GenericAccount, GenericRefreshToken> {
 
     private static final String TAG = MicrosoftFamilyOAuth2TokenCache.class.getSimpleName();

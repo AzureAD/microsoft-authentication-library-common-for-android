@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 
 // Suppressing rawtype warnings due to the generic type MicrosoftAuthorizationRequest

@@ -28,17 +28,18 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -59,7 +60,7 @@ public class MsalCppOAuth2TokenCache
                 GenericAuthorizationRequest extends AuthorizationRequest,
                 GenericTokenResponse extends TokenResponse,
                 GenericAccount extends BaseAccount,
-                GenericRefreshToken extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken>
+                GenericRefreshToken extends RefreshToken>
         extends MsalOAuth2TokenCache<
         GenericOAuth2Strategy,
         GenericAuthorizationRequest,

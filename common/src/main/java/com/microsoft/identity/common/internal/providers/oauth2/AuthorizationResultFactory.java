@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Intent;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 

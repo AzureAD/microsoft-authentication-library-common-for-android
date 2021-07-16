@@ -26,7 +26,7 @@ package com.microsoft.identity.common.internal.cache;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
 
 import java.util.ArrayList;
 import java.util.Collection;

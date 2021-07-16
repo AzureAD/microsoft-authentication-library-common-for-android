@@ -39,8 +39,8 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.internal.cache.SchemaUtil;
-import com.microsoft.identity.common.internal.dto.IAccountRecord;
+import com.microsoft.identity.common.java.util.SchemaUtil;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CliTelemInfo.RT_AGE;
