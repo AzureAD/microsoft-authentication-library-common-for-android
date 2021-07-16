@@ -61,6 +61,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -89,6 +90,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
@@ -171,7 +173,7 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * A background worker to service async tasks.
      */
-    private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
+    private static final ExecutorService sThreadExecutor = Executors.newFixedThreadPool(5);
 
     /**
      * Reference to our perf-marker object.
@@ -274,14 +276,14 @@ class DevicePopManager implements IDevicePopManager {
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
         mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
-                                                   .keyStore(instance)
-                                                   .thumbprintSupplier(new Supplier<byte[]>() {
-                                                       @SneakyThrows(ClientException.class)
-                                                       @Override
-                                                       public byte[] get() {
-                                                           return getAsymmetricKeyThumbprint().getBytes(UTF8);
-                                                       }
-                                                   })
+                .keyStore(instance)
+                .thumbprintSupplier(new Supplier<byte[]>() {
+                    @SneakyThrows(ClientException.class)
+                    @Override
+                    public byte[] get() {
+                        return getAsymmetricKeyThumbprint().getBytes(UTF8);
+                    }
+                })
                 .build();
     }
 
@@ -326,6 +328,7 @@ class DevicePopManager implements IDevicePopManager {
 
     /**
      * Given an RSA private key entry, get the RSA thumbprint.
+     *
      * @param entry the entry to compute the thumbprint for.
      * @return A String that would be identicative of this specific key.
      * @throws JOSEException If there is a computation problem.
@@ -826,7 +829,7 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
         return mKeyManager.getCertificateChain();
-   }
+    }
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {

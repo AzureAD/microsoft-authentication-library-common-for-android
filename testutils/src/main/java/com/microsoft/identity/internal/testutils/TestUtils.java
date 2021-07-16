@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
+import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -32,6 +33,8 @@ import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.CredentialType;
+
+import org.mockito.Mockito;
 
 import java.util.Map;
 
@@ -72,12 +75,8 @@ public class TestUtils {
      */
     public static SharedPreferencesFileManager getEncryptedSharedPreferences(final String sharedPrefName) {
         final Context context = ApplicationProvider.getApplicationContext();
-        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(
-                context,
-                sharedPrefName,
-                Context.MODE_PRIVATE,
-                new AndroidCommonComponents(context).
-                        getStorageEncryptionManager(null));
+        final StorageHelper storageHelper = new StorageHelper(context);
+        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, storageHelper);
         return barePreferences;
     }
 
