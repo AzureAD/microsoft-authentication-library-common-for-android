@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
@@ -111,4 +113,15 @@ public class AzureActiveDirectoryCloud {
         mIsValidated = isValidated;
     }
 
+    /**
+     * Checks for equality with passed in AzureActiveDirectoryCloud object based on
+     * PreferredNetworkHostName and PreferredCacheHostName.
+     *
+     * @param cloudObjectToCheck AzureActiveDirectoryCloud object to check against.
+     * @return true if PreferredNetworkHostName and PreferredCacheHostName matches, otherwise false.
+     */
+    public boolean equals(@NonNull final AzureActiveDirectoryCloud cloudObjectToCheck) {
+        return  mPreferredNetworkHostName.equals(cloudObjectToCheck.mPreferredNetworkHostName) &&
+                mPreferredCacheHostName.equals(cloudObjectToCheck.mPreferredCacheHostName);
+    }
 }
