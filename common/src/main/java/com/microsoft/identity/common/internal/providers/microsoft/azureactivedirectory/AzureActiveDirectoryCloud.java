@@ -27,17 +27,22 @@ import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
+
 /**
  * This class contains information about a specific Azure Active Directory Cloud.  Azure Active Directory
  * as a service is available in multiple clouds.  World wide is the default; however their are sovereign clouds
  * available for Germany, China, etc....
  */
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class AzureActiveDirectoryCloud {
 
     @SerializedName("preferred_network")
+    @EqualsAndHashCode.Include
     private final String mPreferredNetworkHostName;
 
     @SerializedName("preferred_cache")
+    @EqualsAndHashCode.Include
     private final String mPreferredCacheHostName;
 
     @SerializedName("aliases")
@@ -110,5 +115,4 @@ public class AzureActiveDirectoryCloud {
     void setIsValidated(final boolean isValidated) {
         mIsValidated = isValidated;
     }
-
 }
