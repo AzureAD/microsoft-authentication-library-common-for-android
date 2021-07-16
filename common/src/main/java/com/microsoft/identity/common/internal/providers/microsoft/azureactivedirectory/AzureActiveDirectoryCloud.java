@@ -22,12 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class contains information about a specific Azure Active Directory Cloud.  Azure Active Directory
@@ -120,8 +121,18 @@ public class AzureActiveDirectoryCloud {
      * @param cloudObjectToCheck AzureActiveDirectoryCloud object to check against.
      * @return true if PreferredNetworkHostName and PreferredCacheHostName matches, otherwise false.
      */
-    public boolean equals(@NonNull final AzureActiveDirectoryCloud cloudObjectToCheck) {
-        return  mPreferredNetworkHostName.equals(cloudObjectToCheck.mPreferredNetworkHostName) &&
-                mPreferredCacheHostName.equals(cloudObjectToCheck.mPreferredCacheHostName);
+    @Override
+    public boolean equals(@Nullable final Object cloudObjectToCheck) {
+        if(cloudObjectToCheck == null || getClass() != cloudObjectToCheck.getClass()) {
+            return false;
+        }
+
+        return  mPreferredNetworkHostName.equals(((AzureActiveDirectoryCloud) cloudObjectToCheck).mPreferredNetworkHostName) &&
+                mPreferredCacheHostName.equals(((AzureActiveDirectoryCloud) cloudObjectToCheck).mPreferredCacheHostName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mPreferredNetworkHostName, mPreferredCacheHostName);
     }
 }
