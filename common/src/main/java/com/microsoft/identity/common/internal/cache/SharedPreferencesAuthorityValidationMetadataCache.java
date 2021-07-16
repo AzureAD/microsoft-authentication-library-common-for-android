@@ -33,7 +33,7 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.VALUE_CA
 public class SharedPreferencesAuthorityValidationMetadataCache implements IAuthorityValidationMetadataCache {
 
     private static final String CACHE_VALUE_SEPARATOR = "-";
-    private static final String AUTHORITY_VALIDATION_METADATA_CACHE_GUID = "33DD5583-1098-4617-AF07-2D327BC4C0E4";
+    private static final String AUTHORITY_VALIDATION_METADATA_CACHE_GUID = "authority_validation";
 
     /**
      * The name of the SharedPreferences file on disk.
