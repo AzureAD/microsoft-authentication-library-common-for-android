@@ -54,6 +54,53 @@ public class AuthorizationActivity extends DualScreenActivity {
 
     private AuthorizationFragment mFragment;
 
+    public static Intent createStartIntent(final Context context,
+                                            final Intent authIntent,
+                                            final String requestUrl,
+                                            final String redirectUri,
+                                            final HashMap<String, String> requestHeaders,
+                                            final AuthorizationAgent authorizationAgent,
+                                            final boolean webViewZoomEnabled,
+                                            final boolean webViewZoomControlsEnabled) {
+         Intent intent;
+         if (ProcessUtil.isBrokerProcess(context)) {
+             intent = new Intent(context, BrokerAuthorizationActivity.class);
+         } else {
+             intent = new Intent(context, AuthorizationActivity.class) {
+
+                 @Override
+                 public Object clone() {
+                     return super.clone();
+                 }
+             };
+         }
+
+         intent.putExtra(AUTH_INTENT, authIntent);
+         intent.putExtra(REQUEST_URL, requestUrl);
+         intent.putExtra(REDIRECT_URI, redirectUri);
+         intent.putExtra(REQUEST_HEADERS, requestHeaders);
+         intent.putExtra(AUTHORIZATION_AGENT, authorizationAgent);
+         intent.putExtra(WEB_VIEW_ZOOM_CONTROLS_ENABLED, webViewZoomControlsEnabled);
+         intent.putExtra(WEB_VIEW_ZOOM_ENABLED, webViewZoomEnabled);
+         intent.putExtra(DiagnosticContext.CORRELATION_ID, DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+         return intent;
+     }
+
+     public static AuthorizationFragment getAuthorizationFragmentFromStartIntent(@NonNull final Intent intent) {
+         AuthorizationFragment fragment;
+         final AuthorizationAgent authorizationAgent = (AuthorizationAgent) intent.getSerializableExtra(AUTHORIZATION_AGENT);
+         Telemetry.emit(new UiStartEvent().putUserAgent(authorizationAgent));
+
+         if (authorizationAgent == AuthorizationAgent.WEBVIEW) {
+             fragment = new WebViewAuthorizationFragment();
+         } else {
+             fragment = new BrowserAuthorizationFragment();
+         }
+
+         fragment.setInstanceState(intent.getExtras());
+         return fragment;
+     }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
