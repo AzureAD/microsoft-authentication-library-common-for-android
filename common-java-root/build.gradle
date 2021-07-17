@@ -35,15 +35,6 @@ allprojects {
         NOTE: When building in Travis packages will be pulled from here
          */
         mavenCentral()
-        /*
-        Required since the DUO sdk is not published to any of the other large android
-        repositories... which is odd.
-
-        NOTE: This is required for Travis.
-         */
-        maven {
-            url 'https://pkgs.dev.azure.com/MicrosoftDeviceSDK/DuoSDK-Public/_packaging/Duo-SDK-Feed/maven/v1'
-        }
     }
 }
 
