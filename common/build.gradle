@@ -6,7 +6,7 @@ plugins {
     id 'maven-publish'
 }
 
-apply from: 'versioning/version_tasks.gradle'
+apply from: '../versioning/version_tasks.gradle'
 
 def desugarCode = false
 
