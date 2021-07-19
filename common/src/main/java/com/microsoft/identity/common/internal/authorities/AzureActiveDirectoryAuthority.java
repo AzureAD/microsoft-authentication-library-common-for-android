@@ -186,20 +186,18 @@ public class AzureActiveDirectoryAuthority extends Authority {
     }
 
     /**
-     * Checks if current authority cloud has same preferred network host name as the passed in authority cloud.
+     * Checks if current authority belongs to same cloud as the passed in authority.
      *
-     * @param authorityToCheck authority to check against
-     * @return true if preferred network host name matches for both authorities, otherwise false
+     * @param authorityToCheck authority to check against.
+     * @return true if both authorities belong to same cloud, otherwise false.
      */
     @WorkerThread
-    public synchronized boolean isSamePreferredNetworkHostAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck) throws IOException {
+    public synchronized boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck) throws IOException {
         if (!AzureActiveDirectory.isInitialized()) {
             // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
             AzureActiveDirectory.performCloudDiscovery();
         }
 
-        final String preferredNetworkHostName = getAzureActiveDirectoryCloud().getPreferredNetworkHostName();
-        final String authorityToCheckPreferredNetworkHostName = authorityToCheck.getAzureActiveDirectoryCloud().getPreferredNetworkHostName();
-        return preferredNetworkHostName.equals(authorityToCheckPreferredNetworkHostName);
+        return getAzureActiveDirectoryCloud().equals(authorityToCheck.getAzureActiveDirectoryCloud());
     }
 }
