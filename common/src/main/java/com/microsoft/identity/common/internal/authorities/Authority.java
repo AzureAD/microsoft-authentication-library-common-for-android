@@ -279,13 +279,16 @@ public abstract class Authority {
 
     private static void performCloudDiscovery() throws IOException {
         final String methodName = ":performCloudDiscovery";
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Performing cloud discovery..."
         );
         synchronized (sLock) {
+            Logger.info(TAG + methodName, "Acquired lock.");
             if (!AzureActiveDirectory.isInitialized()) {
+                Logger.info(TAG + methodName, "Not initialized. Starting request.");
                 AzureActiveDirectory.performCloudDiscovery();
+                Logger.info(TAG + methodName, "Loaded cloud metadata.");
             }
         }
     }
@@ -363,18 +366,20 @@ public abstract class Authority {
         boolean known = false;
 
         try {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Performing cloud discovery"
             );
             performCloudDiscovery();
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             clientException = new ClientException(
                     ClientException.IO_ERROR,
                     "Unable to perform cloud discovery",
                     ex
             );
         }
+
+        Logger.info(TAG + methodName, "Cloud discovery complete.");
 
         if (clientException == null) {
             if (!isKnownAuthority(authority)) {
@@ -383,6 +388,7 @@ public abstract class Authority {
                         "Provided authority is not known.  MSAL will only make requests to known authorities"
                 );
             } else {
+                Logger.info(TAG + methodName, "Cloud is known.");
                 known = true;
             }
         }
