@@ -28,11 +28,9 @@ allprojects {
         }
         //Required for google published packages not published to maven central
         google()
-        /*
-        Required for Android Studio / Android Tools (for example: linter) packages not published
-        to maven central.
 
-        NOTE: When building in Travis packages will be pulled from here
+        /*
+         * Required for packages published to Maven Central.
          */
         mavenCentral()
     }
