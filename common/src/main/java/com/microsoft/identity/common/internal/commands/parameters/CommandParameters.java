@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import android.content.Context;
 
 import com.google.gson.annotations.Expose;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.request.SdkType;
 

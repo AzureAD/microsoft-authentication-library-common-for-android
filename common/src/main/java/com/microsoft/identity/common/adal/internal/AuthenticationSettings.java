@@ -26,7 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.logging.Logger;
 

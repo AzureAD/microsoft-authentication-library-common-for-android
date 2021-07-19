@@ -22,14 +22,15 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.BaseAccount;
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
 /**
@@ -42,7 +43,7 @@ public interface IAccountCredentialAdapter
                 U extends AuthorizationRequest,
                 V extends TokenResponse,
                 W extends BaseAccount,
-                X extends com.microsoft.identity.common.internal.providers.oauth2.RefreshToken> {
+                X extends RefreshToken> {
 
     /**
      * Constructs an Account.
@@ -86,7 +87,7 @@ public interface IAccountCredentialAdapter
 
     /**
      * Adapter method to turn
-     * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances into
+     * {@link RefreshToken} instances into
      * {@link RefreshTokenRecord}.
      *
      * @param refreshToken The RefreshToken to adapt.
@@ -105,7 +106,7 @@ public interface IAccountCredentialAdapter
 
     /**
      * Constructs IdToken instances from {@link BaseAccount} and
-     * {@link com.microsoft.identity.common.internal.providers.oauth2.RefreshToken} instances.
+     * {@link RefreshToken} instances.
      *
      * @param account      The Account to read.
      * @param refreshToken The RefreshToken to read.

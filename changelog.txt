@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Add method to check if two authorities belong to same cloud (#1471)
 - [MINOR] Adds new cache encryption key migration API for OneAuth (#1464)
 - [MAJOR] Migrate StorageHelper to common4j (#1450)
 - [MAJOR] Migrate Exceptions from common to common4j (#1442)
