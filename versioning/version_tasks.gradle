@@ -1,17 +1,10 @@
 def getVersionFile() {
-    
-    File file = new File("$rootDir/common/common/versioning/version.properties")
-    if(file.exists()){
-        return file;
-    }else{
-        return new File("$rootDir/common/versioning/version.properties")
-    }
-
+    return file("../versioning/version.properties")
 }
 
 def getVersionProps() {
     def versionProps = new Properties();
-    getVersionFile().withInputStream {stream -> versionProps.load(stream)}
+    getVersionFile().withInputStream { stream -> versionProps.load(stream) }
     return versionProps
 }
 
@@ -45,14 +38,14 @@ private void saveChanges(String versionName) {
     versionProps.store(getVersionFile().newWriter(), null)
 }
 
-private void incrementLatestVersion(){
+private void incrementLatestVersion() {
     def versionProps = getVersionProps()
     versionProps["latestPatchVersion"] = (getLatestPatchVersion() + 1).toString()
-    versionProps.store(getVersionFile().newWriter(), null )
+    versionProps.store(getVersionFile().newWriter(), null)
 }
 
-task incrementLatestVersionNumber(){
-    doLast{
+task incrementLatestVersionNumber() {
+    doLast {
         incrementLatestVersion()
     }
 }
