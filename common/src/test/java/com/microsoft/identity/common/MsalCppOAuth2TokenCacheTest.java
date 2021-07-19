@@ -29,12 +29,12 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalCppOAuth2TokenCache;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 
 import org.junit.After;
 import org.junit.Assert;

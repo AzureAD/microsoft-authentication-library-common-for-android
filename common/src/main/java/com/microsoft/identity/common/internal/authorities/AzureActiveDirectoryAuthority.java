@@ -25,19 +25,21 @@ package com.microsoft.identity.common.internal.authorities;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
@@ -56,7 +58,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
 
     private AzureActiveDirectoryCloud mAzureActiveDirectoryCloud;
 
-    private void getAzureActiveDirectoryCloud() {
+    private AzureActiveDirectoryCloud getAzureActiveDirectoryCloud() {
         final String methodName = ":getAzureActiveDirectoryCloud";
         AzureActiveDirectoryCloud cloud = null;
 
@@ -73,13 +75,13 @@ public class AzureActiveDirectoryAuthority extends Authority {
             mKnownToMicrosoft = false;
         }
 
-        mAzureActiveDirectoryCloud = cloud;
+        return cloud;
     }
 
     public AzureActiveDirectoryAuthority(AzureActiveDirectoryAudience signInAudience) {
         mAudience = signInAudience;
         mAuthorityTypeString = "AAD";
-        getAzureActiveDirectoryCloud();
+        mAzureActiveDirectoryCloud = getAzureActiveDirectoryCloud();
     }
 
     public AzureActiveDirectoryAuthority() {
@@ -87,7 +89,7 @@ public class AzureActiveDirectoryAuthority extends Authority {
         mAudience = new AllAccounts();
         mAuthorityTypeString = "AAD";
         mMultipleCloudsSupported = false;
-        getAzureActiveDirectoryCloud();
+        mAzureActiveDirectoryCloud = getAzureActiveDirectoryCloud();
     }
 
     /**
@@ -183,4 +185,19 @@ public class AzureActiveDirectoryAuthority extends Authority {
         return mAudience;
     }
 
+    /**
+     * Checks if current authority belongs to same cloud as the passed in authority.
+     *
+     * @param authorityToCheck authority to check against.
+     * @return true if both authorities belong to same cloud, otherwise false.
+     */
+    @WorkerThread
+    public synchronized boolean isSameCloudAsAuthority(@NonNull final AzureActiveDirectoryAuthority authorityToCheck) throws IOException {
+        if (!AzureActiveDirectory.isInitialized()) {
+            // Cloud discovery is needed in order to make sure that we have a preferred_network_host_name to cloud aliases mappings
+            AzureActiveDirectory.performCloudDiscovery();
+        }
+
+        return getAzureActiveDirectoryCloud().equals(authorityToCheck.getAzureActiveDirectoryCloud());
+    }
 }

@@ -40,7 +40,17 @@ public class AuthenticationConstants {
     public static final Charset ENCODING_UTF8 = Charset.forName(ENCODING_UTF8_STRING);
 
     /**
-     * Represents the constants value for Active Directory.
+     * The Constant ASCII.
+     */
+    public static final String ENCODING_ASCII_STRING = "ASCII";
+
+    /**
+     * The Constant CHARSET_ASCII.
+     */
+    public static final Charset CHARSET_ASCII = Charset.forName(ENCODING_ASCII_STRING);
+
+    /**
+     * Represents the constants value for Azure Active Directory.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class AAD {
@@ -48,6 +58,21 @@ public class AuthenticationConstants {
          * String of client request id.
          */
         public static final String CLIENT_REQUEST_ID = "client-request-id";
+
+        /**
+         * String of AAD version.
+         */
+        public static final String AAD_VERSION = "ver";
+
+        /**
+         * Constant for v1 endpoint
+         */
+        public static final String AAD_VERSION_V1 = "1.0";
+
+        /**
+         * Constant for v2 endpoint
+         */
+        public static final String AAD_VERSION_V2 = "2.0";
     }
 
     /**

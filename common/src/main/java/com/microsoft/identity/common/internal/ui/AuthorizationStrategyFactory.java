@@ -26,7 +26,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;

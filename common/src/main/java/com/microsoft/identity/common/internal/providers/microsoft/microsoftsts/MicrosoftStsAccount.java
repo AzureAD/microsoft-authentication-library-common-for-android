@@ -24,12 +24,14 @@ package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.cache.SchemaUtil;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.SchemaUtil;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.MalformedURLException;
 import java.util.Map;
 
 import lombok.EqualsAndHashCode;
@@ -65,7 +67,7 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
     }
 
     @Override
-    protected String getDisplayableId(@NonNull final Map<String, ?> claims) {
+    protected String getDisplayableIdFromClaims(@NonNull final Map<String, ?> claims) {
         return SchemaUtil.getDisplayableId(claims);
     }
 
