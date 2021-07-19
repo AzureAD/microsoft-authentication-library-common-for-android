@@ -5,20 +5,20 @@
 # Repo Code Owners
 #--------------------
 
-*       @iambmelt @rpdome @shahzaibj @AzureAD/androidleads
+*       @AdamBJohnsonx @iambmelt @rpdome @shahzaibj @shoatman @AzureAD/androidleads
 
 
 # Area Owners
 #---------------------
 
 # Interfaces
-/common4j/src/main/java/com/microsoft/identity/common/java/interfaces/              @rpdome @iambmelt @AzureAD/androidleads
+/common4j/src/main/java/com/microsoft/identity/common/java/interfaces/              @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 # Automation
-/common/src/test/                                                                   @shahzaibj @rpdome @iambmelt @AzureAD/androidleads
+/common/src/test/                                                                   @shahzaibj @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 /common/src/androidTest/                                                            @shahzaibj @rpdome @shoatman @iambmelt @AzureAD/androidleads 
-/common4j/src/test/                                                                 @shahzaibj @rpdome @shoatman @iambmelt @AzureAD/androidleads
-/uiautomationutilities/src/                                                         @shahzaibj @iamgusain @AzureAD/androidleads
+/common4j/src/test/                                                                 @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx @AzureAD/androidleads
+/uiautomationutilities/src/                                                         @AdamBJohnsonx @shahzaibj @iamgusain @AzureAD/androidleads
 /testutils/                                                                         @shahzaibj @shoatman @AdamBJohnsonx @iamgusain @AzureAD/androidleads
 /common4j/src/test/com/microsoft/identity/common/java/eststelemetry                 @shahzaibj @rpdome @AzureAD/androidleads
 /common4j/src/test/com/microsoft/identity/common/java/logging                       @shahzaibj @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
