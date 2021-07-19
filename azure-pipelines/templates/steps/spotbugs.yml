@@ -8,11 +8,14 @@ parameters:
   default: spotbugsLocalDebug
 - name: artifactName
   default: CodeAnalysisLogs
+- name: cwd
+  default: $(Build.SourcesDirectory)
 
 steps:
 - task: Gradle@2
   displayName: 'Run Spotbugs'
   inputs:
+    cwd: ${{ parameters.cwd }}
     tasks: ${{ parameters.project }}:${{ parameters.spotbugsCommand }}
     publishJUnitResults: false
 - task: PublishPipelineArtifact@1
