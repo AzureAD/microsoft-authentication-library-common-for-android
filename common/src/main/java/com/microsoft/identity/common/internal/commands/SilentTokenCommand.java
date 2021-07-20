@@ -111,9 +111,9 @@ public class SilentTokenCommand extends TokenCommand {
     }
 
     @Override
-    public void onFinishInteractiveSession(int requestCode,
-                                           int resultCode,
-                                           @NonNull final DataBag data) {
+    public void onFinishAuthorizationSession(int requestCode,
+                                             int resultCode,
+                                             @NonNull final DataBag data) {
         throw new UnsupportedOperationException();
     }
 

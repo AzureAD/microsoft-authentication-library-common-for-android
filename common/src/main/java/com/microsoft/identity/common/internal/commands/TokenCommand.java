@@ -51,9 +51,9 @@ public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
         super(parameters, controllers, callback, publicApiId);
     }
 
-    abstract void onFinishInteractiveSession(int requestCode,
-                                             int resultCode,
-                                             @NonNull final DataBag data);
+    abstract void onFinishAuthorizationSession(int requestCode,
+                                               int resultCode,
+                                               @NonNull final DataBag data);
 
     @Override
     public boolean willReachTokenEndpoint() {

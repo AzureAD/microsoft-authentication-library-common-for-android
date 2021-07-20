@@ -244,7 +244,7 @@ public class LocalMSALController extends BaseController {
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
                                              @NonNull final DataBag data) {
-        final String methodName = ":onFinishInteractiveSession";
+        final String methodName = ":onFinishAuthorizationSession";
         Logger.verbose(
                 TAG + methodName,
                 "Completing authorization..."

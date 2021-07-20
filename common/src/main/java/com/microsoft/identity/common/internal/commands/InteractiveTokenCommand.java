@@ -110,9 +110,9 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public void onFinishInteractiveSession(int requestCode,
-                                           int resultCode,
-                                           @NonNull final DataBag data) {
+    public void onFinishAuthorizationSession(int requestCode,
+                                             int resultCode,
+                                             @NonNull final DataBag data) {
         getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
     }
 

@@ -56,7 +56,6 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.ported.DataBag;
@@ -73,7 +72,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
@@ -642,7 +640,7 @@ public class CommandDispatcher {
         int resultCode = dataBag.getIntMap().getOrDefault(RESULT_CODE, -1);
 
         if (sCommand != null) {
-            sCommand.onFinishInteractiveSession(requestCode, resultCode, dataBag);
+            sCommand.onFinishAuthorizationSession(requestCode, resultCode, dataBag);
         } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }

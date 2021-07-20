@@ -111,9 +111,9 @@ public class DeviceCodeFlowCommand extends TokenCommand {
     }
 
     @Override
-    void onFinishInteractiveSession(final int requestCode,
-                                    final int resultCode,
-                                    @NonNull final DataBag data) {
+    void onFinishAuthorizationSession(final int requestCode,
+                                      final int resultCode,
+                                      @NonNull final DataBag data) {
         throw new UnsupportedOperationException();
     }
 }
