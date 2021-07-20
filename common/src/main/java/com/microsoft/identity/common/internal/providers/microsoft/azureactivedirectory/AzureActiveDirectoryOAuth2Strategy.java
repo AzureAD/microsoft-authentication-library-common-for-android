@@ -115,8 +115,8 @@ public class AzureActiveDirectoryOAuth2Strategy
         final String methodName = "getIssuerCacheIdentifier";
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
-        if (cloud == null && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
-            Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
+        if (cloud == null || !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
+            Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and/or validation is off."
                     + " Returning passed in Authority: "
                     + authRequest.getAuthority().toString());
             return authRequest.getAuthority().toString();

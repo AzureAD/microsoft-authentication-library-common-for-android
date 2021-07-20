@@ -102,7 +102,11 @@ public class UrlUtil {
      * @return a map of url parameters.
      */
     @NonNull
-    public static Map<String, String> getUrlParameters(@NonNull final String finalUrl) {
+    public static Map<String, String> getUrlParameters(@Nullable final String finalUrl) {
+        if (StringUtil.isNullOrEmpty(finalUrl)){
+            return Collections.emptyMap();
+        }
+
         final String methodName = ":getUrlParameters";
         try {
             final URI response = new URIBuilder(finalUrl).build();

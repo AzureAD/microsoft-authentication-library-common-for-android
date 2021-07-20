@@ -164,6 +164,9 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
             case CANCELLED:
                 Telemetry.emit(new UiEndEvent().isUserCancelled());
                 break;
+
+            default:
+                break;
         }
 
         sendResult(data);

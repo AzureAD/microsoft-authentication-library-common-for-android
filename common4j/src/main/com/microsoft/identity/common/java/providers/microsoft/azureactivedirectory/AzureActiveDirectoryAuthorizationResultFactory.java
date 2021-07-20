@@ -62,7 +62,7 @@ public class AzureActiveDirectoryAuthorizationResultFactory
     }
 
     @Override
-    protected AzureActiveDirectoryAuthorizationResult parseUrlAndCreateAuthorizationResult(@Nullable final String url,
+    protected AzureActiveDirectoryAuthorizationResult parseUrlAndCreateAuthorizationResult(@NonNull final String url,
                                                                                            @Nullable final String requestStateParameter) {
         final Map<String, String> urlParameters = UrlUtil.getUrlParameters(url);
 

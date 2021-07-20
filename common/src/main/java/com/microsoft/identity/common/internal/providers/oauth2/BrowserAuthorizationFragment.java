@@ -181,6 +181,9 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
             case CANCELLED:
                 Telemetry.emit(new UiEndEvent().isUserCancelled());
                 break;
+
+            default:
+                break;
         }
 
         sendResult(data);

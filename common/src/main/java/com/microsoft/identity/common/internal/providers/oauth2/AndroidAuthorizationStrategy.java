@@ -27,9 +27,11 @@ import android.content.Context;
 import android.content.Intent;
 
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
@@ -41,7 +43,7 @@ import lombok.NonNull;
 
 /**
  * Android's {@link IAuthorizationStrategy} implementation.
- * */
+ */
 // Suppressing rawtype warnings due to the generic types OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AndroidAuthorizationStrategy<
@@ -72,20 +74,28 @@ public abstract class AndroidAuthorizationStrategy<
      * If fragment is provided, add AuthorizationFragment on top of that fragment.
      * Otherwise, launch AuthorizationActivity.
      */
-    protected void launchIntent(@NonNull Intent intent) {
+    protected void launchIntent(@NonNull Intent intent) throws ClientException {
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
             final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
-            fragment.getFragmentManager()
-                    .beginTransaction()
+            final FragmentManager fragmentManager = fragment.getFragmentManager();
+            if (fragmentManager == null) {
+                throw new ClientException(ClientException.UNKNOWN_ERROR, "Fragment Manager is null");
+            }
+
+            fragmentManager.beginTransaction()
                     .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                     .add(fragment.getId(), authFragment, Fragment.class.getName())
                     .commit();
             return;
         }
 
-        mReferencedActivity.get().startActivity(intent);
+        final Activity activity = mReferencedActivity.get();
+        if (activity == null) {
+            throw new ClientException(ClientException.UNKNOWN_ERROR, "Referenced activity is null");
+        }
+        activity.startActivity(intent);
     }
 }
