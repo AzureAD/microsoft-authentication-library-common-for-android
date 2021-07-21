@@ -29,6 +29,7 @@ jobs:
   displayName: Initiating Release Process
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 1
+  condition: and(ne(variables['parameters.versionType'], ''), ne(variables['parameters.gradleTasks'], ''))
   pool:
     name: Hosted Windows 2019 with VS2019
   steps:
