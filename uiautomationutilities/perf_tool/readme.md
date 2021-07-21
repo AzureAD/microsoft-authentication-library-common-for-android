@@ -58,7 +58,7 @@
 
 #### Changes needed in the Report tool - C# code
 - In the report tool code, open the file [PerfDataConfiguration.xml](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml) and perform following actions:
-	- In tag `MeasurementsConfigurations`, add a new `MeasurementsConfiguration`, set the Id to a random unique string of digits and the startMarker and endMarker according to what you defined in this step. Note that the full identifier of a marker is the scenario code preppended to the marker identifier. An example here would be if you defined the scenario code as 100 and the code marker as 10011 then the full identifier is 10010011
+	- In tag `MeasurementsConfigurations`, add a new `MeasurementsConfiguration`, set the Id to a random unique string of digits and the startMarker and endMarker according to what you defined in [this step](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/paul/update-perf-testing-documentation/uiautomationutilities/perf_tool/readme.md#changes-needed-in-common---javakotlin-code). Note that the full identifier of a marker is the scenario code preppended to the marker identifier. An example here would be if you defined the scenario code as 100 and the code marker as 10011 then the full identifier is 10010011
 	- In tag, `Scenarios`, add a new scenario with the Measurement ID of the MesurementConfiguration just added above.
 - Push the changes into dev branch by raising a PR.
 - Deploy C# tool into the pipeline. (Pipeline information given at the start of this doc). We can deploy C# tool even before merging of PR if need be. As this deployment is done after building at the local machine.
