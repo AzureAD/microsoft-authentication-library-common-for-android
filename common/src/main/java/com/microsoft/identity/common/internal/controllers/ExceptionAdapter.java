@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
@@ -244,6 +245,16 @@ public class ExceptionAdapter {
         Throwable e = exception;
         if (exception instanceof ExecutionException){
             e = exception.getCause();
+        }
+
+        if (e instanceof TerminalException) {
+            final String errorCode = ((TerminalException) e).getErrorCode();
+            e = e.getCause();
+            return new ClientException(
+                    errorCode,
+                    "An unhandled exception occurred with message: " + e.getMessage(),
+                    e
+            );
         }
 
         if (e instanceof IOException) {
