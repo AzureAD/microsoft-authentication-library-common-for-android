@@ -47,31 +47,38 @@
 **Targetfiles:** These are the code marker files generated during the current run
 
 
-### Steps to add a new marker and see it in the report:
-- If a new scenario has to be created, come up with a scenario code comprised of 3 digits and add it to the codemarker definitions in file [PerfConstants.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java), for example some of the existing scenario codes are 100 and 200.
-- In the common codebase, and add codemarkers (e.g. start of the activity to be measured and the end of the activity to be measured) at desired places. See example in [CommandDispatcher.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/controllers/CommandDispatcher.java#L197). Example events lines are given as follows:
+### Steps to add a new scenario(s)/marker(s) and see it in the report:
+#### Changes needed in Common - Java/Kotlin code
+- If a new scenario has to be created, come up with a scenario code comprised of 3 unique random digits and add it to the codemarker definitions in file [PerfConstants.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java), you can find the existing scenario codes under ScenarioConstants in the same file.
+- Come up with unique random digits to represent code markers you would like to add and add them to the codemarker definitions in file [PerfConstants.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/PerfConstants.java), see some examples under CodeMarkerConstants in the same file.
+- Add codemarkers (e.g. start of the activity to be measured and the end of the activity to be measured) at desired places. See example in [CommandDispatcher.java](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/common/src/main/java/com/microsoft/identity/common/internal/controllers/CommandDispatcher.java#L197). Example events lines are given as follows:
 	- `CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_START);`
 	- `CodeMarkerManager.getInstance().markCode(CodeMarkersConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);`
+- Push the common code to dev branch by raising a PR.
+
+#### Changes needed in the Report tool - C# code
+- In the report tool code, open the file [PerfDataConfiguration.xml](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml) and perform following actions:
+	- In tag `MeasurementsConfigurations`, add a new `MeasurementsConfiguration`, set the Id to a random unique string of digits and the startMarker and endMarker according to what you defined in this step. Note that the full identifier of a marker is the scenario code preppended to the marker identifier. An example here would be if you defined the scenario code as 100 and the code marker as 10011 then the full identifier is 10010011
+	- In tag, `Scenarios`, add a new scenario with the Measurement ID of the MesurementConfiguration just added above.
+- Push the changes into dev branch by raising a PR.
+- Deploy C# tool into the pipeline. (Pipeline information given at the start of this doc). We can deploy C# tool even before merging of PR if need be. As this deployment is done after building at the local machine.
+
+
+#### Changes needed in the target library
 - Write a new test case that targets the flow where code markers have been added, see existing test case [TestCasePerf.java](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerf.java) for non-brokered auth and [TestCasePerfBrokered.java](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerfBrokered.java) for brokered auth.
 - In the new test case, before performing the particular scenario, add following code snippet
 	- Enable the Code marker: `CodeMarkerManager.getInstance().setEnableCodeMarker(true);`
-	- Setup the scenario code defined in step #1: `CodeMarkerManager.getInstance().setPrefixScenarioCode("100");`
+	- Setup the scenario code defined above: `CodeMarkerManager.getInstance().setPrefixScenarioCode("100");`
 	- If we are having more than one iterations of same scenario, i.e. running same code multiple times, 
 		- Make sure to clear the previous run's markers in the start of the iteration as follows: `CodeMarkerManager.getInstance().clearMarkers();`
 		- Also write the content to the file using [FileAppender](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/src/main/java/com/microsoft/identity/client/ui/automation/logging/appender/FileAppender.java) such as [here](https://github.com/AzureAD/microsoft-authentication-library-for-android/blob/dev/msalautomationapp/src/androidTest/java/com/microsoft/identity/client/msal/automationapp/testpass/perf/TestCasePerf.java#L119-L124)
 	- Also add followings after performing the particular scenario:
 		- Clear the codemarkers: `CodeMarkerManager.getInstance().clearMarkers();`
 		- Disable the codemarkers: `CodeMarkerManager.getInstance().setEnableCodeMarker(false);`
-- In the C# tool code, open the file [PerfDataConfiguration.xml](https://github.com/AzureAD/microsoft-authentication-library-common-for-android/blob/dev/uiautomationutilities/perf_tool/PerfDataConfiguration.xml) and perform following actions:
-	- In tag `MeasurementsConfigurations`, add a new `MeasurementsConfiguration` with giving the startMarker and endMarker as given in the step 2. 
-	- In tag, `Scenarios`, add a new scenario with the Measurement ID of the MesurementConfiguration just added in previous sub-step.
-- Push the common code and msal native code to dev branch by raising PRs.
-- Push the C# changes of its repo (i.e. common) into dev branch by raising a PR.
-- Deploy C# tool into the pipeline. (Pipeline information given at the start of this doc). We can deploy C# tool even before merging of PR if need be. As this deployment is done after building at the local machine.
-
+- Push the target library code to dev branch by raising a PR.
 
 ### Steps to deploy latest version of C# tool to pipeline:
-- Install a recent version of [Visual Studio](https://visualstudio.microsoft.com/)
+- Install a recent version of [Visual Studio](https://visualstudio.microsoft.com/) on Mac/Windows
 - Ensure that you have the following tools selected while installing Visual Studio:
 	- .NET desktop environment
 	- Desktop development using C++
