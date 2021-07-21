@@ -27,32 +27,34 @@ import android.net.Uri;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.net.HttpResponse;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
-import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.HttpURLConnection;
+
+import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
 
 /**
  * The Azure Active Directory OAuth 2.0 Strategy.
@@ -111,18 +113,23 @@ public class AzureActiveDirectoryOAuth2Strategy
     }
 
     @Override
-    public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest authRequest) {
+    public String getIssuerCacheIdentifier(final AzureActiveDirectoryAuthorizationRequest authRequest) throws ClientException {
         final String methodName = "getIssuerCacheIdentifier";
 
         final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloud(authRequest.getAuthority());
-        if (cloud == null && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
-            Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
-                    + " Returning passed in Authority: "
-                    + authRequest.getAuthority().toString());
-            return authRequest.getAuthority().toString();
+        if (cloud == null) {
+            if (!getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
+                Logger.warn(TAG + ":" + methodName, "Discovery data does not include cloud authority and validation is off."
+                        + " Returning passed in Authority: "
+                        + authRequest.getAuthority().toString());
+                return authRequest.getAuthority().toString();
+            }
+
+            throw new ClientException(AUTHORITY_URL_NOT_VALID,
+                    "Discovery data does not include cloud authority and validation is on.");
         }
 
-        if (cloud != null && !cloud.isValidated() && getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
+        if (!cloud.isValidated() && getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(TAG + ":" + methodName, "Authority host validation has been enabled. This data hasn't been validated, though.");
             // We have invalid cloud data... and authority host validation is enabled....
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
@@ -132,7 +139,7 @@ public class AzureActiveDirectoryOAuth2Strategy
             // on a null object reference
         }
 
-        if (cloud != null && !cloud.isValidated() && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
+        if (!cloud.isValidated() && !getOAuth2Configuration().isAuthorityHostValidationEnabled()) {
             Logger.warn(
                     TAG + ":" + methodName,
                     "Authority host validation not specified..."

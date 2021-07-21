@@ -137,7 +137,7 @@ public class ADALOAuth2TokenCache
     public ICacheRecord save(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
-            final AzureActiveDirectoryTokenResponse response) {
+            final AzureActiveDirectoryTokenResponse response) throws ClientException {
         final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 

@@ -366,7 +366,7 @@ public abstract class OAuth2Strategy
      * @param request generic token request.
      * @return String of issuer cache identifier.
      */
-    public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request);
+    public abstract String getIssuerCacheIdentifier(GenericAuthorizationRequest request) throws ClientException;
 
     /**
      * @param response generic token response.
