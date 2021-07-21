@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
@@ -165,10 +166,10 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
     private void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
 
-        final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
+        RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
         switch (data.getResultCode()){
             case BROKER_INSTALLATION_TRIGGERED:
-                final Map<String, String> urlQueryParameters = UrlUtil.getUrlParameters(customTabResponseUri);
+                final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
                 startActivity(browserIntent);

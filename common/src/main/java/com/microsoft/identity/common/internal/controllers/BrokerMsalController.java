@@ -257,9 +257,9 @@ public class BrokerMsalController extends BaseController {
             public void onReceive(@NonNull DataBag dataBag) {
                 /**
                  * Get the response from the Broker captured by BrokerActivity.
-                 * BrokerActivity will pass along the response to the broker controller
-                 * The Broker controller will map th response into the broker result
-                 * And signal the future with the broker result to unblock the request.
+                 * BrokerActivity will pass along the response to the broker controller.
+                 * The Broker controller will map the response into the broker result
+                 * and signal the future with the broker result to unblock the request.
                  */
 
                 Logger.verbose(
@@ -270,8 +270,8 @@ public class BrokerMsalController extends BaseController {
                 Telemetry.emit(
                         new ApiStartEvent()
                                 .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(dataBag.getIntMap().get(REQUEST_CODE)))
-                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(dataBag.getIntMap().get(RESULT_CODE)))
+                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(dataBag.get(REQUEST_CODE)))
+                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(dataBag.get(RESULT_CODE)))
                 );
 
                 mBrokerResultFuture.setResult(DataBagUtil.toBundle(dataBag));

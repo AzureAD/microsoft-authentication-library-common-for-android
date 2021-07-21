@@ -38,7 +38,7 @@ public enum AuthorizationStatus {
     USER_CANCEL,
 
     /**
-     * Sdk cancelled Auth flow
+     * Sdk cancelled Auth flow.
      */
     SDK_CANCEL,
 

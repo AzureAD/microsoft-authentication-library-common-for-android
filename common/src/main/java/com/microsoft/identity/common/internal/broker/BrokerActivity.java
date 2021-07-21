@@ -112,8 +112,8 @@ public final class BrokerActivity extends Activity {
             Logger.verbose(TAG + methodName, "Completing interactive request ");
 
             final DataBag dataBag = DataBagUtil.fromBundle(data.getExtras());
-            dataBag.getIntMap().put(REQUEST_CODE, BROKER_FLOW);
-            dataBag.getIntMap().put(RESULT_CODE, resultCode);
+            dataBag.put(REQUEST_CODE, BROKER_FLOW);
+            dataBag.put(RESULT_CODE, resultCode);
 
             LocalBroadcaster.INSTANCE.broadcast(
                     RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, dataBag);

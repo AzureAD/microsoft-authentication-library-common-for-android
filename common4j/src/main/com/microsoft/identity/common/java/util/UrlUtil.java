@@ -78,68 +78,41 @@ public class UrlUtil {
         return builder.build().toURL();
     }
 
-
     /**
-     * create url from given endpoint. return null if format is not right.
+     * Get URL parameters from a given {@link URI} object.
      *
-     * @param endpoint url as a string
-     * @return URL object for this string
-     */
-    public static URL getUrl(@NonNull final String endpoint) {
-        final String methodName = ":getUrl";
-        try {
-            return new URL(endpoint);
-        } catch (final MalformedURLException e) {
-            Logger.errorPII(TAG + methodName, "URL is malformed", e);
-            return null;
-        }
-    }
-
-    /**
-     * Get URL parameters from final url.
-     *
-     * @param finalUrl String
+     * @param uri String
      * @return a map of url parameters.
      */
     @NonNull
-    public static Map<String, String> getUrlParameters(@Nullable final String finalUrl) {
-        if (StringUtil.isNullOrEmpty(finalUrl)){
+    public static Map<String, String> getParameters(@Nullable final URI uri){
+        final String methodName = ":getUrlParameters";
+
+        if (uri == null){
+            Logger.warn(TAG, "uri is null.");
             return Collections.emptyMap();
         }
 
-        final String methodName = ":getUrlParameters";
-        try {
-            final URI response = new URIBuilder(finalUrl).build();
-            final String fragment = response.getFragment();
+        final String fragment = uri.getFragment();
+        if (!StringUtil.isNullOrEmpty(fragment) &&
+                !urlFormDecode(fragment).isEmpty()) {
+            Logger.warn(TAG, "Received url contains unexpected fragment parameters.");
+            Logger.warnPII(TAG, "Unexpected fragment: " + uri.getFragment());
+        }
 
-            if (!StringUtil.isNullOrEmpty(fragment) &&
-                    !urlFormDecode(fragment).isEmpty()) {
-                Logger.warn(TAG, "Received url contains unexpected fragment parameters.");
-                Logger.warnPII(TAG, "Unexpected fragment: " + response.getFragment());
-            }
-
-            if (StringUtil.isNullOrEmpty(response.getQuery())){
-                Logger.info(
-                        TAG + methodName,
-                        "URL does not contain query parameter"
-                );
-                return Collections.emptyMap();
-            }
-
-            return urlFormDecode(response.getQuery());
-        } catch (final URISyntaxException e) {
-            Logger.warn(TAG + methodName, "Failed to extract URL parameters");
-            Logger.errorPII(
+        if (StringUtil.isNullOrEmpty(uri.getQuery())) {
+            Logger.info(
                     TAG + methodName,
-                    "Url is invalid",
-                    e
+                    "URL does not contain query parameter"
             );
             return Collections.emptyMap();
         }
+
+        return urlFormDecode(uri.getQuery());
     }
 
     /**
-     * decode url string into a key value pairs with default query delimiter.
+     * Decode url string into a key value pairs with default query delimiter.
      *
      * @param urlParameter URL query parameter
      * @return key value pairs
@@ -150,7 +123,7 @@ public class UrlUtil {
     }
 
     /**
-     * decode url string into a key value pairs with given query delimiter given
+     * Decode url string into a key value pairs with given query delimiter given
      * string as a=1&b=2 will return key value of [[a,1],[b,2]].
      *
      * @param urlParameter URL parameter to be decoded

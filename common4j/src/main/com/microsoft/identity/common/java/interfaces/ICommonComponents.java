@@ -54,14 +54,19 @@ public interface ICommonComponents {
     IClockSkewManager getClockSkewManager();
 
     /**
+     * Gets the default {@link IDevicePopManager}
+     *
      * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
-     * */
+     */
     @NonNull
     IDevicePopManager getDefaultDevicePopManager() throws ClientException;
 
     /**
+     * Gets a {@link IDevicePopManager} associated to the key alias.
+     *
+     * @param alias the alias of the key. Storage mechanisms can use this alias to provide access.
      * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
-     * */
+     */
     @NonNull
     IDevicePopManager getDevicePopManager(@NonNull final String alias) throws ClientException;
 }

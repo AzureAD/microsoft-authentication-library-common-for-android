@@ -32,6 +32,9 @@ import java.util.Map;
 
 import lombok.NonNull;
 
+/**
+ * {@link DataBag} utilities.
+ */
 public class DataBagUtil {
 
     /**
@@ -40,35 +43,8 @@ public class DataBagUtil {
     public static Bundle toBundle(@NonNull final DataBag dataBag) {
         final Bundle bundle = new Bundle();
 
-        final INameValueStorage<String> stringMap = dataBag.getStringMap();
-        for (final String key : stringMap.keySet()) {
-            bundle.putString(key, stringMap.get(key));
-        }
-
-        final INameValueStorage<byte[]> byteArrayMap = dataBag.getByteArrayMap();
-        for (final String key : byteArrayMap.keySet()) {
-            bundle.putByteArray(key, byteArrayMap.get(key));
-        }
-
-        final INameValueStorage<Boolean> booleanMap = dataBag.getBooleanMap();
-        for (final String key : booleanMap.keySet()) {
-            final Boolean valueToPut = booleanMap.get(key);
-            if (valueToPut != null) {
-                bundle.putBoolean(key, valueToPut);
-            }
-        }
-
-        final INameValueStorage<Integer> intMap = dataBag.getIntMap();
-        for (final String key : intMap.keySet()) {
-            final Integer valueToPut = intMap.get(key);
-            if (valueToPut != null) {
-                bundle.putInt(key, valueToPut);
-            }
-        }
-
-        final INameValueStorage<Serializable> serializableMap = dataBag.getSerializableMap();
-        for (final String key : serializableMap.keySet()) {
-            bundle.putSerializable(key, serializableMap.get(key));
+        for (final String key : dataBag.keySet()) {
+            bundle.putSerializable(key, dataBag.get(key));
         }
 
         return bundle;
@@ -81,18 +57,7 @@ public class DataBagUtil {
         final DataBag result = new DataBag();
 
         for (final String key : bundle.keySet()) {
-            final Object value = bundle.get(key);
-            if (value instanceof String) {
-                result.getStringMap().put(key, (String) value);
-            } else if (value instanceof byte[]) {
-                result.getByteArrayMap().put(key, (byte[]) value);
-            } else if (value instanceof Boolean) {
-                result.getBooleanMap().put(key, (Boolean) value);
-            } else if (value instanceof Integer) {
-                result.getIntMap().put(key, (Integer) value);
-            } else if (value instanceof Serializable) {
-                result.getSerializableMap().put(key, (Serializable) value);
-            }
+            result.put(key, bundle.get(key));
         }
 
         return result;

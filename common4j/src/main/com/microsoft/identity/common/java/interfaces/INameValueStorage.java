@@ -40,15 +40,6 @@ public interface INameValueStorage<T> {
     T get(@NonNull String name);
 
     /**
-     * Gets a value from the storage, or returns the provided default value.
-     *
-     * @param name         A name associated to the value.
-     * @param defaultValue the value to be returned if the element associated with the name doesn't exist.
-     */
-    @NonNull
-    T getOrDefault(@NonNull final String name, @NonNull final T defaultValue);
-
-    /**
      * Puts a value into the storage.
      *
      * @param name  A name associated to the value.

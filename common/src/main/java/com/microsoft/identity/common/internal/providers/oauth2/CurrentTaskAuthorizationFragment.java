@@ -61,7 +61,7 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
         @Override
         public void onReceive(@NonNull final DataBag dataBag) {
-            cancelAuthorization(dataBag.getBooleanMap().getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
+            cancelAuthorization(dataBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
         }
     };
 
@@ -156,7 +156,7 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
         Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
         final DataBag dataBag = RawAuthorizationResult.toDataBag(result);
-        dataBag.getIntMap().put(REQUEST_CODE, BROWSER_FLOW);
+        dataBag.put(REQUEST_CODE, BROWSER_FLOW);
 
         LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, dataBag);
     }

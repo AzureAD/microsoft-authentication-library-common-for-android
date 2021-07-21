@@ -25,16 +25,52 @@ package com.microsoft.identity.common.java.util.ported;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.io.Serializable;
+import java.util.Set;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-@Getter
 @Accessors(prefix = "m")
 public class DataBag {
-    private final INameValueStorage<Boolean> mBooleanMap = new MapWithDefault<>();
-    private final INameValueStorage<byte[]> mByteArrayMap = new MapWithDefault<>();
-    private final INameValueStorage<String> mStringMap = new MapWithDefault<>();
-    private final INameValueStorage<Integer> mIntMap = new MapWithDefault<>();
-    private final INameValueStorage<Serializable> mSerializableMap = new MapWithDefault<>();
+    private final INameValueStorage<Object> mMap = new InMemoryStorage<>();
+
+    public void put(@NonNull final String name, @Nullable final Object value) {
+        mMap.put(name, value);
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    public <T extends Serializable> T get(@NonNull final String name) {
+        final Object object = mMap.get(name);
+        if (object == null) {
+            return null;
+        }
+
+        try {
+            return (T) object;
+        } catch (final ClassCastException e) {
+            return null;
+        }
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    public <T extends Serializable> T getOrDefault(@NonNull final String name, @NonNull final T defaultValue) {
+        final Object object = mMap.get(name);
+        if (object == null) {
+            return defaultValue;
+        }
+
+        try {
+            return (T) object;
+        } catch (final ClassCastException e) {
+            return defaultValue;
+        }
+    }
+
+    public Set<String> keySet(){
+        return mMap.keySet();
+    }
 }

@@ -29,6 +29,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.java.util.ported.DataBag;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
@@ -132,7 +133,7 @@ public class RawAuthorizationResult {
     private final ResultCode mResultCode;
 
     @Nullable
-    private final String mAuthorizationFinalUrl;
+    private final URI mAuthorizationFinalUri;
 
     @Nullable
     private final BaseException mException;
@@ -160,11 +161,12 @@ public class RawAuthorizationResult {
     }
 
     @NonNull
-    public static RawAuthorizationResult fromRedirectUri(@NonNull final String uri) {
+    public static RawAuthorizationResult fromRedirectUri(@NonNull final String redirectUri) {
         try {
+            final URI uri = new URI(redirectUri);
             return RawAuthorizationResult.builder()
                     .resultCode(getResultCodeFromFinalRedirectUri(uri))
-                    .authorizationFinalUrl(uri)
+                    .authorizationFinalUri(uri)
                     .build();
         } catch (final URISyntaxException e) {
             return fromException(new ClientException(ClientException.MALFORMED_URL,
@@ -175,25 +177,23 @@ public class RawAuthorizationResult {
     @NonNull
     public static DataBag toDataBag(@NonNull final RawAuthorizationResult data) {
         final DataBag dataBag = new DataBag();
-        dataBag.getIntMap().put(RESULT_CODE, data.mResultCode.mCode);
-        dataBag.getStringMap().put(RESPONSE_FINAL_URL, data.mAuthorizationFinalUrl);
-        dataBag.getSerializableMap().put(RESPONSE_EXCEPTION, data.mException);
+        dataBag.put(RESULT_CODE, data.mResultCode.mCode);
+        dataBag.put(RESPONSE_FINAL_URL, data.mAuthorizationFinalUri);
+        dataBag.put(RESPONSE_EXCEPTION, data.mException);
         return dataBag;
     }
 
     @NonNull
     public static RawAuthorizationResult fromDataBag(@NonNull final DataBag dataBag) {
         return RawAuthorizationResult.builder()
-                .resultCode(ResultCode.fromInteger(dataBag.getIntMap().get(RESULT_CODE)))
-                .authorizationFinalUrl(dataBag.getStringMap().get(RESPONSE_FINAL_URL))
-                .exception((BaseException) dataBag.getSerializableMap().get(RESPONSE_EXCEPTION))
+                .resultCode(ResultCode.fromInteger(dataBag.<Integer>get(RESULT_CODE)))
+                .authorizationFinalUri(dataBag.<URI>get(RESPONSE_FINAL_URL))
+                .exception((BaseException) dataBag.<Serializable>get(RESPONSE_EXCEPTION))
                 .build();
     }
 
-    private static ResultCode getResultCodeFromFinalRedirectUri(@NonNull final String redirectUri) throws URISyntaxException {
-        final URI uri = new URI(redirectUri);
-
-        final Map<String, String> parameters = UrlUtil.getUrlParameters(redirectUri);
+    private static ResultCode getResultCodeFromFinalRedirectUri(@NonNull final URI uri) throws URISyntaxException {
+        final Map<String, String> parameters = UrlUtil.getParameters(uri);
 
         if (REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme())) {
             // i.e. (Browser) msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11ZifsnqwgyKrY%3D?wpj=1&username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator

@@ -22,20 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.logging.Logger;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.URLDecoder;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -133,10 +125,10 @@ public class StringUtil {
      * @return List<String>
      */
     public static List<String> getStringTokens(final String items, final String delimiter) {
-        final StringTokenizer st = new StringTokenizer(items, delimiter);
+        final StringTokenizer tokenizer = new StringTokenizer(items, delimiter);
         final List<String> itemList = new ArrayList<>();
-        while (st.hasMoreTokens()) {
-            String name = st.nextToken();
+        while (tokenizer.hasMoreTokens()) {
+            final String name = tokenizer.nextToken();
             if (!isNullOrEmpty(name)) {
                 itemList.add(name);
             }
@@ -220,11 +212,11 @@ public class StringUtil {
         return pw.toString();
     }
 
-    public static String fromByteArray(@NonNull final byte[] bytes){
+    public static String fromByteArray(@NonNull final byte[] bytes) {
         return new String(bytes, ENCODING_UTF8);
     }
 
-    public static byte[] toByteArray(@NonNull final String string){
+    public static byte[] toByteArray(@NonNull final String string) {
         return string.getBytes(ENCODING_UTF8);
     }
 }

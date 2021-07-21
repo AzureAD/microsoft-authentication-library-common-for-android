@@ -151,7 +151,7 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
         final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
         switch (data.getResultCode()){
             case BROKER_INSTALLATION_TRIGGERED:
-                final Map<String, String> urlQueryParameters = UrlUtil.getUrlParameters(customTabResponseUri);
+                final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
                 final String appLink = urlQueryParameters.get(APP_LINK_KEY);
                 final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
                 startActivity(browserIntent);

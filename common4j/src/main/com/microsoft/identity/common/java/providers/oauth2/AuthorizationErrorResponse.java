@@ -37,13 +37,13 @@ import lombok.experimental.Accessors;
 public class AuthorizationErrorResponse implements IErrorResponse{
 
     /**
-     * error returned due to Authorization request failure.
+     * Error returned due to Authorization request failure.
      */
     @Expose()
     private String mError;
 
     /**
-     * error description returned due to Authorization request failure
+     * Error description returned due to Authorization request failure
      * */
     @Expose()
     private String mErrorDescription;

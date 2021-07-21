@@ -95,7 +95,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromResultCode(resultCode);
         Assert.assertEquals(resultCode, result.getResultCode());
         Assert.assertNull(result.getException());
-        Assert.assertNull(result.getAuthorizationFinalUrl());
+        Assert.assertNull(result.getAuthorizationFinalUri());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class RawAuthorizationResultTest {
         );
 
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
-        Assert.assertNull(result.getAuthorizationFinalUrl());
+        Assert.assertNull(result.getAuthorizationFinalUri());
         Assert.assertNotNull(result.getException());
         Assert.assertEquals(MOCK_ERROR_CODE, result.getException().getErrorCode());
         Assert.assertEquals(MOCK_ERROR_MESSAGE, result.getException().getMessage());
@@ -116,7 +116,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(SUCCEED_REDIRECT_URI);
 
         Assert.assertEquals(COMPLETED, result.getResultCode());
-        Assert.assertEquals(SUCCEED_REDIRECT_URI, result.getAuthorizationFinalUrl());
+        Assert.assertEquals(SUCCEED_REDIRECT_URI, result.getAuthorizationFinalUri());
     }
 
     // It's a 'valid' redirect uri, so it's treated as 'succeeded'.
@@ -126,7 +126,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(ERROR_RESPONSE_REDIRECT_URI);
 
         Assert.assertEquals(COMPLETED, result.getResultCode());
-        Assert.assertEquals(ERROR_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUrl());
+        Assert.assertEquals(ERROR_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUri());
     }
 
     @Test
@@ -134,7 +134,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(CANCEL_RESPONSE_REDIRECT_URI);
 
         Assert.assertEquals(CANCELLED, result.getResultCode());
-        Assert.assertEquals(CANCEL_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUrl());
+        Assert.assertEquals(CANCEL_RESPONSE_REDIRECT_URI, result.getAuthorizationFinalUri());
     }
 
     @Test
@@ -142,7 +142,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(MALFORMED_REDIRECT_URI);
 
         Assert.assertEquals(NON_OAUTH_ERROR, result.getResultCode());
-        Assert.assertNull(result.getAuthorizationFinalUrl());
+        Assert.assertNull(result.getAuthorizationFinalUri());
         Assert.assertNotNull(result.getException());
         Assert.assertEquals(ClientException.MALFORMED_URL, result.getException().getErrorCode());
     }
@@ -152,7 +152,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(WPJ_REQUIRED_REDIRECT_URI);
 
         Assert.assertEquals(DEVICE_REGISTRATION_REQUIRED, result.getResultCode());
-        Assert.assertEquals(WPJ_REQUIRED_REDIRECT_URI, result.getAuthorizationFinalUrl());
+        Assert.assertEquals(WPJ_REQUIRED_REDIRECT_URI, result.getAuthorizationFinalUri());
     }
 
     @Test
@@ -160,7 +160,7 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI);
 
         Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
-        Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI, result.getAuthorizationFinalUrl());
+        Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_BROWSER_REDIRECT_URI, result.getAuthorizationFinalUri());
     }
 
     @Test
@@ -168,6 +168,6 @@ public class RawAuthorizationResultTest {
         final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI);
 
         Assert.assertEquals(BROKER_INSTALLATION_TRIGGERED, result.getResultCode());
-        Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI, result.getAuthorizationFinalUrl());
+        Assert.assertEquals(BROKER_INSTALLATION_REQUIRED_WEBVIEW_REDIRECT_URI, result.getAuthorizationFinalUri());
     }
 }

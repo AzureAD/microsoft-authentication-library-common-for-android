@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.InMemoryStorage;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -30,6 +29,7 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.After;
 import org.junit.Assert;

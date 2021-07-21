@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.java.logging.Logger;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -62,10 +64,9 @@ public class AzureActiveDirectoryAuthorizationResultFactory
     }
 
     @Override
-    protected AzureActiveDirectoryAuthorizationResult parseUrlAndCreateAuthorizationResult(@NonNull final String url,
-                                                                                           @Nullable final String requestStateParameter) {
-        final Map<String, String> urlParameters = UrlUtil.getUrlParameters(url);
-
+    protected AzureActiveDirectoryAuthorizationResult parseRedirectUriAndCreateAuthorizationResult(@NonNull final URI redirectUri,
+                                                                                                   @Nullable final String requestStateParameter) {
+        final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
         if (urlParameters == null || urlParameters.isEmpty()) {
             Logger.warn(TAG, "Invalid server response, empty query string from the webview redirect.");
             return createAuthorizationResultWithErrorResponse(AuthorizationStatus.FAIL,

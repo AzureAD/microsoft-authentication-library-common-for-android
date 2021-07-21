@@ -33,6 +33,8 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationStatus;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2.CODE;
@@ -64,20 +66,14 @@ public class MicrosoftStsAuthorizationResultFactory
     }
 
     @Override
-    protected MicrosoftStsAuthorizationResult parseUrlAndCreateAuthorizationResult(@NonNull final String url,
-                                                                                   @Nullable final String requestStateParameter) {
+    protected MicrosoftStsAuthorizationResult parseRedirectUriAndCreateAuthorizationResult(@NonNull final URI redirectUri,
+                                                                                           @Nullable final String requestStateParameter) {
         final String methodName = "parseUrlAndCreateAuthorizationResponse";
-        Map<String, String> urlParameters = null;
 
-        if (!StringUtil.isNullOrEmpty(url)) {
-            urlParameters = UrlUtil.getUrlParameters(url);
-        } else {
-            Logger.warn(TAG + methodName, "URL is null or empty");
-        }
+        final Map<String, String> urlParameters = UrlUtil.getParameters(redirectUri);
 
         MicrosoftStsAuthorizationResult result;
-
-        if (urlParameters == null || urlParameters.isEmpty()) {
+        if (urlParameters.isEmpty()) {
             Logger.warn(TAG, "Invalid server response, empty query string from the webview redirect.");
             result = createAuthorizationResultWithErrorResponse(
                     AuthorizationStatus.FAIL,
@@ -151,5 +147,4 @@ public class MicrosoftStsAuthorizationResultFactory
 
         return result;
     }
-
 }

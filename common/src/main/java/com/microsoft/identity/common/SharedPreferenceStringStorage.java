@@ -52,15 +52,6 @@ public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueSt
     }
 
     @Override
-    public @NonNull String getOrDefault(@NonNull String name, @NonNull String defaultValue) {
-        final String result = get(name);
-        if (result == null) {
-            return defaultValue;
-        }
-        return result;
-    }
-
-    @Override
     public void put(@NonNull String name, @Nullable String value) {
         mManager.putString(name, value);
     }

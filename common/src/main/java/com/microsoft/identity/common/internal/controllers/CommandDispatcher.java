@@ -636,8 +636,8 @@ public class CommandDispatcher {
     private static void completeInteractive(final DataBag dataBag) {
         final String methodName = ":completeInteractive";
 
-        int requestCode = dataBag.getIntMap().getOrDefault(REQUEST_CODE, -1);
-        int resultCode = dataBag.getIntMap().getOrDefault(RESULT_CODE, -1);
+        int requestCode = dataBag.<Integer>getOrDefault(REQUEST_CODE, -1);
+        int resultCode = dataBag.<Integer>getOrDefault(RESULT_CODE, -1);
 
         if (sCommand != null) {
             sCommand.onFinishAuthorizationSession(requestCode, resultCode, dataBag);

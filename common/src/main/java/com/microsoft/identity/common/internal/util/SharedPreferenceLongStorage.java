@@ -43,11 +43,6 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
     }
 
     @Override
-    public @NonNull Long getOrDefault(@NonNull String name, @NonNull Long defaultValue) {
-        return null;
-    }
-
-    @Override
     public void put(@NonNull String name, Long value) {
         mManager.putLong(name, value);
     }

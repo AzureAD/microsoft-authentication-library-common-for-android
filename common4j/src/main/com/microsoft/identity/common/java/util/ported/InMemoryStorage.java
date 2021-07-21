@@ -34,23 +34,13 @@ import lombok.NonNull;
 
 /**
  * A wrapper around Map
- * We have this class because Map's getOrDefault is not available pre Android API 24.
- * */
-public class MapWithDefault<T> implements INameValueStorage<T> {
+ */
+public class InMemoryStorage<T> implements INameValueStorage<T> {
     private final Map<String, T> mMap = new ConcurrentHashMap<>();
 
     @Nullable
     public T get(@NonNull final String key) {
         return mMap.get(key);
-    }
-
-    @NonNull
-    public T getOrDefault(@NonNull final String key, @NonNull final T defaultValue) {
-        final T result = mMap.get(key);
-        if (result == null) {
-            return defaultValue;
-        }
-        return result;
     }
 
     public void put(@NonNull final String key,
@@ -76,5 +66,9 @@ public class MapWithDefault<T> implements INameValueStorage<T> {
     @Override
     public Set<String> keySet() {
         return mMap.keySet();
+    }
+
+    public int size() {
+        return mMap.size();
     }
 }

@@ -30,6 +30,8 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthoriza
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -57,8 +59,7 @@ public abstract class AuthorizationResultFactory
     public GenericAuthorizationResult createAuthorizationResult(@NonNull final RawAuthorizationResult data,
                                                                 @NonNull final GenericAuthorizationRequest request) {
 
-        final String url = data.getAuthorizationFinalUrl();
-
+        final URI url = data.getAuthorizationFinalUri();
         switch (data.getResultCode()) {
             case CANCELLED:
                 Logger.info(TAG, null, "The authorization request was intentionally cancelled.");
@@ -77,14 +78,14 @@ public abstract class AuthorizationResultFactory
                 );
 
             case COMPLETED:
-                if (StringUtil.isNullOrEmpty(url)) {
+                if (url == null) {
                     Logger.warn(TAG, null, "returned URL is null or empty.");
                     return createAuthorizationResultWithErrorResponse(
                             AuthorizationStatus.FAIL,
                             MicrosoftAuthorizationErrorResponse.AUTHORIZATION_FAILED,
                             MicrosoftAuthorizationErrorResponse.AUTHORIZATION_SERVER_INVALID_RESPONSE);
                 }
-                return parseUrlAndCreateAuthorizationResult(url, request.getState());
+                return parseRedirectUriAndCreateAuthorizationResult(url, request.getState());
 
             case NON_OAUTH_ERROR:
                 // This is purely client side error, possible return could be chrome_not_installed or the request intent is
@@ -105,7 +106,7 @@ public abstract class AuthorizationResultFactory
                         MicrosoftAuthorizationErrorResponse.BROKER_NEEDS_TO_BE_INSTALLED_ERROR_DESCRIPTION);
 
                 // Set username returned from the service. We're not currently using it though, but the server returns it.
-                final Map<String, String> urlParameters = UrlUtil.getUrlParameters(url);
+                final Map<String, String> urlParameters = UrlUtil.getParameters(url);
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
                 return result;
             }
@@ -117,7 +118,7 @@ public abstract class AuthorizationResultFactory
                         MicrosoftAuthorizationErrorResponse.DEVICE_REGISTRATION_NEEDED_ERROR_DESCRIPTION);
 
                 // Set username returned from the service
-                final Map<String, String> urlParameters = UrlUtil.getUrlParameters(url);
+                final Map<String, String> urlParameters = UrlUtil.getParameters(url);
                 result.getAuthorizationErrorResponse().setUpnToWpj(urlParameters.get(UPN_TO_WPJ_KEY));
                 return result;
             }
@@ -135,8 +136,8 @@ public abstract class AuthorizationResultFactory
                 MicrosoftAuthorizationErrorResponse.UNKNOWN_RESULT_CODE + "[" + data.getResultCode() + "]");
     }
 
-    protected abstract GenericAuthorizationResult parseUrlAndCreateAuthorizationResult(@NonNull final String url,
-                                                                                       @Nullable final String requestStateParameter);
+    protected abstract GenericAuthorizationResult parseRedirectUriAndCreateAuthorizationResult(final @NonNull URI redirectUri,
+                                                                                               @Nullable final String requestStateParameter);
 
     protected abstract GenericAuthorizationResult createAuthorizationResultWithErrorResponse(final AuthorizationStatus authStatus,
                                                                                              @NonNull final String error,

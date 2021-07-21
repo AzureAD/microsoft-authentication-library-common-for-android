@@ -31,7 +31,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.ported.MapWithDefault;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,8 +55,8 @@ public class EstsTelemetry {
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     EstsTelemetry() {
-        this(new MapWithDefault<CurrentRequestTelemetry>(),
-                new MapWithDefault<Set<FailedRequest>>());
+        this(new InMemoryStorage<CurrentRequestTelemetry>(),
+                new InMemoryStorage<Set<FailedRequest>>());
     }
 
     // Exposed for testing only.
