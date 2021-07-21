@@ -29,11 +29,12 @@ import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
-import com.microsoft.identity.common.java.util.Base64;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.net.URL;
 import java.util.UUID;
 
+import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -171,7 +172,8 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private PkceChallenge mPkceChallenge;
 
         public Builder() {
-            setState(Base64.encode(new DefaultStateGenerator().generate()));
+            setState(Base64.encodeToString(StringUtil.toByteArray(new DefaultStateGenerator().generate()),
+                    Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
         }
 
         public B setAuthority(URL authority) {

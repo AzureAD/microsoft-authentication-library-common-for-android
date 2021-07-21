@@ -23,14 +23,14 @@
 package com.microsoft.identity.common;
 
 import com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.java.util.Base64;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -53,7 +53,9 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import static com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
+import cz.msebera.android.httpclient.extras.Base64;
+
+import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount.AUTHORITY_TYPE_MS_STS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -212,6 +214,6 @@ public class MicrosoftStsAccountCredentialAdapterTest {
 
     static String createRawClientInfo(final String uid, final String utid) {
         final String claims = "{\"uid\":\"" + uid + "\",\"utid\":\"" + utid + "\"}";
-        return Base64.encode(claims);
+        return Base64.encodeToString(StringUtil.toByteArray(claims), Base64.URL_SAFE);
     }
 }

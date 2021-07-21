@@ -29,6 +29,7 @@ import java.net.URLDecoder;
 
 import lombok.NonNull;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8_STRING;
 
 public class StringUtil {
@@ -70,5 +71,13 @@ public class StringUtil {
         final PrintWriter pw = new PrintWriter(sw);
         exception.printStackTrace(pw);
         return pw.toString();
+    }
+
+    public static String fromByteArray(@NonNull final byte[] bytes){
+        return new String(bytes, ENCODING_UTF8);
+    }
+
+    public static byte[] toByteArray(@NonNull final String string){
+        return string.getBytes(ENCODING_UTF8);
     }
 }

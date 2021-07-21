@@ -28,6 +28,7 @@ import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackW
  * Interface describing an object that can reencrypt instances of
  * {@link ISharedPreferencesFileManager}.
  */
+@Deprecated
 public interface ISharedPrefsFileManagerReencrypter {
 
     /**

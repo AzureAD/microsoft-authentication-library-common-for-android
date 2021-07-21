@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -107,8 +107,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
                 //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-                @SuppressWarnings(WarningType.unchecked_warning)
-                final AuthorizationResult result = mOAuth2Strategy
+                @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
                         .getAuthorizationResultFactory()
                         .createAuthorizationResult(
                                 resultCode,

@@ -27,10 +27,10 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.logging.Logger;

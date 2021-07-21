@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal;
 
-import android.net.Uri;
-
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
-import com.microsoft.identity.common.internal.cache.SchemaUtil;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 
+import java.net.URL;
 import java.util.Date;
 
 public class ADALUserInfo {
@@ -42,7 +41,7 @@ public class ADALUserInfo {
 
     private String mIdentityProvider;
 
-    private transient Uri mPasswordChangeUrl;
+    private transient URL mPasswordChangeUrl;
 
     private transient Date mPasswordExpiresOn;
 
@@ -151,7 +150,7 @@ public class ADALUserInfo {
      *
      * @return the password change uri
      */
-    public Uri getPasswordChangeUrl() {
+    public URL getPasswordChangeUrl() {
         return mPasswordChangeUrl;
     }
 

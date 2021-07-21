@@ -24,10 +24,11 @@ package com.microsoft.identity.common.java.net;
 
 import net.jcip.annotations.Immutable;
 
-import java.net.HttpURLConnection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import lombok.NonNull;
 
 /**
  * Internal class to wrap the raw server response, headers and status code.
@@ -52,7 +53,7 @@ public class HttpResponse {
         this(new Date(), statusCode, responseBody, responseHeaders);
     }
 
-    public HttpResponse(final Date date,
+    public HttpResponse(@NonNull final Date date,
                         final int statusCode,
                         final String responseBody,
                         final Map<String, List<String>> headerFields) {
