@@ -53,7 +53,6 @@ public class GenerateShrCommandTest {
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
                     .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
-                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommand COMMAND_ONE = GenerateShrCommand.builder()
