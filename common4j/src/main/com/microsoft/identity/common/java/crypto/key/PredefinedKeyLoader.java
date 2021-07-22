@@ -20,9 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.crypto;
-
-import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
+package com.microsoft.identity.common.java.crypto.key;
 
 import javax.crypto.SecretKey;
 
@@ -42,7 +40,7 @@ public class PredefinedKeyLoader extends AES256KeyLoader {
     private final SecretKey mKey;
 
     public PredefinedKeyLoader(@NonNull final String alias,
-                               @NonNull final byte[] rawBytes){
+                               @NonNull final byte[] rawBytes) {
         mAlias = alias;
         mKey = generateKeyFromRawBytes(rawBytes);
     }
