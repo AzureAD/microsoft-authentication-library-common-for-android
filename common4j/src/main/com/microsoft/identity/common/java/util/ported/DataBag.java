@@ -43,21 +43,18 @@ public class DataBag {
     @Nullable
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T get(@NonNull final String name) {
-        final Object object = mMap.get(name);
-        if (object == null) {
-            return null;
-        }
-
-        try {
-            return (T) object;
-        } catch (final ClassCastException e) {
-            return null;
-        }
+        return getOrDefaultInternal(name, null)
     }
 
     @NonNull
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T getOrDefault(@NonNull final String name, @NonNull final T defaultValue) {
+       return getOrDefaultInternal(name, defaultValue)
+    }
+
+    @NonNull
+    @SuppressWarnings("unchecked")
+    private <T extends Serializable> T getOrDefaultInternal(@NonNull final String name, @Nullable final T defaultValue) {
         final Object object = mMap.get(name);
         if (object == null) {
             return defaultValue;
