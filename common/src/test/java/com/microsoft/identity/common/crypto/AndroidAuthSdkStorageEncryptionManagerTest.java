@@ -29,6 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.KeyUtil;
+import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 
 import org.junit.Assert;
 import org.junit.Before;
