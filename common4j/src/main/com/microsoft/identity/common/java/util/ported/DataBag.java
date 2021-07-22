@@ -43,13 +43,13 @@ public class DataBag {
     @Nullable
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T get(@NonNull final String name) {
-        return getOrDefaultInternal(name, null)
+        return getOrDefaultInternal(name, null);
     }
 
     @NonNull
     @SuppressWarnings("unchecked")
     public <T extends Serializable> T getOrDefault(@NonNull final String name, @NonNull final T defaultValue) {
-       return getOrDefaultInternal(name, defaultValue)
+       return getOrDefaultInternal(name, defaultValue);
     }
 
     @NonNull

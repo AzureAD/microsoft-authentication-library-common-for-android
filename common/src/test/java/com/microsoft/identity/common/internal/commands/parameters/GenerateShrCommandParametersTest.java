@@ -22,11 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import com.microsoft.identity.common.InMemoryStorage;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.internal.util.UrlUtils;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Assert;
 import org.junit.Test;

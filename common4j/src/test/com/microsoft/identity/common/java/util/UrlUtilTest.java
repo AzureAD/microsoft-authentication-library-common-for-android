@@ -50,7 +50,7 @@ public class UrlUtilTest {
 
     @Test
     public void testAppendPathStringWithoutStartingSlash() throws MalformedURLException, URISyntaxException {
-        Assert.assertEquals( new URL("https://www.test.com/path"),
+        Assert.assertEquals(new URL("https://www.test.com/path"),
                 UrlUtil.appendPathToURL(new URL("https://www.test.com"), "path"));
     }
 
