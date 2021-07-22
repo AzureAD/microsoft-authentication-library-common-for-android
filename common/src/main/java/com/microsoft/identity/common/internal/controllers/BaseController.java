@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.text.TextUtils;
@@ -30,21 +29,13 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
@@ -53,24 +44,28 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.java.dto.AccessTokenRecord;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.dto.IdTokenRecord;
-import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.AuthenticationConstants;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
@@ -79,9 +74,14 @@ import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.IResult;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.SchemaUtil;
+import com.microsoft.identity.common.java.util.ported.DataBag;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -129,11 +129,10 @@ public abstract class BaseController {
     public abstract AcquireTokenResult acquireToken(final InteractiveTokenCommandParameters request)
             throws Exception;
 
-    public abstract void completeAcquireToken(
+    public abstract void onFinishAuthorizationSession(
             final int requestCode,
             final int resultCode,
-            final Intent data
-    );
+            @NonNull final DataBag data);
 
     public abstract AcquireTokenResult acquireTokenSilent(
             final SilentTokenCommandParameters parameters)

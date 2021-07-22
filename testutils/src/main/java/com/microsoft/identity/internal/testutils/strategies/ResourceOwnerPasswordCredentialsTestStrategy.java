@@ -25,12 +25,12 @@ package com.microsoft.identity.internal.testutils.strategies;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -54,21 +54,21 @@ public class ResourceOwnerPasswordCredentialsTestStrategy extends MicrosoftStsOA
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) {
-        super(config, new OAuth2StrategyParameters());
+    public ResourceOwnerPasswordCredentialsTestStrategy(final MicrosoftStsOAuth2Configuration config) throws ClientException {
+        super(config, OAuth2StrategyParameters.builder().build());
     }
 
     /**
      * Template method for executing an OAuth2 authorization request.
      *
      * @param request               microsoft sts authorization request.
-     * @param authorizationStrategy authorization strategy.
+     * @param IAuthorizationStrategy authorization strategy.
      * @return GenericAuthorizationResponse
      */
     @Override
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
-            final AuthorizationStrategy authorizationStrategy) {
+            final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultNetworkTests authorizationResult = new MockSuccessAuthorizationResultNetworkTests();
         final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);

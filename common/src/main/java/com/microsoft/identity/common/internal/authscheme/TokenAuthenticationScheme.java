@@ -24,7 +24,8 @@ package com.microsoft.identity.common.internal.authscheme;
 
 import androidx.annotation.NonNull;
 
-import lombok.Builder;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;

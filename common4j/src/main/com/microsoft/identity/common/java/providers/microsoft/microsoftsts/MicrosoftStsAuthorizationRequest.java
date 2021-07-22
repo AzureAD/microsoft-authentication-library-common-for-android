@@ -24,23 +24,21 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -203,7 +201,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     @Override
-    public URI getAuthorizationRequestAsHttpRequest() throws URISyntaxException {
+    public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         final URIBuilder builder = new URIBuilder(super.getAuthorizationRequestAsHttpRequest());
         appendParameterToBuilder(builder, mFlightParameters);
 
@@ -222,11 +220,15 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             builder.addParameter(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
         }
 
-        return builder.build();
+        try {
+            return builder.build();
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 
     @Override
-    public String getAuthorizationEndpoint() throws URISyntaxException {
+    public String getAuthorizationEndpoint() throws ClientException {
         final String methodName = ":getAuthorizationEndpoint";
 
         if (this.getAuthority() == null) {
@@ -235,7 +237,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             throw new IllegalStateException("Authority is null.");
         }
 
-        return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT);
+        try {
+            return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT).toString();
+        } catch (final URISyntaxException | MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 }
 

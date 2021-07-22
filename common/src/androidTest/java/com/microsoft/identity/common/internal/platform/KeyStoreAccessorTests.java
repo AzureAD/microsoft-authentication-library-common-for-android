@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import org.junit.Assert;
 import org.junit.Test;

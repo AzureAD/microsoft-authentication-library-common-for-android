@@ -45,6 +45,7 @@ import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.DataBag;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -599,7 +600,7 @@ public class CommandDispatcherTest {
             }
 
             @Override
-            public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
+            public void onFinishAuthorizationSession(int requestCode, int resultCode, @NonNull DataBag data) {
 
             }
 

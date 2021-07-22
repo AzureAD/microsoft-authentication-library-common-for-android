@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.content.Intent;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * This is the callback interface to send the authorization challenge response
@@ -34,10 +36,9 @@ public interface IAuthorizationCompletionCallback {
     /**
      * Send the authorization challenge response back to the activity.
      *
-     * @param returnCode     UI response code
-     * @param responseIntent challenge response
+     * @param response   challenge response
      */
-    void onChallengeResponseReceived(int returnCode, Intent responseIntent);
+    void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response);
 
     void setPKeyAuthStatus(boolean status);
 }

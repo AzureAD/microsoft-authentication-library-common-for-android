@@ -25,9 +25,11 @@ package com.microsoft.identity.common.java.providers.oauth2;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
@@ -232,20 +234,20 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
                 '}';
     }
 
-    public abstract String getAuthorizationEndpoint() throws URISyntaxException;
+    public abstract String getAuthorizationEndpoint() throws ClientException;
 
     /**
      * Constructs A request URI from this object.
      */
-    public URI getAuthorizationRequestAsHttpRequest() throws URISyntaxException {
-        final URIBuilder builder = new URIBuilder(getAuthorizationEndpoint());
-
-        appendParameterToBuilder(builder, ObjectMapper.serializeObjectHashMap(this));
-
-        // Add extra qp, if present...
-        appendParameterToBuilder(builder, mExtraQueryParams);
-
-        return builder.build();
+    public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
+        try {
+            final URIBuilder builder = new URIBuilder(getAuthorizationEndpoint());
+            appendParameterToBuilder(builder, ObjectMapper.serializeObjectHashMap(this));
+            appendParameterToBuilder(builder, mExtraQueryParams);
+            return builder.build();
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 
     protected void appendParameterToBuilder(@NonNull final URIBuilder builder,

@@ -26,8 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.platform.Device;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import java.net.URL;
@@ -80,6 +80,8 @@ public class PopAuthenticationSchemeInternal
     @SerializedName(CLIENT_CLAIMS)
     private String mClientClaims;
 
+    private transient IDevicePopManager mPopManager;
+
     /**
      * Constructor for gson use.
      */
@@ -90,29 +92,9 @@ public class PopAuthenticationSchemeInternal
     /**
      * Constructs a new PopAuthenticationSchemeInternal.
      *
-     * @param clockSkewManager Used to compute and compensate for any client clock-skew relative to
-     *                         AAD.
-     * @param httpMethod       The HTTP method associated with this request. Optional.
-     * @param url              The resource URL of future-recipient of this SHR.
-     * @param nonce            Client nonce value; for replay protection.
-     */
-    @Deprecated
-    public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
-                                           @Nullable final String httpMethod,
-                                           @NonNull final URL url,
-                                           @Nullable final String nonce) {
-        super(SCHEME_POP);
-        mClockSkewManager = clockSkewManager;
-        mHttpMethod = httpMethod;
-        mUrl = url;
-        mNonce = nonce;
-    }
-
-    /**
-     * Constructs a new PopAuthenticationSchemeInternal.
-     *
      * @param clockSkewManager Used to compute and compensate for any client clock-skew
      *                         (relative to AAD).
+     * @param popManager
      * @param httpMethod       The HTTP method associated with this request. Optional.
      * @param url              The resource URL of future-recipient of this SHR.
      * @param nonce            Client nonce value; for replay protection.
@@ -120,12 +102,14 @@ public class PopAuthenticationSchemeInternal
      *                         property of the resulting SHR.
      */
     public PopAuthenticationSchemeInternal(@NonNull final IClockSkewManager clockSkewManager,
+                                           @NonNull final IDevicePopManager popManager,
                                            @Nullable final String httpMethod,
                                            @NonNull final URL url,
                                            @Nullable final String nonce,
                                            @Nullable final String clientClaims) {
         super(SCHEME_POP);
         mClockSkewManager = clockSkewManager;
+        mPopManager = popManager;
         mHttpMethod = httpMethod;
         mUrl = url;
         mNonce = nonce;
@@ -137,18 +121,21 @@ public class PopAuthenticationSchemeInternal
      * MSAL -> Broker. Because no {@link IClockSkewManager} is supplied, functions related to access
      * token signing cannot be used.
      *
+     * @param popManager
      * @param httpMethod   The HTTP method associated with this request. Optional.
      * @param url          The resource URL of future-recipient of this SHR.
      * @param nonce        Client nonce value; for replay protection.
      * @param clientClaims Optional claims provided by the caller to embed in the client_claims
      *                     property of the resulting SHR.
      */
-    public PopAuthenticationSchemeInternal(@Nullable final String httpMethod,
+    public PopAuthenticationSchemeInternal(@NonNull final IDevicePopManager popManager,
+                                           @Nullable final String httpMethod,
                                            @NonNull final URL url,
                                            @Nullable final String nonce,
                                            @Nullable final String clientClaims) {
         super(SCHEME_POP);
         mClockSkewManager = null;
+        mPopManager = popManager;
         mHttpMethod = httpMethod;
         mUrl = url;
         mNonce = nonce;
@@ -165,16 +152,14 @@ public class PopAuthenticationSchemeInternal
         final long ONE_SECOND_MILLIS = 1000L;
         final long timestampMillis = mClockSkewManager.getAdjustedReferenceTime().getTime();
 
-        return Device
-                .getDevicePoPManagerInstance()
-                .mintSignedAccessToken(
-                        getHttpMethod(),
-                        timestampMillis / ONE_SECOND_MILLIS,
-                        getUrl(),
-                        accessToken,
-                        getNonce(),
-                        getClientClaims()
-                );
+        return mPopManager.mintSignedAccessToken(
+                getHttpMethod(),
+                timestampMillis / ONE_SECOND_MILLIS,
+                getUrl(),
+                accessToken,
+                getNonce(),
+                getClientClaims()
+        );
     }
 
     public void setClockSkewManager(@NonNull final IClockSkewManager clockSkewManager) {

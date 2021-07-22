@@ -34,10 +34,6 @@ public abstract class MicrosoftAuthorizationResult<
         GenericMicrosoftAuthorizationErrorResponse extends MicrosoftAuthorizationErrorResponse>
         extends AuthorizationResult<GenericMicrosoftAuthorizationResponse, GenericMicrosoftAuthorizationErrorResponse> {
 
-
-    public static final String REQUEST_STATE_PARAMETER = "request_state_parameter";
-
-
     /**
      * Constructor of {@link MicrosoftAuthorizationResult}.
      *
@@ -61,6 +57,4 @@ public abstract class MicrosoftAuthorizationResult<
         setAuthorizationStatus(authStatus);
         setAuthorizationErrorResponse(errorResponse);
     }
-
-
 }

@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.content.Intent;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
@@ -35,6 +34,7 @@ import com.microsoft.identity.common.adal.internal.JWSBuilder;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Constructor;
@@ -45,8 +45,8 @@ import java.util.Map;
 
 public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAuthChallenge, Void> {
     private static final String TAG = PKeyAuthChallengeHandler.class.getSimpleName();
-    private WebView mWebView;
-    private IAuthorizationCompletionCallback mChallengeCallback;
+    private final WebView mWebView;
+    private final IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
      * @param view
@@ -81,12 +81,9 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
             // It should return error code and finish the
             // activity, so that onActivityResult implementation
             // returns errors to callback.
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
             //TODO log the request info
             mChallengeCallback.onChallengeResponseReceived(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION,
-                    resultIntent
+                    RawAuthorizationResult.fromException(e)
             );
         }
 

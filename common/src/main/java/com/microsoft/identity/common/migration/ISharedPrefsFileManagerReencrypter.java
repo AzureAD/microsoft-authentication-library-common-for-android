@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.migration;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallback;
+import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 
 /**
  * Interface describing an object that can reencrypt instances of

@@ -24,7 +24,7 @@ package com.microsoft.identity.common.migration;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallback;
+import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;

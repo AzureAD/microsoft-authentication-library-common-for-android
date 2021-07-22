@@ -72,7 +72,7 @@ public class BrokerOperationExecutor {
          * Gets a BrokerOperationBundle bundle to pass to each IpcStrategies.
          */
         @NonNull
-        BrokerOperationBundle getBundle();
+        BrokerOperationBundle getBundle() throws ClientException;
 
         /**
          * Extracts the result object from a bundle returned by an IpcStrategy.

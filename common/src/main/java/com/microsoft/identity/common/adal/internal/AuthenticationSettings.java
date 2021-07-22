@@ -255,6 +255,15 @@ public enum AuthenticationSettings {
         return mClazzDeviceCertProxy;
     }
 
+
+    /**
+     * remove class for work place join related API. This is only used from
+     * Authenticator side.
+     */
+    public void removeDeviceCertificateProxy() {
+        mClazzDeviceCertProxy = null;
+    }
+
     /**
      * get package name to setup intent for AuthenticationActivity.
      *

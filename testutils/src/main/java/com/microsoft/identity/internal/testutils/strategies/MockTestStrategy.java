@@ -23,10 +23,11 @@
 package com.microsoft.identity.internal.testutils.strategies;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
@@ -49,7 +50,7 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
      *
      * @param config Microsoft Sts OAuth2 configuration
      */
-    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) {
+    public MockTestStrategy(MicrosoftStsOAuth2Configuration config) throws ClientException {
         super(config);
     }
 
@@ -57,13 +58,13 @@ public class MockTestStrategy extends ResourceOwnerPasswordCredentialsTestStrate
      * Template method for executing an OAuth2 authorization request.
      *
      * @param request               microsoft sts authorization request.
-     * @param authorizationStrategy authorization strategy.
+     * @param IAuthorizationStrategy authorization strategy.
      * @return GenericAuthorizationResponse
      */
     @Override
     public Future<AuthorizationResult> requestAuthorization(
             final MicrosoftStsAuthorizationRequest request,
-            final AuthorizationStrategy authorizationStrategy) {
+            final IAuthorizationStrategy IAuthorizationStrategy) {
         final MockSuccessAuthorizationResultMockedTests authorizationResult = new MockSuccessAuthorizationResultMockedTests();
         final ResultFuture<AuthorizationResult> future = new ResultFuture<>();
         future.setResult(authorizationResult);

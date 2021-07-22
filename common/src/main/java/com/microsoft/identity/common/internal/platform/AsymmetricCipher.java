@@ -28,6 +28,8 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.crypto.AsymmetricAlgorithm;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.security.KeyStore;
 

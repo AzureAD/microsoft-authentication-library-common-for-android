@@ -28,6 +28,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -87,13 +88,13 @@ public class DevicePoPManagerSigningTests {
     @SuppressWarnings("unused")
     public DevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager();
+        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
         this.signingAlg = signingAlg;
     }
 
     @Before
     public void setUp() throws ClientException {
-        devicePopManager.generateAsymmetricKey(ApplicationProvider.getApplicationContext());
+        devicePopManager.generateAsymmetricKey();
     }
 
     @After

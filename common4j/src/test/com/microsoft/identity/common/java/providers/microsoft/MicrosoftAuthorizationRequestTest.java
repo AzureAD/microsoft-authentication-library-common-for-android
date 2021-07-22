@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.oauth2.MockAuthorizationRequest;
-import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.After;
@@ -34,13 +34,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequestTests.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
 
 @RunWith(JUnit4.class)
 public class MicrosoftAuthorizationRequestTest {
@@ -56,12 +55,11 @@ public class MicrosoftAuthorizationRequestTest {
     public static final boolean MOCK_MULTIPLE_CLOUD_AWARE = true;
     public static final UUID MOCK_CORRELATION_ID = UUID.randomUUID();
     public static final String MOCK_LOGIN_HINT = "MOCK_LOGIN_HINT";
-    public static final PkceChallenge MOCK_PKCE_CHALLENGE = PkceChallenge.newPkceChallenge();
 
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, URISyntaxException {
+    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, ClientException {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()

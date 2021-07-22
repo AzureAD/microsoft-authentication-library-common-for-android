@@ -28,12 +28,14 @@ import android.util.Base64;
 
 import androidx.annotation.RequiresApi;
 import androidx.test.InstrumentationRegistry;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -58,8 +60,8 @@ import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Date;
 
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.JWK;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.JWK;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
@@ -74,7 +76,7 @@ public class DevicePoPManagerTests {
             throws CertificateException, NoSuchAlgorithmException,
             KeyStoreException, IOException {
         mContext = InstrumentationRegistry.getTargetContext();
-        mDevicePopManager = new DevicePopManager();
+        mDevicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
     }
 
     @After
@@ -86,14 +88,14 @@ public class DevicePoPManagerTests {
     @Test
     public void testAsymmetricKeyExists() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
     }
 
     @Test
     public void testAsymmetricKeyExistsById() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String kid = mDevicePopManager.getAsymmetricKeyThumbprint();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists(kid));
@@ -102,7 +104,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testGetAsymmetricKeyThumbprint() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String kid = mDevicePopManager.getAsymmetricKeyThumbprint();
         Assert.assertNotNull(kid);
@@ -111,14 +113,14 @@ public class DevicePoPManagerTests {
     @Test
     public void testGenerateAsymmetricKey() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
     }
 
     @Test
     public void testClearAsymmetricKey() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         mDevicePopManager.clearAsymmetricKey();
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
@@ -127,7 +129,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testGetRequestConfirmation() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         final String reqCnf = mDevicePopManager.getRequestConfirmation();
         Assert.assertNotNull(reqCnf);
     }
@@ -135,7 +137,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testMintSignedAccessToken() throws ClientException, MalformedURLException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 "GET",
@@ -151,7 +153,7 @@ public class DevicePoPManagerTests {
     public void testMintSignedAccessTokenWithClientClaims()
             throws ClientException, MalformedURLException, ParseException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String httpMethod = "GET";
         final long timestamp = 12345;
@@ -194,7 +196,7 @@ public class DevicePoPManagerTests {
     public void testMintSignedAccessTokenWithNullHttpMethod()
             throws ClientException, MalformedURLException, ParseException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 null, // Not supplied
@@ -212,7 +214,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testKidHeaderMatchesThumbprint() throws ClientException, MalformedURLException, ParseException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 null, // Not supplied
@@ -229,7 +231,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testHeaderAlgRS256() throws ClientException, MalformedURLException, ParseException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 null, // Not supplied
@@ -250,7 +252,7 @@ public class DevicePoPManagerTests {
         final String hostWithScheme = "https://" + host;
 
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 "OPTIONS", // Not supplied
@@ -274,7 +276,7 @@ public class DevicePoPManagerTests {
         final String hostWithSchemeAndPath = scheme + host + path;
 
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 null, // Not supplied
@@ -296,7 +298,7 @@ public class DevicePoPManagerTests {
         final String hostWithScheme = "https://" + host;
 
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 null, // Not supplied
@@ -323,7 +325,7 @@ public class DevicePoPManagerTests {
         final String accessToken = "a_token_for_you";
 
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedAccessToken(
                 httpMethod,
@@ -362,7 +364,7 @@ public class DevicePoPManagerTests {
         Assert.assertNull(createdDate);
 
         // Generate it
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
 
         // Assert the Date exists
         Assert.assertNotNull(mDevicePopManager.getAsymmetricKeyCreationDate());
@@ -371,7 +373,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testAsymmetricKeyHasPublicKeyX509() throws ClientException, NoSuchAlgorithmException, InvalidKeySpecException {
         // Generate keys
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
 
         // Get the public key
         final String publicKey = mDevicePopManager.getPublicKey(X_509_SubjectPublicKeyInfo_ASN_1);
@@ -386,7 +388,7 @@ public class DevicePoPManagerTests {
     @Test
     public void testAsymmetricKeyHasPublicKeyJwk() throws ClientException {
         // Generate keys
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
 
         // Get the public key
         final String publicKey = mDevicePopManager.getPublicKey(JWK);
@@ -426,7 +428,7 @@ public class DevicePoPManagerTests {
         final String clientClaims = "test claims!";
 
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
         final String shr = mDevicePopManager.mintSignedHttpRequest(
                 httpMethod,
@@ -457,7 +459,7 @@ public class DevicePoPManagerTests {
     @RequiresApi(Build.VERSION_CODES.N)
     public void testHasCertificateChain24() throws ClientException {
         Assert.assertFalse(mDevicePopManager.asymmetricKeyExists());
-        mDevicePopManager.generateAsymmetricKey(mContext);
+        mDevicePopManager.generateAsymmetricKey();
         Assert.assertTrue(mDevicePopManager.asymmetricKeyExists());
 
         // At least 1 certificate should exist, though likely there is an additional

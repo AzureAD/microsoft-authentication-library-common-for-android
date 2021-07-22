@@ -29,7 +29,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;

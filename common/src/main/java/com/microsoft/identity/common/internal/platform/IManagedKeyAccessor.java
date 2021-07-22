@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyManager;
 
 import java.security.KeyStore;
 

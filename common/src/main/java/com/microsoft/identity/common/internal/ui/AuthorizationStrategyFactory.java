@@ -29,14 +29,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthorizationStrategy;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
 import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthorizationStrategy;
@@ -46,7 +46,7 @@ import java.util.List;
 
 // Suppressing rawtype warnings due to the generic types AuthorizationStrategy, AuthorizationStrategyFactory, EmbeddedWebViewAuthorizationStrategy and BrowserAuthorizationStrategy
 @SuppressWarnings(WarningType.rawtype_warning)
-public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends AuthorizationStrategy> {
+public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
     private static final String TAG = AuthorizationStrategyFactory.class.getSimpleName();
 
     private static AuthorizationStrategyFactory sInstance = null;
@@ -120,14 +120,14 @@ public class AuthorizationStrategyFactory<GenericAuthorizationStrategy extends A
 
             genericAuthorizationStrategy = (GenericAuthorizationStrategy) currentTaskBrowserAuthorizationStrategy;
         } else {
-            final BrowserAuthorizationStrategy browserAuthorizationStrategy = new BrowserAuthorizationStrategy(
+            final DefaultBrowserAuthorizationStrategy defaultBrowserAuthorizationStrategy = new DefaultBrowserAuthorizationStrategy(
                     applicationContext,
                     activity,
                     fragment,
                     isBrokerRequest
             );
-            browserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
-            genericAuthorizationStrategy = (GenericAuthorizationStrategy) browserAuthorizationStrategy;
+            defaultBrowserAuthorizationStrategy.setBrowserSafeList(browserSafeList);
+            genericAuthorizationStrategy = (GenericAuthorizationStrategy) defaultBrowserAuthorizationStrategy;
         }
 
         return genericAuthorizationStrategy;

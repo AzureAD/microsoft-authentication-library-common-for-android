@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
-import com.microsoft.identity.common.java.InMemoryStorage;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 class MockTelemetryContext extends AbstractTelemetryContext {
     public MockTelemetryContext(){

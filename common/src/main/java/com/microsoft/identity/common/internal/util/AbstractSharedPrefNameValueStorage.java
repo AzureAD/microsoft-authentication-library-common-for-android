@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.util;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
+import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
@@ -43,5 +45,10 @@ public abstract class AbstractSharedPrefNameValueStorage<T> implements INameValu
     @Override
     public void clear() {
         mManager.clear();
+    }
+
+    @Override
+    public @NonNull Set<String> keySet() {
+        return mManager.getAll().keySet();
     }
 }

@@ -169,82 +169,6 @@ public final class AuthenticationConstants {
     }
 
     /**
-     * Represents the response code.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class UIResponse {
-
-        /**
-         * Represents that user cancelled the flow.
-         */
-        public static final int BROWSER_CODE_CANCEL = 2001;
-
-        /**
-         * Represents that browser error is returned.
-         */
-        public static final int BROWSER_CODE_ERROR = 2002;
-
-        /**
-         * Represents that the authorization code is returned successfully.
-         */
-        public static final int BROWSER_CODE_COMPLETE = 2003;
-
-        /**
-         * Represents that broker successfully returns the response.
-         */
-        public static final int TOKEN_BROKER_RESPONSE = 2004;
-
-        /**
-         * Webview throws Authentication exception. It needs to be send to callback.
-         */
-        public static final int BROWSER_CODE_AUTHENTICATION_EXCEPTION = 2005;
-
-        /**
-         * CA flow, device doesn't have company portal or azure authenticator installed.
-         * Waiting for broker package to be installed, and resume request in broker.
-         */
-        public static final int BROKER_REQUEST_RESUME = 2006;
-
-        /**
-         * Device registration in broker apps.
-         */
-        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
-
-        /**
-         * Represents that SDK signalled to cancelled the auth flow as app
-         * launched a new interactive auth request
-         */
-        public static final int BROWSER_CODE_SDK_CANCEL = 2008;
-
-        /**
-         * MDM Flow is triggered.
-         */
-        public static final int BROWSER_CODE_MDM = 2009;
-    }
-
-    /**
-     * Represents the request code.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class UIRequest {
-
-        /**
-         * Represents the request of browser flow.
-         */
-        public static final int BROWSER_FLOW = 1001;
-
-        /**
-         * Represents the request of token flow.
-         */
-        public static final int TOKEN_FLOW = 1002;
-
-        /**
-         * Represents the request of broker flow.
-         */
-        public static final int BROKER_FLOW = 1003;
-    }
-
-    /**
      * Represents the constant value of oauth2 params.
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -1134,11 +1058,6 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
-         * Device Registration redirect url host name
-         */
-        public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";
-
-        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";
@@ -1177,16 +1096,6 @@ public final class AuthenticationConstants {
          * Activity name to launch company portal.
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
-
-        /**
-         * Redirect URI parameter key to get link to install broker
-         */
-        public static final String INSTALL_URL_KEY = "app_link";
-
-        /**
-         * Redirect URI parameter key to get the upn
-         */
-        public static final String INSTALL_UPN_KEY = "username";
 
         /**
          * PRT nonce.
@@ -1675,29 +1584,12 @@ public final class AuthenticationConstants {
 
         public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
-        public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
-
-        public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
-
-        public static final String REQUEST_CANCELLED_BY_USER = "com.microsoft.identity.client.request.cancelled.by.user";
-
         public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
     }
 
     public static final class AuthorizationIntentAction {
-
-        /**
-         * an intent action specifying that the current interactive action should be cancelled.
-         */
-        public static final String CANCEL_INTERACTIVE_REQUEST = "cancel_interactive_request";
-
-        /**
-         * an intent action specifying that the intent contains authorization results.
-         */
-        public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
-
         /**
          * An intent action specifying that the authorization result redirect was returned to the application.
          */
@@ -1898,5 +1790,4 @@ public final class AuthenticationConstants {
          */
         public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
     }
-
 }

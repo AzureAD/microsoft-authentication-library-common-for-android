@@ -37,12 +37,14 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.crypto.IKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -98,6 +100,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
+import lombok.Getter;
 import lombok.SneakyThrows;
 
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
@@ -128,7 +131,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.UNKNO
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-class DevicePopManager implements IDevicePopManager {
+public class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
@@ -261,9 +264,11 @@ class DevicePopManager implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    DevicePopManager() throws KeyStoreException, CertificateException,
+    private final Context mContext;
+
+    public DevicePopManager(@NonNull final Context context) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
+        this(context, DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
     @Override
@@ -271,7 +276,8 @@ class DevicePopManager implements IDevicePopManager {
         return mKeyManager;
     }
 
-    DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
+    public DevicePopManager(@NonNull final Context context,
+                            @NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
@@ -285,6 +291,7 @@ class DevicePopManager implements IDevicePopManager {
                     }
                 })
                 .build();
+        mContext = context;
     }
 
     @Override
@@ -340,14 +347,13 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public void generateAsymmetricKey(@NonNull final Context context,
-                                      @NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+    public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            callback.onTaskCompleted(generateAsymmetricKey(context));
+                            callback.onTaskCompleted(generateAsymmetricKey());
                         } catch (final ClientException e) {
                             callback.onError(e);
                         }
@@ -357,13 +363,12 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String generateAsymmetricKey(@NonNull final Context context) throws ClientException {
+    public String generateAsymmetricKey() throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
-            sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
-            final KeyPair keyPair = generateNewRsaKeyPair(context, RSA_KEY_SIZE);
+            final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {

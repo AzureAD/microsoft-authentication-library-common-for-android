@@ -22,9 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
+import androidx.annotation.NonNull;
+
 import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 
 /**
  * Azure Active Directory B2C is effectively it's own OpenID Provider.  This class is responsible
@@ -34,9 +37,13 @@ public class AzureActiveDirectoryB2C
         extends IdentityProvider<AzureActiveDirectoryB2COAuth2Strategy, OAuth2Configuration> {
 
     @Override
-    public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(OAuth2Configuration config) {
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        return new AzureActiveDirectoryB2COAuth2Strategy(config, strategyParameters);
+    public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2Configuration config,
+                                                                      @NonNull final ICommonComponents commonComponents) {
+        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
+                .platformComponents(commonComponents)
+                .build();
+
+        return new AzureActiveDirectoryB2COAuth2Strategy(config, parameters);
     }
 
 }
