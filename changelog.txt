@@ -1,5 +1,6 @@
-VNext
+Version 3.5.0
 ----------
+- [MINOR] Code changes for new OneAuth cache key migration API (#1464)
 
 Version 3.4.5
 ----------

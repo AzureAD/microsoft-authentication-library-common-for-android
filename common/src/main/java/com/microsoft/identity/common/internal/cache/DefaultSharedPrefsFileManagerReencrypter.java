@@ -31,6 +31,7 @@ import java.util.Map;
 /**
  * Default implementation of {@link ISharedPrefsFileManagerReencrypter}.
  */
+@Deprecated
 public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
 
     @Override
