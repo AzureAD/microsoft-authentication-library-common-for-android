@@ -57,7 +57,7 @@ public class DataBagUtil {
         final DataBag result = new DataBag();
 
         for (final String key : bundle.keySet()) {
-            result.put(key, bundle.get(key));
+            result.put(key, bundle.getSerializable(key));
         }
 
         return result;

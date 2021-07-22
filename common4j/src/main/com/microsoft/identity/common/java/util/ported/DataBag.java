@@ -36,18 +36,16 @@ import lombok.experimental.Accessors;
 public class DataBag {
     private final INameValueStorage<Object> mMap = new InMemoryStorage<>();
 
-    public void put(@NonNull final String name, @Nullable final Object value) {
+    public <T extends Serializable> void put(@NonNull final String name, @Nullable final T value) {
         mMap.put(name, value);
     }
 
     @Nullable
-    @SuppressWarnings("unchecked")
     public <T extends Serializable> T get(@NonNull final String name) {
         return getOrDefaultInternal(name, null);
     }
 
     @NonNull
-    @SuppressWarnings("unchecked")
     public <T extends Serializable> T getOrDefault(@NonNull final String name, @NonNull final T defaultValue) {
        return getOrDefaultInternal(name, defaultValue);
     }
