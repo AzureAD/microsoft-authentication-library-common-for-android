@@ -36,6 +36,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
@@ -55,6 +57,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -143,6 +146,8 @@ class DevicePopManager implements IDevicePopManager {
      * Log message when private key material cannot be found.
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
+    public static final Type MAP_STRING_STRING_TYPE = new TypeToken<Map<String, String>>(){}.getType();
+    public static final Gson GSON = new Gson();
 
     /**
      * Manager class for interacting with key storage mechanism.
@@ -813,7 +818,7 @@ class DevicePopManager implements IDevicePopManager {
 
         try {
             final Map<String, Object> jwkMap = getDevicePopJwkMinifiedJson();
-            return jwkMap.get(SignedHttpRequestJwtClaims.JWK).toString();
+            return GSON.toJson(jwkMap.get(SignedHttpRequestJwtClaims.JWK), MAP_STRING_STRING_TYPE);
         } catch (final UnrecoverableEntryException e) {
             exception = e;
             errCode = INVALID_PROTECTION_PARAMS;
