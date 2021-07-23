@@ -101,8 +101,8 @@ import lombok.EqualsAndHashCode;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
-import static com.microsoft.identity.common.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
+import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {

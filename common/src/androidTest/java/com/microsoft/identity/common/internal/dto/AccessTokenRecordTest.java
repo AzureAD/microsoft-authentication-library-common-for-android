@@ -2,6 +2,8 @@ package com.microsoft.identity.common.internal.dto;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+
 import junit.framework.TestCase;
 
 import org.junit.Test;

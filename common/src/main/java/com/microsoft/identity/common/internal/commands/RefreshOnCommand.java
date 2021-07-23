@@ -26,13 +26,13 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.result.VoidResult;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;

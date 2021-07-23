@@ -22,8 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.logging.Logger;
 
 /*
