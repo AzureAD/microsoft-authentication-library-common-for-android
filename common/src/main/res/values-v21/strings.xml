@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- used by webview to enable Negotiate Challenge handling see https://chromium.googlesource.com/chromium/src/+/master/docs/webview_policies.md -->
+    <string name="AuthAndroidNegotiateAccountTypeDesc">Specifies the account type of the accounts provided by the Android authentication app that supports HTTP Negotiate authentication (e.g. Kerberos authentication). This information should be available from the supplier of the authentication app. For more details see https://goo.gl/hajyfN. If no setting is provided, HTTP Negotiate authentication is disabled on Android.</string>
+    <string name="AuthAndroidNegotiateAccountTypeTitle">Account type for HTTP Negotiate authentication</string>
+    <string name="AuthServerWhitelistDesc">Specifies which servers should be whitelisted for integrated authentication. Integrated authentication is only enabled when Chromium receives an authentication challenge from a proxy or from a server which is in this permitted list. Separate multiple server names with commas. Wildcards (*) are allowed. If you leave this policy not set Chromium will try to detect if a server is on the Intranet and only then will it respond to IWA requests. If a server is detected as Internet then IWA requests from it will be ignored by Chromium.</string>
+    <string name="AuthServerWhitelistTitle">Authentication server whitelist</string>
+    <string name="NtlmV2EnabledDesc">Controls whether NTLMv2 is enabled. All recent versions of Samba and Windows servers support NTLMv2. This should only be disabled for backwards compatibility and reduces the security of authentication. If this policy is not set, the default is true and NTLMv2 is enabled.</string>
+    <string name="NtlmV2EnabledTitle">Whether NTLMv2 authentication is enabled.</string>
+</resources>

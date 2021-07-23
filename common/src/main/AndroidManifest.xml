@@ -4,7 +4,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+
     <application>
+        <!-- used by webview to enable Negotiate Challenge handling see https://chromium.googlesource.com/chromium/src/+/master/docs/webview_policies.md -->
+        <meta-data
+            android:name="android.content.APP_RESTRICTIONS"
+            android:resource="@xml/webview_app_restrictions" />
         <activity
             android:name="com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity"
             android:configChanges="orientation|keyboardHidden|screenSize|smallestScreenSize|screenLayout" />

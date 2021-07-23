@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- used by webview to enable Negotiate Challenge handling see https://chromium.googlesource.com/chromium/src/+/master/docs/webview_policies.md -->
+    <restriction android:description="@string/NtlmV2EnabledDesc" android:title="@string/NtlmV2EnabledTitle" android:key="com.android.browser:NtlmV2Enabled" android:restrictionType="bool" />
+    <restriction android:description="@string/AuthServerWhitelistDesc" android:title="@string/AuthServerWhitelistTitle" android:key="com.android.browser:AuthServerWhitelist" android:restrictionType="string" />
+    <restriction android:description="@string/AuthAndroidNegotiateAccountTypeDesc" android:title="@string/AuthAndroidNegotiateAccountTypeTitle" android:key="com.android.browser:AuthAndroidNegotiateAccountType" android:restrictionType="string" />
+</restrictions>
