@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] Enabling refresh_in feature (#1310)
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
 - [PATCH] Add method to check if two authorities belong to same cloud (#1471)
 - [MINOR] Adds new cache encryption key migration API for OneAuth (#1464)
 - [MAJOR] Migrate StorageHelper to common4j (#1450)

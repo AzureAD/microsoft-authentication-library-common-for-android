@@ -54,6 +54,20 @@ public class TokenResponse implements ISuccessResponse {
     @SerializedName("expires_in")
     private Long mExpiresIn;
 
+
+    /**
+     * RECOMMENDED.  The refresh lifetime in seconds of the access token.  For
+     * example, the value "1800" denotes that the access token will
+     * be refreshed in half an hour from the time the response was generated.
+     * If omitted, the authorization server SHOULD provide the
+     * refresh time via other means or document the default value.
+     *
+     * @see <a href="https://tools.ietf.org/html/rfc6749#section-5.1">RFC 6749 - Successful Response</a>
+     */
+    @Expose()
+    @SerializedName("refresh_in")
+    private Long mRefreshIn;
+
     /**
      * REQUIRED.  The access token issued by the authorization server.
      *
@@ -160,6 +174,24 @@ public class TokenResponse implements ISuccessResponse {
      */
     public void setExpiresIn(final Long expiresIn) {
         mExpiresIn = expiresIn;
+    }
+
+    /**
+     * Gets the response refresh_in.
+     *
+     * @return The refresh_in to get.
+     */
+    public Long getRefreshIn() {
+        return mRefreshIn;
+    }
+
+    /**
+     * Sets the response expires_in.
+     *
+     * @param refreshIn The refresh_in to set.
+     */
+    public void setRefreshIn(final Long refreshIn) {
+        mRefreshIn = refreshIn;
     }
 
     /**
@@ -296,6 +328,7 @@ public class TokenResponse implements ISuccessResponse {
     public String toString() {
         return "TokenResponse{" +
                 "mExpiresIn=" + mExpiresIn +
+                ", mRefreshIn=" + mRefreshIn +
                 ", mAccessToken='" + mAccessToken + '\'' +
                 ", mTokenType='" + mTokenType + '\'' +
                 ", mRefreshToken='" + mRefreshToken + '\'' +

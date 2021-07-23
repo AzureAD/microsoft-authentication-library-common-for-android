@@ -87,7 +87,8 @@ public class AccessTokenRecord extends Credential {
         public static final String REQUESTED_CLAIMS = "requested_claims";
 
         /**
-         * String of refresh_in.
+         * Client side representation of refresh_in time interval value provided from eSTS response.
+         * refresh_on is an epoch time, and is calculated based on the refresh_in interval.
          */
         public static final String REFRESH_ON = "refresh_on";
     }
@@ -317,6 +318,15 @@ public class AccessTokenRecord extends Credential {
     }
 
     /**
+     * Convenience method for determining if refreshIn is returned from server.
+     *
+     * @return RefreshOn is active.
+     */
+    public boolean refreshOnIsActive() {
+        return !getExpiresOn().equals(getRefreshOn());
+    }
+
+    /**
      * Sets the refresh_on timestamp.
      *
      * @param refreshOn The refresh_on to set.
@@ -357,10 +367,8 @@ public class AccessTokenRecord extends Credential {
         final String refreshOn = getRefreshOn();
         if (refreshOn != null && !refreshOn.isEmpty()) {
             return isExpired(refreshOn);
-        }
-        else if(getRefreshOn() != null) {
+        } else {
             return isExpired();
         }
-        return true;
     }
 }
