@@ -22,18 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
-import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
-import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftClientAssertion;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
+import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
+import com.microsoft.identity.common.java.providers.keys.KeyStoreConfiguration;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftClientAssertion;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
 import org.junit.Ignore;
 import org.junit.Test;

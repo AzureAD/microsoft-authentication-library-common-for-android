@@ -24,8 +24,8 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;

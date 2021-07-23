@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
-import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.internal.test.labapi.ApiException;
 import com.microsoft.identity.internal.test.labapi.api.AppApi;
 import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
@@ -237,7 +237,7 @@ public class LabUserHelper {
         LabConfig.setCurrentLabConfig(labConfig);
         UserInfo userInfo = labConfig.getConfigInfo().getUserInfo();
         String upn = userInfo.getHomeUPN();
-        if (StringUtil.isNullOrEmpty(upn) || upn.equalsIgnoreCase("None")) {
+        if (StringUtil.isEmpty(upn) || upn.equalsIgnoreCase("None")) {
             upn = userInfo.getUpn();
         }
 

@@ -30,11 +30,12 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.internal.cache.DefaultSharedPrefsFileManagerReencrypter;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.cache.ISharedPrefsFileManagerReencrypter;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
+import com.microsoft.identity.common.internal.controllers.TaskCompletedCallback;
+import com.microsoft.identity.common.migration.DefaultSharedPrefsFileManagerReencrypter;
+import com.microsoft.identity.common.migration.IMigrationOperationResult;
+import com.microsoft.identity.common.migration.ISharedPrefsFileManagerReencrypter;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -123,7 +124,6 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile = SharedPreferencesFileManager.getSharedPreferences(
                 mContext,
                 TEST_CACHE_FILENAME,
-                -1,
                 null
         );
         mFileManagerReencrypter = new DefaultSharedPrefsFileManagerReencrypter();
@@ -184,16 +184,12 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false,
                         false
                 ),
-                new TaskCompletedCallbackWithError<Void, Exception>() {
+                new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onError(Exception e) {
-                        e.printStackTrace();
-                        Assert.fail();
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onTaskCompleted(Void aVoid) {
+                    public void onTaskCompleted(final IMigrationOperationResult iMigrationOperationResult) {
+                        Assert.assertEquals(0, iMigrationOperationResult.getCountOfTotalRecords());
+                        Assert.assertEquals(0, iMigrationOperationResult.getCountOfFailedRecords());
+                        Assert.assertEquals(0, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
                 }
@@ -270,16 +266,12 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false,
                         false
                 ),
-                new TaskCompletedCallbackWithError<Void, Exception>() {
+                new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onError(Exception e) {
-                        e.printStackTrace();
-                        Assert.fail();
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onTaskCompleted(Void aVoid) {
+                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                        Assert.assertEquals(10, iMigrationOperationResult.getCountOfTotalRecords());
+                        Assert.assertEquals(0, iMigrationOperationResult.getCountOfFailedRecords());
+                        Assert.assertEquals(0, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
                 }
@@ -290,14 +282,14 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         Assert.assertEquals(10, mTestCacheFile.getAll().size());
     }
 
-    @Test(expected = IOException.class)
+    @Test
     public void testAbortOnError() throws Exception {
         final String sampleKey = "sample_key";
         final String sampleValue = "plaintext_value";
         mTestCacheFile.putString(sampleKey, sampleValue);
 
         // Try to decrypt the unencrypted data, it will fail
-        mFileManagerReencrypter.reencrypt(
+        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
                 mTestCacheFile,
                 mStringEncrypter,
                 new ISharedPrefsFileManagerReencrypter.IStringDecrypter() {
@@ -314,6 +306,10 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false
                 )
         );
+
+        Assert.assertEquals(1, result.getCountOfTotalRecords());
+        Assert.assertEquals(1, result.getCountOfFailedRecords());
+        Assert.assertEquals(1, result.getFailures().size());
     }
 
     @Test
@@ -339,15 +335,12 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         false,
                         false
                 ),
-                new TaskCompletedCallbackWithError<Void, Exception>() {
+                new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onError(Exception error) {
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onTaskCompleted(Void aVoid) {
-                        Assert.fail();
+                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                        Assert.assertEquals(1, iMigrationOperationResult.getCountOfTotalRecords());
+                        Assert.assertEquals(1, iMigrationOperationResult.getCountOfFailedRecords());
+                        Assert.assertEquals(1, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
                 }
@@ -406,15 +399,12 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         true,
                         false
                 ),
-                new TaskCompletedCallbackWithError<Void, Exception>() {
+                new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onTaskCompleted(Void aVoid) {
+                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                        Assert.assertEquals(1, iMigrationOperationResult.getCountOfTotalRecords());
+                        Assert.assertEquals(1, iMigrationOperationResult.getCountOfFailedRecords());
+                        Assert.assertEquals(1, iMigrationOperationResult.getFailures().size());
                         latch.countDown();
                     }
                 }
@@ -483,15 +473,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         true,
                         false
                 ),
-                new TaskCompletedCallbackWithError<Void, Exception>() {
+                new TaskCompletedCallback<IMigrationOperationResult>() {
                     @Override
-                    public void onError(Exception error) {
-                        Assert.fail();
-                        latch.countDown();
-                    }
-
-                    @Override
-                    public void onTaskCompleted(Void aVoid) {
+                    public void onTaskCompleted(IMigrationOperationResult iMigrationOperationResult) {
+                        Assert.assertEquals(2, iMigrationOperationResult.getCountOfTotalRecords());
+                        Assert.assertEquals(2, iMigrationOperationResult.getCountOfFailedRecords());
+                        Assert.assertEquals(1, iMigrationOperationResult.getFailures().size());
+                        Assert.assertEquals(0, mTestCacheFile.getAll().size());
                         latch.countDown();
                     }
                 }
@@ -529,7 +517,6 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         Assert.assertEquals(legacyEncryptedValue, mTestCacheFile.getString(key));
     }
 
-    @Test(expected = Exception.class)
     public void testIncorrectKeyProvidedThrows() throws Exception {
         final byte[] mockKey = generateLegacyFormatKey("abcdefabcd");
         final TestEncrypterDecrypter origDelegate = new TestEncrypterDecrypter(mContext, mockKey);
@@ -542,7 +529,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile.putString(key, legacyEncryptedValue);
 
         // Attempt to reencrypt the cache, but provide the wrong key intentionally
-        mFileManagerReencrypter.reencrypt(
+        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
@@ -572,7 +559,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile.putString(keyTwo, anotherLegacyEncryptedValue);
 
         // Attempt to reencrypt the cache, but provide the wrong key intentionally
-        mFileManagerReencrypter.reencrypt(
+        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
@@ -586,6 +573,9 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         // Assert entries removed
         Assert.assertNull(mTestCacheFile.getString(keyOne));
         Assert.assertNull(mTestCacheFile.getString(keyTwo));
+        Assert.assertEquals(2, result.getCountOfTotalRecords());
+        Assert.assertEquals(2, result.getCountOfFailedRecords());
+        Assert.assertEquals(1, result.getFailures().size());
     }
 
     @Test
@@ -606,21 +596,21 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mTestCacheFile.putString(keyTwo, anotherLegacyEncryptedValue);
 
         // Attempt to reencrypt the cache, but provide the wrong key intentionally
-        try {
-            mFileManagerReencrypter.reencrypt(
-                    mTestCacheFile,
-                    mTestEncrypterDecrypter,
-                    mTestEncrypterDecrypter,
-                    new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
-                            true,
-                            true,
-                            false
-                    )
-            );
-        } catch (final Exception e) {
-            Assert.assertNull(mTestCacheFile.getString(keyOne));
-            Assert.assertEquals(anotherLegacyEncryptedValue, mTestCacheFile.getString(keyTwo));
-        }
+        final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
+                mTestCacheFile,
+                mTestEncrypterDecrypter,
+                mTestEncrypterDecrypter,
+                new ISharedPrefsFileManagerReencrypter.ReencryptionParams(
+                        true,
+                        true,
+                        false
+                )
+        );
+
+        Assert.assertEquals(2, result.getCountOfTotalRecords());
+        Assert.assertEquals(1, result.getCountOfFailedRecords());
+        Assert.assertNull(mTestCacheFile.getString(keyOne));
+        Assert.assertEquals(anotherLegacyEncryptedValue, mTestCacheFile.getString(keyTwo));
     }
 
     @Test

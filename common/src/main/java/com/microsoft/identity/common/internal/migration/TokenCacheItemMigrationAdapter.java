@@ -24,41 +24,42 @@ package com.microsoft.identity.common.internal.migration;
 
 import android.net.Uri;
 import android.text.TextUtils;
-import android.util.Pair;
+
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -92,10 +93,10 @@ public class TokenCacheItemMigrationAdapter {
      * @param cacheItems The cache items to migrate.
      * @return The result.
      */
-    public static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
+    public static List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> migrateTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final Collection<ADALTokenCacheItem> cacheItems) {
-        final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         final boolean cloudMetadataLoaded = loadCloudDiscoveryMetadata();
 
@@ -259,10 +260,10 @@ public class TokenCacheItemMigrationAdapter {
         );
     }
 
-    private static List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
+    private static List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final List<ADALTokenCacheItem> filteredTokens) {
-        final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+        final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
         final int tokenCount = filteredTokens.size();
 
         // Create a CountDownLatch to parallelize these requests
@@ -275,14 +276,14 @@ public class TokenCacheItemMigrationAdapter {
                 public void run() {
                     final ADALTokenCacheItem targetCacheItemToRenew = filteredTokens.get(subIndex);
 
-                    final Pair<MicrosoftAccount, MicrosoftRefreshToken> renewedPair = renewToken(
+                    final Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> renewedKeyValuePair = renewToken(
                             redirects.get(targetCacheItemToRenew.getClientId()),
                             targetCacheItemToRenew
                     );
 
-                    if (null != renewedPair) {
+                    if (null != renewedKeyValuePair) {
                         result.add(
-                                renewedPair
+                                renewedKeyValuePair
                         );
                     }
 
@@ -307,10 +308,10 @@ public class TokenCacheItemMigrationAdapter {
     }
 
     @Nullable
-    public static Pair<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
+    public static Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> renewToken(
             @Nullable final String redirectUri,
             @NonNull final ITokenCacheItem targetCacheItemToRenew) {
-        Pair<MicrosoftAccount, MicrosoftRefreshToken> resultPair = null;
+        Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
 
         if (!StringExtensions.isNullOrBlank(redirectUri)) {
             try {
@@ -365,7 +366,7 @@ public class TokenCacheItemMigrationAdapter {
                             ).getPreferredCacheHostName()
                     );
 
-                    resultPair = new Pair<>(account, msStsRt);
+                    resultKeyValuePair = new AbstractMap.SimpleEntry<>(account, msStsRt);
                 } else {
                     Logger.warn(
                             TAG,
@@ -386,7 +387,7 @@ public class TokenCacheItemMigrationAdapter {
             }
         }
 
-        return resultPair;
+        return resultKeyValuePair;
     }
 
     @NonNull

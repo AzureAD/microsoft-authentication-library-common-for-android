@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.app.Activity;
-import android.util.Pair;
 
 import androidx.fragment.app.Fragment;
 
@@ -35,6 +34,7 @@ import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,7 +74,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
     @Expose()
     private final boolean handleNullTaskAffinity;
 
-    private final List<Pair<String, String>> extraQueryStringParameters;
+    private final List<Map.Entry<String, String>> extraQueryStringParameters;
 
     private final List<String> extraScopesToConsent;
 
@@ -82,7 +82,7 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
         return handleNullTaskAffinity;
     }
 
-    public List<Pair<String, String>> getExtraQueryStringParameters() {
+    public List<Map.Entry<String, String>> getExtraQueryStringParameters() {
         return this.extraQueryStringParameters == null ? null : new ArrayList<>(this.extraQueryStringParameters);
     }
 

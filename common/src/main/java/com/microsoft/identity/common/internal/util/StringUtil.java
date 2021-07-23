@@ -23,14 +23,15 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
+import java.util.AbstractMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -116,7 +117,7 @@ public final class StringUtil {
      * @return A Pair of Strings representing the uid/utid of the supplied home_account_id.
      * Return value cannot be null, but its values (pair.first, pair.second) may be.
      */
-    public static Pair<String, String> getTenantInfo(@NonNull final String homeAccountId) {
+    public static Map.Entry<String, String> getTenantInfo(@NonNull final String homeAccountId) {
         // Split this value by its parts... <uid>.<utid>
         final int EXPECTED_LENGTH = 2;
         final int INDEX_UID = 0;
@@ -134,7 +135,7 @@ public final class StringUtil {
             utid = uidUtidArray[INDEX_UTID];
         }
 
-        return new Pair<>(uid, utid);
+        return new AbstractMap.SimpleEntry<>(uid, utid);
     }
 
     /**
@@ -187,29 +188,6 @@ public final class StringUtil {
     public static boolean isFirstVersionLargerOrEqual(@NonNull final String first,
                                                       @Nullable final String second) {
         return compareSemanticVersion(first, second) >= 0;
-    }
-
-    /**
-     * Counts the number of occurrences of one String in another.
-     *
-     * @param str
-     * @param subString
-     * @return int
-     */
-    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
-        int count = 0;
-
-        if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
-            return count;
-        }
-
-        for (int i = 0; i <= (str.length() - subString.length()); i++) {
-            if (str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
-                count++;
-            }
-        }
-
-        return count;
     }
 
     /**

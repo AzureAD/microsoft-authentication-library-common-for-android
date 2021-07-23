@@ -23,65 +23,68 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.exception.ServiceException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.SchemaUtil;
+import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.AccountRecord;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
-import com.microsoft.identity.common.logging.DiagnosticContext;
-import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftTokenResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.internal.providers.oauth2.IResult;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.telemetry.CliTelemInfo;
+import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IResult;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -95,6 +98,7 @@ import java.util.regex.Pattern;
 
 import lombok.EqualsAndHashCode;
 
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
 import static com.microsoft.identity.common.exception.ServiceException.SERVICE_NOT_AVAILABLE;
@@ -179,27 +183,31 @@ public abstract class BaseController {
         }
 
         builder.setClientId(parameters.getClientId())
-                .setRedirectUri(parameters.getRedirectUri())
-                .setCorrelationId(correlationId);
+                .setRedirectUri(parameters.getRedirectUri());
+
+        if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
+            ((MicrosoftAuthorizationRequest.Builder) builder).setCorrelationId(correlationId);
+        }
 
         final Set<String> scopes = parameters.getScopes();
 
         if (parameters instanceof InteractiveTokenCommandParameters) {
-            InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
+            final InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
             // Set the multipleCloudAware and slice fields.
-            if (interactiveTokenCommandParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
-                final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
-                ((MicrosoftAuthorizationRequest.Builder) builder)
-                        .setAuthority(requestAuthority.getAuthorityURL())
-                        .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                        .setStateGenerator(new AndroidTaskStateGenerator(interactiveTokenCommandParameters.getActivity().getTaskId()))
-                        .setSlice(requestAuthority.mSlice);
-            }
-
-            if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+            if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
                 ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
+                if (interactiveTokenCommandParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
+                    final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
+                    ((MicrosoftStsAuthorizationRequest.Builder) builder)
+                            .setAuthority(requestAuthority.getAuthorityURL())
+                            .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
+                            .setState(new AndroidTaskStateGenerator(interactiveTokenCommandParameters.getActivity().getTaskId()).generate())
+                            .setSlice(requestAuthority.mSlice);
+                }
             }
 
+            // Adding getExtraScopesToConsent to "Auth" request only.
+            // https://docs.microsoft.com/bs-latn-ba/azure/active-directory/develop/msal-net-user-gets-consent-for-multiple-resources
             if (interactiveTokenCommandParameters.getExtraScopesToConsent() != null) {
                 scopes.addAll(interactiveTokenCommandParameters.getExtraScopesToConsent());
             }
@@ -219,13 +227,13 @@ public abstract class BaseController {
             );
 
             // Add additional fields to the AuthorizationRequest.Builder to support interactive
-
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
             if (!StringExtensions.isNullOrBlank(interactiveTokenCommandParameters.getLoginHint()) &&
-                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT) {
-                builder.setPrompt(null);
+                    interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT &&
+                    builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
             }
         }
 
@@ -237,12 +245,8 @@ public abstract class BaseController {
     // Suppressing unchecked warning as the generic type was not provided during constructing builder object.
     @SuppressWarnings(WarningType.unchecked_warning)
     private void setBuilderProperties(@SuppressWarnings(WarningType.rawtype_warning) @NonNull AuthorizationRequest.Builder builder, @NonNull TokenCommandParameters parameters, InteractiveTokenCommandParameters interactiveTokenCommandParameters, HashMap<String, String> completeRequestHeaders) {
-        builder.setLoginHint(
-                interactiveTokenCommandParameters.getLoginHint()
-        ).setExtraQueryParams(
+        builder.setExtraQueryParams(
                 interactiveTokenCommandParameters.getExtraQueryStringParameters()
-        ).setPrompt(
-                interactiveTokenCommandParameters.getPrompt().toString()
         ).setClaims(
                 parameters.getClaimsRequestJson()
         ).setRequestHeaders(
@@ -251,9 +255,24 @@ public abstract class BaseController {
                 interactiveTokenCommandParameters.isWebViewZoomEnabled()
         ).setWebViewZoomControlsEnabled(
                 interactiveTokenCommandParameters.isWebViewZoomControlsEnabled()
-        ).setCpInstallationDetail(
-                parameters.getAndroidApplicationContext()
         );
+
+        if (builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
+            final MicrosoftStsAuthorizationRequest.Builder msBuilder = (MicrosoftStsAuthorizationRequest.Builder) builder;
+            msBuilder.setLoginHint(
+                    interactiveTokenCommandParameters.getLoginHint()
+            ).setPrompt(
+                    interactiveTokenCommandParameters.getPrompt().toString()
+            );
+
+            try {
+                final PackageInfo packageInfo =
+                        parameters.getAndroidApplicationContext().getPackageManager().getPackageInfo(COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
+                msBuilder.setInstalledCompanyPortalVersion(packageInfo.versionName);
+            } catch (final PackageManager.NameNotFoundException e) {
+                // CP is not installed. No need to do anything.
+            }
+        }
     }
 
     // Suppressing rawtype warnings due to the generic type AuthorizationRequest, OAuth2Strategy and Builder
@@ -265,7 +284,7 @@ public abstract class BaseController {
         return builder.build();
     }
 
-   protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+    protected TokenResult performTokenRequest(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                               @SuppressWarnings(WarningType.rawtype_warning) @NonNull final AuthorizationRequest request,
                                               @NonNull final AuthorizationResponse response,
                                               @NonNull final InteractiveTokenCommandParameters parameters)
@@ -289,7 +308,7 @@ public abstract class BaseController {
         }
 
         if (parameters instanceof IHasExtraParameters) {
-            ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters)parameters).getExtraParameters());
+            ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters) parameters).getExtraParameters());
         }
 
         logExposedFieldsOfObject(TAG + methodName, tokenRequest);
@@ -739,6 +758,7 @@ public abstract class BaseController {
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getAccount().getHomeAccountId();
         final String localAccountId = parameters.getAccount().getLocalAccountId();
+        final String environment = parameters.getAccount().getEnvironment();
 
         AccountRecord targetAccount;
 
@@ -760,7 +780,7 @@ public abstract class BaseController {
             targetAccount = parameters
                     .getOAuth2TokenCache()
                     .getAccountByLocalAccountId(
-                            null,
+                            environment,
                             clientId,
                             localAccountId
                     );

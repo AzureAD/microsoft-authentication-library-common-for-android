@@ -22,10 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.InstrumentationRegistry;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 
@@ -41,10 +45,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
-
 @RunWith(Parameterized.class)
 public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHelper {
 
@@ -58,15 +58,13 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public static Iterable<ISharedPreferencesFileManager> testParams() {
         return Arrays.asList(new ISharedPreferencesFileManager[]{
                 SharedPreferencesFileManager.getSharedPreferences(
-                        InstrumentationRegistry.getTargetContext(),
-                        sTEST_SHARED_PREFS_NAME,
-                        -1, null
+                        ApplicationProvider.getApplicationContext(),
+                        sTEST_SHARED_PREFS_NAME,null
                 ),
                 SharedPreferencesFileManager.getSharedPreferences(
-                        InstrumentationRegistry.getTargetContext(),
+                        ApplicationProvider.getApplicationContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        -1,
-                        new StorageHelper(InstrumentationRegistry.getTargetContext())
+                        new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null)
                 )
         });
     }

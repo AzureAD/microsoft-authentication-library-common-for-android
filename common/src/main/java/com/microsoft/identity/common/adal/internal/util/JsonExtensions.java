@@ -28,17 +28,11 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.util.ICacheRecordGsonAdapter;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Helper methods related to JSON.
@@ -47,28 +41,6 @@ public final class JsonExtensions {
 
     private JsonExtensions() {
         // Utility class.
-    }
-
-    /**
-     * Extract JSON Object into Map<String, String>.
-     *
-     * @param jsonString String
-     * @return Map
-     * @throws JSONException if JSON string is malformed.
-     */
-    public static Map<String, String> extractJsonObjectIntoMap(final String jsonString)
-            throws JSONException {
-
-        final JSONObject jsonObject = new JSONObject(jsonString);
-        final Iterator<String> keyIterator = jsonObject.keys();
-
-        final Map<String, String> responseItems = new HashMap<>();
-        while (keyIterator.hasNext()) {
-            final String key = keyIterator.next();
-            responseItems.put(key, jsonObject.getString(key));
-        }
-
-        return responseItems;
     }
 
     /**

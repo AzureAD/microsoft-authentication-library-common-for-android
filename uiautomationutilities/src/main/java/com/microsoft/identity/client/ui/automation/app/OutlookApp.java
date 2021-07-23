@@ -57,7 +57,7 @@ public class OutlookApp extends App implements IFirstPartyApp {
                                 @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) {
         Logger.i(TAG, "Adding First Account..");
         // Click start btn
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_add_account");
+        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/btn_primary_button");
 
         // sign in with supplied username/password
         signIn(username, password, promptHandlerParameters);
@@ -76,8 +76,6 @@ public class OutlookApp extends App implements IFirstPartyApp {
         // click may be later
         UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/bottom_flow_navigation_start_button");
 
-        // Skip through account added optional UI
-        UiAutomatorUtils.handleButtonClick("com.microsoft.office.outlook:id/product_tour_skip_btn");
     }
 
     @Override

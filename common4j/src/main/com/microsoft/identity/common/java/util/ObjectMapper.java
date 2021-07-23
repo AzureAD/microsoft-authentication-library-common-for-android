@@ -308,10 +308,10 @@ public final class ObjectMapper {
      * Method to deserialize the query string into a map.
      *
      * @param queryString String
-     * @return Map
+     * @return a {@link LinkedHashMap} containing the query params.
      */
     public static Map<String, String> deserializeQueryStringToMap(final String queryString) {
-        final Map<String, String> decodedUrlMap = new HashMap<>();
+        final Map<String, String> decodedUrlMap = new LinkedHashMap<>();
 
         if (StringUtil.isNullOrEmpty(queryString)) {
             return decodedUrlMap;

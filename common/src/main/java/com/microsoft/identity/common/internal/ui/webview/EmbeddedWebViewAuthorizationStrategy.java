@@ -25,23 +25,24 @@ package com.microsoft.identity.common.internal.ui.webview;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.concurrent.Future;
 
 /**
@@ -74,12 +75,12 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
      */
     @Override
     public Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
-                                                            GenericOAuth2Strategy oAuth2Strategy) {
+                                                            GenericOAuth2Strategy oAuth2Strategy) throws URISyntaxException {
         mAuthorizationResultFuture = new ResultFuture<>();
         mOAuth2Strategy = oAuth2Strategy;
         mAuthorizationRequest = authorizationRequest;
         Logger.info(TAG, "Perform the authorization request with embedded webView.");
-        final Uri requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+        final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
         final Intent authIntent = buildAuthorizationActivityStartIntent(requestUrl);
 
         launchIntent(authIntent);
@@ -88,7 +89,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
 
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
-    private Intent buildAuthorizationActivityStartIntent(Uri requestUrl) {
+    private Intent buildAuthorizationActivityStartIntent(URI requestUrl) {
         return AuthorizationActivity.createStartIntent(
                     getApplicationContext(),
                     null,
@@ -106,8 +107,7 @@ public class EmbeddedWebViewAuthorizationStrategy<GenericOAuth2Strategy extends 
             if (mOAuth2Strategy != null && mAuthorizationResultFuture != null) {
 
                 //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-                @SuppressWarnings(WarningType.unchecked_warning)
-                final AuthorizationResult result = mOAuth2Strategy
+                @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
                         .getAuthorizationResultFactory()
                         .createAuthorizationResult(
                                 resultCode,

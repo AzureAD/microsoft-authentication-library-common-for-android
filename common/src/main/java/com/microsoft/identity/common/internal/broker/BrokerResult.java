@@ -26,17 +26,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
-import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
-public class BrokerResult implements Serializable {
+public class BrokerResult {
 
-    private class SerializedNames {
+    private static class SerializedNames {
         static final String TENANT_PROFILE_CACHE_RECORDS = "tenant_profile_cache_records";
         static final String ACCESS_TOKEN = "access_token";
         static final String ID_TOKEN = "id_token";
@@ -243,7 +245,7 @@ public class BrokerResult implements Serializable {
     // Exception parameters
 
     /**
-     * Error code corresponding to any of the {@link com.microsoft.identity.common.exception.ErrorStrings}
+     * Error code corresponding to any of the {@link ErrorStrings}
      */
     @Nullable
     @SerializedName(SerializedNames.BROKER_ERROR_CODE)
@@ -355,7 +357,9 @@ public class BrokerResult implements Serializable {
     }
 
     public List<ICacheRecord> getTenantProfileData() {
-        return mTenantProfileData;
+        return mTenantProfileData == null
+                ? null
+                : new ArrayList<>(mTenantProfileData);
     }
 
     public String getCliTelemSubErrorCode() {
@@ -398,7 +402,9 @@ public class BrokerResult implements Serializable {
         return mSuccess;
     }
 
-    public boolean isServicedFromCache() { return mServicedFromCache; }
+    public boolean isServicedFromCache() {
+        return mServicedFromCache;
+    }
 
     public String getRefreshTokenAge() {
         return mRefreshTokenAge;
@@ -673,7 +679,9 @@ public class BrokerResult implements Serializable {
         }
 
         public Builder tenantProfileRecords(final List<ICacheRecord> cacheRecordWithTenantProfileData) {
-            this.mTenantProfileData = cacheRecordWithTenantProfileData;
+            if (cacheRecordWithTenantProfileData != null) {
+                this.mTenantProfileData = new ArrayList<>(cacheRecordWithTenantProfileData);
+            }
             return this;
         }
 

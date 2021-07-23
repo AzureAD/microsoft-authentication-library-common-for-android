@@ -1491,7 +1491,7 @@ public final class AuthenticationConstants {
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null)
-                ;
+            ;
             /**
              * The content provider path that the API exists behind.
              */
@@ -1697,6 +1697,23 @@ public final class AuthenticationConstants {
          * an intent action specifying that the intent contains authorization results.
          */
         public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
+
+        /**
+         * An intent action specifying that the authorization result redirect was returned to the application.
+         */
+        public static final String REDIRECT_RETURNED_ACTION = "redirect_returned_action";
+
+        /**
+         * An intent action specifying that the activity receiving the authorization result redirect should be destroyed.
+         */
+        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION = "destroy_redirect_receiving_activity_action";
+
+        /**
+         * An intent action used to tell the activity used to launch custom tabs that it should re-launch in order to close the custom tabs UI
+         * Custom Tabs does not provide a mechanism to programmtically close custom tabs... hence we have to make this happen via the activity used
+         * to launch custom tabs and intent flags to clear the task.
+         */
+        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
     }
 
     /**
@@ -1833,13 +1850,11 @@ public final class AuthenticationConstants {
     public static final class TelemetryEvents {
         public static final String DECRYPTION_ERROR = "decryption_error_v2";
 
-        public static final String KEYCHAIN_WRITE_START = "keychain_write_v2_start";
-
-        public static final String KEYCHAIN_WRITE_END = "keychain_write_v2_end";
-
-        public static final String KEYCHAIN_READ_START = "keychain_read_v2_start";
-
-        public static final String KEYCHAIN_READ_END = "keychain_read_v2_end";
+        // The event names have been wrong. It should be keystore, not keychain.
+        public static final String KEYSTORE_WRITE_START = "keychain_write_v2_start";
+        public static final String KEYSTORE_WRITE_END = "keychain_write_v2_end";
+        public static final String KEYSTORE_READ_START = "keychain_read_v2_start";
+        public static final String KEYSTORE_READ_END = "keychain_read_v2_end";
 
         public static final String KEY_RETRIEVAL_START = "key_retrieval_v2_start";
 

@@ -77,7 +77,7 @@ public class HelloCache {
     public HelloCache(final @NonNull Context context,
                       final @NonNull String protocolName,
                       final @NonNull String targetAppPackageName) {
-        mFileManager = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFERENCE_NAME, -1, null);
+        mFileManager = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFERENCE_NAME, null);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;

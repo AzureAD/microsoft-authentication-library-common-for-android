@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import android.accounts.Account;
 import android.text.TextUtils;
 
-import com.microsoft.identity.common.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 

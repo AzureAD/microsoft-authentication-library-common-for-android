@@ -48,15 +48,14 @@ public class ClockSkewManager extends com.microsoft.identity.common.java.util.Cl
 
     @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public ClockSkewManager(@NonNull final ISharedPreferencesFileManager manager) {
-        super(new SharedPrefLongKeyPairStorage(manager));
+        super(new SharedPrefLongNameValueStorage(manager));
     }
 
     public ClockSkewManager(@NonNull final Context context) {
-        super(new SharedPrefLongKeyPairStorage(
+        super(new SharedPrefLongNameValueStorage(
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         PreferencesMetadata.SKEW_PREFERENCES_FILENAME,
-                        -1,
                         null
                 )
         ));

@@ -32,10 +32,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 
 import java.lang.ref.WeakReference;
+import java.net.URISyntaxException;
 import java.util.concurrent.Future;
 
 /**
@@ -47,9 +50,9 @@ import java.util.concurrent.Future;
 @SuppressWarnings(WarningType.rawtype_warning)
 public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
         GenericAuthorizationRequest extends AuthorizationRequest> {
-    private WeakReference<Context> mReferencedApplicationContext;
-    private WeakReference<Activity> mReferencedActivity;
-    private WeakReference<Fragment> mReferencedFragment;
+    private final WeakReference<Context> mReferencedApplicationContext;
+    private final WeakReference<Activity> mReferencedActivity;
+    private final WeakReference<Fragment> mReferencedFragment;
 
     /**
      * Constructor of AuthorizationStrategy.
@@ -74,12 +77,12 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
         final Fragment fragment = mReferencedFragment.get();
 
         if (fragment != null) {
-            final AuthorizationFragment authFragment = AuthorizationActivity.getAuthorizationFragmentFromStartIntent(intent);
+            final Fragment authFragment = AuthorizationActivityFactory.getAuthorizationFragmentFromStartIntent(intent);
 
             fragment.getFragmentManager()
                     .beginTransaction()
                     .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                    .add(fragment.getId(), authFragment, AuthorizationFragment.class.getName())
+                    .add(fragment.getId(), authFragment, Fragment.class.getName())
                     .commit();
             return;
         }
@@ -92,7 +95,7 @@ public abstract class AuthorizationStrategy<GenericOAuth2Strategy extends OAuth2
      */
     public abstract Future<AuthorizationResult> requestAuthorization(GenericAuthorizationRequest authorizationRequest,
                                                                      GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException;
+            throws ClientException, URISyntaxException;
 
     public abstract void completeAuthorization(int requestCode, int resultCode, final Intent data);
 }

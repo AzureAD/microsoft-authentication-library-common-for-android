@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.labapi.utilities.authentication;
 
-import com.microsoft.identity.labapi.utilities.authentication.exception.LabApiException;
+import com.microsoft.identity.labapi.utilities.exception.LabApiException;
 
 /**
  * An interface describing an access token accessor i.e. anyone that has the ability to return a

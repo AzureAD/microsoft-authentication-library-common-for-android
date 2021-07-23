@@ -29,7 +29,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -46,18 +45,20 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTo
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.result.AdalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -125,7 +126,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
             redirectUri = intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_REDIRECT);
         }
 
-        final List<Pair<String, String>> extraQP = getExtraQueryParamAsList(
+        final List<Map.Entry<String, String>> extraQP = getExtraQueryParamAsList(
                 intent.getStringExtra(AuthenticationConstants.Broker.ACCOUNT_EXTRA_QUERY_PARAM)
         );
 
@@ -283,8 +284,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
     /**
      * Helper to get Extra QP as a List (V2 format) from String (adal format)
      */
-    private List<Pair<String, String>> getExtraQueryParamAsList(@Nullable final String extraQueryParamString) {
-        final List<Pair<String, String>> extraQPList = new ArrayList<>();
+    private List<Map.Entry<String, String>> getExtraQueryParamAsList(@Nullable final String extraQueryParamString) {
+        final List<Map.Entry<String, String>> extraQPList = new ArrayList<>();
         if (!StringUtil.isEmpty(extraQueryParamString)) {
             final String[] extraQueryParams = extraQueryParamString.split("&");
 
@@ -293,8 +294,8 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     String[] split = param.split("=");
                     final String name = split[0];
                     final String value = (split.length > 1) ? split[1] : null;
-                    final Pair<String, String> extraQPPair = new Pair<>(name, value);
-                    extraQPList.add(extraQPPair);
+                    final Map.Entry<String, String> extraQPKeyValuePair = new AbstractMap.SimpleEntry<>(name, value);
+                    extraQPList.add(extraQPKeyValuePair);
                 }
             }
         }
@@ -306,7 +307,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * TODO : Refactor to remove this code and move the logic to better place
      */
     public static AzureActiveDirectoryAuthority getRequestAuthorityWithExtraQP(final String authority,
-                                                                               final List<Pair<String, String>> extraQP) {
+                                                                               final List<Map.Entry<String, String>> extraQP) {
 
         final AzureActiveDirectoryAuthority requestAuthority
                 = (AzureActiveDirectoryAuthority) Authority.getAuthorityFromAuthorityUrl(authority);
@@ -314,12 +315,12 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
         if (extraQP != null) {
             AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
 
-            Iterator<Pair<String, String>> itr = extraQP.iterator();
-            Pair<String, String> parameter;
+            Iterator<Map.Entry<String, String>> itr = extraQP.iterator();
+            Map.Entry<String, String> parameter;
             while (itr.hasNext() && (parameter = itr.next()) != null) {
-                if (StringUtil.isEmpty(parameter.first)) {
+                if (StringUtil.isEmpty(parameter.getKey())) {
                     Logger.warn(TAG, "The extra query parameter.first is empty.");
-                } else if (MicrosoftAuthorizationRequest.INSTANCE_AWARE.equalsIgnoreCase(parameter.first)) {
+                } else if (MicrosoftAuthorizationRequest.INSTANCE_AWARE.equalsIgnoreCase(parameter.getKey())) {
                     Logger.info(TAG,
                             "Set the extra query parameter mMultipleCloudAware" +
                                     " for MicrosoftStsAuthorizationRequest."
@@ -328,18 +329,18 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                     Logger.infoPII(
                             TAG,
                             "Set the mMultipleCloudAware to " +
-                                    (parameter.second == null ? "null" : parameter.second)
+                                    (parameter.getValue() == null ? "null" : parameter.getValue())
                     );
 
                     requestAuthority.mMultipleCloudsSupported =
-                            null != parameter.second &&
-                                    Boolean.TRUE.toString().equalsIgnoreCase(parameter.second);
+                            null != parameter.getValue() &&
+                                    Boolean.TRUE.toString().equalsIgnoreCase(parameter.getValue());
                     itr.remove();
-                } else if (AzureActiveDirectorySlice.SLICE_PARAMETER.equalsIgnoreCase(parameter.first)) {
-                    slice.setSlice(parameter.second);
+                } else if (AzureActiveDirectorySlice.SLICE_PARAMETER.equalsIgnoreCase(parameter.getKey())) {
+                    slice.setSlice(parameter.getValue());
                     itr.remove();
-                } else if (AzureActiveDirectorySlice.DC_PARAMETER.equalsIgnoreCase(parameter.first)) {
-                    slice.setDataCenter(parameter.second);
+                } else if (AzureActiveDirectorySlice.DC_PARAMETER.equalsIgnoreCase(parameter.getKey())) {
+                    slice.setDataCenter(parameter.getValue());
                     itr.remove();
                 }
             }

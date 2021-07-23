@@ -25,8 +25,11 @@ package com.microsoft.identity.common.internal.providers.microsoft.azureactivedi
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
@@ -85,11 +88,11 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
     @Override
     public String getAuthorityType() {
-        return AUTHORITY_TYPE_V1_V2;
+        return AUTHORITY_TYPE_MS_STS;
     }
 
     @Override
-    protected String getDisplayableId(Map<String, ?> claims) {
+    protected String getDisplayableIdFromClaims(Map<String, ?> claims) {
         final String methodName = "getDisplayableId";
 
         String displayableId = null;

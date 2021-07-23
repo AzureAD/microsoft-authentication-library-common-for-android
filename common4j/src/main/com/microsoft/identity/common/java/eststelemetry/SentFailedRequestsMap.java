@@ -22,29 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.NonNull;
 
-public class SentFailedRequestsMap implements IKeyPairStorage<Set<FailedRequest>> {
+public class SentFailedRequestsMap implements INameValueStorage<Set<FailedRequest>> {
     private final ConcurrentHashMap<String, Set<FailedRequest>> sentFailedRequestsMap = new ConcurrentHashMap<>();
 
     @Override
-    public Set<FailedRequest> get(@NonNull String key) {
-        return sentFailedRequestsMap.get(key);
+    public Set<FailedRequest> get(@NonNull String name) {
+        return sentFailedRequestsMap.get(name);
     }
 
     @Override
-    public void put(@NonNull String key, Set<FailedRequest> value) {
-        sentFailedRequestsMap.put(key, value);
+    public void put(@NonNull String name, Set<FailedRequest> value) {
+        sentFailedRequestsMap.put(name, value);
     }
 
     @Override
-    public void remove(@NonNull String key) {
-        sentFailedRequestsMap.remove(key);
+    public void remove(@NonNull String name) {
+        sentFailedRequestsMap.remove(name);
     }
 
     @Override

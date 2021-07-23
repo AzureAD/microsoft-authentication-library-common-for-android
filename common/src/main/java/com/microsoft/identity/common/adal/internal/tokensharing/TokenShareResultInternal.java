@@ -24,7 +24,7 @@ package com.microsoft.identity.common.adal.internal.tokensharing;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 
 public class TokenShareResultInternal implements ITokenShareResultInternal {
 

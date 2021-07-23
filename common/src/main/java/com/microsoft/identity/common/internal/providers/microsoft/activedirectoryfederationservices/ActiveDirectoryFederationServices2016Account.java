@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.activedirectoryfederationservices;
 
-import com.microsoft.identity.common.BaseAccount;
+import com.microsoft.identity.common.java.BaseAccount;
 
 import java.util.List;
 

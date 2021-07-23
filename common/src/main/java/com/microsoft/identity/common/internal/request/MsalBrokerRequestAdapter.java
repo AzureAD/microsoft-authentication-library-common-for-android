@@ -28,14 +28,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authorities.Environment;
@@ -60,9 +59,9 @@ import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -70,6 +69,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -209,8 +209,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
         int callingAppUid = intent.getIntExtra(CALLER_INFO_UID, 0);
 
-        List<Pair<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
-        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
+        List<Map.Entry<String, String>> extraQP = QueryParamsAdapter._fromJson(brokerRequest.getExtraQueryStringParameter());
+        List<Map.Entry<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());;
 
         final AzureActiveDirectoryAuthority authority = AdalBrokerRequestAdapter.getRequestAuthorityWithExtraQP(
                 brokerRequest.getAuthority(),
@@ -323,7 +323,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         }
 
         final String negotiatedBrokerProtocolVersion = bundle.getString(NEGOTIATED_BP_VERSION_KEY);
-        List<Pair<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
+        List<Map.Entry<String, String>> extraOptions = QueryParamsAdapter._fromJson(brokerRequest.getExtraOptions());
 
         final BrokerSilentTokenCommandParameters commandParameters = BrokerSilentTokenCommandParameters
                 .builder()
