@@ -282,4 +282,16 @@ public class BrokerHost extends AbstractTestBroker {
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
     }
+
+    @Override
+    public void setFlights(@Nullable final String flightsJson) {
+        Logger.i(TAG, "Set Flights..");
+        launch();
+        // Make the set flights UI visible on screen
+        UiAutomatorUtils.obtainChildInScrollable("Set Flights");
+        // input flights string in flights input box
+        UiAutomatorUtils.handleInput("com.microsoft.identity.testuserapp:id/editTextFlights", flightsJson);
+        // Click Set Flights button
+        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/setFlightsButton");
+    }
 }

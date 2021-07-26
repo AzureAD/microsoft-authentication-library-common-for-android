@@ -158,4 +158,8 @@ public abstract class AbstractTestBroker extends App implements ITestBroker {
         ));
     }
 
+    @Override
+    public void setFlights(@Nullable final String flightsJson) {
+        // Default implementation, Do nothing.
+    }
 }
