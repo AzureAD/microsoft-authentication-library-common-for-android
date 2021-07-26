@@ -34,8 +34,6 @@ import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCred
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.dto.CredentialType;
 
-import org.mockito.Mockito;
-
 import java.util.Map;
 
 public class TestUtils {
@@ -65,13 +63,6 @@ public class TestUtils {
         final Context context = ApplicationProvider.getApplicationContext();
 
         return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, null);
-    }
-
-    public static Activity getMockActivity(final Context context) {
-        final Activity mockedActivity = Mockito.mock(Activity.class);
-        Mockito.when(mockedActivity.getApplicationContext()).thenReturn(context);
-
-        return mockedActivity;
     }
 
     /**
