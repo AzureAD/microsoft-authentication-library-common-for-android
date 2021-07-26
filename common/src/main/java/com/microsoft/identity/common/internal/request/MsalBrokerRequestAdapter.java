@@ -35,10 +35,11 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.internal.broker.AndroidBrokerAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.internal.authorities.Environment;
+import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
@@ -54,7 +55,7 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
@@ -330,7 +331,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .builder()
                 .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
                 .androidApplicationContext(context)
-                .accountManagerAccount(account)
+                .brokerAccount(AndroidBrokerAccount.load(account))
                 .sdkType(brokerRequest.getSdkType() == null ? SdkType.MSAL : brokerRequest.getSdkType())
                 .sdkVersion(brokerRequest.getMsalVersion())
                 .callerUid(callingAppUid)

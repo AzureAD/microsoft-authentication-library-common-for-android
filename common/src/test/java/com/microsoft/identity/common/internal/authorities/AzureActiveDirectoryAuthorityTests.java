@@ -27,6 +27,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -34,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 public class AzureActiveDirectoryAuthorityTests {
     @Test
-    public void isSameCloudAsAuthority_Returns_True_For_Authority_With_ValidAliases_For_SameCloud() throws IOException {
+    public void isSameCloudAsAuthority_Returns_True_For_Authority_With_ValidAliases_For_SameCloud() throws IOException, URISyntaxException {
         final String[] cloudAliasesWW = new String[]{"https://login.microsoftonline.com", "https://login.windows.net", "https://login.microsoft.com", "https://sts.windows.net"};
         final String[] cloudAliasesCN = new String[]{"https://login.chinacloudapi.cn", "https://login.partner.microsoftonline.cn"};
         final String[] cloudAliasesUSGov = new String[]{"https://login.microsoftonline.us", "https://login.usgovcloudapi.net"};
@@ -59,7 +60,7 @@ public class AzureActiveDirectoryAuthorityTests {
     }
 
     @Test
-    public void isSameCloudAsAuthority_Returns_False_For_Authorities_From_Different_Clouds() throws IOException {
+    public void isSameCloudAsAuthority_Returns_False_For_Authorities_From_Different_Clouds() throws IOException, URISyntaxException {
         final AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.microsoftonline.com"));
         final AzureActiveDirectoryAuthority authorityCN = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.partner.microsoftonline.cn"));
         final AzureActiveDirectoryAuthority authorityUSGov = new AzureActiveDirectoryAuthority(new AllAccounts("https://login.microsoftonline.us"));

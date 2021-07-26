@@ -20,30 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
+package com.microsoft.identity.common.java.providers;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.providers.IdentityProvider;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
-/**
- * Azure Active Directory B2C is effectively it's own OpenID Provider.  This class is responsible
- * for creating the OAuth2Strategy for working the B2C Service.
- */
-public class AzureActiveDirectoryB2C
-        extends IdentityProvider<AzureActiveDirectoryB2COAuth2Strategy, OAuth2Configuration> {
+import lombok.NonNull;
 
-    @Override
-    public AzureActiveDirectoryB2COAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2Configuration config,
-                                                                      @NonNull final ICommonComponents commonComponents) {
-        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
-                .platformComponents(commonComponents)
-                .build();
-
-        return new AzureActiveDirectoryB2COAuth2Strategy(config, parameters);
-    }
+// Suppressing rawtype warnings due to the generic type OAuth2Strategy
+@SuppressWarnings(WarningType.rawtype_warning)
+public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth2Configuration> {
+    /**
+     * Create OAuth2 strategy.
+     *
+     * @param config generic OAuth2 configuration
+     * @return Generic OAuth2Strategy
+     */
+    public abstract T createOAuth2Strategy(@NonNull U config, @NonNull ICommonComponents commonComponents) throws ClientException;
 
 }

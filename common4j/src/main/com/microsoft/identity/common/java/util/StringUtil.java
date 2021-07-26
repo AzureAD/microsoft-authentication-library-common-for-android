@@ -22,16 +22,23 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -41,6 +48,8 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
+
+    private static final String RFC3339_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     /**
      * Checks if string is null or empty.
@@ -219,4 +228,36 @@ public class StringUtil {
     public static byte[] toByteArray(@NonNull final String string) {
         return string.getBytes(ENCODING_UTF8);
     }
+
+    /**
+     * Converts a Date object into a RFC3339 formatted date String
+     *
+     * @param date Date
+     * @return String
+     */
+    @NonNull
+    public static String RFC3339DateToString(@NonNull final Date date) {
+        final String methodName = "RFC3339DateToString";
+        Logger.verbose(TAG + methodName, "RFC3339DateToString is called.");
+        final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
+        RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return RFC3339DateFormat.format(date);
+    }
+
+    /**
+     * Converts a RFC3339 formatted date String into a Date object
+     *
+     * @param dateStr String
+     * @return Date
+     * @throws ParseException if the dateStr is formatted incorrectly
+     */
+    @NonNull
+    public static Date RFC3339StringToDate(@NonNull String dateStr) throws ParseException {
+        final String methodName = "RFC3339StringToDate";
+        Logger.verbose(TAG + methodName, "RFC3339StringToDate is called.");
+        final SimpleDateFormat RFC3339DateFormat = new SimpleDateFormat(RFC3339_DATE_FORMAT, Locale.US);
+        RFC3339DateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return RFC3339DateFormat.parse(dateStr);
+    }
+
 }

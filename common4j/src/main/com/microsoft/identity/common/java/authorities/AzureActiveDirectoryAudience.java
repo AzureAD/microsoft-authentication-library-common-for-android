@@ -20,22 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.oauth2;
+package com.microsoft.identity.common.java.authorities;
 
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
-/**
- * Base class for defining options relative to the construction of an {@link OAuth2Strategy}.
- */
-@Builder
-@Getter
-@Accessors(prefix = "m")
-public class OAuth2StrategyParameters {
-    @Nullable
-    private final transient ICommonComponents mPlatformComponents;
+public class AzureActiveDirectoryAudience {
+    public static final String ORGANIZATIONS = "organizations";
+    public static final String CONSUMERS = "consumers";
+    public static final String ALL = "common";
 }

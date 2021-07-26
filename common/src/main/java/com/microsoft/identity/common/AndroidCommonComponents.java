@@ -77,25 +77,20 @@ public class AndroidCommonComponents implements ICommonComponents {
         Device.setDeviceMetadata(new AndroidDeviceMetadata());
     }
 
-    @Override
-    public void flushHttpCache() {
-        HttpCache.flush();
-    }
-
     // TODO: The caller of this base 'common' class is unclear whether it's in Broker or ADAL/MSAL.
     //       Once we wired this e2e, we should be able to supply the right object,
     //       and shouldn't need process to decide which one to return.
     @Override
-    public IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback) {
+    public IKeyAccessor getStorageEncryptionManager() {
         final String methodName = ":getStorageEncryptionManager";
 
         if (ProcessUtil.isBrokerProcess(mContext)) {
             Logger.info(TAG + methodName, "Returning AndroidBrokerStorageEncryptionManager");
-            return new AndroidBrokerStorageEncryptionManager(mContext, telemetryCallback);
+            return new AndroidBrokerStorageEncryptionManager(mContext, null);
         }
 
         Logger.info(TAG + methodName, "Returning AndroidAuthSdkStorageEncryptionManager");
-        return new AndroidAuthSdkStorageEncryptionManager(mContext, telemetryCallback);
+        return new AndroidAuthSdkStorageEncryptionManager(mContext, null);
     }
 
     @Override

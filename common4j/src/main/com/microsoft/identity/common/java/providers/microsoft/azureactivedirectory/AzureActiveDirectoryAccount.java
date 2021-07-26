@@ -20,17 +20,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
+package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryIdToken;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -97,10 +94,10 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
 
         String displayableId = null;
 
-        if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
+        if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.UPN))) {
             Logger.info(TAG + ":" + methodName, "Returning upn as displayableId");
             displayableId = (String) claims.get(AzureActiveDirectoryIdToken.UPN);
-        } else if (!StringExtensions.isNullOrBlank((String) claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
+        } else if (!StringUtil.isNullOrEmpty((String) claims.get(AzureActiveDirectoryIdToken.EMAIL))) {
             Logger.info(TAG + ":" + methodName, "Returning email as displayableId");
             displayableId = (String) claims.get(AzureActiveDirectoryIdToken.EMAIL);
         }

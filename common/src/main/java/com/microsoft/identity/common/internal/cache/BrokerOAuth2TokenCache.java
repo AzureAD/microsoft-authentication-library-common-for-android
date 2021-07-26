@@ -1583,7 +1583,7 @@ public class BrokerOAuth2TokenCache
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
                         new AndroidCommonComponents(context).
-                                getStorageEncryptionManager(null)
+                                getStorageEncryptionManager()
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, false);
@@ -1601,7 +1601,7 @@ public class BrokerOAuth2TokenCache
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         new AndroidCommonComponents(context).
-                                getStorageEncryptionManager(null)
+                                getStorageEncryptionManager()
                 );
 
         return getTokenCache(context, sharedPreferencesFileManager, true);

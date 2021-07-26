@@ -42,6 +42,7 @@ import java.io.IOException;
 
 import static com.microsoft.identity.common.exception.BrokerCommunicationException.Category.CONNECTION_ERROR;
 import static com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy.Type.ACCOUNT_MANAGER_ADD_ACCOUNT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 
 /**
  * A strategy for communicating with the targeted broker via AccountManager's addAccount().
@@ -68,7 +69,7 @@ public class AccountManagerAddAccountStrategy implements IIpcStrategy {
             final AccountManagerFuture<Bundle> resultBundle =
                     AccountManager.get(mContext)
                             .addAccount(
-                                    AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE,
+                                    BROKER_ACCOUNT_TYPE,
                                     AuthenticationConstants.Broker.AUTHTOKEN_TYPE,
                                     null,
                                     brokerOperationBundle.getAccountManagerBundle(),

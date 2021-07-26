@@ -22,18 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2CAuthority;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter
@@ -73,6 +77,10 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
      */
     private boolean authorityMatchesAccountEnvironment() {
         final String methodName = ":authorityMatchesAccountEnvironment";
+
+        final Exception cause;
+        final String errorCode;
+
         try {
             if (!AzureActiveDirectory.isInitialized()) {
                 performCloudDiscovery();
@@ -80,18 +88,25 @@ public class SilentTokenCommandParameters extends TokenCommandParameters {
             final AzureActiveDirectoryCloud cloud = AzureActiveDirectory.getAzureActiveDirectoryCloudFromHostName(getAccount().getEnvironment());
             return cloud != null && cloud.getPreferredNetworkHostName().equals(getAuthority().getAuthorityURL().getAuthority());
         } catch (final IOException e) {
-            Logger.error(
-                    TAG + methodName,
-                    "Unable to perform cloud discovery",
-                    e);
-            throw new TerminalException(
-                    "Unable to perform cloud discovery in order to validate request authority",
-                    e,
-                    ClientException.IO_ERROR);
+            cause = e;
+            errorCode = ClientException.IO_ERROR;
+        } catch (final URISyntaxException e) {
+            cause = e;
+            errorCode = ClientException.MALFORMED_URL;
         }
+
+        Logger.error(
+                TAG + methodName,
+                "Unable to perform cloud discovery",
+                cause);
+        throw new TerminalException(
+                "Unable to perform cloud discovery in order to validate request authority",
+                cause,
+                errorCode);
     }
 
-    private static void performCloudDiscovery() throws IOException {
+    private static void performCloudDiscovery()
+            throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
         Logger.verbose(
                 TAG + methodName,
