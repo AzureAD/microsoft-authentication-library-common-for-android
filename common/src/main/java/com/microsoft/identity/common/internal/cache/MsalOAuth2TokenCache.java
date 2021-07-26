@@ -144,7 +144,7 @@ public class MsalOAuth2TokenCache
                         context,
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         new AndroidCommonComponents(context).
-                                getStorageEncryptionManager(null)
+                                getStorageEncryptionManager()
                 );
         final IAccountCredentialCache accountCredentialCache =
                 new SharedPreferencesAccountCredentialCache(

@@ -37,15 +37,10 @@ import lombok.NonNull;
 public interface ICommonComponents {
 
     /**
-     * Flushes the underlying http cache, if it exists.
-     */
-    void flushHttpCache();
-
-    /**
      * Get an encryption manager for storage layer.
      */
     @NonNull
-    IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
+    IKeyAccessor getStorageEncryptionManager();
 
     /**
      * Gets clock skew manager.

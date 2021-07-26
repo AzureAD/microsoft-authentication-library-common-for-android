@@ -20,9 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.authorities;
+package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-public enum Environment {
-    PreProduction,
-    Production
+import com.google.gson.annotations.SerializedName;
+
+import java.util.ArrayList;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
+
+@Getter
+@Accessors(prefix = "m")
+public class AzureActiveDirectoryInstanceResponse {
+    @SerializedName("tenant_discovery_endpoint")
+    private String mTestDiscoveryEndpoint;
+    @SerializedName("api-version")
+    private String mApiVersion;
+    @SerializedName("metadata")
+    private ArrayList<AzureActiveDirectoryCloud> mClouds;
 }

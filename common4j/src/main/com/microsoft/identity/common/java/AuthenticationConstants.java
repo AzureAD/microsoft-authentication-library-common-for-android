@@ -501,6 +501,11 @@ public class AuthenticationConstants {
          * Value of supported pkeyauth version.
          */
         public static final String CHALLENGE_TLS_INCAPABLE_VERSION = "1.0";
+
+        /**
+         * Account type string.
+         */
+        public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

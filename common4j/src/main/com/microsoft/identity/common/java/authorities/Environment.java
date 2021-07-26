@@ -20,25 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers;
+package com.microsoft.identity.common.java.authorities;
 
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-
-import lombok.NonNull;
-
-// Suppressing rawtype warnings due to the generic type OAuth2Strategy
-@SuppressWarnings(WarningType.rawtype_warning)
-public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth2Configuration> {
-    /**
-     * Create OAuth2 strategy.
-     *
-     * @param config generic OAuth2 configuration
-     * @return Generic OAuth2Strategy
-     */
-    public abstract T createOAuth2Strategy(@NonNull U config, @NonNull ICommonComponents commonComponents) throws ClientException;
-
+public enum Environment {
+    PreProduction,
+    Production
 }

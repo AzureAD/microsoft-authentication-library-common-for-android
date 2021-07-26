@@ -568,11 +568,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_RETURN_JSON = "broker.json";
 
         /**
-         * Account type string.
-         */
-        public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
-
-        /**
          * String of account initial name.
          */
         public static final String ACCOUNT_INITIAL_NAME = "aad";

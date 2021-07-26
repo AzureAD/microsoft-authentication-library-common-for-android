@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
