@@ -78,7 +78,7 @@
 - Push the target library code to dev branch by raising a PR.
 
 ### Steps to deploy latest version of C# tool to pipeline:
-- Install a recent version of [Visual Studio](https://visualstudio.microsoft.com/) on Mac/Windows
+- Install a recent version of [Visual Studio](https://visualstudio.microsoft.com/) on Windows
 - Ensure that you have the following tools selected while installing Visual Studio:
 	- .NET desktop environment
 	- Desktop development using C++
