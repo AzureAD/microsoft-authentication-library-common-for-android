@@ -26,7 +26,7 @@ parameters:
 
 jobs:
 - job: Phase_1
-  displayName: Initiating Release Process
+  displayName: Publish to Internal Maven (VSTS)
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 1
   condition: and(ne(variables['parameters.versionType'], ''), ne(variables['parameters.gradleTasks'], ''))
