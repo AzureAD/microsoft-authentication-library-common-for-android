@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.util.ported;
 
+import com.microsoft.identity.common.java.logging.Logger;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,6 +32,8 @@ import lombok.NonNull;
 public enum  LocalBroadcaster {
     INSTANCE;
 
+    private static final String TAG = LocalBroadcaster.class.getSimpleName();
+
     public interface IReceiverCallback {
         void onReceive(@NonNull final DataBag dataBag);
     }
@@ -37,18 +41,34 @@ public enum  LocalBroadcaster {
     final Map<String, IReceiverCallback> mReceivers = new HashMap<>();
 
     public void registerCallback(@NonNull final String alias, @NonNull final IReceiverCallback callback){
+        final String methodName = ":registerCallback";
+
+        if (mReceivers.containsKey(alias)){
+            Logger.warn(TAG + methodName, "The alias: " + alias + " has already been registered. " +
+                    "It will be overwritten");
+        }
+
+        Logger.info(TAG + methodName, "Registering alias: " + alias);
         mReceivers.put(alias, callback);
     }
 
     public void unregisterCallback(@NonNull final String alias){
+        final String methodName = ":unregisterCallback";
+
+        Logger.info(TAG + methodName, "Removing alias: " + alias);
         mReceivers.remove(alias);
     }
 
     public void broadcast(@NonNull final String alias, @NonNull final DataBag dataBag){
+        final String methodName = ":broadcast";
         final IReceiverCallback receiver = mReceivers.get(alias);
 
         if (receiver != null){
+            Logger.info(TAG + methodName, "broadcasting to alias: " + alias);
             receiver.onReceive(dataBag);
+        } else {
+            Logger.info(TAG + methodName, "No callback is registered with alias: " + alias +
+                    ". Do nothing.");
         }
     }
 }
