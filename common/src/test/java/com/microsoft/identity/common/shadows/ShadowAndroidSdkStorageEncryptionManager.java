@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.shadows;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
-import com.microsoft.identity.common.crypto.PredefinedKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.crypto.key.AES256KeyLoader;
 
 import org.robolectric.annotation.Implements;
