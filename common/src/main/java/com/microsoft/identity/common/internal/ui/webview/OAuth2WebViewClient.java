@@ -140,6 +140,21 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         sendErrorToCallback(view, errorCode, description);
     }
 
+    /**
+     * API 23+ overload of {@link #onReceivedError(WebView, int, String, String)} - unlike the pre-23
+     * impl, this overload will trigger pageload errors for subframes of the page. As these may not
+     * necessarily affect the sign-in experience (such as failed scripts in an iframe), we are going
+     * to ignore errors for the non-main-frame such that the pre-API 23 behavior is preserved.
+     * <p>
+     * More info:
+     * https://stackoverflow.com/questions/44068123/how-to-detect-errors-only-from-the-main-page-in-new-onreceivederror-from-webview
+     * https://developer.android.com/reference/android/webkit/WebViewClient#onReceivedError(android.webkit.WebView,%20android.webkit.WebResourceRequest,%20android.webkit.WebResourceError)
+     *
+     * @param view    The WebView which triggered the error.
+     * @param request The request which failed within the page.
+     * @param error   The error yielded by the failing request.
+     * @see #onReceivedError(WebView, int, String, String)
+     */
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onReceivedError(@NonNull final WebView view,

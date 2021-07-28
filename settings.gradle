@@ -6,6 +6,27 @@ pluginManagement {
     }
 }
 
-rootProject.name = "com.microsoft.identity"
-include ':common', ':common4j', ':keyvault', ':labapi', ':testutils', ':uiautomationutilities',
-        ':LabApiUtilities'
+rootProject.name = "com.microsoft.identity.android"
+
+// Android Projects
+include(':common')
+project(':common').projectDir = new File('common')
+
+include(':testutils')
+project(':testutils').projectDir = new File('testutils')
+
+include(':uiautomationutilities')
+project(':uiautomationutilities').projectDir = new File('uiautomationutilities')
+
+// Pure Java Projects
+include(':common4j')
+project(':common4j').projectDir = new File('common4j')
+
+include(':keyvault')
+project(':keyvault').projectDir = new File('keyvault')
+
+include(':labapi')
+project(':labapi').projectDir = new File('labapi')
+
+include(':LabApiUtilities')
+project(':LabApiUtilities').projectDir = new File('LabApiUtilities')

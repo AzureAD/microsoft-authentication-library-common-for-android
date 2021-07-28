@@ -38,6 +38,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.CodeMarkerManager;
+import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -52,12 +53,12 @@ import com.microsoft.identity.common.internal.commands.parameters.BrokerInteract
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
@@ -92,14 +93,8 @@ public class CommandDispatcher {
 
     private static final String TAG = CommandDispatcher.class.getSimpleName();
     private static final int SILENT_REQUEST_THREAD_POOL_SIZE = 5;
-    private static final int INTERACTIVE_REQUEST_THREAD_POOL_SIZE = 1;
-    //TODO:1315931 - Refactor the threadpools to not be unbounded for both silent and interactive requests.
-    private static final ExecutorService sInteractiveExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, INTERACTIVE_REQUEST_THREAD_POOL_SIZE, -1, 0, TimeUnit.MINUTES, "interactive"
-    );
-    private static final ExecutorService sSilentExecutor = ThreadUtils.getNamedThreadPoolExecutor(
-            1, SILENT_REQUEST_THREAD_POOL_SIZE, -1, 1, TimeUnit.MINUTES, "silent"
-    );
+    private static final ExecutorService sInteractiveExecutor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService sSilentExecutor = Executors.newFixedThreadPool(SILENT_REQUEST_THREAD_POOL_SIZE);
     private static final Object sLock = new Object();
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
@@ -318,7 +313,7 @@ public class CommandDispatcher {
                 "Starting request for correlation id : ##" + correlationId
                         + ", with PublicApiId : " + publicApiId);
 
-        if (Logger.getAllowPii()) {
+        if (Logger.isAllowPii()) {
             Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
             Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
@@ -578,8 +573,8 @@ public class CommandDispatcher {
             final LocalBroadcastManager localBroadcastManager =
                     LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
-            // only send broadcast to cancel if within broker
-            if (command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+            //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
+            if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
                 localBroadcastManager.sendBroadcast(
                         new Intent(CANCEL_INTERACTIVE_REQUEST)

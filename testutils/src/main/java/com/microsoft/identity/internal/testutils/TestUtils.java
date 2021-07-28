@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
+import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -29,10 +30,11 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.AndroidCommonComponents;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.dto.CredentialType;
 
 import java.util.Map;

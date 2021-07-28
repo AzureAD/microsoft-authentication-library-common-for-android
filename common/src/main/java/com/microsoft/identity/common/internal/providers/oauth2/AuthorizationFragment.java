@@ -123,6 +123,10 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     }
 
+    /**
+     * Get the state form the provided bundle and act on it as needed
+     * @param state a bundle containing data provided when the activity was created
+     */
     void extractState(@NonNull final Bundle state) {
         setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
     }
