@@ -26,25 +26,41 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 
+/**
+ * Class for managing HttpCache.
+ */
 public class HttpCache {
 
     private static IHttpCacheCallback sHttpCache;
 
     private static final ReentrantReadWriteLock sLock = new ReentrantReadWriteLock();
 
+    /**
+     * HttpCache's callback interface.
+     */
     public interface IHttpCacheCallback {
+
+        /**
+         * Flush the cache.
+         */
         void flush();
     }
 
-    public static void setHttpCache(@Nullable IHttpCacheCallback httpCache) {
+    /**
+     * Sets a callback to be triggered when an operation in this class is invoked.
+     */
+    public static void setHttpCache(@Nullable IHttpCacheCallback httpCacheCallback) {
         sLock.writeLock().lock();
         try {
-            sHttpCache = httpCache;
+            sHttpCache = httpCacheCallback;
         } finally {
             sLock.writeLock().unlock();
         }
     }
 
+    /**
+     * Flush the cache.
+     */
     public static void flush() {
         sLock.readLock().lock();
         try {

@@ -22,14 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import com.microsoft.identity.common.AndroidCommonComponents;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2CAuthority;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -37,7 +35,6 @@ import java.net.URISyntaxException;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.experimental.SuperBuilder;
 
 @Getter

@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.broker.IBrokerAccount;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -42,9 +43,9 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
-@Builder(access = AccessLevel.PRIVATE)
 @Getter
 @Accessors(prefix = "m")
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class AndroidBrokerAccount implements IBrokerAccount {
     private static final String TAG = AndroidBrokerAccount.class.getSimpleName();
 
@@ -70,16 +71,14 @@ public class AndroidBrokerAccount implements IBrokerAccount {
             return (AndroidBrokerAccount) account;
         } catch (final ClassCastException e) {
             Logger.error(TAG + methodName,
-                    "Expected an AndroidBrokerAccount, but got something else.", e);
+                    "Expected an AndroidBrokerAccount, but got " + e.getClass().getSimpleName(), e);
             throw e;
         }
     }
 
     @NonNull
-    public static AndroidBrokerAccount load(@NonNull final Account account) {
-        return AndroidBrokerAccount.builder()
-                .account(account)
-                .build();
+    public static AndroidBrokerAccount create(@NonNull final Account account) {
+        return new AndroidBrokerAccount(account);
     }
 
     @NonNull
@@ -92,7 +91,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
         if (account == null) {
             account = new Account(accountName, accountType);
             Logger.verbose(TAG + methodName, "Creating account.");
-            Logger.verbosePII(TAG + methodName, ACCOUNT_NAME + ":" + account.name);
+            Logger.verbosePII(TAG + methodName, "Creating account with name :" + account.name);
             accountManager.addAccountExplicitly(account, null, null);
         } else {
             Logger.verbose(TAG + methodName, "Account found.");
@@ -119,7 +118,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
             );
         }
 
-        return load(account);
+        return create(account);
     }
 
     @Nullable
