@@ -1,0 +1,30 @@
+
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+pr: none
+
+resources:
+  containers:
+  - container: mycontainer
+    image: authclient.azurecr.io/samples/dbi-instrumented-api30:latest
+    endpoint: AuthClient
+    options: '--privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/' # arguments to pass to container at startup
+    env: { ENV_VSTS_AT: mysecret }  # list of environment variables to add
+
+jobs:
+- job: test
+  displayName: test
+  pool:
+    vmImage: 'ubuntu-18.04'
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+  - script: sh scripts/run-instrumented-tests.sh
+    target:
+      container: mycontainer
+  - task: Docker@2
+    inputs:
+      command: stop
+      container: mycontainer
