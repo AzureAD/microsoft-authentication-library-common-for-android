@@ -1,2 +1,10 @@
+pluginManagement {
+    repositories {
+        mavenLocal()
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
 rootProject.name = "com.microsoft.identity"
 include ':common', ':keyvault', ':labapi', ':testutils', ':uiautomationutilities'

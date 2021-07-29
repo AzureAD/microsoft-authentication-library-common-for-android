@@ -6,7 +6,6 @@ buildscript {
     repositories {
         google()
         mavenCentral()
-        gradlePluginPortal()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:${rootProject.ext.gradleVersion}"
