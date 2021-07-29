@@ -9,7 +9,7 @@ resources:
   - container: mycontainer
     image: authclient.azurecr.io/samples/dbi-instrumented-api30:latest
     endpoint: AuthClient
-    options: '--privileged --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/' # arguments to pass to container at startup
+    options: '--privileged --cpus="2" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/' # arguments to pass to container at startup
     env: { ENV_VSTS_AT: mysecret }  # list of environment variables to add
 
 jobs:
