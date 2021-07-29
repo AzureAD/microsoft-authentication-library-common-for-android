@@ -30,7 +30,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Handler;
-import android.text.TextUtils;
 import android.webkit.ClientCertRequest;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
@@ -39,31 +38,30 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.IPPHONE_APP_SIGNATURE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.PLAY_STORE_INSTALL_PREFIX;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SUB_ERROR_UI_CANCEL;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 
 /**
  * For web view client, we do not distinguish V1 from V2.
@@ -109,7 +107,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     @SuppressWarnings(WarningType.deprecation_warning)
     @Override
     public boolean shouldOverrideUrlLoading(final WebView view, final String url) {
-        if (StringUtil.isEmpty(url)) {
+        if (StringUtil.isNullOrEmpty(url)) {
             throw new IllegalArgumentException("Redirect to empty url in web view.");
         }
         return handleUrl(view, url);
@@ -149,49 +147,49 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     private boolean handleUrl(final WebView view, final String url) {
         final String formattedURL = url.toLowerCase(Locale.US);
 
-        if (isPkeyAuthUrl(formattedURL)) {
-            Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
-            try {
+        try {
+            if (isPkeyAuthUrl(formattedURL)) {
+                Logger.info(TAG, "WebView detected request for pkeyauth challenge.");
                 final PKeyAuthChallengeFactory factory = new PKeyAuthChallengeFactory();
                 final PKeyAuthChallenge pKeyAuthChallenge = factory.getPKeyAuthChallenge(url);
                 final PKeyAuthChallengeHandler pKeyAuthChallengeHandler = new PKeyAuthChallengeHandler(view, getCompletionCallback());
                 pKeyAuthChallengeHandler.processChallenge(pKeyAuthChallenge);
-            } catch (final ClientException exception) {
-                Logger.error(TAG, exception.getErrorCode(), null);
-                Logger.errorPII(TAG, exception.getMessage(), exception);
-                returnError(exception.getErrorCode(), exception.getMessage());
-                view.stopLoading();
+            } else if (isRedirectUrl(formattedURL)) {
+                Logger.info(TAG, "Navigation starts with the redirect uri.");
+                processRedirectUrl(view, url);
+            } else if (isWebsiteRequestUrl(formattedURL)) {
+                Logger.info(TAG, "It is an external website request");
+                processWebsiteRequest(view, url);
+            } else if (isInstallRequestUrl(formattedURL)) {
+                Logger.info(TAG, "It is an install request");
+                processInstallRequest(view, url);
+            } else if (isWebCpUrl(formattedURL)) {
+                Logger.info(TAG, "It is a request from WebCP");
+                processWebCpRequest(view, url);
+            } else if (isPlayStoreUrl(formattedURL)) {
+                Logger.info(TAG, "Request to open PlayStore.");
+                return processPlayStoreURL(view, url);
+            } else if (isAuthAppMFAUrl(formattedURL)) {
+                Logger.info(TAG, "Request to link account with Authenticator.");
+                processAuthAppMFAUrl(url);
+            } else if (isInvalidRedirectUri(url)) {
+                Logger.info(TAG, "Check for Redirect Uri.");
+                processInvalidRedirectUri(view, url);
+            } else if (isBlankPageRequest(formattedURL)) {
+                Logger.info(TAG, "It is an blank page request");
+            } else if (isUriSSLProtected(formattedURL)) {
+                Logger.info(TAG, "Check for SSL protection");
+                processSSLProtectionCheck(view, url);
+            } else {
+                Logger.info(TAG, "This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
+                processInvalidUrl(url);
+                return false;
             }
-        } else if (isRedirectUrl(formattedURL)) {
-            Logger.info(TAG, "Navigation starts with the redirect uri.");
-            processRedirectUrl(view, url);
-        } else if (isWebsiteRequestUrl(formattedURL)) {
-            Logger.info(TAG, "It is an external website request");
-            processWebsiteRequest(view, url);
-        } else if (isInstallRequestUrl(formattedURL)) {
-            Logger.info(TAG, "It is an install request");
-            processInstallRequest(view, url);
-        } else if (isWebCpUrl(formattedURL)) {
-            Logger.info(TAG, "It is a request from WebCP");
-            processWebCpRequest(view, url);
-        } else if (isPlayStoreUrl(formattedURL)) {
-            Logger.info(TAG, "Request to open PlayStore.");
-            return processPlayStoreURL(view, url);
-        } else if (isAuthAppMFAUrl(formattedURL)) {
-            Logger.info(TAG, "Request to link account with Authenticator.");
-            processAuthAppMFAUrl(url);
-        } else if (isInvalidRedirectUri(url)) {
-            Logger.info(TAG, "Check for Redirect Uri.");
-            processInvalidRedirectUri(view, url);
-        } else if (isBlankPageRequest(formattedURL)) {
-            Logger.info(TAG, "It is an blank page request");
-        } else if (isUriSSLProtected(formattedURL)) {
-            Logger.info(TAG, "Check for SSL protection");
-            processSSLProtectionCheck(view, url);
-        } else {
-            Logger.info(TAG, "This maybe a valid URI, but no special handling for this mentioned URI, hence deferring to WebView for loading.");
-            processInvalidUrl(url);
-            return false;
+        } catch (final ClientException exception) {
+            Logger.error(TAG, exception.getErrorCode(), null);
+            Logger.errorPII(TAG, exception.getMessage(), exception);
+            returnError(exception.getErrorCode(), exception.getMessage());
+            view.stopLoading();
         }
         return true;
     }
@@ -247,41 +245,13 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
     // This function is only called when the client received a redirect that starts with the apps
     // redirect uri.
     protected void processRedirectUrl(@NonNull final WebView view, @NonNull final String url) {
-        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
-        if (!StringExtensions.isNullOrBlank(parameters.get(ERROR))) {
-            Logger.info(TAG, "Sending intent to cancel authentication activity");
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE, parameters.get(ERROR_SUBCODE));
+        final String methodName = ":processRedirectUrl";
 
-            // Fallback logic on error_subcode when error_description is not provided.
-            // When error is "login_required", redirect url has error_description.
-            // When error is  "access_denied", redirect url has  error_subcode.
-            if (!StringUtil.isEmpty(parameters.get(ERROR_DESCRIPTION))) {
-                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
-            } else {
-                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_SUBCODE));
-            }
-
-            //If user clicked the "Back" button in the webview
-            if (StringUtil.equalsIgnoreCase(parameters.get(ERROR_SUBCODE), SUB_ERROR_UI_CANCEL)) {
-                getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
-            } else {
-                getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
-            }
-
-            view.stopLoading();
-        } else {
-            Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(AUTHORIZATION_FINAL_URL, url);
-            //TODO log request info
-            getCompletionCallback().onChallengeResponseReceived(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE,
-                    resultIntent);
-            view.stopLoading();
-            //the TokenTask should be processed at after the authorization process in the upper calling layer.
-        }
+        Logger.info(TAG + methodName, "It is pointing to redirect. Final url can be processed to get the code or error.");
+        final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(url);
+        getCompletionCallback().onChallengeResponseReceived(data);
+        view.stopLoading();
+        //the TokenTask should be processed at after the authorization process in the upper calling layer.
     }
 
     private void processWebsiteRequest(@NonNull final WebView view, @NonNull final String url) {
@@ -311,16 +281,12 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
 
             // Otherwise, launch in Browser.
             openLinkInBrowser(url);
-            getCompletionCallback().onChallengeResponseReceived(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
-                    new Intent());
+            returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
             return;
         }
 
         openLinkInBrowser(url);
-        getCompletionCallback().onChallengeResponseReceived(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL,
-                new Intent());
+        returnResult(RawAuthorizationResult.ResultCode.CANCELLED);
     }
 
     private boolean processPlayStoreURL(@NonNull final WebView view, @NonNull final String url) {
@@ -371,9 +337,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         getActivity().startActivity(intent);
 
-        getCompletionCallback().onChallengeResponseReceived(
-                AuthenticationConstants.UIResponse.BROWSER_CODE_MDM,
-                new Intent());
+        returnResult(RawAuthorizationResult.ResultCode.MDM_FLOW);
     }
 
     private void openLinkInBrowser(final String url) {
@@ -403,29 +367,16 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                 "Unexpected URL from WebCP: " + url);
     }
 
+    // i.e. msauth://wpj/?username=idlab1%40msidlab4.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local
     private void processInstallRequest(@NonNull final WebView view, @NonNull final String url) {
-        final Intent resultIntent = new Intent();
-        final HashMap<String, String> parameters = StringExtensions.getUrlParameters(url);
-        final String installLink = parameters.get(AuthenticationConstants.Broker.INSTALL_URL_KEY);
-        final String userName = parameters.get(AuthenticationConstants.Broker.INSTALL_UPN_KEY);
-        if (TextUtils.isEmpty(installLink)) {
-            Logger.info(TAG, "Install link is null or empty, " +
-                    "Return to caller with BROWSER_CODE_DEVICE_REGISTER"
-            );
-            resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
-            getCompletionCallback().onChallengeResponseReceived(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
-                    resultIntent
-            );
+
+        final RawAuthorizationResult result = RawAuthorizationResult.fromRedirectUri(url);
+
+        if (result.getResultCode() != RawAuthorizationResult.ResultCode.BROKER_INSTALLATION_TRIGGERED) {
+            getCompletionCallback().onChallengeResponseReceived(result);
             view.stopLoading();
             return;
         }
-
-        Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
-        getCompletionCallback().onChallengeResponseReceived(
-                AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME,
-                resultIntent
-        );
 
         // Having thread sleep for 1 second for calling activity to receive the result from
         // prepareForBrokerResumeRequest, thus the receiver for listening broker result return
@@ -433,21 +384,30 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         // play store and broker app download page which brought the calling activity down
         // in the activity stack.
 
+        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
+        final String appLink = parameters.get(APP_LINK_KEY);
+
+        Logger.info(TAG, "Launching the link to app:" + appLink);
+        getCompletionCallback().onChallengeResponseReceived(result);
+
         final Handler handler = new Handler();
         final int threadSleepForCallingActivity = 1000;
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                String link = installLink
+                String link = appLink
                         .replace(AuthenticationConstants.Broker.BROWSER_EXT_PREFIX, "https://");
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
                 getActivity().startActivity(intent);
                 view.stopLoading();
             }
         }, threadSleepForCallingActivity);
+
+        view.stopLoading();
     }
 
-    private void processInvalidRedirectUri(@NonNull final WebView view, @NonNull final String url) {
+    private void processInvalidRedirectUri(@NonNull final WebView view,
+                                           @NonNull final String url) {
         final String methodName = "#processInvalidRedirectUri";
 
         Logger.error(TAG + methodName, "The RedirectUri is not as expected.", null);
@@ -458,7 +418,8 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         view.stopLoading();
     }
 
-    private void processSSLProtectionCheck(@NonNull final WebView view, @NonNull final String url) {
+    private void processSSLProtectionCheck(@NonNull final WebView view,
+                                           @NonNull final String url) {
         final String redactedUrl = removeQueryParametersOrRedact(url);
 
         Logger.error(TAG, "The webView was redirected to an unsafe URL: " + redactedUrl, null);
@@ -481,17 +442,22 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
         }
     }
 
-    private void returnError(final String errorCode, final String errorMessage) {
-        Intent resultIntent = new Intent();
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, errorCode);
-        resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, errorMessage);
+    private void returnResult(final RawAuthorizationResult.ResultCode resultCode) {
         //TODO log request info
-        getCompletionCallback().onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
+        getCompletionCallback().onChallengeResponseReceived(
+                RawAuthorizationResult.fromResultCode(resultCode));
+    }
+
+    private void returnError(final String errorCode, final String errorMessage) {
+        //TODO log request info
+        getCompletionCallback().onChallengeResponseReceived(
+                RawAuthorizationResult.fromException(new ClientException(errorCode, errorMessage)));
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void onReceivedClientCertRequest(WebView view, final ClientCertRequest clientCertRequest) {
+    public void onReceivedClientCertRequest(WebView view,
+                                            final ClientCertRequest clientCertRequest) {
         final ClientCertAuthChallengeHandler clientCertAuthChallengeHandler = new ClientCertAuthChallengeHandler(getActivity());
         clientCertAuthChallengeHandler.processChallenge(clientCertRequest);
     }

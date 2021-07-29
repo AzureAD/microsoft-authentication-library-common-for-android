@@ -23,20 +23,14 @@
 package com.microsoft.identity.common.internal.commands.parameters;
 
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.MapBackedPreferencesManager;
-import com.microsoft.identity.common.internal.commands.Command;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
-import com.microsoft.identity.common.internal.commands.GenerateShrCommand;
-import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.UrlUtils;
+import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.URL;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -54,7 +48,7 @@ public class GenerateShrCommandParametersTest {
                     .httpMethod("GET")
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
@@ -64,7 +58,7 @@ public class GenerateShrCommandParametersTest {
                     .httpMethod("GET")
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
@@ -74,7 +68,7 @@ public class GenerateShrCommandParametersTest {
                     .httpMethod("GET")
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("two")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
 
@@ -87,7 +81,7 @@ public class GenerateShrCommandParametersTest {
                         .httpMethod("GET")
                         .url(UrlUtils.makeUrlSilent("https://url"))
                         .nonce("one")
-                        .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                         .build())
                 .build();
         GenerateShrCommandParameters commandTwo = GenerateShrCommandParameters.builder()
@@ -97,7 +91,7 @@ public class GenerateShrCommandParametersTest {
                         .httpMethod("GET")
                         .url(UrlUtils.makeUrlSilent("https://url"))
                         .nonce("two")
-                        .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                         .build())
                 .build();
 

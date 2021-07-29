@@ -26,9 +26,11 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import java.net.URL;
@@ -61,11 +63,11 @@ public class DevicePoPUtils {
         final URL resourceUrl = popSchemeParams.getUrl();
         final String nonce = popSchemeParams.getNonce();
         final String clientClaims = popSchemeParams.getClientClaims();
-        final IDevicePopManager popMgr = Device.getDevicePoPManagerInstance();
+        final IDevicePopManager popMgr = new AndroidCommonComponents(context).getDefaultDevicePopManager();
 
         // Generate keys, if none exist (should already be initialized)
         if (!popMgr.asymmetricKeyExists()) {
-            popMgr.generateAsymmetricKey(context);
+            popMgr.generateAsymmetricKey();
         }
 
         final String shr = popMgr.mintSignedHttpRequest(

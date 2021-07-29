@@ -41,7 +41,7 @@ import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -49,7 +49,7 @@ import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
@@ -137,7 +137,7 @@ public class ADALOAuth2TokenCache
     public ICacheRecord save(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
-            final AzureActiveDirectoryTokenResponse response) {
+            final AzureActiveDirectoryTokenResponse response) throws ClientException {
         final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 

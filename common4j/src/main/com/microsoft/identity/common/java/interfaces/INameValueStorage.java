@@ -22,30 +22,34 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import java.util.Set;
+
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
  * An interface for a NameValue storage.
- * */
+ */
 public interface INameValueStorage<T> {
     /**
      * Gets a value from the storage.
      *
      * @param name A name associated to the value.
      */
+    @Nullable
     T get(@NonNull String name);
 
     /**
      * Puts a value into the storage.
      *
-     * @param name A name associated to the value.
+     * @param name  A name associated to the value.
      * @param value value to be persisted.
      */
     void put(@NonNull String name, @Nullable T value);
 
     /**
      * Removes a value from the storage.
+     * [
      *
      * @param name A name associated to the value.
      */
@@ -55,4 +59,10 @@ public interface INameValueStorage<T> {
      * Clear all data from the storage.
      */
     void clear();
+
+    /**
+     * Get all keys in this storage.
+     */
+    @NonNull
+    Set<String> keySet();
 }

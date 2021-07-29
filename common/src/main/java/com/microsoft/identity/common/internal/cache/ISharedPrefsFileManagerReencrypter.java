@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
 /**
  * Interface describing an object that can reencrypt instances of

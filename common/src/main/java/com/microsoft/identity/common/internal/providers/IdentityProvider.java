@@ -23,8 +23,12 @@
 package com.microsoft.identity.common.internal.providers;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+
+import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -35,6 +39,6 @@ public abstract class IdentityProvider<T extends OAuth2Strategy, U extends OAuth
      * @param config generic OAuth2 configuration
      * @return Generic OAuth2Strategy
      */
-    public abstract T createOAuth2Strategy(U config);
+    public abstract T createOAuth2Strategy(@NonNull U config, @NonNull ICommonComponents commonComponents) throws ClientException;
 
 }

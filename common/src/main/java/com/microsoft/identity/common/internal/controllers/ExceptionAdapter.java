@@ -80,7 +80,7 @@ public class ExceptionAdapter {
                                 return new DeviceRegistrationRequiredException(
                                         microsoftAuthorizationErrorResponse.getError(),
                                         microsoftAuthorizationErrorResponse.getErrorDescription(),
-                                        microsoftAuthorizationErrorResponse.getUserName()
+                                        microsoftAuthorizationErrorResponse.getUpnToWpj()
                                 );
                             }
                         }

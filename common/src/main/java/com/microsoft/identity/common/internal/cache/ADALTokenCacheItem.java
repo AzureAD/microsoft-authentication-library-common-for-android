@@ -23,9 +23,10 @@
 package com.microsoft.identity.common.internal.cache;
 
 import com.microsoft.identity.common.adal.internal.ADALUserInfo;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
@@ -87,7 +88,7 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
 
     ADALTokenCacheItem(final AzureActiveDirectoryOAuth2Strategy strategy,
                        final AzureActiveDirectoryAuthorizationRequest request,
-                       final AzureActiveDirectoryTokenResponse response) {
+                       final AzureActiveDirectoryTokenResponse response) throws ClientException {
         String issuerCacheIdentifier = strategy.getIssuerCacheIdentifier(request);
         AzureActiveDirectoryAccount account = strategy.createAccount(response);
         account.setEnvironment(issuerCacheIdentifier);

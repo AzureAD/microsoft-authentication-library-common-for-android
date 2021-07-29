@@ -47,10 +47,10 @@ import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -181,7 +181,7 @@ public class TokenCacheItemMigrationAdapter {
         config.setAuthorityUrl(authorityUrl);
 
         // Create the strategy
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();
@@ -336,7 +336,7 @@ public class TokenCacheItemMigrationAdapter {
                 }
 
                 // Create the strategy
-                final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+                final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
                 final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
                 final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(

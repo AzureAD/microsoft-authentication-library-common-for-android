@@ -32,7 +32,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallback;
+import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.migration.DefaultSharedPrefsFileManagerReencrypter;
 import com.microsoft.identity.common.migration.IMigrationOperationResult;
 import com.microsoft.identity.common.migration.ISharedPrefsFileManagerReencrypter;
