@@ -331,7 +331,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .builder()
                 .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
                 .androidApplicationContext(context)
-                .brokerAccount(AndroidBrokerAccount.create(account))
+                .brokerAccount(AndroidBrokerAccount.adapt(account))
                 .sdkType(brokerRequest.getSdkType() == null ? SdkType.MSAL : brokerRequest.getSdkType())
                 .sdkVersion(brokerRequest.getMsalVersion())
                 .callerUid(callingAppUid)

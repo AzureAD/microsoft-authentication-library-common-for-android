@@ -33,7 +33,6 @@ import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -77,14 +76,14 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     @NonNull
-    public static AndroidBrokerAccount create(@NonNull final Account account) {
+    public static AndroidBrokerAccount adapt(@NonNull final Account account) {
         return new AndroidBrokerAccount(account);
     }
 
     @NonNull
-    public static AndroidBrokerAccount create(@NonNull final AccountManager accountManager,
-                                              @NonNull final String accountName,
-                                              @NonNull final String accountType) {
+    public static AndroidBrokerAccount adapt(@NonNull final AccountManager accountManager,
+                                             @NonNull final String accountName,
+                                             @NonNull final String accountType) {
         final String methodName = ":create";
 
         Account account = getAccount(accountManager, accountName, accountType);
@@ -118,7 +117,7 @@ public class AndroidBrokerAccount implements IBrokerAccount {
             );
         }
 
-        return create(account);
+        return adapt(account);
     }
 
     @Nullable

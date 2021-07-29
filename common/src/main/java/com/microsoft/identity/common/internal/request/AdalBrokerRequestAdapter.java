@@ -237,7 +237,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .builder()
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .androidApplicationContext(context)
-                .brokerAccount(AndroidBrokerAccount.create(account))
+                .brokerAccount(AndroidBrokerAccount.adapt(account))
                 .sdkType(SdkType.ADAL)
                 .callerUid(callingAppUid)
                 .callerPackageName(packageName)
