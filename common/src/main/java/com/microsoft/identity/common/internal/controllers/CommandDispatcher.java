@@ -58,7 +58,7 @@ import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
@@ -571,7 +571,7 @@ public class CommandDispatcher {
             //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
             if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
-                LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new DataBag());
+                LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
             }
 
             sInteractiveExecutor.execute(new Runnable() {
@@ -596,7 +596,7 @@ public class CommandDispatcher {
 
                         final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                             @Override
-                            public void onReceive(@NonNull DataBag dataBag) {
+                            public void onReceive(@NonNull PropertyBag dataBag) {
                                 completeInteractive(dataBag);
                             }
                         };
@@ -633,14 +633,14 @@ public class CommandDispatcher {
         }
     }
 
-    private static void completeInteractive(final DataBag dataBag) {
+    private static void completeInteractive(final PropertyBag propertyBag) {
         final String methodName = ":completeInteractive";
 
-        int requestCode = dataBag.<Integer>getOrDefault(REQUEST_CODE, -1);
-        int resultCode = dataBag.<Integer>getOrDefault(RESULT_CODE, -1);
+        int requestCode = propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1);
+        int resultCode = propertyBag.<Integer>getOrDefault(RESULT_CODE, -1);
 
         if (sCommand != null) {
-            sCommand.onFinishAuthorizationSession(requestCode, resultCode, dataBag);
+            sCommand.onFinishAuthorizationSession(requestCode, resultCode, propertyBag);
         } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }

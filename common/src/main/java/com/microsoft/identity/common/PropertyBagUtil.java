@@ -24,37 +24,33 @@ package com.microsoft.identity.common;
 
 import android.os.Bundle;
 
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.util.ported.DataBag;
-
-import java.io.Serializable;
-import java.util.Map;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import lombok.NonNull;
 
 /**
- * {@link DataBag} utilities.
+ * {@link PropertyBag} utilities.
  */
-public class DataBagUtil {
+public class PropertyBagUtil {
 
     /**
-     * Converts a {@link DataBag} to a {@link Bundle}
+     * Converts a {@link PropertyBag} to a {@link Bundle}
      */
-    public static Bundle toBundle(@NonNull final DataBag dataBag) {
+    public static Bundle toBundle(@NonNull final PropertyBag propertyBag) {
         final Bundle bundle = new Bundle();
 
-        for (final String key : dataBag.keySet()) {
-            bundle.putSerializable(key, dataBag.get(key));
+        for (final String key : propertyBag.keySet()) {
+            bundle.putSerializable(key, propertyBag.get(key));
         }
 
         return bundle;
     }
 
     /**
-     * Converts a {@link Bundle} to a {@link DataBag}
+     * Converts a {@link Bundle} to a {@link PropertyBag}
      * */
-    public static DataBag fromBundle(@NonNull final Bundle bundle) {
-        final DataBag result = new DataBag();
+    public static PropertyBag fromBundle(@NonNull final Bundle bundle) {
+        final PropertyBag result = new PropertyBag();
 
         for (final String key : bundle.keySet()) {
             result.put(key, bundle.getSerializable(key));

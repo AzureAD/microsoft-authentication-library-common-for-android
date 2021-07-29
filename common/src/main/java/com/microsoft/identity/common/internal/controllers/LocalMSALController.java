@@ -71,7 +71,7 @@ import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -243,7 +243,7 @@ public class LocalMSALController extends BaseController {
     @Override
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
-                                             @NonNull final DataBag data) {
+                                             @NonNull final PropertyBag data) {
         final String methodName = ":onFinishAuthorizationSession";
         Logger.verbose(
                 TAG + methodName,
@@ -257,7 +257,7 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
         );
 
-        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromDataBag(data));
+        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
 
         Telemetry.emit(
                 new ApiEndEvent()

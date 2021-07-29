@@ -33,7 +33,7 @@ import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 @Accessors(prefix = "m")
-public class DataBag {
+public class PropertyBag {
     private final INameValueStorage<Object> mMap = new InMemoryStorage<>();
 
     public <T extends Serializable> void put(@NonNull final String name, @Nullable final T value) {

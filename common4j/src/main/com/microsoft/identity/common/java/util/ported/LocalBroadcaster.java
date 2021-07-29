@@ -35,7 +35,7 @@ public enum  LocalBroadcaster {
     private static final String TAG = LocalBroadcaster.class.getSimpleName();
 
     public interface IReceiverCallback {
-        void onReceive(@NonNull final DataBag dataBag);
+        void onReceive(@NonNull final PropertyBag propertyBag);
     }
 
     final Map<String, IReceiverCallback> mReceivers = new HashMap<>();
@@ -59,13 +59,13 @@ public enum  LocalBroadcaster {
         mReceivers.remove(alias);
     }
 
-    public void broadcast(@NonNull final String alias, @NonNull final DataBag dataBag){
+    public void broadcast(@NonNull final String alias, @NonNull final PropertyBag propertyBag){
         final String methodName = ":broadcast";
         final IReceiverCallback receiver = mReceivers.get(alias);
 
         if (receiver != null){
             Logger.info(TAG + methodName, "broadcasting to alias: " + alias);
-            receiver.onReceive(dataBag);
+            receiver.onReceive(propertyBag);
         } else {
             Logger.info(TAG + methodName, "No callback is registered with alias: " + alias +
                     ". Do nothing.");

@@ -34,7 +34,7 @@ import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.internal.util.FindBugsConstants;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
@@ -60,8 +60,8 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
      */
     private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
         @Override
-        public void onReceive(@NonNull final DataBag dataBag) {
-            cancelAuthorization(dataBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
+        public void onReceive(@NonNull final PropertyBag propertyBag) {
+            cancelAuthorization(propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
         }
     };
 
@@ -155,10 +155,10 @@ public abstract class CurrentTaskAuthorizationFragment extends AuthorizationFrag
     void sendResult(@NonNull final RawAuthorizationResult result) {
         Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
-        final DataBag dataBag = RawAuthorizationResult.toDataBag(result);
-        dataBag.put(REQUEST_CODE, BROWSER_FLOW);
+        final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
+        propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
 
-        LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, dataBag);
+        LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
     }
 
     void cancelAuthorization(final boolean isCancelledByUser) {

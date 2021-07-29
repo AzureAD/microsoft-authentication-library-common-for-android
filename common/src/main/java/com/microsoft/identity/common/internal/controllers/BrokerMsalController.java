@@ -33,7 +33,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.DataBagUtil;
+import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -77,7 +77,7 @@ import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.util.ResultFuture;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -254,7 +254,7 @@ public class BrokerMsalController extends BaseController {
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
                 new LocalBroadcaster.IReceiverCallback() {
             @Override
-            public void onReceive(@NonNull DataBag dataBag) {
+            public void onReceive(@NonNull PropertyBag propertyBag) {
                 /**
                  * Get the response from the Broker captured by BrokerActivity.
                  * BrokerActivity will pass along the response to the broker controller.
@@ -270,11 +270,11 @@ public class BrokerMsalController extends BaseController {
                 Telemetry.emit(
                         new ApiStartEvent()
                                 .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(dataBag.get(REQUEST_CODE)))
-                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(dataBag.get(RESULT_CODE)))
+                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(propertyBag.get(REQUEST_CODE)))
+                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(propertyBag.get(RESULT_CODE)))
                 );
 
-                mBrokerResultFuture.setResult(DataBagUtil.toBundle(dataBag));
+                mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
 
                 Telemetry.emit(
                         new ApiEndEvent()
@@ -330,7 +330,7 @@ public class BrokerMsalController extends BaseController {
     @Override
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
-                                             @NonNull final DataBag data) {
+                                             @NonNull final PropertyBag data) {
         throw new UnsupportedOperationException();
     }
 

@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java;
 
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 
 import java.nio.charset.Charset;
@@ -578,7 +578,7 @@ public class AuthenticationConstants {
     }
 
     /**
-     * Fields for the broadcast {@link DataBag}.
+     * Fields for the broadcast {@link PropertyBag}.
      */
     public static final class LocalBroadcasterFields {
 

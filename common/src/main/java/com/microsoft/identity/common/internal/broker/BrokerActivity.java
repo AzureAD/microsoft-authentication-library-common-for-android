@@ -26,8 +26,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.microsoft.identity.common.DataBagUtil;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -111,12 +111,12 @@ public final class BrokerActivity extends Activity {
 
             Logger.verbose(TAG + methodName, "Completing interactive request ");
 
-            final DataBag dataBag = DataBagUtil.fromBundle(data.getExtras());
-            dataBag.put(REQUEST_CODE, BROKER_FLOW);
-            dataBag.put(RESULT_CODE, resultCode);
+            final PropertyBag propertyBag = PropertyBagUtil.fromBundle(data.getExtras());
+            propertyBag.put(REQUEST_CODE, BROKER_FLOW);
+            propertyBag.put(RESULT_CODE, resultCode);
 
             LocalBroadcaster.INSTANCE.broadcast(
-                    RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, dataBag);
+                    RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
         }
 
         finish();

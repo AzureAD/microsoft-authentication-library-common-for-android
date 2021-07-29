@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.io.Serializable;
 import java.net.URI;
@@ -175,20 +175,20 @@ public class RawAuthorizationResult {
     }
 
     @NonNull
-    public static DataBag toDataBag(@NonNull final RawAuthorizationResult data) {
-        final DataBag dataBag = new DataBag();
-        dataBag.put(RESULT_CODE, data.mResultCode.mCode);
-        dataBag.put(RESPONSE_FINAL_URL, data.mAuthorizationFinalUri);
-        dataBag.put(RESPONSE_EXCEPTION, data.mException);
-        return dataBag;
+    public static PropertyBag toPropertyBag(@NonNull final RawAuthorizationResult data) {
+        final PropertyBag propertyBag = new PropertyBag();
+        propertyBag.put(RESULT_CODE, data.mResultCode.mCode);
+        propertyBag.put(RESPONSE_FINAL_URL, data.mAuthorizationFinalUri);
+        propertyBag.put(RESPONSE_EXCEPTION, data.mException);
+        return propertyBag;
     }
 
     @NonNull
-    public static RawAuthorizationResult fromDataBag(@NonNull final DataBag dataBag) {
+    public static RawAuthorizationResult fromPropertyBag(@NonNull final PropertyBag propertyBag) {
         return RawAuthorizationResult.builder()
-                .resultCode(ResultCode.fromInteger(dataBag.<Integer>get(RESULT_CODE)))
-                .authorizationFinalUri(dataBag.<URI>get(RESPONSE_FINAL_URL))
-                .exception((BaseException) dataBag.<Serializable>get(RESPONSE_EXCEPTION))
+                .resultCode(ResultCode.fromInteger(propertyBag.<Integer>get(RESULT_CODE)))
+                .authorizationFinalUri(propertyBag.<URI>get(RESPONSE_FINAL_URL))
+                .exception((BaseException) propertyBag.<Serializable>get(RESPONSE_EXCEPTION))
                 .build();
     }
 

@@ -33,7 +33,7 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -112,7 +112,7 @@ public class InteractiveTokenCommand extends TokenCommand {
     @Override
     public void onFinishAuthorizationSession(int requestCode,
                                              int resultCode,
-                                             @NonNull final DataBag data) {
+                                             @NonNull final PropertyBag data) {
         getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
     }
 

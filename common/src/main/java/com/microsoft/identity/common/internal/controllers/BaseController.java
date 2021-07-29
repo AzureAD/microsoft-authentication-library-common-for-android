@@ -81,7 +81,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.SchemaUtil;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -132,7 +132,7 @@ public abstract class BaseController {
     public abstract void onFinishAuthorizationSession(
             final int requestCode,
             final int resultCode,
-            @NonNull final DataBag data);
+            @NonNull final PropertyBag data);
 
     public abstract AcquireTokenResult acquireTokenSilent(
             final SilentTokenCommandParameters parameters)

@@ -30,7 +30,7 @@ import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Date;
@@ -113,7 +113,7 @@ public class DeviceCodeFlowCommand extends TokenCommand {
     @Override
     void onFinishAuthorizationSession(final int requestCode,
                                       final int resultCode,
-                                      @NonNull final DataBag data) {
+                                      @NonNull final PropertyBag data) {
         throw new UnsupportedOperationException();
     }
 }

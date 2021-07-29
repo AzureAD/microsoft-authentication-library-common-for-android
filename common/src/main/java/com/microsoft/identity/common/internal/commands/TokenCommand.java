@@ -28,7 +28,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.util.ported.DataBag;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.util.List;
 
@@ -53,7 +53,7 @@ public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
 
     abstract void onFinishAuthorizationSession(int requestCode,
                                                int resultCode,
-                                               @NonNull final DataBag data);
+                                               @NonNull final PropertyBag data);
 
     @Override
     public boolean willReachTokenEndpoint() {
