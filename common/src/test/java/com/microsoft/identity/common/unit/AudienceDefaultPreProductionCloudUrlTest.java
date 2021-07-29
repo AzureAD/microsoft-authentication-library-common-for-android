@@ -25,7 +25,7 @@ package com.microsoft.identity.common.unit;
 import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
 import com.microsoft.identity.common.internal.authorities.AllAccounts;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.authorities.Environment;
+import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryEnvironment;
 
