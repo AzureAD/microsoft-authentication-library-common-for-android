@@ -20,11 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
+package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import android.net.Uri;
-
-import androidx.annotation.NonNull;
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
+import lombok.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -33,13 +32,6 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenErrorResponse;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationResponse;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResultFactory;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
@@ -50,9 +42,11 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static com.microsoft.identity.common.java.exception.ErrorStrings.AUTHORITY_URL_NOT_VALID;
 
@@ -135,7 +129,7 @@ public class AzureActiveDirectoryOAuth2Strategy
             // TODO: Throw an exception in this case... need to see what ADAL does in this case.
             // If Cloud is null, e.g. Authority is PPE and AAD PE doesn't include it in the discovery data, this will similarly throw:
             // java.lang.NullPointerException: Attempt to invoke virtual method
-            // 'boolean com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.isValidated()'
+            // 'boolean com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud.isValidated()'
             // on a null object reference
         }
 
@@ -151,16 +145,17 @@ public class AzureActiveDirectoryOAuth2Strategy
         }
 
         Logger.info(TAG, "Building authority URI");
-        Uri authorityUri = Uri.parse(authRequest.getAuthority().toString())
-                .buildUpon()
-                .authority(cloud.getPreferredCacheHostName())
-                .build();
 
-        final String issuerCacheIdentifier = authorityUri.toString();
+        try {
+            final String issuerCacheIdentifier = new URIBuilder(authRequest.getAuthority().toString())
+                    .setHost(cloud.getPreferredCacheHostName())
+                    .build().toString();
 
-        Logger.infoPII(TAG, "Issuer cache identifier created: " + issuerCacheIdentifier);
-
-        return issuerCacheIdentifier;
+            Logger.infoPII(TAG, "Issuer cache identifier created: " + issuerCacheIdentifier);
+            return issuerCacheIdentifier;
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 
     @Override

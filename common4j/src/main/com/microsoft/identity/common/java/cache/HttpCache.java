@@ -20,22 +20,56 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.providers.oauth2;
+package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 /**
- * Base class for defining options relative to the construction of an {@link OAuth2Strategy}.
+ * Class for managing HttpCache.
  */
-@Builder
-@Getter
-@Accessors(prefix = "m")
-public class OAuth2StrategyParameters {
-    @Nullable
-    private final transient ICommonComponents mPlatformComponents;
+public class HttpCache {
+
+    private static IHttpCacheCallback sHttpCache;
+
+    private static final ReentrantReadWriteLock sLock = new ReentrantReadWriteLock();
+
+    /**
+     * HttpCache's callback interface.
+     */
+    public interface IHttpCacheCallback {
+
+        /**
+         * Flush the cache.
+         */
+        void flush();
+    }
+
+    /**
+     * Sets a callback to be triggered when an operation in this class is invoked.
+     */
+    public static void setHttpCache(@Nullable IHttpCacheCallback httpCacheCallback) {
+        sLock.writeLock().lock();
+        try {
+            sHttpCache = httpCacheCallback;
+        } finally {
+            sLock.writeLock().unlock();
+        }
+    }
+
+    /**
+     * Flush the cache.
+     */
+    public static void flush() {
+        sLock.readLock().lock();
+        try {
+            if (sHttpCache != null) {
+                sHttpCache.flush();
+            }
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
 }

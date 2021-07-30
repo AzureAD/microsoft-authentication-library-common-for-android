@@ -20,34 +20,33 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
+package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import android.net.Uri;
-import android.util.Log;
-
-import androidx.annotation.NonNull;
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
+import lombok.NonNull;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.authorities.Environment;
-import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.java.authorities.Environment;
+import com.microsoft.identity.common.java.cache.HttpCache;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
-import com.microsoft.identity.common.internal.providers.IdentityProvider;
+import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Configuration;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -157,7 +156,7 @@ public class AzureActiveDirectory
             return;
         }
 
-        if (StringExtensions.isNullOrBlank(metadata)) {
+        if (StringUtil.isNullOrEmpty(metadata)) {
             sAadClouds.put(authorityHost, new AzureActiveDirectoryCloud(authorityHost, authorityHost));
             return;
         }
@@ -182,14 +181,12 @@ public class AzureActiveDirectory
         }
     }
 
-    public static synchronized void performCloudDiscovery() throws IOException {
+    public static synchronized void performCloudDiscovery()
+            throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
-        Uri instanceDiscoveryRequestUri = Uri.parse(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT);
-
-        instanceDiscoveryRequestUri = instanceDiscoveryRequestUri
-                .buildUpon()
-                .appendQueryParameter(API_VERSION, API_VERSION_VALUE)
-                .appendQueryParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+        final URI instanceDiscoveryRequestUri = new URIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
+                .addParameter(API_VERSION, API_VERSION_VALUE)
+                .addParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
         final HttpResponse response =

@@ -20,27 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory;
+package com.microsoft.identity.common.java.broker;
 
-import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
+import lombok.NonNull;
 
-public class AzureActiveDirectoryTokenRequest extends TokenRequest {
-
-    @SerializedName("resource")
-    private String mResourceId;
+public interface IBrokerAccount {
 
     /**
-     * @return mResourceId of AzureActiveDirectoryTokenRequest
-     */
-    public String getResourceId() {
-        return mResourceId;
-    }
-
-    /**
-     * @param resourceId String of resource ID
-     */
-    public void setResourceId(String resourceId) {
-        mResourceId = resourceId;
-    }
+     * Get account's (unique) username.
+     * */
+    @NonNull
+    String getUsername();
 }

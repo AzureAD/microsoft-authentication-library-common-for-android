@@ -78,6 +78,15 @@ public class HttpCache {
             );
         }
 
+        com.microsoft.identity.common.java.cache.HttpCache.setHttpCache(
+                new com.microsoft.identity.common.java.cache.HttpCache.IHttpCacheCallback() {
+                    @Override
+                    public void flush() {
+                        HttpCache.flush();
+                    }
+                }
+        );
+
         return success;
     }
 
