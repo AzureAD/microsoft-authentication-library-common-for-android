@@ -9,5 +9,5 @@ gradle -version
 echo =============================================
 echo Running instrumented tests
 echo =============================================
-gradle common:connectedDebugAndroidTest -Psugar -i
+gradle common:connectedDebugAndroidTest -Psugar=true -i
 
