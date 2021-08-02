@@ -95,7 +95,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 },
                 new OnPageLoadedCallback() {
                     @Override
-                    public void onPageLoaded() {
+                    public void onPageLoaded(final String url) {
                         return;
                     }
                 },

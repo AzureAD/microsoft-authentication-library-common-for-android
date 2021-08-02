@@ -43,7 +43,6 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
-import com.microsoft.identity.common.internal.ui.webview.OnPageCommitVisibleCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
@@ -135,13 +134,16 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
                     @Override
-                    public void onPageLoaded() {
+                    public void onPageLoaded(final String url) {
                         mProgressBar.setVisibility(View.INVISIBLE);
-                    }
-                },
-                new OnPageCommitVisibleCallback() {
-                    @Override
-                    public void onPageCommitVisible() {
+                        try {
+                            javascriptToExecute[0] = String.format("window.expectedUrl = '%s';\n%s",
+                                    URLEncoder.encode(url, "UTF-8"),
+                                    mPostPageLoadedJavascript);
+                        } catch (UnsupportedEncodingException e) {
+                            // Encode url component failed, fallback.
+                            Logger.warn(TAG, "Inject expectedUrl failed.");
+                        }
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
                         if (!mAuthResultSent && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
