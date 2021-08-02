@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
 
 import java.nio.charset.Charset;
 
@@ -823,62 +824,62 @@ public final class AuthenticationConstants {
         /**
          * String of key for account name.
          */
-        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
 
         /**
          * String of key for account id token.
          */
-        public static final String ACCOUNT_IDTOKEN = "account.idtoken";
+        public static final String ACCOUNT_IDTOKEN = BrokerAccountDataName.ACCOUNT_IDTOKEN;
 
         /**
          * String of key for user id.
          */
-        public static final String ACCOUNT_USERINFO_USERID = "account.userinfo.userid";
+        public static final String ACCOUNT_USERINFO_USERID = BrokerAccountDataName.ACCOUNT_USERINFO_USERID;
 
         /**
          * String of key for user id list.
          */
-        public static final String ACCOUNT_USERINFO_USERID_LIST = "account.userinfo.userid.list";
+        public static final String ACCOUNT_USERINFO_USERID_LIST = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_LIST;
 
         /**
          * String of key for given name.
          */
-        public static final String ACCOUNT_USERINFO_GIVEN_NAME = "account.userinfo.given.name";
+        public static final String ACCOUNT_USERINFO_GIVEN_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_GIVEN_NAME;
 
         /**
          * String of key for family name.
          */
-        public static final String ACCOUNT_USERINFO_FAMILY_NAME = "account.userinfo.family.name";
+        public static final String ACCOUNT_USERINFO_FAMILY_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_FAMILY_NAME;
 
         /**
          * String of key for identity provider.
          */
-        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = "account.userinfo.identity.provider";
+        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = BrokerAccountDataName.ACCOUNT_USERINFO_IDENTITY_PROVIDER;
 
         /**
          * String of key for displayable id.
          */
-        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = "account.userinfo.userid.displayable";
+        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_DISPLAYABLE;
 
         /**
          * String of key for tenant id.
          */
-        public static final String ACCOUNT_USERINFO_TENANTID = "account.userinfo.tenantid";
+        public static final String ACCOUNT_USERINFO_TENANTID = BrokerAccountDataName.ACCOUNT_USERINFO_TENANTID;
 
         /**
          * String of key for environment.
          */
-        public static final String ACCOUNT_USERINFO_ENVIRONMENT = "account.userinfo.environment";
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT = BrokerAccountDataName.ACCOUNT_USERINFO_ENVIRONMENT;
 
         /**
          * String of key for authority type.
          */
-        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = "account.userinfo.authority.type";
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = BrokerAccountDataName.ACCOUNT_USERINFO_AUTHORITY_TYPE;
 
         /**
          * String of key for account id token record.
          */
-        public static final String ACCOUNT_USERINFO_ID_TOKEN = "account.userinfo.id.token";
+        public static final String ACCOUNT_USERINFO_ID_TOKEN = BrokerAccountDataName.ACCOUNT_USERINFO_ID_TOKEN;
 
         /**
          * String of key for adal version.
@@ -913,7 +914,7 @@ public final class AuthenticationConstants {
         /**
          * String of key for user data broker RT.
          */
-        public static final String USERDATA_BROKER_RT = "userdata.broker.rt";
+        public static final String USERDATA_BROKER_RT = BrokerAccountDataName.USERDATA_BROKER_RT;
 
         /**
          * String of key for user data broker PRT, RT.
