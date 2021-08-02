@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 
 import android.text.TextUtils;
 
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
@@ -110,7 +111,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                 );
             }
             if (getSdkType().isCapableOfMSA() &&
-                    !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
+                    !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         "mRedirectUri", "The redirect URI doesn't match the uri" +

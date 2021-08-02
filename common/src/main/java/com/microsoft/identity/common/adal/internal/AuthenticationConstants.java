@@ -1774,15 +1774,5 @@ public final class AuthenticationConstants {
          */
         @Deprecated
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-
-        /**
-         * The String representing the MSAL SdkType.
-         */
-        public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
-
-        /**
-         * The String representing the MSAL.CPP SdkType.
-         */
-        public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
     }
 }

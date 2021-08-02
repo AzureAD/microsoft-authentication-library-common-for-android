@@ -81,9 +81,9 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     @NonNull
-    public static AndroidBrokerAccount adapt(@NonNull final AccountManager accountManager,
-                                             @NonNull final String accountName,
-                                             @NonNull final String accountType) {
+    public static AndroidBrokerAccount create(@NonNull final AccountManager accountManager,
+                                              @NonNull final String accountName,
+                                              @NonNull final String accountType) {
         final String methodName = ":create";
 
         Account account = getAccount(accountManager, accountName, accountType);

@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
+import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -44,10 +45,10 @@ import com.microsoft.identity.common.internal.broker.BrokerResult;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.GzipUtil;
-import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -65,7 +66,6 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BROKER_BUNDLE;
-import static com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter.sRequestAdapterGsonInstance;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 /**
@@ -139,7 +139,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                             HeaderSerializationUtil.toJson((
                                     (ServiceException) exception).getHttpResponseHeaders()
                             ))
-                    .httpResponseBody(sRequestAdapterGsonInstance.toJson(
+                    .httpResponseBody(AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(
                             ((ServiceException) exception).getHttpResponseBody()));
         }
 
@@ -203,7 +203,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     public @NonNull Bundle bundleFromBrokerResult(@NonNull final BrokerResult brokerResult,
                                                   @Nullable final String negotiatedBrokerProtocolVersion) {
         final Bundle resultBundle = new Bundle();
-        final String brokerResultString = sRequestAdapterGsonInstance.toJson(
+        final String brokerResultString = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(
                 brokerResult,
                 BrokerResult.class
         );
@@ -643,7 +643,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
      */
     public GenerateShrResult getGenerateShrResultFromResultBundle(@NonNull final Bundle resultBundle) {
         final String resultJson = resultBundle.getString(BROKER_GENERATE_SHR_RESULT);
-        final GenerateShrResult shrResult = sRequestAdapterGsonInstance.fromJson(
+        final GenerateShrResult shrResult = AuthenticationSchemeTypeAdapter.getGsonInstance().fromJson(
                 resultJson,
                 GenerateShrResult.class
         );

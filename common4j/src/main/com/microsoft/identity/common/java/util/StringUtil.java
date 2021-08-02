@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
@@ -39,7 +40,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.UUID;
 
+import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -260,4 +263,26 @@ public class StringUtil {
         return RFC3339DateFormat.parse(dateStr);
     }
 
+    /**
+     * Util method to check if a string is a UUID or not
+     *
+     * @param inputString : inputString
+     * @return true if the inputString is a UUID else false;
+     */
+    public static boolean isUuid(@NonNull final String inputString) {
+        try {
+            UUID.fromString(inputString);
+            return true;
+        } catch (final IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode){
+        return Base64.encodeToString(bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+
+    public static String encodeUrlSafeString(@NonNull final String stringToEncode){
+        return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+    }
 }

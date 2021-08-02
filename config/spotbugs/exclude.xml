@@ -17,4 +17,8 @@
     <!-- This warns when there's a transient field in a serializable class -->
     <Bug pattern="SE_TRANSIENT_FIELD_NOT_RESTORED" />
 </Match>
+<Match>
+    <!-- This warns when a field is never read. -->
+    <Bug pattern="URF_UNREAD_FIELD" />
+</Match>
 </FindBugsFilter>
