@@ -39,7 +39,6 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -55,7 +54,7 @@ public class DevicePoPManagerSigningTests {
 
     @Parameterized.Parameters
     public static Iterable<SigningAlgorithm> testParams() {
-        return new ArrayList<>(Arrays.asList(SigningAlgorithm.values()));
+        return Arrays.asList(SigningAlgorithm.values());
     }
 
     @SuppressWarnings("unused")
