@@ -68,19 +68,19 @@ public class DevicePoPManagerSigningTests {
     public static Iterable<SigningAlgorithm> testParams() {
         final List<SigningAlgorithm> signingAlgs =
                 new ArrayList<SigningAlgorithm>() {{
-                    add(MD5_WITH_RSA);
+                    //add(MD5_WITH_RSA);
                     add(NONE_WITH_RSA);
                     add(SHA_256_WITH_RSA);
-                    add(SHA_384_WITH_RSA);
-                    add(SHA_512_WITH_RSA);
+                    //add(SHA_384_WITH_RSA);
+                    //add(SHA_512_WITH_RSA);
                 }};
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Only execute these tests at appropriate API levels...
-            signingAlgs.add(SHA_256_WITH_RSA_PSS);
-            signingAlgs.add(SHA_384_WITH_RSA_PSS);
-            signingAlgs.add(SHA_512_WITH_RSA_PSS);
-        }
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            // Only execute these tests at appropriate API levels...
+//            signingAlgs.add(SHA_256_WITH_RSA_PSS);
+//            signingAlgs.add(SHA_384_WITH_RSA_PSS);
+//            signingAlgs.add(SHA_512_WITH_RSA_PSS);
+//        }
 
         return signingAlgs;
     }

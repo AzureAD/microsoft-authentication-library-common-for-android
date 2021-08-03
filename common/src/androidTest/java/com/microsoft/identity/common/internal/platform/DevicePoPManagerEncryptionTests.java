@@ -75,8 +75,8 @@ public class DevicePoPManagerEncryptionTests {
             ciphers.add(RSA_NONE_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
+            //ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
+            //ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
         }
 
         return ciphers;
