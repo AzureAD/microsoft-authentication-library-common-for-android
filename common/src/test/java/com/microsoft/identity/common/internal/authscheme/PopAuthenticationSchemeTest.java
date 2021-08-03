@@ -27,7 +27,6 @@ import com.microsoft.identity.common.internal.util.UrlUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 

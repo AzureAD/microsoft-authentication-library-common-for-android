@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.commands.parameters;
 import com.google.gson.annotations.Expose;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.logging.Logger;
 

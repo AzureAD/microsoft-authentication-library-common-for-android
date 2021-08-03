@@ -32,8 +32,8 @@ import java.net.URL;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.HeaderField;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.MediaType;
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField;
+import static com.microsoft.identity.common.java.net.HttpConstants.MediaType;
 
 /**
  * It uses one time async task. WebRequest are wrapped here to prevent multiple

@@ -34,6 +34,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
@@ -43,7 +44,6 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
 import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.broker.BrokerResultFuture;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
 import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
@@ -62,7 +62,7 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsAccount;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
@@ -78,10 +78,14 @@ import com.microsoft.identity.common.internal.util.AccountManagerUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import lombok.EqualsAndHashCode;
 
@@ -98,6 +102,9 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 
 /**
  * The implementation of MSAL Controller for Broker.
@@ -110,7 +117,7 @@ public class BrokerMsalController extends BaseController {
     protected final MsalBrokerRequestAdapter mRequestAdapter = new MsalBrokerRequestAdapter();
     protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
 
-    private BrokerResultFuture mBrokerResultFuture;
+    private ResultFuture<Bundle> mBrokerResultFuture;
     private final Context mApplicationContext;
     private final String mActiveBrokerPackageName;
     private final BrokerOperationExecutor mBrokerOperationExecutor;
@@ -228,7 +235,9 @@ public class BrokerMsalController extends BaseController {
      */
     @Override
     public AcquireTokenResult acquireToken(final @NonNull InteractiveTokenCommandParameters parameters)
-            throws BaseException, InterruptedException {
+            throws BaseException, InterruptedException, ExecutionException {
+        final String methodName = ":acquireToken";
+
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
@@ -238,7 +247,7 @@ public class BrokerMsalController extends BaseController {
         //Create BrokerResultFuture to block on response from the broker... response will be return as an activity result
         //BrokerActivity will receive the result and ask the API dispatcher to complete the request
         //In completeAcquireToken below we will set the result on the future and unblock the flow.
-        mBrokerResultFuture = new BrokerResultFuture();
+        mBrokerResultFuture = new ResultFuture<>();
 
         //Get the broker interactive parameters intent
         final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
@@ -246,6 +255,40 @@ public class BrokerMsalController extends BaseController {
         //Pass this intent to the BrokerActivity which will be used to start this activity
         final Intent brokerActivityIntent = new Intent(parameters.getAndroidApplicationContext(), BrokerActivity.class);
         brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveRequestIntent);
+
+        LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
+                new LocalBroadcaster.IReceiverCallback() {
+            @Override
+            public void onReceive(@NonNull PropertyBag propertyBag) {
+                /**
+                 * Get the response from the Broker captured by BrokerActivity.
+                 * BrokerActivity will pass along the response to the broker controller.
+                 * The Broker controller will map the response into the broker result
+                 * and signal the future with the broker result to unblock the request.
+                 */
+
+                Logger.verbose(
+                        TAG + methodName,
+                        "Received result from Broker..."
+                );
+
+                Telemetry.emit(
+                        new ApiStartEvent()
+                                .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(propertyBag.get(REQUEST_CODE)))
+                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(propertyBag.get(RESULT_CODE)))
+                );
+
+                mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
+
+                Telemetry.emit(
+                        new ApiEndEvent()
+                                .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
+                );
+
+                LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT);
+            }
+        });
 
         if (null == parameters.getActivity()) {
             // To support calling from OneAuth-MSAL, which may be initialized without an Activity
@@ -257,21 +300,21 @@ public class BrokerMsalController extends BaseController {
             parameters.getActivity().startActivity(brokerActivityIntent);
         }
 
-        //Wait to be notified of the result being returned... we could add a timeout here if we want to
-        final Bundle resultBundle = mBrokerResultFuture.get();
-
-        // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
-        // MSAL needs to save this account locally for future token calls.
-        // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
-        // If the request is from MSALCPP , OAuth2TokenCache will be null.
-        if (parameters.getOAuth2TokenCache() != null) {
-            saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
-        }
-
         final AcquireTokenResult result;
         try {
+            //Wait to be notified of the result being returned... we could add a timeout here if we want to
+            final Bundle resultBundle = mBrokerResultFuture.get();
+
+            // For MSA Accounts Broker doesn't save the accounts, instead it just passes the result along,
+            // MSAL needs to save this account locally for future token calls.
+            // parameters.getOAuth2TokenCache() will be non-null only in case of MSAL native
+            // If the request is from MSALCPP , OAuth2TokenCache will be null.
+            if (parameters.getOAuth2TokenCache() != null) {
+                saveMsaAccountToCache(resultBundle, (MsalOAuth2TokenCache) parameters.getOAuth2TokenCache());
+            }
+
             result = new MsalBrokerResultAdapter().getAcquireTokenResultFromResultBundle(resultBundle);
-        } catch (BaseException e) {
+        } catch (final BaseException | ExecutionException e) {
             Telemetry.emit(
                     new ApiEndEvent()
                             .putException(e)
@@ -289,27 +332,11 @@ public class BrokerMsalController extends BaseController {
         return result;
     }
 
-    /**
-     * Get the response from the Broker captured by BrokerActivity.
-     * BrokerActivity will pass along the response to the broker controller
-     * The Broker controller will map th response into the broker result
-     * And signal the future with the broker result to unblock the request.
-     */
     @Override
-    public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
-        Telemetry.emit(
-                new ApiStartEvent()
-                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                        .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(resultCode))
-                        .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
-        );
-
-        mBrokerResultFuture.setResultBundle(data.getExtras());
-
-        Telemetry.emit(
-                new ApiEndEvent()
-                        .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-        );
+    public void onFinishAuthorizationSession(int requestCode,
+                                             int resultCode,
+                                             @NonNull final PropertyBag data) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -783,7 +810,7 @@ public class BrokerMsalController extends BaseController {
 
             @NonNull
             @Override
-            public BrokerOperationBundle getBundle() {
+            public BrokerOperationBundle getBundle() throws ClientException {
                 return new BrokerOperationBundle(
                         MSAL_GENERATE_SHR,
                         mActiveBrokerPackageName,

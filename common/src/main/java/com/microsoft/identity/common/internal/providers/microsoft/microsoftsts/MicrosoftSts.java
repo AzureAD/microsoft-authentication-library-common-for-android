@@ -22,8 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
-import com.microsoft.identity.common.internal.providers.IdentityProvider;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.IdentityProvider;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+
+import lombok.NonNull;
 
 public class MicrosoftSts
         extends IdentityProvider<MicrosoftStsOAuth2Strategy, MicrosoftStsOAuth2Configuration> {
@@ -35,8 +40,13 @@ public class MicrosoftSts
      * @return MicrosoftStsOAuth2Strategy
      */
     @Override
-    public MicrosoftStsOAuth2Strategy createOAuth2Strategy(MicrosoftStsOAuth2Configuration config) {
-        return new MicrosoftStsOAuth2Strategy(config, new OAuth2StrategyParameters());
+    public MicrosoftStsOAuth2Strategy createOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
+                                                           @NonNull final ICommonComponents commonComponents) throws ClientException {
+        final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
+                .platformComponents(commonComponents)
+                .build();
+
+        return new MicrosoftStsOAuth2Strategy(config, parameters);
     }
 
 }

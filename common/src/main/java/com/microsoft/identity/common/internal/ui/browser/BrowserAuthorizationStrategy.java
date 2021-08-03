@@ -31,27 +31,31 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.internal.providers.oauth2.AndroidAuthorizationStrategy;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivity;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.concurrent.Future;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
+
 // Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
-public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
+public abstract class BrowserAuthorizationStrategy<
+        GenericOAuth2Strategy extends OAuth2Strategy,
+        GenericAuthorizationRequest extends AuthorizationRequest>
+        extends AndroidAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
+
     private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
 
     private CustomTabsManager mCustomTabManager;
@@ -60,14 +64,11 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     private boolean mDisposed;
     private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
     private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
-    private boolean mIsRequestFromBroker;
 
     public BrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                         @NonNull Activity activity,
-                                        @Nullable Fragment fragment,
-                                        boolean isRequestFromBroker) {
+                                        @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
-        mIsRequestFromBroker = isRequestFromBroker;
     }
 
     public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
@@ -78,7 +79,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     public Future<AuthorizationResult> requestAuthorization(
             GenericAuthorizationRequest authorizationRequest,
             GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException, URISyntaxException {
+            throws ClientException {
         final String methodName = ":requestAuthorization";
         checkNotDisposed();
         final Context context = getApplicationContext();
@@ -113,21 +114,10 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
 
         authIntent.setPackage(browser.getPackageName());
         final URI requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
+
         authIntent.setData(Uri.parse(requestUrl.toString()));
 
         final Intent intent = buildAuthorizationActivityStartIntent(authIntent, requestUrl);
-
-        // singleTask launchMode is required for the authorization redirect is from an external browser
-        // in the browser authorization flow
-        // For broker request we need to clear all activities in the task and bring Authorization Activity to the
-        // top. If we do not add FLAG_ACTIVITY_CLEAR_TASK, Authorization Activity on finish can land on
-        // Authenticator's or Company Portal's active activity which would be confusing to the user.
-        if (mIsRequestFromBroker) {
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        } else {
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        }
-
         launchIntent(intent);
 
         return mAuthorizationResultFuture;
@@ -136,7 +126,7 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
     // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
     @SuppressWarnings(WarningType.unchecked_warning)
     private Intent buildAuthorizationActivityStartIntent(Intent authIntent, URI requestUrl) {
-        return AuthorizationActivity.createStartIntent(
+        final Intent intent = AuthorizationActivity.createStartIntent(
                 getApplicationContext(),
                 authIntent,
                 requestUrl.toString(),
@@ -145,7 +135,11 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
                 AuthorizationAgent.BROWSER,
                 true,
                 true);
+        setIntentFlag(intent);
+        return intent;
     }
+
+    protected abstract void setIntentFlag(@NonNull final Intent intent);
 
     private void checkNotDisposed() {
         if (mDisposed) {
@@ -153,15 +147,15 @@ public class BrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2St
         }
     }
 
+
     @Override
-    public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
+    public void completeAuthorization(int requestCode, @NonNull final RawAuthorizationResult data) {
+        if (requestCode == BROWSER_FLOW) {
             dispose();
 
             //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
             @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
                     .getAuthorizationResultFactory().createAuthorizationResult(
-                            resultCode,
                             data,
                             mAuthorizationRequest
                     );

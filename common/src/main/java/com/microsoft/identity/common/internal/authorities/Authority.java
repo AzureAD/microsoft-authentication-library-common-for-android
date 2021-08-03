@@ -32,14 +32,16 @@ import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -277,7 +279,8 @@ public abstract class Authority {
     private static List<Authority> knownAuthorities = new ArrayList<>();
     private static Object sLock = new Object();
 
-    private static void performCloudDiscovery() throws IOException {
+    private static void performCloudDiscovery()
+            throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
         Logger.info(
                 TAG + methodName,
@@ -375,6 +378,12 @@ public abstract class Authority {
             clientException = new ClientException(
                     ClientException.IO_ERROR,
                     "Unable to perform cloud discovery",
+                    ex
+            );
+        } catch (final URISyntaxException ex) {
+            clientException = new ClientException(
+                    ClientException.MALFORMED_URL,
+                    "Unable to construct cloud discovery URL",
                     ex
             );
         }

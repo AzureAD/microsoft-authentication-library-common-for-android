@@ -38,6 +38,7 @@ import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.internal.broker.AndroidBrokerAccount;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
@@ -236,7 +237,7 @@ public class AdalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .builder()
                 .authenticationScheme(new BearerAuthenticationSchemeInternal())
                 .androidApplicationContext(context)
-                .accountManagerAccount(account)
+                .brokerAccount(AndroidBrokerAccount.adapt(account))
                 .sdkType(SdkType.ADAL)
                 .callerUid(callingAppUid)
                 .callerPackageName(packageName)

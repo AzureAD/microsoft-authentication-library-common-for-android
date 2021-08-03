@@ -30,8 +30,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.WarningType;
@@ -1605,7 +1605,7 @@ public class BrokerOAuth2TokenCache
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
                         components.
-                                getStorageEncryptionManager(null)
+                                getStorageEncryptionManager()
                 );
 
         return getTokenCache(components, sharedPreferencesFileManager, false);
@@ -1622,7 +1622,7 @@ public class BrokerOAuth2TokenCache
                 components.getEncryptedFileStore(
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.
-                                getStorageEncryptionManager(null)
+                                getStorageEncryptionManager()
                 );
 
         return getTokenCache(components, sharedPreferencesFileManager, true);

@@ -34,14 +34,16 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.internal.broker.AndroidBrokerAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.internal.authorities.Environment;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authorities.Environment;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.AuthenticationSchemeFactory;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.INameable;
+import com.microsoft.identity.common.java.authscheme.INameable;
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -53,14 +55,14 @@ import com.microsoft.identity.common.internal.commands.parameters.InteractiveTok
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -182,7 +184,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             return new BearerAuthenticationSchemeInternal();
         } else {
             if (requestScheme instanceof PopAuthenticationSchemeInternal) {
-                final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
+                final IClockSkewManager clockSkewManager = new AndroidCommonComponents(context).getClockSkewManager();
                 ((PopAuthenticationSchemeInternal) requestScheme).setClockSkewManager(clockSkewManager);
             }
 
@@ -329,7 +331,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .builder()
                 .authenticationScheme(getAuthenticationScheme(context, brokerRequest))
                 .androidApplicationContext(context)
-                .accountManagerAccount(account)
+                .brokerAccount(AndroidBrokerAccount.adapt(account))
                 .sdkType(brokerRequest.getSdkType() == null ? SdkType.MSAL : brokerRequest.getSdkType())
                 .sdkVersion(brokerRequest.getMsalVersion())
                 .callerUid(callingAppUid)
@@ -599,14 +601,14 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
      * @return The result Bundle from the Broker.
      */
     public Bundle getRequestBundleForGenerateShr(@NonNull final GenerateShrCommandParameters parameters,
-                                                 @NonNull final String negotiatedBrokerProtocolVersion) {
+                                                 @NonNull final String negotiatedBrokerProtocolVersion) throws ClientException {
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getHomeAccountId();
 
         // Convert the supplied public class to the internal representation
         final PopAuthenticationSchemeInternal popParameters =
                 (PopAuthenticationSchemeInternal) AuthenticationSchemeFactory.createScheme(
-                        parameters.getAndroidApplicationContext(),
+                        new AndroidCommonComponents(parameters.getAndroidApplicationContext()),
                         (INameable) parameters.getPopParameters()
                 );
 

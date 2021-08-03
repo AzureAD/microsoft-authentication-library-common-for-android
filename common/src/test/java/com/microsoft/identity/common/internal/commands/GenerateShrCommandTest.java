@@ -26,8 +26,9 @@ import com.microsoft.identity.common.internal.authscheme.PopAuthenticationScheme
 import com.microsoft.identity.common.internal.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.internal.util.UrlUtils;
+import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -51,7 +52,7 @@ public class GenerateShrCommandTest {
                     .httpMethod("GET")
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommand COMMAND_ONE = GenerateShrCommand.builder()
@@ -67,7 +68,7 @@ public class GenerateShrCommandTest {
                     .httpMethod("GET")
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommand COMMAND_ONE_CLONE = GenerateShrCommand.builder()
@@ -83,7 +84,7 @@ public class GenerateShrCommandTest {
                     .httpMethod("GET")
                     .url(UrlUtils.makeUrlSilent("https://url"))
                     .nonce("two")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommand COMMAND_TWO = GenerateShrCommand.builder()
@@ -110,7 +111,7 @@ public class GenerateShrCommandTest {
                         .httpMethod("GET")
                         .url(UrlUtils.makeUrlSilent("https://url"))
                         .nonce("two")
-                        .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                         .build())
                 .build();
         GenerateShrCommand commandTwo = GenerateShrCommand.builder()

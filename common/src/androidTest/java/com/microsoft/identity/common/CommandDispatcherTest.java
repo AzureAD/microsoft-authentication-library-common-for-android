@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
@@ -45,6 +43,7 @@ import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -599,7 +598,7 @@ public class CommandDispatcherTest {
             }
 
             @Override
-            public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
+            public void onFinishAuthorizationSession(int requestCode, int resultCode, @NonNull PropertyBag data) {
 
             }
 

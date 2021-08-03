@@ -31,6 +31,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -54,7 +55,8 @@ public class EstsTelemetry {
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     EstsTelemetry() {
-        this(new TelemetryMap(), new SentFailedRequestsMap());
+        this(new InMemoryStorage<CurrentRequestTelemetry>(),
+                new InMemoryStorage<Set<FailedRequest>>());
     }
 
     // Exposed for testing only.
@@ -177,7 +179,7 @@ public class EstsTelemetry {
         final CurrentRequestTelemetry currentTelemetry = mTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
             Logger.info(TAG + methodName, "currentTelemetry is null. Nothing to flush.");
-             return;
+            return;
         }
 
         // load the last request object from cache
@@ -333,7 +335,7 @@ public class EstsTelemetry {
         final RequestTelemetry currentTelemetry = mTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
             Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
-                    correlationId +" is null.");
+                    correlationId + " is null.");
             return null;
         }
 
@@ -366,7 +368,7 @@ public class EstsTelemetry {
             final CurrentRequestTelemetry currentRequestTelemetry = mTelemetryMap.get(correlationId);
             if (currentRequestTelemetry == null) {
                 Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
-                        correlationId +" is null.");
+                        correlationId + " is null.");
                 return null;
             }
 

@@ -1,6 +1,8 @@
 V.Next
 ----------
 - [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
+- [MAJOR] Migrate AccountManager's Account (#1483)
+- [MAJOR] Migrate Strategies part 1/2 (#1475)
 - [MINOR] Move predefined key loader to common4j from common (#1477)
 - [PATCH] Add method to check if two authorities belong to same cloud (#1471)
 - [MINOR] Adds new cache encryption key migration API for OneAuth (#1464)

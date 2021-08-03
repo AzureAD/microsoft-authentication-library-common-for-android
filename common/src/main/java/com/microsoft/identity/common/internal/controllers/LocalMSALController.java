@@ -23,12 +23,12 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.content.Context;
-import android.content.Intent;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ArgumentException;
@@ -36,7 +36,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
@@ -47,9 +47,10 @@ import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountC
 import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.request.SdkType;
@@ -60,7 +61,6 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
 import com.microsoft.identity.common.internal.ui.AuthorizationStrategyFactory;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
@@ -71,10 +71,10 @@ import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -90,7 +90,7 @@ public class LocalMSALController extends BaseController {
     private static final String TAG = LocalMSALController.class.getSimpleName();
 
     @SuppressWarnings(WarningType.rawtype_warning)
-    private AuthorizationStrategy mAuthorizationStrategy = null;
+    private IAuthorizationStrategy mAuthorizationStrategy = null;
 
     @SuppressWarnings(WarningType.rawtype_warning)
     private AuthorizationRequest mAuthorizationRequest = null;
@@ -98,7 +98,7 @@ public class LocalMSALController extends BaseController {
     @Override
     public AcquireTokenResult acquireToken(
             @NonNull final InteractiveTokenCommandParameters parameters)
-            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException, URISyntaxException {
+            throws ExecutionException, InterruptedException, ClientException, IOException, ArgumentException {
         final String methodName = ":acquireToken";
 
         Logger.verbose(
@@ -147,8 +147,9 @@ public class LocalMSALController extends BaseController {
         }
 
         // Build up params for Strategy construction
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(new AndroidCommonComponents(parametersWithScopes.getAndroidApplicationContext()))
+                .build();
 
         //1) Get oAuth2Strategy for Authority Type
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parametersWithScopes
@@ -218,7 +219,7 @@ public class LocalMSALController extends BaseController {
     private AuthorizationResult performAuthorizationRequest(@NonNull final OAuth2Strategy strategy,
                                                             @NonNull final Context context,
                                                             @NonNull final InteractiveTokenCommandParameters parameters)
-            throws ExecutionException, InterruptedException, ClientException, URISyntaxException {
+            throws ExecutionException, InterruptedException, ClientException {
 
         throwIfNetworkNotAvailable(context, parameters.isPowerOptCheckEnabled());
 
@@ -240,13 +241,13 @@ public class LocalMSALController extends BaseController {
     }
 
     @Override
-    public void completeAcquireToken(final int requestCode,
-                                     final int resultCode,
-                                     final Intent data) {
-        final String methodName = ":completeAcquireToken";
+    public void onFinishAuthorizationSession(int requestCode,
+                                             int resultCode,
+                                             @NonNull final PropertyBag data) {
+        final String methodName = ":onFinishAuthorizationSession";
         Logger.verbose(
                 TAG + methodName,
-                "Completing acquire token..."
+                "Completing authorization..."
         );
 
         Telemetry.emit(
@@ -256,7 +257,7 @@ public class LocalMSALController extends BaseController {
                         .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(requestCode))
         );
 
-        mAuthorizationStrategy.completeAuthorization(requestCode, resultCode, data);
+        mAuthorizationStrategy.completeAuthorization(requestCode, RawAuthorizationResult.fromPropertyBag(data));
 
         Telemetry.emit(
                 new ApiEndEvent()
@@ -299,8 +300,9 @@ public class LocalMSALController extends BaseController {
 
         // Build up params for Strategy construction
         final AbstractAuthenticationScheme authScheme = parametersWithScopes.getAuthenticationScheme();
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(new AndroidCommonComponents(parametersWithScopes.getAndroidApplicationContext()))
+                .build();
 
         @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy strategy = parametersWithScopes.getAuthority().createOAuth2Strategy(strategyParameters);
 
@@ -528,8 +530,9 @@ public class LocalMSALController extends BaseController {
 
         try {
             // Create OAuth2Strategy using commandParameters and strategyParameters
-            final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-            strategyParameters.setContext(parametersWithScopes.getAndroidApplicationContext());
+            final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                    .platformComponents(new AndroidCommonComponents(parametersWithScopes.getAndroidApplicationContext()))
+                    .build();
 
             final OAuth2Strategy oAuth2Strategy = parametersWithScopes
                     .getAuthority()
@@ -601,8 +604,9 @@ public class LocalMSALController extends BaseController {
 
         try {
             // Create OAuth2Strategy using commandParameters and strategyParameters
-            final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-            strategyParameters.setContext(parameters.getAndroidApplicationContext());
+            final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                    .platformComponents(new AndroidCommonComponents(parameters.getAndroidApplicationContext()))
+                    .build();
 
             @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parameters
                     .getAuthority()
@@ -695,7 +699,7 @@ public class LocalMSALController extends BaseController {
     public GenerateShrResult generateSignedHttpRequest(
             @NonNull final GenerateShrCommandParameters parameters) throws Exception {
         final Context context = parameters.getAndroidApplicationContext();
-        final IClockSkewManager clockSkewManager = new ClockSkewManager(context);
+        final IClockSkewManager clockSkewManager = new AndroidCommonComponents(context).getClockSkewManager();
         final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
         final String clientId = parameters.getClientId();
         final String homeAccountId = parameters.getHomeAccountId();

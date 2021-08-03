@@ -26,14 +26,18 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_OPERATION_CANCELLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_ERROR_RESPONSE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_SUCCESS_RESPONSE;
 
 public final class BrokerActivity extends Activity {
 
@@ -101,20 +105,20 @@ public final class BrokerActivity extends Activity {
                         + " Result code: " + requestCode
         );
 
-        if (resultCode == AuthenticationConstants.UIResponse.TOKEN_BROKER_RESPONSE ||
-                resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL
-                || resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR) {
+        if (resultCode == BROKER_SUCCESS_RESPONSE
+                || resultCode == BROKER_OPERATION_CANCELLED
+                || resultCode == BROKER_ERROR_RESPONSE) {
 
             Logger.verbose(TAG + methodName, "Completing interactive request ");
 
-            data.setAction(RETURN_INTERACTIVE_REQUEST_RESULT);
-            data.putExtra(REQUEST_CODE, AuthenticationConstants.UIRequest.BROWSER_FLOW);
-            data.putExtra(RESULT_CODE, resultCode);
+            final PropertyBag propertyBag = PropertyBagUtil.fromBundle(data.getExtras());
+            propertyBag.put(REQUEST_CODE, BROKER_FLOW);
+            propertyBag.put(RESULT_CODE, resultCode);
 
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(data);
+            LocalBroadcaster.INSTANCE.broadcast(
+                    RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
         }
+
         finish();
     }
-
-
 }

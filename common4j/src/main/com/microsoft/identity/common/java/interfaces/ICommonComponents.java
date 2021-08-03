@@ -23,10 +23,14 @@
 package com.microsoft.identity.common.java.interfaces;
 
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
+import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Common components, shared between Android, Linux.
@@ -34,14 +38,24 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 public interface ICommonComponents<T> {
 
     /**
-     * Flushes the underlying http cache, if it exists.
-     */
-    void flushHttpCache();
-
-    /**
      * Get an encryption manager for storage layer.
      */
-    IKeyAccessor getStorageEncryptionManager(@Nullable final ITelemetryCallback telemetryCallback);
+    @NonNull
+    IKeyAccessor getStorageEncryptionManager();
+
+    /**
+     * Gets clock skew manager.
+     */
+    @NonNull
+    IClockSkewManager getClockSkewManager();
+
+    /**
+     * Gets the default {@link IDevicePopManager}
+     *
+     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     */
+    @NonNull
+    IDevicePopManager getDefaultDevicePopManager() throws ClientException;
 
     /**
      * Retrieve a name-value store with a given identifier.
@@ -82,4 +96,7 @@ public interface ICommonComponents<T> {
      * @return the underlying implementation of the platform context that this is hiding.
      */
     T getPlatformContext();
+
+    @NonNull
+    IDevicePopManager getDevicePopManager(@NonNull final String alias) throws ClientException;
 }
