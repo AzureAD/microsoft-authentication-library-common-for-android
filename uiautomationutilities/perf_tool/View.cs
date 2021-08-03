@@ -75,12 +75,12 @@ namespace PerfDiffResultMailer
 
         internal static string CreateTableHtml(List<Parameter> parameters, 
             HashSet<string> primaryMeasurements, HashSet<string> secondaryMeasurements,
-            string[] heading, HashSet<string> activeScenarios, HashSet<string> activeM, string jobId)
+            string[] heading, HashSet<string> activeScenarios, HashSet<string> activeM, string jobId, string runName)
         {
             StringBuilder htmlBuilder = new StringBuilder();
             int columns = (parameters.Count * (3)) + 2;
             htmlBuilder.Append("<table class=\"table\">");
-            htmlBuilder.Append(CreateTableHeader(columns, parameters, heading, jobId));
+            htmlBuilder.Append(CreateTableHeader(columns, parameters, heading, jobId, runName));
             htmlBuilder.Append(DiffTableHTML1(parameters, "grey", activeScenarios, primaryMeasurements, secondaryMeasurements));
             htmlBuilder.Append("</table>");
             htmlBuilder.Append("<br><br>");
@@ -231,7 +231,7 @@ namespace PerfDiffResultMailer
             return htmlBuilder.ToString();
         }
 
-        public static string CreateAppInfoTable(List<Task> baseTasks, List<Task> targetTasks, string app, string deviceModel, string OS)
+        public static string ReportSummaryHeaderValues(List<Task> baseTasks, List<Task> latestTasks, List<Task> targetTasks, string app, string deviceModel, string OS)
         {
             StringBuilder htmlBuilder = new StringBuilder();
 
@@ -242,16 +242,19 @@ namespace PerfDiffResultMailer
             htmlBuilder.Append(GetTaskInfoTable(baseTasks, "blue"));
             htmlBuilder.Append("</td>");
             htmlBuilder.Append("<td>");
+            htmlBuilder.Append(GetTaskInfoTable(latestTasks, "blue"));
+            htmlBuilder.Append("</td>");
+            htmlBuilder.Append("<td>");
             htmlBuilder.Append(GetTaskInfoTable(targetTasks, ""));
             htmlBuilder.Append("</td>");
             return htmlBuilder.ToString();
         }
 
         // Measurement table headers
-        private static string CreateTableHeader(int columns, List<Parameter> parameters, string[] heading, string jobId)
+        private static string CreateTableHeader(int columns, List<Parameter> parameters, string[] heading, string jobId, string runName)
         {
             StringBuilder htmlBuilder = new StringBuilder();
-            htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + /*1*/2 + "\" align=\"center\">" + "Perf Run on " + jobId + "</td>");
+            htmlBuilder.Append("<tr class=\"blue\" style=\"font-weight:bold\"><td colspan=\"" + /*1*/2 + "\" align=\"center\">" + "Perf Run " + jobId +" vs "+ runName+ " run</td>");
             foreach (var parameter in parameters)
             {
                 htmlBuilder.Append("<td colspan=\"" + 3 + "\" align=\"center\" class=\"" + parameter.Color + "\">" + parameter.Name + "</td>"); //add indivdual colors
@@ -369,7 +372,7 @@ namespace PerfDiffResultMailer
         /// Formatting the report summary headers
         /// </summary>
         /// <returns></returns>
-        public static List<string> InfoInit()
+        public static List<string> ReportSummaryHeaders()
         {
             List<string> info = new List<string>();
             info.Add("<p><font color=\"red\" size=\"+2\"><bold>Job Summary<bold></font></p>");
@@ -380,6 +383,7 @@ namespace PerfDiffResultMailer
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Target Application</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Device Configuration</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Base Build</td>");
+            htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Latest Build</td>");
             htmlBuilder.Append("<td style=\"padding-left:5px; padding-right:5px;\">Target Build</td>");
 
             htmlBuilder.Append("</tr>");
