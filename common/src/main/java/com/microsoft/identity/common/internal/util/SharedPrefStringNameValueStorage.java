@@ -23,7 +23,7 @@
 
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 
 import lombok.NonNull;
 
@@ -32,7 +32,7 @@ import lombok.NonNull;
  * value types.
  */
 public class SharedPrefStringNameValueStorage extends AbstractSharedPrefNameValueStorage<String> {
-    public SharedPrefStringNameValueStorage(ISharedPreferencesFileManager mManager) {
+    public SharedPrefStringNameValueStorage(IKeyBasedStorage mManager) {
         super(mManager);
     }
 

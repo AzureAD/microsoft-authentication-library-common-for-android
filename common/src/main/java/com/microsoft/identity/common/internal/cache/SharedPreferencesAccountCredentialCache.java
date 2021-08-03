@@ -86,7 +86,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
 
     // SharedPreferences used to store Accounts and Credentials
-    private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
+    private final IKeyBasedStorage mSharedPreferencesFileManager;
 
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
@@ -98,7 +98,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      */
     public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
-            @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+            @NonNull final IKeyBasedStorage sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;

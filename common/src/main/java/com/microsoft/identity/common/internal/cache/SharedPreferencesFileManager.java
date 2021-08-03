@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Convenience class for accessing {@link SharedPreferences}.
  */
-public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
+public class SharedPreferencesFileManager implements IKeyBasedStorage {
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 

@@ -27,10 +27,9 @@ import android.content.Context;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.DevicePopManager;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
@@ -42,12 +41,10 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.platform.Device;
-import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.logging.Logger;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -159,7 +156,7 @@ public class AndroidCommonComponents implements ICommonComponents<Context> {
 
     @Override
     public <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz) {
-        final ISharedPreferencesFileManager mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+        final IKeyBasedStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
         if (Long.class.isAssignableFrom(clazz)) {
             @SuppressWarnings("unchecked")
             final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
@@ -173,12 +170,12 @@ public class AndroidCommonComponents implements ICommonComponents<Context> {
     }
 
     @Override
-    public ISharedPreferencesFileManager getEncryptedFileStore(String storeName, IKeyAccessor helper) {
+    public IKeyBasedStorage getEncryptedFileStore(String storeName, IKeyAccessor helper) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
     }
 
     @Override
-    public ISharedPreferencesFileManager getFileStore(String storeName) {
+    public IKeyBasedStorage getFileStore(String storeName) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
     }
 

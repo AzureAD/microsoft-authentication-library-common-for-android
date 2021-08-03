@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
  * A SharedPreferencesFileManager backed by a HashMap.  This is mainly for testing purposes,
  * where it doesn't make sense to instantiate shared preferences files.
  */
-public class MapBackedPreferencesManager implements ISharedPreferencesFileManager {
+public class MapBackedPreferencesManager implements IKeyBasedStorage {
 
     private final String mName;
 

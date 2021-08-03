@@ -1600,7 +1600,7 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(components, bindingProcessUid);
         }
 
-        final ISharedPreferencesFileManager sharedPreferencesFileManager =
+        final IKeyBasedStorage sharedPreferencesFileManager =
                 components.getEncryptedFileStore(
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
@@ -1618,7 +1618,7 @@ public class BrokerOAuth2TokenCache
                 "Initializing foci cache"
         );
 
-        final ISharedPreferencesFileManager sharedPreferencesFileManager =
+        final IKeyBasedStorage sharedPreferencesFileManager =
                 components.getEncryptedFileStore(
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.
@@ -1630,7 +1630,7 @@ public class BrokerOAuth2TokenCache
 
     @SuppressWarnings(UNCHECKED)
     private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final ICommonComponents components,
-                                                                    @NonNull final ISharedPreferencesFileManager spfm,
+                                                                    @NonNull final IKeyBasedStorage spfm,
                                                                     boolean isFoci) {
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final IAccountCredentialCache accountCredentialCache =

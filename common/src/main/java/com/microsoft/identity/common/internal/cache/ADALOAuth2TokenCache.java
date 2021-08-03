@@ -32,7 +32,6 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
@@ -72,7 +71,7 @@ import java.util.Set;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
-    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
+    private IKeyBasedStorage mISharedPreferencesFileManager;
 
     static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 

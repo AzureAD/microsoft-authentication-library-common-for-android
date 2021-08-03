@@ -158,7 +158,7 @@ public class MsalOAuth2TokenCache
 
         // Init the new-schema cache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
-        final ISharedPreferencesFileManager sharedPreferencesFileManager =
+        final IKeyBasedStorage sharedPreferencesFileManager =
                 components.getEncryptedFileStore(
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.

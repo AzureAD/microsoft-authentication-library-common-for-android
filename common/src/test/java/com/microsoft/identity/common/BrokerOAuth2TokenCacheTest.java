@@ -27,6 +27,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
@@ -36,12 +37,10 @@ import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -237,7 +236,7 @@ public class BrokerOAuth2TokenCacheTest {
                 1341
         };
 
-        final List<ISharedPreferencesFileManager> fileManagers = getAppUidFileManagers(
+        final List<IKeyBasedStorage> fileManagers = getAppUidFileManagers(
                 components,
                 testAppUids
         );
@@ -259,10 +258,10 @@ public class BrokerOAuth2TokenCacheTest {
         }
     }
 
-    private List<IAccountCredentialCache> getAccountCredentialCaches(final List<ISharedPreferencesFileManager> fileManagers) {
+    private List<IAccountCredentialCache> getAccountCredentialCaches(final List<IKeyBasedStorage> fileManagers) {
         final List<IAccountCredentialCache> accountCredentialCaches = new ArrayList<>();
 
-        for (final ISharedPreferencesFileManager fileManager : fileManagers) {
+        for (final IKeyBasedStorage fileManager : fileManagers) {
             accountCredentialCaches.add(
                     getAccountCredentialCache(fileManager)
             );
@@ -271,9 +270,9 @@ public class BrokerOAuth2TokenCacheTest {
         return accountCredentialCaches;
     }
 
-    private List<ISharedPreferencesFileManager> getAppUidFileManagers(final ICommonComponents components,
-                                                                      final int[] testAppUids) {
-        final List<ISharedPreferencesFileManager> fileManagers = new ArrayList<>();
+    private List<IKeyBasedStorage> getAppUidFileManagers(final ICommonComponents components,
+                                                         final int[] testAppUids) {
+        final List<IKeyBasedStorage> fileManagers = new ArrayList<>();
 
         for (final int currentAppUid : testAppUids) {
             fileManagers.add(
@@ -287,28 +286,28 @@ public class BrokerOAuth2TokenCacheTest {
         return fileManagers;
     }
 
-    private ISharedPreferencesFileManager getAppUidFileManager(final ICommonComponents components,
-                                                               final int appUid) {
+    private IKeyBasedStorage getAppUidFileManager(final ICommonComponents components,
+                                                  final int appUid) {
         if (!(components instanceof AndroidCommonComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
         return components.getEncryptedFileStore(
                 getBrokerUidSequesteredFilename(appUid),
-                new AndroidAuthSdkStorageEncryptionManager(((AndroidCommonComponents) components).getPlatformContext(), null));
+                components.getStorageEncryptionManager());
     }
 
-    private ISharedPreferencesFileManager getFociFileManager(final ICommonComponents components) {
+    private IKeyBasedStorage getFociFileManager(final ICommonComponents components) {
         if (!(components instanceof AndroidCommonComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
         return components.getEncryptedFileStore(
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                new AndroidAuthSdkStorageEncryptionManager(((AndroidCommonComponents) components).getPlatformContext(), null)
+                components.getStorageEncryptionManager()
         );
     }
 
     private SharedPreferencesAccountCredentialCache getAccountCredentialCache(
-            final ISharedPreferencesFileManager fm) {
+            final IKeyBasedStorage fm) {
         return new SharedPreferencesAccountCredentialCache(
                 new CacheKeyValueDelegate(),
                 fm
@@ -339,7 +338,7 @@ public class BrokerOAuth2TokenCacheTest {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
 
-        final ISharedPreferencesFileManager appUidCacheFileManager = getAppUidFileManager(
+        final IKeyBasedStorage appUidCacheFileManager = getAppUidFileManager(
                 components,
                 uid
         );
@@ -353,7 +352,7 @@ public class BrokerOAuth2TokenCacheTest {
         if (!(components instanceof AndroidCommonComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
-        final ISharedPreferencesFileManager fociCacheFileManager = getFociFileManager(components);
+        final IKeyBasedStorage fociCacheFileManager = getFociFileManager(components);
 
         mFociCredentialCache = getAccountCredentialCache(fociCacheFileManager);
 

@@ -26,14 +26,14 @@ import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
 /**
  * Interface describing an object that can reencrypt instances of
- * {@link ISharedPreferencesFileManager}.
+ * {@link IKeyBasedStorage}.
  */
 @Deprecated
 public interface ISharedPrefsFileManagerReencrypter {
 
     /**
      * The object to which this class delegates reencryption of the
-     * {@link ISharedPreferencesFileManager}.
+     * {@link IKeyBasedStorage}.
      */
     interface IStringEncrypter {
         String encrypt(String input) throws Exception;
@@ -41,7 +41,7 @@ public interface ISharedPrefsFileManagerReencrypter {
 
     /**
      * The object to which this class delegates decryption of the input
-     * {@link ISharedPreferencesFileManager}.
+     * {@link IKeyBasedStorage}.
      */
     interface IStringDecrypter {
         String decrypt(String input) throws Exception;
@@ -100,7 +100,7 @@ public interface ISharedPrefsFileManagerReencrypter {
     }
 
     /**
-     * Performs reencryption of the provided {@link ISharedPreferencesFileManager}, delegating to
+     * Performs reencryption of the provided {@link IKeyBasedStorage}, delegating to
      * the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform content
      * transformations.
      * <p>
@@ -108,19 +108,19 @@ public interface ISharedPrefsFileManagerReencrypter {
      * this API are advised to ensure the designated store is not mutated during the reencryption
      * process otherwise undefined behavior/results may occur.
      *
-     * @param fileManager The {@link ISharedPreferencesFileManager} to reencrypt.
+     * @param fileManager The {@link IKeyBasedStorage} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      */
-    void reencrypt(ISharedPreferencesFileManager fileManager,
+    void reencrypt(IKeyBasedStorage fileManager,
                    IStringEncrypter encrypter,
                    IStringDecrypter decrypter,
                    ReencryptionParams params
     ) throws Exception;
 
     /**
-     * Performs reencryption of the provided {@link ISharedPreferencesFileManager} asynchronously,
+     * Performs reencryption of the provided {@link IKeyBasedStorage} asynchronously,
      * delegating to the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform
      * content transformations.
      * <p>
@@ -128,13 +128,13 @@ public interface ISharedPrefsFileManagerReencrypter {
      * this API are advised to ensure the designated store is not mutated during the reencryption
      * process otherwise undefined behavior/results may occur.
      *
-     * @param fileManager The {@link ISharedPreferencesFileManager} to reencrypt.
+     * @param fileManager The {@link IKeyBasedStorage} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      * @param callback    Callback to receive any error/completion callbacks.
      */
-    void reencryptAsync(ISharedPreferencesFileManager fileManager,
+    void reencryptAsync(IKeyBasedStorage fileManager,
                         IStringEncrypter encrypter,
                         IStringDecrypter decrypter,
                         ReencryptionParams params,

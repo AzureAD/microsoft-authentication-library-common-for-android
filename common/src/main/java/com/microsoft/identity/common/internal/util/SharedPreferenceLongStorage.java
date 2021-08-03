@@ -22,18 +22,16 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-
-import java.util.Set;
 
 import lombok.NonNull;
 
 /**
- * Adapts {@link ISharedPreferencesFileManager} to {@link INameValueStorage <Long>}
+ * Adapts {@link IKeyBasedStorage} to {@link INameValueStorage <Long>}
  * */
 public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStorage<Long> {
-    public SharedPreferenceLongStorage(ISharedPreferencesFileManager mManager) {
+    public SharedPreferenceLongStorage(IKeyBasedStorage mManager) {
         super(mManager);
     }
 

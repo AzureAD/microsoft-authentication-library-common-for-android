@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
@@ -30,12 +29,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.AndroidCommonComponents;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
-import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.dto.CredentialType;
 
 import java.util.Map;
@@ -63,7 +59,7 @@ public class TestUtils {
         return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
     }
 
-    public static ISharedPreferencesFileManager getSharedPreferences(final String sharedPrefName) {
+    public static IKeyBasedStorage getSharedPreferences(final String sharedPrefName) {
         final ICommonComponents components = new AndroidCommonComponents(ApplicationProvider.getApplicationContext());
 
         return components.getFileStore(sharedPrefName);
@@ -75,9 +71,9 @@ public class TestUtils {
      * @param sharedPrefName the name of the shared preferences file.
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
-    public static ISharedPreferencesFileManager getEncryptedSharedPreferences(final String sharedPrefName) {
+    public static IKeyBasedStorage getEncryptedSharedPreferences(final String sharedPrefName) {
         final ICommonComponents components = new AndroidCommonComponents(ApplicationProvider.getApplicationContext());
-        final ISharedPreferencesFileManager barePreferences = components.getEncryptedFileStore(
+        final IKeyBasedStorage barePreferences = components.getEncryptedFileStore(
                 sharedPrefName,
                 components.
                         getStorageEncryptionManager());
@@ -85,12 +81,12 @@ public class TestUtils {
     }
 
     public static void clearCache(final String sharedPrefName) {
-        ISharedPreferencesFileManager sharedPreferences = getSharedPreferences(sharedPrefName);
+        IKeyBasedStorage sharedPreferences = getSharedPreferences(sharedPrefName);
         sharedPreferences.clear();
     }
 
     public static void removeAccessTokenFromCache(final String sharedPrefName) {
-        ISharedPreferencesFileManager sharedPreferences = getSharedPreferences(sharedPrefName);
+        IKeyBasedStorage sharedPreferences = getSharedPreferences(sharedPrefName);
         final Map<String, ?> cacheValues = sharedPreferences.getAll();
         final String keyToRemove = getCacheKeyForAccessToken(cacheValues);
         if (keyToRemove != null) {

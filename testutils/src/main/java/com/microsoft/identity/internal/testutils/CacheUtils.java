@@ -28,9 +28,8 @@ import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -83,7 +82,7 @@ public class CacheUtils {
     public void editAllTokenInCache(@NonNull final String sharedPrefName, @NonNull final Predicate<String> predicate,
                                     @NonNull Function<String, Class<? extends Credential>> classFunction, @NonNull final Function<String, String> editor,
                                              final boolean encrypted) {
-        final ISharedPreferencesFileManager sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+        final IKeyBasedStorage sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
                 TestUtils.getSharedPreferences(sharedPrefName);
         final Map<String, ?> cacheEntries = sharedPref.getAll();
 
@@ -200,7 +199,7 @@ public class CacheUtils {
     }
 
     public void clear(String sharedPrefName, boolean encrypted) {
-        final ISharedPreferencesFileManager sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+        final IKeyBasedStorage sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
                 TestUtils.getSharedPreferences(sharedPrefName);
         sharedPref.clear();
     }

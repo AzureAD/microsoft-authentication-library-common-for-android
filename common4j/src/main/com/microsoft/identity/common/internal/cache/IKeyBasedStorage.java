@@ -30,7 +30,7 @@ import java.util.Map;
 /**
  * Return a key-value store
  */
-public interface ISharedPreferencesFileManager {
+public interface IKeyBasedStorage {
     /**
      * Associates a {@link String} value with a key in the named resource that this represents.
      *

@@ -22,14 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
@@ -82,14 +80,14 @@ public interface ICommonComponents<T> {
      * @param storeName The name of a new KeyValue store. May not be null.
      * @param helper    The key manager for the encryption.  May not be null.
      */
-    ISharedPreferencesFileManager getEncryptedFileStore(String storeName, IKeyAccessor helper);
+    IKeyBasedStorage getEncryptedFileStore(String storeName, IKeyAccessor helper);
 
     /**
      * Get a generic encrypted ISharedPreferencesFileManager with a given identifier.
      *
      * @param storeName The name of a new KeyValue store. May not be null.
      */
-    ISharedPreferencesFileManager getFileStore(String storeName);
+    IKeyBasedStorage getFileStore(String storeName);
 
     /**
      * Unwrap the platform context being shadowed by this interface.

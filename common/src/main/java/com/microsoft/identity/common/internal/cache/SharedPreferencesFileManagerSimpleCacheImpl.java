@@ -57,7 +57,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     private static final String EMTPY_ARRAY = "[]";
     private static final String TIMING_TAG = "execWithTiming";
 
-    private final ISharedPreferencesFileManager mSharedPrefsFileManager;
+    private final IKeyBasedStorage mSharedPrefsFileManager;
     private final String mKeySingleEntry;
     private final boolean mForceReinsertionOfDuplicates;
     private final Gson mGson = new Gson();
@@ -148,14 +148,14 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
 
     /**
      * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl from the provided
-     * {@link ISharedPreferencesFileManager}, using the provided singleKey for the underlying collection.
+     * {@link IKeyBasedStorage}, using the provided singleKey for the underlying collection.
      *
-     * @param sharedPreferencesFileManager The underlying {@link ISharedPreferencesFileManager} to use.
+     * @param sharedPreferencesFileManager The underlying {@link IKeyBasedStorage} to use.
      * @param singleKey                    The name of the key under which all entries will be cached.
      * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
      *                                     replaces the existing value with the newly-provided one.
      */
-    protected SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager,
+    protected SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final IKeyBasedStorage sharedPreferencesFileManager,
                                                        @NonNull final String singleKey,
                                                        final boolean forceReinsertionOfDuplicates) {
         Logger.verbose(TAG + "::ctor", "Init");

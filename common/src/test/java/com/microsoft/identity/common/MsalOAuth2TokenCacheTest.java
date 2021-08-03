@@ -35,10 +35,9 @@ import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -57,7 +56,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.internal.matchers.And;
 import org.powermock.api.mockito.PowerMockito;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
@@ -106,7 +104,7 @@ public class MsalOAuth2TokenCacheTest {
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> mOauth2TokenCache;
-    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
+    private IKeyBasedStorage mSharedPreferencesFileManager;
 
     MicrosoftStsOAuth2Strategy mockStrategy;
 

@@ -31,9 +31,8 @@ import com.google.gson.JsonPrimitive;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -93,7 +92,7 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
     private SharedPreferencesAccountCredentialCache mSharedPreferencesAccountCredentialCache;
     private CacheKeyValueDelegate mDelegate;
-    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
+    private IKeyBasedStorage mSharedPreferencesFileManager;
 
     @Before
     public void setUp() throws Exception {

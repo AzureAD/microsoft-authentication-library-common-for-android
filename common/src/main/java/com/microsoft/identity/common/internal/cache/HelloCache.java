@@ -50,7 +50,7 @@ public class HelloCache {
 
     private static final String SHARED_PREFERENCE_NAME = "com.microsoft.common.ipc.hello.cache";
 
-    private final ISharedPreferencesFileManager mFileManager;
+    private final IKeyBasedStorage mFileManager;
     private final Context mContext;
     private final String mProtocolName;
     private final String mTargetAppPackageName;

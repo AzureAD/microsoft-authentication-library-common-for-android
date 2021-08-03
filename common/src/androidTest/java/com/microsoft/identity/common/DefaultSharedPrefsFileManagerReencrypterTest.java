@@ -30,8 +30,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.migration.DefaultSharedPrefsFileManagerReencrypter;
 import com.microsoft.identity.common.migration.IMigrationOperationResult;
@@ -64,7 +63,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
 
     private Context mContext;
 
-    private ISharedPreferencesFileManager mTestCacheFile;
+    private IKeyBasedStorage mTestCacheFile;
 
     private ISharedPrefsFileManagerReencrypter mFileManagerReencrypter;
     private TestEncrypterDecrypter mTestEncrypterDecrypter;

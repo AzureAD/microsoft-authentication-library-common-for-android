@@ -35,7 +35,7 @@ import java.util.Map;
 public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
 
     @Override
-    public void reencrypt(@NonNull final ISharedPreferencesFileManager fileManager,
+    public void reencrypt(@NonNull final IKeyBasedStorage fileManager,
                           @NonNull final IStringEncrypter encrypter,
                           @NonNull final IStringDecrypter decrypter,
                           @NonNull final ReencryptionParams params) throws Exception {
@@ -77,7 +77,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
     }
 
     @Override
-    public void reencryptAsync(@NonNull final ISharedPreferencesFileManager fileManager,
+    public void reencryptAsync(@NonNull final IKeyBasedStorage fileManager,
                                @NonNull final IStringEncrypter encrypter,
                                @NonNull final IStringDecrypter decrypter,
                                @NonNull final ReencryptionParams params,
