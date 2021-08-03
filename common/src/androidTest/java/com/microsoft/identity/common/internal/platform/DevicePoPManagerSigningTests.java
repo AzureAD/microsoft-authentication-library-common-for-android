@@ -40,10 +40,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
-import java.util.List;
-
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.NONE_WITH_RSA;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_256_WITH_RSA;
+import java.util.Arrays;
 
 
 // Note: Test cannot use robolectric due to the following open issue
@@ -58,13 +55,7 @@ public class DevicePoPManagerSigningTests {
 
     @Parameterized.Parameters
     public static Iterable<SigningAlgorithm> testParams() {
-        final List<SigningAlgorithm> signingAlgs =
-                new ArrayList<SigningAlgorithm>() {{
-                    add(NONE_WITH_RSA);
-                    add(SHA_256_WITH_RSA);
-                }};
-
-        return signingAlgs;
+        return new ArrayList<>(Arrays.asList(SigningAlgorithm.values()));
     }
 
     @SuppressWarnings("unused")
