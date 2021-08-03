@@ -14,4 +14,5 @@ jobs:
   workspace:
     clean: all
   steps:
-  - template: ../templates/steps/auth-client/docker-tasks.yml
+  - script: df -h
+  #- template: ../templates/steps/auth-client/docker-tasks.yml
