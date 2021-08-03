@@ -35,20 +35,19 @@ public class CodeMarkerUtil {
      * @return string to save
      */
     public static String getCsvContent(final List<CodeMarker> codeMarkers) {
-        if (codeMarkers == null) {
+        if (codeMarkers == null || codeMarkers.isEmpty()) {
             return "";
         }
 
-        final StringBuilder stringToWrite = new StringBuilder();
-        if (codeMarkers.size() > 0) {
-            stringToWrite.append(codeMarkers.get(0).getCsvHeader());
-        }
+        final StringBuilder content = new StringBuilder();
+        content.append(codeMarkers.get(0).getCsvHeader());
 
-        for (final CodeMarker codeMarker : codeMarkers) {
-            stringToWrite.append('\n');
-            stringToWrite.append(codeMarker.getCsvLine());
+        synchronized (codeMarkers) {
+            for (CodeMarker codeMarker : codeMarkers) {
+                content.append('\n');
+                content.append(codeMarker.getCsvLine());
+            }
         }
-
-        return stringToWrite.toString();
+        return content.toString();
     }
 }
