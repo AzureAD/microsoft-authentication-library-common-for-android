@@ -80,7 +80,7 @@ public class TestUtils {
         final ISharedPreferencesFileManager barePreferences = components.getEncryptedFileStore(
                 sharedPrefName,
                 components.
-                        getStorageEncryptionManager(null));
+                        getStorageEncryptionManager());
         return barePreferences;
     }
 
