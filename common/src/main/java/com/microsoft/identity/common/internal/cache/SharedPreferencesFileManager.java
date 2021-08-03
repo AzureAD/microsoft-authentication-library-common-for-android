@@ -96,7 +96,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
      *                                 if it does not exist.
      * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
-    private SharedPreferencesFileManager(
+    public SharedPreferencesFileManager(
             final Context context,
             final String name,
             final IKeyAccessor encryptionManager) {
