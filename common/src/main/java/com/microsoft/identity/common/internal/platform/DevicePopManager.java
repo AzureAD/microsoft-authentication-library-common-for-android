@@ -1288,7 +1288,7 @@ public class DevicePopManager implements IDevicePopManager {
                 )
                 .setDigests(
 //                      KeyProperties.DIGEST_MD5,
-//                      KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
 //                      KeyProperties.DIGEST_SHA384,
@@ -1359,7 +1359,7 @@ public class DevicePopManager implements IDevicePopManager {
                 )
                 .setDigests(
 //                      KeyProperties.DIGEST_MD5,
-//                      KeyProperties.DIGEST_NONE,
+                        KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
                         KeyProperties.DIGEST_SHA256
 //                      KeyProperties.DIGEST_SHA384,
