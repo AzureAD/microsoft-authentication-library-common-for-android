@@ -1287,16 +1287,16 @@ public class DevicePopManager implements IDevicePopManager {
         )
                 .setKeySize(keySize)
                 .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
-                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
+                        //KeyProperties.SIGNATURE_PADDING_RSA_PSS
                 )
                 .setDigests(
-                        KeyProperties.DIGEST_MD5,
-                        KeyProperties.DIGEST_NONE,
+//                        KeyProperties.DIGEST_MD5,
+//                        KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256,
-                        KeyProperties.DIGEST_SHA384,
-                        KeyProperties.DIGEST_SHA512
+                        KeyProperties.DIGEST_SHA256
+//                        KeyProperties.DIGEST_SHA384,
+//                        KeyProperties.DIGEST_SHA512
                 ).setEncryptionPaddings(
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
@@ -1358,16 +1358,16 @@ public class DevicePopManager implements IDevicePopManager {
                 mKeyManager.getKeyAlias(), purposes)
                 .setKeySize(keySize)
                 .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
-                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
+//                      KeyProperties.SIGNATURE_PADDING_RSA_PSS
                 )
                 .setDigests(
-                        KeyProperties.DIGEST_MD5,
-                        KeyProperties.DIGEST_NONE,
+//                        KeyProperties.DIGEST_MD5,
+//                        KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256,
-                        KeyProperties.DIGEST_SHA384,
-                        KeyProperties.DIGEST_SHA512
+                        KeyProperties.DIGEST_SHA256
+//                        KeyProperties.DIGEST_SHA384,
+//                        KeyProperties.DIGEST_SHA512
                 ).setEncryptionPaddings(
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
