@@ -44,6 +44,7 @@ import java.util.Locale;
 
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 public abstract class Authority {
@@ -105,6 +106,9 @@ public abstract class Authority {
         mIsDefault = isDefault;
     }
 
+
+    @SuppressFBWarnings(value="RpC_REPEATED_CONDITIONAL_TEST",
+            justification="Somehow, spotbugs thinks that BuildConfig.SLICE and BuildConfig.DC are the same values.")
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
         if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
