@@ -91,7 +91,9 @@ public class EstsTelemetry {
     public synchronized void clear(){
         mTelemetryMap.clear();
         mSentFailedRequests.clear();
-        mLastRequestTelemetryCache.clear();
+        if (mLastRequestTelemetryCache != null) {
+            mLastRequestTelemetryCache.clear();
+        }
     }
 
     /**
