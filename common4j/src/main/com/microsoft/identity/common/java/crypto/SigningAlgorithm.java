@@ -26,7 +26,11 @@ import lombok.NonNull;
 
 /**
  * Signing algorithms supported by our underlying keystore. Not all algs available at all device
- * levels.
+ * levels. Please note that Common supports a minimal subset of signing algorithms due to device/OEM
+ * specific incompatibilities when attempting AndroidKeystore-based key generations >256 bits.
+ * RSA-PKCS1 is favored over RSA-PSS for broader compatibility.
+ *
+ * More info: https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1453707
  */
 public enum SigningAlgorithm {
 
