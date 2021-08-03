@@ -47,7 +47,6 @@ import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
-import com.microsoft.identity.common.java.util.CommandLineParameter;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -100,7 +99,6 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     public static synchronized void initializeStaticClasses() {
         if (!sInitialized) {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
-            CommandLineParameter.setInstance(new AndroidCommandLineParameters());
             Logger.setAndroidLogger();
             sInitialized = true;
         }

@@ -22,10 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import static com.microsoft.identity.common.java.util.CommandLineParameter.Fields.DC;
-import static com.microsoft.identity.common.java.util.CommandLineParameter.Fields.SLICE;
-
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.BuildConfig;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -33,7 +31,6 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.CommandLineParameter;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
@@ -110,12 +107,10 @@ public abstract class Authority {
 
     public Authority() {
         // setting slice directly here in constructor if slice provided as command line param
-        final String sliceParam = CommandLineParameter.get(SLICE);
-        final String dcParam = CommandLineParameter.get(DC);
-        if (!StringUtil.isNullOrEmpty(sliceParam) || !StringUtil.isNullOrEmpty(dcParam)) {
+        if (!StringUtil.isNullOrEmpty(BuildConfig.SLICE) || !StringUtil.isNullOrEmpty(BuildConfig.DC)) {
             final AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
-            slice.setSlice(sliceParam);
-            slice.setDataCenter(dcParam);
+            slice.setSlice(BuildConfig.SLICE);
+            slice.setDataCenter(BuildConfig.DC);
             mSlice = slice;
         }
     }

@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MAJOR] Migrate Strategies, Parameters, and some other stuffs. (#1488)
 - [MAJOR] Migrate AccountManager's Account (#1483)
 - [MAJOR] Migrate Strategies part 1/2 (#1475)
 - [MINOR] Move predefined key loader to common4j from common (#1477)
