@@ -127,6 +127,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final String methodName = "#onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
+        final String[] javascriptToExecute = new String[1];
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
         final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
