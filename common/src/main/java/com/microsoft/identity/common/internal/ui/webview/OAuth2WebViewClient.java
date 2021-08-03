@@ -58,7 +58,6 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
     private final OnPageLoadedCallback mPageLoadedCallback;
-
     private final Activity mActivity;
 
     @VisibleForTesting
