@@ -140,7 +140,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                     public void onPageLoaded(final String url) {
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
-                            javascriptToExecute[0] = String.format("window.expectedUrl = '%s';\n%s",
+                            javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
                                     URLEncoder.encode(url, "UTF-8"),
                                     mPostPageLoadedJavascript);
                         } catch (UnsupportedEncodingException e) {
