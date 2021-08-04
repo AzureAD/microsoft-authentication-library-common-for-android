@@ -28,7 +28,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
@@ -53,6 +54,8 @@ public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
 
     private static final String RFC3339_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+    private static final String TOKEN_HASH_ALGORITHM = "SHA256";
 
     /**
      * Checks if string is null or empty.
@@ -284,5 +287,21 @@ public class StringUtil {
 
     public static String encodeUrlSafeString(@NonNull final String stringToEncode){
         return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+    /**
+     * Create the Hash string of the message.
+     *
+     * @param msg String
+     * @return String in Hash
+     * @throws NoSuchAlgorithmException throws if no such algorithm.
+     */
+    public static String createHash(final String msg) throws NoSuchAlgorithmException {
+        if (!isNullOrEmpty(msg)) {
+            final MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
+            final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
+            return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
+                    ENCODING_UTF8);
+        }
+        return msg;
     }
 }
