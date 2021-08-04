@@ -89,12 +89,6 @@ public interface ICommonComponents<T> {
      */
     IKeyBasedStorage getFileStore(String storeName);
 
-    /**
-     * Unwrap the platform context being shadowed by this interface.
-     * @return the underlying implementation of the platform context that this is hiding.
-     */
-    T getPlatformContext();
-
     @NonNull
     IDevicePopManager getDevicePopManager(@NonNull final String alias) throws ClientException;
 }
