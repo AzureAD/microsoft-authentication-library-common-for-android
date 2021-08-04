@@ -143,20 +143,20 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                             javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
                                     URLEncoder.encode(url, "UTF-8"),
                                     mPostPageLoadedJavascript);
-                        } catch (UnsupportedEncodingException e) {
+                        } catch (final UnsupportedEncodingException e) {
                             // Encode url component failed, fallback.
                             Logger.warn(TAG, "Inject expectedUrl failed.");
                         }
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
-                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
+                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                mWebView.evaluateJavascript(mPostPageLoadedJavascript, null);
+                                mWebView.evaluateJavascript(javascriptToExecute[0], null);
                             } else {
                                 // On earlier versions of Android, javascript has to be loaded with a custom scheme.
                                 // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
                                 // our javascript may contain the '%' character, so we escape it again, to undo that.
-                                mWebView.loadUrl("javascript:" + mPostPageLoadedJavascript.replace("%", "%25"));
+                                mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
                             }
                         }
                     }
