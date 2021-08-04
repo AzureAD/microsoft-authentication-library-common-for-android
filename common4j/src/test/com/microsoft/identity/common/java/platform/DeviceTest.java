@@ -73,6 +73,12 @@ public class DeviceTest {
     }
 
     @Test
+    public void testGetDeviceType(){
+        Device.setDeviceMetadata(new MockDeviceMetadata());
+        Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_TYPE, Device.getDeviceType());
+    }
+
+    @Test
     public void testGetCpu(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, Device.getCpu());

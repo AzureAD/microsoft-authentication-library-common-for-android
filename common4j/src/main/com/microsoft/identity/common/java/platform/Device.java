@@ -103,6 +103,18 @@ public class Device {
         }
     }
 
+    public static String getDeviceType() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getDeviceType();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
     public static final class PlatformIdParameters {
         /**
          * The String representing the CPU for the device.
