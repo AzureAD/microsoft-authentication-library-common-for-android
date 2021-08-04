@@ -31,6 +31,7 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -48,7 +49,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 
 /**
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.

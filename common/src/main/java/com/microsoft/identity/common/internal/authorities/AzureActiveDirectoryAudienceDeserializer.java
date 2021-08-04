@@ -27,6 +27,11 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.microsoft.identity.common.java.authorities.AccountsInOneOrganization;
+import com.microsoft.identity.common.java.authorities.AllAccounts;
+import com.microsoft.identity.common.java.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.java.authorities.AnyPersonalAccount;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
 import com.microsoft.identity.common.logging.Logger;
 
 import net.jcip.annotations.Immutable;

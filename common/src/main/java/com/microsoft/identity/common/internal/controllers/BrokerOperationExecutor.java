@@ -33,7 +33,7 @@ import com.microsoft.identity.common.PerfConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
@@ -164,11 +164,12 @@ public class BrokerOperationExecutor {
 
     private <T extends CommandParameters, U> void emitOperationStartEvent(@Nullable final T parameters,
                                                                           @NonNull final BrokerOperation<U> operation) {
-        if (operation.getTelemetryApiId() != null) {
+        final String telemetryApiId = operation.getTelemetryApiId();
+        if (!StringUtil.isNullOrEmpty(telemetryApiId)) {
             Telemetry.emit(
                     new ApiStartEvent()
                             .putProperties(parameters)
-                            .putApiId(operation.getTelemetryApiId())
+                            .putApiId(telemetryApiId)
             );
         }
     }

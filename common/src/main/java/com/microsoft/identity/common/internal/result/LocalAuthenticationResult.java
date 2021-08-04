@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
-import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Date;
