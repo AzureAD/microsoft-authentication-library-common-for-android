@@ -59,7 +59,7 @@ namespace IdentityPerfTestApp
             string emailToList = args[i++]; // Email To list separated by comma
 
             ReportParams reportParams = new ReportParams(inputBaseFileLocation, inputTargetFileLocation, baseJobId, currentJobId,
-                deviceModel, deviceOs, appName, fromAddress, fromPassword, emailToList, "Base");
+                deviceModel, deviceOs, appName, fromAddress, fromPassword, emailToList, "Last Released Build");
 
             List<string> reportHtml = View.ResultInit();
             reportHtml.AddRange(View.ReportSummaryHeaders());
@@ -83,7 +83,7 @@ namespace IdentityPerfTestApp
             reportParams.BaseJobId = latestJobId;
             reportParams.BaseJobArtifactURL = ReportParams.GetJobArtifactURL(latestJobId);
             reportParams.InputBaseFileLocation = inputLatestFileLocation;
-            reportParams.RunName =  "Latest";
+            reportParams.RunName = "Last Dev Build";
             List<string> latestBody = SendEmail.GenerateReportBody(reportParams);
             reportHtml.AddRange(latestBody);
 

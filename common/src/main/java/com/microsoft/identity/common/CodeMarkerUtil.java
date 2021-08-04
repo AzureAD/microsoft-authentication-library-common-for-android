@@ -43,7 +43,7 @@ public class CodeMarkerUtil {
         content.append(codeMarkers.get(0).getCsvHeader());
 
         synchronized (codeMarkers) {
-            for (CodeMarker codeMarker : codeMarkers) {
+            for (final CodeMarker codeMarker : codeMarkers) {
                 content.append('\n');
                 content.append(codeMarker.getCsvLine());
             }
