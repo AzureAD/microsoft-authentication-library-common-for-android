@@ -278,8 +278,8 @@ public class BrokerMsalController extends BaseController {
                 Telemetry.emit(
                         new ApiStartEvent()
                                 .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(propertyBag.get(REQUEST_CODE)))
-                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(propertyBag.get(RESULT_CODE)))
+                                .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
+                                .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
                 );
 
                 mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));

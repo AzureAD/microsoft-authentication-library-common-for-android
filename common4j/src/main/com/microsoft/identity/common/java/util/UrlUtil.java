@@ -115,6 +115,23 @@ public class UrlUtil {
             return Collections.emptyMap();
         }
 
+        if (uri.isOpaque()){
+            // Opaque URI *might* have query params, but Java's URI would just treat the whole URL as
+            // [scheme:]scheme-specific-part[#fragment]
+            //
+            // Since we want to try extracting query params from it (and we don't care about other parts of the URI),
+            // we're going to prepend a scheme so that Java's URI recognizes this as a hierarchical one.
+            // [scheme:][//authority][path][?query][#fragment]
+            //
+            // See: https://docs.oracle.com/javase/8/docs/api/java/net/URI.html
+            try {
+                return getParameters(new URI("scheme://" + uri.toString()));
+            } catch (final URISyntaxException e) {
+                Logger.warn(TAG, "Cannot convert opaque URI.");
+                return Collections.emptyMap();
+            }
+        }
+
         final String fragment = uri.getFragment();
         if (!StringUtil.isNullOrEmpty(fragment) &&
                 !urlFormDecode(fragment).isEmpty()) {

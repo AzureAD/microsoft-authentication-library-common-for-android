@@ -43,6 +43,10 @@ import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
+/**
+ * A class/builder that represents PKeyAuth challenge.
+ * see {@link PKeyAuthChallengeFactory}.
+ * */
 public class PKeyAuthChallenge implements Serializable {
     private static final String TAG = PKeyAuthChallenge.class.getSimpleName();
 

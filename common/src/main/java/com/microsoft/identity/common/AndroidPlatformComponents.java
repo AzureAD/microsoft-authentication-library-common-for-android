@@ -95,6 +95,8 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
     /**
      * Initializes platform-dependent static classes.
+     * TODO: Once we finish the work, this should be extracted out.
+     *       It should be init separately, not as part of this class' construction.
      */
     public static synchronized void initializeStaticClasses() {
         if (!sInitialized) {

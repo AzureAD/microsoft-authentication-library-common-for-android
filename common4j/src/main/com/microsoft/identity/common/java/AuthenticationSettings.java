@@ -32,8 +32,8 @@ public enum AuthenticationSettings {
     private Class<?> mClazzDeviceCertProxy;
 
     /**
-     * set class for work place join related API. This is only used from
-     * Authenticator side.
+     * Set class for work place join related API.
+     * This is only used in the broker process.
      *
      * @param clazz class for workplace join
      */
@@ -46,8 +46,8 @@ public enum AuthenticationSettings {
     }
 
     /**
-     * get class for work place join related API. This is only used from
-     * Authenticator side.
+     * Get class for work place join related API.
+     * This is only used in the broker process.
      *
      * @return Class
      */
@@ -55,4 +55,11 @@ public enum AuthenticationSettings {
         return mClazzDeviceCertProxy;
     }
 
+    /**
+     * Remove class for work place join related API.
+     * This is only used in the broker process.
+     */
+    public void removeDeviceCertificateProxy() {
+        mClazzDeviceCertProxy = null;
+    }
 }

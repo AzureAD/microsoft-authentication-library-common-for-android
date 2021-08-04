@@ -65,7 +65,7 @@ public abstract class Authority {
     protected String mAuthorityTypeString;
 
     @SerializedName("authority_url")
-    protected String mAuthorityUrl;
+    protected String mAuthorityUrlString;
 
     @SerializedName("slice")
     public AzureActiveDirectorySlice mSlice;
@@ -80,7 +80,7 @@ public abstract class Authority {
 
     public URI getAuthorityUri() {
         try {
-            return new URI(mAuthorityUrl);
+            return new URI(mAuthorityUrlString);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Authority URL is not a URI.", e);
         }
@@ -196,8 +196,8 @@ public abstract class Authority {
             // Iterate over all of the developer trusted authorities and check if the authorities
             // are the same...
             for (final Authority currentAuthority : knownAuthorities) {
-                if (!StringUtil.isNullOrEmpty(currentAuthority.mAuthorityUrl)) {
-                    final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrl);
+                if (!StringUtil.isNullOrEmpty(currentAuthority.mAuthorityUrlString)) {
+                    final URL currentAuthorityUrl = new URL(currentAuthority.mAuthorityUrlString);
                     final String currentHttpAuthority = currentAuthorityUrl.getAuthority();
 
                     if (httpAuthority.equalsIgnoreCase(currentHttpAuthority)) {
@@ -340,10 +340,10 @@ public abstract class Authority {
             knownToDeveloper = true;
         } else {
             for (final Authority currentAuthority : knownAuthorities) {
-                if (currentAuthority.mAuthorityUrl != null &&
+                if (currentAuthority.mAuthorityUrlString != null &&
                         authority.getAuthorityURL() != null &&
                         authority.getAuthorityURL().getAuthority() != null &&
-                        currentAuthority.mAuthorityUrl.toLowerCase(Locale.ROOT).contains(
+                        currentAuthority.mAuthorityUrlString.toLowerCase(Locale.ROOT).contains(
                                 authority
                                         .getAuthorityURL()
                                         .getAuthority()

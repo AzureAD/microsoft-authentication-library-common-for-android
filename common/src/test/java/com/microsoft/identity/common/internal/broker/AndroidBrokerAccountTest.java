@@ -74,7 +74,7 @@ public class AndroidBrokerAccountTest {
 
     @Test
     public void testCanAdaptAccountManagerAccountWhenAccountNameAndTypeProvided() {
-        final AndroidBrokerAccount androidBrokerAccount = AndroidBrokerAccount.adapt(
+        final AndroidBrokerAccount androidBrokerAccount = AndroidBrokerAccount.create(
                 ACCOUNT_MANAGER,
                 TEST_ACCOUNT_NAME,
                 ACCOUNT_TYPE
@@ -90,7 +90,7 @@ public class AndroidBrokerAccountTest {
 
     @Test
     public void testCanCastBrokerAccountToAndroidBrokerAccountWhenPossible() {
-        final IBrokerAccount brokerAccount = AndroidBrokerAccount.adapt(
+        final IBrokerAccount brokerAccount = AndroidBrokerAccount.create(
                 ACCOUNT_MANAGER,
                 TEST_ACCOUNT_NAME,
                 ACCOUNT_TYPE

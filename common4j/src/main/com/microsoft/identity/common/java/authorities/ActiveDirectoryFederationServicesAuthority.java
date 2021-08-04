@@ -37,7 +37,7 @@ import java.net.URL;
 public class ActiveDirectoryFederationServicesAuthority extends Authority {
 
     ActiveDirectoryFederationServicesAuthority(String authorityUrl) {
-        this.mAuthorityUrl = authorityUrl;
+        this.mAuthorityUrlString = authorityUrl;
     }
 
     // Suppressing rawtype warnings due to the generic type OAuth2Strategy

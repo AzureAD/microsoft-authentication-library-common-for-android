@@ -42,7 +42,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
 
     public AzureActiveDirectoryB2CAuthority(String authorityUrl) {
         mAuthorityTypeString = "B2C";
-        mAuthorityUrl = authorityUrl;
+        mAuthorityUrlString = authorityUrl;
     }
 
     protected MicrosoftStsOAuth2Configuration createOAuth2Configuration() {
@@ -86,7 +86,7 @@ public class AzureActiveDirectoryB2CAuthority extends Authority {
      * @return a String with the Policy name
      */
     public String getB2CPolicyName(){
-        final String[] authorityUriParts = mAuthorityUrl.split("/");
+        final String[] authorityUriParts = mAuthorityUrlString.split("/");
         return authorityUriParts[authorityUriParts.length - 1];
     }
 }
