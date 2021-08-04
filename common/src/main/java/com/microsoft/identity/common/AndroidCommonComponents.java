@@ -178,10 +178,4 @@ public class AndroidCommonComponents implements ICommonComponents<Context> {
     public IKeyBasedStorage getFileStore(String storeName) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
     }
-
-    @Deprecated
-    @Override
-    public Context getPlatformContext() {
-        return mContext;
-    }
 }
