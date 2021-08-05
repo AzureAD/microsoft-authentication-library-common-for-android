@@ -215,7 +215,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
     @Override
     public <T> INameValueStorage<T> getEncryptedNameValueStore(final @NonNull String storeName,
-                                                               final @NonNull IKeyAccessor helper,
+                                                               final @Nullable IKeyAccessor helper,
                                                                final @NonNull Class<T> clazz) {
         final IMultiTypeNameValueStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
         if (Long.class.isAssignableFrom(clazz)) {
