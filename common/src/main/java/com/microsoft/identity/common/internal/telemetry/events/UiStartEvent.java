@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.events;
 
-import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;

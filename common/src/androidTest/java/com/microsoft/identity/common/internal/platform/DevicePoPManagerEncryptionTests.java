@@ -26,8 +26,8 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -45,8 +45,6 @@ import java.util.List;
 
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_384AndMGF1Padding;
-import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_512AndMGF1Padding;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
 
@@ -75,8 +73,6 @@ public class DevicePoPManagerEncryptionTests {
             ciphers.add(RSA_NONE_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
         }
 
         return ciphers;

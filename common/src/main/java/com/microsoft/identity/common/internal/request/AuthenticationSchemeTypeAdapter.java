@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.request;
 
 import androidx.annotation.NonNull;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -32,24 +34,34 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
 
 import static com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme.SerializedNames.NAME;
-import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
-import static com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
+import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 
 /**
  * Gson de/serialization utility class for auth schemes.
  */
-class AuthenticationSchemeTypeAdapter implements
+public class AuthenticationSchemeTypeAdapter implements
         JsonDeserializer<AbstractAuthenticationScheme>,
         JsonSerializer<AbstractAuthenticationScheme> {
 
     private static final String TAG = AuthenticationSchemeTypeAdapter.class.getSimpleName();
+
+    private static Gson sRequestAdapterGsonInstance = new GsonBuilder()
+            .registerTypeAdapter(
+                    AbstractAuthenticationScheme.class,
+                    new AuthenticationSchemeTypeAdapter()
+            ).create();
+
+    public static Gson getGsonInstance(){
+        return sRequestAdapterGsonInstance;
+    }
 
     @Override
     public AbstractAuthenticationScheme deserialize(@NonNull final JsonElement json,
