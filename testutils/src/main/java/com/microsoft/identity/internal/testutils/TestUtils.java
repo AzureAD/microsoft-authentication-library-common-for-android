@@ -72,7 +72,7 @@ public class TestUtils {
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
     public static IKeyBasedStorage getEncryptedSharedPreferences(final String sharedPrefName) {
-        final ICommonComponents components = new AndroidCommonComponents(ApplicationProvider.getApplicationContext());
+        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
         final IKeyBasedStorage barePreferences = components.getEncryptedFileStore(
                 sharedPrefName,
                 components.
