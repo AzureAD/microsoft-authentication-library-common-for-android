@@ -29,7 +29,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
@@ -59,7 +59,7 @@ public class TestUtils {
         return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
     }
 
-    public static IKeyBasedStorage getSharedPreferences(final String sharedPrefName) {
+    public static IMultiTypeNameValueStorage getSharedPreferences(final String sharedPrefName) {
         final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
 
         return components.getFileStore(sharedPrefName);
@@ -71,9 +71,9 @@ public class TestUtils {
      * @param sharedPrefName the name of the shared preferences file.
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
-    public static IKeyBasedStorage getEncryptedSharedPreferences(final String sharedPrefName) {
+    public static IMultiTypeNameValueStorage getEncryptedSharedPreferences(final String sharedPrefName) {
         final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
-        final IKeyBasedStorage barePreferences = components.getEncryptedFileStore(
+        final IMultiTypeNameValueStorage barePreferences = components.getEncryptedFileStore(
                 sharedPrefName,
                 components.
                         getStorageEncryptionManager());
@@ -81,12 +81,12 @@ public class TestUtils {
     }
 
     public static void clearCache(final String sharedPrefName) {
-        IKeyBasedStorage sharedPreferences = getSharedPreferences(sharedPrefName);
+        IMultiTypeNameValueStorage sharedPreferences = getSharedPreferences(sharedPrefName);
         sharedPreferences.clear();
     }
 
     public static void removeAccessTokenFromCache(final String sharedPrefName) {
-        IKeyBasedStorage sharedPreferences = getSharedPreferences(sharedPrefName);
+        IMultiTypeNameValueStorage sharedPreferences = getSharedPreferences(sharedPrefName);
         final Map<String, ?> cacheValues = sharedPreferences.getAll();
         final String keyToRemove = getCacheKeyForAccessToken(cacheValues);
         if (keyToRemove != null) {

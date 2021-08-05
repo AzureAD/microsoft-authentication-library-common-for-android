@@ -39,8 +39,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import lombok.AllArgsConstructor;
-
 /**
  * A simple metadata store definition that uses INameValueStorage to persist, read,
  * update, and delete data. Please note that all CRUD actions return success, as the underlying
@@ -103,7 +101,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
     /**
      * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl from the provided
-     * {@link IKeyBasedStorage}, using the provided singleKey for the underlying collection.
+     * {@link IMultiTypeNameValueStorage}, using the provided singleKey for the underlying collection.
      *
      * @param storage                      The underlying {@link INameValueStorage<String>} to use.
      * @param singleKey                    The name of the key under which all entries will be cached.

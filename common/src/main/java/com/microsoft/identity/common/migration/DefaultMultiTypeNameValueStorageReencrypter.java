@@ -36,11 +36,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Default implementation of {@link IKeyBasedStorageReencrypter}.
+ * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
-public class DefaultKeyBasedStorageReencrypter implements IKeyBasedStorageReencrypter {
+public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
 
-    private static final String TAG = DefaultKeyBasedStorageReencrypter.class.getSimpleName();
+    private static final String TAG = DefaultMultiTypeNameValueStorageReencrypter.class.getSimpleName();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
@@ -129,7 +129,7 @@ public class DefaultKeyBasedStorageReencrypter implements IKeyBasedStorageReencr
      * @param callable             The callable definining the mutation.
      * @param inputResult          A {@link MigrationOperationResult} used to track error states which may
      *                             occur during a mutation.
-     * @param params               The {@link IKeyBasedStorageReencrypter.ReencryptionParams}
+     * @param params               The {@link IMultiTypeNameValueStorageReencrypter.ReencryptionParams}
      *                             defining how errors should be handled/surfaced.
      * @param keysMarkedForRemoval A {@link Set} of cache keys to be removed from the underlying
      *                             cache if an error is encountered. Please note that this function

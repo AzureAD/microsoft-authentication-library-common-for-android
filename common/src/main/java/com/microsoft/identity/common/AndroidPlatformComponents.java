@@ -35,7 +35,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
@@ -217,7 +217,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     public <T> INameValueStorage<T> getEncryptedNameValueStore(final @NonNull String storeName,
                                                                final @NonNull IKeyAccessor helper,
                                                                final @NonNull Class<T> clazz) {
-        final IKeyBasedStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+        final IMultiTypeNameValueStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
         if (Long.class.isAssignableFrom(clazz)) {
             @SuppressWarnings("unchecked")
             final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
@@ -231,12 +231,12 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     }
 
     @Override
-    public IKeyBasedStorage getEncryptedFileStore(final @NonNull String storeName, final @NonNull IKeyAccessor helper) {
+    public IMultiTypeNameValueStorage getEncryptedFileStore(final @NonNull String storeName, final @NonNull IKeyAccessor helper) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
     }
 
     @Override
-    public IKeyBasedStorage getFileStore(final @NonNull String storeName) {
+    public IMultiTypeNameValueStorage getFileStore(final @NonNull String storeName) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
     }
 

@@ -32,8 +32,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
-import com.microsoft.identity.common.migration.DefaultKeyBasedStorageReencrypter;
-import com.microsoft.identity.common.migration.IKeyBasedStorageReencrypter;
+import com.microsoft.identity.common.migration.DefaultMultiTypeNameValueStorageReencrypter;
+import com.microsoft.identity.common.migration.IMultiTypeNameValueStorageReencrypter;
 import com.microsoft.identity.common.migration.IMigrationOperationResult;
 
 import org.junit.After;
@@ -65,14 +65,14 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
 
     private INameValueStorage<String> mTestCacheFile;
 
-    private IKeyBasedStorageReencrypter mFileManagerReencrypter;
+    private IMultiTypeNameValueStorageReencrypter mFileManagerReencrypter;
     private TestEncrypterDecrypter mTestEncrypterDecrypter;
-    private IKeyBasedStorageReencrypter.IStringEncrypter mStringEncrypter;
-    private IKeyBasedStorageReencrypter.IStringDecrypter mStringDecrypter;
+    private IMultiTypeNameValueStorageReencrypter.IStringEncrypter mStringEncrypter;
+    private IMultiTypeNameValueStorageReencrypter.IStringDecrypter mStringDecrypter;
 
     private class TestEncrypterDecrypter implements
-            IKeyBasedStorageReencrypter.IStringEncrypter,
-            IKeyBasedStorageReencrypter.IStringDecrypter {
+            IMultiTypeNameValueStorageReencrypter.IStringEncrypter,
+            IMultiTypeNameValueStorageReencrypter.IStringDecrypter {
 
         private final Context mContext;
 
@@ -121,7 +121,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     public void setUp() {
         mContext = InstrumentationRegistry.getTargetContext();
         mTestCacheFile = AndroidPlatformComponents.createFromContext(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
-        mFileManagerReencrypter = new DefaultKeyBasedStorageReencrypter();
+        mFileManagerReencrypter = new DefaultMultiTypeNameValueStorageReencrypter();
         try {
             final byte[] mockKey = generateLegacyFormatKey("abcdedfdfd");
             mTestEncrypterDecrypter = new TestEncrypterDecrypter(mContext, mockKey);
@@ -158,7 +158,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -174,7 +174,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -219,7 +219,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -256,7 +256,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -287,7 +287,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         final IMigrationOperationResult result = mFileManagerReencrypter.reencrypt(
                 mTestCacheFile,
                 mStringEncrypter,
-                new IKeyBasedStorageReencrypter.IStringDecrypter() {
+                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
                     @Override
                     public String decrypt(String input) throws Exception {
                         Assert.assertEquals(1, mTestCacheFile.getAll().size());
@@ -295,7 +295,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                         throw new IOException();
                     }
                 },
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -319,13 +319,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
-                new IKeyBasedStorageReencrypter.IStringDecrypter() {
+                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
                     @Override
                     public String decrypt(String input) throws Exception {
                         throw new IOException();
                     }
                 },
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -356,13 +356,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mFileManagerReencrypter.reencrypt(
                 mTestCacheFile,
                 mStringEncrypter,
-                new IKeyBasedStorageReencrypter.IStringDecrypter() {
+                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
                     @Override
                     public String decrypt(String input) throws Exception {
                         throw new IOException();
                     }
                 },
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         false,
                         true,
                         false
@@ -383,13 +383,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
-                new IKeyBasedStorageReencrypter.IStringDecrypter() {
+                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
                     @Override
                     public String decrypt(String input) throws Exception {
                         throw new IOException();
                     }
                 },
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         false,
                         true,
                         false
@@ -424,13 +424,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mFileManagerReencrypter.reencrypt(
                 mTestCacheFile,
                 mStringEncrypter,
-                new IKeyBasedStorageReencrypter.IStringDecrypter() {
+                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
                     @Override
                     public String decrypt(String input) throws Exception {
                         throw new IOException();
                     }
                 },
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         false,
                         true,
                         false
@@ -457,13 +457,13 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
         mFileManagerReencrypter.reencryptAsync(
                 mTestCacheFile,
                 mStringEncrypter,
-                new IKeyBasedStorageReencrypter.IStringDecrypter() {
+                new IMultiTypeNameValueStorageReencrypter.IStringDecrypter() {
                     @Override
                     public String decrypt(String input) throws Exception {
                         throw new IOException();
                     }
                 },
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         false,
                         true,
                         false
@@ -501,7 +501,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         false,
                         false,
                         false
@@ -528,7 +528,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -558,7 +558,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         false,
                         true,
                         false
@@ -595,7 +595,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mTestEncrypterDecrypter,
                 mTestEncrypterDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         true,
                         false
@@ -631,7 +631,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     mTestCacheFile,
                     mTestEncrypterDecrypter,
                     mTestEncrypterDecrypter,
-                    new IKeyBasedStorageReencrypter.ReencryptionParams(
+                    new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                             true,
                             false,
                             true
@@ -668,7 +668,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -683,7 +683,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     mTestCacheFile,
                     mStringEncrypter,
                     mStringDecrypter,
-                    new IKeyBasedStorageReencrypter.ReencryptionParams(
+                    new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                             true,
                             false,
                             false
@@ -720,7 +720,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                 mTestCacheFile,
                 mStringEncrypter,
                 mStringDecrypter,
-                new IKeyBasedStorageReencrypter.ReencryptionParams(
+                new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                         true,
                         false,
                         false
@@ -735,7 +735,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
                     mTestCacheFile,
                     mStringEncrypter,
                     mStringDecrypter,
-                    new IKeyBasedStorageReencrypter.ReencryptionParams(
+                    new IMultiTypeNameValueStorageReencrypter.ReencryptionParams(
                             true,
                             false,
                             true

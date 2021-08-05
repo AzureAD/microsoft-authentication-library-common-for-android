@@ -22,9 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.AbstractMap;
@@ -36,15 +35,15 @@ import java.util.NoSuchElementException;
 import lombok.NonNull;
 
 /**
- * Adapts {@link IKeyBasedStorage} to {@link INameValueStorage <Long>}
+ * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage <Long>}
  * */
 public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStorage<Long> {
-    public SharedPreferenceLongStorage(IKeyBasedStorage mManager) {
+    public SharedPreferenceLongStorage(final @NonNull IMultiTypeNameValueStorage mManager) {
         super(mManager);
     }
 
     @Override
-    public Long get(@NonNull String name) {
+    public Long get(final @NonNull String name) {
         return mManager.getLong(name);
     }
 

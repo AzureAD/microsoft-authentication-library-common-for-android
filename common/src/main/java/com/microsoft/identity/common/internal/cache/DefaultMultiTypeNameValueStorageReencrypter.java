@@ -29,13 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Default implementation of {@link IKeyBasedStorageReencrypter}.
+ * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
 @Deprecated
-public class DefaultKeyBasedStorageReencrypter implements IKeyBasedStorageReencrypter {
+public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
 
     @Override
-    public void reencrypt(@NonNull final IKeyBasedStorage fileManager,
+    public void reencrypt(@NonNull final IMultiTypeNameValueStorage fileManager,
                           @NonNull final IStringEncrypter encrypter,
                           @NonNull final IStringDecrypter decrypter,
                           @NonNull final ReencryptionParams params) throws Exception {
@@ -77,7 +77,7 @@ public class DefaultKeyBasedStorageReencrypter implements IKeyBasedStorageReencr
     }
 
     @Override
-    public void reencryptAsync(@NonNull final IKeyBasedStorage fileManager,
+    public void reencryptAsync(@NonNull final IMultiTypeNameValueStorage fileManager,
                                @NonNull final IStringEncrypter encrypter,
                                @NonNull final IStringDecrypter decrypter,
                                @NonNull final ReencryptionParams params,

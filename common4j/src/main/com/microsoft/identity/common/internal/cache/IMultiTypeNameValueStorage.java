@@ -28,9 +28,10 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * The interface for a key-value store.  This should
+ * The interface for a key-value store with multiple types.  This should be roughly equivalent to Android
+ * Shared Preferences.
  */
-public interface IKeyBasedStorage {
+public interface IMultiTypeNameValueStorage {
     /**
      * Associates a {@link String} value with a key in the named resource that this represents.
      *

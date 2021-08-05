@@ -22,23 +22,20 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.util.ported.Predicate;
 
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * Adapts {@link IKeyBasedStorage} to {@link INameValueStorage}
+ * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage}
  * */
 @AllArgsConstructor
 public abstract class AbstractSharedPrefNameValueStorage<T> implements INameValueStorage<T> {
-    protected IKeyBasedStorage mManager;
+    protected IMultiTypeNameValueStorage mManager;
 
     @Override
     public void remove(@NonNull String name) {

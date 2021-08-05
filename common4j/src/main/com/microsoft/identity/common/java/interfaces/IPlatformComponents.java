@@ -22,14 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
@@ -88,14 +85,14 @@ public interface IPlatformComponents {
      * @param storeName The name of a new KeyValue store. May not be null.
      * @param helper    The key manager for the encryption.  May not be null.
      */
-    IKeyBasedStorage getEncryptedFileStore(String storeName, IKeyAccessor helper);
+    IMultiTypeNameValueStorage getEncryptedFileStore(String storeName, IKeyAccessor helper);
 
     /**
      * Get a generic encrypted ISharedPreferencesFileManager with a given identifier.
      *
      * @param storeName The name of a new KeyValue store. May not be null.
      */
-    IKeyBasedStorage getFileStore(String storeName);
+    IMultiTypeNameValueStorage getFileStore(String storeName);
 
     @NonNull
     IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;

@@ -20,20 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.migration;
 
-import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 
 /**
  * Interface describing an object that can reencrypt instances of
- * {@link IKeyBasedStorage}.
+ * {@link IMultiTypeNameValueStorage}.
  */
-@Deprecated
-public interface IKeyBasedStorageReencrypter {
+public interface IMultiTypeNameValueStorageReencrypter {
 
     /**
      * The object to which this class delegates reencryption of the
-     * {@link IKeyBasedStorage}.
+     * {@link IMultiTypeNameValueStorage}.
      */
     interface IStringEncrypter {
         String encrypt(String input) throws Exception;
@@ -41,7 +42,7 @@ public interface IKeyBasedStorageReencrypter {
 
     /**
      * The object to which this class delegates decryption of the input
-     * {@link IKeyBasedStorage}.
+     * {@link IMultiTypeNameValueStorage}.
      */
     interface IStringDecrypter {
         String decrypt(String input) throws Exception;
@@ -100,7 +101,7 @@ public interface IKeyBasedStorageReencrypter {
     }
 
     /**
-     * Performs reencryption of the provided {@link IKeyBasedStorage}, delegating to
+     * Performs reencryption of the provided {@link IMultiTypeNameValueStorage}, delegating to
      * the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform content
      * transformations.
      * <p>
@@ -108,19 +109,19 @@ public interface IKeyBasedStorageReencrypter {
      * this API are advised to ensure the designated store is not mutated during the reencryption
      * process otherwise undefined behavior/results may occur.
      *
-     * @param fileManager The {@link IKeyBasedStorage} to reencrypt.
+     * @param fileManager The {@link INameValueStorage<String>} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      */
-    void reencrypt(IKeyBasedStorage fileManager,
-                   IStringEncrypter encrypter,
-                   IStringDecrypter decrypter,
-                   ReencryptionParams params
-    ) throws Exception;
+    IMigrationOperationResult reencrypt(INameValueStorage<String> fileManager,
+                                        IStringEncrypter encrypter,
+                                        IStringDecrypter decrypter,
+                                        ReencryptionParams params
+    );
 
     /**
-     * Performs reencryption of the provided {@link IKeyBasedStorage} asynchronously,
+     * Performs reencryption of the provided {@link IMultiTypeNameValueStorage} asynchronously,
      * delegating to the suppplied {@link IStringEncrypter} and {@link IStringDecrypter} to perform
      * content transformations.
      * <p>
@@ -128,16 +129,16 @@ public interface IKeyBasedStorageReencrypter {
      * this API are advised to ensure the designated store is not mutated during the reencryption
      * process otherwise undefined behavior/results may occur.
      *
-     * @param fileManager The {@link IKeyBasedStorage} to reencrypt.
+     * @param fileManager The {@link IMultiTypeNameValueStorage} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      * @param callback    Callback to receive any error/completion callbacks.
      */
-    void reencryptAsync(IKeyBasedStorage fileManager,
+    void reencryptAsync(INameValueStorage<String> fileManager,
                         IStringEncrypter encrypter,
                         IStringDecrypter decrypter,
                         ReencryptionParams params,
-                        TaskCompletedCallbackWithError<Void, Exception> callback
+                        TaskCompletedCallback<IMigrationOperationResult> callback
     );
 }

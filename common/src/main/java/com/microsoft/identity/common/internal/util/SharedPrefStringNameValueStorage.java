@@ -23,7 +23,7 @@
 
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.Iterator;
@@ -36,7 +36,7 @@ import lombok.NonNull;
  * value types.
  */
 public class SharedPrefStringNameValueStorage extends AbstractSharedPrefNameValueStorage<String> {
-    public SharedPrefStringNameValueStorage(IKeyBasedStorage mManager) {
+    public SharedPrefStringNameValueStorage(IMultiTypeNameValueStorage mManager) {
         super(mManager);
     }
 
