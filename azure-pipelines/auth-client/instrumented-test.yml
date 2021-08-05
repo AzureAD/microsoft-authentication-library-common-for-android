@@ -15,4 +15,4 @@ jobs:
     clean: all
   steps:
   - script: df -h
-  #- template: ../templates/steps/auth-client/docker-tasks.yml
+  - template: ../templates/steps/auth-client/docker-tasks.yml
