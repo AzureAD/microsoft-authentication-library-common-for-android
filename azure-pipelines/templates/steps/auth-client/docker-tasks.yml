@@ -13,6 +13,7 @@ steps:
     echo Kill all running containers if existing
     echo =============================================
     docker container kill $(docker ps -q)
+    docker system prune --volumes -f
     echo =============================================
     echo Run unit and instrumented inside docker container
     echo =============================================
