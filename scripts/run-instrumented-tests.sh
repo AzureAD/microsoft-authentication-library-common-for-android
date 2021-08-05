@@ -7,7 +7,7 @@ echo =============================================
 android list avd
 echo =============================================
 emulator @test -no-window -no-audio -wipe-data &
-sleep 30
+sleep 120
 gradle -version
 echo =============================================
 echo Running instrumented tests
