@@ -22,8 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
-import com.microsoft.identity.common.AndroidCommonComponents;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -33,9 +32,6 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.util.List;
@@ -54,27 +50,7 @@ import lombok.NonNull;
 public abstract class OAuth2TokenCache
         <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
 
-    private final ICommonComponents mCommonComponents;
-
-    /**
-     * Constructs a new OAuth2TokenCache.
-     *
-     * @param context The Application Context of the consuming app.
-     */
-    @Deprecated
-    public OAuth2TokenCache(Context context) {
-        mCommonComponents = new AndroidCommonComponents(context);
-    }
-
-    /**
-     * Constructs a new OAuth2TokenCache.
-     *
-     * @param commonComponents The platform components of the consuming app.
-     */
-    public OAuth2TokenCache(ICommonComponents commonComponents) {
-        mCommonComponents = commonComponents;
-    }
-
+    private final @NonNull IPlatformComponents mPlatformComponents;
 
     /**
      * Saves the credentials and tokens returned by the service to the cache.
@@ -314,8 +290,8 @@ public abstract class OAuth2TokenCache
      *
      * @return The set of common components that this cache was created with.
      */
-    protected final ICommonComponents getComponents() {
-        return mCommonComponents;
+    protected final IPlatformComponents getComponents() {
+        return mPlatformComponents;
     }
 
     public abstract AccountRecord getAccountByHomeAccountId(@Nullable final String environment,

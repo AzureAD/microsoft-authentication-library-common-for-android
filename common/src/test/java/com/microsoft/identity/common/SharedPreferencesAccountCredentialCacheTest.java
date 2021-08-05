@@ -99,9 +99,9 @@ public class SharedPreferencesAccountCredentialCacheTest {
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = new AndroidCommonComponents(testContext).getEncryptedNameValueStore(
+        mSharedPreferencesFileManager = AndroidPlatformComponents.createFromContext(testContext).getEncryptedNameValueStore(
                 sAccountCredentialSharedPreferences,
-                new AndroidCommonComponents(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
+                AndroidPlatformComponents.createFromContext(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
                 String.class
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(

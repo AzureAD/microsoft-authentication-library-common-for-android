@@ -92,6 +92,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unchecked")
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
 public class MsalOAuth2TokenCacheTest {
@@ -261,7 +262,7 @@ public class MsalOAuth2TokenCacheTest {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
 
-        final AndroidCommonComponents components = new AndroidCommonComponents(mContext);
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(mContext);
         mSharedPreferencesFileManager = components.getEncryptedNameValueStore(
                 "test_prefs",
                 components.getStorageEncryptionManager(),

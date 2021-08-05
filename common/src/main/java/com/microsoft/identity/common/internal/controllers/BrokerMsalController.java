@@ -51,7 +51,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -91,6 +91,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -127,7 +128,7 @@ public class BrokerMsalController extends BaseController {
     private final Context mApplicationContext;
 
     public BrokerMsalController(@NonNull final Context applicationContext) {
-        mComponents = new AndroidPlatformComponents(applicationContext);
+        mComponents = AndroidPlatformComponents.createFromContext(applicationContext);
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
         if (TextUtils.isEmpty(mActiveBrokerPackageName)) {

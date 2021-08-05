@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
@@ -100,10 +101,6 @@ public class MsalOAuth2TokenCache
             GenericAccount,
             GenericRefreshToken> mAccountCredentialAdapter;
 
-    @Getter
-    @Accessors(prefix = "m")
-    private final Context mContext;
-
     /**
      * Constructor of MsalOAuth2TokenCache.
      *
@@ -111,7 +108,7 @@ public class MsalOAuth2TokenCache
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
-    public MsalOAuth2TokenCache(final IPlatformCmponents commonComponents,
+    public MsalOAuth2TokenCache(final IPlatformComponents commonComponents,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<
                                         GenericOAuth2Strategy,
@@ -119,7 +116,7 @@ public class MsalOAuth2TokenCache
                                         GenericTokenResponse,
                                         GenericAccount,
                                         GenericRefreshToken> accountCredentialAdapter) {
-        mContext = context;
+        super(commonComponents);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mAccountCredentialAdapter = accountCredentialAdapter;
@@ -140,7 +137,7 @@ public class MsalOAuth2TokenCache
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> create(@NonNull final Context context) {
-        return create(new AndroidCommonComponents(context));
+        return create(AndroidPlatformComponents.createFromContext(context));
     }
 
     /**
@@ -148,7 +145,7 @@ public class MsalOAuth2TokenCache
      * <p>
      * NOTE: Currently this is configured for AAD v2 as the only IDP
      *
-     * @param context The Application Context
+     * @param components The platform components
      * @return An instance of the MsalOAuth2TokenCache.
      */
     public static MsalOAuth2TokenCache<

@@ -32,7 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -79,7 +79,7 @@ public class HelloCache {
     public HelloCache(final @NonNull Context context,
                       final @NonNull String protocolName,
                       final @NonNull String targetAppPackageName,
-                      final @NonNull ICommonComponents components) {
+                      final @NonNull IPlatformComponents components) {
         mFileManager = components.getNameValueStore(SHARED_PREFERENCE_NAME, String.class);
         mContext = context;
         mProtocolName = protocolName;

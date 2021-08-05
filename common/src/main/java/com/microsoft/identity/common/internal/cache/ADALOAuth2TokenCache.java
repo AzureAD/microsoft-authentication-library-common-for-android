@@ -90,17 +90,13 @@ public class ADALOAuth2TokenCache
 
     private List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> mSharedSSOCaches;
 
-    @Getter
-    @Accessors(prefix = "m")
-    private final Context mContext;
-
     /**
      * Constructor of ADALOAuth2TokenCache.
      *
      * @param context Context
      */
     public ADALOAuth2TokenCache(final Context context) {
-        mContext = context;
+        super(AndroidPlatformComponents.createFromContext(context));
         Logger.verbose(TAG, "Init: " + TAG);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
@@ -115,7 +111,7 @@ public class ADALOAuth2TokenCache
      */
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> sharedSSOCaches) {
-        mContext = context;
+        super(AndroidPlatformComponents.createFromContext(context));
         Logger.verbose(TAG, "Init: " + TAG);
         Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
         validateSecretKeySetting();

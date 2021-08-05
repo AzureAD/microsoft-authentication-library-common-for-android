@@ -121,7 +121,7 @@ public class DefaultSharedPrefsFileManagerReencrypterTest {
     @Before
     public void setUp() {
         mContext = InstrumentationRegistry.getTargetContext();
-        mTestCacheFile = new AndroidCommonComponents(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
+        mTestCacheFile = AndroidPlatformComponents.createFromContext(mContext).getNameValueStore(TEST_CACHE_FILENAME, String.class);
         mFileManagerReencrypter = new DefaultSharedPrefsFileManagerReencrypter();
         try {
             final byte[] mockKey = generateLegacyFormatKey("abcdedfdfd");

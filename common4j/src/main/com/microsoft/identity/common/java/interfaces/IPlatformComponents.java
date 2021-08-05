@@ -35,6 +35,7 @@ import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.strategies.IAuthorizationStrategyFactory;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**

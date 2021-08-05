@@ -28,7 +28,6 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
@@ -39,6 +38,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+
+import lombok.AllArgsConstructor;
 
 /**
  * A simple metadata store definition that uses INameValueStorage to persist, read,
@@ -74,7 +75,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     public NameValueStorageFileManagerSimpleCacheImpl(@NonNull final IPlatformComponents components,
                                                       @NonNull final String name,
                                                       @NonNull final String singleKey) {
-        this(components.getNameValueStorage(name),
+        this(components.getNameValueStore(name, String.class),
                 singleKey,
                 false
         );
@@ -94,7 +95,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
                                                       @NonNull final String name,
                                                       @NonNull final String singleKey,
                                                       final boolean forceReinsertionOfDuplicates) {
-        this(components.getNameValueStorage(name),
+        this(components.getNameValueStore(name, String.class),
                 singleKey,
                 forceReinsertionOfDuplicates
         );

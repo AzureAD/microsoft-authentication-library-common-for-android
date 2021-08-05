@@ -22,53 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
-import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
-import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
-import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
-import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
-import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.dto.Credential;
-import com.microsoft.identity.common.java.dto.CredentialType;
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
-import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.api.mockito.PowerMockito;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
 import static com.microsoft.identity.common.MicrosoftStsAccountCredentialAdapterTest.MOCK_ID_TOKEN_WITH_CLAIMS;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.BEARER_AUTHENTICATION_SCHEME;
 import static com.microsoft.identity.common.SharedPreferencesAccountCredentialCacheTest.CACHED_AT;
@@ -92,7 +45,48 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
-@SuppressWarnings("rawtypes")
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
+import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
+import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
+import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.powermock.api.mockito.PowerMockito;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@SuppressWarnings({"rawtypes", "unchecked"})
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
 public class BrokerOAuth2TokenCacheTest {
@@ -100,7 +94,7 @@ public class BrokerOAuth2TokenCacheTest {
     private static final int TEST_APP_UID = 1337;
 
     private Context mContext;
-    private ICommonComponents<Context> mCommonComponents;
+    private IPlatformComponents mPlatformComponents;
 
     private MicrosoftStsOAuth2Strategy mockStrategy;
     private MicrosoftStsAuthorizationRequest mockRequest;
@@ -131,12 +125,12 @@ public class BrokerOAuth2TokenCacheTest {
         mMockCredentialAdapter = PowerMockito.mock(IAccountCredentialAdapter.class);
 
         mContext = ApplicationProvider.getApplicationContext();
-        mCommonComponents = new AndroidCommonComponents(mContext);
+        mPlatformComponents = AndroidPlatformComponents.createFromContext(mContext);
 
         mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mContext);
 
-        initFociCache(mCommonComponents);
-        initOtherCaches(mCommonComponents);
+        initFociCache(mPlatformComponents);
+        initOtherCaches(mPlatformComponents);
 
         mBrokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 mContext,
@@ -144,7 +138,7 @@ public class BrokerOAuth2TokenCacheTest {
                 mApplicationMetadataCache,
                 new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
                     @Override
-                    public MsalOAuth2TokenCache getTokenCache(final ICommonComponents context,
+                    public MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context,
                                                               final int bindingProcessUid) {
                         return initAppUidCache(context, bindingProcessUid);
                     }
@@ -233,7 +227,7 @@ public class BrokerOAuth2TokenCacheTest {
         mApplicationMetadataCache.clear();
     }
 
-    private void initOtherCaches(final ICommonComponents<Context> components) {
+    private void initOtherCaches(final IPlatformComponents components) {
         testAppUids = new int[]{
                 1338,
                 1339,
@@ -275,7 +269,7 @@ public class BrokerOAuth2TokenCacheTest {
         return accountCredentialCaches;
     }
 
-    private List<INameValueStorage<String>> getAppUidFileManagers(final ICommonComponents components,
+    private List<INameValueStorage<String>> getAppUidFileManagers(final IPlatformComponents components,
                                                          final int[] testAppUids) {
         final List<INameValueStorage<String>> fileManagers = new ArrayList<>();
 
@@ -291,9 +285,9 @@ public class BrokerOAuth2TokenCacheTest {
         return fileManagers;
     }
 
-    private INameValueStorage<String> getAppUidFileManager(final ICommonComponents components,
+    private INameValueStorage<String> getAppUidFileManager(final IPlatformComponents components,
                                                    final int appUid) {
-        if (!(components instanceof AndroidCommonComponents)) {
+        if (!(components instanceof AndroidPlatformComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
         return components.getEncryptedNameValueStore(
@@ -302,8 +296,8 @@ public class BrokerOAuth2TokenCacheTest {
                 String.class);
     }
 
-    private INameValueStorage getFociFileManager(final ICommonComponents components) {
-        if (!(components instanceof AndroidCommonComponents)) {
+    private INameValueStorage<String> getFociFileManager(final IPlatformComponents components) {
+        if (!(components instanceof AndroidPlatformComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
         return components.getEncryptedNameValueStore(
@@ -322,7 +316,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends MsalOAuth2TokenCache> T getTokenCache(final ICommonComponents components,
+    private <T extends MsalOAuth2TokenCache> T getTokenCache(final IPlatformComponents components,
                                                              final IAccountCredentialCache cache,
                                                              boolean isFoci) {
         return (T) (isFoci ?
@@ -340,8 +334,8 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
 
-    private MsalOAuth2TokenCache initAppUidCache(final ICommonComponents components, final int uid) {
-        if (!(components instanceof AndroidCommonComponents)) {
+    private MsalOAuth2TokenCache initAppUidCache(final IPlatformComponents components, final int uid) {
+        if (!(components instanceof AndroidPlatformComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
 
@@ -355,10 +349,11 @@ public class BrokerOAuth2TokenCacheTest {
         return getTokenCache(components, mAppUidCredentialCache, false);
     }
 
-    private void initFociCache(final ICommonComponents components) {
-        if (!(components instanceof AndroidCommonComponents)) {
+    private void initFociCache(final IPlatformComponents components) {
+        if (!(components instanceof AndroidPlatformComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
+        @SuppressWarnings("unchecked")
         final INameValueStorage<String> fociCacheFileManager = getFociFileManager(components);
 
         mFociCredentialCache = getAccountCredentialCache(fociCacheFileManager);
@@ -411,6 +406,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testKnownClientIdsNonFoci() throws ClientException {
         configureMocksForAppUid();
 
@@ -425,6 +421,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testKnownClientIdsFoci() throws ClientException {
         configureMocksForFoci();
 
@@ -439,6 +436,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testGetFociCacheRecords() throws ClientException {
         configureMocksForFoci();
 
@@ -463,6 +461,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void testGetFociCacheRecordsEmpty() throws ClientException {
         configureMocksForAppUid();
 
@@ -796,7 +795,7 @@ public class BrokerOAuth2TokenCacheTest {
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
                         @Override
-                        public MsalOAuth2TokenCache getTokenCache(ICommonComponents context, int bindingProcessUid) {
+                        public MsalOAuth2TokenCache getTokenCache(IPlatformComponents context, int bindingProcessUid) {
                             return initAppUidCache(context, bindingProcessUid);
                         }
                     },
@@ -866,7 +865,7 @@ public class BrokerOAuth2TokenCacheTest {
                     mApplicationMetadataCache,
                     new BrokerOAuth2TokenCache.ProcessUidCacheFactory() {
                         @Override
-                        public MsalOAuth2TokenCache getTokenCache(ICommonComponents context, int bindingProcessUid) {
+                        public MsalOAuth2TokenCache getTokenCache(IPlatformComponents context, int bindingProcessUid) {
                             return initAppUidCache(context, bindingProcessUid);
                         }
                     },
@@ -895,7 +894,7 @@ public class BrokerOAuth2TokenCacheTest {
         assertEquals(xAppAccounts.size(), xAppAccountsNoParam.size());
 
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
-                mContext,
+                mPlatformComponents,
                 TEST_APP_UID,
                 new NameValueStorageBrokerApplicationMetadataCache(mContext)
         );
@@ -906,7 +905,7 @@ public class BrokerOAuth2TokenCacheTest {
         );
 
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
-                mContext,
+                mPlatformComponents,
                 TEST_APP_UID,
                 new NameValueStorageBrokerApplicationMetadataCache(mContext)
         );
