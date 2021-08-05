@@ -161,7 +161,6 @@ public class BrokerOAuth2TokenCache
          * @return
          */
         MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context, final int bindingProcessUid);
-
     }
 
     /**
@@ -176,14 +175,19 @@ public class BrokerOAuth2TokenCache
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
-       this(AndroidPlatformComponents.createFromContext(context), callingProcessUid, applicationMetadataCache);
+        // This cannot call the other constructors, since they unconditionally initialize
+        // the foci cache, and this one uses the value passed in for testing.
+        super(AndroidPlatformComponents.createFromContext(context));
 
         Logger.verbose(
                 TAG + "ctor",
                 "Init::" + TAG
         );
 
+        mApplicationMetadataCache = applicationMetadataCache;
+        mCallingProcessUid = callingProcessUid;
         mDelegate = delegate;
+        mFociCache = fociCache;
     }
 
     /**
