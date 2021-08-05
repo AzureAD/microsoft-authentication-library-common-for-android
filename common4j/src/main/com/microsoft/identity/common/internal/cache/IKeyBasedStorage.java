@@ -28,7 +28,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Return a key-value store
+ * The interface for a key-value store.  This should
  */
 public interface IKeyBasedStorage {
     /**

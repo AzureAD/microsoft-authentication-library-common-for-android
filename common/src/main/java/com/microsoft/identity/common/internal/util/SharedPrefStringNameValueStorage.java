@@ -24,6 +24,10 @@
 package com.microsoft.identity.common.internal.util;
 
 import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
+
+import java.util.Iterator;
+import java.util.Map;
 
 import lombok.NonNull;
 
@@ -40,7 +44,17 @@ public class SharedPrefStringNameValueStorage extends AbstractSharedPrefNameValu
     public String get(@NonNull String name) { return mManager.getString(name); }
 
     @Override
+    public @NonNull Map<String, String> getAll() {
+        return mManager.getAll();
+    }
+
+    @Override
     public void put(@NonNull String name, String value) {
         mManager.putString(name, value);
+    }
+
+    @Override
+    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
+        return mManager.getAllFilteredByKey(keyFilter);
     }
 }

@@ -29,8 +29,10 @@ import android.os.SystemClock;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashSet;
@@ -57,7 +59,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     private static final String EMTPY_ARRAY = "[]";
     private static final String TIMING_TAG = "execWithTiming";
 
-    private final IKeyBasedStorage mSharedPrefsFileManager;
+    private final INameValueStorage<String> mSharedPrefsFileManager;
     private final String mKeySingleEntry;
     private final boolean mForceReinsertionOfDuplicates;
     private final Gson mGson = new Gson();
@@ -73,7 +75,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final ICommonComponents components,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey) {
-        this(components.getFileStore(prefsName),
+        this(components.getNameValueStore(prefsName, String.class),
                 singleKey,
                 false
         );
@@ -93,7 +95,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey,
                                                        final boolean forceReinsertionOfDuplicates) {
-        this(components.getFileStore(prefsName),
+        this(components.getNameValueStore(prefsName, String.class),
                 singleKey,
                 forceReinsertionOfDuplicates
         );
@@ -111,11 +113,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
     public SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final Context context,
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey) {
-        this(SharedPreferencesFileManager.getSharedPreferences(
-                context,
-                prefsName,
-                null // File is not encrypted
-                ),
+        this(new AndroidCommonComponents(context).getNameValueStore(prefsName, String.class),
                 singleKey,
                 false
         );
@@ -136,11 +134,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
                                                        @NonNull final String prefsName,
                                                        @NonNull final String singleKey,
                                                        final boolean forceReinsertionOfDuplicates) {
-        this(SharedPreferencesFileManager.getSharedPreferences(
-                context,
-                prefsName,
-                null // File is not encrypted
-                ),
+        this(new AndroidCommonComponents(context).getNameValueStore(prefsName, String.class),
                 singleKey,
                 forceReinsertionOfDuplicates
         );
@@ -155,7 +149,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
      * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
      *                                     replaces the existing value with the newly-provided one.
      */
-    protected SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final IKeyBasedStorage sharedPreferencesFileManager,
+    protected SharedPreferencesFileManagerSimpleCacheImpl(@NonNull final INameValueStorage<String> sharedPreferencesFileManager,
                                                        @NonNull final String singleKey,
                                                        final boolean forceReinsertionOfDuplicates) {
         Logger.verbose(TAG + "::ctor", "Init");
@@ -222,7 +216,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
 
                 allMetadata.add(t);
                 final String json = mGson.toJson(allMetadata);
-                mSharedPrefsFileManager.putString(mKeySingleEntry, json);
+                mSharedPrefsFileManager.put(mKeySingleEntry, json);
                 return true;
             }
         });
@@ -241,7 +235,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
                 final Set<T> allMetadata = new HashSet<>(getAll());
                 allMetadata.remove(t);
                 final String json = mGson.toJson(allMetadata);
-                mSharedPrefsFileManager.putString(mKeySingleEntry, json);
+                mSharedPrefsFileManager.put(mKeySingleEntry, json);
                 return true;
             }
         });
@@ -257,7 +251,7 @@ public abstract class SharedPreferencesFileManagerSimpleCacheImpl<T> implements 
 
             @Override
             public List<T> call() {
-                String jsonList = mSharedPrefsFileManager.getString(mKeySingleEntry);
+                String jsonList = mSharedPrefsFileManager.get(mKeySingleEntry);
 
                 if (StringUtil.isEmpty(jsonList)) {
                     jsonList = EMTPY_ARRAY;

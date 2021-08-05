@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.commands;
 
 import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.util.UrlUtils;

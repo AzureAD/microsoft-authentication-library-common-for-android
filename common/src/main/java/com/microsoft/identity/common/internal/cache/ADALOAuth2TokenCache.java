@@ -45,6 +45,7 @@ import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
@@ -71,7 +72,7 @@ import java.util.Set;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
-    private IKeyBasedStorage mISharedPreferencesFileManager;
+    private INameValueStorage<String> mISharedPreferencesFileManager;
 
     static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
@@ -119,9 +120,10 @@ public class ADALOAuth2TokenCache
 
         final ICommonComponents components = getComponents();
         mISharedPreferencesFileManager =
-                components.getEncryptedFileStore(
+                components.getEncryptedNameValueStore(
                         fileName,
-                        components.getStorageEncryptionManager()
+                        components.getStorageEncryptionManager(),
+                        String.class
                 );
     }
 
@@ -375,7 +377,7 @@ public class ADALOAuth2TokenCache
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
         Logger.info(TAG, "Setting item to cache");
         String json = mGson.toJson(cacheItem);
-        mISharedPreferencesFileManager.putString(key, json);
+        mISharedPreferencesFileManager.put(key, json);
     }
 
     private void validateSecretKeySetting() {

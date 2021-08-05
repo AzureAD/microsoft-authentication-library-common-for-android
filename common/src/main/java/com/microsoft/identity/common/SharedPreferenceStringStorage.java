@@ -27,6 +27,10 @@ import android.content.Context;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.util.AbstractSharedPrefNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
+
+import java.util.Iterator;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
@@ -49,6 +53,15 @@ public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueSt
     @Override
     public String get(@NonNull String name) {
         return mManager.getString(name);
+    }
+
+    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyPredicate) {
+        return mManager.getAllFilteredByKey(keyPredicate);
+    }
+
+    @Override
+    public @NonNull Map<String, String> getAll() {
+        return mManager.getAll();
     }
 
     @Override

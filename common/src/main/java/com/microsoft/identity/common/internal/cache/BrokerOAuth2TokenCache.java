@@ -31,6 +31,7 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
@@ -1600,12 +1601,13 @@ public class BrokerOAuth2TokenCache
             return mDelegate.getTokenCache(components, bindingProcessUid);
         }
 
-        final IKeyBasedStorage sharedPreferencesFileManager =
-                components.getEncryptedFileStore(
+        final INameValueStorage<String> sharedPreferencesFileManager =
+                components.getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
                         components.
-                                getStorageEncryptionManager()
+                                getStorageEncryptionManager(),
+                        String.class
                 );
 
         return getTokenCache(components, sharedPreferencesFileManager, false);
@@ -1618,11 +1620,11 @@ public class BrokerOAuth2TokenCache
                 "Initializing foci cache"
         );
 
-        final IKeyBasedStorage sharedPreferencesFileManager =
-                components.getEncryptedFileStore(
+        final INameValueStorage<String> sharedPreferencesFileManager =
+                components.getEncryptedNameValueStore(
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        components.
-                                getStorageEncryptionManager()
+                        components.getStorageEncryptionManager(),
+                        String.class
                 );
 
         return getTokenCache(components, sharedPreferencesFileManager, true);
@@ -1630,7 +1632,7 @@ public class BrokerOAuth2TokenCache
 
     @SuppressWarnings(UNCHECKED)
     private static <T extends MsalOAuth2TokenCache> T getTokenCache(@NonNull final ICommonComponents components,
-                                                                    @NonNull final IKeyBasedStorage spfm,
+                                                                    @NonNull final INameValueStorage<String> spfm,
                                                                     boolean isFoci) {
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final IAccountCredentialCache accountCredentialCache =

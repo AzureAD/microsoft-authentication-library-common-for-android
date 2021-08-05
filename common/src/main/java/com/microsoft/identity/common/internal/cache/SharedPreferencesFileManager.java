@@ -256,6 +256,11 @@ public class SharedPreferencesFileManager implements IKeyBasedStorage {
                 nextEntry = null;
                 return tmp;
             }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Removal is not supported");
+            }
         };
     }
 

@@ -40,6 +40,7 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
 
 import org.junit.After;
@@ -92,15 +93,16 @@ public class SharedPreferencesAccountCredentialCacheTest {
 
     private SharedPreferencesAccountCredentialCache mSharedPreferencesAccountCredentialCache;
     private CacheKeyValueDelegate mDelegate;
-    private IKeyBasedStorage mSharedPreferencesFileManager;
+    private INameValueStorage<String> mSharedPreferencesFileManager;
 
     @Before
     public void setUp() throws Exception {
         final Context testContext = ApplicationProvider.getApplicationContext();
         mDelegate = new CacheKeyValueDelegate();
-        mSharedPreferencesFileManager = new AndroidCommonComponents(testContext).getEncryptedFileStore(
+        mSharedPreferencesFileManager = new AndroidCommonComponents(testContext).getEncryptedNameValueStore(
                 sAccountCredentialSharedPreferences,
-                new AndroidAuthSdkStorageEncryptionManager(testContext, null) // Use encrypted storage for tests...
+                new AndroidCommonComponents(testContext).getStorageEncryptionManager(), // Use encrypted storage for tests...
+                String.class
         );
         mSharedPreferencesAccountCredentialCache = new SharedPreferencesAccountCredentialCache(
                 mDelegate,
@@ -1722,11 +1724,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(account);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an account\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" \"not an account\"}");
 
         final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
-        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1739,11 +1741,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(account);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an account\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an account\"}");
 
         final AccountRecord malformedAccount = mSharedPreferencesAccountCredentialCache.getAccount(cacheKey);
         assertNull(malformedAccount);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1757,11 +1759,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(accessToken);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not an accessToken\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" \"not an accessToken\"}");
 
         final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
-        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1775,11 +1777,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(accessToken);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an accessToken\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an accessToken\"}");
 
         final AccessTokenRecord malformedAccessToken = (AccessTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedAccessToken);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1793,11 +1795,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(refreshToken);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" \"not a refreshToken\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" \"not a refreshToken\"}");
 
         final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
-        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1811,11 +1813,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(refreshToken);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not a refreshToken\"}");
 
         final RefreshTokenRecord malformedRefreshToken = (RefreshTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(malformedRefreshToken);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1829,11 +1831,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(idToken);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\"  \"not an idToken\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\"  \"not an idToken\"}");
 
         final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
-        assertNotNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNotNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test
@@ -1847,11 +1849,11 @@ public class SharedPreferencesAccountCredentialCacheTest {
         // Generate a cache key
         final String cacheKey = mDelegate.generateCacheKey(idToken);
 
-        mSharedPreferencesFileManager.putString(cacheKey, "{\"thing\" : \"not an idToken\"}");
+        mSharedPreferencesFileManager.put(cacheKey, "{\"thing\" : \"not an idToken\"}");
 
         final IdTokenRecord restoredIdToken = (IdTokenRecord) mSharedPreferencesAccountCredentialCache.getCredential(cacheKey);
         assertNull(restoredIdToken);
-        assertNull(mSharedPreferencesFileManager.getString(cacheKey));
+        assertNull(mSharedPreferencesFileManager.get(cacheKey));
     }
 
     @Test

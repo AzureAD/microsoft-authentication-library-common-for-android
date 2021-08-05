@@ -33,6 +33,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -50,7 +51,7 @@ public class HelloCache {
 
     private static final String SHARED_PREFERENCE_NAME = "com.microsoft.common.ipc.hello.cache";
 
-    private final IKeyBasedStorage mFileManager;
+    private final INameValueStorage<String> mFileManager;
     private final Context mContext;
     private final String mProtocolName;
     private final String mTargetAppPackageName;
@@ -79,7 +80,7 @@ public class HelloCache {
                       final @NonNull String protocolName,
                       final @NonNull String targetAppPackageName,
                       final @NonNull ICommonComponents components) {
-        mFileManager = components.getFileStore(SHARED_PREFERENCE_NAME);
+        mFileManager = components.getNameValueStore(SHARED_PREFERENCE_NAME, String.class);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;
@@ -108,7 +109,7 @@ public class HelloCache {
             return null;
         }
 
-        return mFileManager.getString(key);
+        return mFileManager.get(key);
     }
 
     /**
@@ -136,7 +137,7 @@ public class HelloCache {
             return;
         }
 
-        mFileManager.putString(key, negotiatedProtocolVersion);
+        mFileManager.put(key, negotiatedProtocolVersion);
     }
 
     /**

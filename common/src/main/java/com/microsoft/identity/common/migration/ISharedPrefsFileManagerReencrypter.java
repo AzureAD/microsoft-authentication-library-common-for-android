@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.migration;
 
 import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 
 /**
@@ -108,12 +109,12 @@ public interface ISharedPrefsFileManagerReencrypter {
      * this API are advised to ensure the designated store is not mutated during the reencryption
      * process otherwise undefined behavior/results may occur.
      *
-     * @param fileManager The {@link IKeyBasedStorage} to reencrypt.
+     * @param fileManager The {@link INameValueStorage<String>} to reencrypt.
      * @param encrypter   The delegate object to handle reencryption.
      * @param decrypter   The delegate object to handle decryption of the existing data.
      * @param params      Params to control error handling behavior.
      */
-    IMigrationOperationResult reencrypt(IKeyBasedStorage fileManager,
+    IMigrationOperationResult reencrypt(INameValueStorage<String> fileManager,
                                         IStringEncrypter encrypter,
                                         IStringDecrypter decrypter,
                                         ReencryptionParams params
@@ -134,7 +135,7 @@ public interface ISharedPrefsFileManagerReencrypter {
      * @param params      Params to control error handling behavior.
      * @param callback    Callback to receive any error/completion callbacks.
      */
-    void reencryptAsync(IKeyBasedStorage fileManager,
+    void reencryptAsync(INameValueStorage<String> fileManager,
                         IStringEncrypter encrypter,
                         IStringDecrypter decrypter,
                         ReencryptionParams params,

@@ -44,6 +44,7 @@ import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerAppli
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
@@ -236,7 +237,7 @@ public class BrokerOAuth2TokenCacheTest {
                 1341
         };
 
-        final List<IKeyBasedStorage> fileManagers = getAppUidFileManagers(
+        final List<INameValueStorage<String>> fileManagers = getAppUidFileManagers(
                 components,
                 testAppUids
         );
@@ -258,10 +259,10 @@ public class BrokerOAuth2TokenCacheTest {
         }
     }
 
-    private List<IAccountCredentialCache> getAccountCredentialCaches(final List<IKeyBasedStorage> fileManagers) {
+    private List<IAccountCredentialCache> getAccountCredentialCaches(final List<INameValueStorage<String>> fileManagers) {
         final List<IAccountCredentialCache> accountCredentialCaches = new ArrayList<>();
 
-        for (final IKeyBasedStorage fileManager : fileManagers) {
+        for (final INameValueStorage<String> fileManager : fileManagers) {
             accountCredentialCaches.add(
                     getAccountCredentialCache(fileManager)
             );
@@ -270,9 +271,9 @@ public class BrokerOAuth2TokenCacheTest {
         return accountCredentialCaches;
     }
 
-    private List<IKeyBasedStorage> getAppUidFileManagers(final ICommonComponents components,
+    private List<INameValueStorage<String>> getAppUidFileManagers(final ICommonComponents components,
                                                          final int[] testAppUids) {
-        final List<IKeyBasedStorage> fileManagers = new ArrayList<>();
+        final List<INameValueStorage<String>> fileManagers = new ArrayList<>();
 
         for (final int currentAppUid : testAppUids) {
             fileManagers.add(
@@ -286,28 +287,30 @@ public class BrokerOAuth2TokenCacheTest {
         return fileManagers;
     }
 
-    private IKeyBasedStorage getAppUidFileManager(final ICommonComponents components,
-                                                  final int appUid) {
+    private INameValueStorage<String> getAppUidFileManager(final ICommonComponents components,
+                                                   final int appUid) {
         if (!(components instanceof AndroidCommonComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
-        return components.getEncryptedFileStore(
+        return components.getEncryptedNameValueStore(
                 getBrokerUidSequesteredFilename(appUid),
-                components.getStorageEncryptionManager());
+                components.getStorageEncryptionManager(),
+                String.class);
     }
 
-    private IKeyBasedStorage getFociFileManager(final ICommonComponents components) {
+    private INameValueStorage getFociFileManager(final ICommonComponents components) {
         if (!(components instanceof AndroidCommonComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
-        return components.getEncryptedFileStore(
+        return components.getEncryptedNameValueStore(
                 BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                components.getStorageEncryptionManager()
+                components.getStorageEncryptionManager(),
+                String.class
         );
     }
 
     private SharedPreferencesAccountCredentialCache getAccountCredentialCache(
-            final IKeyBasedStorage fm) {
+            final INameValueStorage<String> fm) {
         return new SharedPreferencesAccountCredentialCache(
                 new CacheKeyValueDelegate(),
                 fm
@@ -338,7 +341,7 @@ public class BrokerOAuth2TokenCacheTest {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
 
-        final IKeyBasedStorage appUidCacheFileManager = getAppUidFileManager(
+        final INameValueStorage<String> appUidCacheFileManager = getAppUidFileManager(
                 components,
                 uid
         );
@@ -352,7 +355,7 @@ public class BrokerOAuth2TokenCacheTest {
         if (!(components instanceof AndroidCommonComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }
-        final IKeyBasedStorage fociCacheFileManager = getFociFileManager(components);
+        final INameValueStorage<String> fociCacheFileManager = getFociFileManager(components);
 
         mFociCredentialCache = getAccountCredentialCache(fociCacheFileManager);
 

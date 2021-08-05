@@ -45,6 +45,7 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -104,7 +105,7 @@ public class MsalOAuth2TokenCacheTest {
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> mOauth2TokenCache;
-    private IKeyBasedStorage mSharedPreferencesFileManager;
+    private INameValueStorage<String> mSharedPreferencesFileManager;
 
     MicrosoftStsOAuth2Strategy mockStrategy;
 
@@ -261,9 +262,10 @@ public class MsalOAuth2TokenCacheTest {
         mContext = ApplicationProvider.getApplicationContext();
 
         final AndroidCommonComponents components = new AndroidCommonComponents(mContext);
-        mSharedPreferencesFileManager = components.getEncryptedFileStore(
+        mSharedPreferencesFileManager = components.getEncryptedNameValueStore(
                 "test_prefs",
-                new AndroidAuthSdkStorageEncryptionManager(mContext, null)
+                components.getStorageEncryptionManager(),
+                String.class
         );
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();
@@ -314,7 +316,7 @@ public class MsalOAuth2TokenCacheTest {
     @Test
     public void saveTokensWithMalformedDataInCache() throws Exception {
         // Prepopulate the cache with unparseable, junk data
-        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+        mSharedPreferencesFileManager.put(JUNK_KEY, JUNK_VALUE);
 
         mOauth2TokenCache.save(
                 mockStrategy,
@@ -340,7 +342,7 @@ public class MsalOAuth2TokenCacheTest {
         assertEquals(defaultTestBundleV2.mGeneratedIdToken, ids.get(0));
 
         // Verify that our junk data still exists
-        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.get(JUNK_KEY));
     }
 
     @Test
@@ -353,7 +355,7 @@ public class MsalOAuth2TokenCacheTest {
         );
 
         // Then insert unparseable, junk data
-        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+        mSharedPreferencesFileManager.put(JUNK_KEY, JUNK_VALUE);
 
         final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
@@ -371,7 +373,7 @@ public class MsalOAuth2TokenCacheTest {
         validateResultListContents(rts, ats, ids);
 
         // Verify that our junk data still exists
-        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.get(JUNK_KEY));
     }
 
     private void validateResultListContents(List<Credential> rts, List<Credential> ats, List<Credential> ids) {
@@ -437,7 +439,7 @@ public class MsalOAuth2TokenCacheTest {
     @Test
     public void saveTokensWithAggregationSingleEntryWithMalformedDataInCache() throws ClientException {
         // Prepopulate the cache with unparseable, junk data
-        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+        mSharedPreferencesFileManager.put(JUNK_KEY, JUNK_VALUE);
 
         final List<ICacheRecord> result = loadTestBundleIntoCacheWithAggregation(
                 defaultTestBundleV2
@@ -453,7 +455,7 @@ public class MsalOAuth2TokenCacheTest {
         assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, entry.getRefreshToken());
 
         // Verify that our junk data still exists
-        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.get(JUNK_KEY));
     }
 
     @Test
