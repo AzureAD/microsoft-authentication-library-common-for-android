@@ -33,6 +33,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
@@ -45,6 +46,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 @Getter
 @Accessors(prefix = "m")
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@EqualsAndHashCode
 public class AndroidBrokerAccount implements IBrokerAccount {
     private static final String TAG = AndroidBrokerAccount.class.getSimpleName();
 
@@ -81,9 +83,9 @@ public class AndroidBrokerAccount implements IBrokerAccount {
     }
 
     @NonNull
-    public static AndroidBrokerAccount adapt(@NonNull final AccountManager accountManager,
-                                             @NonNull final String accountName,
-                                             @NonNull final String accountType) {
+    public static AndroidBrokerAccount create(@NonNull final AccountManager accountManager,
+                                              @NonNull final String accountName,
+                                              @NonNull final String accountType) {
         final String methodName = ":create";
 
         Account account = getAccount(accountManager, accountName, accountType);

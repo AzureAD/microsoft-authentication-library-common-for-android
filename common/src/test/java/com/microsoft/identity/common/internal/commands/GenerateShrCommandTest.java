@@ -22,20 +22,26 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
+import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.util.UrlUtils;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+@RunWith(RobolectricTestRunner.class)
 public class GenerateShrCommandTest {
 
     private static final CommandCallback EMPTY_CALLBACK = new CommandCallback() {
@@ -45,11 +51,12 @@ public class GenerateShrCommandTest {
     };
 
     public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .url(UrlUtil.makeUrlSilent("https://url"))
                     .nonce("one")
                     .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
@@ -61,11 +68,12 @@ public class GenerateShrCommandTest {
             .controllers(Collections.<BaseController>emptyList())
             .build();
     public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .url(UrlUtil.makeUrlSilent("https://url"))
                     .nonce("one")
                     .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
@@ -77,11 +85,12 @@ public class GenerateShrCommandTest {
             .controllers(Collections.<BaseController>emptyList())
             .build();
     public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .url(UrlUtil.makeUrlSilent("https://url"))
                     .nonce("two")
                     .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
@@ -104,11 +113,12 @@ public class GenerateShrCommandTest {
                 .build();
 
         GenerateShrCommandParameters paramsTwo = GenerateShrCommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
                 .homeAccountId("One")
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(UrlUtils.makeUrlSilent("https://url"))
+                        .url(UrlUtil.makeUrlSilent("https://url"))
                         .nonce("two")
                         .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                         .build())

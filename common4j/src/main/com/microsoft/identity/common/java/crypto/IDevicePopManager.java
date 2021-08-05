@@ -123,29 +123,6 @@ public interface IDevicePopManager {
                 // https://issuetracker.google.com/issues/37075898#comment7
                 return new OAEPParameterSpec("SHA-256", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
-        },
-
-        //@RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding") {
-
-            @Override
-            public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
-                // android platform support.  See:
-                // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-384", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
-            }
-        },
-
-        //@RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding") {
-            @Override
-            public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
-                // android platform support.  See:
-                // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-512", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
-            }
         };
 
         private final String mValue;

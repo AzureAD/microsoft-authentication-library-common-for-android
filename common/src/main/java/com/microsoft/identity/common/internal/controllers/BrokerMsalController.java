@@ -22,73 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.ActivityNotFoundException;
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import com.microsoft.identity.common.AndroidCommonComponents;
-import com.microsoft.identity.common.PropertyBagUtil;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.internal.broker.BrokerActivity;
-import com.microsoft.identity.common.internal.broker.BrokerResult;
-import com.microsoft.identity.common.internal.broker.BrokerValidator;
-import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
-import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
-import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
-import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.cache.HelloCache;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
-import com.microsoft.identity.common.java.providers.oauth2.IDToken;
-import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
-import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
-import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.internal.ui.browser.Browser;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
-import com.microsoft.identity.common.internal.util.AccountManagerUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.util.ResultFuture;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.logging.Logger;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import lombok.EqualsAndHashCode;
-
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_NAME;
@@ -106,6 +39,74 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBr
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 
+import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Bundle;
+import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
+
+import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.internal.broker.BrokerActivity;
+import com.microsoft.identity.common.internal.broker.BrokerResult;
+import com.microsoft.identity.common.internal.broker.BrokerValidator;
+import com.microsoft.identity.common.internal.broker.MicrosoftAuthClient;
+import com.microsoft.identity.common.internal.broker.ipc.AccountManagerAddAccountStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.BoundServiceStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
+import com.microsoft.identity.common.internal.broker.ipc.ContentProviderStrategy;
+import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.internal.cache.HelloCache;
+import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
+import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
+import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
+import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
+import com.microsoft.identity.common.internal.ui.browser.Browser;
+import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.internal.util.AccountManagerUtil;
+import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
+import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
+import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.logging.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import lombok.EqualsAndHashCode;
+
 /**
  * The implementation of MSAL Controller for Broker.
  */
@@ -118,14 +119,15 @@ public class BrokerMsalController extends BaseController {
     protected final MsalBrokerResultAdapter mResultAdapter = new MsalBrokerResultAdapter();
 
     private ResultFuture<Bundle> mBrokerResultFuture;
-    private final Context mApplicationContext;
     private final String mActiveBrokerPackageName;
     private final BrokerOperationExecutor mBrokerOperationExecutor;
     private final HelloCache mHelloCache;
-    private final ICommonComponents mComponents;
+    private final IPlatformComponents mComponents;
 
-    public BrokerMsalController(final Context applicationContext) {
-        mComponents = new AndroidCommonComponents(applicationContext);
+    private final Context mApplicationContext;
+
+    public BrokerMsalController(@NonNull final Context applicationContext) {
+        mComponents = new AndroidPlatformComponents(applicationContext);
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
         if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
@@ -252,8 +254,13 @@ public class BrokerMsalController extends BaseController {
         //Get the broker interactive parameters intent
         final Intent interactiveRequestIntent = getBrokerAuthorizationIntent(parameters);
 
+        Activity activity = null;
+        if (parameters instanceof AndroidActivityInteractiveTokenCommandParameters){
+            activity = ((AndroidActivityInteractiveTokenCommandParameters)parameters).getActivity();
+        }
+
         //Pass this intent to the BrokerActivity which will be used to start this activity
-        final Intent brokerActivityIntent = new Intent(parameters.getAndroidApplicationContext(), BrokerActivity.class);
+        final Intent brokerActivityIntent = new Intent(mApplicationContext, BrokerActivity.class);
         brokerActivityIntent.putExtra(BrokerActivity.BROKER_INTENT, interactiveRequestIntent);
 
         LocalBroadcaster.INSTANCE.registerCallback(RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT,
@@ -275,8 +282,8 @@ public class BrokerMsalController extends BaseController {
                 Telemetry.emit(
                         new ApiStartEvent()
                                 .putApiId(TelemetryEventStrings.Api.BROKER_COMPLETE_ACQUIRE_TOKEN_INTERACTIVE)
-                                .put(TelemetryEventStrings.Key.REQUEST_CODE, String.valueOf(propertyBag.get(REQUEST_CODE)))
-                                .put(TelemetryEventStrings.Key.RESULT_CODE, String.valueOf(propertyBag.get(RESULT_CODE)))
+                                .put(TelemetryEventStrings.Key.REQUEST_CODE, propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1).toString())
+                                .put(TelemetryEventStrings.Key.RESULT_CODE, propertyBag.<Integer>getOrDefault(RESULT_CODE, -1).toString())
                 );
 
                 mBrokerResultFuture.setResult(PropertyBagUtil.toBundle(propertyBag));
@@ -290,14 +297,14 @@ public class BrokerMsalController extends BaseController {
             }
         });
 
-        if (null == parameters.getActivity()) {
+        if (null == activity) {
             // To support calling from OneAuth-MSAL, which may be initialized without an Activity
             // add Flags to start as a NEW_TASK if we are launching from an application Context
             brokerActivityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             mApplicationContext.startActivity(brokerActivityIntent);
         } else {
             // Start the BrokerActivity using our existing Activity
-            parameters.getActivity().startActivity(brokerActivityIntent);
+            activity.startActivity(brokerActivityIntent);
         }
 
         final AcquireTokenResult result;
@@ -421,6 +428,7 @@ public class BrokerMsalController extends BaseController {
                         return new BrokerOperationBundle(MSAL_ACQUIRE_TOKEN_SILENT,
                                 mActiveBrokerPackageName,
                                 mRequestAdapter.getRequestBundleForAcquireTokenSilent(
+                                        mApplicationContext,
                                         parameters,
                                         negotiatedBrokerProtocolVersion
                                 ));

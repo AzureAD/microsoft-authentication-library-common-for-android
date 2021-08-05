@@ -32,6 +32,10 @@ import java.net.URISyntaxException;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.microsoft.identity.common.java.authorities.AllAccounts;
+import com.microsoft.identity.common.java.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
+
 @RunWith(RobolectricTestRunner.class)
 public class AzureActiveDirectoryAuthorityTests {
     @Test
@@ -40,7 +44,7 @@ public class AzureActiveDirectoryAuthorityTests {
         final String[] cloudAliasesCN = new String[]{"https://login.chinacloudapi.cn", "https://login.partner.microsoftonline.cn"};
         final String[] cloudAliasesUSGov = new String[]{"https://login.microsoftonline.us", "https://login.usgovcloudapi.net"};
 
-        final  AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesWW[0]));
+        final AzureActiveDirectoryAuthority authorityWW = new AzureActiveDirectoryAuthority(new AllAccounts(cloudAliasesWW[0]));
         for (final  String cloudUrl : cloudAliasesWW) {
             final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(new AnyOrganizationalAccount(cloudUrl));
             assertTrue(authorityWW.isSameCloudAsAuthority(authority));

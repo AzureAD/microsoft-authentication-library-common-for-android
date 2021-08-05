@@ -28,8 +28,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
+import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
@@ -41,6 +42,7 @@ import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCa
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -49,6 +51,8 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
@@ -129,7 +133,7 @@ public class BrokerOAuth2TokenCacheTest {
         mContext = ApplicationProvider.getApplicationContext();
         mCommonComponents = new AndroidCommonComponents(mContext);
 
-        mApplicationMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(mContext);
+        mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mContext);
 
         initFociCache(mCommonComponents);
         initOtherCaches(mCommonComponents);
@@ -893,7 +897,7 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 mContext,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(mContext)
+                new NameValueStorageBrokerApplicationMetadataCache(mContext)
         );
 
         assertEquals(
@@ -904,7 +908,7 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
                 mContext,
                 TEST_APP_UID,
-                new SharedPreferencesBrokerApplicationMetadataCache(mContext)
+                new NameValueStorageBrokerApplicationMetadataCache(mContext)
         );
 
         assertEquals(

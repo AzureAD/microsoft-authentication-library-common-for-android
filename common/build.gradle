@@ -37,17 +37,6 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    def sliceParameter = "" // will be blank unless specified by developer
-    def dcParameter = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("slice")) {
-        sliceParameter = slice
-    }
-
-    if (project.hasProperty("dc")) {
-        dcParameter = dc
-    }
-
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
@@ -57,8 +46,6 @@ android {
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "SLICE", "\"$sliceParameter\"")
-        buildConfigField("String", "DC", "\"$dcParameter\"")
     }
 
     buildTypes {

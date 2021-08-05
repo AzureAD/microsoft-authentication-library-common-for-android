@@ -31,6 +31,7 @@ import com.google.gson.Gson;
 import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.interfaces.ICommonComponents;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.CredentialType;
 

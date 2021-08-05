@@ -24,8 +24,8 @@ package com.microsoft.identity.internal.testutils.authorities;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.authorities.AnyOrganizationalAccount;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.java.authorities.AnyOrganizationalAccount;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;

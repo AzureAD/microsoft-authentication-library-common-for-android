@@ -22,8 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import java.util.ArrayList;
 import java.util.List;
