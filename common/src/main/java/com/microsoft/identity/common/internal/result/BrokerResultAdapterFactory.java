@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.result;
 
-import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.java.request.SdkType;
 
 /**
  * Class which returns creates {@link IBrokerResultAdapter }  based on {@link SdkType}

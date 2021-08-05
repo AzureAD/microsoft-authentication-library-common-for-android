@@ -22,14 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.AndroidCommonComponents;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;

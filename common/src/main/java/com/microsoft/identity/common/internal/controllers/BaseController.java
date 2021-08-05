@@ -22,33 +22,22 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
+import static com.microsoft.identity.common.java.authorities.Authority.B2C;
+
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.adal.internal.net.HttpWebRequest;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAudience;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
-import com.microsoft.identity.common.internal.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
-import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter;
-import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
@@ -56,9 +45,17 @@ import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAudience;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.ITokenAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
@@ -73,17 +70,21 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ResultUtil;
 import com.microsoft.identity.common.java.util.SchemaUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.logging.DiagnosticContext;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -95,11 +96,6 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 
 import lombok.EqualsAndHashCode;
-
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
-import static com.microsoft.identity.common.internal.authorities.Authority.B2C;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {
@@ -173,7 +169,7 @@ public abstract class BaseController {
         UUID correlationId = null;
 
         try {
-            correlationId = UUID.fromString(DiagnosticContext.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
+            correlationId = UUID.fromString(DiagnosticContext.INSTANCE.getRequestContext().get(DiagnosticContext.CORRELATION_ID));
         } catch (IllegalArgumentException ex) {
             Logger.error(TAG, "correlation id from diagnostic context is not a UUID", ex);
         }
@@ -197,7 +193,7 @@ public abstract class BaseController {
                     ((MicrosoftStsAuthorizationRequest.Builder) builder)
                             .setAuthority(requestAuthority.getAuthorityURL())
                             .setMultipleCloudAware(requestAuthority.mMultipleCloudsSupported)
-                            .setState(new AndroidTaskStateGenerator(interactiveTokenCommandParameters.getActivity().getTaskId()).generate())
+                            .setState(interactiveTokenCommandParameters.getPlatformComponents().getStateGenerator().generate())
                             .setSlice(requestAuthority.mSlice);
                 }
             }
@@ -261,12 +257,11 @@ public abstract class BaseController {
                     interactiveTokenCommandParameters.getPrompt().toString()
             );
 
-            try {
-                final PackageInfo packageInfo =
-                        parameters.getAndroidApplicationContext().getPackageManager().getPackageInfo(COMPANY_PORTAL_APP_PACKAGE_NAME, 0);
-                msBuilder.setInstalledCompanyPortalVersion(packageInfo.versionName);
-            } catch (final PackageManager.NameNotFoundException e) {
-                // CP is not installed. No need to do anything.
+            final String installedCompanyPortalVersion =
+                    parameters.getPlatformComponents().getPlatformUtil().getInstalledCompanyPortalVersion();
+
+            if (!StringUtil.isNullOrEmpty(installedCompanyPortalVersion)){
+                msBuilder.setInstalledCompanyPortalVersion(installedCompanyPortalVersion);
             }
         }
     }
@@ -286,10 +281,10 @@ public abstract class BaseController {
                                               @NonNull final InteractiveTokenCommandParameters parameters)
             throws IOException, ClientException {
         final String methodName = ":performTokenRequest";
-        HttpWebRequest.throwIfNetworkNotAvailable(
-                parameters.getAndroidApplicationContext(),
-                parameters.isPowerOptCheckEnabled()
-        );
+
+        parameters.getPlatformComponents()
+                .getPlatformUtil()
+                .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
         // Suppressing unchecked warnings due to casting of type AuthorizationRequest to GenericAuthorizationRequest and AuthorizationResponse to GenericAuthorizationResponse in arguments of method call to createTokenRequest
         @SuppressWarnings(WarningType.unchecked_warning) final TokenRequest tokenRequest = strategy.createTokenRequest(
@@ -307,12 +302,12 @@ public abstract class BaseController {
             ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters) parameters).getExtraParameters());
         }
 
-        logExposedFieldsOfObject(TAG + methodName, tokenRequest);
+        ResultUtil.logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
         @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult = strategy.requestToken(tokenRequest);
 
-        logResult(TAG, tokenResult);
+        ResultUtil.logResult(TAG, tokenResult);
 
         return tokenResult;
     }
@@ -341,7 +336,7 @@ public abstract class BaseController {
 
         acquireTokenSilentResult.setTokenResult(tokenResult);
 
-        logResult(TAG + methodName, tokenResult);
+        ResultUtil.logResult(TAG + methodName, tokenResult);
 
         if (tokenResult.getSuccess()) {
             Logger.info(
@@ -401,61 +396,6 @@ public abstract class BaseController {
     }
 
     /**
-     * Log IResult objects.  IResult objects are returned from Authorization and Token Requests
-     *
-     * @param tag    The log tag to use.
-     * @param result The result object to log.
-     */
-    public static void logResult(@NonNull final String tag,
-                                 @NonNull final IResult result) {
-        final String TAG = tag + ":" + result.getClass().getSimpleName();
-
-        if (result.getSuccess()) {
-            Logger.info(
-                    TAG,
-                    "Success Result"
-            );
-
-            logExposedFieldsOfObject(TAG, result.getSuccessResponse());
-        } else {
-            Logger.warn(
-                    TAG,
-                    "Failure Result"
-            );
-
-            if (result.getErrorResponse() != null) {
-                if (result.getErrorResponse().getError() != null) {
-                    Logger.warn(
-                            TAG,
-                            "Error: " + result.getErrorResponse().getError()
-                    );
-                }
-
-                if (result.getErrorResponse().getErrorDescription() != null) {
-                    Logger.warnPII(
-                            TAG,
-                            "Description: " + result.getErrorResponse().getErrorDescription()
-                    );
-                }
-
-                logExposedFieldsOfObject(TAG, result.getErrorResponse());
-            }
-        }
-
-        if (result instanceof AuthorizationResult) {
-            @SuppressWarnings(WarningType.rawtype_warning)
-            AuthorizationResult authResult = (AuthorizationResult) result;
-
-            if (authResult.getAuthorizationStatus() != null) {
-                Logger.info(
-                        TAG,
-                        "Authorization Status: " + authResult.getAuthorizationStatus().toString()
-                );
-            }
-        }
-    }
-
-    /**
      * Log parameters objects passed to controllers
      *
      * @param tag        The log tag to use.
@@ -464,17 +404,11 @@ public abstract class BaseController {
     protected void logParameters(String tag, Object parameters) {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
-        if (Logger.getAllowPii()) {
+        if (Logger.isAllowPii()) {
             Logger.infoPII(TAG, ObjectMapper.serializeObjectToJsonString(parameters));
         } else {
             Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(parameters));
         }
-    }
-
-    protected static void logExposedFieldsOfObject(@NonNull final String tag,
-                                                   @NonNull final Object object) {
-        final String TAG = tag + ":" + object.getClass().getSimpleName();
-        Logger.info(TAG, ObjectMapper.serializeExposedFieldsOfObjectToJsonString(object));
     }
 
     protected TokenResult performSilentTokenRequest(
@@ -489,10 +423,9 @@ public abstract class BaseController {
                 "Requesting tokens..."
         );
 
-        HttpWebRequest.throwIfNetworkNotAvailable(
-                parameters.getAndroidApplicationContext(),
-                parameters.isPowerOptCheckEnabled()
-        );
+        parameters.getPlatformComponents()
+                .getPlatformUtil()
+                .throwIfNetworkNotAvailable(parameters.isPowerOptCheckEnabled());
 
         // Check that the authority is known
         final Authority.KnownAuthorityResult authorityResult =

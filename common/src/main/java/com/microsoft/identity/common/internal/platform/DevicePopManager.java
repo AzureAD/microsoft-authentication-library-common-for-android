@@ -38,7 +38,6 @@ import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.internal.util.Supplier;
-import com.microsoft.identity.common.internal.util.ThreadUtils;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
@@ -63,7 +62,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -93,14 +91,12 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.security.auth.x500.X500Principal;
 
-import lombok.Getter;
 import lombok.SneakyThrows;
 
 import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
@@ -182,7 +178,6 @@ public class DevicePopManager implements IDevicePopManager {
      * Reference to our perf-marker object.
      */
     private static final CodeMarkerManager sCodeMarkerManager = CodeMarkerManager.getInstance();
-
 
     /**
      * Properties used by the self-signed certificate.
@@ -368,6 +363,7 @@ public class DevicePopManager implements IDevicePopManager {
         final String errCode;
 
         try {
+            sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
             final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
@@ -1264,7 +1260,7 @@ public class DevicePopManager implements IDevicePopManager {
                             final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
         } else {
             initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
@@ -1287,16 +1283,12 @@ public class DevicePopManager implements IDevicePopManager {
         )
                 .setKeySize(keySize)
                 .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
-                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
                 )
                 .setDigests(
-                        KeyProperties.DIGEST_MD5,
                         KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256,
-                        KeyProperties.DIGEST_SHA384,
-                        KeyProperties.DIGEST_SHA512
+                        KeyProperties.DIGEST_SHA256
                 ).setEncryptionPaddings(
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
@@ -1358,16 +1350,12 @@ public class DevicePopManager implements IDevicePopManager {
                 mKeyManager.getKeyAlias(), purposes)
                 .setKeySize(keySize)
                 .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
-                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
                 )
                 .setDigests(
-                        KeyProperties.DIGEST_MD5,
                         KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256,
-                        KeyProperties.DIGEST_SHA384,
-                        KeyProperties.DIGEST_SHA512
+                        KeyProperties.DIGEST_SHA256
                 ).setEncryptionPaddings(
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1

@@ -29,9 +29,9 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.java.authorities.Environment;
 import com.microsoft.identity.common.java.cache.HttpCache;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.net.HttpClient;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
@@ -81,7 +81,7 @@ public class AzureActiveDirectory
 
     @Override
     public AzureActiveDirectoryOAuth2Strategy createOAuth2Strategy(@NonNull final AzureActiveDirectoryOAuth2Configuration config,
-                                                                   @NonNull final ICommonComponents commonComponents) throws ClientException {
+                                                                   @NonNull final IPlatformComponents commonComponents) throws ClientException {
         final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
                 .platformComponents(commonComponents)
                 .build();
