@@ -28,12 +28,11 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
-import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import java.util.Map;
 
@@ -61,7 +60,7 @@ public class TestUtils {
     }
 
     public static IKeyBasedStorage getSharedPreferences(final String sharedPrefName) {
-        final ICommonComponents components = new AndroidCommonComponents(ApplicationProvider.getApplicationContext());
+        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
 
         return components.getFileStore(sharedPrefName);
     }
