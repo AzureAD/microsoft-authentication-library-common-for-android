@@ -22,13 +22,38 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.performance;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
 /**
- * Collect memory information regarding the current process. This will basically return the total memory being used in KiloBytes
+ * Keeps track of the total network traffic as well as the diff of data received / sent
  */
-public class MemoryMonitor implements PerformanceProfileMonitor<Long> {
-    @Override
-    public Long getStats(ProcessInfo processInfo) {
-        // From the total memory used in the device, calculate the number of bytes being used by the process  defined by processInfo
-        return (long) (processInfo.getMemoryUsage() * processInfo.getUsedSystemMemory()) / 100;
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Accessors(prefix = "m")
+public class TrafficInfo {
+    private long mTotalBytesSent;
+    private long mTotalBytesReceived;
+    private long mDiffBytesSent;
+    private long mDiffBytesReceived;
+
+    /**
+     * Updates the total bytes sent by the application since device boot, and also stores information on how much more bytes
+     * have been sent since the last query.
+     *
+     * @param totalBytesSent     the total bytes sent so far
+     * @param totalBytesReceived the total bytes received so far
+     * @param prevTrafficInfo    the previous TrafficInfo queried.
+     */
+    protected void setTrafficInfo(final long totalBytesSent, final long totalBytesReceived, final TrafficInfo prevTrafficInfo) {
+        mTotalBytesReceived = totalBytesReceived;
+        mTotalBytesSent = totalBytesSent;
+        if (prevTrafficInfo != null) {
+            mDiffBytesReceived = mTotalBytesReceived - prevTrafficInfo.getTotalBytesReceived();
+            mDiffBytesSent = mTotalBytesSent - prevTrafficInfo.getTotalBytesSent();
+        }
     }
 }

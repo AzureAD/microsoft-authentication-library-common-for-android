@@ -30,7 +30,7 @@ package com.microsoft.identity.client.ui.automation.performance;
 public interface PerformanceProfileMonitor<T> {
 
     /**
-     * Get the stats for the {@link PerformanceProfile} for reporting
+     * Get the stats for the {@link PerformanceProfile} for reporting.
      *
      * @param processInfo information regarding the current process
      * @return some data with information regarding the current usage of the {@link PerformanceProfile}

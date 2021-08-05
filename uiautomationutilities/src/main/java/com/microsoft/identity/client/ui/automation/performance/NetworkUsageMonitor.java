@@ -24,20 +24,17 @@ package com.microsoft.identity.client.ui.automation.performance;
 
 import android.net.TrafficStats;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.experimental.Accessors;
-
 /**
- * Collects network traffic information by the current process
+ * Collects network traffic information by the current process.
  * It will tend to store the previous traffic information in order to provide a diff showing how much more bytes have been sent/received.
  */
-public class NetworkUsageMonitor implements PerformanceProfileMonitor<NetworkUsageMonitor.TrafficInfo> {
+public class NetworkUsageMonitor implements PerformanceProfileMonitor<TrafficInfo> {
 
     private static TrafficInfo prevTrafficInfo = null;
 
-    //     Load the traffic information as early as possible
+    // Load the traffic information as early as possible, this is to ensure that we capture
+    // the bytes sent/received immediately the app is running. This information is necessary
+    // in order to know how much data has been used by the application at any point during its runtime
     static {
         loadTrafficInfo(DeviceMonitor.getApplicationUid());
     }
@@ -61,31 +58,4 @@ public class NetworkUsageMonitor implements PerformanceProfileMonitor<NetworkUsa
         return trafficInfo;
     }
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    @Accessors(prefix = "m")
-    public static class TrafficInfo {
-        private long mTotalBytesSent;
-        private long mTotalBytesReceived;
-        private long mDiffBytesSent;
-        private long mDiffBytesReceived;
-
-        /**
-         * Updates the total bytes sent by the application since device boot, and also stores information on how much more bytes
-         * have been sent since the last query
-         *
-         * @param bytesSent       the total bytes sent so far
-         * @param bytesReceived   the total bytes received so far
-         * @param prevTrafficInfo the previous TrafficInfo queried.
-         */
-        private void setTrafficInfo(long bytesSent, long bytesReceived, TrafficInfo prevTrafficInfo) {
-            mTotalBytesReceived = bytesReceived;
-            mTotalBytesSent = bytesSent;
-            if (prevTrafficInfo != null) {
-                mDiffBytesReceived = mTotalBytesReceived - prevTrafficInfo.getTotalBytesReceived();
-                mDiffBytesSent = mTotalBytesSent - prevTrafficInfo.getTotalBytesSent();
-            }
-        }
-    }
 }

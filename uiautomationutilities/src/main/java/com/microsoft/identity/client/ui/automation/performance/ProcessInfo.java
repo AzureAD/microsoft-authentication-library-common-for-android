@@ -22,28 +22,26 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.performance;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
- * An object that stores the current process information
+ * An object that stores the current process information.
  */
 @Data
 @Accessors(prefix = "m")
 @Builder
 @NoArgsConstructor
-@AllArgsConstructor
 public class ProcessInfo {
     private int mPid;
     private long mTotalSystemMemory;
-    private long mUsedSystemMemory;
-    private long mFreeSystemMemory;
-    private long mAvailableSystemMemory;
+    private long mUsedSystemMemory; // the memory being used by all the processes in the device
+    private long mFreeSystemMemory; // the free memory in the device, should be equal to mTotalSystemMemory - mUsedSystemMemory
+    private long mAvailableSystemMemory; // the free memory in the device that is available for processes to make use of
     private int mUid;
     private double mCpuUsage;
-    private double mMemoryUsage;
-    private String packageName;
+    private double mMemoryUsage; // a percentage of the system memory
+    private String mPackageName;
 }

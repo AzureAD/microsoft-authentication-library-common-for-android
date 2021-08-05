@@ -22,12 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.performance;
 
+import androidx.annotation.NonNull;
+
 /**
- * Collects data regarding the cpu usage for the current process
+ * Collects data regarding the cpu usage for the process supplied based on the {@link ProcessInfo} object
  */
 public class CPUMonitor implements PerformanceProfileMonitor<Double> {
     @Override
-    public Double getStats(ProcessInfo processInfo) {
+    public Double getStats(@NonNull final ProcessInfo processInfo) {
         return processInfo.getCpuUsage();
     }
 }

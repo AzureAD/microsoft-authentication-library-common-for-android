@@ -24,6 +24,7 @@ package com.microsoft.identity.client.ui.automation.performance;
 
 import android.os.Build;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
@@ -34,30 +35,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Collects data for the current process for different {@link PerformanceProfile}. Additional profiles can included and
- * their implementation done in {@link PerformanceProfileMonitor} then passed through the method {@link DeviceMonitor#setProfiler(PerformanceProfile, PerformanceProfileMonitor)}
+ * Collects data for the current process for different {@link PerformanceProfile}.
+ * Additional profiles can be included and * their implementation done in {@link PerformanceProfileMonitor}
+ * then passed through the method {@link DeviceMonitor#setProfiler(PerformanceProfile, PerformanceProfileMonitor)}
  */
 public class DeviceMonitor {
 
     private static final String packageName = ApplicationProvider.getApplicationContext().getPackageName();
     private static final HashMap<PerformanceProfile, PerformanceProfileMonitor<?>> profilers = new HashMap<>();
-    private static ProcessInfo processInfo = null;
+    private static final ProcessInfo processInfo = new ProcessInfo();
 
     static {
         loadProcessInfo();
-        setProfiler(PerformanceProfile.CPU, new CPUMonitor());
-        setProfiler(PerformanceProfile.MEMORY, new MemoryMonitor());
-        setProfiler(PerformanceProfile.NETWORK, new NetworkUsageMonitor());
     }
 
     /**
-     * Get the device name string
+     * Get a String representation of the name of the current device
      *
-     * @return
+     * @return a string representation of the name of the current device
      */
     public static String getDeviceName() {
-        String manufacturer = Build.MANUFACTURER;
-        String model = Build.MODEL;
+        final String manufacturer = Build.MANUFACTURER;
+        final String model = Build.MODEL;
+        // If the device model has the name of the manufacturer, just return the model, otherwise concatenate
+        // the manufacturer and the model
         if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
             return capitalize(model);
         } else {
@@ -66,28 +67,23 @@ public class DeviceMonitor {
     }
 
 
-    private static String capitalize(String s) {
+    private static String capitalize(final String s) {
         if (s == null || s.length() == 0) {
             return "";
         }
-        char first = s.charAt(0);
-        if (Character.isUpperCase(first)) {
-            return s;
-        } else {
-            return Character.toUpperCase(first) + s.substring(1);
-        }
+        return s.substring(0, 1).toUpperCase() + s.substring(1);
     }
 
     /**
-     * Gets the current application's uid
+     * Gets the current application's uid.
      *
-     * @return the application uid
+     * @return an integer representing the application's uid
      */
     public static int getApplicationUid() {
         final Pattern pattern = Pattern.compile("userId=(\\d+)");
-        final String command = "dumpsys package " + packageName;
+        final String shellCommand = "dumpsys package " + packageName;
 
-        final Matcher matcher = pattern.matcher(AdbShellUtils.executeShellCommand(command));
+        final Matcher matcher = pattern.matcher(AdbShellUtils.executeShellCommand(shellCommand));
 
         if (matcher.find()) {
             return Integer.parseInt(Objects.requireNonNull(matcher.group(1)));
@@ -96,9 +92,9 @@ public class DeviceMonitor {
     }
 
     /**
-     * Get the total System memory
+     * Get the total System memory.
      *
-     * @return
+     * @return a Long representing the total memory of the device in KB
      */
     public static Long getTotalMemory() {
         return processInfo.getTotalSystemMemory();
@@ -107,14 +103,14 @@ public class DeviceMonitor {
     /**
      * Get the current CPU usage
      *
-     * @return the current cpu usage as a percentage e.g. 3.3%
+     * @return the current cpu usage as a percentage e.g. 3.3
      */
     public static Double getCpuUsage() {
         return getStats(PerformanceProfile.CPU, Double.class);
     }
 
     /**
-     * Get the current memory usage
+     * Get the current memory usage.
      *
      * @return the current memory usage in KB
      */
@@ -123,23 +119,24 @@ public class DeviceMonitor {
     }
 
     /**
-     * Get the current network info
+     * Get the current network info.
      *
-     * @return the information regarding the network usage
+     * @return the information regarding the network usage {@link TrafficInfo}
      */
-    public static NetworkUsageMonitor.TrafficInfo getNetworkTrafficInfo() {
-        return getStats(PerformanceProfile.NETWORK, NetworkUsageMonitor.TrafficInfo.class);
+    public static TrafficInfo getNetworkTrafficInfo() {
+        return getStats(PerformanceProfile.NETWORK, TrafficInfo.class);
     }
 
     /**
-     * Get the statistics of a particular performance profile
+     * Get the statistics of a particular performance profile.
      *
      * @param performanceProfile the performance profile
      * @param classOfT           the class of the stats result
+     * @param <T>                the type of the stats retrieved for the performance profile
      * @return the current data showing its usage.
      */
-    public static <T> T getStats(PerformanceProfile performanceProfile, Class<T> classOfT) {
-        PerformanceProfileMonitor<?> monitor = profilers.get(performanceProfile);
+    public static <T> T getStats(@NonNull final PerformanceProfile performanceProfile, @NonNull final Class<T> classOfT) {
+        final PerformanceProfileMonitor<?> monitor = profilers.get(performanceProfile);
 
         if (monitor == null) {
             throw new IllegalArgumentException("The performanceProfile does not have a monitor.");
@@ -151,32 +148,32 @@ public class DeviceMonitor {
     }
 
     /**
-     * Fetch the current process information
+     * Fetch the current process information.
      *
-     * @return the current process information
+     * @return the current process information {@link ProcessInfo}
      */
     public static ProcessInfo getProcessInfo() {
         return processInfo;
     }
 
     /**
-     * Updates or adds a new profiling monitor for a particular profile
+     * Updates or adds a new profiling monitor for a particular profile.
      *
-     * @param profile  the profile to update
-     * @param profiler the profile monitor to use
+     * @param profile  the profile to update {@link PerformanceProfile}
+     * @param profiler the profile monitor to use {@link PerformanceProfileMonitor}
      * @param <T>      the type of the data that will be collected by the {@link PerformanceProfileMonitor}
      */
-    public static <T> void setProfiler(PerformanceProfile profile, PerformanceProfileMonitor<T> profiler) {
+    public static <T> void setProfiler(@NonNull final PerformanceProfile profile, @NonNull final PerformanceProfileMonitor<T> profiler) {
         profilers.put(profile, profiler);
     }
 
     /**
-     * Returns the current profile monitor tool that's being used by the profile
+     * Returns the current profile monitor tool that's being used by the profile.
      *
      * @param profile {@link PerformanceProfile}
-     * @return the profile monitor tool
+     * @return the profile monitor tool {@link PerformanceProfileMonitor}
      */
-    public static PerformanceProfileMonitor<?> getProfiler(PerformanceProfile profile) {
+    public static PerformanceProfileMonitor<?> getProfiler(@NonNull final PerformanceProfile profile) {
         return profilers.get(profile);
     }
 
@@ -184,36 +181,68 @@ public class DeviceMonitor {
      * Fetches the current process information by executing several adb shell commands.
      */
     private static void loadProcessInfo() {
-        processInfo = new ProcessInfo();
+        processInfo.setUid(getApplicationUid());
 
-        final int pid = android.os.Process.myPid();
+        initializeCpuAndMemoryUsage();
+        initializeMemoryInfo();
+    }
 
-        String command = "top -b -n 1 -p " + pid;
-        String[] commandResult = AdbShellUtils.executeShellCommand(command).split("\n");
-
-        final String[] processInfoString = commandResult[5].trim().split("\\s+");
-        final String cpuUsage = processInfoString[8];
-        final String memoryUsage = processInfoString[9];
-
-        command = "cat /proc/meminfo";
-        commandResult = AdbShellUtils.executeShellCommand(command).split("\n");
+    /**
+     * Fetch the memory information by parsing output from /proc/meminfo
+     * <p>
+     * Example Output
+     * MemTotal:        2042232 kB
+     * MemFree:          329176 kB
+     * MemAvailable:     800604 kB
+     * Buffers:           16252 kB
+     * Cached:           766452 kB
+     */
+    private static void initializeMemoryInfo() {
+        final String shellCommand = "cat /proc/meminfo";
+        final String[] commandResult = AdbShellUtils.executeShellCommand(shellCommand).split("\n");
 
         final long memTotal = Long.parseLong(commandResult[0].trim().split("\\s+")[1]);
         final long memFree = Long.parseLong(commandResult[1].trim().split("\\s+")[1]);
         final long memAvailable = Long.parseLong(commandResult[2].trim().split("\\s+")[1]);
 
+        processInfo.setFreeSystemMemory(memFree);
+        processInfo.setAvailableSystemMemory(memAvailable);
+        processInfo.setTotalSystemMemory(memTotal);
+        processInfo.setUsedSystemMemory(memTotal - memAvailable);
+    }
+
+    /**
+     * Execute the top shell command to get the cpu and memory usage.
+     * <p>
+     * Example Output
+     * Tasks: 1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+     * Mem:      1.9G total,      1.6G used,      328M free,       16M buffers
+     * Swap:      1.4G total,         0 used,      1.4G free,      744M cached
+     * 400%cpu   4%user   0%nice  23%sys 373%idle   0%iow   0%irq   0%sirq   0%host
+     * PID USER         PR  NI VIRT  RES  SHR S[%CPU] %MEM     TIME+ ARGS
+     * 1 root         20   0  31M 3.1M 1.6M S  0.0   0.1   0:05.56 init second_stage
+     */
+    private static void initializeCpuAndMemoryUsage() {
+        final int pid = android.os.Process.myPid();
+
         final int numCpuCores = Runtime.getRuntime().availableProcessors();
 
-        processInfo = ProcessInfo.builder()
-                .cpuUsage(Double.parseDouble(cpuUsage) / numCpuCores)
-                .freeSystemMemory(memFree)
-                .availableSystemMemory(memAvailable)
-                .totalSystemMemory(memTotal)
-                .usedSystemMemory(memTotal - memAvailable)
-                .memoryUsage(Double.parseDouble(memoryUsage))
-                .packageName(packageName)
-                .pid(pid)
-                .uid(getApplicationUid()).build();
+        // Execute the top command by passing the process id.
+        // -b [Batch Mode] sets the output in a parsable format.
+        // -n [Exit top command after specific number of repetitions] in this case we just need it to fetch once.
+        // -p [Process ID] set the process id
+        final String shellCommand = "top -b -n 1 -p " + pid;
+        final String[] commandResult = AdbShellUtils.executeShellCommand(shellCommand).split("\n");
+
+        final String[] processInfoString = commandResult[5].trim().split("\\s+");
+
+        final String cpuUsage = processInfoString[8];
+        final String memoryUsage = processInfoString[9];
+
+        processInfo.setCpuUsage(Double.parseDouble(cpuUsage) / numCpuCores);
+        processInfo.setMemoryUsage(Double.parseDouble(memoryUsage));
+        processInfo.setPid(pid);
+
     }
 
 }
