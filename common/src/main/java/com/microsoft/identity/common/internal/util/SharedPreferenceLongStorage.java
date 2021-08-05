@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
@@ -61,7 +62,7 @@ public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStor
     }
 
     @Override
-    public void put(@NonNull String name, Long value) {
+    public void put(@NonNull final String name, @Nullable final Long value) {
         mManager.putLong(name, value);
     }
 

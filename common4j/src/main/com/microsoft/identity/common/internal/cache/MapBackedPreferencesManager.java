@@ -65,7 +65,7 @@ public class MapBackedPreferencesManager implements IMultiTypeNameValueStorage {
     }
 
     @Override
-    public String getSharedPreferencesFileName() {
+    public String getStorageFileName() {
         return mName;
     }
 

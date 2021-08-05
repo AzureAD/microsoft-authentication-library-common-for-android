@@ -69,7 +69,7 @@ public interface IMultiTypeNameValueStorage {
      *
      * @return The name of the file.
      */
-    String getSharedPreferencesFileName();
+    String getStorageFileName();
 
     /**
      * Returns all entries in the named resource.

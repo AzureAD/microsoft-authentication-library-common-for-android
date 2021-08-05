@@ -115,14 +115,14 @@ public class BrokerOAuth2TokenCache
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
-     * @param context                  The current application context.
+     * @param components               The current platform components.
      * @param callingProcessUid        The UID of the current broker-calling app.
      * @param applicationMetadataCache The metadata cache to use.
      */
-    public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents context,
+    public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
                                   int callingProcessUid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
-        super(context);
+        super(components);
 
         Logger.verbose(
                 TAG + "ctor",
@@ -144,15 +144,7 @@ public class BrokerOAuth2TokenCache
     public BrokerOAuth2TokenCache(@NonNull final Context context,
                                   int callingProcessUid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
-        super(AndroidPlatformComponents.createFromContext(context));
-
-        Logger.verbose(
-                TAG + "ctor",
-                "Init::" + TAG
-        );
-        mCallingProcessUid = callingProcessUid;
-        mFociCache = initializeFociCache(getComponents());
-        mApplicationMetadataCache = applicationMetadataCache;
+        this(AndroidPlatformComponents.createFromContext(context), callingProcessUid, applicationMetadataCache);
     }
 
     /**
@@ -184,7 +176,7 @@ public class BrokerOAuth2TokenCache
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
-       super(AndroidPlatformComponents.createFromContext(context));
+       this(AndroidPlatformComponents.createFromContext(context), callingProcessUid, applicationMetadataCache);
 
         Logger.verbose(
                 TAG + "ctor",
@@ -192,9 +184,6 @@ public class BrokerOAuth2TokenCache
         );
 
         mDelegate = delegate;
-        mApplicationMetadataCache = applicationMetadataCache;
-        mCallingProcessUid = callingProcessUid;
-        mFociCache = fociCache;
     }
 
     /**

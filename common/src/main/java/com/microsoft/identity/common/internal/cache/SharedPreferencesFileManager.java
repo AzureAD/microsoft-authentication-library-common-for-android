@@ -187,7 +187,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     @Override
-    public final String getSharedPreferencesFileName() {
+    public final String getStorageFileName() {
         return mSharedPreferencesFileName;
     }
 

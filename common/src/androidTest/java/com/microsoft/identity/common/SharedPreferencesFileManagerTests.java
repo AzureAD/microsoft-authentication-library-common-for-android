@@ -98,7 +98,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public void testGetSharedPreferencesFileName() {
         assertEquals(
                 sTEST_SHARED_PREFS_NAME,
-                mSharedPreferencesFileManager.getSharedPreferencesFileName()
+                mSharedPreferencesFileManager.getStorageFileName()
         );
     }
 

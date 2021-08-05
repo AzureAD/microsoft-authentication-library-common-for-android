@@ -80,7 +80,7 @@ public interface IPlatformComponents {
     <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz);
 
     /**
-     * Get a generic encrypted ISharedPreferencesFileManager with a given identifier.
+     * Get a generic encrypted IMultiTypeNameValueStorage with a given identifier.
      *
      * @param storeName The name of a new KeyValue store. May not be null.
      * @param helper    The key manager for the encryption.  May not be null.
@@ -88,7 +88,7 @@ public interface IPlatformComponents {
     IMultiTypeNameValueStorage getEncryptedFileStore(String storeName, IKeyAccessor helper);
 
     /**
-     * Get a generic encrypted ISharedPreferencesFileManager with a given identifier.
+     * Get a generic IMultiTypeNameValueStorage with a given identifier.
      *
      * @param storeName The name of a new KeyValue store. May not be null.
      */
