@@ -112,8 +112,6 @@ public class BrokerOAuth2TokenCache
     private final int mCallingProcessUid;
     private ProcessUidCacheFactory mDelegate = null;
 
-    IPlatformComponents mContext;
-
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
@@ -152,9 +150,8 @@ public class BrokerOAuth2TokenCache
                 TAG + "ctor",
                 "Init::" + TAG
         );
-
         mCallingProcessUid = callingProcessUid;
-        mFociCache = initializeFociCache(mContext);
+        mFociCache = initializeFociCache(getComponents());
         mApplicationMetadataCache = applicationMetadataCache;
     }
 

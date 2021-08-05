@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.util.TaskCompletedCallback;
  * Interface describing an object that can reencrypt instances of
  * {@link IKeyBasedStorage}.
  */
-public interface ISharedPrefsFileManagerReencrypter {
+public interface IKeyBasedStorageReencrypter {
 
     /**
      * The object to which this class delegates reencryption of the

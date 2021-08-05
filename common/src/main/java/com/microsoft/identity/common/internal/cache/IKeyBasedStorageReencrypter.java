@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
  * {@link IKeyBasedStorage}.
  */
 @Deprecated
-public interface ISharedPrefsFileManagerReencrypter {
+public interface IKeyBasedStorageReencrypter {
 
     /**
      * The object to which this class delegates reencryption of the

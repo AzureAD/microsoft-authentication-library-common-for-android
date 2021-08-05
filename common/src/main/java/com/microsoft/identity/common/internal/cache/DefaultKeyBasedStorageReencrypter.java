@@ -29,10 +29,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Default implementation of {@link ISharedPrefsFileManagerReencrypter}.
+ * Default implementation of {@link IKeyBasedStorageReencrypter}.
  */
 @Deprecated
-public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
+public class DefaultKeyBasedStorageReencrypter implements IKeyBasedStorageReencrypter {
 
     @Override
     public void reencrypt(@NonNull final IKeyBasedStorage fileManager,

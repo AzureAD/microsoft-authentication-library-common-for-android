@@ -209,12 +209,14 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     }
 
     @Override
-    public <T> INameValueStorage<T> getNameValueStore(String storeName, Class<T> clazz) {
+    public <T> INameValueStorage<T> getNameValueStore(final @NonNull String storeName, final @NonNull Class<T> clazz) {
         return getEncryptedNameValueStore(storeName, null, clazz);
     }
 
     @Override
-    public <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz) {
+    public <T> INameValueStorage<T> getEncryptedNameValueStore(final @NonNull String storeName,
+                                                               final @NonNull IKeyAccessor helper,
+                                                               final @NonNull Class<T> clazz) {
         final IKeyBasedStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
         if (Long.class.isAssignableFrom(clazz)) {
             @SuppressWarnings("unchecked")
@@ -229,12 +231,12 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     }
 
     @Override
-    public IKeyBasedStorage getEncryptedFileStore(String storeName, IKeyAccessor helper) {
+    public IKeyBasedStorage getEncryptedFileStore(final @NonNull String storeName, final @NonNull IKeyAccessor helper) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
     }
 
     @Override
-    public IKeyBasedStorage getFileStore(String storeName) {
+    public IKeyBasedStorage getFileStore(final @NonNull String storeName) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
     }
 

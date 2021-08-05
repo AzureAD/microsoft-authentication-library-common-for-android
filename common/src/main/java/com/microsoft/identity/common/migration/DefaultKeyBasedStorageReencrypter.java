@@ -23,7 +23,6 @@ package com.microsoft.identity.common.migration;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.cache.IKeyBasedStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -37,11 +36,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Default implementation of {@link ISharedPrefsFileManagerReencrypter}.
+ * Default implementation of {@link IKeyBasedStorageReencrypter}.
  */
-public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
+public class DefaultKeyBasedStorageReencrypter implements IKeyBasedStorageReencrypter {
 
-    private static final String TAG = DefaultSharedPrefsFileManagerReencrypter.class.getSimpleName();
+    private static final String TAG = DefaultKeyBasedStorageReencrypter.class.getSimpleName();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
@@ -130,7 +129,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
      * @param callable             The callable definining the mutation.
      * @param inputResult          A {@link MigrationOperationResult} used to track error states which may
      *                             occur during a mutation.
-     * @param params               The {@link com.microsoft.identity.common.migration.ISharedPrefsFileManagerReencrypter.ReencryptionParams}
+     * @param params               The {@link IKeyBasedStorageReencrypter.ReencryptionParams}
      *                             defining how errors should be handled/surfaced.
      * @param keysMarkedForRemoval A {@link Set} of cache keys to be removed from the underlying
      *                             cache if an error is encountered. Please note that this function
