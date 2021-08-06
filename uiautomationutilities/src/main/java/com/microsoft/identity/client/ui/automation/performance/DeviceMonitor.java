@@ -25,23 +25,18 @@ package com.microsoft.identity.client.ui.automation.performance;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 
 import java.util.HashMap;
-import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Collects data for the current process for different {@link PerformanceProfile}.
- * Additional profiles can be included and * their implementation done in {@link PerformanceProfileMonitor}
- * then passed through the method {@link DeviceMonitor#setProfiler(PerformanceProfile, PerformanceProfileMonitor)}
+ * Additional profiles can be included and their implementation done in {@link PerformanceProfileMonitor}
+ * then passed through the method {@link DeviceMonitor#setProfiler(PerformanceProfile, PerformanceProfileMonitor)}.
  */
 public class DeviceMonitor {
 
-    private static final String packageName = ApplicationProvider.getApplicationContext().getPackageName();
     private static final HashMap<PerformanceProfile, PerformanceProfileMonitor<?>> profilers = new HashMap<>();
     private static final ProcessInfo processInfo = new ProcessInfo();
 
@@ -50,7 +45,7 @@ public class DeviceMonitor {
     }
 
     /**
-     * Get a String representation of the name of the current device
+     * Get a String representation of the name of the current device.
      *
      * @return a string representation of the name of the current device
      */
@@ -72,23 +67,6 @@ public class DeviceMonitor {
             return "";
         }
         return s.substring(0, 1).toUpperCase() + s.substring(1);
-    }
-
-    /**
-     * Gets the current application's uid.
-     *
-     * @return an integer representing the application's uid
-     */
-    public static int getApplicationUid() {
-        final Pattern pattern = Pattern.compile("userId=(\\d+)");
-        final String shellCommand = "dumpsys package " + packageName;
-
-        final Matcher matcher = pattern.matcher(AdbShellUtils.executeShellCommand(shellCommand));
-
-        if (matcher.find()) {
-            return Integer.parseInt(Objects.requireNonNull(matcher.group(1)));
-        }
-        return 0;
     }
 
     /**
@@ -181,8 +159,6 @@ public class DeviceMonitor {
      * Fetches the current process information by executing several adb shell commands.
      */
     private static void loadProcessInfo() {
-        processInfo.setUid(getApplicationUid());
-
         initializeCpuAndMemoryUsage();
         initializeMemoryInfo();
     }

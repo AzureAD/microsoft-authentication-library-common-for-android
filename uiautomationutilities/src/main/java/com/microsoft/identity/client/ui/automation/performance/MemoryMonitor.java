@@ -23,12 +23,12 @@
 package com.microsoft.identity.client.ui.automation.performance;
 
 /**
- * Collect memory information regarding the current process. This will basically return the total memory being used in KiloBytes
+ * Collect memory information regarding the current process. This will basically return the total memory being used in KiloBytes.
  */
 public class MemoryMonitor implements PerformanceProfileMonitor<Long> {
     @Override
     public Long getStats(ProcessInfo processInfo) {
-        // From the total memory used in the device, calculate the number of bytes being used by the process  defined by processInfo
+        // From the total memory used in the device, calculate the number of bytes being used by the process defined by processInfo.
         return (long) (processInfo.getMemoryUsage() * processInfo.getUsedSystemMemory()) / 100;
     }
 }

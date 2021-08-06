@@ -25,7 +25,7 @@ package com.microsoft.identity.client.ui.automation.performance;
 import androidx.annotation.NonNull;
 
 /**
- * Collects data regarding the cpu usage for the process supplied based on the {@link ProcessInfo} object
+ * Collects data regarding the cpu usage for the process supplied based on the {@link ProcessInfo} object.
  */
 public class CPUMonitor implements PerformanceProfileMonitor<Double> {
     @Override

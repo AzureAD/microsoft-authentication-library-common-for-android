@@ -32,21 +32,30 @@ public class NetworkUsageMonitor implements PerformanceProfileMonitor<TrafficInf
 
     private static TrafficInfo prevTrafficInfo = null;
 
+
     // Load the traffic information as early as possible, this is to ensure that we capture
     // the bytes sent/received immediately the app is running. This information is necessary
-    // in order to know how much data has been used by the application at any point during its runtime
+    // in order to know how much data has been used by the application at any point during its runtime.
     static {
-        loadTrafficInfo(DeviceMonitor.getApplicationUid());
+        loadTrafficInfo();
     }
 
     @Override
     public TrafficInfo getStats(ProcessInfo processInfo) {
-        return loadTrafficInfo(processInfo.getUid());
+        return loadTrafficInfo();
     }
 
 
-    private static TrafficInfo loadTrafficInfo(int uid) {
-        TrafficInfo trafficInfo = new TrafficInfo();
+    /**
+     * Get the traffic information on bytes sent/received by the application.
+     *
+     * @return an object describing the transferred/received bytes by the application since the last
+     * time this method was invoked {@link TrafficInfo}.
+     */
+    private static TrafficInfo loadTrafficInfo() {
+        final TrafficInfo trafficInfo = new TrafficInfo();
+
+        final int uid = ProcessInfo.getApplicationUid();
 
         trafficInfo.setTrafficInfo(
                 TrafficStats.getUidTxBytes(uid),
