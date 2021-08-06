@@ -198,6 +198,16 @@ public class Device {
         }
     }
 
+    /**
+     * Get the device display name.
+     *
+     * @return a String representing this device's display name.
+     */
+    @NonNull
+    public static String getDeviceDisplayName() {
+        return getManufacturer() + getModel();
+    }
+
     public static final class PlatformIdParameters {
         /**
          * The String representing the CPU for the device.

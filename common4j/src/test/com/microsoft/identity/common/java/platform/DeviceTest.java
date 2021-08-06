@@ -108,12 +108,19 @@ public class DeviceTest {
         Assert.assertEquals(MockDeviceMetadata.TEST_MANUFACTURER, Device.getManufacturer());
     }
 
-
     @Test
     public void testGetModel(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, Device.getModel());
     }
+
+    @Test
+    public void testGetDisplayName(){
+        Device.setDeviceMetadata(new MockDeviceMetadata());
+        Assert.assertEquals(MockDeviceMetadata.TEST_MANUFACTURER + MockDeviceMetadata.TEST_DEVICE_MODEL,
+                Device.getDeviceDisplayName());
+    }
+
 
     @Test
     public void testGetAllMetadata(){
