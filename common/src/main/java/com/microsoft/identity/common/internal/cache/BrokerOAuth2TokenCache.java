@@ -31,11 +31,12 @@ import androidx.annotation.VisibleForTesting;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.CacheRecord;
@@ -62,9 +63,6 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.internal.cache.ADALOAuth2TokenCache.ERR_UNSUPPORTED_OPERATION;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
-
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 /**
  * "Combined" cache implementation to cache tokens inside of the broker.

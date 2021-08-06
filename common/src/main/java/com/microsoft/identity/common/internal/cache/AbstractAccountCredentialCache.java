@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -41,7 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
+import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 import static com.microsoft.identity.common.internal.util.StringUtil.equalsIgnoreCaseTrimBoth;
 
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {

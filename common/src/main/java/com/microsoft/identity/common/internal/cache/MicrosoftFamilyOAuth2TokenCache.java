@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -33,7 +31,10 @@ import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationSchem
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.CacheRecord;
+import com.microsoft.identity.common.java.cache.IAccountCredentialAdapter;
+import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -72,11 +73,11 @@ public class MicrosoftFamilyOAuth2TokenCache
     public MicrosoftFamilyOAuth2TokenCache(final IPlatformComponents context,
                                            final IAccountCredentialCache accountCredentialCache,
                                            final IAccountCredentialAdapter<
-                                                   GenericOAuth2Strategy,
-                                                   GenericAuthorizationRequest,
-                                                   GenericTokenResponse,
-                                                   GenericAccount,
-                                                   GenericRefreshToken> accountCredentialAdapter) {
+                                                                                              GenericOAuth2Strategy,
+                                                                                              GenericAuthorizationRequest,
+                                                                                              GenericTokenResponse,
+                                                                                              GenericAccount,
+                                                                                              GenericRefreshToken> accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 

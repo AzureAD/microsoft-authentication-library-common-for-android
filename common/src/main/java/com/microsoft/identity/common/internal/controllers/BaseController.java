@@ -32,7 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
@@ -42,7 +42,7 @@ import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
@@ -89,7 +89,6 @@ import com.microsoft.identity.common.java.logging.Logger;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -102,19 +101,11 @@ public abstract class BaseController {
 
     private static final String TAG = BaseController.class.getSimpleName();
 
-    public static final Set<String> DEFAULT_SCOPES = new HashSet<>();
-
-    static {
-        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OPEN_ID_SCOPE);
-        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.OFFLINE_ACCESS_SCOPE);
-        DEFAULT_SCOPES.add(AuthenticationConstants.OAuth2Scopes.PROFILE_SCOPE);
-    }
-
     public static String getDelimitedDefaultScopeString() {
         // using StringBuilder as String.join() requires at least API level 26
         StringBuilder stringBuilder = new StringBuilder();
 
-        for (String scope : DEFAULT_SCOPES) {
+        for (String scope : AuthenticationConstants.DEFAULT_SCOPES) {
             stringBuilder.append(scope);
             stringBuilder.append(' ');
         }
@@ -514,7 +505,7 @@ public abstract class BaseController {
 
     protected Set<String> addDefaultScopes(@NonNull final TokenCommandParameters commandParameters) {
         final Set<String> requestScopes = commandParameters.getScopes();
-        requestScopes.addAll(DEFAULT_SCOPES);
+        requestScopes.addAll(AuthenticationConstants.DEFAULT_SCOPES);
         // sanitize empty and null scopes
         requestScopes.removeAll(Arrays.asList("", null));
         return requestScopes;

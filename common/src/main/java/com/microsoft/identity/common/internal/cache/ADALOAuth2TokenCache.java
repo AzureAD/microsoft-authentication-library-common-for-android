@@ -41,6 +41,7 @@ import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -64,9 +65,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would

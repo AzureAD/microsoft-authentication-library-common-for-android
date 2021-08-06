@@ -20,22 +20,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.AndroidPlatformComponents;
+0
+i
+import com.microsoft.identity.common.java.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
-import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -52,12 +46,12 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.telemetry.events.CacheStartEvent;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,9 +69,6 @@ import static com.microsoft.identity.common.java.dto.CredentialType.ID_TOKEN_TYP
 import static com.microsoft.identity.common.java.dto.CredentialType.IdToken;
 import static com.microsoft.identity.common.java.dto.CredentialType.RefreshToken;
 import static com.microsoft.identity.common.java.dto.CredentialType.V1IdToken;
-
-import lombok.Getter;
-import lombok.experimental.Accessors;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
@@ -165,7 +156,7 @@ public class MsalOAuth2TokenCache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final INameValueStorage<String> sharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
-                        DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.getStorageEncryptionManager(),
                         String.class
                 );
@@ -1717,8 +1708,8 @@ public class MsalOAuth2TokenCache
 
         if (omitDefaultScopes) {
             // Remove the default scopes (if present), do not consider them in lookup criteria
-            token1Scopes.removeAll(DEFAULT_SCOPES);
-            token2Scopes.removeAll(DEFAULT_SCOPES);
+            token1Scopes.removeAll(BaseController.DEFAULT_SCOPES);
+            token2Scopes.removeAll(BaseController.DEFAULT_SCOPES);
         }
 
         boolean result = false;

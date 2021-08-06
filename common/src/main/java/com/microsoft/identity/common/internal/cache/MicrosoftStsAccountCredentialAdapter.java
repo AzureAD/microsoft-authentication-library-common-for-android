@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -48,15 +49,15 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
-import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
+import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
         <MicrosoftStsOAuth2Strategy,
-                MicrosoftStsAuthorizationRequest,
-                MicrosoftStsTokenResponse,
-                MicrosoftAccount,
-                MicrosoftRefreshToken> {
+                        MicrosoftStsAuthorizationRequest,
+                        MicrosoftStsTokenResponse,
+                        MicrosoftAccount,
+                        MicrosoftRefreshToken> {
 
     private static final String TAG = MicrosoftStsAccountCredentialAdapter.class.getSimpleName();
 
