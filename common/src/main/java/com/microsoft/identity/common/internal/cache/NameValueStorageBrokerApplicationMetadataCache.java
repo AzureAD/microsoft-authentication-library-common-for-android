@@ -30,6 +30,7 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -53,6 +54,9 @@ public class NameValueStorageBrokerApplicationMetadataCache
                 DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
     }
 
+    public NameValueStorageBrokerApplicationMetadataCache(@NonNull final IPlatformComponents context) {
+        super(context, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
+    }
     @Override
     public Set<String> getAllClientIds() {
         final String methodName = ":getAllClientIds";

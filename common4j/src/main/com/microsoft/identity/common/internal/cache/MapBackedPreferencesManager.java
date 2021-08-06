@@ -22,24 +22,22 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import androidx.annotation.VisibleForTesting;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 
 @Builder
-@VisibleForTesting(otherwise = VisibleForTesting.NONE)
 @RequiredArgsConstructor
 /**
  * A SharedPreferencesFileManager backed by a HashMap.  This is mainly for testing purposes,
  * where it doesn't make sense to instantiate shared preferences files.
  */
-public class MapBackedPreferencesManager implements ISharedPreferencesFileManager {
+public class MapBackedPreferencesManager implements IMultiTypeNameValueStorage {
 
     private final String mName;
 
@@ -67,17 +65,17 @@ public class MapBackedPreferencesManager implements ISharedPreferencesFileManage
     }
 
     @Override
-    public String getSharedPreferencesFileName() {
+    public String getStorageFileName() {
         return mName;
     }
 
     @Override
     public Map<String, String> getAll() {
-        return new HashMap(mBackingStore);
+        return new HashMap<>(mBackingStore);
     }
 
     @Override
-    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(SharedPreferencesFileManager.Predicate<String> keyFilter) {
+    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
         Map<String, String> newMap = new HashMap<>();
         for (Map.Entry<String, String> entry: mBackingStore.entrySet()) {
             if (keyFilter.test(entry.getKey())) {

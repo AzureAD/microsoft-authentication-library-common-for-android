@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
 - [MAJOR] Migrate Strategies and Parameters. (#1488)
 - [MAJOR] Migrate AccountManager's Account (#1483)
 - [MAJOR] Migrate Strategies part 1/2 (#1475)

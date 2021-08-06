@@ -22,10 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
@@ -38,12 +39,6 @@ import lombok.NonNull;
  * Common components for each platforms.
  */
 public interface IPlatformComponents {
-
-    /**
-     * Gets an {@link INameValueStorage<String>} associated to the given name.
-     */
-    @NonNull
-    INameValueStorage<String> getNameValueStorage(@NonNull final String name);
 
     /**
      * Get an encryption manager for storage layer.
@@ -66,11 +61,39 @@ public interface IPlatformComponents {
     IDevicePopManager getDefaultDevicePopManager() throws ClientException;
 
     /**
-     * Gets a {@link IDevicePopManager} associated to the key alias.
+     * Retrieve a name-value store with a given identifier.
      *
-     * @param alias the alias of the key. Storage mechanisms can use this alias to provide access.
-     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     * @param storeName The name of a new KeyValue store.
+     * @param clazz     The class of values in the name value store.
+     * @return a INameValueStorage instance based around data stored with the same storeName.
      */
+    <T> INameValueStorage<T> getNameValueStore(String storeName, Class<T> clazz);
+
+    /**
+     * Retrieve a name-value store with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     * @param helper    The key manager for the encryption.  May be null.
+     * @param clazz     The class of values in the name value store. May not be null.
+     * @return a INameValueStorage instance based around data stored with the same storeName.
+     */
+    <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz);
+
+    /**
+     * Get a generic encrypted IMultiTypeNameValueStorage with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     * @param helper    The key manager for the encryption.  May not be null.
+     */
+    IMultiTypeNameValueStorage getEncryptedFileStore(String storeName, IKeyAccessor helper);
+
+    /**
+     * Get a generic IMultiTypeNameValueStorage with a given identifier.
+     *
+     * @param storeName The name of a new KeyValue store. May not be null.
+     */
+    IMultiTypeNameValueStorage getFileStore(String storeName);
+
     @NonNull
     IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
 

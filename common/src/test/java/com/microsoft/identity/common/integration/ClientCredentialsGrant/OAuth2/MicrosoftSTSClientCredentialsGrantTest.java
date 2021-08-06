@@ -89,6 +89,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         );
 
         try {
+            @SuppressWarnings("unchecked")
             final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());
