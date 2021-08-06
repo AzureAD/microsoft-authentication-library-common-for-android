@@ -34,6 +34,7 @@ import androidx.annotation.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
@@ -173,7 +174,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
             clientInfo.addProperty("utid", utid);
 
             final String clientInfoJson = clientInfo.toString();
-            final String base64EncodedClientInfo = new String(Base64.encode(clientInfoJson.getBytes(), 0));
+            final String base64EncodedClientInfo = new String(Base64.encode(clientInfoJson.getBytes(AuthenticationConstants.CHARSET_UTF8), 0),
+                    AuthenticationConstants.CHARSET_UTF8);
             final ClientInfo clientInfoObj = new ClientInfo(base64EncodedClientInfo);
             final IDToken idToken = new IDToken(rawIdToken);
 
