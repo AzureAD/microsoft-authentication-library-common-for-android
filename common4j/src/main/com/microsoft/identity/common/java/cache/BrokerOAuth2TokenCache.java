@@ -20,27 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
-import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -52,7 +40,8 @@ import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -61,8 +50,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.cache.ADALOAuth2TokenCache.ERR_UNSUPPORTED_OPERATION;
-import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * "Combined" cache implementation to cache tokens inside of the broker.
@@ -133,22 +122,9 @@ public class BrokerOAuth2TokenCache
     }
 
     /**
-     * Constructs a new BrokerOAuth2TokenCache.
-     *
-     * @param context                  The current application context.
-     * @param callingProcessUid        The UID of the current broker-calling app.
-     * @param applicationMetadataCache The metadata cache to use.
-     */
-    public BrokerOAuth2TokenCache(@NonNull final Context context,
-                                  int callingProcessUid,
-                                  @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
-        this(AndroidPlatformComponents.createFromContext(context), callingProcessUid, applicationMetadataCache);
-    }
-
-    /**
      * Interface used to inject process-uid based caches into the broker.
      */
-    @VisibleForTesting
+    //@VisibleForTesting
     public interface ProcessUidCacheFactory {
 
         /**
@@ -164,18 +140,18 @@ public class BrokerOAuth2TokenCache
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
-     * @param context   The current application context.
-     * @param fociCache The FOCI cache implementation to use.
+     * @param components The current application components.
+     * @param fociCache  The FOCI cache implementation to use.
      */
-    @VisibleForTesting
-    public BrokerOAuth2TokenCache(@NonNull Context context,
+    //@VisibleForTesting
+    public BrokerOAuth2TokenCache(@NonNull IPlatformComponents components,
                                   final int callingProcessUid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
         // This cannot call the other constructors, since they unconditionally initialize
         // the foci cache, and this one uses the value passed in for testing.
-        super(AndroidPlatformComponents.createFromContext(context));
+        super(components);
 
         Logger.verbose(
                 TAG + "ctor",
@@ -207,7 +183,7 @@ public class BrokerOAuth2TokenCache
 
         final ICacheRecord result;
 
-        final boolean isFoci = !StringExtensions.isNullOrBlank(familyId);
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
 
         Logger.info(
                 TAG + methodName,
@@ -280,7 +256,7 @@ public class BrokerOAuth2TokenCache
 
         final ICacheRecord result;
 
-        final boolean isFoci = !StringExtensions.isNullOrBlank(familyId);
+        final boolean isFoci = !StringUtil.isNullOrEmpty(familyId);
 
         Logger.info(
                 TAG + methodName,
@@ -397,7 +373,7 @@ public class BrokerOAuth2TokenCache
                              @NonNull final GenericTokenResponse response) throws ClientException {
         final String methodName = ":save";
 
-        final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
+        final boolean isFoci = !StringUtil.isNullOrEmpty(response.getFamilyId());
 
         if (isFoci) {
             Logger.verbose(
@@ -450,7 +426,7 @@ public class BrokerOAuth2TokenCache
         synchronized (this) {
             final String methodName = ":saveAndLoadAggregatedAccountData";
 
-            final boolean isFoci = !StringExtensions.isNullOrBlank(response.getFamilyId());
+            final boolean isFoci = !StringUtil.isNullOrEmpty(response.getFamilyId());
 
             OAuth2TokenCache targetCache;
 
@@ -520,7 +496,7 @@ public class BrokerOAuth2TokenCache
     public ICacheRecord save(@NonNull final AccountRecord accountRecord,
                              @NonNull final IdTokenRecord idTokenRecord) {
         throw new UnsupportedOperationException(
-                ERR_UNSUPPORTED_OPERATION
+                OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION
         );
     }
 
@@ -1322,12 +1298,12 @@ public class BrokerOAuth2TokenCache
                                                String realm,
                                                CredentialType... typesToRemove) {
         // This API not needed for now...
-        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
+        throw new UnsupportedOperationException(OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION);
     }
 
     @Override
     public void clearAll() {
-        throw new UnsupportedOperationException(ERR_UNSUPPORTED_OPERATION);
+        throw new UnsupportedOperationException(OAuth2TokenCache.ERR_UNSUPPORTED_OPERATION);
     }
 
     /**
@@ -1617,7 +1593,7 @@ public class BrokerOAuth2TokenCache
 
         final INameValueStorage<String> sharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
-                        BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.getStorageEncryptionManager(),
                         String.class
                 );

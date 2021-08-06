@@ -516,16 +516,16 @@
   </BugInstance>
   <BugInstance type="DM_BOXED_PRIMITIVE_FOR_PARSING" priority="1" rank="16" abbrev="Bx" category="PERFORMANCE" instanceHash="8c11cd79131cd2081e9b1222ee6040bb" instanceOccurrenceNum="0" instanceOccurrenceMax="0">
     <ShortMessage>Boxing/unboxing to parse a primitive</ShortMessage>
-    <LongMessage>Boxing/unboxing to parse a primitive com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.setSingleSignOnState(String, MicrosoftAccount, MicrosoftRefreshToken)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Boxing/unboxing to parse a primitive com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.setSingleSignOnState(String, MicrosoftAccount, MicrosoftRefreshToken)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="setSingleSignOnState" signature="(Ljava/lang/String;Lcom/microsoft/identity/common/internal/providers/microsoft/MicrosoftAccount;Lcom/microsoft/identity/common/internal/providers/microsoft/MicrosoftRefreshToken;)V" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1731" end="1781" startBytecode="0" endBytecode="517" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.setSingleSignOnState(String, MicrosoftAccount, MicrosoftRefreshToken)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="setSingleSignOnState" signature="(Ljava/lang/String;Lcom/microsoft/identity/common/internal/providers/microsoft/MicrosoftAccount;Lcom/microsoft/identity/common/internal/providers/microsoft/MicrosoftRefreshToken;)V" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1731" end="1781" startBytecode="0" endBytecode="517" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.setSingleSignOnState(String, MicrosoftAccount, MicrosoftRefreshToken)</Message>
     </Method>
     <Method classname="java.lang.Integer" name="intValue" signature="()I" isStatic="false" role="METHOD_CALLED">
       <SourceLine classname="java.lang.Integer" start="893" end="893" startBytecode="0" endBytecode="28" sourcefile="Integer.java" sourcepath="java/lang/Integer.java"/>
@@ -534,256 +534,256 @@
     <Method classname="java.lang.Integer" name="parseInt" signature="(Ljava/lang/String;)I" isStatic="true" role="SHOULD_CALL">
       <Message>Should call Integer.parseInt(String) instead</Message>
     </Method>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1737" end="1737" startBytecode="14" endBytecode="14" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1737" end="1737" startBytecode="14" endBytecode="14" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 1737]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="597f475d3aa37d6f40a94c34d82e629a" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccount(String, String, String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccount(String, String, String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccount" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/dto/AccountRecord;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="790" end="839" startBytecode="0" endBytecode="64" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccount(String, String, String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccount" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/dto/AccountRecord;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="790" end="839" startBytecode="0" endBytecode="64" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccount(String, String, String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="119" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="829" end="829" startBytecode="122" endBytecode="122" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="829" end="829" startBytecode="122" endBytecode="122" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 829]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="80b529b2e94d54ff02e8da9d2a2b140" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountByHomeAccountId(String, String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountByHomeAccountId(String, String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccountByHomeAccountId" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/dto/AccountRecord;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1539" end="1589" startBytecode="0" endBytecode="86" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountByHomeAccountId(String, String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccountByHomeAccountId" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/dto/AccountRecord;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1539" end="1589" startBytecode="0" endBytecode="86" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountByHomeAccountId(String, String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="172" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1581" end="1581" startBytecode="175" endBytecode="175" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1581" end="1581" startBytecode="175" endBytecode="175" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 1581]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="9399c442d148b72208afffbb21fe6880" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountByLocalAccountId(String, String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountByLocalAccountId(String, String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccountByLocalAccountId" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/dto/AccountRecord;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="936" end="986" startBytecode="0" endBytecode="86" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountByLocalAccountId(String, String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccountByLocalAccountId" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/dto/AccountRecord;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="936" end="986" startBytecode="0" endBytecode="86" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountByLocalAccountId(String, String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="172" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="978" end="978" startBytecode="175" endBytecode="175" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="978" end="978" startBytecode="175" endBytecode="175" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 978]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="5ad831e77a525a575be47580d72eb849" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountWithAggregatedAccountDataByLocalAccountId(String, String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountWithAggregatedAccountDataByLocalAccountId(String, String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccountWithAggregatedAccountDataByLocalAccountId" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/cache/ICacheRecord;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="996" end="1040" startBytecode="0" endBytecode="76" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountWithAggregatedAccountDataByLocalAccountId(String, String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccountWithAggregatedAccountDataByLocalAccountId" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lcom/microsoft/identity/common/internal/cache/ICacheRecord;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="996" end="1040" startBytecode="0" endBytecode="76" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountWithAggregatedAccountDataByLocalAccountId(String, String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="146" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1032" end="1032" startBytecode="149" endBytecode="149" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1032" end="1032" startBytecode="149" endBytecode="149" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 1032]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="ce05c34d6f8df854787662c5a60766f2" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccounts(String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccounts(String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccounts" signature="(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1048" end="1086" startBytecode="0" endBytecode="81" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccounts(String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccounts" signature="(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1048" end="1086" startBytecode="0" endBytecode="81" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccounts(String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="122" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1070" end="1070" startBytecode="124" endBytecode="124" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1070" end="1070" startBytecode="124" endBytecode="124" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 1070]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="6d1e6287e2a8aef88af6579522d791d5" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccountsWithAggregatedAccountData" signature="(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1111" end="1155" startBytecode="0" endBytecode="65" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccountsWithAggregatedAccountData" signature="(Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1111" end="1155" startBytecode="0" endBytecode="65" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="121" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1149" end="1149" startBytecode="123" endBytecode="123" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1149" end="1149" startBytecode="123" endBytecode="123" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 1149]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_LOAD_OF_KNOWN_NULL_VALUE" priority="2" rank="16" abbrev="NP" category="STYLE" instanceHash="3db232bf1cb5881ab76e6a90eec1a6d2" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Load of known null value</ShortMessage>
-    <LongMessage>Load of known null value in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String, String)</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Load of known null value in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String, String)</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAccountsWithAggregatedAccountData" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="847" end="901" startBytecode="0" endBytecode="67" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAccountsWithAggregatedAccountData" signature="(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/util/List;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="847" end="901" startBytecode="0" endBytecode="67" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAccountsWithAggregatedAccountData(String, String, String)</Message>
     </Method>
     <LocalVariable name="environment" register="1" pc="123" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from environment</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="889" end="889" startBytecode="125" endBytecode="125" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="889" end="889" startBytecode="125" endBytecode="125" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
       <Message>At BrokerOAuth2TokenCache.java:[line 889]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" priority="2" rank="13" abbrev="NP" category="STYLE" instanceHash="267f70e16fe87641c032eafcbbd9b33b" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Possible null pointer dereference due to return value of called method</ShortMessage>
-    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAllTenantAccountsForAccountByClientId(String, AccountRecord) due to return value of called method</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAllTenantAccountsForAccountByClientId(String, AccountRecord) due to return value of called method</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getAllTenantAccountsForAccountByClientId" signature="(Ljava/lang/String;Lcom/microsoft/identity/common/internal/dto/AccountRecord;)Ljava/util/List;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1092" end="1105" startBytecode="0" endBytecode="150" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getAllTenantAccountsForAccountByClientId(String, AccountRecord)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getAllTenantAccountsForAccountByClientId" signature="(Ljava/lang/String;Lcom/microsoft/identity/common/internal/dto/AccountRecord;)Ljava/util/List;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1092" end="1105" startBytecode="0" endBytecode="150" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getAllTenantAccountsForAccountByClientId(String, AccountRecord)</Message>
     </Method>
     <LocalVariable name="cache" register="3" pc="16" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from cache</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1100" end="1100" startBytecode="17" endBytecode="17" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_DEREF">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1100" end="1100" startBytecode="17" endBytecode="17" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_DEREF">
       <Message>Dereferenced at BrokerOAuth2TokenCache.java:[line 1100]</Message>
     </SourceLine>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1092" end="1092" startBytecode="10" endBytecode="10" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_KNOWN_NULL">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1092" end="1092" startBytecode="10" endBytecode="10" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_KNOWN_NULL">
       <Message>Known null at BrokerOAuth2TokenCache.java:[line 1092]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" priority="2" rank="13" abbrev="NP" category="STYLE" instanceHash="8de7fce2a84c355cc29e1f577822d4c5" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Possible null pointer dereference due to return value of called method</ShortMessage>
-    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getIdTokensForAccountRecord(String, AccountRecord) due to return value of called method</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getIdTokensForAccountRecord(String, AccountRecord) due to return value of called method</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="getIdTokensForAccountRecord" signature="(Ljava/lang/String;Lcom/microsoft/identity/common/internal/dto/AccountRecord;)Ljava/util/List;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1162" end="1188" startBytecode="0" endBytecode="226" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.getIdTokensForAccountRecord(String, AccountRecord)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="getIdTokensForAccountRecord" signature="(Ljava/lang/String;Lcom/microsoft/identity/common/internal/dto/AccountRecord;)Ljava/util/List;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1162" end="1188" startBytecode="0" endBytecode="226" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.getIdTokensForAccountRecord(String, AccountRecord)</Message>
     </Method>
     <LocalVariable name="cache" register="5" pc="37" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from cache</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="1180" end="1180" startBytecode="38" endBytecode="38" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_DEREF">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="1180" end="1180" startBytecode="38" endBytecode="38" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_DEREF">
       <Message>Dereferenced at BrokerOAuth2TokenCache.java:[line 1180]</Message>
     </SourceLine>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="1172" end="1172" startBytecode="29" endBytecode="29" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_KNOWN_NULL">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="1172" end="1172" startBytecode="29" endBytecode="29" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_KNOWN_NULL">
       <Message>Known null at BrokerOAuth2TokenCache.java:[line 1172]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" priority="2" rank="13" abbrev="NP" category="STYLE" instanceHash="50334a638d07b448d5335693133cb8c7" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Possible null pointer dereference due to return value of called method</ShortMessage>
-    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.loadAggregatedAccountData(AbstractAuthenticationScheme, ICacheRecord) due to return value of called method</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
+    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.loadAggregatedAccountData(AbstractAuthenticationScheme, ICacheRecord) due to return value of called method</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="88" end="1790" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java">
         <Message>At BrokerOAuth2TokenCache.java:[lines 88-1790]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" name="loadAggregatedAccountData" signature="(Lcom/microsoft/identity/common/internal/authscheme/AbstractAuthenticationScheme;Lcom/microsoft/identity/common/internal/cache/ICacheRecord;)Ljava/util/List;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="359" end="369" startBytecode="0" endBytecode="204" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache.loadAggregatedAccountData(AbstractAuthenticationScheme, ICacheRecord)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" name="loadAggregatedAccountData" signature="(Lcom/microsoft/identity/common/internal/authscheme/AbstractAuthenticationScheme;Lcom/microsoft/identity/common/internal/cache/ICacheRecord;)Ljava/util/List;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="359" end="369" startBytecode="0" endBytecode="204" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache.loadAggregatedAccountData(AbstractAuthenticationScheme, ICacheRecord)</Message>
     </Method>
     <LocalVariable name="cache" register="6" pc="56" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from cache</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" primary="true" start="369" end="369" startBytecode="57" endBytecode="57" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_DEREF">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" primary="true" start="369" end="369" startBytecode="57" endBytecode="57" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_DEREF">
       <Message>Dereferenced at BrokerOAuth2TokenCache.java:[line 369]</Message>
     </SourceLine>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache" start="363" end="363" startBytecode="40" endBytecode="40" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_KNOWN_NULL">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache" start="363" end="363" startBytecode="40" endBytecode="40" sourcefile="BrokerOAuth2TokenCache.java" sourcepath="com/microsoft/identity/common/internal/cache/BrokerOAuth2TokenCache.java" role="SOURCE_LINE_KNOWN_NULL">
       <Message>Known null at BrokerOAuth2TokenCache.java:[line 363]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="SBSC_USE_STRINGBUFFER_CONCATENATION" priority="2" rank="18" abbrev="SBSC" category="PERFORMANCE" instanceHash="7014970b8c02d5158c6288cb01473d7b" instanceOccurrenceNum="0" instanceOccurrenceMax="0">
     <ShortMessage>Method concatenates strings using + in a loop</ShortMessage>
-    <LongMessage>com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter.getTarget(String, String) concatenates strings using + in a loop</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter" start="53" end="291" sourcefile="MicrosoftStsAccountCredentialAdapter.java" sourcepath="com/microsoft/identity/common/internal/cache/MicrosoftStsAccountCredentialAdapter.java">
+    <LongMessage>com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter.getTarget(String, String) concatenates strings using + in a loop</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter" start="53" end="291" sourcefile="MicrosoftStsAccountCredentialAdapter.java" sourcepath="com/microsoft/identity/common/internal/cache/MicrosoftStsAccountCredentialAdapter.java">
         <Message>At MicrosoftStsAccountCredentialAdapter.java:[lines 53-291]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter" name="getTarget" signature="(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter" start="135" end="153" startBytecode="0" endBytecode="320" sourcefile="MicrosoftStsAccountCredentialAdapter.java" sourcepath="com/microsoft/identity/common/internal/cache/MicrosoftStsAccountCredentialAdapter.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter.getTarget(String, String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter" name="getTarget" signature="(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter" start="135" end="153" startBytecode="0" endBytecode="320" sourcefile="MicrosoftStsAccountCredentialAdapter.java" sourcepath="com/microsoft/identity/common/internal/cache/MicrosoftStsAccountCredentialAdapter.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter.getTarget(String, String)</Message>
     </Method>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.MicrosoftStsAccountCredentialAdapter" primary="true" start="145" end="145" startBytecode="74" endBytecode="74" sourcefile="MicrosoftStsAccountCredentialAdapter.java" sourcepath="com/microsoft/identity/common/internal/cache/MicrosoftStsAccountCredentialAdapter.java">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.MicrosoftStsAccountCredentialAdapter" primary="true" start="145" end="145" startBytecode="74" endBytecode="74" sourcefile="MicrosoftStsAccountCredentialAdapter.java" sourcepath="com/microsoft/identity/common/internal/cache/MicrosoftStsAccountCredentialAdapter.java">
       <Message>At MicrosoftStsAccountCredentialAdapter.java:[line 145]</Message>
     </SourceLine>
   </BugInstance>
   <BugInstance type="NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" priority="2" rank="13" abbrev="NP" category="STYLE" instanceHash="5f7a5fa9469b5b9732c111bb7f45a04a" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="476">
     <ShortMessage>Possible null pointer dereference due to return value of called method</ShortMessage>
-    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.credentialClassForType(String) due to return value of called method</LongMessage>
-    <Class classname="com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache" start="50" end="570" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java">
+    <LongMessage>Possible null pointer dereference in com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache.credentialClassForType(String) due to return value of called method</LongMessage>
+    <Class classname="com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache" start="50" end="570" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java">
         <Message>At SharedPreferencesAccountCredentialCache.java:[lines 50-570]</Message>
       </SourceLine>
-      <Message>In class com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache</Message>
+      <Message>In class com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache</Message>
     </Class>
-    <Method classname="com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache" name="credentialClassForType" signature="(Ljava/lang/String;)Ljava/lang/Class;" isStatic="false" primary="true">
-      <SourceLine classname="com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache" start="494" end="501" startBytecode="0" endBytecode="157" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java"/>
-      <Message>In method com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.credentialClassForType(String)</Message>
+    <Method classname="com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache" name="credentialClassForType" signature="(Ljava/lang/String;)Ljava/lang/Class;" isStatic="false" primary="true">
+      <SourceLine classname="com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache" start="494" end="501" startBytecode="0" endBytecode="157" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java"/>
+      <Message>In method com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache.credentialClassForType(String)</Message>
     </Method>
     <LocalVariable name="targetType" register="2" pc="75" role="LOCAL_VARIABLE_VALUE_OF">
       <Message>Value loaded from targetType</Message>
     </LocalVariable>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache" primary="true" start="501" end="501" startBytecode="76" endBytecode="76" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java" role="SOURCE_LINE_INVOKED">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache" primary="true" start="501" end="501" startBytecode="76" endBytecode="76" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java" role="SOURCE_LINE_INVOKED">
       <Message>Method invoked at SharedPreferencesAccountCredentialCache.java:[line 501]</Message>
     </SourceLine>
-    <SourceLine classname="com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache" start="497" end="497" startBytecode="39" endBytecode="39" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java" role="SOURCE_LINE_KNOWN_NULL">
+    <SourceLine classname="com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache" start="497" end="497" startBytecode="39" endBytecode="39" sourcefile="SharedPreferencesAccountCredentialCache.java" sourcepath="com/microsoft/identity/common/internal/cache/SharedPreferencesAccountCredentialCache.java" role="SOURCE_LINE_KNOWN_NULL">
       <Message>Known null at SharedPreferencesAccountCredentialCache.java:[line 497]</Message>
     </SourceLine>
   </BugInstance>

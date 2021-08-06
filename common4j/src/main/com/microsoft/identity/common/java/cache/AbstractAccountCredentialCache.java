@@ -20,13 +20,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -34,7 +29,9 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,7 +40,9 @@ import java.util.Locale;
 import java.util.Set;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
-import static com.microsoft.identity.common.internal.util.StringUtil.equalsIgnoreCaseTrimBoth;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public abstract class AbstractAccountCredentialCache implements IAccountCredentialCache {
 
@@ -86,9 +85,9 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String environment,
                                                                 @Nullable final String realm,
                                                                 @NonNull final List<AccountRecord> allAccounts) {
-        final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
-        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
-        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
+        final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
+        final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
+        final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
 
         Logger.verbose(
                 TAG,
@@ -103,15 +102,15 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
+                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, account.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, account.getEnvironment());
             }
 
             if (mustMatchOnRealm) {
-                matches = matches && equalsIgnoreCaseTrimBoth(realm, account.getRealm());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, account.getRealm());
             }
 
             if (matches) {
@@ -136,16 +135,16 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
                                                                 @Nullable final String authScheme,
                                                                 @Nullable final String requestedClaims,
                                                                 @NonNull final List<Credential> allCredentials) {
-        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
-        final boolean mustMatchOnHomeAccountId = !StringExtensions.isNullOrBlank(homeAccountId);
-        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
-        final boolean mustMatchOnTarget = !StringExtensions.isNullOrBlank(target);
-        final boolean mustMatchOnClientId = !StringExtensions.isNullOrBlank(clientId);
+        final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
+        final boolean mustMatchOnHomeAccountId = !StringUtil.isNullOrEmpty(homeAccountId);
+        final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
+        final boolean mustMatchOnTarget = !StringUtil.isNullOrEmpty(target);
+        final boolean mustMatchOnClientId = !StringUtil.isNullOrEmpty(clientId);
         final boolean mustMatchOnCredentialType = null != credentialType;
         final boolean mustMatchOnAuthScheme = mustMatchOnCredentialType
-                && !StringExtensions.isNullOrBlank(authScheme)
+                && !StringUtil.isNullOrEmpty(authScheme)
                 && credentialType == CredentialType.AccessToken_With_AuthScheme;
-        final boolean mustMatchOnRequestedClaims = !StringExtensions.isNullOrBlank(requestedClaims);
+        final boolean mustMatchOnRequestedClaims = !StringUtil.isNullOrEmpty(requestedClaims);
 
         Logger.verbose(
                 TAG,
@@ -170,29 +169,29 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             boolean matches = true;
 
             if (mustMatchOnHomeAccountId) {
-                matches = equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId());
+                matches = StringUtil.equalsIgnoreCaseTrimBoth(homeAccountId, credential.getHomeAccountId());
             }
 
             if (mustMatchOnEnvironment) {
-                matches = matches && equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(environment, credential.getEnvironment());
             }
 
             if (mustMatchOnCredentialType) {
-                matches = matches && equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(credentialType.name(), credential.getCredentialType());
             }
 
             if (mustMatchOnClientId) {
-                matches = matches && equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(clientId, credential.getClientId());
             }
 
             if (mustMatchOnRealm && credential instanceof AccessTokenRecord) {
                 final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                matches = matches && equalsIgnoreCaseTrimBoth(realm, accessToken.getRealm());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, accessToken.getRealm());
             }
 
             if (mustMatchOnRealm && credential instanceof IdTokenRecord) {
                 final IdTokenRecord idToken = (IdTokenRecord) credential;
-                matches = matches && equalsIgnoreCaseTrimBoth(realm, idToken.getRealm());
+                matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(realm, idToken.getRealm());
             }
 
             if (mustMatchOnTarget) {
@@ -221,7 +220,7 @@ public abstract class AbstractAccountCredentialCache implements IAccountCredenti
             if (mustMatchOnRequestedClaims) {
                 if (credential instanceof AccessTokenRecord) {
                     final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-                    matches = matches && equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
+                    matches = matches && StringUtil.equalsIgnoreCaseTrimBoth(requestedClaims, accessToken.getRequestedClaims());
                 } else {
                     Logger.verbose(TAG, "Query specified requested_claims-match, but attempted to match with non-AT credential type.");
                 }

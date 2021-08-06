@@ -20,39 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.aad.adal;
 
-/**
- * Interface to glue together various migration/TSL related functionality.
- */
-public interface ITokenCacheItem {
-
-    /**
-     * Gets the authority.
-     *
-     * @return The authority to get.
-     */
-    String getAuthority();
-
-    /**
-     * Gets the clientId.
-     *
-     * @return The clientId to get.
-     */
-    String getClientId();
-
-    /**
-     * Gets the refresh tokens (as a raw String).
-     *
-     * @return The refresh token to get.
-     */
-    String getRefreshToken();
-
-    /**
-     * Gets the resource associated to this request.
-     *
-     * @return The resource to get.
-     */
-    String getResource();
-
+public final class DateTimeAdapter
+        extends com.microsoft.identity.common.java.adal.cache.DateTimeAdapter {
+    // This class has moved to common. See super.
 }

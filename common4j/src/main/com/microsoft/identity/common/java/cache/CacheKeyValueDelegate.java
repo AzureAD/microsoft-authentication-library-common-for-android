@@ -20,9 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
-
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.cache;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -31,7 +29,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountCredentialBase;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -39,8 +36,9 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -52,14 +50,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.AUTH_SCHEME;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.AUTH_SCHEME;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
@@ -156,7 +156,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
         RefreshTokenRecord rt;
         if ((credential instanceof RefreshTokenRecord)
-                && !StringExtensions.isNullOrBlank((rt = (RefreshTokenRecord) credential).getFamilyId())) {
+                && !StringUtil.isNullOrEmpty((rt = (RefreshTokenRecord) credential).getFamilyId())) {
             String familyIdForCacheKey = rt.getFamilyId();
 
             if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
@@ -178,7 +178,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
             }
 
-            if (!StringExtensions.isNullOrBlank(accessToken.getRequestedClaims())) {
+            if (!StringUtil.isNullOrEmpty(accessToken.getRequestedClaims())) {
                 // The Requested Claims string has no guarantee it doesn't contain a delimiter, so we hash it
                 cacheKey += CACHE_VALUE_SEPARATOR + REQUESTED_CLAIMS;
                 String reqClaimsHash = String.valueOf(sanitizeNull(accessToken.getRequestedClaims()).hashCode());
@@ -216,7 +216,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             @SuppressWarnings(WarningType.unchecked_warning)
             final T resultObject = (T) mGson.fromJson(string, t);
 
-            if (!StringExtensions.isNullOrBlank(string)) {
+            if (!StringUtil.isNullOrEmpty(string)) {
                 // Turn the incoming String into a JSONObject
                 final JsonObject incomingJson = new JsonParser().parse(string).getAsJsonObject();
 

@@ -20,17 +20,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
@@ -41,7 +39,6 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -50,6 +47,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
+
+import lombok.NonNull;
 
 public class MicrosoftStsAccountCredentialAdapter
         implements IAccountCredentialAdapter
@@ -133,9 +132,9 @@ public class MicrosoftStsAccountCredentialAdapter
      */
     private String getTarget(@NonNull final String requestScope,
                              @NonNull final String responseScope) {
-        String scopesToCache = "";
 
         if (StringUtil.isNullOrEmpty(responseScope)) {
+            StringBuilder scopesToCache = new StringBuilder();
             // The response scopes were empty -- per https://tools.ietf.org/html/rfc6749#section-3.3
             // we are going to fall back to a the request scopes minus any default scopes....
             final String[] requestScopes = requestScope.split("\\s+");
@@ -143,15 +142,13 @@ public class MicrosoftStsAccountCredentialAdapter
             requestScopeSet.removeAll(DEFAULT_SCOPES);
 
             for (final String scope : requestScopeSet) {
-                scopesToCache += scope + " ";
+                scopesToCache.append(scope).append(' ');
             }
 
-            scopesToCache = scopesToCache.trim();
+            return scopesToCache.toString().trim();
         } else {
-            scopesToCache = responseScope;
+            return responseScope;
         }
-
-        return scopesToCache;
     }
 
     @Override

@@ -64,7 +64,27 @@ public class StringUtil {
      * @return true, if the string is null or blank.
      */
     public static boolean isNullOrEmpty(String message) {
-        return message == null || message.trim().length() == 0;
+        if (message == null) {
+            return true;
+        }
+        return message.trim().length() == 0;
+/*
+        // We could convert this to an array.  However, we don't need to, and this will avoid
+        // that array allocation, though it looks like it may happen anyway due to a varargs method
+        // buried in {@link String}.  This is just hoping that the JVM is very clever with that
+        // length-1 varargs array.
+
+        // From the String.trim() documentation:
+        //  "Returns a string whose value is this string, with all leading and trailing space
+        //   removed, where space is defined as any character whose codepoint is less than or"
+        //   equal to 'U+0020' (the space character)."
+        for (int i = 0; i < message.length(); i++) {
+            if (message.indexOf(i) > 0x20) {
+                return false;
+            }
+        }
+        return true;
+ */
     }
 
     /**
@@ -303,5 +323,28 @@ public class StringUtil {
                     ENCODING_UTF8);
         }
         return msg;
+    }
+
+    /**
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming both inputs.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return true if the inputs are equal, false otherwise.
+     */
+    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
+                                                   @Nullable final String two) {
+        return equalsIgnoreCaseTrim(null != one ? one.trim() : one, two);
+    }
+
+    /**
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming the second input.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return true if the inputs are equal, false otherwise.
+     */
+    public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
+        return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
 }

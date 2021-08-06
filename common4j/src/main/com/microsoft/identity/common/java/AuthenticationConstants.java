@@ -60,7 +60,10 @@ public class AuthenticationConstants {
      * Default access token expiration time in seconds.
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
-    
+
+    /**
+     * Default scopes for OAuth2.
+     */
     public static final Set<String> DEFAULT_SCOPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
             OAuth2Scopes.OPEN_ID_SCOPE,
             OAuth2Scopes.OFFLINE_ACCESS_SCOPE,

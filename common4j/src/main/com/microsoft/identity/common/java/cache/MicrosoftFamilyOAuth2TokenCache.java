@@ -20,21 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.cache.IAccountCredentialAdapter;
-import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -46,12 +38,15 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
+import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.targetsIntersect;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -161,7 +156,7 @@ public class MicrosoftFamilyOAuth2TokenCache
                             && accountRecord.getEnvironment().equals(atRecord.getEnvironment())
                             && accountRecord.getHomeAccountId().equals(atRecord.getHomeAccountId())
                             && accountRecord.getRealm().equals(atRecord.getRealm())
-                            && targetsIntersect(target, atRecord.getTarget(), true)) {
+                            && AbstractAccountCredentialCache.targetsIntersect(target, atRecord.getTarget(), true)) {
                         if (CredentialType.AccessToken.name().equalsIgnoreCase(atRecord.getCredentialType())
                                 && BearerAuthenticationSchemeInternal.SCHEME_BEARER.equalsIgnoreCase(authenticationScheme.getName())) {
                             atRecordToReturn = atRecord;

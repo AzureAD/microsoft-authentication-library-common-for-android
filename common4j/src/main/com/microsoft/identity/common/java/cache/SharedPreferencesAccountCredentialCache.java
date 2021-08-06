@@ -20,13 +20,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -35,7 +33,6 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,7 +43,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
 public class SharedPreferencesAccountCredentialCache extends AbstractAccountCredentialCache {
@@ -499,6 +499,10 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         final CredentialType targetType = getCredentialTypeForCredentialCacheKey(cacheKey);
 
+        if (targetType == null) {
+            return null;
+        }
+
         Logger.verbose(TAG, "CredentialType matched: [" + targetType + "]");
 
         return getTargetClassForCredentialType(cacheKey, targetType);
@@ -512,7 +516,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      */
     @Nullable
     public static CredentialType getCredentialTypeForCredentialCacheKey(@NonNull final String cacheKey) {
-        if (StringExtensions.isNullOrBlank(cacheKey)) {
+        if (StringUtil.isNullOrEmpty(cacheKey)) {
             throw new IllegalArgumentException("Param [cacheKey] cannot be null.");
         }
 
@@ -526,7 +530,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         CredentialType type = null;
         for (final String credentialTypeStr : credentialTypesLowerCase) {
-            if (cacheKey.contains(CACHE_VALUE_SEPARATOR + credentialTypeStr + CACHE_VALUE_SEPARATOR)) {
+            if (cacheKey.contains(CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR + credentialTypeStr + CacheKeyValueDelegate.CACHE_VALUE_SEPARATOR)) {
                 Logger.verbose(TAG, "Cache key is a Credential type...");
 
                 if (CredentialType.AccessToken.name().equalsIgnoreCase(credentialTypeStr)) {
