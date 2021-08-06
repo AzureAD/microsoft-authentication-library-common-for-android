@@ -37,6 +37,7 @@ V.Next
 - [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
 - [MINOR] Move Account Manager User Data look-up constants from common, AADAuthenticator to common4j (#1486)
 - [MAJOR] Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489)
+- [PATCH] Add explicit dependency on androidx.localbroadcast manager and increment androidx.browser version to 1.3 (#1500)
 
 Version 3.4.5
 ----------
