@@ -56,10 +56,11 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
         return "UNKNOWN";
     }
 
+    // Returns a SDK version (i.e. 24) instead of a user-friendly android version (i.e. 7.0)
     @Override
     @NonNull
     public String getOs() {
-        return android.os.Build.VERSION.RELEASE;
+        return String.valueOf(Build.VERSION.SDK_INT);
     }
 
     @Override
