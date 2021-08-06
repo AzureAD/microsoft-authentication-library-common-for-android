@@ -81,7 +81,7 @@ public class MicrosoftStsAccountCredentialAdapter
 
             final AccessTokenRecord accessToken = new AccessTokenRecord();
             // Required fields
-            accessToken.setCredentialType(getCredentialType(response.getTokenType()));
+            accessToken.setCredentialType(getCredentialType(StringUtil.sanitizeNull(response.getTokenType())));
             accessToken.setHomeAccountId(SchemaUtil.getHomeAccountId(clientInfo));
             accessToken.setRealm(getRealm(strategy, response));
             accessToken.setEnvironment(strategy.getIssuerCacheIdentifierFromTokenEndpoint());

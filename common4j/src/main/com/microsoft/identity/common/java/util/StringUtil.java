@@ -347,4 +347,14 @@ public class StringUtil {
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
+
+    public static String sanitizeNull(final String input) {
+        return null == input ? "" : input;
+    }
+
+    public static String sanitizeNullAndLowercaseAndTrim(final String input) {
+        String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
+
+        return outValue;
+    }
 }

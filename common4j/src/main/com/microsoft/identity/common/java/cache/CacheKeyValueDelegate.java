@@ -46,7 +46,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,12 +94,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String REQUESTED_CLAIMS = "<requested_claims>";
     }
 
-    private static String sanitizeNull(final String input) {
-        String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
-
-        return outValue;
-    }
-
     @Override
     public String generateCacheKey(AccountRecord account) {
         String cacheKey = HOME_ACCOUNT_ID
@@ -108,9 +101,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 + ENVIRONMENT
                 + CACHE_VALUE_SEPARATOR
                 + REALM;
-        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(account.getHomeAccountId()));
-        cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(account.getEnvironment()));
-        cacheKey = cacheKey.replace(REALM, sanitizeNull(account.getRealm()));
+        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, StringUtil.sanitizeNullAndLowercaseAndTrim(account.getHomeAccountId()));
+        cacheKey = cacheKey.replace(ENVIRONMENT, StringUtil.sanitizeNullAndLowercaseAndTrim(account.getEnvironment()));
+        cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(account.getRealm()));
 
         return cacheKey;
     }
@@ -150,9 +143,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                         + CLIENT_ID + CACHE_VALUE_SEPARATOR
                         + REALM + CACHE_VALUE_SEPARATOR
                         + TARGET;
-        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(credential.getHomeAccountId()));
-        cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
-        cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
+        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getHomeAccountId()));
+        cacheKey = cacheKey.replace(ENVIRONMENT, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getEnvironment()));
+        cacheKey = cacheKey.replace(CREDENTIAL_TYPE, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getCredentialType()));
 
         RefreshTokenRecord rt;
         if ((credential instanceof RefreshTokenRecord)
@@ -165,33 +158,33 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
             cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
         } else {
-            cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
+            cacheKey = cacheKey.replace(CLIENT_ID, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getClientId()));
         }
 
         if (credential instanceof AccessTokenRecord) {
             final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-            cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
-            cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
+            cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getTarget()));
 
             if (TokenRequest.TokenType.POP.equalsIgnoreCase(accessToken.getAccessTokenType())) {
                 cacheKey += CACHE_VALUE_SEPARATOR + AUTH_SCHEME;
-                cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
+                cacheKey = cacheKey.replace(AUTH_SCHEME, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getAccessTokenType()));
             }
 
             if (!StringUtil.isNullOrEmpty(accessToken.getRequestedClaims())) {
                 // The Requested Claims string has no guarantee it doesn't contain a delimiter, so we hash it
                 cacheKey += CACHE_VALUE_SEPARATOR + REQUESTED_CLAIMS;
-                String reqClaimsHash = String.valueOf(sanitizeNull(accessToken.getRequestedClaims()).hashCode());
-                cacheKey = cacheKey.replace(REQUESTED_CLAIMS, sanitizeNull(reqClaimsHash));
+                String reqClaimsHash = String.valueOf(StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getRequestedClaims()).hashCode());
+                cacheKey = cacheKey.replace(REQUESTED_CLAIMS, StringUtil.sanitizeNullAndLowercaseAndTrim(reqClaimsHash));
             }
 
         } else if (credential instanceof RefreshTokenRecord) {
             final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");
-            cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
+            cacheKey = cacheKey.replace(TARGET, StringUtil.sanitizeNullAndLowercaseAndTrim(refreshToken.getTarget()));
         } else if (credential instanceof IdTokenRecord) {
             final IdTokenRecord idToken = (IdTokenRecord) credential;
-            cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
+            cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(idToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, "");
         } else if (credential instanceof PrimaryRefreshTokenRecord) {
             cacheKey = cacheKey.replace(REALM, "");

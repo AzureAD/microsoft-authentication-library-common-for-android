@@ -1540,7 +1540,7 @@ public class MsalOAuth2TokenCache
      * @return The number of Credentials removed.
      */
     private int removeCredentialsOfTypeForAccount(
-            @NonNull final String environment, // 'authority host'
+            @Nullable final String environment, // 'authority host'
             @Nullable final String clientId,
             @NonNull final CredentialType credentialType,
             @NonNull final AccountRecord targetAccount,
