@@ -25,18 +25,18 @@ package com.microsoft.identity.common.adal.internal.tokensharing;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.tokensharing.SSOStateSerializer;
-import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ServiceException;
-import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
@@ -58,10 +58,10 @@ import java.util.concurrent.Future;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID;
 import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.RAW;
 import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.SSO_STATE_SERIALIZER_BLOB;
-import static com.microsoft.identity.common.java.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
+import static com.microsoft.identity.common.java.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
 public class TokenShareUtility implements ITokenShareInternal {
 
@@ -73,7 +73,10 @@ public class TokenShareUtility implements ITokenShareInternal {
      * To support caching lookups in ADAL, the following authority is used to signal
      * that the tokens being yielded belong to the target user's home tenant.
      */
-    private static final String sHomeTenantAuthority = "https://login.windows.net/common";
+    private static final String ENVIRONMENT_GLOBAL = "login.microsoftonline.com";
+    public static final String ENVIRONMENT_GALLATIN = "login.partner.microsoftonline.cn";
+    public static final String ENVIRONMENT_ITAR = "login.microsoftonline.us";
+    public static final String ENVIRONMENT_BLACKFOREST = "login.microsoftonline.de";
 
     static {
         applyV1ToV2Mappings();
@@ -97,6 +100,39 @@ public class TokenShareUtility implements ITokenShareInternal {
         mClientId = clientId;
         mRedirectUri = redirectUri;
         mTokenCache = cache;
+    }
+
+    @NonNull
+    private static String getCanonicalEnvironment(@NonNull final String environment) {
+        switch (environment) {
+            case "login.windows.net":
+            case "login.microsoft.com":
+            case "sts.windows.net":
+                return ENVIRONMENT_GLOBAL;
+            case "login.chinacloudapi.cn":
+                return ENVIRONMENT_GALLATIN;
+            case "login.usgovcloudapi.net":
+                return ENVIRONMENT_ITAR;
+            default:
+                return environment;
+        }
+    }
+
+    @Nullable
+    private static String getAuthorityForEnvironment(@NonNull final String environment) {
+        String canonicalEnvironment = getCanonicalEnvironment(environment);
+        switch (canonicalEnvironment) {
+            case ENVIRONMENT_GLOBAL:
+                return "https://login.microsoftonline.com/common";
+            case ENVIRONMENT_GALLATIN:
+                return "https://login.partner.microsoftonline.cn/common";
+            case ENVIRONMENT_BLACKFOREST:
+                return "https://login.microsoftonline.de/common";
+            case ENVIRONMENT_ITAR:
+                return "https://login.microsoftonline.us/common";
+            default:
+                return null;
+        }
     }
 
     @Override
@@ -322,7 +358,7 @@ public class TokenShareUtility implements ITokenShareInternal {
         // In order to support ADAL cache lookups when the cache is empty, always use /common
         // when the outbound token is from the home tenant
         if (isFromHomeTenant(idTokenRecord)) {
-            authority = sHomeTenantAuthority;
+            authority = getAuthorityForEnvironment(refreshTokenRecord.getEnvironment());
         } else {
             authority = idTokenRecord.getAuthority();
         }
