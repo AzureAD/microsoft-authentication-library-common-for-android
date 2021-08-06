@@ -599,7 +599,8 @@ public abstract class BaseController {
             );
             throw new ClientException(
                     ErrorStrings.NO_ACCOUNT_FOUND,
-                    "No cached accounts found for the supplied homeAccountId"
+                    "No cached accounts found for the supplied "
+                            + (isB2CAuthority ? "homeAccountId" : "localAccountId")
             );
         }
 
