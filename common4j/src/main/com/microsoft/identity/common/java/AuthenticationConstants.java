@@ -402,6 +402,11 @@ public class AuthenticationConstants {
         public static final String BEARER = "Bearer";
 
         /**
+         * AAD Oauth2 authorization.
+         */
+        public static final String AUTHORIZATION = "Authorization";
+
+        /**
          * AAD Oauth2 string of realm.
          */
         public static final String REALM = "realm";
