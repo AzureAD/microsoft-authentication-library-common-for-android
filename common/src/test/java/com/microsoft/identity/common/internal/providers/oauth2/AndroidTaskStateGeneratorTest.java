@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import com.microsoft.identity.common.java.providers.oauth2.StateGenerator;
+import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -37,7 +37,7 @@ public class AndroidTaskStateGeneratorTest {
 
     @Test
     public void test_stateGeneratorGenerateMethod(){
-        StateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
+        IStateGenerator generator = new AndroidTaskStateGenerator(TASK_ID);
         String state = generator.generate();
         String expected = String.valueOf(TASK_ID);
         Assert.assertEquals(expected, state.split(":")[0]);

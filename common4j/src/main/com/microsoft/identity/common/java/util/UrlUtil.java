@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.util;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -81,6 +82,27 @@ public class UrlUtil {
     /**
      * Get URL parameters from a given {@link URI} object.
      *
+     * @param urlString a uri string.
+     * @return a map of url parameters.
+     */
+    @NonNull
+    public static Map<String, String> getParameters(@Nullable final String urlString)
+            throws ClientException {
+        if (StringUtil.isNullOrEmpty(urlString)){
+            Logger.warn(TAG, "url string is null.");
+            return Collections.emptyMap();
+        }
+
+        try {
+            return getParameters(new URI(urlString));
+        } catch (final URISyntaxException e){
+            throw new ClientException(ClientException.MALFORMED_URL,
+                    "Cannot extract parameter from a malformed URL string.", e);
+        }
+    }
+    /**
+     * Get URL parameters from a given {@link URI} object.
+     *
      * @param uri String
      * @return a map of url parameters.
      */
@@ -91,6 +113,23 @@ public class UrlUtil {
         if (uri == null){
             Logger.warn(TAG, "uri is null.");
             return Collections.emptyMap();
+        }
+
+        if (uri.isOpaque()){
+            // Opaque URI *might* have query params, but Java's URI would just treat the whole URL as
+            // [scheme:]scheme-specific-part[#fragment]
+            //
+            // Since we want to try extracting query params from it (and we don't care about other parts of the URI),
+            // we're going to prepend a scheme so that Java's URI recognizes this as a hierarchical one.
+            // [scheme:][//authority][path][?query][#fragment]
+            //
+            // See: https://docs.oracle.com/javase/8/docs/api/java/net/URI.html
+            try {
+                return getParameters(new URI("scheme://" + uri.toString()));
+            } catch (final URISyntaxException e) {
+                Logger.warn(TAG, "Cannot convert opaque URI.");
+                return Collections.emptyMap();
+            }
         }
 
         final String fragment = uri.getFragment();
@@ -180,5 +219,16 @@ public class UrlUtil {
         return result;
     }
 
-
+    /**
+     * This creates a url from a String, rewriting any malformedUrlExceptions to runtime.
+     * @param urlString the string to convert.
+     * @return the corresponding {@link URL}.
+     */
+    public static URL makeUrlSilent(String urlString) {
+        try {
+            return new URL(urlString);
+        } catch (final MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

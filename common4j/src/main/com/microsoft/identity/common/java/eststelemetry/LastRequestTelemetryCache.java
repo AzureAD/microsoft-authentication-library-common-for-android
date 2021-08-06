@@ -86,6 +86,10 @@ public class LastRequestTelemetryCache implements IRequestTelemetryCache<LastReq
         }
     }
 
+    public void clear() {
+        mStorage.clear();
+    }
+
     @Override
     public synchronized void saveRequestTelemetryToCache(@NonNull final LastRequestTelemetry requestTelemetry) {
         Logger.verbose(TAG, "Saving Last Request Telemetry to cache...");

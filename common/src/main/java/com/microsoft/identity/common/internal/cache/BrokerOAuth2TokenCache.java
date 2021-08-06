@@ -28,11 +28,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
@@ -58,6 +59,9 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.internal.cache.ADALOAuth2TokenCache.ERR_UNSUPPORTED_OPERATION;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 /**
  * "Combined" cache implementation to cache tokens inside of the broker.
@@ -105,6 +109,10 @@ public class BrokerOAuth2TokenCache
     private final int mCallingProcessUid;
     private ProcessUidCacheFactory mDelegate = null;
 
+    @Getter
+    @Accessors(prefix = "m")
+    private final Context mContext;
+
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
@@ -115,7 +123,7 @@ public class BrokerOAuth2TokenCache
     public BrokerOAuth2TokenCache(@NonNull final Context context,
                                   int callingProcessUid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
-        super(context);
+        mContext = context;
 
         Logger.verbose(
                 TAG + "ctor",
@@ -156,7 +164,7 @@ public class BrokerOAuth2TokenCache
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
-        super(context);
+        mContext = context;
 
         Logger.verbose(
                 TAG + "ctor",
@@ -1582,7 +1590,7 @@ public class BrokerOAuth2TokenCache
                         context,
                         SharedPreferencesAccountCredentialCache
                                 .getBrokerUidSequesteredFilename(bindingProcessUid),
-                        new AndroidCommonComponents(context).
+                        AndroidPlatformComponents.createFromContext(context).
                                 getStorageEncryptionManager()
                 );
 
@@ -1600,7 +1608,7 @@ public class BrokerOAuth2TokenCache
                 SharedPreferencesFileManager.getSharedPreferences(
                         context,
                         BROKER_FOCI_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        new AndroidCommonComponents(context).
+                        AndroidPlatformComponents.createFromContext(context).
                                 getStorageEncryptionManager()
                 );
 

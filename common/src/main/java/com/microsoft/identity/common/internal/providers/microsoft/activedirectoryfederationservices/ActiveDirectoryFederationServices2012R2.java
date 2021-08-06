@@ -24,8 +24,8 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.IdentityProvider;
-import com.microsoft.identity.common.java.interfaces.ICommonComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 
@@ -37,7 +37,7 @@ public class ActiveDirectoryFederationServices2012R2
 
     @Override
     public ActiveDirectoryFederationServices2012R2OAuth2Strategy createOAuth2Strategy(@NonNull final OAuth2Configuration config,
-                                                                                      @NonNull final ICommonComponents commonComponents) {
+                                                                                      @NonNull final IPlatformComponents commonComponents) {
         final OAuth2StrategyParameters parameters = OAuth2StrategyParameters.builder()
                 .platformComponents(commonComponents)
                 .build();

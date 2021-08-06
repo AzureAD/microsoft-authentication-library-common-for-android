@@ -28,6 +28,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.Collections;
@@ -62,8 +63,6 @@ public enum AuthenticationSettings {
     private String mBrokerPackageName = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
     private String mBrokerSignature = AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
-
-    private Class<?> mClazzDeviceCertProxy;
 
     private String mActivityPackageName;
 
@@ -238,30 +237,25 @@ public enum AuthenticationSettings {
      * @param clazz class for workplace join
      */
     public void setDeviceCertificateProxyClass(@SuppressWarnings(WarningType.rawtype_warning) Class clazz) {
-        if (IDeviceCertificate.class.isAssignableFrom(clazz)) {
-            mClazzDeviceCertProxy = clazz;
-        } else {
-            throw new IllegalArgumentException("clazz");
-        }
+        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.setDeviceCertificateProxyClass(clazz);
     }
 
     /**
-     * get class for work place join related API. This is only used from
-     * Authenticator side.
+     * get class for work place join related API. This is only used from the
+     * Broker side.
      *
      * @return Class
      */
     public Class<?> getDeviceCertificateProxy() {
-        return mClazzDeviceCertProxy;
+        return com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.getDeviceCertificateProxy();
     }
-
 
     /**
      * remove class for work place join related API. This is only used from
      * Authenticator side.
      */
     public void removeDeviceCertificateProxy() {
-        mClazzDeviceCertProxy = null;
+        com.microsoft.identity.common.java.AuthenticationSettings.INSTANCE.removeDeviceCertificateProxy();
     }
 
     /**

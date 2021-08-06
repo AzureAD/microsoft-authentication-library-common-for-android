@@ -28,6 +28,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
@@ -39,7 +41,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
+import java.util.UUID;
 
+import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -50,6 +54,8 @@ public class StringUtil {
     private static String TAG = StringUtil.class.getSimpleName();
 
     private static final String RFC3339_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+
+    private static final String TOKEN_HASH_ALGORITHM = "SHA256";
 
     /**
      * Checks if string is null or empty.
@@ -260,4 +266,42 @@ public class StringUtil {
         return RFC3339DateFormat.parse(dateStr);
     }
 
+    /**
+     * Util method to check if a string is a UUID or not
+     *
+     * @param inputString : inputString
+     * @return true if the inputString is a UUID else false;
+     */
+    public static boolean isUuid(@NonNull final String inputString) {
+        try {
+            UUID.fromString(inputString);
+            return true;
+        } catch (final IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode){
+        return Base64.encodeToString(bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+
+    public static String encodeUrlSafeString(@NonNull final String stringToEncode){
+        return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
+    }
+    /**
+     * Create the Hash string of the message.
+     *
+     * @param msg String
+     * @return String in Hash
+     * @throws NoSuchAlgorithmException throws if no such algorithm.
+     */
+    public static String createHash(final String msg) throws NoSuchAlgorithmException {
+        if (!isNullOrEmpty(msg)) {
+            final MessageDigest digester = MessageDigest.getInstance(TOKEN_HASH_ALGORITHM);
+            final byte[] msgInBytes = msg.getBytes(ENCODING_UTF8);
+            return new String(Base64.encode(digester.digest(msgInBytes), Base64.NO_WRAP),
+                    ENCODING_UTF8);
+        }
+        return msg;
+    }
 }
