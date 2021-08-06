@@ -37,6 +37,7 @@ V.Next
 - [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
 - [MINOR] Move Account Manager User Data look-up constants from common, AADAuthenticator to common4j (#1486)
 - [MAJOR] Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489)
+- [MINOR] Implements a fix for sovereign cloud TSL scenarios
 
 Version 3.4.5
 ----------

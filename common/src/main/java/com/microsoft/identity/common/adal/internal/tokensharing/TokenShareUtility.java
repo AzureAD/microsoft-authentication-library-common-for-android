@@ -68,15 +68,10 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
     private static final String CONSUMERS_ENDPOINT = "https://login.microsoftonline.com/consumers";
-
-    /**
-     * To support caching lookups in ADAL, the following authority is used to signal
-     * that the tokens being yielded belong to the target user's home tenant.
-     */
     private static final String ENVIRONMENT_GLOBAL = "login.microsoftonline.com";
-    public static final String ENVIRONMENT_GALLATIN = "login.partner.microsoftonline.cn";
-    public static final String ENVIRONMENT_ITAR = "login.microsoftonline.us";
-    public static final String ENVIRONMENT_BLACKFOREST = "login.microsoftonline.de";
+    private static final String ENVIRONMENT_GALLATIN = "login.partner.microsoftonline.cn";
+    private static final String ENVIRONMENT_ITAR = "login.microsoftonline.us";
+    private static final String ENVIRONMENT_BLACKFOREST = "login.microsoftonline.de";
 
     static {
         applyV1ToV2Mappings();
