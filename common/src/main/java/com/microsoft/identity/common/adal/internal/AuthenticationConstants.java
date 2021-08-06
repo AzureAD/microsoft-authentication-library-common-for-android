@@ -427,16 +427,6 @@ public final class AuthenticationConstants {
         public static final String RESOURCE = "resource";
 
         /**
-         * AAD OAuth2 Challenge strings.
-         */
-        public static final String BEARER = "Bearer";
-
-        /**
-         * AAD Oauth2 authorization.
-         */
-        public static final String AUTHORIZATION = "authorization";
-
-        /**
          * String of authorization uri.
          */
         public static final String AUTHORIZATION_URI = "authorization_uri";
