@@ -31,7 +31,6 @@ import java.util.Map;
 /**
  * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
-@Deprecated
 public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
 
     @Override

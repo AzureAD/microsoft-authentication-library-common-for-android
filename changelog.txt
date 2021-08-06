@@ -38,6 +38,11 @@ V.Next
 - [MINOR] Move Account Manager User Data look-up constants from common, AADAuthenticator to common4j (#1486)
 - [MAJOR] Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489)
 
+Version 3.5.0
+----------
+- [MINOR] Code changes for new OneAuth cache key migration API (#1464)
+- [PATCH] Correct the production of JSON JWKs by the popManager code (#1479)
+
 Version 3.4.5
 ----------
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
