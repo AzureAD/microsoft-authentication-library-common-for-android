@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -48,20 +47,21 @@ import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChal
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR;
 
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
-    @NonNull private final OnPageLoadedCallback mPageLoadedCallback;
-    @Nullable private final OnPageCommitVisibleCallback mPageCommitVisibleCallback;
+    @NonNull
+    private final OnPageLoadedCallback mPageLoadedCallback;
+    @Nullable
+    private final OnPageCommitVisibleCallback mPageCommitVisibleCallback;
     private final Activity mActivity;
 
     @VisibleForTesting
@@ -97,9 +97,9 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     /**
      * Constructor for the OAuth2 basic web view client.
      *
-     * @param activity           app Context
-     * @param completionCallback Challenge completion callback
-     * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
+     * @param activity                  app Context
+     * @param completionCallback        Challenge completion callback
+     * @param pageLoadedCallback        callback to be triggered on page load. For UI purposes.
      * @param pageCommitVisibleCallback callback to be triggered on page commit visible, For UI purposes.
      */
     OAuth2WebViewClient(@NonNull final Activity activity,
@@ -140,6 +140,21 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         sendErrorToCallback(view, errorCode, description);
     }
 
+    /**
+     * API 23+ overload of {@link #onReceivedError(WebView, int, String, String)} - unlike the pre-23
+     * impl, this overload will trigger pageload errors for subframes of the page. As these may not
+     * necessarily affect the sign-in experience (such as failed scripts in an iframe), we are going
+     * to ignore errors for the non-main-frame such that the pre-API 23 behavior is preserved.
+     * <p>
+     * More info:
+     * https://stackoverflow.com/questions/44068123/how-to-detect-errors-only-from-the-main-page-in-new-onreceivederror-from-webview
+     * https://developer.android.com/reference/android/webkit/WebViewClient#onReceivedError(android.webkit.WebView,%20android.webkit.WebResourceRequest,%20android.webkit.WebResourceError)
+     *
+     * @param view    The WebView which triggered the error.
+     * @param request The request which failed within the page.
+     * @param error   The error yielded by the failing request.
+     * @see #onReceivedError(WebView, int, String, String)
+     */
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onReceivedError(@NonNull final WebView view,
@@ -161,13 +176,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                      @NonNull final String description) {
         view.stopLoading();
 
-        // Create result intent when webView received an error.
-        final Intent resultIntent = new Intent();
-        resultIntent.putExtra(RESPONSE_ERROR_CODE, "Error Code:" + errorCode);
-        resultIntent.putExtra(RESPONSE_ERROR_MESSAGE, description);
-
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(
+                RawAuthorizationResult.fromException(
+                        new ClientException("Code:" + errorCode, description)));
     }
 
     @Override
@@ -182,13 +194,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         Logger.error(TAG + ":onReceivedSslError", errMsg, null);
 
-        // WebView received the ssl error and create the result intent.
-        final Intent resultIntent = new Intent();
-        resultIntent.putExtra(RESPONSE_ERROR_CODE, "Code:" + ERROR_FAILED_SSL_HANDSHAKE);
-        resultIntent.putExtra(RESPONSE_ERROR_MESSAGE, error.toString());
-
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(
+                RawAuthorizationResult.fromException(
+                        new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
     }
 
     @Override

@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
+import com.microsoft.identity.common.exception.IErrorInformation;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
@@ -32,7 +33,7 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-public class BaseException extends Exception {
+public class BaseException extends Exception implements IErrorInformation {
 
     public static final String sName =  BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;

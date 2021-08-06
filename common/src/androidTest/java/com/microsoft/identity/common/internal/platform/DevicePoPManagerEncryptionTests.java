@@ -26,6 +26,7 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.After;
@@ -42,12 +43,10 @@ import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_384AndMGF1Padding;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_512AndMGF1Padding;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
+import static com.microsoft.identity.common.java.crypto.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
@@ -74,8 +73,6 @@ public class DevicePoPManagerEncryptionTests {
             ciphers.add(RSA_NONE_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
         }
 
         return ciphers;
@@ -83,13 +80,13 @@ public class DevicePoPManagerEncryptionTests {
 
     public DevicePoPManagerEncryptionTests(final IDevicePopManager.Cipher cipher)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager();
+        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
         this.cipher = cipher;
     }
 
     @Before
     public void setUp() throws ClientException {
-        devicePopManager.generateAsymmetricKey(ApplicationProvider.getApplicationContext());
+        devicePopManager.generateAsymmetricKey();
     }
 
     @After

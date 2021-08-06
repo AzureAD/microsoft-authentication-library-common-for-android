@@ -47,6 +47,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
@@ -213,7 +214,7 @@ public class BrokerValidator {
     public String getCurrentActiveBrokerPackageName() {
         AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
-            if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
+            if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)
                     && verifySignature(authenticator.packageName)) {
                 return authenticator.packageName;
             }

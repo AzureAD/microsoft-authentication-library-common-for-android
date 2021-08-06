@@ -22,27 +22,29 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -59,7 +61,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-
 
 @RunWith(AndroidJUnit4.class)
 public class CommandDispatcherTest {
@@ -320,6 +321,32 @@ public class CommandDispatcherTest {
                 }));
     }
 
+    @Test
+    public void testSubmitSilentWithTerminalException() {
+        final String errorCode = "anError";
+        final CountDownLatch testLatch = new CountDownLatch(1);
+        CommandDispatcher.submitSilent(new CommandThrowingIErrorInformationException(getEmptyTestParams(),
+                new CommandCallback<String, Exception>() {
+                    @Override
+                    public void onCancel() {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+
+                    @Override
+                    public void onError(Exception error) {
+                        Assert.assertEquals(ClientException.class, error.getClass());
+                        Assert.assertEquals(errorCode, ((ClientException) error).getErrorCode());
+                        testLatch.countDown();
+                    }
+
+                    @Override
+                    public void onTaskCompleted(String s) {
+                        testLatch.countDown();
+                        Assert.fail();
+                    }
+                }, errorCode));
+    }
     /**
      * This test takes a while to run.  But it should always work.  Just put it here in order
      * to save anyone else from having to write it.  Effectively all of these results are non
@@ -476,6 +503,26 @@ public class CommandDispatcherTest {
         }
     }
 
+    static class CommandThrowingIErrorInformationException extends BaseCommand<String> {
+        final String mErrorCode;
+
+        public CommandThrowingIErrorInformationException(@NonNull final CommandParameters parameters,
+                                                         @NonNull final CommandCallback callback, String errorCode) {
+            super(parameters, getTestController(), callback, "test_id");
+            mErrorCode = errorCode;
+        }
+
+        @Override
+        public String execute() {
+            throw new TerminalException("An unexpected exception!", new Exception("Exception"), mErrorCode);
+        }
+
+        @Override
+        public boolean isEligibleForEstsTelemetry() {
+            return false;
+        }
+    }
+
 
     static class TestCommand extends BaseCommand<String> {
         public int value;
@@ -551,7 +598,7 @@ public class CommandDispatcherTest {
             }
 
             @Override
-            public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
+            public void onFinishAuthorizationSession(int requestCode, int resultCode, @NonNull PropertyBag data) {
 
             }
 
@@ -603,6 +650,8 @@ public class CommandDispatcherTest {
     }
 
     private static CommandParameters getEmptyTestParams() {
-        return CommandParameters.builder().build();
+        return CommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .build();
     }
 }

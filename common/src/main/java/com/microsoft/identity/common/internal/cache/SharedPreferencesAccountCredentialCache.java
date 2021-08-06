@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -85,7 +87,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private static final String CREDENTIAL_DESERIALIZATION_FAILED = DESERIALIZATION_FAILED + Credential.class.getSimpleName();
 
     // SharedPreferences used to store Accounts and Credentials
-    private final ISharedPreferencesFileManager mSharedPreferencesFileManager;
+    private final INameValueStorage<String> mSharedPreferencesFileManager;
 
     private final ICacheKeyValueDelegate mCacheValueDelegate;
 
@@ -97,7 +99,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      */
     public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,
-            @NonNull final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+            @NonNull final INameValueStorage<String> sharedPreferencesFileManager) {
         Logger.verbose(TAG, "Init: " + TAG);
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
         mCacheValueDelegate = accountCacheValueDelegate;
@@ -118,7 +120,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         }
 
         final String cacheValue = mCacheValueDelegate.generateCacheValue(accountToSave);
-        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+        mSharedPreferencesFileManager.put(cacheKey, cacheValue);
     }
 
     @Override
@@ -135,14 +137,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         }
 
         final String cacheValue = mCacheValueDelegate.generateCacheValue(credentialToSave);
-        mSharedPreferencesFileManager.putString(cacheKey, cacheValue);
+        mSharedPreferencesFileManager.put(cacheKey, cacheValue);
     }
 
     @Override
     public synchronized AccountRecord getAccount(@NonNull final String cacheKey) {
         Logger.verbose(TAG, "Loading Account by key...");
         AccountRecord account = mCacheValueDelegate.fromCacheValue(
-                mSharedPreferencesFileManager.getString(cacheKey),
+                mSharedPreferencesFileManager.get(cacheKey),
                 AccountRecord.class
         );
 
@@ -180,7 +182,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
 
         if (null != clazz) {
             credential = mCacheValueDelegate.fromCacheValue(
-                    mSharedPreferencesFileManager.getString(cacheKey),
+                    mSharedPreferencesFileManager.get(cacheKey),
                     clazz
             );
         }
@@ -208,7 +210,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     @NonNull
     private Map<String, AccountRecord> getAccountsWithKeys() {
         Logger.verbose(TAG, "Loading Accounts + keys...");
-        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return isAccount(value);
@@ -272,11 +274,12 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
     private Map<String, Credential> getCredentialsWithKeys() {
         Logger.verbose(TAG, "Loading Credentials with keys...");
         final Map<String, Credential> credentials = new HashMap<>();
-        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        final Iterator<Map.Entry<String, String>> cacheValues = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return isCredential(value);
-            }});
+            }
+        });
 
         while (cacheValues.hasNext()) {
             Map.Entry<String, ?> cacheValue = cacheValues.next();
@@ -556,14 +559,14 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         return type;
     }
 
-    private boolean isAccount(@NonNull final String cacheKey) {
+    private static boolean isAccount(@NonNull final String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isAccount = null == getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(TAG, "isAccount? [" + isAccount + "]");
         return isAccount;
     }
 
-    private boolean isCredential(@NonNull String cacheKey) {
+    private static boolean isCredential(@NonNull String cacheKey) {
         Logger.verbosePII(TAG, "Evaluating cache key: [" + cacheKey + "]");
         boolean isCredential = null != getCredentialTypeForCredentialCacheKey(cacheKey);
         Logger.verbose(TAG, "isCredential? [" + isCredential + "]");

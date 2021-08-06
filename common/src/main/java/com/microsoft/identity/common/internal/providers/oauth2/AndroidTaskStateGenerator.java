@@ -48,6 +48,7 @@ public class AndroidTaskStateGenerator extends DefaultStateGenerator {
     }
 
     @Override
+    @NonNull
     public String generate() {
         String state = super.generate();
         state = String.format("%d%s%s", this.taskId, SPLITTER, state);

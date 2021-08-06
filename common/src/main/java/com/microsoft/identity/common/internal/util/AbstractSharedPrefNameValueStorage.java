@@ -22,18 +22,20 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+
+import java.util.Set;
 
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * Adapts {@link ISharedPreferencesFileManager} to {@link INameValueStorage}
+ * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage}
  * */
 @AllArgsConstructor
 public abstract class AbstractSharedPrefNameValueStorage<T> implements INameValueStorage<T> {
-    protected ISharedPreferencesFileManager mManager;
+    protected IMultiTypeNameValueStorage mManager;
 
     @Override
     public void remove(@NonNull String name) {
@@ -43,5 +45,10 @@ public abstract class AbstractSharedPrefNameValueStorage<T> implements INameValu
     @Override
     public void clear() {
         mManager.clear();
+    }
+
+    @Override
+    public @NonNull Set<String> keySet() {
+        return mManager.getAll().keySet();
     }
 }

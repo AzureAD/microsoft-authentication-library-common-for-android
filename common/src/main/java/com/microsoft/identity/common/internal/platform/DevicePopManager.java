@@ -37,12 +37,13 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
-import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.crypto.IKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -89,7 +90,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -126,7 +127,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.UNKNO
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-class DevicePopManager implements IDevicePopManager {
+public class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
@@ -171,13 +172,12 @@ class DevicePopManager implements IDevicePopManager {
     /**
      * A background worker to service async tasks.
      */
-    private static final ExecutorService sThreadExecutor = ThreadUtils.getNamedThreadPoolExecutor(1, 5, 5, 1, TimeUnit.MINUTES, "pop-manager");
+    private static final ExecutorService sThreadExecutor = Executors.newFixedThreadPool(5);
 
     /**
      * Reference to our perf-marker object.
      */
     private static final CodeMarkerManager sCodeMarkerManager = CodeMarkerManager.getInstance();
-
 
     /**
      * Properties used by the self-signed certificate.
@@ -259,9 +259,11 @@ class DevicePopManager implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    DevicePopManager() throws KeyStoreException, CertificateException,
+    private final Context mContext;
+
+    public DevicePopManager(@NonNull final Context context) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
+        this(context, DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
     @Override
@@ -269,20 +271,22 @@ class DevicePopManager implements IDevicePopManager {
         return mKeyManager;
     }
 
-    DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
+    public DevicePopManager(@NonNull final Context context,
+                            @NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
         mKeyManager = DeviceKeyManager.<KeyStore.PrivateKeyEntry>builder().keyAlias(alias)
-                                                   .keyStore(instance)
-                                                   .thumbprintSupplier(new Supplier<byte[]>() {
-                                                       @SneakyThrows(ClientException.class)
-                                                       @Override
-                                                       public byte[] get() {
-                                                           return getAsymmetricKeyThumbprint().getBytes(UTF8);
-                                                       }
-                                                   })
+                .keyStore(instance)
+                .thumbprintSupplier(new Supplier<byte[]>() {
+                    @SneakyThrows(ClientException.class)
+                    @Override
+                    public byte[] get() {
+                        return getAsymmetricKeyThumbprint().getBytes(UTF8);
+                    }
+                })
                 .build();
+        mContext = context;
     }
 
     @Override
@@ -326,6 +330,7 @@ class DevicePopManager implements IDevicePopManager {
 
     /**
      * Given an RSA private key entry, get the RSA thumbprint.
+     *
      * @param entry the entry to compute the thumbprint for.
      * @return A String that would be identicative of this specific key.
      * @throws JOSEException If there is a computation problem.
@@ -337,14 +342,13 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public void generateAsymmetricKey(@NonNull final Context context,
-                                      @NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+    public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            callback.onTaskCompleted(generateAsymmetricKey(context));
+                            callback.onTaskCompleted(generateAsymmetricKey());
                         } catch (final ClientException e) {
                             callback.onError(e);
                         }
@@ -354,13 +358,13 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String generateAsymmetricKey(@NonNull final Context context) throws ClientException {
+    public String generateAsymmetricKey() throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
             sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
-            final KeyPair keyPair = generateNewRsaKeyPair(context, RSA_KEY_SIZE);
+            final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
@@ -826,7 +830,7 @@ class DevicePopManager implements IDevicePopManager {
     @Override
     public Certificate[] getCertificateChain() throws ClientException {
         return mKeyManager.getCertificateChain();
-   }
+    }
 
     private @NonNull
     String getJwkPublicKey() throws ClientException {
@@ -1256,7 +1260,7 @@ class DevicePopManager implements IDevicePopManager {
                             final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
         } else {
             initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);
@@ -1279,16 +1283,12 @@ class DevicePopManager implements IDevicePopManager {
         )
                 .setKeySize(keySize)
                 .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
-                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
                 )
                 .setDigests(
-                        KeyProperties.DIGEST_MD5,
                         KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256,
-                        KeyProperties.DIGEST_SHA384,
-                        KeyProperties.DIGEST_SHA512
+                        KeyProperties.DIGEST_SHA256
                 ).setEncryptionPaddings(
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1
@@ -1350,16 +1350,12 @@ class DevicePopManager implements IDevicePopManager {
                 mKeyManager.getKeyAlias(), purposes)
                 .setKeySize(keySize)
                 .setSignaturePaddings(
-                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1,
-                        KeyProperties.SIGNATURE_PADDING_RSA_PSS
+                        KeyProperties.SIGNATURE_PADDING_RSA_PKCS1
                 )
                 .setDigests(
-                        KeyProperties.DIGEST_MD5,
                         KeyProperties.DIGEST_NONE,
                         KeyProperties.DIGEST_SHA1,
-                        KeyProperties.DIGEST_SHA256,
-                        KeyProperties.DIGEST_SHA384,
-                        KeyProperties.DIGEST_SHA512
+                        KeyProperties.DIGEST_SHA256
                 ).setEncryptionPaddings(
                         KeyProperties.ENCRYPTION_PADDING_RSA_OAEP,
                         KeyProperties.ENCRYPTION_PADDING_RSA_PKCS1

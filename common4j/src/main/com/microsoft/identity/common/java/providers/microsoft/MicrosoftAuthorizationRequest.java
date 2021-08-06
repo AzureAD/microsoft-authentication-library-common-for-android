@@ -172,8 +172,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         private PkceChallenge mPkceChallenge;
 
         public Builder() {
-            setState(Base64.encodeToString(StringUtil.toByteArray(new DefaultStateGenerator().generate()),
-                    Base64.NO_PADDING | Base64.URL_SAFE | Base64.NO_WRAP));
+            setState(StringUtil.encodeUrlSafeString(new DefaultStateGenerator().generate()));
         }
 
         public B setAuthority(URL authority) {
