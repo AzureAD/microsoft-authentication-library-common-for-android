@@ -22,31 +22,34 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache;
 
-import android.content.SharedPreferences;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import java.util.Iterator;
 import java.util.Map;
 
-
-public interface ISharedPreferencesFileManager {
+/**
+ * The interface for a key-value store with multiple types.  This should be roughly equivalent to Android
+ * Shared Preferences.
+ */
+public interface IMultiTypeNameValueStorage {
     /**
-     * Saves a Token (as a {@link String} to the {@link SharedPreferences} file.
+     * Associates a {@link String} value with a key in the named resource that this represents.
      *
-     * @param key   The name (key) of the Token to save.
-     * @param value The Token's value (as a {@link String}).
+     * @param key   The name to store a String under.
+     * @param value A string value..
      */
     void putString(String key, String value);
 
     /**
-     * Retrieves a Token from the {@link SharedPreferences} file.
+     * Retrieves a given String from the resource with the given key.
      *
-     * @param key The name (key) of the Token.
-     * @return The Token's value or null if no value could be found.
+     * @param key The key being retrieved.
+     * @return The string value associated with this key or null if no value could be found.
      */
     String getString(String key);
 
     /**
-     * Persists a long value to the {@link SharedPreferences} file.
+     * Persists a long value to the named resource.
      *
      * @param key   The name (key) of the long to save.
      * @param value The actual value to persist.
@@ -62,14 +65,14 @@ public interface ISharedPreferencesFileManager {
     long getLong(String key);
 
     /**
-     * Returns the name of {@link SharedPreferences} file in use.
+     * Returns the name of named resource that this data source is backed by.
      *
      * @return The name of the file.
      */
-    String getSharedPreferencesFileName();
+    String getStorageFileName();
 
     /**
-     * Returns all entries in the {@link SharedPreferences} file.
+     * Returns all entries in the named resource.
      * <p>
      * Note that you must not modify the collection returned by this method, or alter any of its
      * contents. The consistency of your stored data is not guaranteed if you do.
@@ -84,10 +87,10 @@ public interface ISharedPreferencesFileManager {
      * @param keyFilter A predicate to use to evaluate the key, return true to include key value pair.
      * @return an iterator as a view on the shared preferences file.
      */
-    Iterator<Map.Entry<String, String>> getAllFilteredByKey(SharedPreferencesFileManager.Predicate<String> keyFilter);
+    Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter);
 
     /**
-     * Tests if the {@link SharedPreferences} file contains an entry for the supplied key.
+     * Tests if the store backed by the named resource contains an entry for the supplied key.
      *
      * @param key The key to consult.
      * @return True, if the key has an associate entry.
@@ -95,7 +98,7 @@ public interface ISharedPreferencesFileManager {
     boolean contains(String key);
 
     /**
-     * Clears the contents of the {@link SharedPreferences} file.
+     * Clears the contents of the named resource.
      */
     void clear();
 
@@ -105,4 +108,5 @@ public interface ISharedPreferencesFileManager {
      * @param key The key whose value should be cleared.
      */
     void remove(final String key);
+
 }

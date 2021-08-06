@@ -51,6 +51,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
@@ -90,6 +91,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAccount;
@@ -121,10 +123,12 @@ public class BrokerMsalController extends BaseController {
     private final String mActiveBrokerPackageName;
     private final BrokerOperationExecutor mBrokerOperationExecutor;
     private final HelloCache mHelloCache;
+    private final IPlatformComponents mComponents;
 
     private final Context mApplicationContext;
 
     public BrokerMsalController(@NonNull final Context applicationContext) {
+        mComponents = AndroidPlatformComponents.createFromContext(applicationContext);
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
         if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
@@ -137,7 +141,8 @@ public class BrokerMsalController extends BaseController {
 
     @VisibleForTesting
     public HelloCache getHelloCache() {
-        return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName);
+        return new HelloCache(mApplicationContext, MSAL_TO_BROKER_PROTOCOL_NAME, mActiveBrokerPackageName,
+                mComponents);
     }
 
     @VisibleForTesting

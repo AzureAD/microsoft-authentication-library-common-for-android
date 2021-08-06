@@ -23,7 +23,7 @@ package com.microsoft.identity.common.migration;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -36,15 +36,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Default implementation of {@link ISharedPrefsFileManagerReencrypter}.
+ * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
-public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
+public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
 
-    private static final String TAG = DefaultSharedPrefsFileManagerReencrypter.class.getSimpleName();
+    private static final String TAG = DefaultMultiTypeNameValueStorageReencrypter.class.getSimpleName();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
-    public IMigrationOperationResult reencrypt(@NonNull final ISharedPreferencesFileManager fileManager,
+    public IMigrationOperationResult reencrypt(@NonNull final INameValueStorage<String> fileManager,
                                                @NonNull final IStringEncrypter encrypter,
                                                @NonNull final IStringDecrypter decrypter,
                                                @NonNull final ReencryptionParams params) {
@@ -111,7 +111,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
         // Write the newly encrypted records...
         Logger.info(TAG + methodName, "Writing reencrypted cache entries.");
         for (final Map.Entry<String, String> cacheEntry : cacheEntries.entrySet()) {
-            fileManager.putString(cacheEntry.getKey(), cacheEntry.getValue());
+            fileManager.put(cacheEntry.getKey(), cacheEntry.getValue());
         }
 
         return result;
@@ -129,12 +129,12 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
      * @param callable             The callable definining the mutation.
      * @param inputResult          A {@link MigrationOperationResult} used to track error states which may
      *                             occur during a mutation.
-     * @param params               The {@link com.microsoft.identity.common.migration.ISharedPrefsFileManagerReencrypter.ReencryptionParams}
+     * @param params               The {@link IMultiTypeNameValueStorageReencrypter.ReencryptionParams}
      *                             defining how errors should be handled/surfaced.
      * @param keysMarkedForRemoval A {@link Set} of cache keys to be removed from the underlying
      *                             cache if an error is encountered. Please note that this function
      *                             does not perform the removal operation itself; see
-     *                             {@link #clearEntriesMarkedForRemoval(ISharedPreferencesFileManager, Map, Set)}.
+     *                             {@link #clearEntriesMarkedForRemoval(INameValueStorage<String>, Map, Set)}.
      * @param skipKeys             Cache keys which should not have the supplied mutation applied to it, usually
      *                             due to an error reading the value stored at this key (for example, cannot
      *                             be decrypted).
@@ -182,7 +182,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
         }
     }
 
-    private void clearEntriesMarkedForRemoval(@NonNull final ISharedPreferencesFileManager fileManager,
+    private void clearEntriesMarkedForRemoval(@NonNull final INameValueStorage<String> fileManager,
                                               @NonNull final Map<String, String> cacheEntries,
                                               @NonNull final Set<String> keysMarkedForRemoval) {
         final String methodName = ":clearEntriesMarkedForRemoval";
@@ -194,7 +194,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
     }
 
     @Override
-    public void reencryptAsync(@NonNull final ISharedPreferencesFileManager fileManager,
+    public void reencryptAsync(@NonNull final INameValueStorage<String> fileManager,
                                @NonNull final IStringEncrypter encrypter,
                                @NonNull final IStringDecrypter decrypter,
                                @NonNull final ReencryptionParams params,

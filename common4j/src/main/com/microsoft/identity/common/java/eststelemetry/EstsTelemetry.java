@@ -113,7 +113,7 @@ public class EstsTelemetry {
     public synchronized void setUp(@NonNull final IPlatformComponents platformComponents) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
-                    platformComponents.getNameValueStorage(LAST_REQUEST_TELEMETRY_STORAGE_FILE));
+                    platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
     }
 

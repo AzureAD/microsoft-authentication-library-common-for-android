@@ -222,7 +222,7 @@ public class HelloCacheTests {
 
         class HelloCacheMock extends HelloCache {
             public HelloCacheMock(@NonNull Context context, @NonNull String protocolName, @NonNull String targetAppPackageName) {
-                super(context, protocolName, targetAppPackageName);
+                super(context, protocolName, targetAppPackageName, AndroidPlatformComponents.createFromContext(context));
             }
 
             @NonNull @Override public String getVersionCode() throws PackageManager.NameNotFoundException {

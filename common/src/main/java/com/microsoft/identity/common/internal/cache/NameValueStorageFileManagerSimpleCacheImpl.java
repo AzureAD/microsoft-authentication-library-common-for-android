@@ -73,7 +73,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     public NameValueStorageFileManagerSimpleCacheImpl(@NonNull final IPlatformComponents components,
                                                       @NonNull final String name,
                                                       @NonNull final String singleKey) {
-        this(components.getNameValueStorage(name),
+        this(components.getNameValueStore(name, String.class),
                 singleKey,
                 false
         );
@@ -93,7 +93,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
                                                       @NonNull final String name,
                                                       @NonNull final String singleKey,
                                                       final boolean forceReinsertionOfDuplicates) {
-        this(components.getNameValueStorage(name),
+        this(components.getNameValueStore(name, String.class),
                 singleKey,
                 forceReinsertionOfDuplicates
         );
@@ -101,7 +101,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
 
     /**
      * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl from the provided
-     * {@link SharedPreferencesFileManager}, using the provided singleKey for the underlying collection.
+     * {@link IMultiTypeNameValueStorage}, using the provided singleKey for the underlying collection.
      *
      * @param storage                      The underlying {@link INameValueStorage<String>} to use.
      * @param singleKey                    The name of the key under which all entries will be cached.

@@ -29,13 +29,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Default implementation of {@link ISharedPrefsFileManagerReencrypter}.
+ * Default implementation of {@link IMultiTypeNameValueStorageReencrypter}.
  */
 @Deprecated
-public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFileManagerReencrypter {
+public class DefaultMultiTypeNameValueStorageReencrypter implements IMultiTypeNameValueStorageReencrypter {
 
     @Override
-    public void reencrypt(@NonNull final ISharedPreferencesFileManager fileManager,
+    public void reencrypt(@NonNull final IMultiTypeNameValueStorage fileManager,
                           @NonNull final IStringEncrypter encrypter,
                           @NonNull final IStringDecrypter decrypter,
                           @NonNull final ReencryptionParams params) throws Exception {
@@ -77,7 +77,7 @@ public class DefaultSharedPrefsFileManagerReencrypter implements ISharedPrefsFil
     }
 
     @Override
-    public void reencryptAsync(@NonNull final ISharedPreferencesFileManager fileManager,
+    public void reencryptAsync(@NonNull final IMultiTypeNameValueStorage fileManager,
                                @NonNull final IStringEncrypter encrypter,
                                @NonNull final IStringDecrypter decrypter,
                                @NonNull final ReencryptionParams params,

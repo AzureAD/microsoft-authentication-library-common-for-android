@@ -31,6 +31,7 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.SystemClock;
 
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
@@ -115,6 +116,15 @@ public class AndroidPlatformUtil implements IPlatformUtil {
     @Override
     public void onReturnCommandResult(@NonNull ICommand<?> command) {
         optionallyReorderTasks(command);
+    }
+
+    @Override
+    public long getNanosecondTime() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return SystemClock.elapsedRealtimeNanos();
+        } else {
+            return System.nanoTime();
+        }
     }
 
     /**

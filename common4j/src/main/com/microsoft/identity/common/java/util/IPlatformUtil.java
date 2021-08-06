@@ -78,4 +78,11 @@ public interface IPlatformUtil {
      * An operation to be triggered when result of a {@link ICommand} is returned.
      */
     void onReturnCommandResult(@NonNull final ICommand<?> command);
+
+    /**
+     * @return a view of the elapsed time in nanoseconds.  This is *only useful* as a measure of
+     * time differences to other points acquired from this precise method in the same thread.
+     */
+    long getNanosecondTime();
+
 }
