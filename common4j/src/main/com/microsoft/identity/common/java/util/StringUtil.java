@@ -63,28 +63,8 @@ public class StringUtil {
      * @param message String to check for null or blank.
      * @return true, if the string is null or blank.
      */
-    public static boolean isNullOrEmpty(String message) {
-        if (message == null) {
-            return true;
-        }
-        return message.trim().length() == 0;
-/*
-        // We could convert this to an array.  However, we don't need to, and this will avoid
-        // that array allocation, though it looks like it may happen anyway due to a varargs method
-        // buried in {@link String}.  This is just hoping that the JVM is very clever with that
-        // length-1 varargs array.
-
-        // From the String.trim() documentation:
-        //  "Returns a string whose value is this string, with all leading and trailing space
-        //   removed, where space is defined as any character whose codepoint is less than or"
-        //   equal to 'U+0020' (the space character)."
-        for (int i = 0; i < message.length(); i++) {
-            if (message.indexOf(i) > 0x20) {
-                return false;
-            }
-        }
-        return true;
- */
+    public static boolean isNullOrEmpty(final @Nullable String message) {
+        return message == null || message.trim().length() == 0;
     }
 
     /**
@@ -348,10 +328,21 @@ public class StringUtil {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
 
+    /**
+     * Return an empty string if the input is null.
+     * @param input an input string to evaluate.
+     * @return an empty string if the input is null, the input otherwise.
+     */
     public static String sanitizeNull(final String input) {
         return null == input ? "" : input;
     }
 
+    /**
+     * If the input is null, return an empty string. Otherwise, return a trimmed, toLowerCase
+     * version of the string in question.
+     * @param input a string to evaluate.
+     * @return a sanitized version of that string.
+     */
     public static String sanitizeNullAndLowercaseAndTrim(final String input) {
         String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
 
