@@ -48,6 +48,7 @@ import java.util.concurrent.TimeUnit;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SCHEME_POP;
 import static com.microsoft.identity.common.java.AuthenticationConstants.DEFAULT_SCOPES;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 public class MicrosoftStsAccountCredentialAdapter
@@ -130,8 +131,8 @@ public class MicrosoftStsAccountCredentialAdapter
      * @param responseScope The response scope to parse.
      * @return The target containing default scopes.
      */
-    private String getTarget(@NonNull final String requestScope,
-                             @NonNull final String responseScope) {
+    private String getTarget(@Nullable final String requestScope,
+                             @Nullable final String responseScope) {
 
         if (StringUtil.isNullOrEmpty(responseScope)) {
             StringBuilder scopesToCache = new StringBuilder();

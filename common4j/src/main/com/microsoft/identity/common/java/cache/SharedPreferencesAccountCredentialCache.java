@@ -493,6 +493,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
         Logger.info(TAG, "SharedPreferences cleared.");
     }
 
+    @Nullable
     private Class<? extends Credential> credentialClassForType(@NonNull final String cacheKey) {
         Logger.verbose(TAG, "Resolving class for key/CredentialType...");
         Logger.verbosePII(TAG, "Supplied key: [" + cacheKey + "]");
