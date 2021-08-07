@@ -1547,6 +1547,25 @@ public final class AuthenticationConstants {
 
     }
 
+    public static final class IntuneContentProviderCall {
+        /**
+         * Intune's ContentProvider URI code constant for AppDataClearAction request.
+         */
+        public static final String AUTHORITY = "com.microsoft.intune.shareduserlessdataclear";
+
+        /**
+         * A functional mapping in Intune's ContentProvider implementation.
+         */
+        public static final String IS_APP_DATA_CLEAR_ACTION = "AppDataClearAction";
+
+        /**
+         * an intent extra field specifying thE request to clear Browser data.
+         */
+        public static final String EXTRA_SHARED_USERLESS_APP_DATA_CLEAR_ACTION =
+                "com.microsoft.intune.EXTRA_SHARED_USERLESS_APP_DATA_CLEAR_ACTION";
+
+    }
+
     public static final class AuthorizationIntentKey {
 
         public static final String AUTH_INTENT = "com.microsoft.identity.auth.intent";
