@@ -27,7 +27,8 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.java.providers.oauth2.OpenIdConnectPromptParameter;
+import com.microsoft.identity.common.java.request.SdkType;
 
 import java.io.Serializable;
 
@@ -142,9 +143,9 @@ public class BrokerRequest implements Serializable {
 
     /**
      * Prompt for the request.
-     * {@link com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter}
+     * {@link OpenIdConnectPromptParameter}
      * <p>
-     * Default value : {@link com.microsoft.identity.common.internal.providers.oauth2.OpenIdConnectPromptParameter#SELECT_ACCOUNT}
+     * Default value : {@link OpenIdConnectPromptParameter#SELECT_ACCOUNT}
      */
     @Nullable
     @SerializedName(SerializedNames.PROMPT)

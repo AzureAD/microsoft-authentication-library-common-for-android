@@ -27,11 +27,13 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.AndroidCommonComponents;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -42,13 +44,14 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
@@ -65,13 +68,16 @@ import java.util.Set;
 
 import static com.microsoft.identity.common.java.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
-import static com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
 import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
 import static com.microsoft.identity.common.java.dto.CredentialType.ID_TOKEN_TYPES;
 import static com.microsoft.identity.common.java.dto.CredentialType.IdToken;
 import static com.microsoft.identity.common.java.dto.CredentialType.RefreshToken;
 import static com.microsoft.identity.common.java.dto.CredentialType.V1IdToken;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
@@ -98,11 +104,11 @@ public class MsalOAuth2TokenCache
     /**
      * Constructor of MsalOAuth2TokenCache.
      *
-     * @param context                  Context
+     * @param commonComponents         {@link IPlatformComponents}
      * @param accountCredentialCache   IAccountCredentialCache
      * @param accountCredentialAdapter IAccountCredentialAdapter
      */
-    public MsalOAuth2TokenCache(final Context context,
+    public MsalOAuth2TokenCache(final IPlatformComponents commonComponents,
                                 final IAccountCredentialCache accountCredentialCache,
                                 final IAccountCredentialAdapter<
                                         GenericOAuth2Strategy,
@@ -110,7 +116,7 @@ public class MsalOAuth2TokenCache
                                         GenericTokenResponse,
                                         GenericAccount,
                                         GenericRefreshToken> accountCredentialAdapter) {
-        super(context);
+        super(commonComponents);
         Logger.verbose(TAG, "Init: " + TAG);
         mAccountCredentialCache = accountCredentialCache;
         mAccountCredentialAdapter = accountCredentialAdapter;
@@ -124,12 +130,30 @@ public class MsalOAuth2TokenCache
      * @param context The Application Context
      * @return An instance of the MsalOAuth2TokenCache.
      */
+    @Deprecated
     public static MsalOAuth2TokenCache<
             MicrosoftStsOAuth2Strategy,
             MicrosoftStsAuthorizationRequest,
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> create(@NonNull final Context context) {
+        return create(AndroidPlatformComponents.createFromContext(context));
+    }
+
+    /**
+     * Factory method for creating an instance of MsalOAuth2TokenCache
+     * <p>
+     * NOTE: Currently this is configured for AAD v2 as the only IDP
+     *
+     * @param components The platform components
+     * @return An instance of the MsalOAuth2TokenCache.
+     */
+    public static MsalOAuth2TokenCache<
+            MicrosoftStsOAuth2Strategy,
+            MicrosoftStsAuthorizationRequest,
+            MicrosoftStsTokenResponse,
+            MicrosoftAccount,
+            MicrosoftRefreshToken> create(@NonNull final IPlatformComponents components) {
         final String methodName = ":create";
 
         Logger.verbose(
@@ -139,12 +163,11 @@ public class MsalOAuth2TokenCache
 
         // Init the new-schema cache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
-        final ISharedPreferencesFileManager sharedPreferencesFileManager =
-                SharedPreferencesFileManager.getSharedPreferences(
-                        context,
+        final INameValueStorage<String> sharedPreferencesFileManager =
+                components.getEncryptedNameValueStore(
                         DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
-                        new AndroidCommonComponents(context).
-                                getStorageEncryptionManager()
+                        components.getStorageEncryptionManager(),
+                        String.class
                 );
         final IAccountCredentialCache accountCredentialCache =
                 new SharedPreferencesAccountCredentialCache(
@@ -155,7 +178,7 @@ public class MsalOAuth2TokenCache
                 new MicrosoftStsAccountCredentialAdapter();
 
         return new MsalOAuth2TokenCache<>(
-                context,
+                components,
                 accountCredentialCache,
                 accountCredentialAdapter
         );

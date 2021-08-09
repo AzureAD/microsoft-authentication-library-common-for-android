@@ -30,6 +30,9 @@ import lombok.NonNull;
  */
 public interface IDeviceMetadata {
 
+    @NonNull
+    String getDeviceType();
+
     /**
      * Get the CPU name of this device.
      *

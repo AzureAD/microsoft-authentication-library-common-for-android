@@ -49,6 +49,7 @@ import java.security.cert.CertificateException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+@SuppressWarnings("unchecked")
 @Ignore
 @RunWith(JUnit4.class)
 public class AzureActiveDirectoryClientCredentialsGrantTest {

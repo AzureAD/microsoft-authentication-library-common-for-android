@@ -30,6 +30,7 @@ import org.json.JSONObject;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import lombok.Builder;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -38,6 +39,7 @@ public class JweResponse {
     @Builder
     @Getter
     @Accessors(prefix = "m")
+    @EqualsAndHashCode
     public static class JweHeader {
         private final String mAlgorithm;
 

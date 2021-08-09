@@ -26,7 +26,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.BuildConfig;
+import com.microsoft.identity.common.java.BuildConfig;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;

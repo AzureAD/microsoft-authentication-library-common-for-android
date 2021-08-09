@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
 import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
@@ -89,6 +89,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         );
 
         try {
+            @SuppressWarnings("unchecked")
             final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());

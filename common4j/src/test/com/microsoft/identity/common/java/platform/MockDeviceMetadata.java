@@ -22,30 +22,38 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.platform;
 
+import lombok.NonNull;
+
 public class MockDeviceMetadata extends AbstractDeviceMetadata {
 
+    public static final String TEST_DEVICE_TYPE = "TestDeviceType";
     public static final String TEST_CPU = "TestCPU";
     public static final String TEST_OS = "TestOS";
     public static final String TEST_DEVICE_MODEL = "TestDeviceModel";
     public static final String TEST_MANUFACTURER = "TestManufacturer";
 
     @Override
-    public String getCpu() {
+    public @NonNull String getDeviceType() {
+        return TEST_DEVICE_TYPE;
+    }
+
+    @Override
+    public @NonNull String getCpu() {
         return TEST_CPU;
     }
 
     @Override
-    public String getOs() {
+    public @NonNull String getOs() {
         return TEST_OS;
     }
 
     @Override
-    public String getDeviceModel() {
+    public @NonNull String getDeviceModel() {
         return TEST_DEVICE_MODEL;
     }
 
     @Override
-    public String getManufacturer() {
+    public @NonNull String getManufacturer() {
         return TEST_MANUFACTURER;
     }
 }

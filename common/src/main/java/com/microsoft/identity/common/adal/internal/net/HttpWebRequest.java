@@ -176,51 +176,6 @@ public class HttpWebRequest {
 
         return response;
     }
-    /**
-     * Check if the network is available. If the network is unavailable, {@link ClientException}
-     * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
-     * when connection is not available to refresh token because power optimization is enabled, or
-     * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
-     *
-     * @param context Context : application context
-     *
-     * @throws ClientException throw network exception
-     */
-    public static void throwIfNetworkNotAvailable(final Context context)
-            throws ClientException {
-        throwIfNetworkNotAvailable(context, false);
-    }
-
-    /**
-     * Check if the network is available. If the network is unavailable, {@link ClientException}
-     * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
-     * when connection is not available to refresh token because power optimization is enabled, or
-     * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
-     *
-     * @param context                       application context
-     * @param performPowerOptimizationCheck True, if power optimization checks should be performed.
-     *                                      False otherwise.
-     * @throws ClientException throw network exception
-     */
-    public static void throwIfNetworkNotAvailable(final Context context,
-                                                  final boolean performPowerOptimizationCheck)
-            throws ClientException {
-
-        final DefaultConnectionService connectionService = new DefaultConnectionService(context);
-
-        if (performPowerOptimizationCheck && connectionService.isNetworkDisabledFromOptimizations()) {
-            throw new ClientException(
-                    ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
-                    "Connection is not available to refresh token because power optimization is "
-                            + "enabled. And the device is in doze mode or the app is standby");
-        }
-
-        if (!connectionService.isConnectionAvailable()) {
-            throw new ClientException(
-                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
-                    "Connection is not available to refresh token");
-        }
-    }
 
     /**
      * Convert stream into the string.

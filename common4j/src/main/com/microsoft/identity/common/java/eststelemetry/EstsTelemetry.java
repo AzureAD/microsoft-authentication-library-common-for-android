@@ -26,6 +26,7 @@ import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -48,6 +49,12 @@ import lombok.NonNull;
  */
 public class EstsTelemetry {
     private final static String TAG = EstsTelemetry.class.getSimpleName();
+
+    /**
+     * The name of the storage file on disk for the last request telemetry.
+     */
+    private static final String LAST_REQUEST_TELEMETRY_STORAGE_FILE =
+            "com.microsoft.identity.client.last_request_telemetry";
 
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private LastRequestTelemetryCache mLastRequestTelemetryCache;
@@ -80,13 +87,33 @@ public class EstsTelemetry {
         return sEstsTelemetryInstance;
     }
 
+    //@VisibleForTesting
+    public synchronized void clear(){
+        mTelemetryMap.clear();
+        mSentFailedRequests.clear();
+        if (mLastRequestTelemetryCache != null) {
+            mLastRequestTelemetryCache.clear();
+        }
+    }
+
     /**
      * Bootstrap an instance of {@link EstsTelemetry}.
      * Must be invoked prior to any operation on this object.
      */
-    public synchronized void setUp(@Nullable final LastRequestTelemetryCache lastRequestTelemetryCache) {
+    public synchronized void setUp(@NonNull final LastRequestTelemetryCache lastRequestTelemetryCache) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = lastRequestTelemetryCache;
+        }
+    }
+
+    /**
+     * Bootstrap an instance of {@link EstsTelemetry}.
+     * Must be invoked prior to any operation on this object.
+     */
+    public synchronized void setUp(@NonNull final IPlatformComponents platformComponents) {
+        if (this.mLastRequestTelemetryCache == null) {
+            this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
+                    platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
     }
 

@@ -27,7 +27,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
 
 import org.junit.After;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
     @Before
     public void setUp() {
-        mMetadataCache = new SharedPreferencesBrokerApplicationMetadataCache(
+        mMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(
                 InstrumentationRegistry.getContext()
         );
     }

@@ -27,9 +27,10 @@ import java.util.UUID;
 import lombok.NonNull;
 
 /**
- * This generates a non-guessable value for the state parameter in an authorization request per the specification: https://tools.ietf.org/html/rfc6749#section-10.10
+ * This generates a non-guessable value for the state parameter in an authorization request per the specification:
+ * https://tools.ietf.org/html/rfc6749#section-10.10
  */
-public class DefaultStateGenerator extends StateGenerator {
+public class DefaultStateGenerator implements IStateGenerator {
     @Override
     @NonNull
     public String generate() {

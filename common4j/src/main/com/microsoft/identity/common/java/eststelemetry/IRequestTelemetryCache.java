@@ -27,7 +27,7 @@ package com.microsoft.identity.common.java.eststelemetry;
  * This is a "cache of one" i.e. there will always be only one IRequestTelemetry object saved
  * in the cache at any given time
  */
-public interface IRequestTelemetryCache<T extends IRequestTelemetry>{
+public interface IRequestTelemetryCache<T extends IRequestTelemetry> {
 
     /**
      * Save telemetry associated to the {@link IRequestTelemetry} object to the cache
@@ -42,4 +42,9 @@ public interface IRequestTelemetryCache<T extends IRequestTelemetry>{
      * @return a {@link IRequestTelemetry} object
      */
     T getRequestTelemetryFromCache();
+
+    /**
+     * Clear cache.
+     */
+    void clear();
 }

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.util.ported;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -41,6 +42,11 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
     @Nullable
     public T get(@NonNull final String key) {
         return mMap.get(key);
+    }
+
+    @Override
+    public @NonNull Map<String, T> getAll() {
+        return mMap;
     }
 
     public void put(@NonNull final String key,
@@ -66,6 +72,11 @@ public class InMemoryStorage<T> implements INameValueStorage<T> {
     @Override
     public Set<String> keySet() {
         return mMap.keySet();
+    }
+
+    @Override
+    public Iterator<Map.Entry<String, T>> getAllFilteredByKey(Predicate<String> keyFilter) {
+        return null;
     }
 
     public int size() {
