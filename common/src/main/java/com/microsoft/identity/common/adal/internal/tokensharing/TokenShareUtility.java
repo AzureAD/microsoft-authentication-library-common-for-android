@@ -86,19 +86,25 @@ public class TokenShareUtility implements ITokenShareInternal {
             mCommonEndpoint = commonEndpoint;
         }
 
-        @Nullable
-        static Environment toEnvironment(@NonNull final String envString) {
+        @NonNull
+        static Environment toEnvironment(@NonNull final String envString) throws ClientException {
             switch (envString) {
+                case "login.microsoftonline.com":
                 case "login.windows.net":
                 case "login.microsoft.com":
                 case "sts.windows.net":
                     return Environment.WORLDWIDE;
                 case "login.chinacloudapi.cn":
+                case "login.partner.microsoftonline.cn":
                     return Environment.GALLATIN;
                 case "login.usgovcloudapi.net":
+                case "login.microsoftonline.us":
                     return Environment.ITAR;
+                case "login.microsoftonline.de":
+                    return Environment.BLACKFOREST;
                 default:
-                    return null;
+                    Logger.warn(TAG, "Unable to map provided env to enum: " + envString);
+                    throw new ClientException("Unrecognized environment");
             }
         }
 
@@ -129,12 +135,6 @@ public class TokenShareUtility implements ITokenShareInternal {
         mClientId = clientId;
         mRedirectUri = redirectUri;
         mTokenCache = cache;
-    }
-
-    @Nullable
-    private static String getAuthorityForEnvironment(@NonNull final String env) {
-        final Environment environment = Environment.toEnvironment(env);
-        return null == environment ? null : environment.getCommonEndpoint();
     }
 
     @Override
@@ -348,7 +348,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     @SuppressWarnings("PMD.UnusedPrivateMethod")
     @NonNull
     private static ADALTokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
-                                            @NonNull final RefreshTokenRecord refreshTokenRecord) throws ServiceException {
+                                            @NonNull final RefreshTokenRecord refreshTokenRecord) throws BaseException {
         final ADALTokenCacheItem tokenCacheItem = new ADALTokenCacheItem();
         tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
@@ -360,7 +360,7 @@ public class TokenShareUtility implements ITokenShareInternal {
         // In order to support ADAL cache lookups when the cache is empty, always use /common
         // when the outbound token is from the home tenant
         if (isFromHomeTenant(idTokenRecord)) {
-            authority = getAuthorityForEnvironment(refreshTokenRecord.getEnvironment());
+            authority = Environment.toEnvironment(refreshTokenRecord.getEnvironment()).getCommonEndpoint();
         } else {
             authority = idTokenRecord.getAuthority();
         }
