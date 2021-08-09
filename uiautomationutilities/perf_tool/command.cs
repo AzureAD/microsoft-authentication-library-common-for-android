@@ -47,32 +47,14 @@ namespace TestScript
     // Class declaration 
     class SendEmail
     {
+        // Few constants:
+        public const string codemarkerBaseFileNamePreFix = "PerfData"; // Prefix of the files which should be taken as base PerfData files for raw data.
+        public const string codemarkerTargetFileNamePreFix = "PerfData"; // Prefix of the files which should be taken as target PerfData files for raw data.
+        public const string outputFileLocation = "."; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
+        public const string outputFileNamePrefix = ""; // Prefix of the file names to be generated. Example value: "run_output"
 
-        // Main Method - takes several arguments elaborated below that configure different aspects of the tool
-        public static void main(string[] args)
+        public static List<string> GenerateReportBody(ReportParams reportParams)
         {
-            int i;
-            for (i = 0; i < args.Length; i++)
-            {
-                Console.WriteLine(args[i]);
-            }
-            i = 0;
-            string inputBaseFileLocation = args[i++]; // Directory where PerfData base files are present. Example value: "C:\testdata\basefiles" 
-            string inputTargetFileLocation = args[i++]; // Directory where PerfData target files are present. Example value: "C:\testdata\targetfiles" 
-            string basejobID = args[i++]; // Build id of the base task.
-            string currentJobID = args[i++]; // Build id which should be written in the final Email report and used for going to artifact url. Example value: "1234"
-            string deviceModel = args[i++]; // Device model to be written in the final Email report. Example value: "Pixel2"
-            string OS = args[i++]; // Device OS to be written in the final Email report. Example value: "API28"
-            string appName = args[i++]; // App name to be written in the Email report. Example value: "MSALTestApp"
-            string fromAddress = args[i++]; // Email ID of the sender's account. Example value: "idlab1@msidlab4.onmicrosoft.com"
-            string fromPassword = args[i++]; // Password of the sender's account.
-            string emailToList = args[i++]; // Email To list separated by comma
-
-            // Few constants:
-            string codemarkerBaseFileNamePreFix = "PerfData"; // Prefix of the files which should be taken as base PerfData files for raw data.
-            string codemarkerTargetFileNamePreFix = "PerfData"; // Prefix of the files which should be taken as target PerfData files for raw data.
-            string outputFileLocation = "."; // Directory where target files all interim reports and final diff reports are desired. Example value: "C:\output\"
-            string outputFileNamePrefix = ""; // Prefix of the file names to be generated. Example value: "run_output"
 
             HashSet<string> primaryMeasurements = new HashSet<string>();
             HashSet<string> secondaryMeasurements = new HashSet<string>();
@@ -80,15 +62,11 @@ namespace TestScript
             HashSet<string> activeMeasurements = new HashSet<string>();
 
             DateTime startTime = DateTime.MinValue;
-            string baseJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId="
-                + basejobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
-            string targetJobArtifactURL = "https://dev.azure.com/IdentityDivision/IDDP/_build/results?buildId="
-                + currentJobID + "&view=artifacts&pathAsName=false&type=publishedArtifacts";
             PerfMeasurementConfigurationsProvider configProvider;
 
 
-            string[] baseFileList = System.IO.Directory.GetFiles(inputBaseFileLocation, codemarkerBaseFileNamePreFix + "*.txt");
-            string[] targetFileList = System.IO.Directory.GetFiles(inputTargetFileLocation, codemarkerTargetFileNamePreFix + "*.txt");
+            string[] baseFileList = System.IO.Directory.GetFiles(reportParams.InputBaseFileLocation, codemarkerBaseFileNamePreFix + "*.txt");
+            string[] targetFileList = System.IO.Directory.GetFiles(reportParams.InputTargetFileLocation, codemarkerTargetFileNamePreFix + "*.txt");
             deletePreviousRunOutputCSVs(outputFileLocation, outputFileNamePrefix);
 
 
@@ -97,7 +75,7 @@ namespace TestScript
             Dictionary<string, List<PerfMeasurementsSet>> targetMeasurements = new Dictionary<string, List<PerfMeasurementsSet>>();
             foreach (string s in MeasurementsConfiguration.getAllScenarioNames())
             {
-                configProvider = new PerfMeasurementConfigurationsProvider(appName, s);
+                configProvider = new PerfMeasurementConfigurationsProvider(reportParams.AppName, s);
                 foreach (String measurementName in configProvider.getActiveMeasurementNames())
                 {
                     secondaryMeasurements.Add(measurementName);
@@ -117,30 +95,19 @@ namespace TestScript
 
             List<string> htmlResult = new List<string>();
 
-            List<string> jobInfoHtml = View.ResultInit();
-            jobInfoHtml.AddRange(View.InfoInit());
-
-            List<Task> baseTasks = new List<Task>();
-            baseTasks.Add(createTask(deviceModel, basejobID, appName, currentJobID, baseJobArtifactURL));
-
-            List<Task> targetTasks = new List<Task>();
-            targetTasks.Add(createTask(deviceModel, currentJobID, appName, currentJobID, targetJobArtifactURL));
-
-            jobInfoHtml.Add(View.CreateAppInfoTable(baseTasks, targetTasks, appName, deviceModel, OS));
-
             List<Parameter> updatedParameters = new List<Parameter>();
 
             // Primary measurements are those which are necessary to produce a result to pass the scenario run.
             // If there is starting point of a primary measurement available but not the endpoint of the measurement in the PerfData file, the test will fail. 
             // However, if starting point or end point of a secondary measurement is missing, the test run will pass with ignoring the particular measurement.
-            string[] heading = { "Task Runs", baseTasks[0].AppName, baseTasks[0].Device };
+            string[] heading = { "Task Runs", reportParams.AppName, reportParams.DeviceModel };
 
             // Starting creating object Parameter task so that it has all the information to be written to the HTML and Email.
             Parameter task = new Parameter("Response Time(seconds)", "NA", 3, "lemon");
-            task.BaseCheckpoint = basejobID;
-            task.TargetCheckPoint = currentJobID;
-            task.BaseLogDir = baseJobArtifactURL;
-            task.TargetLogDir = targetJobArtifactURL;
+            task.BaseCheckpoint = reportParams.BaseJobId;
+            task.TargetCheckPoint = reportParams.CurrentJobId;
+            task.BaseLogDir = reportParams.BaseJobArtifactURL;
+            task.TargetLogDir = reportParams.TargetJobArtifactURL;
 
             task.BaseScenarioToPerfValueMap = new Dictionary<string, Dictionary<string, double>>();
             task.TargetScenarioToPerfValueMap = new Dictionary<string, Dictionary<string, double>>();
@@ -184,32 +151,9 @@ namespace TestScript
             updatedParameters.Add(task);
 
             htmlResult.Add(View.CreateTableHtml(updatedParameters, primaryMeasurements, secondaryMeasurements,
-                                        heading, activeScenarios, activeMeasurements, currentJobID));
+                                        heading, activeScenarios, activeMeasurements, reportParams.CurrentJobId, reportParams.RunName));
 
-            jobInfoHtml.Add(View.EndofJobDetailsTable());
-            jobInfoHtml.AddRange(htmlResult);
-            jobInfoHtml.Add(View.BuildEndOfHTML());
-
-            File.WriteAllLines(outputFileLocation + "diff.html", jobInfoHtml);
-            String emailBody = "";
-            foreach (string s in jobInfoHtml)
-            {
-                emailBody += s;
-            }
-            ReportHelper.ShowResultNSendEmail(emailBody, fromAddress, fromPassword, emailToList);
-        }
-
-        //create a task
-        private static Task createTask(string deviceModel, string baseBuild, string appName, string id, string artifactURL)
-        {
-            Task task = new Task();
-            task.Checkpoint = baseBuild;
-            task.AppName = appName;
-            task.Device = deviceModel;
-            task.FeatureGateOverrides = new Dictionary<string, string>();
-            task.Id = id;
-            task.LogsDir = artifactURL;
-            return task;
+            return htmlResult;
         }
 
         //delete previous csvs

@@ -130,6 +130,28 @@ public class CodeMarkerManager {
      * @return the content of all the code markers available till the time converted to CSV which can be directly written to a file.
      */
     public String getFileContent() {
-        return CodeMarkerUtil.getCsvContent(codeMarkers);
+        return getCsvContent();
+    }
+
+    /**
+     * This method converts list of code markers to csv content which can be written to a file.
+     *
+     * @return string to save
+     */
+    public String getCsvContent() {
+        if (codeMarkers.isEmpty()) {
+            return "";
+        }
+
+        final StringBuilder content = new StringBuilder();
+        content.append(codeMarkers.get(0).getCsvHeader());
+
+        synchronized (codeMarkers) {
+            for (final CodeMarker codeMarker : codeMarkers) {
+                content.append('\n');
+                content.append(codeMarker.getCsvLine());
+            }
+        }
+        return content.toString();
     }
 }
