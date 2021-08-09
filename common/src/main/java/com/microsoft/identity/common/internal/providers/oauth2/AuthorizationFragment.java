@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
@@ -109,8 +110,9 @@ public abstract class AuthorizationFragment extends Fragment {
         } else {
             // The calling activity is not owned by MSAL/Broker.
             // Just remove this fragment.
-            if (getFragmentManager() != null) {
-                getFragmentManager()
+            final FragmentManager fragmentManager = getFragmentManager();
+            if (fragmentManager != null) {
+                fragmentManager
                         .beginTransaction()
                         .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                         .remove(this)
@@ -145,7 +147,8 @@ public abstract class AuthorizationFragment extends Fragment {
     @Override
     public void onStop() {
         final String methodName = ":onStop";
-        if (!mAuthResultSent && (getActivity() == null || getActivity().isFinishing())) {
+        final FragmentActivity activity = getActivity();
+        if (!mAuthResultSent && (activity == null || activity.isFinishing())) {
             Logger.info(TAG + methodName,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
             );

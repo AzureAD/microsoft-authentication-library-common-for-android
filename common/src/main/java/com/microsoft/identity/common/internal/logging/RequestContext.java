@@ -27,6 +27,8 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * This class is deprecated.
  *
@@ -41,6 +43,7 @@ public class RequestContext extends HashMap<String, String> implements IRequestC
 
     private static boolean sLogDeprecationWarning = true;
 
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @Override
     public String toJsonString() {
         if (sLogDeprecationWarning) {

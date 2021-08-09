@@ -135,7 +135,7 @@ public class MicrosoftStsAccountCredentialAdapter
                              @Nullable final String responseScope) {
 
         if (StringUtil.isNullOrEmpty(responseScope)) {
-            StringBuilder scopesToCache = new StringBuilder();
+            final StringBuilder scopesToCache = new StringBuilder();
             // The response scopes were empty -- per https://tools.ietf.org/html/rfc6749#section-3.3
             // we are going to fall back to a the request scopes minus any default scopes....
             final String[] requestScopes = requestScope.split("\\s+");

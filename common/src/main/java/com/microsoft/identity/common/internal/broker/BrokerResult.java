@@ -33,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Encapsulates the possible responses from the broker.  Both successful response and error response.
  */
@@ -624,6 +626,7 @@ public class BrokerResult {
             return this;
         }
 
+        @SuppressFBWarnings("URF_UNREAD_FIELD")
         public Builder negotiatedBrokerProtocolVersion(final String negotiatedBrokerProtocolVersion) {
             this.mNegotiatedBrokerProtocolVersion = negotiatedBrokerProtocolVersion;
             return this;

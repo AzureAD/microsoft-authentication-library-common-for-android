@@ -33,6 +33,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -41,6 +42,7 @@ import lombok.NonNull;
  */
 public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueStorage<String> {
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "Lombok inserts nullchecks")
     public SharedPreferenceStringStorage(@NonNull final Context context,
                                          @NonNull final String sharedPrefFileName) {
         super(SharedPreferencesFileManager.getSharedPreferences(

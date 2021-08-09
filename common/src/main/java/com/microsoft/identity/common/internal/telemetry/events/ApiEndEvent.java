@@ -80,7 +80,7 @@ public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.ev
         return this;
     }
 
-    public ApiEndEvent putApiId(@NonNull final String apiId) {
+    public @NonNull ApiEndEvent putApiId(@NonNull final String apiId) {
         put(Key.API_ID, apiId);
         return this;
     }

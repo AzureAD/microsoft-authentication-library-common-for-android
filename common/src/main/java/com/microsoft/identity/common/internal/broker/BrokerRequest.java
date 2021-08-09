@@ -46,7 +46,7 @@ public class BrokerRequest implements Serializable {
 
     private static final long serialVersionUID = -543392127065130474L;
 
-    private class SerializedNames {
+    private static final class SerializedNames {
         final static String EXTRA_OPTIONS = "extra_options";
         final static String AUTHORITY = "authority";
         final static String SCOPE = "scopes";
