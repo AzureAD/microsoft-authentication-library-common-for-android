@@ -68,10 +68,6 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final String TAG = TokenShareUtility.class.getSimpleName();
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
     private static final String CONSUMERS_ENDPOINT = "https://login.microsoftonline.com/consumers";
-    private static final String ENVIRONMENT_GLOBAL = "login.microsoftonline.com";
-    private static final String ENVIRONMENT_GALLATIN = "login.partner.microsoftonline.cn";
-    private static final String ENVIRONMENT_ITAR = "login.microsoftonline.us";
-    private static final String ENVIRONMENT_BLACKFOREST = "login.microsoftonline.de";
 
     private enum Environment {
         // Use the preferred_cache name for ADAL backcompat
