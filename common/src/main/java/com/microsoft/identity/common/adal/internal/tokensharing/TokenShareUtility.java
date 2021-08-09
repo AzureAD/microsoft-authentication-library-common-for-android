@@ -85,6 +85,7 @@ public class TokenShareUtility implements ITokenShareInternal {
             mCommonEndpoint = commonEndpoint;
         }
 
+        @Nullable
         static Environment toEnvironment(@NonNull final String envString) {
             switch (envString) {
                 case "login.windows.net":
