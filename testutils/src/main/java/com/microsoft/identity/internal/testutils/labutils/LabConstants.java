@@ -63,6 +63,7 @@ public class LabConstants {
         public static final String LAB_2 = "msidlab2.com";
         public static final String LAB_3 = "msidlab3.com";
         public static final String LAB_4 = "msidlab4.com";
+        public static final String LAB_6 = "msidlab6.com";
     }
 
     public static final class HomeUpn {
