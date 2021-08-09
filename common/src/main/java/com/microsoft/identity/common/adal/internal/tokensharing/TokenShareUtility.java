@@ -74,7 +74,8 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final String ENVIRONMENT_BLACKFOREST = "login.microsoftonline.de";
 
     private enum Environment {
-        WORLDWIDE("https://login.microsoftonline.com/common"),
+        // Use the preferred_cache name for ADAL backcompat
+        WORLDWIDE("https://login.windows.net/common"),
         GALLATIN("https://login.partner.microsoftonline.cn/common"),
         BLACKFOREST("https://login.microsoftonline.de/common"),
         ITAR("https://login.microsoftonline.us/common");
