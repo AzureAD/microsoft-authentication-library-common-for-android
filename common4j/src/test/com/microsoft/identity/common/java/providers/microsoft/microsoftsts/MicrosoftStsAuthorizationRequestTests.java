@@ -134,7 +134,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                         "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
                         "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                         "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS +
+                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&response_type=code" +
