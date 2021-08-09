@@ -73,6 +73,38 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final String ENVIRONMENT_ITAR = "login.microsoftonline.us";
     private static final String ENVIRONMENT_BLACKFOREST = "login.microsoftonline.de";
 
+    private enum Environment {
+        WORLDWIDE("https://login.microsoftonline.com/common"),
+        GALLATIN("https://login.partner.microsoftonline.cn/common"),
+        BLACKFOREST("https://login.microsoftonline.de/common"),
+        ITAR("https://login.microsoftonline.us/common");
+
+        private String mCommonEndpoint;
+
+        Environment(final String commonEndpoint) {
+            mCommonEndpoint = commonEndpoint;
+        }
+
+        static Environment toEnvironment(@NonNull final String envString) {
+            switch (envString) {
+                case "login.windows.net":
+                case "login.microsoft.com":
+                case "sts.windows.net":
+                    return Environment.WORLDWIDE;
+                case "login.chinacloudapi.cn":
+                    return Environment.GALLATIN;
+                case "login.usgovcloudapi.net":
+                    return Environment.ITAR;
+                default:
+                    return null;
+            }
+        }
+
+        String getCommonEndpoint() {
+            return mCommonEndpoint;
+        }
+    }
+
     static {
         applyV1ToV2Mappings();
     }
@@ -97,37 +129,10 @@ public class TokenShareUtility implements ITokenShareInternal {
         mTokenCache = cache;
     }
 
-    @NonNull
-    private static String getCanonicalEnvironment(@NonNull final String environment) {
-        switch (environment) {
-            case "login.windows.net":
-            case "login.microsoft.com":
-            case "sts.windows.net":
-                return ENVIRONMENT_GLOBAL;
-            case "login.chinacloudapi.cn":
-                return ENVIRONMENT_GALLATIN;
-            case "login.usgovcloudapi.net":
-                return ENVIRONMENT_ITAR;
-            default:
-                return environment;
-        }
-    }
-
     @Nullable
-    private static String getAuthorityForEnvironment(@NonNull final String environment) {
-        String canonicalEnvironment = getCanonicalEnvironment(environment);
-        switch (canonicalEnvironment) {
-            case ENVIRONMENT_GLOBAL:
-                return "https://login.microsoftonline.com/common";
-            case ENVIRONMENT_GALLATIN:
-                return "https://login.partner.microsoftonline.cn/common";
-            case ENVIRONMENT_BLACKFOREST:
-                return "https://login.microsoftonline.de/common";
-            case ENVIRONMENT_ITAR:
-                return "https://login.microsoftonline.us/common";
-            default:
-                return null;
-        }
+    private static String getAuthorityForEnvironment(@NonNull final String env) {
+        final Environment environment = Environment.toEnvironment(env);
+        return null == environment ? null : environment.getCommonEndpoint();
     }
 
     @Override
