@@ -29,15 +29,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Deprecated.
- *
+ * <p>
  * This is now acting as an adapter for {@link com.microsoft.identity.common.java.logging.Logger}.
  **/
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class Logger extends com.microsoft.identity.common.logging.Logger {
 
     private static final String TAG = Logger.class.getSimpleName();
-
-    private static boolean sLogDeprecationWarning = true;
 
     private static final Logger INSTANCE = new Logger();
 
@@ -67,34 +65,28 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
     }
 
     public static void setAllowPii(final boolean allowPii) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.setAllowPii(allowPii);
     }
 
     public static void setAllowLogcat(final boolean allowLogcat) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.setAllowLogcat(allowLogcat);
     }
 
     public static boolean getAllowPii() {
-        logDeprecationWarning();
         return com.microsoft.identity.common.logging.Logger.getAllowPii();
     }
 
     public static boolean getAllowLogcat() {
-        logDeprecationWarning();
         return com.microsoft.identity.common.logging.Logger.getAllowLogcat();
     }
 
     public static String getDiagnosticContextMetadata() {
-        logDeprecationWarning();
         return com.microsoft.identity.common.logging.Logger.getDiagnosticContextMetadata();
     }
 
     public static void error(final String tag,
                              @Nullable final String errorMessage,
                              @Nullable final Throwable exception) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.error(tag, errorMessage, exception);
     }
 
@@ -102,14 +94,12 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
                              @Nullable final String correlationID,
                              @Nullable final String errorMessage,
                              @Nullable final Throwable exception) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.error(tag, correlationID, errorMessage, exception);
     }
 
     public static void errorPII(final String tag,
                                 @Nullable final String errorMessage,
                                 @Nullable final Throwable exception) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.errorPII(tag, errorMessage, exception);
     }
 
@@ -117,79 +107,66 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
                                 @Nullable final String correlationID,
                                 @Nullable final String errorMessage,
                                 @Nullable final Throwable exception) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.errorPII(tag, correlationID, errorMessage, exception);
     }
 
     public static void warn(final String tag, @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.warn(tag, message);
     }
 
     public static void warn(final String tag,
                             @Nullable final String correlationID,
                             @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.warn(tag, correlationID, message);
     }
 
     public static void warnPII(final String tag, @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.warnPII(tag, message);
     }
 
     public static void warnPII(final String tag,
                                @Nullable final String correlationID,
                                @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.warnPII(tag, correlationID, message);
     }
 
     public static void info(final String tag, @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.info(tag, message);
     }
 
     public static void info(final String tag,
                             @Nullable final String correlationID,
                             @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.info(tag, correlationID, message);
     }
 
     public static void infoPII(final String tag, @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.infoPII(tag, message);
     }
 
     public static void infoPII(final String tag,
                                @Nullable final String correlationID,
                                @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.infoPII(tag, correlationID, message);
     }
 
     public static void verbose(final String tag, @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.verbose(tag, message);
     }
 
     public static void verbose(final String tag,
                                @Nullable final String correlationID,
                                @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.verbose(tag, correlationID, message);
     }
 
     public static void verbosePII(final String tag, @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.verbosePII(tag, message);
     }
 
     public static void verbosePII(final String tag,
                                   @Nullable final String correlationID,
                                   @Nullable final String message) {
-        logDeprecationWarning();
         com.microsoft.identity.common.logging.Logger.verbosePII(tag, correlationID, message);
     }
 
@@ -202,19 +179,16 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
     @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
             " the implementation is separate.")
     public void setLogLevel(final LogLevel logLevel) {
-        logDeprecationWarningNonStatic();
         mInstanceDelegate.setLogLevel(adapt(logLevel));
     }
 
     public static Logger getInstance() {
-        logDeprecationWarning();
         return INSTANCE;
     }
 
     @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
             " the implementation is separate.")
     public void setExternalLogger(final ILoggerCallback externalLogger) {
-        logDeprecationWarningNonStatic();
         mInstanceDelegate.setExternalLogger(new com.microsoft.identity.common.logging.ILoggerCallback() {
             @Override
             public void log(final String tag,
@@ -253,22 +227,6 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
                 return com.microsoft.identity.common.logging.Logger.LogLevel.VERBOSE;
             default:
                 throw new RuntimeException("Unknown or invalid log level");
-        }
-    }
-
-    private void logDeprecationWarningNonStatic() {
-        if (sLogDeprecationWarning) {
-            sLogDeprecationWarning = false;
-            com.microsoft.identity.common.logging.Logger.warn(TAG, "This class is deprecated. "
-                    + "Migrate usage to: com.microsoft.identity.common.logging.Logger");
-        }
-    }
-
-    private static void logDeprecationWarning() {
-        if (sLogDeprecationWarning) {
-            sLogDeprecationWarning = false;
-            com.microsoft.identity.common.logging.Logger.warn(TAG, "This class is deprecated. "
-                    + "Migrate usage to: com.microsoft.identity.common.logging.Logger");
         }
     }
 }
