@@ -23,7 +23,7 @@
 
 package com.microsoft.identity.common.java.util;
 
-import com.microsoft.identity.common.java.InMemoryStorage;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

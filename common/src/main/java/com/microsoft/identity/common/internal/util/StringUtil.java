@@ -191,21 +191,6 @@ public final class StringUtil {
     }
 
     /**
-     * Util method to check if a string is a UUID or not
-     *
-     * @param inputString : inputString
-     * @return true if the inputString is a UUID else false;
-     */
-    public static boolean isUuid(@NonNull final String inputString) {
-        try {
-            UUID.fromString(inputString);
-            return true;
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    /**
      * Utility to null-safe-compare string in a case-insensitive manner.
      *
      * @param one The first string to compare.

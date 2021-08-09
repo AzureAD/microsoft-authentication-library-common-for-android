@@ -130,9 +130,4 @@ public class AuthorizationResponse implements ISuccessResponse {
     public void setExtraParameters(Iterable<Map.Entry<String, String>> params) {
         mExtraParameters = params;
     }
-
-    public static class Fields {
-        public static final String CODE = "code";
-        public static final String STATE = "state";
-    }
 }

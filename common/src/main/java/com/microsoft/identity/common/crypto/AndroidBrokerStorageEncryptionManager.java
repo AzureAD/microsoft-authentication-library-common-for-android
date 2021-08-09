@@ -33,6 +33,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.java.crypto.StorageEncryptionManager;
 import com.microsoft.identity.common.java.crypto.key.AbstractSecretKeyLoader;
+import com.microsoft.identity.common.java.crypto.key.PredefinedKeyLoader;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -96,16 +97,17 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
             return mKeyStoreKeyLoader;
         }
 
-        if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
+        final String packageName = getPackageName();
+        if (AZURE_AUTHENTICATOR_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
             return mLegacyAuthAppKeyLoader;
         }
 
-        if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName()) ||
-                BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(getPackageName())) {
+        if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
+                BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
             return mLegacyCPKeyLoader;
         }
 
-        throw new IllegalStateException("Matching encryption key not found");
+        throw new IllegalStateException("Matching encryption key not found, package name in use was " + packageName);
     }
 
     @Override

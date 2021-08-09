@@ -89,6 +89,8 @@ public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
             }
         };
 
-        return (T) authService;
+        @SuppressWarnings("unchecked")
+        final T returnVal = (T) authService;
+        return returnVal;
     }
 }

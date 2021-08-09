@@ -26,17 +26,8 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.exception.ClientException;
-
-import java.io.IOException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
-
-import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
-import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
-import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 
 /**
  * Factory class for constructing asymmetric keys.
@@ -56,33 +47,9 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
 
     @Override
     public synchronized AsymmetricRsaKey generateAsymmetricKey(@NonNull final String alias) throws ClientException {
-        final Exception exception;
-        final String errCode;
-
-        try {
-            return new AndroidKeystoreAsymmetricRsaKey(
-                    mContext,
-                    new DevicePopManager(alias),
-                    alias
-            );
-        } catch (final KeyStoreException e) {
-            exception = e;
-            errCode = KEYSTORE_NOT_INITIALIZED;
-        } catch (final CertificateException e) {
-            exception = e;
-            errCode = CERTIFICATE_LOAD_FAILURE;
-        } catch (final NoSuchAlgorithmException e) {
-            exception = e;
-            errCode = NO_SUCH_ALGORITHM;
-        } catch (final IOException e) {
-            exception = e;
-            errCode = IO_ERROR;
-        }
-
-        throw new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
+        return new AndroidKeystoreAsymmetricRsaKey(
+                AndroidPlatformComponents.createFromContext(mContext).getDevicePopManager(alias),
+                alias
         );
     }
 
@@ -94,29 +61,6 @@ public class AndroidKeystoreAsymmetricRsaKeyFactory implements AsymmetricRsaKeyF
 
     @Override
     public synchronized boolean clearAsymmetricKey(@NonNull final String alias) throws ClientException {
-        final Exception exception;
-        final String errCode;
-
-        try {
-            return new DevicePopManager(alias).clearAsymmetricKey();
-        } catch (final KeyStoreException e) {
-            exception = e;
-            errCode = KEYSTORE_NOT_INITIALIZED;
-        } catch (final CertificateException e) {
-            exception = e;
-            errCode = CERTIFICATE_LOAD_FAILURE;
-        } catch (final NoSuchAlgorithmException e) {
-            exception = e;
-            errCode = NO_SUCH_ALGORITHM;
-        } catch (final IOException e) {
-            exception = e;
-            errCode = IO_ERROR;
-        }
-
-        throw new ClientException(
-                errCode,
-                exception.getMessage(),
-                exception
-        );
+        return AndroidPlatformComponents.createFromContext(mContext).getDevicePopManager(alias).clearAsymmetricKey();
     }
 }

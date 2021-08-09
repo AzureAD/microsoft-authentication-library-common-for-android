@@ -22,7 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
+import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

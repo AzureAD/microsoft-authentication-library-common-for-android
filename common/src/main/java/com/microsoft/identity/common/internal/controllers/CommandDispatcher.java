@@ -22,11 +22,18 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import android.app.ActivityManager;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
+import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
@@ -35,35 +42,33 @@ import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
-import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
 import java.lang.reflect.Field;
@@ -76,18 +81,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
-import static com.microsoft.identity.common.internal.eststelemetry.EstsTelemetry.createLastRequestTelemetryCacheOnAndroid;
 
 public class CommandDispatcher {
 
@@ -251,7 +244,7 @@ public class CommandDispatcher {
                         if (command.getParameters() instanceof SilentTokenCommandParameters) {
                             EstsTelemetry.getInstance().emitForceRefresh(((SilentTokenCommandParameters) command.getParameters()).isForceRefresh());
                         }
-                        
+
                         codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START);
                         try {
                             commandResult = executeCommand(command);
@@ -296,11 +289,8 @@ public class CommandDispatcher {
     }
 
     private static void initTelemetryForCommand(@NonNull final BaseCommand<?> command) {
-        // TODO: This will eventually be moved up the chain to the Android Wrapper.
-        //       For now, we can keep it here.
         EstsTelemetry.getInstance().setUp(
-                createLastRequestTelemetryCacheOnAndroid(command.getParameters().getAndroidApplicationContext()));
-
+                command.getParameters().getPlatformComponents());
         EstsTelemetry.getInstance().initTelemetryForCommand(command);
     }
 
@@ -424,7 +414,7 @@ public class CommandDispatcher {
     private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command,
                                             final CommandResult result, @NonNull final Handler handler) {
 
-        optionallyReorderTasks(command);
+        command.getParameters().getPlatformComponents().getPlatformUtil().onReturnCommandResult(command);
 
         handler.post(new Runnable() {
             @Override
@@ -444,38 +434,6 @@ public class CommandDispatcher {
                 }
             }
         });
-    }
-
-
-    /**
-     * This method optionally re-orders tasks to bring the task that launched
-     * the interactive activity to the foreground.  This is useful when the activity provided
-     * to us does not have a taskAffinity and as a result it's possible that other apps or the home
-     * screen could be in the task stack ahead of the app that launched the interactive
-     * authorization UI.
-     *
-     * @param command The BaseCommand.
-     */
-    private static void optionallyReorderTasks(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command) {
-        final String methodName = ":optionallyReorderTasks";
-        if (command instanceof InteractiveTokenCommand) {
-            InteractiveTokenCommand interactiveTokenCommand = (InteractiveTokenCommand) command;
-            InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) interactiveTokenCommand.getParameters();
-
-            if (interactiveTokenCommandParameters.getHandleNullTaskAffinity() && !interactiveTokenCommand.getHasTaskAffinity()) {
-                //If an interactive command doesn't have a task affinity bring the
-                //task that launched the command to the foreground
-                //In order for this to work the app has to have requested the re-order tasks permission
-                //https://developer.android.com/reference/android/Manifest.permission#REORDER_TASKS
-                //if the permission has not been granted nothing will happen if you just invoke the method
-                ActivityManager activityManager = (ActivityManager) command.getParameters().getAndroidApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
-                if (activityManager != null) {
-                    activityManager.moveTaskToFront(interactiveTokenCommand.getTaskId(), 0);
-                } else {
-                    Logger.warn(TAG + methodName, "ActivityManager was null; Unable to bring task for the foreground.");
-                }
-            }
-        }
     }
 
     // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
@@ -570,15 +528,11 @@ public class CommandDispatcher {
     public static void beginInteractive(final InteractiveTokenCommand command) {
         final String methodName = ":beginInteractive";
         synchronized (sLock) {
-            final LocalBroadcastManager localBroadcastManager =
-                    LocalBroadcastManager.getInstance(command.getParameters().getAndroidApplicationContext());
 
             //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
             if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
                 // Send a broadcast to cancel if any active auth request is present.
-                localBroadcastManager.sendBroadcast(
-                        new Intent(CANCEL_INTERACTIVE_REQUEST)
-                );
+                LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
             }
 
             sInteractiveExecutor.execute(new Runnable() {
@@ -601,26 +555,26 @@ public class CommandDispatcher {
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                        final BroadcastReceiver resultReceiver = new BroadcastReceiver() {
+                        final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
                             @Override
-                            public void onReceive(Context context, Intent intent) {
-                                completeInteractive(intent);
+                            public void onReceive(@NonNull PropertyBag dataBag) {
+                                completeInteractive(dataBag);
                             }
                         };
 
                         CommandResult commandResult;
                         Handler handler = new Handler(Looper.getMainLooper());
 
-                        localBroadcastManager.registerReceiver(
-                                resultReceiver,
-                                new IntentFilter(RETURN_INTERACTIVE_REQUEST_RESULT));
+                        LocalBroadcaster.INSTANCE.registerCallback(
+                                RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
 
                         sCommand = command;
 
                         //Try executing request
                         commandResult = executeCommand(command);
                         sCommand = null;
-                        localBroadcastManager.unregisterReceiver(resultReceiver);
+
+                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
 
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
@@ -640,14 +594,14 @@ public class CommandDispatcher {
         }
     }
 
-    private static void completeInteractive(final Intent resultIntent) {
+    private static void completeInteractive(final PropertyBag propertyBag) {
         final String methodName = ":completeInteractive";
 
-        int requestCode = resultIntent.getIntExtra(REQUEST_CODE, 0);
-        int resultCode = resultIntent.getIntExtra(RESULT_CODE, 0);
+        int requestCode = propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1);
+        int resultCode = propertyBag.<Integer>getOrDefault(RESULT_CODE, -1);
 
         if (sCommand != null) {
-            sCommand.notify(requestCode, resultCode, resultIntent);
+            sCommand.onFinishAuthorizationSession(requestCode, resultCode, propertyBag);
         } else {
             Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
         }
@@ -663,8 +617,8 @@ public class CommandDispatcher {
         final com.microsoft.identity.common.internal.logging.RequestContext rc =
                 new com.microsoft.identity.common.internal.logging.RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        rc.put(AuthenticationConstants.SdkPlatformFields.PRODUCT, sdkType);
-        rc.put(AuthenticationConstants.SdkPlatformFields.VERSION, sdkVersion);
+        rc.put(PRODUCT, sdkType);
+        rc.put(VERSION, sdkVersion);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,

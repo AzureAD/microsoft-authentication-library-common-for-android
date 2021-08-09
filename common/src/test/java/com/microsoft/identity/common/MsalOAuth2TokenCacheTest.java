@@ -27,17 +27,15 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialAdapter;
 import com.microsoft.identity.common.internal.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.internal.cache.ICacheKeyValueDelegate;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -45,9 +43,9 @@ import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.shadows.ShadowAndroidSdkStorageEncryptionManager;
@@ -92,6 +90,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.when;
 
+@SuppressWarnings("unchecked")
 @RunWith(RobolectricTestRunner.class)
 @Config(shadows = {ShadowAndroidSdkStorageEncryptionManager.class})
 public class MsalOAuth2TokenCacheTest {
@@ -105,7 +104,7 @@ public class MsalOAuth2TokenCacheTest {
             MicrosoftStsTokenResponse,
             MicrosoftAccount,
             MicrosoftRefreshToken> mOauth2TokenCache;
-    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
+    private INameValueStorage<String> mSharedPreferencesFileManager;
 
     MicrosoftStsOAuth2Strategy mockStrategy;
 
@@ -261,10 +260,11 @@ public class MsalOAuth2TokenCacheTest {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
 
-        mSharedPreferencesFileManager = SharedPreferencesFileManager.getSharedPreferences(
-                mContext,
+        final AndroidPlatformComponents components = AndroidPlatformComponents.createFromContext(mContext);
+        mSharedPreferencesFileManager = components.getEncryptedNameValueStore(
                 "test_prefs",
-                new AndroidAuthSdkStorageEncryptionManager(mContext, null)
+                components.getStorageEncryptionManager(),
+                String.class
         );
 
         final ICacheKeyValueDelegate keyValueDelegate = new CacheKeyValueDelegate();
@@ -275,7 +275,7 @@ public class MsalOAuth2TokenCacheTest {
         );
 
         mOauth2TokenCache = new MsalOAuth2TokenCache<>(
-                mContext,
+                components,
                 accountCredentialCache,
                 mockCredentialAdapter
         );
@@ -315,7 +315,7 @@ public class MsalOAuth2TokenCacheTest {
     @Test
     public void saveTokensWithMalformedDataInCache() throws Exception {
         // Prepopulate the cache with unparseable, junk data
-        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+        mSharedPreferencesFileManager.put(JUNK_KEY, JUNK_VALUE);
 
         mOauth2TokenCache.save(
                 mockStrategy,
@@ -341,7 +341,7 @@ public class MsalOAuth2TokenCacheTest {
         assertEquals(defaultTestBundleV2.mGeneratedIdToken, ids.get(0));
 
         // Verify that our junk data still exists
-        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.get(JUNK_KEY));
     }
 
     @Test
@@ -354,7 +354,7 @@ public class MsalOAuth2TokenCacheTest {
         );
 
         // Then insert unparseable, junk data
-        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+        mSharedPreferencesFileManager.put(JUNK_KEY, JUNK_VALUE);
 
         final List<AccountRecord> accounts = accountCredentialCache.getAccounts();
         assertEquals(1, accounts.size());
@@ -372,7 +372,7 @@ public class MsalOAuth2TokenCacheTest {
         validateResultListContents(rts, ats, ids);
 
         // Verify that our junk data still exists
-        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.get(JUNK_KEY));
     }
 
     private void validateResultListContents(List<Credential> rts, List<Credential> ats, List<Credential> ids) {
@@ -438,7 +438,7 @@ public class MsalOAuth2TokenCacheTest {
     @Test
     public void saveTokensWithAggregationSingleEntryWithMalformedDataInCache() throws ClientException {
         // Prepopulate the cache with unparseable, junk data
-        mSharedPreferencesFileManager.putString(JUNK_KEY, JUNK_VALUE);
+        mSharedPreferencesFileManager.put(JUNK_KEY, JUNK_VALUE);
 
         final List<ICacheRecord> result = loadTestBundleIntoCacheWithAggregation(
                 defaultTestBundleV2
@@ -454,7 +454,7 @@ public class MsalOAuth2TokenCacheTest {
         assertEquals(defaultTestBundleV2.mGeneratedRefreshToken, entry.getRefreshToken());
 
         // Verify that our junk data still exists
-        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.getString(JUNK_KEY));
+        assertEquals(JUNK_VALUE, mSharedPreferencesFileManager.get(JUNK_KEY));
     }
 
     @Test

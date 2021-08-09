@@ -32,28 +32,31 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.AndroidCommonComponents;
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.cache.CacheKey;
 import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -61,6 +64,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -71,7 +77,7 @@ import java.util.Set;
 public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
-    private ISharedPreferencesFileManager mISharedPreferencesFileManager;
+    private INameValueStorage<String> mISharedPreferencesFileManager;
 
     static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
@@ -90,7 +96,7 @@ public class ADALOAuth2TokenCache
      * @param context Context
      */
     public ADALOAuth2TokenCache(final Context context) {
-        super(context);
+        super(AndroidPlatformComponents.createFromContext(context));
         Logger.verbose(TAG, "Init: " + TAG);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
@@ -105,7 +111,7 @@ public class ADALOAuth2TokenCache
      */
     public ADALOAuth2TokenCache(final Context context,
                                 final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> sharedSSOCaches) {
-        super(context);
+        super(AndroidPlatformComponents.createFromContext(context));
         Logger.verbose(TAG, "Init: " + TAG);
         Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
         validateSecretKeySetting();
@@ -117,12 +123,12 @@ public class ADALOAuth2TokenCache
         Logger.verbose(TAG, "Initializing SharedPreferencesFileManager");
         Logger.verbosePII(TAG, "Initializing with name: " + fileName);
 
+        final IPlatformComponents components = getComponents();
         mISharedPreferencesFileManager =
-                SharedPreferencesFileManager.getSharedPreferences(
-                        getContext(),
+                components.getEncryptedNameValueStore(
                         fileName,
-                        new AndroidCommonComponents(getContext()).
-                                getStorageEncryptionManager(null)
+                        components.getStorageEncryptionManager(),
+                        String.class
                 );
     }
 
@@ -137,7 +143,7 @@ public class ADALOAuth2TokenCache
     public ICacheRecord save(
             final AzureActiveDirectoryOAuth2Strategy strategy,
             final AzureActiveDirectoryAuthorizationRequest request,
-            final AzureActiveDirectoryTokenResponse response) {
+            final AzureActiveDirectoryTokenResponse response) throws ClientException {
         final String methodName = "save";
         Logger.info(TAG + ":" + methodName, "Saving Tokens...");
 
@@ -376,7 +382,7 @@ public class ADALOAuth2TokenCache
     private void setItem(final String key, final ADALTokenCacheItem cacheItem) {
         Logger.info(TAG, "Setting item to cache");
         String json = mGson.toJson(cacheItem);
-        mISharedPreferencesFileManager.putString(key, json);
+        mISharedPreferencesFileManager.put(key, json);
     }
 
     private void validateSecretKeySetting() {

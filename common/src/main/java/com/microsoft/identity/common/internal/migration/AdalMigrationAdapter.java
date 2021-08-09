@@ -38,14 +38,15 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
 import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -235,7 +236,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
         if (!AzureActiveDirectory.isInitialized()) {
             try {
                 AzureActiveDirectory.performCloudDiscovery();
-            } catch (IOException e) {
+            } catch (final IOException | URISyntaxException e) {
                 Logger.error(
                         TAG + methodName,
                         "Failed to load instance discovery metadata",

@@ -22,9 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import android.accounts.Account;
 import android.text.TextUtils;
 
+import com.microsoft.identity.common.java.broker.IBrokerAccount;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
@@ -43,7 +44,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
     private final String callerAppVersion;
     private final String brokerVersion;
 
-    private final Account accountManagerAccount;
+    private final IBrokerAccount brokerAccount;
     private final String homeAccountId;
     private final String localAccountId;
     private final int sleepTimeBeforePrtAcquisition;
@@ -91,7 +92,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
 
         // Check if SDK is capable of MSA to ensure there is uniformity of logic with SdkType.MSALCPP and SdkType.MSAL
         if (getSdkType().isCapableOfMSA() &&
-                !BrokerValidator.isValidBrokerRedirect(getRedirectUri(), getAndroidApplicationContext(), getCallerPackageName())) {
+                !getPlatformComponents().getPlatformUtil().isValidCallingApp(getRedirectUri(), getCallerPackageName())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mRedirectUri", "The redirect URI doesn't match the uri" +
@@ -106,10 +107,10 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "OAuth2Cache not an instance of BrokerOAuth2TokenCache"
             );
         }
-        if (null == accountManagerAccount) {
+        if (null == brokerAccount) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
-                    "mCallerPackageName", "Android Account manager Account is null"
+                    "mCallerPackageName", "Broker Account is null"
             );
         }
 

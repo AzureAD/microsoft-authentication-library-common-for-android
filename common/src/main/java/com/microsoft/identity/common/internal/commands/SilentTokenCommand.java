@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
@@ -31,9 +29,10 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
@@ -112,7 +111,9 @@ public class SilentTokenCommand extends TokenCommand {
     }
 
     @Override
-    public void notify(int requestCode, int resultCode, Intent data) {
+    public void onFinishAuthorizationSession(int requestCode,
+                                             int resultCode,
+                                             @NonNull final PropertyBag data) {
         throw new UnsupportedOperationException();
     }
 
