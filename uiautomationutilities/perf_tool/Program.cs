@@ -112,6 +112,9 @@ namespace IdentityPerfTestApp
         }
     }
 
+    /// <summary>
+    /// A class that encapsulates the parameters needed to run the pipeline
+    /// </summary>
     class ReportParams
     {
 
