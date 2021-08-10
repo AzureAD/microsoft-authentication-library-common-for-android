@@ -25,18 +25,21 @@ package com.microsoft.identity.common.adal.internal.tokensharing;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.tokensharing.SSOStateSerializer;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftIdToken;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
@@ -58,10 +61,10 @@ import java.util.concurrent.Future;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2.ID_TOKEN_OBJECT_ID;
 import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.RAW;
 import static com.microsoft.identity.common.adal.internal.tokensharing.ITokenShareResultInternal.TokenShareExportFormatInternal.SSO_STATE_SERIALIZER_BLOB;
-import static com.microsoft.identity.common.java.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.renewToken;
 import static com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter.sBackgroundExecutor;
+import static com.microsoft.identity.common.java.exception.ClientException.TOKEN_CACHE_ITEM_NOT_FOUND;
 
 public class TokenShareUtility implements ITokenShareInternal {
 
@@ -69,11 +72,45 @@ public class TokenShareUtility implements ITokenShareInternal {
     private static final Map<String, String> sClaimRemapper = new HashMap<>();
     private static final String CONSUMERS_ENDPOINT = "https://login.microsoftonline.com/consumers";
 
-    /**
-     * To support caching lookups in ADAL, the following authority is used to signal
-     * that the tokens being yielded belong to the target user's home tenant.
-     */
-    private static final String sHomeTenantAuthority = "https://login.windows.net/common";
+    private enum Environment {
+        // Use the preferred_cache name for ADAL backcompat
+        WORLDWIDE("https://login.windows.net/common"),
+        GALLATIN("https://login.partner.microsoftonline.cn/common"),
+        BLACKFOREST("https://login.microsoftonline.de/common"),
+        ITAR("https://login.microsoftonline.us/common");
+
+        private String mCommonEndpoint;
+
+        Environment(final String commonEndpoint) {
+            mCommonEndpoint = commonEndpoint;
+        }
+
+        @NonNull
+        static Environment toEnvironment(@NonNull final String envString) throws ClientException {
+            switch (envString) {
+                case "login.microsoftonline.com":
+                case "login.windows.net":
+                case "login.microsoft.com":
+                case "sts.windows.net":
+                    return Environment.WORLDWIDE;
+                case "login.chinacloudapi.cn":
+                case "login.partner.microsoftonline.cn":
+                    return Environment.GALLATIN;
+                case "login.usgovcloudapi.net":
+                case "login.microsoftonline.us":
+                    return Environment.ITAR;
+                case "login.microsoftonline.de":
+                    return Environment.BLACKFOREST;
+                default:
+                    Logger.warn(TAG, "Unable to map provided env to enum: " + envString);
+                    throw new ClientException("Unrecognized environment");
+            }
+        }
+
+        String getCommonEndpoint() {
+            return mCommonEndpoint;
+        }
+    }
 
     static {
         applyV1ToV2Mappings();
@@ -310,7 +347,7 @@ public class TokenShareUtility implements ITokenShareInternal {
     @SuppressWarnings("PMD.UnusedPrivateMethod")
     @NonNull
     private static ADALTokenCacheItem adapt(@NonNull final IdTokenRecord idTokenRecord,
-                                            @NonNull final RefreshTokenRecord refreshTokenRecord) throws ServiceException {
+                                            @NonNull final RefreshTokenRecord refreshTokenRecord) throws BaseException {
         final ADALTokenCacheItem tokenCacheItem = new ADALTokenCacheItem();
         tokenCacheItem.setClientId(refreshTokenRecord.getClientId());
         tokenCacheItem.setRefreshToken(refreshTokenRecord.getSecret());
@@ -322,7 +359,7 @@ public class TokenShareUtility implements ITokenShareInternal {
         // In order to support ADAL cache lookups when the cache is empty, always use /common
         // when the outbound token is from the home tenant
         if (isFromHomeTenant(idTokenRecord)) {
-            authority = sHomeTenantAuthority;
+            authority = Environment.toEnvironment(refreshTokenRecord.getEnvironment()).getCommonEndpoint();
         } else {
             authority = idTokenRecord.getAuthority();
         }

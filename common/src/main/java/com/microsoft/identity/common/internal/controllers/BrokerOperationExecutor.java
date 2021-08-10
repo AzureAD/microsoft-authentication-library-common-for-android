@@ -25,9 +25,6 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.PerfConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
@@ -45,6 +42,10 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
 
 /**
  * Classes for executing IPC service operations.
@@ -174,11 +175,14 @@ public class BrokerOperationExecutor {
         }
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     private <U> void emitOperationSuccessEvent(@NonNull final BrokerOperation<U> operation,
                                                final U result) {
-        if (operation.getTelemetryApiId() != null) {
-            final ApiEndEvent successEvent = new ApiEndEvent()
-                    .putApiId(operation.getTelemetryApiId())
+        final String telemetryApiId = operation.getTelemetryApiId();
+        if (telemetryApiId != null) {
+            final ApiEndEvent apiEndEvent = new ApiEndEvent();
+            final ApiEndEvent successEvent = apiEndEvent
+                    .putApiId(telemetryApiId)
                     .isApiCallSuccessful(Boolean.TRUE);
             operation.putValueInSuccessEvent(successEvent, result);
             Telemetry.emit(successEvent);

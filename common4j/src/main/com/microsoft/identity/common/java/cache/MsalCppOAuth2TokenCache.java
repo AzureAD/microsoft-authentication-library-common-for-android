@@ -20,19 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import android.content.Context;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
-
-import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -44,7 +37,7 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,6 +45,9 @@ import java.util.List;
 
 import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Sub class of {@link MsalCppOAuth2TokenCache} to add specific public api's required for MSAL CPP library.
@@ -72,22 +68,6 @@ public class MsalCppOAuth2TokenCache
         GenericRefreshToken> {
 
     private static final String TAG = MsalCppOAuth2TokenCache.class.getName();
-
-    /**
-     * Constructor of MsalOAuth2TokenCache.
-     *
-     * @param context                  Context
-     * @param accountCredentialCache   IAccountCredentialCache
-     * @param accountCredentialAdapter IAccountCredentialAdapter
-     */
-    @Deprecated
-    // Suppressing unchecked warnings due to casting of IAccountCredentialAdapter with the generics in the call to the constructor of parent class
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private MsalCppOAuth2TokenCache(final Context context,
-                                    final IAccountCredentialCache accountCredentialCache,
-                                    final IAccountCredentialAdapter accountCredentialAdapter) {
-        super(AndroidPlatformComponents.createFromContext(context), accountCredentialCache, accountCredentialAdapter);
-    }
 
     /**
      * Constructor of MsalOAuth2TokenCache.
@@ -139,7 +119,7 @@ public class MsalCppOAuth2TokenCache
      */
     public synchronized void saveCredentials(@Nullable final AccountRecord accountRecord,
                                              @NonNull final Credential... credentials) throws ClientException {
-        if (credentials == null || credentials.length == 0) {
+        if (credentials.length == 0) {
             throw new ClientException("Credential array passed in is null or empty");
         }
 
@@ -182,7 +162,7 @@ public class MsalCppOAuth2TokenCache
      * API to clear all cache.
      * Note: This method is intended to be only used for testing purposes.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public synchronized void clearCache() {
         getAccountCredentialCache().clearAll();
     }
@@ -193,7 +173,7 @@ public class MsalCppOAuth2TokenCache
      *
      * @return A immutable List of Credentials contained in this cache.
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public synchronized List<Credential> getCredentials() {
         return Collections.unmodifiableList(
                 getAccountCredentialCache().getCredentials()
@@ -209,14 +189,14 @@ public class MsalCppOAuth2TokenCache
      * @return An {@link AccountDeletionRecord} containing a receipt of the removed Accounts.
      * @throws ClientException
      */
-    @VisibleForTesting // private by default for production code
+    //@VisibleForTesting // private by default for production code
     public synchronized AccountDeletionRecord forceRemoveAccount(@NonNull final String homeAccountId,
                                                                  @Nullable final String environment,
                                                                  @Nullable final String realm) throws ClientException {
         validateNonNull(homeAccountId, "homeAccountId");
 
-        final boolean mustMatchOnEnvironment = !StringExtensions.isNullOrBlank(environment);
-        final boolean mustMatchOnRealm = !StringExtensions.isNullOrBlank(realm);
+        final boolean mustMatchOnEnvironment = !StringUtil.isNullOrEmpty(environment);
+        final boolean mustMatchOnRealm = !StringUtil.isNullOrEmpty(realm);
 
         final List<AccountRecord> removedAccounts = new ArrayList<>();
 

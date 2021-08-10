@@ -31,10 +31,13 @@ import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.challengehandlers.IDeviceCertificate;
 import com.microsoft.identity.common.logging.Logger;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Settings to be used in AuthenticationContext.
@@ -312,6 +315,7 @@ public enum AuthenticationSettings {
      *
      * @param useBroker True to use broker
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setUseBroker(boolean useBroker) {
         mUseBroker = useBroker;
     }
@@ -322,6 +326,7 @@ public enum AuthenticationSettings {
      *
      * @param packageNameForSharedFile Package name of other app
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setSharedPrefPackageName(String packageNameForSharedFile) {
         mSharedPrefPackageName = packageNameForSharedFile;
     }
@@ -352,6 +357,7 @@ public enum AuthenticationSettings {
      *
      * @param expirationBuffer the time buffer provided to expiration time.
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setExpirationBuffer(int expirationBuffer) {
         mExpirationBuffer = expirationBuffer;
     }
@@ -413,6 +419,7 @@ public enum AuthenticationSettings {
      *               would be disable.
      * @see #getDisableWebViewHardwareAcceleration()
      */
+    @SuppressFBWarnings("ME_ENUM_FIELD_SETTER")
     public void setDisableWebViewHardwareAcceleration(boolean enable) {
         mEnableHardwareAcceleration = enable;
     }

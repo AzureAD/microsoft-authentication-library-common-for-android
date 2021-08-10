@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache.registry;
 
-import com.microsoft.identity.common.internal.cache.ISimpleCache;
+import com.microsoft.identity.common.java.cache.ISimpleCache;
 
 /**
  * Interface defining the BrokerApplicationRegistry.

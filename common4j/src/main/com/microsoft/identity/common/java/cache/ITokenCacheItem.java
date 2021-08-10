@@ -20,43 +20,39 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import androidx.annotation.Nullable;
-
-import java.util.List;
-import java.util.Set;
-
-public interface IBrokerApplicationMetadataCache extends ISimpleCache<BrokerApplicationMetadata> {
+/**
+ * Interface to glue together various migration/TSL related functionality.
+ */
+public interface ITokenCacheItem {
 
     /**
-     * @return A Set of all ClientIds known to this cache. May be empty, but never null.
-     */
-    Set<String> getAllClientIds();
-
-    /**
-     * @return The Set of all FoCI clientIds.
-     */
-    Set<String> getAllFociClientIds();
-
-    /**
-     * @return The Set of all non-FoCI clientIds.
-     */
-    Set<String> getAllNonFociClientIds();
-
-    /**
-     * @return All of the BrokerApplicationMetadata where the app is FoCI.
-     */
-    List<BrokerApplicationMetadata> getAllFociApplicationMetadata();
-
-    /**
-     * For the supplied criteria, return the {@link BrokerApplicationMetadata} which corresponds to it.
+     * Gets the authority.
      *
-     * @param clientId    The target client id.
-     * @param environment The target environment.
-     * @param processUid  The uid of the app calling broker.
-     * @return The matching {@link BrokerApplicationMetadata} or null if a match cannot be found.
+     * @return The authority to get.
      */
-    @Nullable
-    BrokerApplicationMetadata getMetadata(String clientId, String environment, int processUid);
+    String getAuthority();
+
+    /**
+     * Gets the clientId.
+     *
+     * @return The clientId to get.
+     */
+    String getClientId();
+
+    /**
+     * Gets the refresh tokens (as a raw String).
+     *
+     * @return The refresh token to get.
+     */
+    String getRefreshToken();
+
+    /**
+     * Gets the resource associated to this request.
+     *
+     * @return The resource to get.
+     */
+    String getResource();
+
 }

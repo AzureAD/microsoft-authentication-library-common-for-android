@@ -44,6 +44,7 @@ import java.util.concurrent.Executors;
 import static com.microsoft.identity.common.java.exception.ServiceException.OPENID_PROVIDER_CONFIGURATION_FAILED_TO_LOAD;
 
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -68,6 +69,7 @@ public class OpenIdProviderConfigurationClient {
         mIssuer = new URI(sanitize(issuer)).toString();
     }
 
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public OpenIdProviderConfigurationClient(@NonNull final String authority,
                                              @NonNull final String path) throws URISyntaxException {
         this(authority, path, "");

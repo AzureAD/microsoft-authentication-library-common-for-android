@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
@@ -59,6 +60,7 @@ public class AzureActiveDirectoryAccount extends MicrosoftAccount {
      * @param idToken    Returned as part of the TokenResponse
      * @param clientInfo Returned via TokenResponse
      */
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public AzureActiveDirectoryAccount(@NonNull final IDToken idToken,
                                        @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);

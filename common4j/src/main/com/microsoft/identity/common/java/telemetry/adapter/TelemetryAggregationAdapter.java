@@ -36,8 +36,8 @@ import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings
 
 public final class TelemetryAggregationAdapter implements ITelemetryAdapter<List<Map<String, String>>> {
     private ITelemetryAggregatedObserver mObserver;
-    private final String START = "start";
-    private final String END = "end";
+    private static final String START = "start";
+    private static final String END = "end";
 
     public TelemetryAggregationAdapter(@NonNull final ITelemetryAggregatedObserver observer) {
         mObserver = observer;

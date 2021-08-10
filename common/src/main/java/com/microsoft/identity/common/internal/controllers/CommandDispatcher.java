@@ -379,24 +379,25 @@ public class CommandDispatcher {
             }
         }
 
+        final String correlationId = command.getParameters().getCorrelationId();
         if (baseException != null) {
             if (baseException instanceof UserCancelException) {
                 commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null,
-                        command.getParameters().getCorrelationId());
+                        correlationId);
             } else {
                 //Post On Error
                 commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException,
-                        command.getParameters().getCorrelationId());
+                        correlationId);
             }
         } else /* baseException == null */ {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
-                        command.getParameters().getCorrelationId());
+                commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
+                        correlationId);
             } else {
                 //For commands that don't return an AcquireTokenResult
                 commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
-                        command.getParameters().getCorrelationId());
+                        correlationId);
             }
         }
 
@@ -505,18 +506,16 @@ public class CommandDispatcher {
     /**
      * Get Commandresult from acquiretokenresult
      *
-     * @param baseException
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
-                                                                 @NonNull AcquireTokenResult result, @NonNull String correlationId) {
+    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
         //Token Commands
         if (result.getSucceeded()) {
             return new CommandResult(CommandResult.ResultStatus.COMPLETED,
                     result.getLocalAuthenticationResult(), correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {

@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.cache.ISimpleCache;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.logging.Logger;
