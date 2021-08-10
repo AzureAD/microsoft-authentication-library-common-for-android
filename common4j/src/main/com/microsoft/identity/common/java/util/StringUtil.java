@@ -45,6 +45,7 @@ import java.util.UUID;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
@@ -314,7 +315,7 @@ public class StringUtil {
      */
     public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
                                                    @Nullable final String two) {
-        return equalsIgnoreCaseTrim(null != one ? one.trim() : one, two);
+        return equalsIgnoreCaseTrim(one != null ? one.trim() : null, two);
     }
 
     /**
@@ -324,6 +325,8 @@ public class StringUtil {
      * @param two The second string to compare.
      * @return true if the inputs are equal, false otherwise.
      */
+    @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
+                        justification = "This is an intentional reference comparison")
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }

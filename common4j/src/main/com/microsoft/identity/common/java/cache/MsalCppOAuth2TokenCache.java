@@ -119,7 +119,7 @@ public class MsalCppOAuth2TokenCache
      */
     public synchronized void saveCredentials(@Nullable final AccountRecord accountRecord,
                                              @NonNull final Credential... credentials) throws ClientException {
-        if (credentials == null || credentials.length == 0) {
+        if (credentials.length == 0) {
             throw new ClientException("Credential array passed in is null or empty");
         }
 

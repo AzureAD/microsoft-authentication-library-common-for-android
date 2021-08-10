@@ -22,6 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.aad.adal;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public final class DateTimeAdapter
         extends com.microsoft.identity.common.java.adal.cache.DateTimeAdapter {
     // This class has moved to common. See super.

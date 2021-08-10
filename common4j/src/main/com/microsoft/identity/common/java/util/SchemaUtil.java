@@ -64,15 +64,11 @@ public final class SchemaUtil {
         if (null != idToken) {
             final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
-            if (null != idTokenClaims) {
-                issuer = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
-                Logger.verbosePII(TAG + ":" + methodName, "Issuer: " + issuer);
+            issuer = (String) idTokenClaims.get(MicrosoftIdToken.ISSUER);
+            Logger.verbosePII(TAG + ":" + methodName, "Issuer: " + issuer);
 
-                if (null == issuer) {
-                    Logger.warn(TAG + ":" + methodName, "Environment was null or could not be parsed.");
-                }
-            } else {
-                Logger.warn(TAG + ":" + methodName, "IDToken claims were null");
+            if (null == issuer) {
+                Logger.warn(TAG + ":" + methodName, "Environment was null or could not be parsed.");
             }
         } else {
             Logger.warn(TAG + ":" + methodName, "IDToken was null");
@@ -95,16 +91,12 @@ public final class SchemaUtil {
         if (null != idToken) {
             final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
-            if (null != idTokenClaims) {
-                avatarUrl = (String) idTokenClaims.get(IDToken.PICTURE);
+            avatarUrl = (String) idTokenClaims.get(IDToken.PICTURE);
 
-                Logger.verbosePII(TAG + ":" + methodName, "Avatar URL: " + avatarUrl);
+            Logger.verbosePII(TAG + ":" + methodName, "Avatar URL: " + avatarUrl);
 
-                if (null == avatarUrl) {
-                    Logger.warn(TAG + ":" + methodName, "Avatar URL was null.");
-                }
-            } else {
-                Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
+            if (null == avatarUrl) {
+                Logger.warn(TAG + ":" + methodName, "Avatar URL was null.");
             }
         } else {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
@@ -128,16 +120,12 @@ public final class SchemaUtil {
         if (null != idToken) {
             final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
-            if (null != idTokenClaims) {
-                alternativeAccountId = (String) idTokenClaims.get("altsecid");
+            alternativeAccountId = (String) idTokenClaims.get("altsecid");
 
-                Logger.verbosePII(TAG + ":" + methodName, "alternative_account_id: " + alternativeAccountId);
+            Logger.verbosePII(TAG + ":" + methodName, "alternative_account_id: " + alternativeAccountId);
 
-                if (null == alternativeAccountId) {
-                    Logger.warn(TAG + ":" + methodName, "alternative_account_id was null.");
-                }
-            } else {
-                Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
+            if (null == alternativeAccountId) {
+                Logger.warn(TAG + ":" + methodName, "alternative_account_id was null.");
             }
         } else {
             Logger.warn(TAG + ":" + methodName, "IDToken was null.");
@@ -183,17 +171,13 @@ public final class SchemaUtil {
                 idToken = new IDToken(idTokenString);
                 final Map<String, ?> idTokenClaims = idToken.getTokenClaims();
 
-                if (null != idTokenClaims) {
-                    // IDP claim is present only in case of guest scenerio and is empty for home tenants.
-                    // Few Apps consuming ADAL use this to differentiate between home vs guest accounts.
-                    idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
+                // IDP claim is present only in case of guest scenerio and is empty for home tenants.
+                // Few Apps consuming ADAL use this to differentiate between home vs guest accounts.
+                idp = (String) idTokenClaims.get(AzureActiveDirectoryIdToken.IDENTITY_PROVIDER);
 
-                    Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
-                    if (null == idp) {
-                        Logger.info(TAG + ":" + methodName, "idp claim was null.");
-                    }
-                } else {
-                    Logger.warn(TAG + ":" + methodName, "IDToken claims were null.");
+                Logger.verbosePII(TAG + ":" + methodName, "idp: " + idp);
+                if (null == idp) {
+                    Logger.info(TAG + ":" + methodName, "idp claim was null.");
                 }
             } catch (ServiceException e) {
                 Logger.warn(TAG + ":" + methodName, EXCEPTION_CONSTRUCTING_IDTOKEN + e.getMessage());

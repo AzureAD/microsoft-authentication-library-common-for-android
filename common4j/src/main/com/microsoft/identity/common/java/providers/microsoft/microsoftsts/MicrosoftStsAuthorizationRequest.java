@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -77,6 +78,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @SerializedName("cpVersion")
     private final String mCompanyPortalVersion;
 
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @Getter
     @Accessors(prefix = "m")
     private final transient String mDisplayableId;
@@ -91,12 +93,14 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      * That said, I'm not sure if removing this will have any unintended side effects,
      * so I'm keeping it here for now.
      */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @Getter
     @Accessors(prefix = "m")
     private final transient String mTokenScope;
 
     protected transient AzureActiveDirectorySlice mSlice;
 
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     protected transient Map<String, String> mFlightParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;

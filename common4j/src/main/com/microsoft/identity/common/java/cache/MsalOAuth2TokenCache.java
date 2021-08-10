@@ -517,7 +517,7 @@ public class MsalOAuth2TokenCache
                 acct
         );
 
-        if (acctIdTokens.size() > ID_TOKEN_TYPES.length) {
+        if (acctIdTokens.size() > ID_TOKEN_TYPES.size()) {
             // We shouldn't have more idtokens than types of idtokens... 1 each
             Logger.warn(
                     TAG + methodName,

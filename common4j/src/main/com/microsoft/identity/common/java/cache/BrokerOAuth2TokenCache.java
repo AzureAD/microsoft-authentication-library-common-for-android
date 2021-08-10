@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -81,6 +82,7 @@ import lombok.NonNull;
  * @param <GenericRefreshToken>         The RefreshToken type to use.
  */
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy, AuthorizationRequest, MicrosoftFamilyOAuth2TokenCache, MsalOAuth2TokenCache and OAuth2TokenCache
+@SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
 public class BrokerOAuth2TokenCache
         <GenericOAuth2Strategy extends OAuth2Strategy,
@@ -783,7 +785,7 @@ public class BrokerOAuth2TokenCache
                 result = cacheIterator
                         .next()
                         .getAccount(
-                                environment,
+                                null,
                                 clientId,
                                 homeAccountId,
                                 realm
@@ -842,7 +844,7 @@ public class BrokerOAuth2TokenCache
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
                 List<ICacheRecord> accountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(
-                        environment,
+                        null,
                         clientId,
                         homeAccountId
                 );
@@ -932,7 +934,7 @@ public class BrokerOAuth2TokenCache
                 result = cacheIterator
                         .next()
                         .getAccountByLocalAccountId(
-                                environment,
+                                null,
                                 clientId,
                                 localAccountId
                         );
@@ -986,7 +988,7 @@ public class BrokerOAuth2TokenCache
                 result = cacheIterator
                         .next()
                         .getAccountWithAggregatedAccountDataByLocalAccountId(
-                                environment,
+                                null,
                                 clientId,
                                 localAccountId
                         );
@@ -1022,12 +1024,14 @@ public class BrokerOAuth2TokenCache
             final List<OAuth2TokenCache> cachesToInspect = getTokenCachesForClientId(clientId);
 
             for (final OAuth2TokenCache cache : cachesToInspect) {
-                result.addAll(
-                        cache.getAccounts(
-                                environment,
-                                clientId
-                        )
-                );
+                if (cache != null) {
+                    result.addAll(
+                            cache.getAccounts(
+                                    null,
+                                    clientId
+                            )
+                    );
+                }
             }
 
             Logger.verbose(
@@ -1109,7 +1113,7 @@ public class BrokerOAuth2TokenCache
 
                 // Suppressing unchecked warning as the generic type was not provided for cache
                 @SuppressWarnings(WarningType.unchecked_warning)
-                List<ICacheRecord> cacheAccountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(environment, clientId);
+                List<ICacheRecord> cacheAccountsWithAggregatedAccountData = cache.getAccountsWithAggregatedAccountData(null, clientId);
 
                 result.addAll(cacheAccountsWithAggregatedAccountData);
             }
@@ -1208,19 +1212,11 @@ public class BrokerOAuth2TokenCache
      * @param accountRecord The AccountRecord to remove.
      * @return An {@link AccountDeletionRecord} indicating which AccountRecords were removed, if any.
      */
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE",
+                        justification = "Lombok inserts null checks that may be redundant")
     @SuppressWarnings(UNCHECKED)
     public AccountDeletionRecord removeAccountFromDevice(@NonNull final AccountRecord accountRecord) {
         final String methodName = ":removeAccountFromDevice";
-
-        if (null == accountRecord) {
-            Logger.error(
-                    TAG + methodName,
-                    "Illegal arg. Cannot delete a null AccountRecord!",
-                    null
-            );
-
-            throw new IllegalArgumentException("AccountRecord may not be null.");
-        }
 
         final Set<String> allClientIds = mApplicationMetadataCache.getAllClientIds();
 
@@ -1544,7 +1540,7 @@ public class BrokerOAuth2TokenCache
                 result = cacheIterator
                         .next()
                         .getAccountByHomeAccountId(
-                                environment,
+                                null,
                                 clientId,
                                 homeAccountId
                         );
