@@ -9,6 +9,4 @@ gradle -version
 echo =============================================
 echo Running instrumented tests
 echo =============================================
-gradle common:connectedLocalDebugAndroidTest -i -Psugar=true; \
-echo =============================================; \
-echo Clean ; gradle --stop; gradle clean
+gradle common:connectedLocalDebugAndroidTest -i -Psugar=true; gradle --stop
