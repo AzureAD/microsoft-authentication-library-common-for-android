@@ -69,7 +69,7 @@ public class DeviceTest {
         Assert.assertEquals(3, platformParameter.size());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, platformParameter.get(Device.PlatformIdParameters.CPU_PLATFORM));
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, platformParameter.get(Device.PlatformIdParameters.DEVICE_MODEL));
-        Assert.assertEquals(MockDeviceMetadata.TEST_OS, platformParameter.get(Device.PlatformIdParameters.OS));
+        Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, platformParameter.get(Device.PlatformIdParameters.OS));
     }
 
     @Test
@@ -87,7 +87,8 @@ public class DeviceTest {
     @Test
     public void testGetOs(){
         Device.setDeviceMetadata(new MockDeviceMetadata());
-        Assert.assertEquals(MockDeviceMetadata.TEST_OS, Device.getOs());
+        Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, Device.getOsForEsts());
+        Assert.assertEquals(MockDeviceMetadata.TEST_OS_DRS, Device.getOsForDrs());
     }
 
     @Test
@@ -128,7 +129,8 @@ public class DeviceTest {
         final String expectedResult = MockDeviceMetadata.TEST_DEVICE_MODEL + METADATA_SEPARATOR +
                 MockDeviceMetadata.TEST_MANUFACTURER + METADATA_SEPARATOR +
                 MockDeviceMetadata.TEST_CPU + METADATA_SEPARATOR +
-                MockDeviceMetadata.TEST_OS;
+                MockDeviceMetadata.TEST_OS_ESTS + METADATA_SEPARATOR +
+                MockDeviceMetadata.TEST_OS_DRS;
         Assert.assertEquals(expectedResult, deviceMetadata.getAllMetadata());
     }
 }

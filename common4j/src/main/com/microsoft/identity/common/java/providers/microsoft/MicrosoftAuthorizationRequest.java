@@ -148,7 +148,7 @@ public abstract class MicrosoftAuthorizationRequest<T extends MicrosoftAuthoriza
         mLibraryVersion = builder.mLibraryVersion;
         mLibraryName = builder.mLibraryName;
 
-        mDiagnosticOS = Device.getOs();
+        mDiagnosticOS = Device.getOsForEsts();
         mDiagnosticDM = Device.getModel();
         mDiagnosticCPU = Device.getCpu();
     }

@@ -80,7 +80,7 @@ public class MicrosoftAuthorizationRequestTest {
                         "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
                         "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
                         "&x-client-SKU=" + MOCK_LIBRARY_NAME +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS +
+                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
@@ -111,7 +111,7 @@ public class MicrosoftAuthorizationRequestTest {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder().build();
-        Assert.assertEquals(MockDeviceMetadata.TEST_OS, request.getDiagnosticOS());
+        Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, request.getDiagnosticOS());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, request.getDiagnosticCPU());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, request.getDiagnosticDM());
     }
