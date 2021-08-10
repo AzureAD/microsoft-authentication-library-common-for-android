@@ -60,9 +60,3 @@ steps:
 - script: docker system df
   condition: always()
   displayName: Docker status
-- task: DeleteFiles@1
-  inputs:
-    Contents: '*'
-    RemoveSourceFolder: true
-  condition: always()
-  displayName: Delete Build Source Directory
