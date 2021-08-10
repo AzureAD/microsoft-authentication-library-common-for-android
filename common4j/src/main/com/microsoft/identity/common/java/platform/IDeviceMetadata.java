@@ -42,12 +42,23 @@ public interface IDeviceMetadata {
     String getCpu();
 
     /**
-     * Get the OS of this device. This would include the OS name and version.
+     * Get the OS of this device to be sent to eSTS.
+     *
+     * We have this because in Android, we're sending [SDK VERSION] (i.e. 24) to eSTS,
+     * not the [OS VERSION] (i.e. 7.0), and eSTS are using these [SDK VERSION] to gate features.
      *
      * @return a String representing the OS information
      */
     @NonNull
-    String getOs();
+    String getOsForEsts();
+
+    /**
+     * Get the OS of this device to be sent to DRS.
+     *
+     * @return a String representing the OS information
+     */
+    @NonNull
+    String getOsForDrs();
 
     /**
      * Get the model name of this device.
