@@ -37,6 +37,7 @@ import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.WarningType;
@@ -94,7 +95,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WebViewUtil.setDataDirectorySuffix(getActivity().getApplicationContext());
+        final FragmentActivity activity = getActivity();
+        if (activity != null) {
+            WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+        }
     }
 
     @Override
@@ -130,8 +134,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
+        final FragmentActivity activity = getActivity();
+        if (activity == null) {
+            return null;
+        }
         final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
-                getActivity(),
+                activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
                     @Override

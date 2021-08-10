@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.content.Context;
 import android.os.Debug;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
@@ -40,6 +41,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Webrequest are called in background thread from API level. HttpWebRequest
@@ -78,6 +81,7 @@ public class HttpWebRequest {
      * @param requestContent     byte[]
      * @param requestContentType String
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public HttpWebRequest(
             URL requestURL,
             String requestMethod,
@@ -184,10 +188,10 @@ public class HttpWebRequest {
      * @return The converted string
      * @throws IOException Thrown when failing to access inputStream stream.
      */
-    private static String convertStreamToString(InputStream inputStream) throws IOException {
+    private static String convertStreamToString(final InputStream inputStream) throws IOException {
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new InputStreamReader(inputStream));
+            reader = new BufferedReader(new InputStreamReader(inputStream, AuthenticationConstants.CHARSET_UTF8));
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {

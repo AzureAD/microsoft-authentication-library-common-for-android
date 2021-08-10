@@ -20,32 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.aad.adal;
 
-import com.microsoft.identity.common.java.BaseAccount;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-/**
- * Interface that defines methods allowing refresh token cache state to be shared between Cache Implementations.
- * The assumption being that in order for a client to avoid prompting a user to sign in they need a refresh token (effectively SSO state)
- */
-public interface IShareSingleSignOnState<T extends BaseAccount, U extends RefreshToken> {
-    /**
-     * Set the single sign on state for account.
-     *
-     * @param account      T
-     * @param refreshToken U
-     * @throws ClientException
-     */
-    void setSingleSignOnState(T account, U refreshToken) throws ClientException;
-
-    /**
-     * Get the single sign on state.
-     *
-     * @param account T
-     * @return U
-     */
-    U getSingleSignOnState(T account);
-
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
+public final class DateTimeAdapter
+        extends com.microsoft.identity.common.java.adal.cache.DateTimeAdapter {
+    // This class has moved to common. See super.
 }

@@ -50,6 +50,7 @@ import lombok.NonNull;
 public abstract class OAuth2TokenCache
         <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
 
+    public static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
     private final @NonNull IPlatformComponents mPlatformComponents;
 
     /**

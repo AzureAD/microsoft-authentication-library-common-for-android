@@ -20,39 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
+
+import com.microsoft.identity.common.java.BaseAccount;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 
 /**
- * Interface to glue together various migration/TSL related functionality.
+ * Interface that defines methods allowing refresh token cache state to be shared between Cache Implementations.
+ * The assumption being that in order for a client to avoid prompting a user to sign in they need a refresh token (effectively SSO state)
  */
-public interface ITokenCacheItem {
+public interface IShareSingleSignOnState<T extends BaseAccount, U extends RefreshToken> {
+    /**
+     * Set the single sign on state for account.
+     *
+     * @param account      T
+     * @param refreshToken U
+     * @throws ClientException
+     */
+    void setSingleSignOnState(T account, U refreshToken) throws ClientException;
 
     /**
-     * Gets the authority.
+     * Get the single sign on state.
      *
-     * @return The authority to get.
+     * @param account T
+     * @return U
      */
-    String getAuthority();
-
-    /**
-     * Gets the clientId.
-     *
-     * @return The clientId to get.
-     */
-    String getClientId();
-
-    /**
-     * Gets the refresh tokens (as a raw String).
-     *
-     * @return The refresh token to get.
-     */
-    String getRefreshToken();
-
-    /**
-     * Gets the resource associated to this request.
-     *
-     * @return The resource to get.
-     */
-    String getResource();
+    U getSingleSignOnState(T account);
 
 }

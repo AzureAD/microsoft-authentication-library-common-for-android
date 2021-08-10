@@ -39,6 +39,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import cz.msebera.android.httpclient.client.utils.URIBuilder;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
@@ -114,6 +115,7 @@ public class MicrosoftStsOAuth2Strategy
      * @param config     MicrosoftStsOAuth2Configuration
      * @param parameters OAuth2StrategyParameters
      */
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public MicrosoftStsOAuth2Strategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                       @NonNull final OAuth2StrategyParameters parameters) throws ClientException {
         super(config, parameters);

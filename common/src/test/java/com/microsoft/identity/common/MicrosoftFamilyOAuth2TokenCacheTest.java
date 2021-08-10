@@ -29,7 +29,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.MicrosoftFamilyOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;

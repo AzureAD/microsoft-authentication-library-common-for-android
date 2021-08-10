@@ -27,9 +27,9 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 
-import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
 import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;

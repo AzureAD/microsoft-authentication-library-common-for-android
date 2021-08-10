@@ -30,6 +30,7 @@ import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.Map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
@@ -52,6 +53,7 @@ public class MicrosoftStsAccount extends MicrosoftAccount {
      * @param idToken    IDToken
      * @param clientInfo clientInfo
      */
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public MicrosoftStsAccount(@NonNull final IDToken idToken,
                                @NonNull final ClientInfo clientInfo) {
         super(idToken, clientInfo);

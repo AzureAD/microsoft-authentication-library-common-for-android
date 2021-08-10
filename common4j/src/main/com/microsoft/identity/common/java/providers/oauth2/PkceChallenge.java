@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -71,6 +72,7 @@ public final class PkceChallenge implements Serializable {
      * ALPHA = %x41-5A / %x61-7A
      * DIGIT = %x30-39
      */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     private final transient String mCodeVerifier;
 
     /**

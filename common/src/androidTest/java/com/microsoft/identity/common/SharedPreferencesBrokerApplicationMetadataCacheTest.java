@@ -25,8 +25,8 @@ package com.microsoft.identity.common;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.microsoft.identity.common.internal.cache.BrokerApplicationMetadata;
-import com.microsoft.identity.common.internal.cache.IBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
+import com.microsoft.identity.common.java.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
 
 import org.junit.After;

@@ -33,6 +33,7 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -40,7 +41,7 @@ import lombok.NonNull;
  */
 public class SP800108KeyGen {
 
-    public static final byte[] BIG_ENDIAN_INT_256 = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256).array();
+    static final byte[] BIG_ENDIAN_INT_256 = ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(256).array();
 
     /**]
      * Generate a derived key given a starting key.
@@ -52,11 +53,9 @@ public class SP800108KeyGen {
      * @throws InvalidKeyException
      * @throws NoSuchAlgorithmException
      */
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", justification = "Interaction with Lombok")
     public static byte[] generateDerivedKey(@NonNull final byte[] key, @NonNull final byte[] label, @NonNull final byte[] ctx)
             throws IOException, InvalidKeyException, NoSuchAlgorithmException {
-        if (ctx == null) {
-            return null;
-        }
         final ByteArrayOutputStream stream = new ByteArrayOutputStream();
         stream.write(label);
         stream.write(0x0);

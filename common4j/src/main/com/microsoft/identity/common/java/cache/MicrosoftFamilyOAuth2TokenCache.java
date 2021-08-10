@@ -20,20 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
-
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.cache;
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
@@ -45,12 +38,15 @@ import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.microsoft.identity.common.internal.cache.AbstractAccountCredentialCache.targetsIntersect;
+import static com.microsoft.identity.common.java.cache.AbstractAccountCredentialCache.targetsIntersect;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings(WarningType.rawtype_warning)
@@ -72,11 +68,11 @@ public class MicrosoftFamilyOAuth2TokenCache
     public MicrosoftFamilyOAuth2TokenCache(final IPlatformComponents context,
                                            final IAccountCredentialCache accountCredentialCache,
                                            final IAccountCredentialAdapter<
-                                                   GenericOAuth2Strategy,
-                                                   GenericAuthorizationRequest,
-                                                   GenericTokenResponse,
-                                                   GenericAccount,
-                                                   GenericRefreshToken> accountCredentialAdapter) {
+                                                                                              GenericOAuth2Strategy,
+                                                                                              GenericAuthorizationRequest,
+                                                                                              GenericTokenResponse,
+                                                                                              GenericAccount,
+                                                                                              GenericRefreshToken> accountCredentialAdapter) {
         super(context, accountCredentialCache, accountCredentialAdapter);
     }
 

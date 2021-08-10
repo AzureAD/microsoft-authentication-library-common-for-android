@@ -20,9 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.adal.internal.cache;
+package com.microsoft.identity.common.java.adal.cache;
 
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.Serializable;
 import java.util.Locale;
@@ -58,7 +58,7 @@ public class CacheKey implements Serializable {
     @Override
     public String toString() {
         // only family token cache item will have the family client id as the key
-        if (StringExtensions.isNullOrBlank(mFamilyClientId)) {
+        if (StringUtil.isNullOrEmpty(mFamilyClientId)) {
             return String.format(Locale.US, "%s$%s$%s$%s$%s", mAuthority, mResource, mClientId,
                     (mIsMultipleResourceRefreshToken ? "y" : "n"), mUserId);
         }
@@ -125,7 +125,7 @@ public class CacheKey implements Serializable {
         key.mIsMultipleResourceRefreshToken = isMultiResourceRefreshToken;
 
         // optional
-        if (!StringExtensions.isNullOrBlank(userId)) {
+        if (!StringUtil.isNullOrEmpty(userId)) {
             key.mUserId = userId.toLowerCase(Locale.US);
         }
 

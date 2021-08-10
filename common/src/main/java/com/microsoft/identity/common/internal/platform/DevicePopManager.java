@@ -37,6 +37,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.CodeMarkerManager;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.util.Supplier;
@@ -881,7 +882,7 @@ public class DevicePopManager implements IDevicePopManager {
             final PublicKey publicKey = rsaKeyPair.getPublic();
             final byte[] publicKeybytes = publicKey.getEncoded();
             final byte[] bytesBase64Encoded = Base64.encode(publicKeybytes, Base64.DEFAULT);
-            return new String(bytesBase64Encoded);
+            return new String(bytesBase64Encoded, AuthenticationConstants.CHARSET_UTF8);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
