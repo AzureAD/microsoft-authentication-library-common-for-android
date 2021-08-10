@@ -22,12 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import android.content.Context;
 import android.os.Build;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
+import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -37,10 +40,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.NonNull;
+
 /**
  * Helper class to add additional platform specific query parameters or headers for the request sent to sts.
  */
 public final class Device {
+
+    private static final String TAG = Device.class.getSimpleName();
 
     private static IDevicePopManager sDevicePoPManager;
 
@@ -150,6 +157,27 @@ public final class Device {
                     "Failed to initialize DevicePoPManager = " + e.getMessage(),
                     e
             );
+        }
+    }
+
+    /**
+     * Determines if requests made on this device can successfully use AT/PoP APIs.
+     * @param context The current application's {@link Context}.
+     * @return True if AT/PoP requests can be made from this device. False otherwise.
+     */
+    public static boolean isDevicePoPSupported(@NonNull final Context context) {
+        final String methodName = ":isDevicePoPSupported";
+
+        try {
+            final IDevicePopManager popManager = getDevicePoPManagerInstance();
+            final String thumbprint = popManager.generateAsymmetricKey(context);
+            // If we were able to successfully generate a thumbprint, we are in good shape
+            final boolean thumbprintExists =  !StringUtil.isEmpty(thumbprint);
+            Logger.info(TAG + methodName, "AT/PoP is supported.");
+            return thumbprintExists;
+        } catch (final ClientException e) {
+            Logger.warn(TAG + methodName, "AT/PoP is not supported.");
+            return false;
         }
     }
 
