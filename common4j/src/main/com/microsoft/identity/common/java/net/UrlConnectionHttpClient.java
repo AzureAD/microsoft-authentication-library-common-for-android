@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.net;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
@@ -246,7 +247,8 @@ public class UrlConnectionHttpClient extends AbstractHttpClient {
      */
     private String convertStreamToString(final InputStream inputStream) throws IOException {
         try {
-            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            final BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream,
+                    AuthenticationConstants.CHARSET_UTF8));
             final char[] buffer = new char[streamBufferSize];
             final StringBuilder stringBuilder = new StringBuilder();
             int charsRead;

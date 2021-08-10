@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.cache.registry;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.cache.AbstractApplicationMetadata;
+import com.microsoft.identity.common.java.cache.AbstractApplicationMetadata;
 
 /**
  * A basic registry (key/value) entry for tracking info about apps which bind to the

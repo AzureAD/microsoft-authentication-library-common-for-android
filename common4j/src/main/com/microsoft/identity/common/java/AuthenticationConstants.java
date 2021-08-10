@@ -26,6 +26,10 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -43,6 +47,11 @@ public class AuthenticationConstants {
     public static final Charset ENCODING_UTF8 = Charset.forName(ENCODING_UTF8_STRING);
 
     /**
+     * The Constant CHARSET_UTF8.
+     */
+    public static final Charset CHARSET_UTF8 = Charset.forName("UTF-8");
+
+    /**
      * The Constant ASCII.
      */
     public static final String ENCODING_ASCII_STRING = "ASCII";
@@ -56,6 +65,15 @@ public class AuthenticationConstants {
      * Default access token expiration time in seconds.
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
+
+    /**
+     * Default scopes for OAuth2.
+     */
+    public static final Set<String> DEFAULT_SCOPES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            OAuth2Scopes.OPEN_ID_SCOPE,
+            OAuth2Scopes.OFFLINE_ACCESS_SCOPE,
+            OAuth2Scopes.PROFILE_SCOPE
+    )));
 
     /**
      * Represents the request code.

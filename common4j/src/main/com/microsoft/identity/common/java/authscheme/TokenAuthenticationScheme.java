@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authscheme;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import lombok.EqualsAndHashCode;
@@ -31,6 +32,8 @@ import lombok.experimental.SuperBuilder;
 /**
  * Abstract representation of any Authentication Scheme which may be token based.
  */
+@SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+                    justification = "Lombok inserts redundant null checks into the code")
 @SuperBuilder(toBuilder = true)
 @EqualsAndHashCode(callSuper = true)
 @Accessors(prefix = "m")

@@ -20,10 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 
 import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
@@ -63,7 +63,7 @@ public class CacheEndEvent extends com.microsoft.identity.common.java.telemetry.
         if (null != cacheRecord.getRefreshToken()) {
             put(Key.MRRT_STATUS, Value.TRUE); //MSAL RT is MRRT and ADFS is not supported by now.
             put(Key.RT_STATUS, Value.TRUE);
-            put(Key.FRT_STATUS, StringUtil.isEmpty(cacheRecord.getRefreshToken().getFamilyId()) ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
+            put(Key.FRT_STATUS, StringUtil.isNullOrEmpty(cacheRecord.getRefreshToken().getFamilyId()) ? TelemetryEventStrings.Value.FALSE : TelemetryEventStrings.Value.TRUE);
         } else {
             put(Key.RT_STATUS, Value.FALSE);
         }

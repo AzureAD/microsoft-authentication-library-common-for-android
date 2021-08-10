@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.tokensharing;
 
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
+
 public interface ITokenShareInternal {
 
     /**
@@ -42,7 +44,7 @@ public interface ITokenShareInternal {
      * and cannot be used directly against an STS.
      *
      * @param identifier The identifier of the sought user's FRT.
-     * @return The {@link com.microsoft.identity.common.internal.cache.ADALTokenCacheItem}
+     * @return The {@link ADALTokenCacheItem}
      * serialized to JSON.
      * @throws Exception If the requested token cannot be found.
      */

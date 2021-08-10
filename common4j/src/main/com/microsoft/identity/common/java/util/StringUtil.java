@@ -45,6 +45,7 @@ import java.util.UUID;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
@@ -63,7 +64,7 @@ public class StringUtil {
      * @param message String to check for null or blank.
      * @return true, if the string is null or blank.
      */
-    public static boolean isNullOrEmpty(String message) {
+    public static boolean isNullOrEmpty(final @Nullable String message) {
         return message == null || message.trim().length() == 0;
     }
 
@@ -303,5 +304,51 @@ public class StringUtil {
                     ENCODING_UTF8);
         }
         return msg;
+    }
+
+    /**
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming both inputs.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return true if the inputs are equal, false otherwise.
+     */
+    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
+                                                   @Nullable final String two) {
+        return equalsIgnoreCaseTrim(one != null ? one.trim() : null, two);
+    }
+
+    /**
+     * Utility to null-safe-compare strings in a case-insensitive manner, trimming the second input.
+     *
+     * @param one The first string to compare.
+     * @param two The second string to compare.
+     * @return true if the inputs are equal, false otherwise.
+     */
+    @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
+                        justification = "This is an intentional reference comparison")
+    public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
+        return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
+    }
+
+    /**
+     * Return an empty string if the input is null.
+     * @param input an input string to evaluate.
+     * @return an empty string if the input is null, the input otherwise.
+     */
+    public static String sanitizeNull(final String input) {
+        return null == input ? "" : input;
+    }
+
+    /**
+     * If the input is null, return an empty string. Otherwise, return a trimmed, toLowerCase
+     * version of the string in question.
+     * @param input a string to evaluate.
+     * @return a sanitized version of that string.
+     */
+    public static String sanitizeNullAndLowercaseAndTrim(final String input) {
+        String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
+
+        return outValue;
     }
 }

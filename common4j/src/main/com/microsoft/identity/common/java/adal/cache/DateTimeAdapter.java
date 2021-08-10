@@ -20,9 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.adal.internal.cache;
-
-import android.util.Log;
+package com.microsoft.identity.common.java.adal.cache;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -31,6 +29,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.lang.reflect.Type;
 import java.text.DateFormat;
@@ -96,32 +95,32 @@ public class DateTimeAdapter implements JsonDeserializer<Date>, JsonSerializer<D
         try {
             return mISO8601Format.parse(jsonString);
         } catch (final ParseException ignored) {
-            Log.v(TAG, "Cannot parse with ISO8601, try again with local format.");
+            Logger.verbose(TAG, "Cannot parse with ISO8601, try again with local format.");
         }
 
         // fallback logic for old date format parsing.
         try {
             return mLocalFormat.parse(jsonString);
         } catch (final ParseException ignored) {
-            Log.v(TAG, "Cannot parse with local format, try again with local 24 hour format.");
+            Logger.verbose(TAG, "Cannot parse with local format, try again with local 24 hour format.");
         }
 
         try {
             return mLocal24HourFormat.parse(jsonString);
         } catch (final ParseException ignored) {
-            Log.v(TAG, "Cannot parse with local 24 hour format, try again with en us format.");
+            Logger.verbose(TAG, "Cannot parse with local 24 hour format, try again with en us format.");
         }
 
         try {
             return mEnUsFormat.parse(jsonString);
         } catch (final ParseException ignored) {
-            Log.v(TAG, "Cannot parse with en us format, try again with en us 24 hour format.");
+            Logger.verbose(TAG, "Cannot parse with en us format, try again with en us 24 hour format.");
         }
 
         try {
             return mEnUs24HourFormat.parse(jsonString);
         } catch (final ParseException e) {
-            Log.e(TAG, "Could not parse date: " + e.getMessage(), e);
+            Logger.error(TAG, "Could not parse date: " + e.getMessage(), e);
         }
 
         throw new JsonParseException("Could not parse date: " + jsonString);

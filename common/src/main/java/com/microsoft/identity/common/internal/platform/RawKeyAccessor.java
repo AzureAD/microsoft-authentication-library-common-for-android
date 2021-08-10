@@ -45,6 +45,8 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import androidx.annotation.Nullable;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -65,6 +67,7 @@ import static com.microsoft.identity.common.internal.platform.KeyStoreAccessor.U
 @Builder
 @Getter
 @Accessors(prefix = "m")
+@SuppressFBWarnings("EI_EXPOSE_REP")
 public class RawKeyAccessor implements IKeyAccessor {
     private static final SecureRandom mRandom = new SecureRandom();
 

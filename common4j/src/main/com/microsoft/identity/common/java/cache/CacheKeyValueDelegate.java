@@ -20,9 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
-
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.cache;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -31,7 +29,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.AccountCredentialBase;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -39,8 +36,9 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.dto.PrimaryRefreshTokenRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -48,18 +46,19 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.AUTH_SCHEME;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
-import static com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.AUTH_SCHEME;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CLIENT_ID;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.CREDENTIAL_TYPE;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.ENVIRONMENT;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.HOME_ACCOUNT_ID;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.REALM;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.REQUESTED_CLAIMS;
+import static com.microsoft.identity.common.java.cache.CacheKeyValueDelegate.CacheKeyReplacements.TARGET;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
 
 /**
  * Uses Gson to serialize instances of <T> into {@link String}s.
@@ -95,12 +94,6 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
         static final String REQUESTED_CLAIMS = "<requested_claims>";
     }
 
-    private static String sanitizeNull(final String input) {
-        String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
-
-        return outValue;
-    }
-
     @Override
     public String generateCacheKey(AccountRecord account) {
         String cacheKey = HOME_ACCOUNT_ID
@@ -108,9 +101,9 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                 + ENVIRONMENT
                 + CACHE_VALUE_SEPARATOR
                 + REALM;
-        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(account.getHomeAccountId()));
-        cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(account.getEnvironment()));
-        cacheKey = cacheKey.replace(REALM, sanitizeNull(account.getRealm()));
+        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, StringUtil.sanitizeNullAndLowercaseAndTrim(account.getHomeAccountId()));
+        cacheKey = cacheKey.replace(ENVIRONMENT, StringUtil.sanitizeNullAndLowercaseAndTrim(account.getEnvironment()));
+        cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(account.getRealm()));
 
         return cacheKey;
     }
@@ -150,13 +143,13 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
                         + CLIENT_ID + CACHE_VALUE_SEPARATOR
                         + REALM + CACHE_VALUE_SEPARATOR
                         + TARGET;
-        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, sanitizeNull(credential.getHomeAccountId()));
-        cacheKey = cacheKey.replace(ENVIRONMENT, sanitizeNull(credential.getEnvironment()));
-        cacheKey = cacheKey.replace(CREDENTIAL_TYPE, sanitizeNull(credential.getCredentialType()));
+        cacheKey = cacheKey.replace(HOME_ACCOUNT_ID, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getHomeAccountId()));
+        cacheKey = cacheKey.replace(ENVIRONMENT, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getEnvironment()));
+        cacheKey = cacheKey.replace(CREDENTIAL_TYPE, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getCredentialType()));
 
         RefreshTokenRecord rt;
         if ((credential instanceof RefreshTokenRecord)
-                && !StringExtensions.isNullOrBlank((rt = (RefreshTokenRecord) credential).getFamilyId())) {
+                && !StringUtil.isNullOrEmpty((rt = (RefreshTokenRecord) credential).getFamilyId())) {
             String familyIdForCacheKey = rt.getFamilyId();
 
             if (familyIdForCacheKey.startsWith(FOCI_PREFIX)) {
@@ -165,33 +158,33 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
 
             cacheKey = cacheKey.replace(CLIENT_ID, familyIdForCacheKey);
         } else {
-            cacheKey = cacheKey.replace(CLIENT_ID, sanitizeNull(credential.getClientId()));
+            cacheKey = cacheKey.replace(CLIENT_ID, StringUtil.sanitizeNullAndLowercaseAndTrim(credential.getClientId()));
         }
 
         if (credential instanceof AccessTokenRecord) {
             final AccessTokenRecord accessToken = (AccessTokenRecord) credential;
-            cacheKey = cacheKey.replace(REALM, sanitizeNull(accessToken.getRealm()));
-            cacheKey = cacheKey.replace(TARGET, sanitizeNull(accessToken.getTarget()));
+            cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getRealm()));
+            cacheKey = cacheKey.replace(TARGET, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getTarget()));
 
             if (TokenRequest.TokenType.POP.equalsIgnoreCase(accessToken.getAccessTokenType())) {
                 cacheKey += CACHE_VALUE_SEPARATOR + AUTH_SCHEME;
-                cacheKey = cacheKey.replace(AUTH_SCHEME, sanitizeNull(accessToken.getAccessTokenType()));
+                cacheKey = cacheKey.replace(AUTH_SCHEME, StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getAccessTokenType()));
             }
 
-            if (!StringExtensions.isNullOrBlank(accessToken.getRequestedClaims())) {
+            if (!StringUtil.isNullOrEmpty(accessToken.getRequestedClaims())) {
                 // The Requested Claims string has no guarantee it doesn't contain a delimiter, so we hash it
                 cacheKey += CACHE_VALUE_SEPARATOR + REQUESTED_CLAIMS;
-                String reqClaimsHash = String.valueOf(sanitizeNull(accessToken.getRequestedClaims()).hashCode());
-                cacheKey = cacheKey.replace(REQUESTED_CLAIMS, sanitizeNull(reqClaimsHash));
+                String reqClaimsHash = String.valueOf(StringUtil.sanitizeNullAndLowercaseAndTrim(accessToken.getRequestedClaims()).hashCode());
+                cacheKey = cacheKey.replace(REQUESTED_CLAIMS, StringUtil.sanitizeNullAndLowercaseAndTrim(reqClaimsHash));
             }
 
         } else if (credential instanceof RefreshTokenRecord) {
             final RefreshTokenRecord refreshToken = (RefreshTokenRecord) credential;
             cacheKey = cacheKey.replace(REALM, "");
-            cacheKey = cacheKey.replace(TARGET, sanitizeNull(refreshToken.getTarget()));
+            cacheKey = cacheKey.replace(TARGET, StringUtil.sanitizeNullAndLowercaseAndTrim(refreshToken.getTarget()));
         } else if (credential instanceof IdTokenRecord) {
             final IdTokenRecord idToken = (IdTokenRecord) credential;
-            cacheKey = cacheKey.replace(REALM, sanitizeNull(idToken.getRealm()));
+            cacheKey = cacheKey.replace(REALM, StringUtil.sanitizeNullAndLowercaseAndTrim(idToken.getRealm()));
             cacheKey = cacheKey.replace(TARGET, "");
         } else if (credential instanceof PrimaryRefreshTokenRecord) {
             cacheKey = cacheKey.replace(REALM, "");
@@ -216,7 +209,7 @@ public class CacheKeyValueDelegate implements ICacheKeyValueDelegate {
             @SuppressWarnings(WarningType.unchecked_warning)
             final T resultObject = (T) mGson.fromJson(string, t);
 
-            if (!StringExtensions.isNullOrBlank(string)) {
+            if (!StringUtil.isNullOrEmpty(string)) {
                 // Turn the incoming String into a JSONObject
                 final JsonObject incomingJson = new JsonParser().parse(string).getAsJsonObject();
 

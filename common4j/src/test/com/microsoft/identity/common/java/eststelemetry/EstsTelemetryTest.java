@@ -143,7 +143,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, inMemoryTelemetryMap, null, lastRequestTelemetryMap);
 
         Assert.assertEquals(lastRequestTelemetryMap.size(), 3);
@@ -221,7 +221,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, inMemoryTelemetryMap, null, lastRequestTelemetryMap);
 
         Assert.assertEquals(lastRequestTelemetryMap.size(), 3);
@@ -311,7 +311,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage());
+        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage<String>());
 
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
         Assert.assertTrue(headers.isEmpty());
@@ -326,7 +326,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage());
+        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage<String>());
 
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
@@ -344,7 +344,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         lastRequestTelemetryMap.put(LAST_TELEMETRY_OBJECT_CACHE_KEY,
                 "{\"silent_successful_count\":5,\"failed_requests\":[" +
                         "{\"mApiId\":\"API_1\",\"mCorrelationId\":\"COL_ID_1\",\"mError\":\"ERR_1\"}," +
