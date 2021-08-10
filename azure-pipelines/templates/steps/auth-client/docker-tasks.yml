@@ -12,7 +12,7 @@ parameters:
 steps:
 - task: PostBuildCleanup@3
   condition: always()
-  displayName: 'Post build clean up'
+  displayName: Post build clean up
 - checkout: ${{ parameters.androidProject }}
   clean: true
   submodules: recursive
@@ -20,7 +20,9 @@ steps:
   displayName: 'Create Enviroment file'
 - script: echo "${{ parameters.EnvVstsMvnAccount }}=$(mvnAccessToken)" >> env.list
   condition: ne('${{ parameters.EnvVstsMvnAccount }}', '')
-  displayName: set mvnAccessToken
+  displayName: set mvnAccessToken in env.file
+- script: docker --version
+  displayName: Docker Version
 - script: |
     if docker image inspect $DOCKERIMAGE; then
       echo "Image is already installed"
@@ -32,14 +34,11 @@ steps:
     DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
   displayName: Pulling Image from ACR
 - script: |
-    docker --version
-    echo =============================================
-    echo Kill all running containers if existing
-    echo =============================================
     docker container kill $(docker ps -q)
-    echo =============================================
-    echo Run unit and instrumented inside docker container
-    echo =============================================
+    docker system prune --volumes -f
+  displayName: Kill all running containers if existing, and prune containers to avoid running out of disk space.
+- script: |
+    echo docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE sh scripts/run-instrumented-tests.sh
     docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE sh scripts/run-instrumented-tests.sh
   env:
     DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
@@ -54,28 +53,16 @@ steps:
     mergeTestResults: false
     testRunTitle: '${{ parameters.androidProject }} ${{ parameters.azureContainerRegistryImage }}'
 - script: |
-    echo =============================================
-    echo Kill all running containers if existing
-    echo =============================================
     docker container kill $(docker ps -q)
-    echo =============================================
-    echo Cleaning up build output that is owned by docker user rather than agent user
-    echo =============================================
-    docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE gradle --stop
-    docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE gradle clean
-    echo =============================================
-    echo prune containers to avoid running out of disk space - shutdown containers still exist on disk
-    echo =============================================
     docker system prune --volumes -f
-    echo =============================================
-    echo Dump environment variables for build agent
-    echo =============================================
-    env
-    echo =============================================
-    echo Docker status
-    echo =============================================
-    docker system df
-  env:
-    DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
   condition: always()
-  displayName: 'Cleanup'
+  displayName: Kill all running containers if existing, and prune containers to avoid running out of disk space.
+- script: docker system df
+  condition: always()
+  displayName: Docker status
+- task: DeleteFiles@1
+  inputs:
+    Contents: '*'
+    RemoveSourceFolder: true
+  condition: always()
+  displayName: Delete Build Source Directory
