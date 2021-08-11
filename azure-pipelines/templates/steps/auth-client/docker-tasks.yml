@@ -58,7 +58,7 @@ steps:
     docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE gradle clean
   env:
     DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
-    displayName: Gradle clean
+  displayName: Gradle clean
 - script: |
     docker container kill $(docker ps -q)
     docker system prune --volumes -f
