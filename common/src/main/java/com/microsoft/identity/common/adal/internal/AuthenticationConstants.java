@@ -1657,6 +1657,36 @@ public final class AuthenticationConstants {
 
     }
 
+    public static final class IntuneContentProviderCall {
+
+        /**
+         * Intune's ContentProvider URI code constant for AppDataClearAction request.
+         */
+        public static final String AUTHORITY =
+                "content://com.microsoft.intune.shareduserlessdataclear/datacollection";
+
+        /**
+         * A functional mapping in Intune's ContentProvider result Bundle for AppDataClearAction.
+         */
+        public static final String IS_APP_DATA_CLEAR_ACTION = "AppDataClearResult";
+
+        /**
+         * A functional mapping in Intune's ContentProvider result Bundle for Pending Intent.
+         */
+        public static final String INTUNE_PENDING_INTENT = "AppDataClearIntent";
+
+        /**
+         * String value indicating unsupported AppDataClearAction.
+         */
+        public static final String APP_DATA_CLEAR_UNSUPPORTED = "UNSUPPORTED";
+
+        /**
+         * String value indicating supported AppDataClearAction.
+         */
+        public static final String APP_DATA_CLEAR_SUPPORTED = "SUPPORTED";
+
+    }
+
     public static final class AuthorizationIntentKey {
 
         public static final String AUTH_INTENT = "com.microsoft.identity.auth.intent";
