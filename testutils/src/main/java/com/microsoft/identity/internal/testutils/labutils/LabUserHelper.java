@@ -63,29 +63,34 @@ public class LabUserHelper {
         List<ConfigInfo> configInfos;
 
         try {
-            configInfos = api.apiConfigGet(
-                    query.userType,
-                    query.userRole,
-                    query.mfa,
-                    query.protectionPolicy,
-                    query.homeDomain,
-                    query.homeUpn,
-                    query.b2cProvider,
-                    query.federationProvider,
-                    query.azureEnvironment,
-                    query.guestHomeAzureEnvironment,
-                    query.appType,
-                    query.publicClient,
-                    query.signInAudience,
-                    query.guestHomedIn,
-                    query.hasAltId,
-                    query.altIdSource,
-                    query.altIdType,
-                    query.passwordPolicyValidityPeriod,
-                    query.passwordPolicyNotificationDays,
-                    query.tokenLifetimePolicy,
-                    query.tokenType,
-                    query.tokenLifetime);
+
+            if(query.isUpnQuery()){
+                configInfos = api.apiConfigUpnGet(query.upn);
+            } else{
+                configInfos = api.apiConfigGet(
+                        query.userType,
+                        query.userRole,
+                        query.mfa,
+                        query.protectionPolicy,
+                        query.homeDomain,
+                        query.homeUpn,
+                        query.b2cProvider,
+                        query.federationProvider,
+                        query.azureEnvironment,
+                        query.guestHomeAzureEnvironment,
+                        query.appType,
+                        query.publicClient,
+                        query.signInAudience,
+                        query.guestHomedIn,
+                        query.hasAltId,
+                        query.altIdSource,
+                        query.altIdType,
+                        query.passwordPolicyValidityPeriod,
+                        query.passwordPolicyNotificationDays,
+                        query.tokenLifetimePolicy,
+                        query.tokenType,
+                        query.tokenLifetime);
+            }
 
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);

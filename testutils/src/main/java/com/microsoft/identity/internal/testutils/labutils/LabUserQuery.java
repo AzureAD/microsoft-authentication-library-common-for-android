@@ -31,6 +31,7 @@ public class LabUserQuery {
     public String mfa;
     public String protectionPolicy;
     public String homeDomain;
+    public String upn;
     public String homeUpn;
     public String b2cProvider;
     public String federationProvider;
@@ -48,4 +49,8 @@ public class LabUserQuery {
     public String tokenLifetimePolicy;
     public String tokenType;
     public String tokenLifetime;
+
+    public boolean isUpnQuery(){
+        return this.upn!=null && !this.upn.isEmpty();
+    }
 }

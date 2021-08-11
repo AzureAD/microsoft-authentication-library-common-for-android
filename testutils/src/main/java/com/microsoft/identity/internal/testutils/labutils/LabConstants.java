@@ -71,6 +71,7 @@ public class LabConstants {
         public static final String LAB_2 = "gidlab@msidlab2.com";
         public static final String LAB_3 = "gidlab@msidlab3.com";
         public static final String LAB_4 = "gidlab@msidlab4.com";
+        public static final String LAB_6 = "gidlab@msidlab6.com";
     }
 
     public static final class B2CProvider {
