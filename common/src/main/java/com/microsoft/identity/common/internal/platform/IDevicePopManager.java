@@ -90,8 +90,6 @@ public interface IDevicePopManager {
      * levels.
      */
     enum SigningAlgorithm {
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        MD5_WITH_RSA("MD5withRSA"),
 
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
         NONE_WITH_RSA("NONEwithRSA"),
@@ -99,22 +97,7 @@ public interface IDevicePopManager {
         SHA_1_WITH_RSA("SHA1withRSA"),
 
         @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        SHA_256_WITH_RSA("SHA256withRSA"),
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        SHA_256_WITH_RSA_PSS("SHA256withRSA/PSS"),
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        SHA_384_WITH_RSA("SHA384withRSA"),
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        SHA_384_WITH_RSA_PSS("SHA384withRSA/PSS"),
-
-        @RequiresApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
-        SHA_512_WITH_RSA("SHA512withRSA"),
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        SHA_512_WITH_RSA_PSS("SHA512withRSA/PSS");
+        SHA_256_WITH_RSA("SHA256withRSA");
 
         private final String mValue;
 
@@ -170,29 +153,6 @@ public interface IDevicePopManager {
                 // android platform support.  See:
                 // https://issuetracker.google.com/issues/37075898#comment7
                 return new OAEPParameterSpec("SHA-256", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
-            }
-        },
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_384AndMGF1Padding("RSA/ECB/OAEPWithSHA-384AndMGF1Padding") {
-
-            @Override
-            public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
-                // android platform support.  See:
-                // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-384", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
-            }
-        },
-
-        @RequiresApi(Build.VERSION_CODES.M)
-        RSA_ECB_OAEPWithSHA_512AndMGF1Padding("RSA/ECB/OAEPWithSHA-512AndMGF1Padding") {
-            @Override
-            public AlgorithmParameterSpec getParameters() {
-                // We're going to be forcing defaults in this cipher to correct a deficiency in certain
-                // android platform support.  See:
-                // https://issuetracker.google.com/issues/37075898#comment7
-                return new OAEPParameterSpec("SHA-512", MGF_1, new MGF1ParameterSpec(SHA_1), PSource.PSpecified.DEFAULT);
             }
         };
 
