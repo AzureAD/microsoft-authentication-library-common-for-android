@@ -53,10 +53,13 @@ steps:
     mergeTestResults: false
     testRunTitle: '${{ parameters.androidProject }} ${{ parameters.azureContainerRegistryImage }}'
 - script: |
+    docker container kill $(docker ps -q)
+    docker system prune --volumes -f
     echo docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE gradle clean
     docker run --privileged --env-file env.list --cpus="3" --memory="12g" -v "$PWD":/home/gradle/ -w /home/gradle/ $DOCKERIMAGE gradle clean
   env:
     DOCKERIMAGE: ${{ parameters.azureContainerRegistryImage }}
+    displayName: 'Publish Test Results'
 - script: |
     docker container kill $(docker ps -q)
     docker system prune --volumes -f
