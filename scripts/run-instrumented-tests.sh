@@ -10,3 +10,4 @@ echo =============================================
 echo Running instrumented tests
 echo =============================================
 gradle common:connectedLocalDebugAndroidTest -i -Psugar=true
+
