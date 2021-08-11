@@ -82,6 +82,14 @@ public interface ISettings {
      */
     void forwardDeviceTimeForOneDay();
 
+
+    /**
+     * Change the time on the device by advancing the clock by seconds.
+     *
+     * @param seconds seconds to fast forward by
+     */
+    void forwardDeviceTime(int seconds);
+
     /**
      * Activate this admin app. This method is supposed to be called when the Activate Device Admin
      * UI appears on the device. It will activate the admin for whichever admin requested the activation.

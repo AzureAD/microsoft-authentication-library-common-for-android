@@ -32,13 +32,18 @@ import android.provider.Settings;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.uiautomator.UiObject;
+import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
 import org.junit.Assert;
 
+import java.util.Calendar;
+
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.launchIntent;
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
 
 public abstract class BaseSettings implements ISettings {
 
@@ -97,5 +102,57 @@ public abstract class BaseSettings implements ISettings {
             // to see if this ever happens in the wild)
             throw new AssertionError(e);
         }
+    }
+
+    public void forwardDeviceTime(int seconds) {
+        Logger.i(TAG, "Forwarding Time For One Day on Google Device..");
+        // Disable Automatic TimeZone
+        AdbShellUtils.disableAutomaticTimeZone();
+        // Launch the date time settings page
+        launchDateTimeSettingsPage();
+
+        try {
+            // Click the set date button
+            final UiObject setDateBtn = obtainDateButton();
+            setDateBtn.click();
+
+            // Make sure we see the calendar
+            final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/date_picker_header_date");
+            Assert.assertTrue("Date Picker appears", datePicker.exists());
+
+            final Calendar cal = Calendar.getInstance();
+
+            // move by seconds
+            cal.add(Calendar.SECOND, seconds);
+
+            // this is the new date
+            final int dateToSet = cal.get(Calendar.DATE);
+
+            if (dateToSet == 1) {
+                // looks if we are into the next month, so let's update month here too
+                UiAutomatorUtils.handleButtonClick("android:id/next");
+            }
+
+            // Click on this new date in this calendar
+            UiObject specifiedDateIcon = obtainUiObjectWithExactText(
+                    String.valueOf(dateToSet)
+            );
+            specifiedDateIcon.click();
+
+            // Confirm setting date
+            final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
+            okBtn.click();
+        } catch (final UiObjectNotFoundException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    private UiObject obtainDateButton() {
+        Logger.i(TAG, "Obtain Date Button on Google Device..");
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            return UiAutomatorUtils.obtainUiObjectWithText("Set date");
+        }
+
+        return UiAutomatorUtils.obtainEnabledUiObjectWithExactText("Date");
     }
 }
