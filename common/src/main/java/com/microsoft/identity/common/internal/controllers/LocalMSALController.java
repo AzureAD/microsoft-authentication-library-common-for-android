@@ -32,6 +32,7 @@ import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowComm
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
@@ -762,7 +763,7 @@ public class LocalMSALController extends BaseController {
                 case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE;
                     break;
-                case AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT:
+                case OAuth2ErrorCode.INVALID_GRANT:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE;
                     break;
                 case ErrorStrings.INVALID_SCOPE:
