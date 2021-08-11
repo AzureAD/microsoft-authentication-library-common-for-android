@@ -280,6 +280,33 @@ public class Telemetry {
         }
     }
 
+    public List<Map<String, String>> getFinalMap(@NonNull final String correlationId) {
+        if (!mIsTelemetryEnabled) {
+            return Collections.emptyList();
+        }
+
+        if (StringUtil.isNullOrEmpty(correlationId)) {
+            Logger.warn(TAG, "No correlation id set.");
+            return Collections.emptyList();
+        }
+
+        //check the configuration
+        if (!mDefaultConfiguration.isDebugEnabled() && mIsDebugging) {
+            return Collections.emptyList();
+        }
+
+        List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
+
+        for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
+            Map<String, String> event = iterator.next();
+            if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
+                finalRawMap.add(applyPiiOiiRule(event));
+                iterator.remove();
+            }
+        }
+        return finalRawMap;
+    }
+
     private Map<String, String> applyPiiOiiRule(final Map<String, String> properties) {
         if (mDefaultConfiguration.isPiiEnabled()) {
             Logger.warn(TAG, "Telemetry PII/OII is enabled by the developer.");
