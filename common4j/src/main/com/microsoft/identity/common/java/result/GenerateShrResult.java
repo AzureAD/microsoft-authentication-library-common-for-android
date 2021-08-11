@@ -20,32 +20,48 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
+package com.microsoft.identity.common.java.result;
 
-import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.experimental.Accessors;
-import lombok.experimental.SuperBuilder;
+import lombok.Setter;
 
 /**
- * Parameter class for generating SHRs.
+ * The result of a generateShr request.
  */
 @Getter
-@SuperBuilder(toBuilder = true)
-@EqualsAndHashCode(callSuper = true)
-@Accessors(prefix = "m")
-public class GenerateShrCommandParameters extends CommandParameters {
+@Setter
+public class GenerateShrResult {
 
     /**
-     * The home_account_id of the account for which we will generate the resulting SHR.
+     * Errors that can be returned in this object. These values also used by OneAuth/MSAL CPP.
      */
-    private String mHomeAccountId;
+    public static class Errors {
 
-    /**
-     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
-     */
-    private IPoPAuthenticationSchemeParams mPopParameters;
+        /**
+         * Indicates that the supplied home_account_id does not match any
+         * {@link AccountRecord} in our [broker] local
+         * cache.
+         */
+        public static final String NO_ACCOUNT_FOUND = ErrorStrings.NO_ACCOUNT_FOUND;
+
+        /**
+         * Indicates an error in client-side processing, review the contents of the error message
+         * for additional info as to why this error could be thrown. Most likely, there was an
+         * issue initializing the keystore to produce the requested SHR.
+         */
+        public static final String CLIENT_EXCEPTION = "client_exception";
+    }
+
+    @SerializedName("shr")
+    private String shr;
+
+    @SerializedName("error_code")
+    private String errorCode;
+
+    @SerializedName("error_msg")
+    private String errorMessage;
 }

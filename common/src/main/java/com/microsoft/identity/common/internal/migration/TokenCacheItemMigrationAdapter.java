@@ -22,28 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.migration;
 
-import android.net.Uri;
-import android.text.TextUtils;
 
-import com.microsoft.identity.common.java.providers.microsoft.MicrosoftTokenResponse;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
@@ -51,11 +43,8 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
 import java.net.URL;
@@ -70,8 +59,10 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public class TokenCacheItemMigrationAdapter {
 
@@ -142,121 +133,11 @@ public class TokenCacheItemMigrationAdapter {
                                                         @NonNull final String clientId,
                                                         @NonNull final String redirectUri,
                                                         @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
-        return tryFociTokenWithGivenClientId(
+        return FociQueryUtilities.tryFociTokenWithGivenClientId(
                 brokerOAuth2TokenCache,
                 clientId, redirectUri,
                 cacheRecord.getRefreshToken(),
                 cacheRecord.getAccount()
-        );
-    }
-
-    /**
-     * Testing whether the given client ID can use the cached foci to refresh token.
-     *
-     * @param clientId           String of the given client id.
-     * @param redirectUri        redirect url string of the given client id.
-     * @param accountRecord      account record of request
-     * @param refreshTokenRecord refresh token record of FOCI account
-     * @return true if the given client id can use the cached foci token. False, otherwise.
-     * @throws ClientException
-     * @throws IOException
-     */
-    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache brokerOAuth2TokenCache,
-                                                        @NonNull final String clientId,
-                                                        @NonNull final String redirectUri,
-                                                        @NonNull final RefreshTokenRecord refreshTokenRecord,
-                                                        @NonNull final IAccountRecord accountRecord)
-            throws ClientException, IOException {
-        final String methodName = ":tryFociTokenWithGivenClientId";
-        final MicrosoftStsOAuth2Configuration config = new MicrosoftStsOAuth2Configuration();
-
-        //Get authority url
-        final Uri.Builder requestUrlBuilder = new Uri.Builder();
-        requestUrlBuilder.scheme("https")
-                .authority(refreshTokenRecord.getEnvironment())
-                .appendPath(StringUtil.isEmpty(accountRecord.getRealm()) ? ALL_ACCOUNTS_TENANT_ID : accountRecord.getRealm());
-        final URL authorityUrl = new URL(requestUrlBuilder.build().toString());
-
-        //set the token endpoint for the configuration
-        config.setAuthorityUrl(authorityUrl);
-
-        // Create the strategy
-        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
-        final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
-
-        final String refreshToken = refreshTokenRecord.getSecret();
-
-        final String scopes;
-        // Hardcoding Teams Agent's client ID with the scope it's pre-authorized for.
-        // This is because if only the default scope is passed, eSTS will set the resource ID (on its side)
-        // based on the RT (Which the given clientId might not be pre-authorized for).
-        // TODO: make pre-authorization of MSGraph User.read (and the default scopes) a requirement
-        //       for every FoCI apps (and hardcode it here).
-        //       https://identitydivision.visualstudio.com/Engineering/_workitems/edit/1222002
-        if (TextUtils.equals(clientId, "87749df4-7ccf-48f8-aa87-704bad0e0e16")) {
-            scopes = "https://devicemgmt.teams.microsoft.com/.default " + BaseController.getDelimitedDefaultScopeString();
-            Logger.info(TAG + methodName,
-                    "Teams agent client ID - making a test request with teams agent resource.");
-        } else {
-            scopes = BaseController.getDelimitedDefaultScopeString();
-        }
-
-        // Create a correlation_id for the request
-        final UUID correlationId = UUID.randomUUID();
-
-        Logger.verbose(TAG + methodName,
-                "Create the token request with correlationId ["
-                        + correlationId
-                        + "]");
-
-        final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
-                clientId,
-                scopes,
-                refreshToken,
-                redirectUri,
-                strategy,
-                correlationId,
-                "2"
-        );
-
-        Logger.verbose(TAG + methodName,
-                "Start refreshing token (to verify foci) with correlationId ["
-                        + correlationId
-                        + "]");
-        final TokenResult tokenResult = strategy.requestToken(tokenRequest);
-
-        Logger.verbose(TAG + methodName,
-                "Is the client ID able to use the foci? ["
-                        + tokenResult.getSuccess()
-                        + "] with correlationId ["
-                        + correlationId
-                        + "]");
-
-        if (tokenResult.getSuccess()) {
-            // Save the token record in tha cache so that we have an entry in BrokerApplicationMetadata for this client id.
-            final MicrosoftStsAuthorizationRequest authorizationRequest = createAuthRequest(
-                    strategy,
-                    clientId,
-                    redirectUri,
-                    scopes,
-                    accountRecord,
-                    correlationId
-            );
-            Logger.verbose(TAG + methodName,
-                    "Saving records to cache with client id" + clientId
-            );
-            brokerOAuth2TokenCacheSave(brokerOAuth2TokenCache, strategy, tokenResult, authorizationRequest);
-        }
-        return tokenResult.getSuccess();
-    }
-
-    // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance brokerOAuth2TokenCache while calling method save
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private static void brokerOAuth2TokenCacheSave(@SuppressWarnings(WarningType.rawtype_warning) @NonNull OAuth2TokenCache brokerOAuth2TokenCache, MicrosoftStsOAuth2Strategy strategy, TokenResult tokenResult, MicrosoftStsAuthorizationRequest authorizationRequest) throws ClientException {
-        brokerOAuth2TokenCache.save(
-                strategy,
-                authorizationRequest,
-                (MicrosoftTokenResponse) tokenResult.getTokenResponse()
         );
     }
 
@@ -313,7 +194,7 @@ public class TokenCacheItemMigrationAdapter {
             @NonNull final ITokenCacheItem targetCacheItemToRenew) {
         Map.Entry<MicrosoftAccount, MicrosoftRefreshToken> resultKeyValuePair = null;
 
-        if (!StringExtensions.isNullOrBlank(redirectUri)) {
+        if (!StringUtil.isNullOrEmpty(redirectUri)) {
             try {
                 final String authority = targetCacheItemToRenew.getAuthority();
                 final String clientId = targetCacheItemToRenew.getClientId();
@@ -327,7 +208,7 @@ public class TokenCacheItemMigrationAdapter {
 
                 final String scopes;
 
-                if (TextUtils.isEmpty(targetCacheItemToRenew.getResource())) {
+                if (StringUtil.isNullOrEmpty(targetCacheItemToRenew.getResource())) {
                     scopes = BaseController.getDelimitedDefaultScopeString();
                 } else {
                     scopes = getScopesForTokenRequest(
@@ -339,7 +220,7 @@ public class TokenCacheItemMigrationAdapter {
                 final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
                 final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
-                final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(
+                final MicrosoftStsTokenRequest tokenRequest = FociQueryUtilities.createTokenRequest(
                         clientId,
                         scopes,
                         refreshToken,
@@ -531,7 +412,7 @@ public class TokenCacheItemMigrationAdapter {
         ADALTokenCacheItem result = null;
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
-            if (!StringExtensions.isNullOrBlank(cacheItem.getRefreshToken())) {
+            if (!StringUtil.isNullOrEmpty(cacheItem.getRefreshToken())) {
                 result = cacheItem;
 
                 Logger.verbose(
@@ -560,7 +441,7 @@ public class TokenCacheItemMigrationAdapter {
         ADALTokenCacheItem result = null;
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
-            if (!StringExtensions.isNullOrBlank(cacheItem.getRefreshToken())
+            if (!StringUtil.isNullOrEmpty(cacheItem.getRefreshToken())
                     && cacheItem.getIsMultiResourceRefreshToken()) {
                 result = cacheItem;
 
@@ -590,8 +471,8 @@ public class TokenCacheItemMigrationAdapter {
         ADALTokenCacheItem result = null;
 
         for (final ADALTokenCacheItem cacheItem : cacheItems) {
-            if (!StringExtensions.isNullOrBlank(cacheItem.getRefreshToken())
-                    && !StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
+            if (!StringUtil.isNullOrEmpty(cacheItem.getRefreshToken())
+                    && !StringUtil.isNullOrEmpty(cacheItem.getFamilyClientId())) {
                 result = cacheItem;
 
                 Logger.verbose(
@@ -632,55 +513,6 @@ public class TokenCacheItemMigrationAdapter {
     @NonNull
     public static String getScopeFromResource(@NonNull final String resource) {
         return resource + RESOURCE_DEFAULT_SCOPE;
-    }
-
-    /**
-     * Create the token request used to refresh the cache RTs.
-     *
-     * @param clientId      The clientId of the app which "owns" this token.
-     * @param scopes        The scopes to include in the request.
-     * @param refreshToken  The token to refresh/
-     * @param redirectUri   The redirect uri for this request.
-     * @param strategy      The strategy to create the TokenRequest.
-     * @param correlationId The correlation id to send in the request.
-     * @return The fully-formed TokenRequest.
-     */
-    @NonNull
-    public static MicrosoftStsTokenRequest createTokenRequest(@NonNull final String clientId,
-                                                              @NonNull final String scopes,
-                                                              @NonNull final String refreshToken,
-                                                              @NonNull final String redirectUri,
-                                                              @NonNull final MicrosoftStsOAuth2Strategy strategy,
-                                                              @Nullable final UUID correlationId,
-                                                              @NonNull final String idTokenVersion) throws ClientException {
-        final MicrosoftStsTokenRequest tokenRequest =
-                strategy.createRefreshTokenRequest(new BearerAuthenticationSchemeInternal());
-
-        // Set the request properties
-        tokenRequest.setClientId(clientId);
-        tokenRequest.setScope(scopes);
-        tokenRequest.setCorrelationId(correlationId);
-        tokenRequest.setRefreshToken(refreshToken);
-        tokenRequest.setRedirectUri(redirectUri);
-        tokenRequest.setIdTokenVersion(idTokenVersion);
-
-        return tokenRequest;
-    }
-
-    private static MicrosoftStsAuthorizationRequest createAuthRequest(@NonNull final MicrosoftStsOAuth2Strategy strategy,
-                                                                      @NonNull final String clientId,
-                                                                      @NonNull final String redirectUri,
-                                                                      @NonNull final String scope,
-                                                                      @NonNull final IAccountRecord accountRecord,
-                                                                      @Nullable final UUID correlationId) {
-        final MicrosoftStsAuthorizationRequest.Builder builder = strategy.createAuthorizationRequestBuilder(
-                accountRecord
-        );
-        return builder.setClientId(clientId)
-                .setRedirectUri(redirectUri)
-                .setCorrelationId(correlationId)
-                .setScope(scope)
-                .build();
     }
 
     /**

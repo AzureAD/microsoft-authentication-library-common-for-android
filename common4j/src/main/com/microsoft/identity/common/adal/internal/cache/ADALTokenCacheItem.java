@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.cache;
 
-import com.microsoft.identity.common.adal.internal.ADALUserInfo;
+import com.microsoft.identity.common.java.adal.ADALUserInfo;
 import com.microsoft.identity.common.java.cache.ITokenCacheItem;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccessToken;
@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryTokenResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.internal.util.DateUtilities;
+import com.microsoft.identity.common.java.util.DateExtensions;
 
 import java.util.Date;
 
@@ -245,7 +245,7 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
      * @return the time the token get expired.
      */
     public Date getExpiresOn() {
-        return DateUtilities.createCopy(mExpiresOn);
+        return DateExtensions.createCopy(mExpiresOn);
     }
 
     /**
@@ -254,7 +254,7 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
      * @param expiresOn the expire time.
      */
     public void setExpiresOn(final Date expiresOn) {
-        mExpiresOn = DateUtilities.createCopy(expiresOn);
+        mExpiresOn = DateExtensions.createCopy(expiresOn);
     }
 
     /**
@@ -335,7 +335,7 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
      * @param extendedExpiresOn extended expired date.
      */
     public final void setExtendedExpiresOn(final Date extendedExpiresOn) {
-        mExtendedExpiresOn = DateUtilities.createCopy(extendedExpiresOn);
+        mExtendedExpiresOn = DateExtensions.createCopy(extendedExpiresOn);
     }
 
     /**
@@ -344,6 +344,6 @@ public class ADALTokenCacheItem implements ITokenCacheItem {
      * @return the extended expired date.
      */
     public final Date getExtendedExpiresOn() {
-        return DateUtilities.createCopy(mExtendedExpiresOn);
+        return DateExtensions.createCopy(mExtendedExpiresOn);
     }
 }
