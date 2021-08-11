@@ -20,12 +20,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.aad.adal;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-public final class DateTimeAdapter
-        extends com.microsoft.identity.common.java.adal.cache.DateTimeAdapter {
-    // This class has moved to common. See super.
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.SuperBuilder;
+
+@Getter
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+public class RemoveAccountCommandParameters extends CommandParameters {
+
+    private IAccountRecord account;
+    private List<BrowserDescriptor> browserSafeList;
+
+    public List<BrowserDescriptor> getBrowserSafeList() {
+        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
+    }
 }

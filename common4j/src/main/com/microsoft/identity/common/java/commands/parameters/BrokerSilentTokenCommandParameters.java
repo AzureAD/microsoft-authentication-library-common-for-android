@@ -20,14 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
-
-import android.text.TextUtils;
+package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -58,7 +56,7 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mCallerUId", "Caller Uid is not set"
             );
         }
-        if (TextUtils.isEmpty(callerPackageName)) {
+        if (StringUtil.isNullOrEmpty(callerPackageName)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mCallerPackageName", "Caller package name is not set"
@@ -76,13 +74,13 @@ public class BrokerSilentTokenCommandParameters extends SilentTokenCommandParame
                     "mScopes", "Scope or resource is not set"
             );
         }
-        if (TextUtils.isEmpty(getClientId())) {
+        if (StringUtil.isNullOrEmpty(getClientId())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mClientId", "Client Id is not set"
             );
         }
-        if (TextUtils.isEmpty(callerPackageName)) {
+        if (StringUtil.isNullOrEmpty(callerPackageName)) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_SILENT_OPERATION_NAME,
                     "mCallerPackageName", "Caller package name is not set"

@@ -20,24 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.result;
+package com.microsoft.identity.common.java.result;
 
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.request.ILocalAuthenticationCallback;
+import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Successful authentication result. When auth succeeds, token will be wrapped into the
@@ -94,7 +94,7 @@ public class LocalAuthenticationResult implements ILocalAuthenticationResult {
                 "Constructing LocalAuthentication result"
                         + ", AccessTokenRecord null: " + (mAccessTokenRecord == null)
                         + ", AccountRecord null: " + (mAccountRecord == null)
-                        + ", RefreshTokenRecord null or empty: " + TextUtils.isEmpty(mRefreshToken)
+                        + ", RefreshTokenRecord null or empty: " + StringUtil.isNullOrEmpty(mRefreshToken)
                         + ", IdTokenRecord null: " + (idTokenRecord == null)
         );
 

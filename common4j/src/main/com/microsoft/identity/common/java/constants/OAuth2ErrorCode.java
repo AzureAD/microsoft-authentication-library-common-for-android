@@ -20,21 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
-
-import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+package com.microsoft.identity.common.java.constants;
 
 /**
- * Supplies needed parameters for executing DeviceCodeFlowCommand.
- * Created a new class instead of simply using TokenCommandParameters in case future implementations
- * want to extend the protocol and add new features.
+ * Represents the oauth2 error code.
  */
-@Getter
-@EqualsAndHashCode(callSuper = true)
-@SuperBuilder(toBuilder = true)
-public class DeviceCodeFlowCommandParameters extends TokenCommandParameters {
+public final class OAuth2ErrorCode {
+    /**
+     * Oauth2 error code invalid_grant.
+     */
+    public static final String INVALID_GRANT = "invalid_grant";
+
+    /**
+     * Oauth2 error code unauthorized_client.
+     */
+    public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
+
+    /**
+     * The refresh token used to redeem access token is invalid and auth code request is needed.
+     * This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
+     */
+    public static final String INTERACTION_REQUIRED = "interaction_required";
 }

@@ -20,14 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.controllers;
 
 import com.google.gson.JsonSyntaxException;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.DeviceRegistrationRequiredException;
@@ -36,21 +33,24 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.exception.TerminalException;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.exception.TerminalException;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
-import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public class ExceptionAdapter {
 
@@ -127,7 +127,7 @@ public class ExceptionAdapter {
         if (tokenResult != null &&
                 !tokenResult.getSuccess() &&
                 tokenResult.getErrorResponse() != null &&
-                !StringUtil.isEmpty(tokenResult.getErrorResponse().getError())) {
+                !StringUtil.isNullOrEmpty(tokenResult.getErrorResponse().getError())) {
 
             outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
@@ -158,8 +158,8 @@ public class ExceptionAdapter {
         // We simplify our logic because this layer is also used by MSAL.
 
         //Interaction required has been deprecated... hence suppressing warning.
-        return AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(oAuthError) ||
-                AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(oAuthError);
+        return OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(oAuthError) ||
+                OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(oAuthError);
 
     }
 

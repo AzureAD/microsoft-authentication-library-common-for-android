@@ -20,35 +20,32 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.util;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 
-import java.util.Set;
-
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage}
- * */
-@AllArgsConstructor
-public abstract class AbstractSharedPrefNameValueStorage<T> implements INameValueStorage<T> {
-    protected IMultiTypeNameValueStorage mManager;
+ * Parameter class for generating SHRs.
+ */
+@Getter
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+@Accessors(prefix = "m")
+public class GenerateShrCommandParameters extends CommandParameters {
 
-    @Override
-    public void remove(@NonNull String name) {
-        mManager.remove(name);
-    }
+    /**
+     * The home_account_id of the account for which we will generate the resulting SHR.
+     */
+    private String mHomeAccountId;
 
-    @Override
-    public void clear() {
-        mManager.clear();
-    }
-
-    @Override
-    public @NonNull Set<String> keySet() {
-        return mManager.getAll().keySet();
-    }
+    /**
+     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
+     */
+    private IPoPAuthenticationSchemeParams mPopParameters;
 }

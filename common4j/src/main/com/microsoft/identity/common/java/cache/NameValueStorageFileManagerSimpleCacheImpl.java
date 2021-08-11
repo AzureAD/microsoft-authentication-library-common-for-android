@@ -20,19 +20,15 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import android.os.Build;
-import android.os.SystemClock;
-
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.internal.util.StringUtil;
-import com.microsoft.identity.common.java.cache.ISimpleCache;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.HashSet;
 import java.util.List;
@@ -58,6 +54,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     private static final String EMTPY_ARRAY = "[]";
     private static final String TIMING_TAG = "execWithTiming";
 
+    private final IPlatformComponents mComponents;
     private final INameValueStorage<String> mStorage;
     private final String mKeySingleEntry;
     private final boolean mForceReinsertionOfDuplicates;
@@ -74,10 +71,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     public NameValueStorageFileManagerSimpleCacheImpl(@NonNull final IPlatformComponents components,
                                                       @NonNull final String name,
                                                       @NonNull final String singleKey) {
-        this(components.getNameValueStore(name, String.class),
-                singleKey,
-                false
-        );
+        this(components, name, singleKey, false);
     }
 
     /**
@@ -94,26 +88,10 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
                                                       @NonNull final String name,
                                                       @NonNull final String singleKey,
                                                       final boolean forceReinsertionOfDuplicates) {
-        this(components.getNameValueStore(name, String.class),
-                singleKey,
-                forceReinsertionOfDuplicates
-        );
-    }
 
-    /**
-     * Constructs a new SharedPreferencesFileManagerSimpleCacheImpl from the provided
-     * {@link IMultiTypeNameValueStorage}, using the provided singleKey for the underlying collection.
-     *
-     * @param storage                      The underlying {@link INameValueStorage<String>} to use.
-     * @param singleKey                    The name of the key under which all entries will be cached.
-     * @param forceReinsertionOfDuplicates If true, calling insert() on a value that already exists
-     *                                     replaces the existing value with the newly-provided one.
-     */
-    public NameValueStorageFileManagerSimpleCacheImpl(@NonNull final INameValueStorage<String> storage,
-                                                      @NonNull final String singleKey,
-                                                      final boolean forceReinsertionOfDuplicates) {
         Logger.verbose(TAG + "::ctor", "Init");
-        mStorage = storage;
+        mComponents = components;
+        mStorage = components.getNameValueStore(name, String.class);
         mKeySingleEntry = singleKey;
         mForceReinsertionOfDuplicates = forceReinsertionOfDuplicates;
     }
@@ -123,14 +101,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
     }
 
     private <V> V execWithTiming(@NonNull final NamedRunnable<V> runnable) {
-        final long startTime;
-        final long execTime;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            startTime = SystemClock.elapsedRealtimeNanos();
-        } else {
-            startTime = System.nanoTime();
-        }
+        final long startTime = mComponents.getPlatformUtil().getNanosecondTime();
 
         V v = null;
         try {
@@ -141,12 +112,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
             }
             Logger.error(TAG + TIMING_TAG, "Error during operation", e);
         } finally {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                execTime = SystemClock.elapsedRealtimeNanos() - startTime;
-            } else {
-                execTime = System.nanoTime() - startTime;
-            }
-
+            final long execTime =  mComponents.getPlatformUtil().getNanosecondTime() - startTime;
             Logger.verbose(TAG + TIMING_TAG,
                     runnable.getName() + " finished in: " + execTime + " " + TimeUnit.NANOSECONDS.name());
         }
@@ -213,7 +179,7 @@ public abstract class NameValueStorageFileManagerSimpleCacheImpl<T> implements I
             public List<T> call() {
                 String jsonList = mStorage.get(mKeySingleEntry);
 
-                if (StringUtil.isEmpty(jsonList)) {
+                if (StringUtil.isNullOrEmpty(jsonList)) {
                     jsonList = EMTPY_ARRAY;
                 }
 

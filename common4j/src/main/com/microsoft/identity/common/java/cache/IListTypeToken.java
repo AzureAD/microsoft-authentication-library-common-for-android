@@ -20,32 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
+package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.Accessors;
-import lombok.experimental.SuperBuilder;
+import java.lang.reflect.Type;
 
 /**
- * Parameter class for generating SHRs.
+ * Interface returning {@link Type} tokens for serialization hints to Gson.
  */
-@Getter
-@SuperBuilder(toBuilder = true)
-@EqualsAndHashCode(callSuper = true)
-@Accessors(prefix = "m")
-public class GenerateShrCommandParameters extends CommandParameters {
+public interface IListTypeToken {
 
     /**
-     * The home_account_id of the account for which we will generate the resulting SHR.
+     * Gets the Type token associated with a List.
+     *
+     * @return The {@link Type}.
      */
-    private String mHomeAccountId;
+    Type getListTypeToken();
 
-    /**
-     * The {@link IPoPAuthenticationSchemeParams} used to produce the resulting SHR.
-     */
-    private IPoPAuthenticationSchemeParams mPopParameters;
 }

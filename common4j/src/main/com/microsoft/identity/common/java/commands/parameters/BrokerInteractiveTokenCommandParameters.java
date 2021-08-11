@@ -20,15 +20,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
+package com.microsoft.identity.common.java.commands.parameters;
 
-import android.text.TextUtils;
-
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.request.BrokerRequestType;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.internal.request.BrokerRequestType;
-import com.microsoft.identity.common.java.commands.parameters.IHasExtraParameters;
+import com.microsoft.identity.common.java.exception.ArgumentException;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Map;
 
@@ -79,7 +76,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                     "mScopes", "Scope or resource is not set"
             );
         }
-        if (TextUtils.isEmpty(getClientId())) {
+        if (StringUtil.isNullOrEmpty(getClientId())) {
             throw new ArgumentException(
                     ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                     "mClientId", "Client Id is not set"
@@ -96,7 +93,7 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
                         "mCallerUId", "Caller Uid is not set"
                 );
             }
-            if (TextUtils.isEmpty(callerPackageName)) {
+            if (StringUtil.isNullOrEmpty(callerPackageName)) {
                 throw new ArgumentException(
                         ArgumentException.ACQUIRE_TOKEN_OPERATION_NAME,
                         "mCallerPackageName", "Caller package name is not set"

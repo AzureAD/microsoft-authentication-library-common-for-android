@@ -32,7 +32,7 @@ import com.microsoft.identity.common.internal.ui.browser.DefaultBrowserAuthoriza
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
@@ -41,7 +41,7 @@ import com.microsoft.identity.common.internal.ui.webview.EmbeddedWebViewAuthoriz
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.logging.Logger;
-import com.microsoft.identity.common.strategies.IAuthorizationStrategyFactory;
+import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
 import java.util.List;
 

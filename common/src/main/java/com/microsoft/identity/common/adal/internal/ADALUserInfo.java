@@ -24,7 +24,7 @@ package com.microsoft.identity.common.adal.internal;
 
 import com.microsoft.identity.common.adal.internal.util.DateExtensions;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 
 import java.net.URL;

@@ -32,6 +32,7 @@ import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.IBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.java.cache.NameValueStorageFileManagerSimpleCacheImpl;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 

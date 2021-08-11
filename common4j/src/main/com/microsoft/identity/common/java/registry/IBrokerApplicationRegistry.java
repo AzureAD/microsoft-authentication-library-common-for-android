@@ -20,23 +20,22 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.exception;
+package com.microsoft.identity.common.java.registry;
 
-import javax.annotation.Nullable;
-
-import lombok.NonNull;
+import com.microsoft.identity.common.java.cache.ISimpleCache;
 
 /**
- * An interface that indicates that there is structured data that can be exctracted from the
- * containing class.  Specifically, this indicates the presence of a string that represents
- * the error code to return to the user.  This interface is specifically written with descendants
- * of (@link Throwable} in mind.
+ * Interface defining the BrokerApplicationRegistry.
  */
-public interface IErrorInformation {
+public interface IBrokerApplicationRegistry extends ISimpleCache<BrokerApplicationRegistryData> {
+
     /**
-     * Get the error code associated with this operation.  May not be null.
-     * @return the associated error code.
+     * Gets the appropriate metadata for the provided app criteria.
+     *
+     * @param clientId    The clientId of the target or binding app.
+     * @param environment The environment of the target or binding app.
+     * @param processUid  The process UID of the target or binding app.
+     * @return The BrokerApplicationRegistryData to return.
      */
-    @NonNull
-    String getErrorCode();
+    BrokerApplicationRegistryData getMetadata(String clientId, String environment, int processUid);
 }

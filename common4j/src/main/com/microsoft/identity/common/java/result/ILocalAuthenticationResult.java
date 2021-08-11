@@ -23,17 +23,48 @@
 
 package com.microsoft.identity.common.java.result;
 
+import lombok.NonNull;
+
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
 
 import java.util.Date;
+import java.util.List;
 
-import lombok.NonNull;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the
- * {@link ILocalAuthenticationResultBase}
+ * {@link ILocalAuthenticationResult}
+ *
+ * NOTE: Due to dependencies with AccountRecord(s), we're not moving the whole class to common4j right now.
  */
-public interface ILocalAuthenticationResultBase {
+public interface ILocalAuthenticationResult {
 
+    /**
+     * Gets the AccountRecord.
+     *
+     * @return The AccountRecord to get.
+     */
+    @NonNull
+    IAccountRecord getAccountRecord();
+
+
+    /**
+     * Gets the {@link AccessTokenRecord}.
+     *
+     * @return The AccessTokenRecord to get.
+     */
+    @NonNull
+    AccessTokenRecord getAccessTokenRecord();
+
+    /**
+     * Gets a list of credentials and accounts from cache. This list will include both root accounts
+     * as well as guest accounts aka tenant profiles.
+     *
+     * @return a list of {@link ICacheRecord} objects
+     */
+    List<ICacheRecord> getCacheRecordWithTenantProfileData();
     /**
      * @return The access token requested.
      */

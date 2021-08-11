@@ -20,20 +20,23 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.exception;
 
-import java.lang.reflect.Type;
+import javax.annotation.Nullable;
+
+import lombok.NonNull;
 
 /**
- * Interface returning {@link Type} tokens for serialization hints to Gson.
+ * An interface that indicates that there is structured data that can be exctracted from the
+ * containing class.  Specifically, this indicates the presence of a string that represents
+ * the error code to return to the user.  This interface is specifically written with descendants
+ * of (@link Throwable} in mind.
  */
-public interface IListTypeToken {
-
+public interface IErrorInformation {
     /**
-     * Gets the Type token associated with a List.
-     *
-     * @return The {@link Type}.
+     * Get the error code associated with this operation.  May not be null.
+     * @return the associated error code.
      */
-    Type getListTypeToken();
-
+    @NonNull
+    String getErrorCode();
 }

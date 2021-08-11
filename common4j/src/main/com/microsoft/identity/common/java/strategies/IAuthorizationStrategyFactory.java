@@ -20,28 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
+package com.microsoft.identity.common.java.strategies;
 
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 
-import java.util.ArrayList;
-import java.util.List;
+import lombok.NonNull;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
+// Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
+@SuppressWarnings(WarningType.rawtype_warning)
+public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
 
-@Getter
-@SuperBuilder(toBuilder = true)
-@EqualsAndHashCode(callSuper = true)
-public class RemoveAccountCommandParameters extends CommandParameters {
-
-    private IAccountRecord account;
-    private List<BrowserDescriptor> browserSafeList;
-
-    public List<BrowserDescriptor> getBrowserSafeList() {
-        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
-    }
+    GenericAuthorizationStrategy getAuthorizationStrategy(
+            @NonNull final InteractiveTokenCommandParameters parameters);
 }
