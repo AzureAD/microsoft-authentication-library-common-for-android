@@ -25,13 +25,12 @@ package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -39,8 +38,8 @@ import com.microsoft.identity.common.logging.Logger;
  */
 public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallenge, Void> {
     private static final String TAG = NtlmChallengeHandler.class.getSimpleName();
-    private Activity mActivity;
-    private IAuthorizationCompletionCallback mChallengeCallback;
+    private final Activity mActivity;
+    private final IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
      * Constructor of NtlmChallengeHandler.
@@ -56,7 +55,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
 
     /**
      * Process the NTLM Challenge. If the credentials stored for the current host exists, use the
-     * users credentials to resolve the NTML challenge. Otherwise, show the http auth dialog on UI,
+     * users credentials to resolve the NTLM challenge. Otherwise, show the http auth dialog on UI,
      * user will need to type in the username and password to resolve the NTML challenge.
      */
     @Override
@@ -99,6 +98,7 @@ public final class NtlmChallengeHandler implements IChallengeHandler<NtlmChallen
 
     private void cancelRequest() {
         Logger.info(TAG, "Sending intent to cancel authentication activity");
-        mChallengeCallback.onChallengeResponseReceived(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, new Intent());
+        mChallengeCallback.onChallengeResponseReceived(
+                RawAuthorizationResult.fromResultCode(RawAuthorizationResult.ResultCode.CANCELLED));
     }
 }

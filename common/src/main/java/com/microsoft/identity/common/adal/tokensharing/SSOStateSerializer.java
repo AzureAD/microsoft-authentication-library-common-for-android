@@ -29,7 +29,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.adal.internal.tokensharing.TokenCacheItemSerializationAdapater;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 
 import org.json.JSONException;
 import org.json.JSONObject;

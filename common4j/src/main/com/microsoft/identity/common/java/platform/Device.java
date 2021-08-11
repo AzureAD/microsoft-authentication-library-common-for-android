@@ -27,6 +27,8 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+import net.jcip.annotations.GuardedBy;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +51,7 @@ public class Device {
 
     private static final ReentrantReadWriteLock sLock = new ReentrantReadWriteLock();
 
+    @GuardedBy("sLock")
     public static void setDeviceMetadata(@NonNull final IDeviceMetadata deviceMetadata) {
         sLock.writeLock().lock();
         try {
@@ -59,6 +62,7 @@ public class Device {
     }
 
     // Visible for testing only.
+    @GuardedBy("sLock")
     public static void clearDeviceMetadata(){
         sLock.writeLock().lock();
         try {
@@ -69,6 +73,7 @@ public class Device {
     }
 
     @NonNull
+    @GuardedBy("sLock")
     public static Map<String, String> getPlatformIdParameters() {
         sLock.readLock().lock();
         try {
@@ -76,7 +81,7 @@ public class Device {
 
             if (sDeviceMetadata != null) {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, sDeviceMetadata.getCpu());
-                platformParameters.put(PlatformIdParameters.OS, sDeviceMetadata.getOs());
+                platformParameters.put(PlatformIdParameters.OS, sDeviceMetadata.getOsForEsts());
                 platformParameters.put(PlatformIdParameters.DEVICE_MODEL, sDeviceMetadata.getDeviceModel());
             } else {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, NOT_SET);
@@ -103,6 +108,128 @@ public class Device {
         }
     }
 
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getDeviceType() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getDeviceType();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Gets the CPU of the current device.
+     *
+     * @return The name of the device CPU.
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getCpu() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getCpu();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Get the OS of this device to be sent to eSTS.
+     *
+     * We have this because in Android, we're sending [SDK VERSION] (i.e. 24) to eSTS,
+     * not the [OS VERSION] (i.e. 7.0), and eSTS are using these [SDK VERSION] to gate features.
+     *
+     * @return The name/version of the device OS.
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getOsForEsts() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getOsForEsts();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Get the OS of this device to be sent to DRS.
+     *
+     * @return a String representing the OS information
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getOsForDrs() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getOsForDrs();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Gets the manufacturer of the current device.
+     *
+     * @return The name of the device manufacturer.
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getManufacturer() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getManufacturer();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Gets the model name of the current device.
+     *
+     * @return The device model name.
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getModel() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getDeviceModel();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Get the device display name.
+     *
+     * @return a String representing this device's display name.
+     */
+    @NonNull
+    public static String getDeviceDisplayName() {
+        return getManufacturer() + getModel();
+    }
+
     public static final class PlatformIdParameters {
         /**
          * The String representing the CPU for the device.
@@ -125,75 +252,4 @@ public class Device {
         public static final String BROKER_VERSION = "x-client-brkrver";
     }
 
-    /**
-     * Gets the CPU of the current device.
-     *
-     * @return The name of the device CPU.
-     */
-    @NonNull
-    public static String getCpu() {
-        sLock.readLock().lock();
-        try {
-            if (sDeviceMetadata != null) {
-                return sDeviceMetadata.getCpu();
-            }
-            return NOT_SET;
-        } finally {
-            sLock.readLock().unlock();
-        }
-    }
-
-    /**
-     * Gets the OS of the current device.
-     *
-     * @return The name/version of the device OS.
-     */
-    @NonNull
-    public static String getOs() {
-        sLock.readLock().lock();
-        try {
-            if (sDeviceMetadata != null) {
-                return sDeviceMetadata.getOs();
-            }
-            return NOT_SET;
-        } finally {
-            sLock.readLock().unlock();
-        }
-    }
-
-    /**
-     * Gets the manufacturer of the current device.
-     *
-     * @return The name of the device manufacturer.
-     */
-    @NonNull
-    public static String getManufacturer() {
-        sLock.readLock().lock();
-        try {
-            if (sDeviceMetadata != null) {
-                return sDeviceMetadata.getManufacturer();
-            }
-            return NOT_SET;
-        } finally {
-            sLock.readLock().unlock();
-        }
-    }
-
-    /**
-     * Gets the model name of the current device.
-     *
-     * @return The device model name.
-     */
-    @NonNull
-    public static String getModel() {
-        sLock.readLock().lock();
-        try {
-            if (sDeviceMetadata != null) {
-                return sDeviceMetadata.getDeviceModel();
-            }
-            return NOT_SET;
-        } finally {
-            sLock.readLock().unlock();
-        }
-    }
 }

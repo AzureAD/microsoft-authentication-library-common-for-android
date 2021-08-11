@@ -5,78 +5,78 @@
 # Repo Code Owners
 #--------------------
 
-*       @AdamBJohnsonx @iambmelt @rpdome @shahzaibj @shoatman
+*       @AdamBJohnsonx @iambmelt @rpdome @shahzaibj @shoatman @AzureAD/androidleads
 
 
 # Area Owners
 #---------------------
 
 # Interfaces
-/common4j/src/main/java/com/microsoft/identity/common/java/interfaces/              @rpdome @iambmelt @AdamBJohnsonx
+/common4j/src/main/java/com/microsoft/identity/common/java/interfaces/              @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 # Automation
-/common/src/test/                                                                   @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx
-/common/src/androidTest/                                                            @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx
-/common4j/src/test/                                                                 @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx
-/uiautomationutilities/src/                                                         @shahzaibj @shoatman @AdamBJohnsonx @iamgusain
-/testutils/                                                                         @shahzaibj @shoatman @AdamBJohnsonx @iamgusain
-/common4j/src/test/com/microsoft/identity/common/java/eststelemetry                 @shahzaibj @rpdome
-/common4j/src/test/com/microsoft/identity/common/java/logging                       @shahzaibj @rpdome @iambmelt @AdamBJohnsonx
-/common4j/src/test/com/microsoft/identity/common/java/net                           @rpdome @AdamBJohnsonx
-/common4j/src/test/com/microsoft/identity/common/java/platform                      @shahzaibj @rpdome @AdamBJohnsonx
-/common4j/src/test/com/microsoft/identity/common/java/providers                     @rpdome @iambmelt @shoatman
-/common4j/src/test/com/microsoft/identity/common/java/telemetry                     @shahzaibj @rpdome @iambmelt
-/common4j/src/test/com/microsoft/identity/common/java/util                          @rpdome @iambmelt @AdamBJohnsonx
+/common/src/test/                                                                   @shahzaibj @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
+/common/src/androidTest/                                                            @shahzaibj @rpdome @shoatman @iambmelt @AzureAD/androidleads 
+/common4j/src/test/                                                                 @shahzaibj @rpdome @shoatman @iambmelt @AdamBJohnsonx @AzureAD/androidleads
+/uiautomationutilities/src/                                                         @AdamBJohnsonx @shahzaibj @iamgusain @AzureAD/androidleads
+/testutils/                                                                         @shahzaibj @shoatman @AdamBJohnsonx @iamgusain @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/eststelemetry                 @shahzaibj @rpdome @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/logging                       @shahzaibj @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/net                           @rpdome @AdamBJohnsonx @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/platform                      @shahzaibj @rpdome @AdamBJohnsonx @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/providers                     @rpdome @iambmelt @shoatman @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/telemetry                     @shahzaibj @rpdome @iambmelt @AzureAD/androidleads
+/common4j/src/test/com/microsoft/identity/common/java/util                          @rpdome @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 
 # AuthSchemes
-/common/src/main/java/com/microsoft/identity/common/internal/authscheme             @iambmelt @AdamBJohnsonx
+/common/src/main/java/com/microsoft/identity/common/internal/authscheme             @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 # Broker
-/common/src/main/java/com/microsoft/identity/common/internal/broker                 @rpdome @AdamBJohnsonx
+/common/src/main/java/com/microsoft/identity/common/internal/broker                 @rpdome @AdamBJohnsonx @AzureAD/androidleads
 
 # Build
-*.gradle                                                                            @shoatman @AdamBJohnsonx @shahzaibj
+*.gradle                                                                            @shoatman @AdamBJohnsonx @shahzaibj @AzureAD/androidleads
 
 # Cache
-/common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman @iamgusain
+/common/src/main/java/com/microsoft/identity/common/internal/cache/                 @iambmelt @shoatman @iamgusain @AzureAD/androidleads
 
 # Commands
-/common/src/main/java/com/microsoft/identity/common/internal/commands               @shoatman @iambmelt @AdamBJohnsonx
-/common4j/src/main/java/com/microsoft/identity/common/java/commands                 @shoatman @iambmelt @AdamBJohnsonx
+/common/src/main/java/com/microsoft/identity/common/internal/commands               @shoatman @iambmelt @AdamBJohnsonx @AzureAD/androidleads
+/common4j/src/main/java/com/microsoft/identity/common/java/commands                 @shoatman @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 # DTOs
-/common/src/main/java/com/microsoft/identity/common/internal/dto                    @iambmelt @AdamBJohnsonx 
+/common/src/main/java/com/microsoft/identity/common/internal/dto                    @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 # Logging
-/common/src/main/java/com/microsoft/identity/common/logging/                        @iambmelt @shahzaibj
-/common4j/src/main/com/microsoft/identity/common/java/logging/                      @iambmelt @shahzaibj
+/common/src/main/java/com/microsoft/identity/common/logging/                        @iambmelt @shahzaibj @AzureAD/androidleads
+/common4j/src/main/com/microsoft/identity/common/java/logging/                      @iambmelt @shahzaibj @AzureAD/androidleads
 
 # Migration
-/common/src/main/java/com/microsoft/identity/common/internal/migration              @iambmelt @rpdome @shahzaibj
+/common/src/main/java/com/microsoft/identity/common/internal/migration              @iambmelt @rpdome @shahzaibj @AzureAD/androidleads
 
 # Networking
-/common/src/main/java/com/microsoft/identity/common/internal/net                    @AdamBJohnsonx @rpdome
-/common4j/src/main/java/com/microsoft/identity/common/java/net                      @AdamBJohnsonx @rpdome
+/common/src/main/java/com/microsoft/identity/common/internal/net                    @AdamBJohnsonx @rpdome @AzureAD/androidleads
+/common4j/src/main/java/com/microsoft/identity/common/java/net                      @AdamBJohnsonx @rpdome @AzureAD/androidleads
 
 # Platform
-/common/src/main/java/com/microsoft/identity/common/internal/platform               @iambmelt @AdamBJohnsonx
-/common4j/src/main/java/com/microsoft/identity/common/java/platform                 @iambmelt @AdamBJohnsonx
+/common/src/main/java/com/microsoft/identity/common/internal/platform               @iambmelt @AdamBJohnsonx @AzureAD/androidleads
+/common4j/src/main/java/com/microsoft/identity/common/java/platform                 @iambmelt @AdamBJohnsonx @AzureAD/androidleads
 
 # Pipelines
-/azure-pipelines/                                                                   @shoatman @shahzaibj @p3dr0rv
+/azure-pipelines/                                                                   @shoatman @shahzaibj @p3dr0rv @AzureAD/androidleads
 
 # Telemetry
-/common/src/main/java/com/microsoft/identity/common/internal/telemetry/             @shahzaibj @iambmelt
-/common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt @rpdome
-/common/src/main/java/com/microsoft/identity/common/internal/eststelemetry          @shahzaibj @iambmelt
-/common4j/src/main/com/microsoft/identity/common/java/eststelemetry/                @shahzaibj @iambmelt @rpdome
+/common/src/main/java/com/microsoft/identity/common/internal/telemetry/             @shahzaibj @iambmelt @AzureAD/androidleads
+/common4j/src/main/com/microsoft/identity/common/java/telemetry/                    @shahzaibj @iambmelt @rpdome @AzureAD/androidleads
+/common/src/main/java/com/microsoft/identity/common/internal/eststelemetry          @shahzaibj @iambmelt @AzureAD/androidleads
+/common4j/src/main/com/microsoft/identity/common/java/eststelemetry/                @shahzaibj @iambmelt @rpdome @AzureAD/androidleads
 
 # Providers
-/common4j/src/main/com/microsoft/identity/common/java/providers/                    @rpdome @iambmelt @shoatman
+/common4j/src/main/com/microsoft/identity/common/java/providers/                    @rpdome @iambmelt @shoatman @AzureAD/androidleads
 
 # Lab Api
-/keyvault                                                                           @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
-/labapi                                                                             @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
-/LabApiUtilities                                                                    @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
-/testutils/src/main/java/com/microsoft/identity/internal/testutils/labutils         @shahzaibj @iamgusain @AdamBJohnsonx @shoatman
+/keyvault                                                                           @shahzaibj @iamgusain @AdamBJohnsonx @shoatman @AzureAD/androidleads
+/labapi                                                                             @shahzaibj @iamgusain @AdamBJohnsonx @shoatman @AzureAD/androidleads
+/LabApiUtilities                                                                    @shahzaibj @iamgusain @AdamBJohnsonx @shoatman @AzureAD/androidleads
+/testutils/src/main/java/com/microsoft/identity/internal/testutils/labutils         @shahzaibj @iamgusain @AdamBJohnsonx @shoatman @AzureAD/androidleads

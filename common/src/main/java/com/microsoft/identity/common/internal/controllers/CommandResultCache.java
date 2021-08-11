@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.util.LruCache;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 
 /**
@@ -35,6 +35,7 @@ public class CommandResultCache {
 
     private final static int DEFAULT_ITEM_COUNT = 250;
 
+    private final Object cacheLock = new Object();
     //Cache items allowed is still TBD... for now using default value of 250
     // Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
@@ -49,7 +50,7 @@ public class CommandResultCache {
     }
 
     public CommandResult get(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key) {
-        synchronized (mCache) {
+        synchronized (cacheLock) {
             CommandResultCacheItem item = mCache.get(key);
             if (item != null) {
                 if (item.isExpired()) {
@@ -65,20 +66,24 @@ public class CommandResultCache {
     }
 
     public void put(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key, CommandResult value) {
+        synchronized (cacheLock) {
 
-        CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
-        //NOTE: If an existing item using this key already in the cache it will be replaced
-        mCache.put(key, cacheItem);
-        //Object old = mCache.put(key, cacheItem);
-        //We may want to log old if we see problems here, since the the old value is the value being replace with the new item.
+            CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
+            //NOTE: If an existing item using this key already in the cache it will be replaced
+            mCache.put(key, cacheItem);
+            //Object old = mCache.put(key, cacheItem);
+            //We may want to log old if we see problems here, since the the old value is the value being replace with the new item.
+        }
     }
 
     public int getSize() {
-        return this.mCache.size();
+        synchronized (cacheLock) {
+            return this.mCache.size();
+        }
     }
 
     public void clear() {
-        synchronized (mCache) {
+        synchronized (cacheLock) {
             mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
         }
     }

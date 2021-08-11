@@ -33,6 +33,7 @@ import com.microsoft.identity.common.java.telemetry.AbstractTelemetryContext;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.logging.Logger;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -43,6 +44,8 @@ public class AndroidTelemetryContext extends AbstractTelemetryContext {
 
     private static final String TAG = AndroidTelemetryContext.class.getName();
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE",
+            justification = "Lombok inserts nullchecks")
     public AndroidTelemetryContext(@NonNull final Context context) {
         super(new AndroidTelemetryPropertiesCache(context));
         addApplicationInfo(context);

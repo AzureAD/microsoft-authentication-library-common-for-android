@@ -22,13 +22,12 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.cache.registry;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManagerSimpleCacheImpl;
+import com.microsoft.identity.common.internal.cache.NameValueStorageFileManagerSimpleCacheImpl;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;
@@ -39,7 +38,7 @@ import java.util.List;
  * broker.
  */
 public class DefaultBrokerApplicationRegistry
-        extends SharedPreferencesFileManagerSimpleCacheImpl<BrokerApplicationRegistryData>
+        extends NameValueStorageFileManagerSimpleCacheImpl<BrokerApplicationRegistryData>
         implements IBrokerApplicationRegistry {
 
     private static final String TAG = DefaultBrokerApplicationRegistry.class.getSimpleName();
@@ -47,7 +46,7 @@ public class DefaultBrokerApplicationRegistry
     private static final String DEFAULT_APP_REGISTRY_CACHE_NAME = "com.microsoft.identity.app-registry";
     private static final String KEY_APP_REGISTRY = "app-registry";
 
-    public DefaultBrokerApplicationRegistry(@NonNull final Context context) {
+    public DefaultBrokerApplicationRegistry(@NonNull final IPlatformComponents context) {
         super(context, DEFAULT_APP_REGISTRY_CACHE_NAME, KEY_APP_REGISTRY);
     }
 

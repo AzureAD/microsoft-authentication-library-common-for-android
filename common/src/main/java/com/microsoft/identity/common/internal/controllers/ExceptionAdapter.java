@@ -26,7 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.JsonSyntaxException;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -36,9 +36,10 @@ import com.microsoft.identity.common.java.exception.UiRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
@@ -79,7 +80,7 @@ public class ExceptionAdapter {
                                 return new DeviceRegistrationRequiredException(
                                         microsoftAuthorizationErrorResponse.getError(),
                                         microsoftAuthorizationErrorResponse.getErrorDescription(),
-                                        microsoftAuthorizationErrorResponse.getUserName()
+                                        microsoftAuthorizationErrorResponse.getUpnToWpj()
                                 );
                             }
                         }
@@ -244,6 +245,16 @@ public class ExceptionAdapter {
         Throwable e = exception;
         if (exception instanceof ExecutionException){
             e = exception.getCause();
+        }
+
+        if (e instanceof TerminalException) {
+            final String errorCode = ((TerminalException) e).getErrorCode();
+            e = e.getCause();
+            return new ClientException(
+                    errorCode,
+                    "An unhandled exception occurred with message: " + e.getMessage(),
+                    e
+            );
         }
 
         if (e instanceof IOException) {

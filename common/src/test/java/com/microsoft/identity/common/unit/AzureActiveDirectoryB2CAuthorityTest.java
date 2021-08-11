@@ -24,8 +24,8 @@ package com.microsoft.identity.common.unit;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryB2CAuthority;
+import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
 
 import org.junit.Assert;
 import org.junit.Test;

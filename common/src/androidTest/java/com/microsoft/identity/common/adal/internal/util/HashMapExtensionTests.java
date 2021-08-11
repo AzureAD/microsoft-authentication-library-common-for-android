@@ -22,21 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.util;
 
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.adal.internal.AndroidTestHelper;
-import com.microsoft.identity.common.adal.internal.ReflectionUtils;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.HashMap;
 
+import static com.microsoft.identity.common.adal.internal.util.HashMapExtensions.urlFormDecode;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -53,50 +51,36 @@ public class HashMapExtensionTests extends AndroidTestHelper {
         super.tearDown();
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    public void testURLFormDecodeNegative() throws IllegalArgumentException,
-            ClassNotFoundException, NoSuchMethodException, InstantiationException,
-            IllegalAccessException, InvocationTargetException {
-
-        final String methodName = "urlFormDecode";
-        Object object = ReflectionUtils.getNonPublicInstance("com.microsoft.identity.common.adal.internal.util.HashMapExtensions");
-        Method m = ReflectionUtils.getTestMethod(object, methodName, String.class);
-        HashMap<String, String> result = (HashMap<String, String>) m.invoke(object, "");
+    public void testURLFormDecodeNegative() {
+        HashMap<String, String> result = urlFormDecode("");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        result = (HashMap<String, String>) m.invoke(object, "&&&");
+        result = urlFormDecode("&&&");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        result = (HashMap<String, String>) m.invoke(object, "=&=");
+        result = urlFormDecode("=&=");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        result = (HashMap<String, String>) m.invoke(object, "=&");
+        result = urlFormDecode("=&");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        result = (HashMap<String, String>) m.invoke(object, "&=");
+        result = urlFormDecode("&=");
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        result = (HashMap<String, String>) m.invoke(object, "&=b");
+        result = urlFormDecode("&=b");
         assertNotNull(result);
         assertTrue(result.isEmpty());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
-    public void testURLFormDecodePositive() throws IllegalArgumentException,
-            ClassNotFoundException, NoSuchMethodException, InstantiationException,
-            IllegalAccessException, InvocationTargetException {
-
-        final String methodName = "urlFormDecode";
-        Object object = ReflectionUtils.getNonPublicInstance("com.microsoft.identity.common.adal.internal.util.HashMapExtensions");
-        Method m = ReflectionUtils.getTestMethod(object, methodName, String.class);
-        HashMap<String, String> result = (HashMap<String, String>) m.invoke(object, "a=b&c=2");
+    public void testURLFormDecodePositive() {
+        HashMap<String, String> result = urlFormDecode("a=b&c=2");
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertTrue(result.containsKey("a"));
@@ -109,24 +93,24 @@ public class HashMapExtensionTests extends AndroidTestHelper {
         assertTrue(result.containsValue("b"));
         assertTrue(result.containsValue("2"));
 
-        result = (HashMap<String, String>) m.invoke(object, "a=v");
+        result = urlFormDecode("a=v");
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertTrue(result.containsKey("a"));
         assertTrue(result.containsValue("v"));
 
-        result = (HashMap<String, String>) m.invoke(object, "d=f&");
+        result = urlFormDecode("d=f&");
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertTrue(result.containsKey("d"));
         assertTrue(result.containsValue("f"));
-        assertTrue(result.size() == 1);
+        assertEquals(1, result.size());
 
-        result = (HashMap<String, String>) m.invoke(object, "=b&c=");
+        result = urlFormDecode("=b&c=");
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertTrue(result.containsKey("c"));
         assertFalse(result.containsValue("b"));
-        assertTrue(result.size() == 1);
+        assertEquals(1, result.size());
     }
 }

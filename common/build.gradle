@@ -6,7 +6,7 @@ plugins {
     id 'maven-publish'
 }
 
-apply from: 'versioning/version_tasks.gradle'
+apply from: '../versioning/version_tasks.gradle'
 
 def desugarCode = false
 
@@ -37,17 +37,6 @@ android {
 
     compileSdkVersion rootProject.ext.compileSdkVersion
 
-    def sliceParameter = "" // will be blank unless specified by developer
-    def dcParameter = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("slice")) {
-        sliceParameter = slice
-    }
-
-    if (project.hasProperty("dc")) {
-        dcParameter = dc
-    }
-
     defaultConfig {
         multiDexEnabled true
         minSdkVersion rootProject.ext.minSdkVersion
@@ -57,8 +46,6 @@ android {
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "SLICE", "\"$sliceParameter\"")
-        buildConfigField("String", "DC", "\"$dcParameter\"")
     }
 
     buildTypes {
@@ -156,6 +143,7 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -171,6 +159,9 @@ dependencies {
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
+
+    testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"

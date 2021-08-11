@@ -37,9 +37,10 @@ import android.widget.ProgressBar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.R;
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
@@ -47,6 +48,7 @@ import com.microsoft.identity.common.internal.ui.webview.OnPageCommitVisibleCall
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
@@ -93,7 +95,10 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WebViewUtil.setDataDirectorySuffix(getActivity().getApplicationContext());
+        final FragmentActivity activity = getActivity();
+        if (activity != null) {
+            WebViewUtil.setDataDirectorySuffix(activity.getApplicationContext());
+        }
     }
 
     @Override
@@ -129,8 +134,12 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
+        final FragmentActivity activity = getActivity();
+        if (activity == null) {
+            return null;
+        }
         final AzureActiveDirectoryWebViewClient webViewClient = new AzureActiveDirectoryWebViewClient(
-                getActivity(),
+                activity,
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
                     @Override
@@ -248,9 +257,9 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
 
     class AuthorizationCompletionCallback implements IAuthorizationCompletionCallback {
         @Override
-        public void onChallengeResponseReceived(final int returnCode, final Intent responseIntent) {
-            Logger.info(TAG, null, "onChallengeResponseReceived:" + returnCode);
-            sendResult(returnCode, responseIntent);
+        public void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response) {
+            Logger.info(TAG, null, "onChallengeResponseReceived:" + response.getResultCode());
+            sendResult(response);
             finish();
         }
 

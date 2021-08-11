@@ -33,25 +33,25 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.WarningType;
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
-import com.microsoft.identity.common.internal.cache.BrokerOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.ITokenCacheItem;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.ITokenCacheItem;
 import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.dto.IAccountRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2TokenCache;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest;
@@ -70,7 +70,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.microsoft.identity.common.internal.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
+import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
 import static com.microsoft.identity.common.internal.migration.AdalMigrationAdapter.loadCloudDiscoveryMetadata;
 
 public class TokenCacheItemMigrationAdapter {
@@ -181,7 +181,7 @@ public class TokenCacheItemMigrationAdapter {
         config.setAuthorityUrl(authorityUrl);
 
         // Create the strategy
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
         final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
         final String refreshToken = refreshTokenRecord.getSecret();
@@ -336,7 +336,7 @@ public class TokenCacheItemMigrationAdapter {
                 }
 
                 // Create the strategy
-                final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+                final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
                 final MicrosoftStsOAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(config, strategyParameters);
 
                 final MicrosoftStsTokenRequest tokenRequest = createTokenRequest(

@@ -95,4 +95,10 @@ public interface ITestBroker extends IApp {
      * @return the {@link DeviceAdmin} name for this broker app
      */
     DeviceAdmin getAdminName();
+
+    /**
+     * Sets the flight information.
+     * @param flightsJson the json representation of the flight key and value pairs {"key1":"value"}.
+     */
+    void setFlights(@Nullable final String flightsJson);
 }

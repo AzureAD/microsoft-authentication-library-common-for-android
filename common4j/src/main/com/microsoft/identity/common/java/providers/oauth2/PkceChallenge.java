@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.providers.oauth2;
 
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.java.util.Base64;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
@@ -31,6 +31,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
@@ -70,6 +72,7 @@ public final class PkceChallenge implements Serializable {
      * ALPHA = %x41-5A / %x61-7A
      * DIGIT = %x30-39
      */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     private final transient String mCodeVerifier;
 
     /**
@@ -108,7 +111,7 @@ public final class PkceChallenge implements Serializable {
             verifierBytes = new byte[CODE_VERIFIER_BYTE_SIZE];
             new SecureRandom().nextBytes(verifierBytes);
         }
-        return Base64.encode(verifierBytes);
+        return StringUtil.encodeUrlSafeString(verifierBytes);
     }
 
     static String generateCodeVerifierChallenge(final String verifier) {
@@ -116,7 +119,7 @@ public final class PkceChallenge implements Serializable {
             MessageDigest digester = MessageDigest.getInstance(DIGEST_ALGORITHM);
             digester.update(verifier.getBytes(ISO_8859_1));
             byte[] digestBytes = digester.digest();
-            return Base64.encode(digestBytes);
+            return StringUtil.encodeUrlSafeString(digestBytes);
         } catch (final NoSuchAlgorithmException e) {
             throw new IllegalStateException("Failed to generate the code verifier challenge", e);
         } catch (final UnsupportedEncodingException e) {

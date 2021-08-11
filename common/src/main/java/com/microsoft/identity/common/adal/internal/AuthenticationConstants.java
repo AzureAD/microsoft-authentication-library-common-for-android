@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
 
 import java.nio.charset.Charset;
 
@@ -166,82 +167,6 @@ public final class AuthenticationConstants {
          * Go-link URL for documentation on troubleshooting common SSL, ADFS issues.
          */
         public static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
-    }
-
-    /**
-     * Represents the response code.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class UIResponse {
-
-        /**
-         * Represents that user cancelled the flow.
-         */
-        public static final int BROWSER_CODE_CANCEL = 2001;
-
-        /**
-         * Represents that browser error is returned.
-         */
-        public static final int BROWSER_CODE_ERROR = 2002;
-
-        /**
-         * Represents that the authorization code is returned successfully.
-         */
-        public static final int BROWSER_CODE_COMPLETE = 2003;
-
-        /**
-         * Represents that broker successfully returns the response.
-         */
-        public static final int TOKEN_BROKER_RESPONSE = 2004;
-
-        /**
-         * Webview throws Authentication exception. It needs to be send to callback.
-         */
-        public static final int BROWSER_CODE_AUTHENTICATION_EXCEPTION = 2005;
-
-        /**
-         * CA flow, device doesn't have company portal or azure authenticator installed.
-         * Waiting for broker package to be installed, and resume request in broker.
-         */
-        public static final int BROKER_REQUEST_RESUME = 2006;
-
-        /**
-         * Device registration in broker apps.
-         */
-        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
-
-        /**
-         * Represents that SDK signalled to cancelled the auth flow as app
-         * launched a new interactive auth request
-         */
-        public static final int BROWSER_CODE_SDK_CANCEL = 2008;
-
-        /**
-         * MDM Flow is triggered.
-         */
-        public static final int BROWSER_CODE_MDM = 2009;
-    }
-
-    /**
-     * Represents the request code.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class UIRequest {
-
-        /**
-         * Represents the request of browser flow.
-         */
-        public static final int BROWSER_FLOW = 1001;
-
-        /**
-         * Represents the request of token flow.
-         */
-        public static final int TOKEN_FLOW = 1002;
-
-        /**
-         * Represents the request of broker flow.
-         */
-        public static final int BROKER_FLOW = 1003;
     }
 
     /**
@@ -502,16 +427,6 @@ public final class AuthenticationConstants {
         public static final String RESOURCE = "resource";
 
         /**
-         * AAD OAuth2 Challenge strings.
-         */
-        public static final String BEARER = "Bearer";
-
-        /**
-         * AAD Oauth2 authorization.
-         */
-        public static final String AUTHORIZATION = "authorization";
-
-        /**
          * String of authorization uri.
          */
         public static final String AUTHORIZATION_URI = "authorization_uri";
@@ -642,11 +557,6 @@ public final class AuthenticationConstants {
          * String for broker return JSON.
          */
         public static final String BROKER_RETURN_JSON = "broker.json";
-
-        /**
-         * Account type string.
-         */
-        public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
 
         /**
          * String of account initial name.
@@ -904,62 +814,62 @@ public final class AuthenticationConstants {
         /**
          * String of key for account name.
          */
-        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
 
         /**
          * String of key for account id token.
          */
-        public static final String ACCOUNT_IDTOKEN = "account.idtoken";
+        public static final String ACCOUNT_IDTOKEN = BrokerAccountDataName.ACCOUNT_IDTOKEN;
 
         /**
          * String of key for user id.
          */
-        public static final String ACCOUNT_USERINFO_USERID = "account.userinfo.userid";
+        public static final String ACCOUNT_USERINFO_USERID = BrokerAccountDataName.ACCOUNT_USERINFO_USERID;
 
         /**
          * String of key for user id list.
          */
-        public static final String ACCOUNT_USERINFO_USERID_LIST = "account.userinfo.userid.list";
+        public static final String ACCOUNT_USERINFO_USERID_LIST = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_LIST;
 
         /**
          * String of key for given name.
          */
-        public static final String ACCOUNT_USERINFO_GIVEN_NAME = "account.userinfo.given.name";
+        public static final String ACCOUNT_USERINFO_GIVEN_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_GIVEN_NAME;
 
         /**
          * String of key for family name.
          */
-        public static final String ACCOUNT_USERINFO_FAMILY_NAME = "account.userinfo.family.name";
+        public static final String ACCOUNT_USERINFO_FAMILY_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_FAMILY_NAME;
 
         /**
          * String of key for identity provider.
          */
-        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = "account.userinfo.identity.provider";
+        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = BrokerAccountDataName.ACCOUNT_USERINFO_IDENTITY_PROVIDER;
 
         /**
          * String of key for displayable id.
          */
-        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = "account.userinfo.userid.displayable";
+        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_DISPLAYABLE;
 
         /**
          * String of key for tenant id.
          */
-        public static final String ACCOUNT_USERINFO_TENANTID = "account.userinfo.tenantid";
+        public static final String ACCOUNT_USERINFO_TENANTID = BrokerAccountDataName.ACCOUNT_USERINFO_TENANTID;
 
         /**
          * String of key for environment.
          */
-        public static final String ACCOUNT_USERINFO_ENVIRONMENT = "account.userinfo.environment";
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT = BrokerAccountDataName.ACCOUNT_USERINFO_ENVIRONMENT;
 
         /**
          * String of key for authority type.
          */
-        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = "account.userinfo.authority.type";
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = BrokerAccountDataName.ACCOUNT_USERINFO_AUTHORITY_TYPE;
 
         /**
          * String of key for account id token record.
          */
-        public static final String ACCOUNT_USERINFO_ID_TOKEN = "account.userinfo.id.token";
+        public static final String ACCOUNT_USERINFO_ID_TOKEN = BrokerAccountDataName.ACCOUNT_USERINFO_ID_TOKEN;
 
         /**
          * String of key for adal version.
@@ -994,7 +904,7 @@ public final class AuthenticationConstants {
         /**
          * String of key for user data broker RT.
          */
-        public static final String USERDATA_BROKER_RT = "userdata.broker.rt";
+        public static final String USERDATA_BROKER_RT = BrokerAccountDataName.USERDATA_BROKER_RT;
 
         /**
          * String of key for user data broker PRT, RT.
@@ -1134,11 +1044,6 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
-         * Device Registration redirect url host name
-         */
-        public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";
-
-        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";
@@ -1177,16 +1082,6 @@ public final class AuthenticationConstants {
          * Activity name to launch company portal.
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
-
-        /**
-         * Redirect URI parameter key to get link to install broker
-         */
-        public static final String INSTALL_URL_KEY = "app_link";
-
-        /**
-         * Redirect URI parameter key to get the upn
-         */
-        public static final String INSTALL_UPN_KEY = "username";
 
         /**
          * PRT nonce.
@@ -1491,7 +1386,7 @@ public final class AuthenticationConstants {
             BROKER_GET_FLIGHTS(BROKER_API_GET_FLIGHTS_PATH, BROKER_VERSION_2, null),
             GET_SSO_TOKEN(GET_SSO_TOKEN_PATH, null, VERSION_7),
             UNKNOWN(null, null, null)
-                ;
+            ;
             /**
              * The content provider path that the API exists behind.
              */
@@ -1675,28 +1570,28 @@ public final class AuthenticationConstants {
 
         public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
-        public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
-
-        public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
-
-        public static final String REQUEST_CANCELLED_BY_USER = "com.microsoft.identity.client.request.cancelled.by.user";
-
         public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
     }
 
     public static final class AuthorizationIntentAction {
+        /**
+         * An intent action specifying that the authorization result redirect was returned to the application.
+         */
+        public static final String REDIRECT_RETURNED_ACTION = "redirect_returned_action";
 
         /**
-         * an intent action specifying that the current interactive action should be cancelled.
+         * An intent action specifying that the activity receiving the authorization result redirect should be destroyed.
          */
-        public static final String CANCEL_INTERACTIVE_REQUEST = "cancel_interactive_request";
+        public static final String DESTROY_REDIRECT_RECEIVING_ACTIVITY_ACTION = "destroy_redirect_receiving_activity_action";
 
         /**
-         * an intent action specifying that the intent contains authorization results.
+         * An intent action used to tell the activity used to launch custom tabs that it should re-launch in order to close the custom tabs UI
+         * Custom Tabs does not provide a mechanism to programmtically close custom tabs... hence we have to make this happen via the activity used
+         * to launch custom tabs and intent flags to clear the task.
          */
-        public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
+        public static final String REFRESH_TO_CLOSE= "refresh_to_close";
     }
 
     /**
@@ -1870,16 +1765,5 @@ public final class AuthenticationConstants {
          */
         @Deprecated
         public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
-
-        /**
-         * The String representing the MSAL SdkType.
-         */
-        public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
-
-        /**
-         * The String representing the MSAL.CPP SdkType.
-         */
-        public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
     }
-
 }

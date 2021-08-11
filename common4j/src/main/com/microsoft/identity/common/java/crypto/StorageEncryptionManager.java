@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.crypto.key.KeyUtil;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.util.Base64;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -44,6 +44,7 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 
+import cz.msebera.android.httpclient.extras.Base64;
 import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODING_UTF8;
@@ -400,7 +401,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
      * and prefix it with{@link StorageEncryptionManager#ENCODE_VERSION}.
      */
     private byte[] prefixWithEncodeVersion(@NonNull final byte[] encryptedData) {
-        final String encryptedText = Base64.encodeURLUnsafe(encryptedData);
+        final String encryptedText = Base64.encodeToString(encryptedData, Base64.NO_WRAP);
         final String result = getEncodeVersionLengthPrefix() + ENCODE_VERSION + encryptedText;
         return result.getBytes(ENCODING_UTF8);
     }
@@ -414,7 +415,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     @NonNull
     private static byte[] stripEncodeVersionFromCipherText(@NonNull final byte[] cipherText)
             throws ClientException {
-        if (cipherText == null || cipherText.length < 1) {
+        if (cipherText.length < 1) {
             throw new IllegalArgumentException("Input blob is null or length < 1");
         }
 
@@ -423,7 +424,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
         validateEncodeVersion(cipherString, encodeVersionLength);
 
         final String encryptedData = cipherString.substring(1 + encodeVersionLength);
-        return Base64.decodeURLUnsafeToByteArray(encryptedData);
+        return Base64.decode(encryptedData, Base64.DEFAULT);
     }
 
     /**

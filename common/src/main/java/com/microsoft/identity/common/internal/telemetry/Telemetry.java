@@ -33,6 +33,7 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.List;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -40,6 +41,7 @@ import lombok.NonNull;
  *
  * This is now acting as an adapter for {@link com.microsoft.identity.common.java.telemetry.Telemetry}.
  **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class Telemetry extends com.microsoft.identity.common.java.telemetry.Telemetry {
     private final static String TAG = Telemetry.class.getSimpleName();
 

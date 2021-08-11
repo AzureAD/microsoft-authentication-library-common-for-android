@@ -22,19 +22,14 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.ActivityInfo;
-import android.content.pm.PackageManager;
-
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.List;
 
@@ -43,16 +38,12 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class InteractiveTokenCommand extends TokenCommand {
     private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
-    //Normally all tasks have an affinity unless configured explicitly for multi-window support to not have one
-    private boolean mHasTaskAffinity = true;
-    private int mTaskId = 0;
 
     public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
                                    @NonNull final BaseController controller,
                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
                                    @NonNull final String publicApiId) {
         super(parameters, controller, callback, publicApiId);
-        checkAndRecordTaskInformation(parameters);
     }
 
     public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
@@ -60,36 +51,7 @@ public class InteractiveTokenCommand extends TokenCommand {
                                    @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
                                    @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
-        checkAndRecordTaskInformation(parameters);
     }
-
-    private void checkAndRecordTaskInformation(@NonNull final InteractiveTokenCommandParameters parameters){
-        final String methodName = ":checkAndRecordTaskInformation";
-        final Context applicationContext = parameters.getAndroidApplicationContext();
-        final PackageManager packageManager = applicationContext.getPackageManager();
-        try {
-            final ComponentName componentName = parameters.getActivity().getComponentName();
-            final ActivityInfo startActivityInfo = componentName != null ? packageManager.getActivityInfo(componentName, 0) : null;
-            if (startActivityInfo == null || startActivityInfo.taskAffinity == null){
-                mHasTaskAffinity = false;
-                mTaskId = parameters.getActivity().getTaskId();
-            }
-        } catch (final PackageManager.NameNotFoundException e) {
-            Logger.warn(
-                    TAG + methodName,
-                    "Unable to get ActivityInfo for activity provided to start authorization."
-            );
-        }
-    }
-
-    public boolean getHasTaskAffinity(){
-        return mHasTaskAffinity;
-    }
-
-    public int getTaskId(){
-        return mTaskId;
-    }
-
 
     @Override
     public AcquireTokenResult execute() throws Exception {
@@ -110,8 +72,10 @@ public class InteractiveTokenCommand extends TokenCommand {
     }
 
     @Override
-    public void notify(int requestCode, int resultCode, final Intent data) {
-        getDefaultController().completeAcquireToken(requestCode, resultCode, data);
+    public void onFinishAuthorizationSession(int requestCode,
+                                             int resultCode,
+                                             @NonNull final PropertyBag data) {
+        getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
     }
 
     @Override

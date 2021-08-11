@@ -99,7 +99,7 @@ public class CustomTabsManager {
      * Method to bind Browser {@link androidx.browser.customtabs.CustomTabsService}.
      * Waits until the {@link CustomTabsServiceConnection} is connected.
      */
-    public synchronized boolean bind(final @NonNull Context context, @NonNull String browserPackage) {
+    public synchronized boolean bind(final @Nullable Context context, @NonNull String browserPackage) {
         // Initiate the service-bind action
         if (context == null
                 || !CustomTabsClient.bindCustomTabsService(context, browserPackage, mCustomTabsServiceConnection)) {
@@ -160,8 +160,9 @@ public class CustomTabsManager {
      * Method to unbind custom tabs service {@link androidx.browser.customtabs.CustomTabsService}.
      */
     public synchronized void unbind() {
-        if (mContextRef.get() != null && mCustomTabsServiceIsBound) {
-            mContextRef.get().unbindService(mCustomTabsServiceConnection);
+        final Context context = mContextRef.get();
+        if (context != null && mCustomTabsServiceIsBound) {
+            context.unbindService(mCustomTabsServiceConnection);
         }
 
         mCustomTabsServiceIsBound = false;
