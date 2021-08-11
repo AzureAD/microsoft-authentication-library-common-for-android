@@ -2,6 +2,7 @@ Version 3.6.0
 ----------
 - [PATCH] Allow retry generation of Device PoP key without attempting attestation cert gen (#1456, #1507)
 - [MAJOR/MINOR (Rebrand)] Please note! This is technically an API breaking change that we have elected to voluntarily ship as "MINOR" due to lack of usage. Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489, #1508)
+- [MINOR] Increase visibility of internal SSOStateSerializer for OneAuth usage (integration steps available at aka.ms/AAd2vt8) (#1448, #1509)
 
 Version 3.5.0
 ----------
