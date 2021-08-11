@@ -1,5 +1,6 @@
 Version 3.6.0
 ----------
+[MINOR] Increase visibility of internal SSOStateSerializer for OneAuth usage (integration steps available at aka.ms/AAd2vt8) (#1448, #1509)
 
 Version 3.5.0
 ----------

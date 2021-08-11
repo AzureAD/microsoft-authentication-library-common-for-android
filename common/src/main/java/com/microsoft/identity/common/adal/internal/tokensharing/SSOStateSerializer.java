@@ -41,7 +41,7 @@ import java.util.List;
  * deserialization details. It provides a serializer to serialize the
  * TokenCacheItem and a deserializer to return the TokenCacheItem.
  */
-final class SSOStateSerializer {
+public final class SSOStateSerializer {
     /**
      * The version number of {@link SSOStateSerializer }.
      */
@@ -146,7 +146,7 @@ final class SSOStateSerializer {
      * @param item ADALTokenCacheItem to convert to serialized json
      * @return String
      */
-    static String serialize(final ADALTokenCacheItem item) {
+    public static String serialize(final ADALTokenCacheItem item) {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer(item);
         return ssoStateSerializer.internalSerialize();
     }
@@ -161,7 +161,7 @@ final class SSOStateSerializer {
      * @return ADALTokenCacheItem
      * @throws ClientException
      */
-    static ADALTokenCacheItem deserialize(final String serializedBlob) throws ClientException {
+    public static ADALTokenCacheItem deserialize(final String serializedBlob) throws ClientException {
         SSOStateSerializer ssoStateSerializer = new SSOStateSerializer();
         return ssoStateSerializer.internalDeserialize(serializedBlob);
     }
