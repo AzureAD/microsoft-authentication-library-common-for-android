@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
@@ -39,6 +40,7 @@ public class AzureActiveDirectoryAccessToken extends AccessToken {
      *
      * @param response AzureActiveDirectoryTokenResponse
      */
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public AzureActiveDirectoryAccessToken(
             @NonNull final AzureActiveDirectoryTokenResponse response) {
         super(response);

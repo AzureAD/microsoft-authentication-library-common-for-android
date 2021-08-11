@@ -30,6 +30,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.fragment.app.FragmentActivity;
 
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
@@ -45,6 +46,8 @@ import java.util.Map;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Authorization fragment with customTabs or browsers.
@@ -105,10 +108,14 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         return intent;
     }
 
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sCallingActivityClass = this.getActivity().getClass();
+        final FragmentActivity activity = this.getActivity();
+        if (activity != null) {
+            sCallingActivityClass = activity.getClass();
+        }
     }
 
     @Override
@@ -125,6 +132,7 @@ public class BrowserAuthorizationFragment extends AuthorizationFragment {
         mBrowserFlowStarted = state.getBoolean(BROWSER_FLOW_STARTED, false);
     }
 
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @Override
     public void onResume() {
         super.onResume();

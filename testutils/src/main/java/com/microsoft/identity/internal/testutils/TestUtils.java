@@ -30,7 +30,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.google.gson.Gson;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 

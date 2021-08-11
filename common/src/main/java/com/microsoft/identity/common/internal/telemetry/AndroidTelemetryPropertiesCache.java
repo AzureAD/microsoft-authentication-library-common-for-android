@@ -27,6 +27,7 @@ import android.content.Context;
 import com.microsoft.identity.common.SharedPreferenceStringStorage;
 import com.microsoft.identity.common.java.telemetry.TelemetryPropertiesCache;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -37,6 +38,7 @@ public class AndroidTelemetryPropertiesCache extends TelemetryPropertiesCache {
 
     private static final String SHARED_PREFS_NAME = "com.microsoft.common.telemetry-properties";
 
+    @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
     public AndroidTelemetryPropertiesCache(@NonNull final Context context) {
         super(new SharedPreferenceStringStorage(context, SHARED_PREFS_NAME));
     }

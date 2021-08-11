@@ -31,11 +31,13 @@ import androidx.test.InstrumentationRegistry;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -59,6 +61,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
 
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.JWK;
 import static com.microsoft.identity.common.java.crypto.IDevicePopManager.PublicKeyFormat.X_509_SubjectPublicKeyInfo_ASN_1;
@@ -394,26 +397,23 @@ public class DevicePoPManagerTests {
         final String publicKey = mDevicePopManager.getPublicKey(JWK);
 
         // Convert it to JSON, parse to verify fields
-        final JsonElement jwkElement = new JsonParser().parse(publicKey);
-
-        // Convert to JsonObject to extract claims
-        final JsonObject jwkObj = jwkElement.getAsJsonObject();
+        final Map<String, String> jwkObj = new Gson().fromJson(publicKey, new TypeToken<Map<String, String>>(){}.getType());
 
         // We should expect the following claims...
         // 'kty' - Key Type - Identifies the cryptographic alg used with this key (ex: RSA, EC)
         // 'e' - Public Exponent - The exponent used on signed/encoded data to decode the orig value
         // 'n' - Modulus - The product of two prime numbers used to generate the key pair
-        final JsonElement kty = jwkObj.get("kty");
+        final String kty = jwkObj.get("kty");
         Assert.assertNotNull(kty);
-        Assert.assertFalse(kty.getAsString().isEmpty());
+        Assert.assertFalse(kty.isEmpty());
 
-        final JsonElement e = jwkObj.get("e");
+        final String e = jwkObj.get("e");
         Assert.assertNotNull(e);
-        Assert.assertFalse(e.getAsString().isEmpty());
+        Assert.assertFalse(e.isEmpty());
 
-        final JsonElement n = jwkObj.get("n");
+        final String n = jwkObj.get("n");
         Assert.assertNotNull(n);
-        Assert.assertFalse(n.getAsString().isEmpty());
+        Assert.assertFalse(n.isEmpty());
     }
 
     @Test

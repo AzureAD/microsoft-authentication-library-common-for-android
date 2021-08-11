@@ -81,7 +81,7 @@ public class Device {
 
             if (sDeviceMetadata != null) {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, sDeviceMetadata.getCpu());
-                platformParameters.put(PlatformIdParameters.OS, sDeviceMetadata.getOs());
+                platformParameters.put(PlatformIdParameters.OS, sDeviceMetadata.getOsForEsts());
                 platformParameters.put(PlatformIdParameters.DEVICE_MODEL, sDeviceMetadata.getDeviceModel());
             } else {
                 platformParameters.put(PlatformIdParameters.CPU_PLATFORM, NOT_SET);
@@ -142,17 +142,39 @@ public class Device {
     }
 
     /**
-     * Gets the OS of the current device.
+     * Get the OS of this device to be sent to eSTS.
+     *
+     * We have this because in Android, we're sending [SDK VERSION] (i.e. 24) to eSTS,
+     * not the [OS VERSION] (i.e. 7.0), and eSTS are using these [SDK VERSION] to gate features.
      *
      * @return The name/version of the device OS.
      */
     @NonNull
     @GuardedBy("sLock")
-    public static String getOs() {
+    public static String getOsForEsts() {
         sLock.readLock().lock();
         try {
             if (sDeviceMetadata != null) {
-                return sDeviceMetadata.getOs();
+                return sDeviceMetadata.getOsForEsts();
+            }
+            return NOT_SET;
+        } finally {
+            sLock.readLock().unlock();
+        }
+    }
+
+    /**
+     * Get the OS of this device to be sent to DRS.
+     *
+     * @return a String representing the OS information
+     */
+    @NonNull
+    @GuardedBy("sLock")
+    public static String getOsForDrs() {
+        sLock.readLock().lock();
+        try {
+            if (sDeviceMetadata != null) {
+                return sDeviceMetadata.getOsForDrs();
             }
             return NOT_SET;
         } finally {

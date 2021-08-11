@@ -42,6 +42,7 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 
 import cz.msebera.android.httpclient.extras.Base64;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * JWS response builder for certificate challenge response.
@@ -64,6 +65,7 @@ public class JWSBuilder {
     /**
      * Payload for JWS.
      */
+    @SuppressFBWarnings({"URF_UNREAD_FIELD"})
     static final class Claims {
         @SerializedName("aud")
         private String mAudience;
@@ -85,6 +87,7 @@ public class JWSBuilder {
     /**
      * Header that includes algorithm, type, thumbprint, keys, and keyid.
      */
+    @SuppressFBWarnings({"URF_UNREAD_FIELD"})
     static final class JwsHeader {
         @SerializedName("alg")
         private String mAlgorithm;

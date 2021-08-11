@@ -28,7 +28,8 @@ public class MockDeviceMetadata extends AbstractDeviceMetadata {
 
     public static final String TEST_DEVICE_TYPE = "TestDeviceType";
     public static final String TEST_CPU = "TestCPU";
-    public static final String TEST_OS = "TestOS";
+    public static final String TEST_OS_ESTS = "TestOSEsts";
+    public static final String TEST_OS_DRS = "TestOSDrs";
     public static final String TEST_DEVICE_MODEL = "TestDeviceModel";
     public static final String TEST_MANUFACTURER = "TestManufacturer";
 
@@ -43,8 +44,13 @@ public class MockDeviceMetadata extends AbstractDeviceMetadata {
     }
 
     @Override
-    public @NonNull String getOs() {
-        return TEST_OS;
+    public @NonNull String getOsForEsts() {
+        return TEST_OS_ESTS;
+    }
+
+    @Override
+    public @NonNull String getOsForDrs() {
+        return TEST_OS_DRS;
     }
 
     @Override

@@ -415,7 +415,7 @@ public abstract class StorageEncryptionManager implements IKeyAccessor {
     @NonNull
     private static byte[] stripEncodeVersionFromCipherText(@NonNull final byte[] cipherText)
             throws ClientException {
-        if (cipherText == null || cipherText.length < 1) {
+        if (cipherText.length < 1) {
             throw new IllegalArgumentException("Input blob is null or length < 1");
         }
 

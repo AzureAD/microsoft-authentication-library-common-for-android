@@ -28,6 +28,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
+import com.microsoft.identity.common.java.cache.ISimpleCache;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.lang.reflect.Type;

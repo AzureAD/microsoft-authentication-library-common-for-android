@@ -25,11 +25,14 @@ package com.microsoft.identity.common.internal.logging;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Deprecated.
  *
  * This is now acting as an adapter for {@link com.microsoft.identity.common.java.logging.Logger}.
  **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class Logger extends com.microsoft.identity.common.logging.Logger {
 
     private static final String TAG = Logger.class.getSimpleName();
@@ -196,8 +199,10 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
      *
      * @param logLevel The {@link LogLevel} to be enabled for the diagnostic logging.
      */
+    @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
+            " the implementation is separate.")
     public void setLogLevel(final LogLevel logLevel) {
-        logDeprecationWarning();
+        logDeprecationWarningNonStatic();
         mInstanceDelegate.setLogLevel(adapt(logLevel));
     }
 
@@ -206,8 +211,10 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         return INSTANCE;
     }
 
+    @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
+            " the implementation is separate.")
     public void setExternalLogger(final ILoggerCallback externalLogger) {
-        logDeprecationWarning();
+        logDeprecationWarningNonStatic();
         mInstanceDelegate.setExternalLogger(new com.microsoft.identity.common.logging.ILoggerCallback() {
             @Override
             public void log(final String tag,
@@ -246,6 +253,14 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
                 return com.microsoft.identity.common.logging.Logger.LogLevel.VERBOSE;
             default:
                 throw new RuntimeException("Unknown or invalid log level");
+        }
+    }
+
+    private void logDeprecationWarningNonStatic() {
+        if (sLogDeprecationWarning) {
+            sLogDeprecationWarning = false;
+            com.microsoft.identity.common.logging.Logger.warn(TAG, "This class is deprecated. "
+                    + "Migrate usage to: com.microsoft.identity.common.logging.Logger");
         }
     }
 

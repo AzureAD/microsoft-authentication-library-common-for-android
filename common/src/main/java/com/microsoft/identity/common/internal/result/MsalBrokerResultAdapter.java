@@ -226,7 +226,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             try {
                 byte[] compressedBytes = compressString(brokerResultString);
                 Logger.info(TAG, "Broker Result, raw payload size:"
-                        + brokerResultString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+                        + brokerResultString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
                 );
                 resultBundle.putByteArray(
                         BROKER_RESULT_V2_COMPRESSED,
@@ -581,7 +581,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             try {
                 byte[] bytes = GzipUtil.compressString(jsonString);
                 Logger.info(TAG, "Get accounts, raw payload size :"
-                        + jsonString.getBytes().length + " compressed size " + bytes.length
+                        + jsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " compressed size " + bytes.length
                 );
                 resultBundle.putByteArray(BROKER_ACCOUNTS_COMPRESSED, bytes);
             } catch (IOException e) {

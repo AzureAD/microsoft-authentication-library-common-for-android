@@ -28,14 +28,13 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 import org.robolectric.ParameterizedRobolectricTestRunner;
 
 import java.util.Arrays;

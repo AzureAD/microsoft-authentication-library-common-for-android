@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.telemetry.events;
+package com.microsoft.identity.common.java.telemetry.events;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //

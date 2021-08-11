@@ -20,22 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.java.cache;
 
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
-import com.microsoft.identity.common.java.cache.CacheRecord;
-import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
@@ -52,12 +43,12 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.telemetry.events.CacheEndEvent;
-import com.microsoft.identity.common.internal.telemetry.events.CacheStartEvent;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
+import com.microsoft.identity.common.java.telemetry.events.CacheStartEvent;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,15 +60,14 @@ import java.util.Set;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.ACCOUNT_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.java.exception.ErrorStrings.CREDENTIAL_IS_SCHEMA_NONCOMPLIANT;
 import static com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal.SCHEME_BEARER;
-import static com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
-import static com.microsoft.identity.common.internal.controllers.BaseController.DEFAULT_SCOPES;
+import static com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES;
 import static com.microsoft.identity.common.java.dto.CredentialType.ID_TOKEN_TYPES;
 import static com.microsoft.identity.common.java.dto.CredentialType.IdToken;
 import static com.microsoft.identity.common.java.dto.CredentialType.RefreshToken;
 import static com.microsoft.identity.common.java.dto.CredentialType.V1IdToken;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 // Suppressing rawtype warnings due to the generic type OAuth2Strategy and AuthorizationRequest
 @SuppressWarnings({"PMD.AvoidDuplicateLiterals", WarningType.rawtype_warning})
@@ -127,24 +117,6 @@ public class MsalOAuth2TokenCache
      * <p>
      * NOTE: Currently this is configured for AAD v2 as the only IDP
      *
-     * @param context The Application Context
-     * @return An instance of the MsalOAuth2TokenCache.
-     */
-    @Deprecated
-    public static MsalOAuth2TokenCache<
-            MicrosoftStsOAuth2Strategy,
-            MicrosoftStsAuthorizationRequest,
-            MicrosoftStsTokenResponse,
-            MicrosoftAccount,
-            MicrosoftRefreshToken> create(@NonNull final Context context) {
-        return create(AndroidPlatformComponents.createFromContext(context));
-    }
-
-    /**
-     * Factory method for creating an instance of MsalOAuth2TokenCache
-     * <p>
-     * NOTE: Currently this is configured for AAD v2 as the only IDP
-     *
      * @param components The platform components
      * @return An instance of the MsalOAuth2TokenCache.
      */
@@ -165,7 +137,7 @@ public class MsalOAuth2TokenCache
         final ICacheKeyValueDelegate cacheKeyValueDelegate = new CacheKeyValueDelegate();
         final INameValueStorage<String> sharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
-                        DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
+                        SharedPreferencesAccountCredentialCache.DEFAULT_ACCOUNT_CREDENTIAL_SHARED_PREFERENCES,
                         components.getStorageEncryptionManager(),
                         String.class
                 );
@@ -420,7 +392,7 @@ public class MsalOAuth2TokenCache
                                               @NonNull final RefreshTokenRecord deletionExemptRefreshToken) {
         // Delete all of the refresh tokens associated with this account, except for the provided one
         final String methodName = ":removeAllRefreshTokensExcept";
-        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+        final boolean isFamilyRefreshToken = !StringUtil.isNullOrEmpty(
                 deletionExemptRefreshToken.getFamilyId()
         );
 
@@ -545,7 +517,7 @@ public class MsalOAuth2TokenCache
                 acct
         );
 
-        if (acctIdTokens.size() > ID_TOKEN_TYPES.length) {
+        if (acctIdTokens.size() > ID_TOKEN_TYPES.size()) {
             // We shouldn't have more idtokens than types of idtokens... 1 each
             Logger.warn(
                     TAG + methodName,
@@ -570,7 +542,7 @@ public class MsalOAuth2TokenCache
     void removeRefreshTokenIfNeeded(@NonNull final AccountRecord accountRecord,
                                     @NonNull final RefreshTokenRecord refreshTokenRecord) {
         final String methodName = ":removeRefreshTokenIfNeeded";
-        final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+        final boolean isFamilyRefreshToken = !StringUtil.isNullOrEmpty(
                 refreshTokenRecord.getFamilyId()
         );
 
@@ -849,7 +821,7 @@ public class MsalOAuth2TokenCache
                 if (rt instanceof RefreshTokenRecord) {
                     final RefreshTokenRecord refreshTokenRecord = (RefreshTokenRecord) rt;
 
-                    final boolean isFamilyRefreshToken = !StringExtensions.isNullOrBlank(
+                    final boolean isFamilyRefreshToken = !StringUtil.isNullOrEmpty(
                             refreshTokenRecord.getFamilyId()
                     );
 
@@ -1462,7 +1434,7 @@ public class MsalOAuth2TokenCache
                         isRealmAgnostic
                 );
 
-                com.microsoft.identity.common.internal.logging.Logger.info(
+                Logger.info(
                         TAG + methodName,
                         "Removed "
                                 + deletedCredentialsOfTypeCount
@@ -1471,7 +1443,7 @@ public class MsalOAuth2TokenCache
                 );
             }
         } else {
-            com.microsoft.identity.common.internal.logging.Logger.warn(
+            Logger.warn(
                     TAG + methodName,
                     "removeAccount called, but no CredentialTypes to remove specified"
             );
@@ -1568,7 +1540,7 @@ public class MsalOAuth2TokenCache
      * @return The number of Credentials removed.
      */
     private int removeCredentialsOfTypeForAccount(
-            @NonNull final String environment, // 'authority host'
+            @Nullable final String environment, // 'authority host'
             @Nullable final String clientId,
             @NonNull final CredentialType credentialType,
             @NonNull final AccountRecord targetAccount,
@@ -1717,8 +1689,8 @@ public class MsalOAuth2TokenCache
 
         if (omitDefaultScopes) {
             // Remove the default scopes (if present), do not consider them in lookup criteria
-            token1Scopes.removeAll(DEFAULT_SCOPES);
-            token2Scopes.removeAll(DEFAULT_SCOPES);
+            token1Scopes.removeAll(AuthenticationConstants.DEFAULT_SCOPES);
+            token2Scopes.removeAll(AuthenticationConstants.DEFAULT_SCOPES);
         }
 
         boolean result = false;
@@ -1741,7 +1713,7 @@ public class MsalOAuth2TokenCache
         final Set<String> scopeSet = new HashSet<>();
         final String scopeString = token.getTarget();
 
-        if (!StringExtensions.isNullOrBlank(scopeString)) {
+        if (!StringUtil.isNullOrEmpty(scopeString)) {
             final String[] scopeArray = scopeString.split("\\s+");
             scopeSet.addAll(Arrays.asList(scopeArray));
         }
@@ -1754,7 +1726,7 @@ public class MsalOAuth2TokenCache
 
         boolean isCompliant = true;
         for (final String[] param : params) {
-            isCompliant = isCompliant && !StringExtensions.isNullOrBlank(param[1]);
+            isCompliant = isCompliant && !StringUtil.isNullOrEmpty(param[1]);
         }
 
         if (!isCompliant) {
@@ -1766,7 +1738,7 @@ public class MsalOAuth2TokenCache
             for (final String[] param : params) {
                 Logger.warn(
                         TAG + ":" + methodName,
-                        param[0] + " is null? [" + StringExtensions.isNullOrBlank(param[1]) + "]"
+                        param[0] + " is null? [" + StringUtil.isNullOrEmpty(param[1]) + "]"
                 );
             }
         }

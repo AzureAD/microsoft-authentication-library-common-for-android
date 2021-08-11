@@ -20,27 +20,22 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
+package com.microsoft.identity.common.adal.internal.cache;
 
-import android.app.Application;
-import android.content.Context;
+
 import android.net.Uri;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.aad.adal.DateTimeAdapter;
+import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.adal.internal.cache.CacheKey;
-import com.microsoft.identity.common.adal.internal.cache.DateTimeAdapter;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
+import com.microsoft.identity.common.java.adal.cache.CacheKey;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.AccountRecord;
@@ -48,6 +43,7 @@ import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
@@ -58,15 +54,15 @@ import com.microsoft.identity.common.java.providers.microsoft.azureactivedirecto
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * Class responsible for saving oAuth2 Tokens for use in future requests.  Ideally this class would
@@ -78,8 +74,6 @@ public class ADALOAuth2TokenCache
         extends OAuth2TokenCache<AzureActiveDirectoryOAuth2Strategy, AzureActiveDirectoryAuthorizationRequest, AzureActiveDirectoryTokenResponse>
         implements IShareSingleSignOnState {
     private INameValueStorage<String> mISharedPreferencesFileManager;
-
-    static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
 
     private static final String TAG = ADALOAuth2TokenCache.class.getSimpleName();
     private static final String SHARED_PREFERENCES_FILENAME = "com.microsoft.aad.adal.cache";
@@ -93,10 +87,10 @@ public class ADALOAuth2TokenCache
     /**
      * Constructor of ADALOAuth2TokenCache.
      *
-     * @param context Context
+     * @param components Context
      */
-    public ADALOAuth2TokenCache(final Context context) {
-        super(AndroidPlatformComponents.createFromContext(context));
+    public ADALOAuth2TokenCache(final IPlatformComponents components) {
+        super(components);
         Logger.verbose(TAG, "Init: " + TAG);
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
@@ -109,11 +103,11 @@ public class ADALOAuth2TokenCache
      * @param context         Context
      * @param sharedSSOCaches List<IShareSingleSignOnState>
      */
-    public ADALOAuth2TokenCache(final Context context,
+    public ADALOAuth2TokenCache(final IPlatformComponents context,
                                 final List<IShareSingleSignOnState<MicrosoftAccount, MicrosoftRefreshToken>> sharedSSOCaches) {
-        super(AndroidPlatformComponents.createFromContext(context));
+        super(context);
         Logger.verbose(TAG, "Init: " + TAG);
-        Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
+        //Logger.info(TAG, "Context is an Application? [" + (context instanceof Application) + "]");
         validateSecretKeySetting();
         initializeSharedPreferencesFileManager(ADALOAuth2TokenCache.SHARED_PREFERENCES_FILENAME);
         mSharedSSOCaches = sharedSSOCaches;
@@ -373,7 +367,7 @@ public class ADALOAuth2TokenCache
             setItem(CacheKey.createCacheKeyForMRRT(issuer, clientId, userId), ADALTokenCacheItem.getAsMRRTTokenCacheItem(cacheItem));
         }
 
-        if (!StringExtensions.isNullOrBlank(cacheItem.getFamilyClientId())) {
+        if (!StringUtil.isNullOrEmpty(cacheItem.getFamilyClientId())) {
             Logger.info(TAG + ":" + methodName, "CacheItem is an FRT.");
             setItem(CacheKey.createCacheKeyForFRT(issuer, cacheItem.getFamilyClientId(), userId), ADALTokenCacheItem.getAsFRTTokenCacheItem(cacheItem));
         }
