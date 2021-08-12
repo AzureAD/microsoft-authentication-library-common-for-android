@@ -27,6 +27,7 @@ import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 
+import java.util.Date;
 import java.util.List;
 
 import lombok.NonNull;
