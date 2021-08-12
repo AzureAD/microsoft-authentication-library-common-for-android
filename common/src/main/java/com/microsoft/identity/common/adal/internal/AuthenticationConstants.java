@@ -26,6 +26,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.logging.Logger;
 import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.nio.charset.Charset;
 
@@ -1601,18 +1602,18 @@ public final class AuthenticationConstants {
         /**
          * Oauth2 error code invalid_grant.
          */
-        public static final String INVALID_GRANT = "invalid_grant";
+        public static final String INVALID_GRANT = ErrorStrings.OAuth2ErrorCode.INVALID_GRANT;
 
         /**
          * Oauth2 error code unauthorized_client.
          */
-        public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
+        public static final String UNAUTHORIZED_CLIENT = ErrorStrings.OAuth2ErrorCode.UNAUTHORIZED_CLIENT;
 
         /**
          * The refresh token used to redeem access token is invalid and auth code request is needed.
          * This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
          */
-        public static final String INTERACTION_REQUIRED = "interaction_required";
+        public static final String INTERACTION_REQUIRED = ErrorStrings.OAuth2ErrorCode.INTERACTION_REQUIRED;
     }
 
     /**
@@ -1625,7 +1626,7 @@ public final class AuthenticationConstants {
          * <p>
          * Suberror code when Intune App Protection Policy is required.
          */
-        public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
+        public static final String PROTECTION_POLICY_REQUIRED = ErrorStrings.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED;
 
         /**
          * Oauth2 suberror code for invalid_grant.
@@ -1633,7 +1634,7 @@ public final class AuthenticationConstants {
          * Suberror code when token is expired or invalid for all resources
          * and scopes and shouldn't be retried again as-is.
          */
-        public static final String BAD_TOKEN = "bad_token";
+        public static final String BAD_TOKEN = ErrorStrings.OAuth2SubErrorCode.BAD_TOKEN;
 
         /**
          * Oauth2 suberror code for invalid_grant.
@@ -1641,7 +1642,7 @@ public final class AuthenticationConstants {
          * Suberror code when failed to do device authentication during a token request.
          * Broker should make a request to DRS to get the current device status and act accordingly.
          */
-        public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
+        public static final String DEVICE_AUTHENTICATION_FAILED = ErrorStrings.OAuth2SubErrorCode.DEVICE_AUTHENTICATION_FAILED;
 
         /**
          * Oauth2 suberror code for invalid_grant.
@@ -1649,21 +1650,21 @@ public final class AuthenticationConstants {
          * SubError code for cases when client not in the Microsoft first party family group
          * redeems auth code or refresh token given to a client in the family.
          */
-        public static final String CLIENT_MISMATCH = "client_mismatch";
+        public static final String CLIENT_MISMATCH = ErrorStrings.OAuth2SubErrorCode.CLIENT_MISMATCH;
 
         /**
          * Oauth2 suberror code for invalid_grant.
          * <p>
          * Conditional access suberror code when a policy enforces token lifetime.
          */
-        public static final String TOKEN_EXPIRED = "token_expired";
+        public static final String TOKEN_EXPIRED = ErrorStrings.OAuth2SubErrorCode.TOKEN_EXPIRED;
 
         /**
          * Oauth2 suberror code for invalid_grant.
          * <p>
          * Conditional access suberror code which indicates a simple action is required by the end user, like MFA.
          */
-        public static final String BASIC_ACTION = "basic_action";
+        public static final String BASIC_ACTION = ErrorStrings.OAuth2SubErrorCode.BASIC_ACTION;
 
         /**
          * Oauth2 suberror code for invalid_grant.
@@ -1672,7 +1673,7 @@ public final class AuthenticationConstants {
          * required that is in the user control, but is outside of the sign in session.
          * For example, enroll in MDM or register install an app that uses Intune app protection.
          */
-        public static final String ADDITIONAL_ACTION = "additional_action";
+        public static final String ADDITIONAL_ACTION = ErrorStrings.OAuth2SubErrorCode.ADDITIONAL_ACTION;
 
         /**
          * Oauth2 suberror code for invalid_grant.
@@ -1681,21 +1682,21 @@ public final class AuthenticationConstants {
          * message with no immediate remediation steps.
          * For example access was blocked due to location or the device is not domain joined.
          */
-        public static final String MESSAGE_ONLY = "message_only";
+        public static final String MESSAGE_ONLY = ErrorStrings.OAuth2SubErrorCode.MESSAGE_ONLY;
 
         /**
          * Oauth2 suberror code for invalid_grant.
          * <p>
          * OpenId connect suberror code, where user consent is required.
          */
-        public static final String CONSENT_REQUIRED = "consent_required";
+        public static final String CONSENT_REQUIRED = ErrorStrings.OAuth2SubErrorCode.CONSENT_REQUIRED;
 
         /**
          * Oauth2 suberror code for invalid_grant.
          * <p>
          * Custom sub error that notifies the user that their password has expired.
          */
-        public static final String USER_PASSWORD_EXPIRED = "user_password_expired";
+        public static final String USER_PASSWORD_EXPIRED = ErrorStrings.OAuth2SubErrorCode.USER_PASSWORD_EXPIRED;
     }
 
     /**
