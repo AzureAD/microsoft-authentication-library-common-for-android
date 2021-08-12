@@ -35,6 +35,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * String utilities.
  */
@@ -191,50 +193,15 @@ public final class StringUtil {
     }
 
     /**
-     * Util method to check if a string is a UUID or not
-     *
-     * @param inputString : inputString
-     * @return true if the inputString is a UUID else false;
-     */
-    public static boolean isUuid(@NonNull final String inputString) {
-        try {
-            UUID.fromString(inputString);
-            return true;
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    /**
      * Utility to null-safe-compare string in a case-insensitive manner.
      *
      * @param one The first string to compare.
      * @param two The second string to compare.
      */
+    @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
+                        justification = "This is actually a reference comparison")
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
         return one == two || (one != null && one.equalsIgnoreCase(two));
     }
 
-    /**
-     * Utility to null-safe-compare strings in a case-insensitive manner, trimming the second input.
-     *
-     * @param one The first string to compare.
-     * @param two The second string to compare.
-     * @return true if the inputs are equal, false otherwise.
-     */
-    public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
-        return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
-    }
-
-    /**
-     * Utility to null-safe-compare strings in a case-insensitive manner, trimming both inputs.
-     *
-     * @param one The first string to compare.
-     * @param two The second string to compare.
-     * @return true if the inputs are equal, false otherwise.
-     */
-    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
-                                                   @Nullable final String two) {
-        return equalsIgnoreCaseTrim(null != one ? one.trim() : one, two);
-    }
 }

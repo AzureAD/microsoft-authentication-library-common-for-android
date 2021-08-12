@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.microsoft.identity.common.java.TestUtils;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
@@ -32,7 +33,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -44,8 +44,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequestTest.MOCK_PKCE_CHALLENGE;
-import static com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequestTests.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
 import static org.junit.Assert.assertTrue;
 
 public class MicrosoftStsAuthorizationRequestTests {
@@ -102,7 +102,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, URISyntaxException {
+    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, URISyntaxException, ClientException {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
@@ -134,7 +134,7 @@ public class MicrosoftStsAuthorizationRequestTests {
                         "&client-request-id=" + DEFAULT_TEST_CORRELATION_ID +
                         "&code_challenge=" + MOCK_PKCE_CHALLENGE.getCodeChallenge() +
                         "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS +
+                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&response_type=code" +
@@ -152,14 +152,14 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test(expected = IllegalStateException.class)
-    public void testGenerateUrlWithoutAuthority() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGenerateUrlWithoutAuthority() throws ClientException {
         final MicrosoftStsAuthorizationRequest requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder().build();
         requestWithLoginHint.getAuthorizationRequestAsHttpRequest();
     }
 
 
     @Test
-    public void testGetCodeRequestUrlWithLoginHint() throws URISyntaxException, UnsupportedEncodingException,  MalformedURLException {
+    public void testGetCodeRequestUrlWithLoginHint() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setLoginHint(DEFAULT_TEST_LOGIN_HINT)
@@ -171,7 +171,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestWithDuplicatedExtraQueryParametersLoginHint() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersLoginHint() throws MalformedURLException, ClientException {
         final int expectedCount = 1;
         final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl());
@@ -185,7 +185,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestWithDuplicatedExtraQueryParametersInstanceAware() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersInstanceAware() throws MalformedURLException, ClientException {
         final int expectedCount = 1;
         final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl());
@@ -202,7 +202,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestUrlWithForceLoginPrompt() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGetCodeRequestUrlWithForceLoginPrompt() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setPrompt(MicrosoftStsAuthorizationRequest.Prompt.FORCE_LOGIN)
@@ -213,7 +213,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestUrlWithSelectAccountPrompt() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGetCodeRequestUrlWithSelectAccountPrompt() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setPrompt(MicrosoftStsAuthorizationRequest.Prompt.SELECT_ACCOUNT)
@@ -224,7 +224,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestUrlWithExtraQP() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGetCodeRequestUrlWithExtraQP() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setPrompt(DEFAULT_TEST_PROMPT)
@@ -238,7 +238,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testGetCodeRequestUrlWithResponseType() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testGetCodeRequestUrlWithResponseType() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .build();
@@ -247,7 +247,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testRequestWithSliceParameter() throws MalformedURLException, URISyntaxException, UnsupportedEncodingException {
+    public void testRequestWithSliceParameter() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setSlice(DEFAULT_TEST_SLICE)
@@ -259,7 +259,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testRequestWithCpVersion() throws MalformedURLException, UnsupportedEncodingException, URISyntaxException {
+    public void testRequestWithCpVersion() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setInstalledCompanyPortalVersion(TEST_CP_VERSION)
@@ -270,7 +270,7 @@ public class MicrosoftStsAuthorizationRequestTests {
     }
 
     @Test
-    public void testSetFlightParameters() throws URISyntaxException, MalformedURLException {
+    public void testSetFlightParameters() throws MalformedURLException, ClientException {
         final MicrosoftStsAuthorizationRequest request = new MicrosoftStsAuthorizationRequest.Builder()
                 .setAuthority(getValidRequestUrl())
                 .setFlightParameters(DEFAULT_FLIGHT_PARAMETER)

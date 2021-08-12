@@ -25,15 +25,12 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.PerfConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
@@ -45,6 +42,10 @@ import com.microsoft.identity.common.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.NonNull;
 
 /**
  * Classes for executing IPC service operations.
@@ -72,7 +73,7 @@ public class BrokerOperationExecutor {
          * Gets a BrokerOperationBundle bundle to pass to each IpcStrategies.
          */
         @NonNull
-        BrokerOperationBundle getBundle();
+        BrokerOperationBundle getBundle() throws ClientException;
 
         /**
          * Extracts the result object from a bundle returned by an IpcStrategy.
@@ -164,20 +165,24 @@ public class BrokerOperationExecutor {
 
     private <T extends CommandParameters, U> void emitOperationStartEvent(@Nullable final T parameters,
                                                                           @NonNull final BrokerOperation<U> operation) {
-        if (operation.getTelemetryApiId() != null) {
+        final String telemetryApiId = operation.getTelemetryApiId();
+        if (!StringUtil.isNullOrEmpty(telemetryApiId)) {
             Telemetry.emit(
                     new ApiStartEvent()
                             .putProperties(parameters)
-                            .putApiId(operation.getTelemetryApiId())
+                            .putApiId(telemetryApiId)
             );
         }
     }
 
+    @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
     private <U> void emitOperationSuccessEvent(@NonNull final BrokerOperation<U> operation,
                                                final U result) {
-        if (operation.getTelemetryApiId() != null) {
-            final ApiEndEvent successEvent = new ApiEndEvent()
-                    .putApiId(operation.getTelemetryApiId())
+        final String telemetryApiId = operation.getTelemetryApiId();
+        if (telemetryApiId != null) {
+            final ApiEndEvent apiEndEvent = new ApiEndEvent();
+            final ApiEndEvent successEvent = apiEndEvent
+                    .putApiId(telemetryApiId)
                     .isApiCallSuccessful(Boolean.TRUE);
             operation.putValueInSuccessEvent(successEvent, result);
             Telemetry.emit(successEvent);

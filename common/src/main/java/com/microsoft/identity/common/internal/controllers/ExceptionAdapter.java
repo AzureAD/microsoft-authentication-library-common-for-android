@@ -39,7 +39,7 @@ import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.telemetry.CliTelemInfo;
-import com.microsoft.identity.common.internal.util.HeaderSerializationUtil;
+import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationErrorResponse;
@@ -80,7 +80,7 @@ public class ExceptionAdapter {
                                 return new DeviceRegistrationRequiredException(
                                         microsoftAuthorizationErrorResponse.getError(),
                                         microsoftAuthorizationErrorResponse.getErrorDescription(),
-                                        microsoftAuthorizationErrorResponse.getUserName()
+                                        microsoftAuthorizationErrorResponse.getUpnToWpj()
                                 );
                             }
                         }

@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import com.microsoft.identity.common.java.exception.ClientException;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,34 +38,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_CLAIMS;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_CLAIMS_ENCODED;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_CLIENT_ID;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_EXTRA_QUERY_PARAMS;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_HEADER_1;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_HEADER_2;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_QUERY_1;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_QUERY_2;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_REDIRECT_URI;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_REQUEST_HEADERS;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_RESPONSE_TYPE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_SCOPE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_SCOPE_ENCODED;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_VALUE_1;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_VALUE_2;
+
 @RunWith(JUnit4.class)
 public class AuthorizationRequestTests {
-
-    public static final String MOCK_CLIENT_ID = "MOCK_CLIENT_ID";
-    public static final String MOCK_CLAIMS = "{\"access_token\":{\"xms_cc\":{\"values\":[\"cp1\",\"llt\"]}}}";
-    public static final String MOCK_CLAIMS_ENCODED = "%7B%22access_token%22%3A%7B%22xms_cc%22%3A%7B%22values%22%3A%5B%22cp1%22%2C%22llt%22%5D%7D%7D%7D";
-    public static final String MOCK_RESPONSE_TYPE = "MOCK_RESPONSE_TYPE";
-    public static final String MOCK_REDIRECT_URI = "MOCK_REDIRECT_URI";
-    public static final String MOCK_STATE = "MOCK_STATE";
-    public static final String MOCK_SCOPE = "MOCK_SCOPE MOCK_SCOPE2";
-    public static final String MOCK_SCOPE_ENCODED = "MOCK_SCOPE+MOCK_SCOPE2";
-    public static final String MOCK_QUERY_1 = "MOCK_QUERY_1";
-    public static final String MOCK_QUERY_2 = "MOCK_QUERY_2";
-    public static final String MOCK_VALUE_1 = "MOCK_VALUE_1";
-    public static final String MOCK_VALUE_2 = "MOCK_VALUE_2";
-    public static final String MOCK_HEADER_1 = "MOCK_HEADER_1";
-    public static final String MOCK_HEADER_2 = "MOCK_HEADER_2";
-    public static final List<Map.Entry<String, String>> MOCK_EXTRA_QUERY_PARAMS = new ArrayList<Map.Entry<String, String>>(){{
-        add(new AbstractMap.SimpleEntry<>(MOCK_QUERY_1, MOCK_VALUE_1));
-        add(new AbstractMap.SimpleEntry<>(MOCK_QUERY_2, MOCK_VALUE_2));
-    }};
-    public static final HashMap<String, String> MOCK_REQUEST_HEADERS =  new HashMap<String, String>(){{
-        put(MOCK_HEADER_1, MOCK_VALUE_1);
-        put(MOCK_HEADER_2, MOCK_VALUE_2);
-    }};
-
     @Test
-    public void testCreateUriFromEmptyAuthorizationRequest() throws URISyntaxException, UnsupportedEncodingException, MalformedURLException {
+    public void testCreateUriFromEmptyAuthorizationRequest() throws ClientException {
         final MockAuthorizationRequest.Builder builder = new MockAuthorizationRequest.Builder();
         Assert.assertEquals(MockAuthorizationRequest.MOCK_AUTH_ENDPOINT + "?response_type=code",
                 builder.build().getAuthorizationRequestAsHttpRequest().toString());
@@ -72,7 +67,7 @@ public class AuthorizationRequestTests {
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws URISyntaxException {
+    public void testCreateUriFromAuthorizationRequest() throws ClientException {
         final MockAuthorizationRequest request = new MockAuthorizationRequest.Builder()
                 .setClientId(MOCK_CLIENT_ID)
                 .setClaims(MOCK_CLAIMS)

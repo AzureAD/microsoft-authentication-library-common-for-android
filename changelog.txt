@@ -2,6 +2,12 @@ V.Next
 ----------
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MAJOR] Migrate *TokenCache classes to common4j
+- [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
+- [MAJOR] Migrate Strategies and Parameters. (#1488)
+- [MAJOR] Migrate AccountManager's Account (#1483)
+- [MAJOR] Migrate Strategies part 1/2 (#1475)
+- [MINOR] Move predefined key loader to common4j from common (#1477)
 - [PATCH] Add method to check if two authorities belong to same cloud (#1471)
 - [MINOR] Adds new cache encryption key migration API for OneAuth (#1464)
 - [MAJOR] Migrate StorageHelper to common4j (#1450)
@@ -32,6 +38,16 @@ V.Next
 - [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
 - [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
 - [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
+- [MINOR] Move Account Manager User Data look-up constants from common, AADAuthenticator to common4j (#1486)
+- [MAJOR] Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489)
+- [MINOR] Implements a fix for sovereign cloud TSL scenarios (#1501)
+- [MINOR] Add a method to allow for the setting of Fragment initial state (#1506)
+- [PATCH] Clear asymmetric pop key on KeyPermanentlyInvalidatedException if occurs during signing (#1505)
+
+Version 3.5.0
+----------
+- [MINOR] Code changes for new OneAuth cache key migration API (#1464)
+- [PATCH] Correct the production of JSON JWKs by the popManager code (#1479)
 
 Version 3.4.5
 ----------

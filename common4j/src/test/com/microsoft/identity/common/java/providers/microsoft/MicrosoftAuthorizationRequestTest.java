@@ -22,10 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.platform.MockDeviceMetadata;
 import com.microsoft.identity.common.java.providers.oauth2.MockAuthorizationRequest;
-import com.microsoft.identity.common.java.providers.oauth2.PkceChallenge;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import org.junit.After;
@@ -34,13 +34,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.UUID;
 
-import static com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequestTests.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;
+import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
 
 @RunWith(JUnit4.class)
 public class MicrosoftAuthorizationRequestTest {
@@ -56,12 +55,11 @@ public class MicrosoftAuthorizationRequestTest {
     public static final boolean MOCK_MULTIPLE_CLOUD_AWARE = true;
     public static final UUID MOCK_CORRELATION_ID = UUID.randomUUID();
     public static final String MOCK_LOGIN_HINT = "MOCK_LOGIN_HINT";
-    public static final PkceChallenge MOCK_PKCE_CHALLENGE = PkceChallenge.newPkceChallenge();
 
     // Check that we're not sending anything unexpected to the server side
     // by comparing the resulted URL by-character.
     @Test
-    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, URISyntaxException {
+    public void testCreateUriFromAuthorizationRequest() throws MalformedURLException, ClientException {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder()
@@ -82,7 +80,7 @@ public class MicrosoftAuthorizationRequestTest {
                         "&code_challenge_method=" + MOCK_PKCE_CHALLENGE.getCodeChallengeMethod() +
                         "&x-client-Ver=" + MOCK_LIBRARY_VERSION +
                         "&x-client-SKU=" + MOCK_LIBRARY_NAME +
-                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS +
+                        "&x-client-OS=" + MockDeviceMetadata.TEST_OS_ESTS +
                         "&x-client-CPU=" + MockDeviceMetadata.TEST_CPU +
                         "&x-client-DM=" + MockDeviceMetadata.TEST_DEVICE_MODEL +
                         "&instance_aware=" + MOCK_MULTIPLE_CLOUD_AWARE +
@@ -113,7 +111,7 @@ public class MicrosoftAuthorizationRequestTest {
         Device.setDeviceMetadata(new MockDeviceMetadata());
 
         final MockMicrosoftAuthorizationRequest request = new MockMicrosoftAuthorizationRequest.Builder().build();
-        Assert.assertEquals(MockDeviceMetadata.TEST_OS, request.getDiagnosticOS());
+        Assert.assertEquals(MockDeviceMetadata.TEST_OS_ESTS, request.getDiagnosticOS());
         Assert.assertEquals(MockDeviceMetadata.TEST_CPU, request.getDiagnosticCPU());
         Assert.assertEquals(MockDeviceMetadata.TEST_DEVICE_MODEL, request.getDiagnosticDM());
     }

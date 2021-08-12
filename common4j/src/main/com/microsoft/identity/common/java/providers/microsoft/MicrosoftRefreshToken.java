@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
@@ -31,6 +32,7 @@ import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
+@SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE")
 public class MicrosoftRefreshToken extends RefreshToken {
 
     private ClientInfo mClientInfo;

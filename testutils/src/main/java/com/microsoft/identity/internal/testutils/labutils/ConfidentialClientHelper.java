@@ -24,13 +24,13 @@ package com.microsoft.identity.internal.testutils.labutils;
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authorities.AccountsInOneOrganization;
-import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.java.authorities.AccountsInOneOrganization;
+import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryAuthority;
 import com.microsoft.identity.common.java.providers.oauth2.AccessToken;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
@@ -91,9 +91,9 @@ abstract class ConfidentialClientHelper {
         final AzureActiveDirectoryAuthority authority = new AzureActiveDirectoryAuthority(aadAudience);
 
         try {
-            final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
+            final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder().build();
             OAuth2Strategy<AccessToken, BaseAccount, AuthorizationRequest, AuthorizationRequest.Builder,
-                    AuthorizationStrategy, OAuth2Configuration, OAuth2StrategyParameters,
+                    IAuthorizationStrategy, OAuth2Configuration, OAuth2StrategyParameters,
                     AuthorizationResponse, RefreshToken, TokenRequest, TokenResponse, TokenResult,
                     AuthorizationResult> strategy = authority.createOAuth2Strategy(strategyParameters);
             TokenResult tokenResult = strategy.requestToken(tokenRequest);

@@ -22,9 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.TerminalException;
@@ -32,29 +31,24 @@ import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.controllers.BaseController;
 import com.microsoft.identity.common.internal.controllers.CommandDispatcher;
 import com.microsoft.identity.common.internal.controllers.CommandResult;
-import com.microsoft.identity.common.internal.request.SdkType;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.internal.result.GenerateShrResult;
-import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
-import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.java.dto.AccessTokenRecord;
-import com.microsoft.identity.common.java.dto.AccountRecord;
-import com.microsoft.identity.common.java.dto.IdTokenRecord;
-import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 
 import org.junit.Assert;
@@ -946,6 +940,8 @@ public class CommandDispatcherTest {
 
         @Override
         public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
+            @Override
+            public void onFinishAuthorizationSession(int requestCode, int resultCode, @NonNull PropertyBag data) {
 
         }
 
@@ -997,7 +993,9 @@ public class CommandDispatcherTest {
     }
 
     private static CommandParameters getEmptyTestParams() {
-        return CommandParameters.builder().build();
+        return CommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .build();
     }
 
     private static SilentTokenCommandParameters getEmptySilentTokenParameters() {
