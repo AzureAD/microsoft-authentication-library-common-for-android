@@ -26,8 +26,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.DeviceRegistrationRequiredException;
@@ -158,7 +158,7 @@ public class ExceptionAdapter {
         // We simplify our logic because this layer is also used by MSAL.
 
         //Interaction required has been deprecated... hence suppressing warning.
-        return AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(oAuthError) ||
+        return com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(oAuthError) ||
                 AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(oAuthError);
 
     }

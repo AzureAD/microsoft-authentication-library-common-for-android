@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MAJOR] Migrate BaseController to common4j (#1515)
 - [MAJOR] Migrate *TokenCache classes to common4j
 - [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
 - [MAJOR] Migrate Strategies and Parameters. (#1488)
