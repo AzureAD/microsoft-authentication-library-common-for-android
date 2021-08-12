@@ -22,18 +22,21 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import android.content.Intent;
+
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.microsoft.identity.common.exception.TerminalException;
+import com.microsoft.identity.common.internal.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.cache.CacheRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.RefreshOnCommand;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -50,6 +53,11 @@ import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.dto.AccountRecord;
+import com.microsoft.identity.common.java.request.SdkType;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -920,7 +928,7 @@ public class CommandDispatcherTest {
         );
 
         final AcquireTokenResult tokenResult = new AcquireTokenResult();
-        tokenResult.setLocalAuthenticagit tionResult(localAuthenticationResult);
+        tokenResult.setLocalAuthenticationResult(localAuthenticationResult);
         return tokenResult;
     }
 
@@ -939,11 +947,7 @@ public class CommandDispatcherTest {
         }
 
         @Override
-        public void completeAcquireToken(int requestCode, int resultCode, Intent data) {
-            @Override
-            public void onFinishAuthorizationSession(int requestCode, int resultCode, @NonNull PropertyBag data) {
-
-        }
+        public void onFinishAuthorizationSession(int requestCode, int resultCode, @NonNull PropertyBag data) {}
 
         @Override
         public AcquireTokenResult acquireTokenSilent(SilentTokenCommandParameters parameters) throws Exception {
@@ -999,6 +1003,9 @@ public class CommandDispatcherTest {
     }
 
     private static SilentTokenCommandParameters getEmptySilentTokenParameters() {
-        return SilentTokenCommandParameters.builder().build();
+        return SilentTokenCommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .build();
     }
+
 }
