@@ -158,6 +158,21 @@ public class TelemetryTest {
         Telemetry.getInstance().flush();
     }
 
+
+    @Test
+    public void testTelemetryMap() {
+        List<Map<String,String>> telemetryData = Telemetry.getInstance().getMap();
+        final Map<String, String> map = telemetryData.get(0);
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.App.NAME));
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.App.BUILD));
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Device.MODEL));
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Device.NAME));
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Os.NAME));
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Os.VERSION));
+        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Device.TIMEZONE));
+    }
+
+
     @Test
     public void testITelemetryAggregatedObserver() {
         Telemetry.getInstance().addObserver(new ITelemetryAggregatedObserver() {

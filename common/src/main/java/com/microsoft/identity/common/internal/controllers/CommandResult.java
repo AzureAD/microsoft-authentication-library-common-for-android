@@ -44,7 +44,6 @@ public class CommandResult implements ICommandResult {
     private final Object mResult;
     private final String mCorrelationId;
 
-    @Nullable
     @Setter
     @Getter
     @Accessors(prefix = "m")

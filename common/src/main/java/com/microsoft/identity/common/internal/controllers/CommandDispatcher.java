@@ -258,7 +258,7 @@ public class CommandDispatcher {
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
-                        List<Map<String, String>> telemetryMap = Telemetry.getInstance().getFinalMap(correlationId);
+                        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(correlationId);
                         commandResult.setTelemetryMap(telemetryMap);
                         Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
