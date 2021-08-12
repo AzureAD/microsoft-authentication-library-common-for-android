@@ -298,7 +298,7 @@ public abstract class BaseController {
             ((IHasExtraParameters) tokenRequest).setExtraParameters(((IHasExtraParameters) parameters).getExtraParameters());
         }
 
-        logExposedFieldsOfObject(TAG + methodName, tokenRequest);
+        ResultUtil.logExposedFieldsOfObject(TAG + methodName, tokenRequest);
 
         // Suppressing unchecked warnings due to casting of type TokenRequest to GenericTokenRequest in argument of method call to requestToken
         @SuppressWarnings(WarningType.unchecked_warning) final TokenResult tokenResult = strategy.requestToken(tokenRequest);
@@ -506,10 +506,10 @@ public abstract class BaseController {
     }
 
     public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
-        //Extract strategy from parameters
-        final OAuth2StrategyParameters strategyParameters = new OAuth2StrategyParameters();
-        strategyParameters.setContext(parameters.getAndroidApplicationContext());
-        parameters.getAuthority().createOAuth2Strategy(strategyParameters);
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.getPlatformComponents())
+                .build();
+
         return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
     }
 
