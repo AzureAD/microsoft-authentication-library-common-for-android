@@ -48,6 +48,9 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -354,8 +357,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BaseException baseException;
 
         //INTERACTION_REQUIRED is marked as deprecated
-        if (AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
-                AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
+        if (com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
+                com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
@@ -365,8 +368,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     brokerResult.getErrorMessage()
             );
 
-        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
-                AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
+        } else if (com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
+                com.microsoft.identity.common.java.AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
 
             Logger.warn(

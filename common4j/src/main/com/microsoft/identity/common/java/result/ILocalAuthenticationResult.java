@@ -21,15 +21,15 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.result;
-
-import androidx.annotation.NonNull;
+package com.microsoft.identity.common.java.result;
 
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 
 import java.util.List;
+
+import lombok.NonNull;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the

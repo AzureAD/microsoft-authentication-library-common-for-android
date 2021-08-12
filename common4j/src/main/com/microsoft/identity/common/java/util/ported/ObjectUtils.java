@@ -20,28 +20,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands.parameters;
+package com.microsoft.identity.common.java.util.ported;
 
-import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.java.dto.IAccountRecord;
-import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+import edu.umd.cs.findbugs.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
+/**
+ * A set of utility classes for handling objects to avoid repetition of common patterns.  The idea here is that the barrier
+ * to entry to this class should be high, and the pattern should be in use in multiple locations.  Some
+ * of these may duplicate functionality present in the JVM in various iterations - once we get support
+ * for that we should remove them.
+ */
+public final class ObjectUtils {
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.experimental.SuperBuilder;
-
-@Getter
-@SuperBuilder(toBuilder = true)
-@EqualsAndHashCode(callSuper = true)
-public class RemoveAccountCommandParameters extends CommandParameters {
-
-    private IAccountRecord account;
-    private List<BrowserDescriptor> browserSafeList;
-
-    public List<BrowserDescriptor> getBrowserSafeList() {
-        return this.browserSafeList == null ? null : new ArrayList<>(this.browserSafeList);
+    //Private constructor to discourage instantiation.
+    private ObjectUtils() {
     }
+
+    /**
+     * This is a local implementation of Objects.equals.  It is a null-safe equals execution.
+     * This should be removed if we get to an API version that has Objects.equals.
+     *
+     * @param o1 the first object
+     * @param o2 the second object
+     * @return true if the objects are both null or if they are both non-null and o1.equals(o2).
+     */
+    public static boolean equals(@Nullable final Object o1, @Nullable final Object o2) {
+        return (o1 == o2) || (o1 != null && o1.equals(o2));
+    }
+
 }
