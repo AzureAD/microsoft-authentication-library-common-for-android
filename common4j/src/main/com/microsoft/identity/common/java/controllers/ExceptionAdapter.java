@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.controllers;
 
 import com.google.gson.JsonSyntaxException;
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.exception.BaseException;

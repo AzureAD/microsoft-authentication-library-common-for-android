@@ -153,7 +153,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
-    public @NonNull ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+    public @NonNull
+    ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
         throw new UnsupportedOperationException();
     }
 
@@ -299,8 +300,7 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
 
         //INTERACTION_REQUIRED is marked as deprecated
         if (OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(serviceException.getErrorCode())
-                || OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())
-        ) {
+                || OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())) {
 
             resultBundle.putString(
                     AuthenticationConstants.OAuth2.ERROR,

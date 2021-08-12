@@ -23,15 +23,13 @@
 
 package com.microsoft.identity.common.java.result;
 
-import lombok.NonNull;
-
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 
-import java.util.Date;
 import java.util.List;
 
+import lombok.NonNull;
 
 /**
  * Interface to wrap successful authentication result. When auth succeeds, token will be wrapped into the

@@ -22,14 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.result;
 
-
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.dto.AccessTokenRecord;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.request.ILocalAuthenticationCallback;
 import com.microsoft.identity.common.java.request.SdkType;
-import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.Date;
