@@ -71,8 +71,9 @@ import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowComm
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.request.MsalBrokerRequestAdapter;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.internal.result.MsalBrokerResultAdapter;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings;

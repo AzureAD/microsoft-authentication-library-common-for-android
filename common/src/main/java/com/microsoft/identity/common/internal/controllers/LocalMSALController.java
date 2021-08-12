@@ -27,14 +27,14 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;

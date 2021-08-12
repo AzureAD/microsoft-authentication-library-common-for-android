@@ -51,6 +51,7 @@ import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.GzipUtil;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
@@ -359,13 +360,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BaseException baseException;
 
         //INTERACTION_REQUIRED is marked as deprecated
-<<<<<<< HEAD
         if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
                 OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
-=======
-        if (com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
-                com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
->>>>>>> dev
                 ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
@@ -374,14 +370,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     errorCode,
                     brokerResult.getErrorMessage()
             );
-
-<<<<<<< HEAD
         } else if (OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
                 OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
-=======
-        } else if (com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
-                com.microsoft.identity.common.java.AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
->>>>>>> dev
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
 
             Logger.warn(

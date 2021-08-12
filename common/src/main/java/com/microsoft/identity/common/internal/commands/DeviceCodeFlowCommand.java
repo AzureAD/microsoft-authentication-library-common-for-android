@@ -26,12 +26,12 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResponse;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
