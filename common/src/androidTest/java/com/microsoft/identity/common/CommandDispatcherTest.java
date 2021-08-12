@@ -125,7 +125,7 @@ public class CommandDispatcherTest {
 
                 }, 3, tryLatch, executeMethodEntranceVerifierLatch,
                 renewAccessTokenCallCount, acquireTokenSilentCallCount,
-                controllerLatch, false) {
+                controllerLatch, true, false) {
             @Override
             public boolean isEligibleForCaching() {
                 return false;
@@ -156,11 +156,11 @@ public class CommandDispatcherTest {
         final CountDownLatch callbackLatch = new CountDownLatch(1);
         CountDownLatch tryLatch = new CountDownLatch(1);
         CountDownLatch executeMethodEntranceVerifierLatch = new CountDownLatch(1);
-        final AtomicInteger taskCompleteCount = new AtomicInteger(0);
 
         CountDownLatch controllerLatch = new CountDownLatch(1);
         final AtomicInteger renewAccessTokenCallCount = new AtomicInteger(0);
         final AtomicInteger acquireTokenSilentCallCount = new AtomicInteger(0);
+        final AtomicInteger taskCompleteCount = new AtomicInteger(0);
 
         final BaseCommand silentTokenCommand = new LatchedRefreshInTestCommand(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT,
                 getEmptySilentTokenParameters(),
@@ -185,7 +185,7 @@ public class CommandDispatcherTest {
                         Assert.fail();
                     }
 
-                }, 5, tryLatch, executeMethodEntranceVerifierLatch, renewAccessTokenCallCount, acquireTokenSilentCallCount, controllerLatch, false) {
+                }, 5, tryLatch, executeMethodEntranceVerifierLatch, renewAccessTokenCallCount, acquireTokenSilentCallCount, controllerLatch, false, false) {
             @Override
             public boolean isEligibleForCaching() {
                 return false;
@@ -200,6 +200,8 @@ public class CommandDispatcherTest {
         callbackLatch.await();
 
         Assert.assertEquals(TEST_ACQUIRE_TOKEN_REFRESH_UNEXPIRED_RESULT.getLocalAuthenticationResult(), silentReturningFuture.get().getResult());
+
+        Assert.assertTrue(silentReturningFuture.isDone());
         Assert.assertEquals(1, taskCompleteCount.get());
         Assert.assertEquals(1, acquireTokenSilentCallCount.get());
         Assert.assertEquals(0, renewAccessTokenCallCount.get());
@@ -244,7 +246,7 @@ public class CommandDispatcherTest {
 
                 }, 7, tryLatch,
                 executeMethodEntranceVerifierLatch,
-                renewAccessTokenCallCount, acquireTokenSilentCallCount, controllerLatch, true) {
+                renewAccessTokenCallCount, acquireTokenSilentCallCount, controllerLatch, true, true) {
             @Override
             public boolean isEligibleForCaching() {
                 return false;
@@ -811,6 +813,7 @@ public class CommandDispatcherTest {
                                            @NonNull final AtomicInteger renewAccessTokenCallCount,
                                            @NonNull final AtomicInteger acquireTokenSilentCallCount,
                                            @NonNull final CountDownLatch controllerLatch,
+                                           @NonNull final Boolean shouldRefresh,
                                            @NonNull final Boolean throwRenewAccessTokenError
         ) {
             super(parameters,
@@ -818,6 +821,7 @@ public class CommandDispatcherTest {
                                                         renewAccessTokenCallCount,
                                                         acquireTokenSilentCallCount,
                                                         controllerLatch,
+                                                        shouldRefresh,
                                                         throwRenewAccessTokenError),
                     callback,
                     "");
@@ -870,14 +874,18 @@ public class CommandDispatcherTest {
                                                              final AtomicInteger renewAccessTokenCallCount,
                                                              final AtomicInteger acquireTokenSilentCallCount,
                                                              final CountDownLatch controllerLatch,
+                                                             final Boolean shouldRefresh,
                                                              final Boolean throwRenewAccessTokenError) {
         return new TestBaseController() {
             @Override
             public AcquireTokenResult acquireTokenSilent(final SilentTokenCommandParameters parameters) {
                 controllerLatch.countDown();
                 acquireTokenSilentCallCount.getAndIncrement();
-                final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
-                CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
+                if(shouldRefresh){
+                    final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, "LocalMSALControllerMockPubId");
+                    CommandDispatcher.submitAndForgetReturningFuture(refreshOnCommand);
+                }
+
                 return expectedAcquireTokenResult;
             }
 
