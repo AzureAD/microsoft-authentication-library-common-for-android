@@ -22,26 +22,21 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
-import android.text.TextUtils;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
-import com.microsoft.identity.common.internal.migration.TokenCacheItemMigrationAdapter;
+import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
-import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
+import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.providers.oauth2.IResult;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
@@ -96,7 +91,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 
 import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
 import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
@@ -183,7 +180,7 @@ public abstract class BaseController {
             final InteractiveTokenCommandParameters interactiveTokenCommandParameters = (InteractiveTokenCommandParameters) parameters;
             // Set the multipleCloudAware and slice fields.
             if (builder instanceof MicrosoftAuthorizationRequest.Builder) {
-                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(TextUtils.join(" ", parameters.getScopes()));
+                ((MicrosoftStsAuthorizationRequest.Builder) builder).setTokenScope(StringUtil.join(" ", parameters.getScopes()));
                 if (interactiveTokenCommandParameters.getAuthority() instanceof AzureActiveDirectoryAuthority) {
                     final AzureActiveDirectoryAuthority requestAuthority = (AzureActiveDirectoryAuthority) interactiveTokenCommandParameters.getAuthority();
                     ((MicrosoftStsAuthorizationRequest.Builder) builder)
@@ -218,14 +215,14 @@ public abstract class BaseController {
             setBuilderProperties(builder, parameters, interactiveTokenCommandParameters, completeRequestHeaders);
 
             // We don't want to show the SELECT_ACCOUNT page if login_hint is set.
-            if (!StringExtensions.isNullOrBlank(interactiveTokenCommandParameters.getLoginHint()) &&
+            if (!StringUtil.isNullOrEmpty(interactiveTokenCommandParameters.getLoginHint()) &&
                     interactiveTokenCommandParameters.getPrompt() == OpenIdConnectPromptParameter.SELECT_ACCOUNT &&
                     builder instanceof MicrosoftStsAuthorizationRequest.Builder) {
                 ((MicrosoftStsAuthorizationRequest.Builder) builder).setPrompt(null);
             }
         }
 
-        builder.setScope(TextUtils.join(" ", scopes));
+        builder.setScope(StringUtil.join(" ", scopes));
 
         return builder;
     }
@@ -522,7 +519,7 @@ public abstract class BaseController {
         //Get cacheRecord from cache
         final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
-                TextUtils.join(" ", parameters.getScopes()),
+                String.join(" ", parameters.getScopes()),
                 targetAccount,
                 authScheme
         );
@@ -631,7 +628,7 @@ public abstract class BaseController {
 
         final TokenRequest refreshTokenRequest = strategy.createRefreshTokenRequest(parameters.getAuthenticationScheme());
         refreshTokenRequest.setClientId(parameters.getClientId());
-        refreshTokenRequest.setScope(TextUtils.join(" ", parameters.getScopes()));
+        refreshTokenRequest.setScope(StringUtil.join(" ", parameters.getScopes()));
         refreshTokenRequest.setRefreshToken(refreshToken.getSecret());
 
         if (refreshTokenRequest instanceof MicrosoftTokenRequest) {
@@ -652,7 +649,7 @@ public abstract class BaseController {
             );
         }
 
-        if (!StringExtensions.isNullOrBlank(refreshTokenRequest.getScope())) {
+        if (!StringUtil.isNullOrEmpty(refreshTokenRequest.getScope())) {
             Logger.infoPII(
                     TAG + methodName,
                     "Scopes: [" + refreshTokenRequest.getScope() + "]"
@@ -815,7 +812,7 @@ public abstract class BaseController {
         if (refreshTokenRecord != null) {
             try {
                 // foci token is available, make a request to service to see if the client id is FOCI and save the tokens
-                TokenCacheItemMigrationAdapter.tryFociTokenWithGivenClientId(
+                FociQueryUtilities.tryFociTokenWithGivenClientId(
                         parameters.getOAuth2TokenCache(),
                         clientId,
                         parameters.getRedirectUri(),

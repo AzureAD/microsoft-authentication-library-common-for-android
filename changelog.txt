@@ -2,6 +2,7 @@ V.Next
 ----------
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MAJOR] Migrate BaseController to common4j (#1515)
 - [MAJOR] Migrate *TokenCache classes to common4j
 - [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
 - [MAJOR] Migrate Strategies and Parameters. (#1488)
