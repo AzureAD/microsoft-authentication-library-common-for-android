@@ -22,11 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.labutils;
 
-import android.text.TextUtils;
-
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.util.ObjectUtils;
+import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 import com.microsoft.identity.internal.test.keyvault.ApiException;
