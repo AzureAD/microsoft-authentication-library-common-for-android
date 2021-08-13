@@ -20,23 +20,25 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.exception;
-
-import javax.annotation.Nullable;
-
-import lombok.NonNull;
+package com.microsoft.identity.common.java.constants;
 
 /**
- * An interface that indicates that there is structured data that can be exctracted from the
- * containing class.  Specifically, this indicates the presence of a string that represents
- * the error code to return to the user.  This interface is specifically written with descendants
- * of (@link Throwable} in mind.
+ * Represents the oauth2 error code.
  */
-public interface IErrorInformation {
+public final class OAuth2ErrorCode {
     /**
-     * Get the error code associated with this operation.  May not be null.
-     * @return the associated error code.
+     * Oauth2 error code invalid_grant.
      */
-    @NonNull
-    String getErrorCode();
+    public static final String INVALID_GRANT = "invalid_grant";
+
+    /**
+     * Oauth2 error code unauthorized_client.
+     */
+    public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
+
+    /**
+     * The refresh token used to redeem access token is invalid and auth code request is needed.
+     * This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
+     */
+    public static final String INTERACTION_REQUIRED = "interaction_required";
 }

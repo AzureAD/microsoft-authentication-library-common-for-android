@@ -20,20 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.java.controllers;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT;
-import static com.microsoft.identity.common.java.AuthenticationConstants.OAuth2SubErrorCode.BAD_TOKEN;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
 
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
@@ -373,7 +373,8 @@ public abstract class BaseController {
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
                 Logger.info(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
-                if (INVALID_GRANT.equals(errorCode) && BAD_TOKEN.equals(subErrorCode)) {
+                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) &&
+                        OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = tokenCache.removeCredential(cacheRecord.getRefreshToken());
                     Logger.info(
                             TAG,
@@ -475,7 +476,7 @@ public abstract class BaseController {
                 final String subErrorCode = tokenResult.getErrorResponse().getSubError();
                 Logger.warn(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
 
-                if (INVALID_GRANT.equals(errorCode) && BAD_TOKEN.equals(subErrorCode)) {
+                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) && OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
                     boolean isRemoved = cache.removeCredential(cacheRecord.getRefreshToken());
                     Logger.info(
                             TAG,

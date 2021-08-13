@@ -687,11 +687,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
 
         /**
-         * String of broker client ID.
-         */
-        public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
-
-        /**
          * Authtoken type string.
          */
         public static final String AUTHTOKEN_TYPE = "adal.authtoken.type";
@@ -1592,33 +1587,6 @@ public final class AuthenticationConstants {
          * to launch custom tabs and intent flags to clear the task.
          */
         public static final String REFRESH_TO_CLOSE= "refresh_to_close";
-    }
-
-    /**
-     * HTTP header fields.
-     */
-    public static final class HeaderField {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc1945#appendix-D.2.1">RFC-1945</a>
-         */
-        public static final String ACCEPT = "Accept";
-
-        /**
-         * Header used to track SPE Ring for telemetry.
-         */
-        public static final String X_MS_CLITELEM = "x-ms-clitelem";
-    }
-
-    /**
-     * Identifiers for file formats and format contents.
-     */
-    public static final class MediaType {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
-         */
-        public static final String APPLICATION_JSON = "application/json";
     }
 
     public static final class TelemetryEvents {

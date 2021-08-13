@@ -1,4 +1,4 @@
-package com.microsoft.identity.common.internal.request;
+package com.microsoft.identity.common.java.request;
 
 public enum BrokerRequestType {
 

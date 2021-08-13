@@ -20,35 +20,23 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.util;
+package com.microsoft.identity.common.java.exception;
 
-import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
-import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import javax.annotation.Nullable;
 
-import java.util.Set;
-
-import lombok.AllArgsConstructor;
 import lombok.NonNull;
 
 /**
- * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage}
- * */
-@AllArgsConstructor
-public abstract class AbstractSharedPrefNameValueStorage<T> implements INameValueStorage<T> {
-    protected IMultiTypeNameValueStorage mManager;
-
-    @Override
-    public void remove(@NonNull String name) {
-        mManager.remove(name);
-    }
-
-    @Override
-    public void clear() {
-        mManager.clear();
-    }
-
-    @Override
-    public @NonNull Set<String> keySet() {
-        return mManager.getAll().keySet();
-    }
+ * An interface that indicates that there is structured data that can be exctracted from the
+ * containing class.  Specifically, this indicates the presence of a string that represents
+ * the error code to return to the user.  This interface is specifically written with descendants
+ * of (@link Throwable} in mind.
+ */
+public interface IErrorInformation {
+    /**
+     * Get the error code associated with this operation.  May not be null.
+     * @return the associated error code.
+     */
+    @NonNull
+    String getErrorCode();
 }
