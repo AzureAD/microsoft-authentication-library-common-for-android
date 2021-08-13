@@ -29,6 +29,7 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
+  - template: ../templates/steps/automation-cert.yml
   - task: Gradle@1
     displayName: Assemble common
     inputs:
@@ -37,3 +38,8 @@ jobs:
     displayName: Run common code coverage
     inputs:
       tasks: common:localDebugCommonUnitTestCoverageReport -Plabtest -ProbolectricSdkVersion=${{variables.robolectricSdkVersion}}
+  - task: PublishCodeCoverageResults@1
+    displayName: 'Publish code coverage report'
+    inputs:
+      summaryFileLocation: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\localDebugCommonUnitTestCoverageReport.xml'
+      reportDirectory: '$(Build.SourcesDirectory)\common\build\reports\jacoco\localDebugCommonUnitTestCoverageReport\html'
