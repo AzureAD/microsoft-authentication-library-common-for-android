@@ -34,6 +34,7 @@ jobs:
     displayName: Assemble common
     inputs:
       tasks: clean common:assembleLocal
+      publishJUnitResults: false
   - task: Gradle@2
     displayName: Run common code coverage
     inputs:
