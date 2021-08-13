@@ -27,18 +27,19 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.commands.parameters.DeviceCodeFlowCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.internal.platform.DevicePoPUtils;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
-import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.ApiEndEvent;
 import com.microsoft.identity.common.internal.telemetry.events.ApiStartEvent;
-import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.util.ThreadUtils;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authorities.Authority;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -762,7 +763,7 @@ public class LocalMSALController extends BaseController {
                 case ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_CODE:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_BAD_VERIFICATION_ERROR_MESSAGE;
                     break;
-                case AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT:
+                case OAuth2ErrorCode.INVALID_GRANT:
                     errorMessage = ErrorStrings.DEVICE_CODE_FLOW_INVALID_GRANT_ERROR_MESSAGE;
                     break;
                 case ErrorStrings.INVALID_SCOPE:

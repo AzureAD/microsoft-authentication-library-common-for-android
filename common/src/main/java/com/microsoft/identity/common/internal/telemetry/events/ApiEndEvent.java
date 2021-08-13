@@ -26,8 +26,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
 import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;

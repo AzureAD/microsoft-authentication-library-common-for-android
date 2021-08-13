@@ -26,7 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
