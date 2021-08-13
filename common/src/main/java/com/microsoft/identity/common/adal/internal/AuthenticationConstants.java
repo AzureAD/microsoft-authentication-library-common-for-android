@@ -1062,6 +1062,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * Intune app package name.
+         */
+        public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
+
+        /**
          * Azure Authenticator app package name.
          */
         public static final String AZURE_AUTHENTICATOR_APP_PACKAGE_NAME = "com.azure.authenticator";
