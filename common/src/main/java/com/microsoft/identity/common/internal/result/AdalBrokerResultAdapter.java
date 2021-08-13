@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -298,9 +299,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         //INTERACTION_REQUIRED is marked as deprecated
-        if (com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(serviceException.getErrorCode())
-                || com.microsoft.identity.common.java.AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())
-        ) {
+        if (OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(serviceException.getErrorCode())
+                || OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())) {
 
             resultBundle.putString(
                     AuthenticationConstants.OAuth2.ERROR,

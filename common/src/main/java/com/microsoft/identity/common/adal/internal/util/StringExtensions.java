@@ -89,10 +89,10 @@ public final class StringExtensions {
     }
 
     /**
-     * encode string with url form encoding. Space will be +.
+     * Encode string with url form encoding. Space will be replaced by '+'.
      *
      * @param source the string to encode.
-     * @return the decoded
+     * @return the decoded string.
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {

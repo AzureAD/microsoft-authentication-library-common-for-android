@@ -23,8 +23,8 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.broker.IBrokerAccount;
-import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import lombok.EqualsAndHashCode;
