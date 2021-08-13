@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.cache.CacheRecord;
