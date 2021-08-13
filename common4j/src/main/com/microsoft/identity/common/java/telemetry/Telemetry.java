@@ -313,8 +313,8 @@ public class Telemetry {
 
         List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
 
-        for (Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
-            Map<String, String> event = iterator.next();
+        for (final Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
+            final Map<String, String> event = iterator.next();
             if (correlationId.equalsIgnoreCase(event.get(Key.CORRELATION_ID))) {
                 finalRawMap.add(applyPiiOiiRule(event));
             }
