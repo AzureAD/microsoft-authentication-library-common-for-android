@@ -44,9 +44,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
@@ -240,7 +241,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 final String jsonString = AuthenticationSchemeTypeAdapter.getGsonInstance().toJson(brokerRequest, BrokerRequest.class);
                 byte[] compressedBytes = compressString(jsonString);
                 Logger.info(TAG, "Broker Result, raw payload size:"
-                        + jsonString.getBytes().length + " ,compressed bytes size: " + compressedBytes.length
+                        + jsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes size: " + compressedBytes.length
                 );
                 requestBundle.putByteArray(BROKER_REQUEST_V2_COMPRESSED, compressedBytes);
             } catch (IOException e) {

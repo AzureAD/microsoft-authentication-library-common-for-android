@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
+import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+
 import android.app.Activity;
 import android.content.Context;
 
@@ -30,6 +35,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
 import com.microsoft.identity.common.internal.platform.AndroidPlatformUtil;
@@ -37,20 +43,21 @@ import com.microsoft.identity.common.internal.platform.DevicePopManager;
 import com.microsoft.identity.common.internal.providers.oauth2.AndroidTaskStateGenerator;
 import com.microsoft.identity.common.internal.ui.AndroidAuthorizationStrategyFactory;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
+import com.microsoft.identity.common.internal.util.SharedPrefStringNameValueStorage;
 import com.microsoft.identity.common.internal.util.SharedPreferenceLongStorage;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.platform.Device;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.logging.Logger;
-import com.microsoft.identity.common.strategies.IAuthorizationStrategyFactory;
+import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
 import java.io.IOException;
 import java.security.KeyStoreException;
@@ -58,11 +65,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 import lombok.NonNull;
-
-import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
-import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
-import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 
 /**
  * Android implementations of platform-dependent components in Common.
@@ -135,11 +137,6 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         initializeStaticClasses();
     }
 
-    @Override
-    public @NonNull INameValueStorage<String> getNameValueStorage(@NonNull String name) {
-        return new SharedPreferenceStringStorage(mContext, name);
-    }
-
     // TODO: The caller of this base 'common' class is unclear whether it's in Broker or ADAL/MSAL.
     //       Once we wired this e2e, we should be able to supply the right object,
     //       and shouldn't need process to decide which one to return.
@@ -209,6 +206,38 @@ public class AndroidPlatformComponents implements IPlatformComponents {
                 "Failed to initialize DevicePoPManager = " + exception.getMessage(),
                 exception
         );
+    }
+
+    @Override
+    public <T> INameValueStorage<T> getNameValueStore(final @NonNull String storeName, final @NonNull Class<T> clazz) {
+        return getEncryptedNameValueStore(storeName, null, clazz);
+    }
+
+    @Override
+    public <T> INameValueStorage<T> getEncryptedNameValueStore(final @NonNull String storeName,
+                                                               final @Nullable IKeyAccessor helper,
+                                                               final @NonNull Class<T> clazz) {
+        final IMultiTypeNameValueStorage mgr = SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+        if (Long.class.isAssignableFrom(clazz)) {
+            @SuppressWarnings("unchecked")
+            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPreferenceLongStorage(mgr);
+            return store;
+        } else if (String.class.isAssignableFrom(clazz)) {
+            @SuppressWarnings("unchecked")
+            final INameValueStorage<T> store = (INameValueStorage<T>) new SharedPrefStringNameValueStorage(mgr);
+            return store;
+        }
+        throw new UnsupportedOperationException("Only Long and String are natively supported as types");
+    }
+
+    @Override
+    public IMultiTypeNameValueStorage getEncryptedFileStore(final @NonNull String storeName, final @NonNull IKeyAccessor helper) {
+        return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, helper);
+    }
+
+    @Override
+    public IMultiTypeNameValueStorage getFileStore(final @NonNull String storeName) {
+        return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
     }
 
     @SuppressWarnings(WarningType.rawtype_warning)

@@ -22,28 +22,96 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.util;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
-import java.util.Set;
+import java.util.AbstractMap;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.NoSuchElementException;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
 /**
- * Adapts {@link ISharedPreferencesFileManager} to {@link INameValueStorage <Long>}
+ * Adapts {@link IMultiTypeNameValueStorage} to {@link INameValueStorage <Long>}
  * */
 public class SharedPreferenceLongStorage extends AbstractSharedPrefNameValueStorage<Long> {
-    public SharedPreferenceLongStorage(ISharedPreferencesFileManager mManager) {
+    public SharedPreferenceLongStorage(final @NonNull IMultiTypeNameValueStorage mManager) {
         super(mManager);
     }
 
     @Override
-    public Long get(@NonNull String name) {
+    public Long get(final @NonNull String name) {
         return mManager.getLong(name);
     }
 
     @Override
-    public void put(@NonNull String name, Long value) {
-        mManager.putLong(name, value);
+    public @NonNull Map<String, Long> getAll() {
+        Map<String, Long> allLongs = new HashMap<>();
+        for (Map.Entry<String, String> e : mManager.getAll().entrySet()) {
+            try {
+                allLongs.put(e.getKey(), Long.parseLong(e.getValue()));
+            } catch (final NumberFormatException nfe) {
+                //nothing to do
+            }
+        }
+        return allLongs;
+    }
+
+    @Override
+    public void put(@NonNull final String name, @Nullable final Long value) {
+        if (value == null) {
+            mManager.putString(name, null);
+        } else {
+            mManager.putLong(name, value);
+        }
+    }
+
+    @Override
+    public Iterator<Map.Entry<String, Long>> getAllFilteredByKey(final @NonNull Predicate<String> keyFilter) {
+        return new Iterator<Map.Entry<String, Long>>() {
+
+            final Iterator<Map.Entry<String, String>> iterator = mManager.getAllFilteredByKey(keyFilter);
+            Map.Entry<String, Long> nextEntry = null;
+
+            @Override
+            public boolean hasNext() {
+                if (nextEntry != null) {
+                    return true;
+                }
+                if (!iterator.hasNext()) {
+                    return false;
+                }
+                do {
+                    Map.Entry<String, String> nextElement = iterator.next();
+                    try {
+                        long parsedValue = Long.parseLong(nextElement.getValue());
+                        nextEntry = new AbstractMap.SimpleEntry<String, Long>(nextElement.getKey(), parsedValue);
+                    } catch (NumberFormatException nfe) {
+                        nextEntry = null;
+                    }
+                } while (nextEntry == null && iterator.hasNext());
+                return nextEntry != null;
+            }
+
+            @Override
+            public Map.Entry<String, Long> next() {
+                if (nextEntry == null && !hasNext()) {
+                    throw new NoSuchElementException();
+                }
+                final Map.Entry<String, Long> tmp = nextEntry;
+                nextEntry = null;
+                return tmp;
+            }
+
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Removal of elements is not supported");
+            }
+        };
     }
 }

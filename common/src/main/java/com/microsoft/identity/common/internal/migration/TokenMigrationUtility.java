@@ -24,7 +24,7 @@ package com.microsoft.identity.common.internal.migration;
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.cache.IShareSingleSignOnState;
+import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;
 import com.microsoft.identity.common.java.providers.oauth2.RefreshToken;
 import com.microsoft.identity.common.logging.Logger;
 

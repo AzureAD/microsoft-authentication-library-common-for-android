@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
@@ -113,7 +113,7 @@ public class EstsTelemetry {
     public synchronized void setUp(@NonNull final IPlatformComponents platformComponents) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
-                    platformComponents.getNameValueStorage(LAST_REQUEST_TELEMETRY_STORAGE_FILE));
+                    platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
     }
 
@@ -244,8 +244,8 @@ public class EstsTelemetry {
                     correlationId,
                     errorCode);
         } else if (commandResult.getResult() != null &&
-                commandResult.getResult() instanceof ILocalAuthenticationResultBase) {
-            final ILocalAuthenticationResultBase localAuthenticationResult = (ILocalAuthenticationResultBase) commandResult.getResult();
+                commandResult.getResult() instanceof ILocalAuthenticationResult) {
+            final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
             if (localAuthenticationResult.isServicedFromCache()) {
                 // we returned a token from cache, let's increment the silent success count
                 lastRequestTelemetry.incrementSilentSuccessCount();
@@ -330,8 +330,8 @@ public class EstsTelemetry {
             // we did not go to token endpoint
             return false;
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED) {
-            if (commandResult.getResult() instanceof ILocalAuthenticationResultBase) {
-                final ILocalAuthenticationResultBase localAuthenticationResult = (ILocalAuthenticationResultBase) commandResult.getResult();
+            if (commandResult.getResult() instanceof ILocalAuthenticationResult) {
+                final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
                 if (localAuthenticationResult.isServicedFromCache()) {
                     // we did not go to token endpoint
                     return false;

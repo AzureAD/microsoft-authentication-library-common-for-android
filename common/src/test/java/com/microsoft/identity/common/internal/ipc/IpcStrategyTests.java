@@ -32,7 +32,7 @@ import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
-import com.microsoft.identity.common.internal.util.ObjectUtils;
+import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import org.junit.Assert;
 import org.junit.Test;

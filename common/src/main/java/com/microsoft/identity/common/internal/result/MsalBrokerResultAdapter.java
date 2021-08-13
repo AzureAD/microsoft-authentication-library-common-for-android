@@ -33,6 +33,8 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
+import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -48,6 +50,10 @@ import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.GzipUtil;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.HeaderSerializationUtil;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -226,7 +232,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             try {
                 byte[] compressedBytes = compressString(brokerResultString);
                 Logger.info(TAG, "Broker Result, raw payload size:"
-                        + brokerResultString.getBytes().length + " ,compressed bytes " + compressedBytes.length
+                        + brokerResultString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " ,compressed bytes " + compressedBytes.length
                 );
                 resultBundle.putByteArray(
                         BROKER_RESULT_V2_COMPRESSED,
@@ -354,8 +360,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
         final BaseException baseException;
 
         //INTERACTION_REQUIRED is marked as deprecated
-        if (AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
-                AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
+        if (OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(errorCode) ||
+                OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.INVALID_BROKER_REFRESH_TOKEN.equalsIgnoreCase(errorCode) ||
                 ErrorStrings.NO_TOKENS_FOUND.equalsIgnoreCase(errorCode)) {
 
@@ -364,9 +370,8 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     errorCode,
                     brokerResult.getErrorMessage()
             );
-
-        } else if (AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
-                AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
+        } else if (OAuth2ErrorCode.UNAUTHORIZED_CLIENT.equalsIgnoreCase(errorCode) &&
+                OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED.
                         equalsIgnoreCase(brokerResult.getSubErrorCode())) {
 
             Logger.warn(
@@ -581,7 +586,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
             try {
                 byte[] bytes = GzipUtil.compressString(jsonString);
                 Logger.info(TAG, "Get accounts, raw payload size :"
-                        + jsonString.getBytes().length + " compressed size " + bytes.length
+                        + jsonString.getBytes(AuthenticationConstants.CHARSET_UTF8).length + " compressed size " + bytes.length
                 );
                 resultBundle.putByteArray(BROKER_ACCOUNTS_COMPRESSED, bytes);
             } catch (IOException e) {

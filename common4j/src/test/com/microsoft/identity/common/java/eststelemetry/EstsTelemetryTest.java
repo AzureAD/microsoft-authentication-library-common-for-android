@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
@@ -128,11 +128,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -143,7 +143,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, inMemoryTelemetryMap, null, lastRequestTelemetryMap);
 
         Assert.assertEquals(lastRequestTelemetryMap.size(), 3);
@@ -158,11 +158,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -178,11 +178,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -221,7 +221,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, inMemoryTelemetryMap, null, lastRequestTelemetryMap);
 
         Assert.assertEquals(lastRequestTelemetryMap.size(), 3);
@@ -311,7 +311,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage());
+        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage<String>());
 
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
         Assert.assertTrue(headers.isEmpty());
@@ -326,7 +326,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage());
+        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage<String>());
 
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
@@ -344,7 +344,7 @@ public class EstsTelemetryTest {
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         lastRequestTelemetryMap.put(LAST_TELEMETRY_OBJECT_CACHE_KEY,
                 "{\"silent_successful_count\":5,\"failed_requests\":[" +
                         "{\"mApiId\":\"API_1\",\"mCorrelationId\":\"COL_ID_1\",\"mError\":\"ERR_1\"}," +
@@ -393,12 +393,12 @@ public class EstsTelemetryTest {
                 .willReachTokenEndpoint(true)
                 .build();
 
-        final ILocalAuthenticationResultBase cachedSuccessResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult cachedSuccessResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
 
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(cachedSuccessResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)

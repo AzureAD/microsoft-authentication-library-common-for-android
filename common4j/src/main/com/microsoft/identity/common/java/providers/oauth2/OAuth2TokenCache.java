@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.oauth2;
 
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
@@ -30,6 +31,7 @@ import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
 import com.microsoft.identity.common.java.dto.IdTokenRecord;
+
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.util.List;
@@ -47,6 +49,9 @@ import lombok.NonNull;
 @AllArgsConstructor
 public abstract class OAuth2TokenCache
         <T extends OAuth2Strategy, U extends AuthorizationRequest, V extends TokenResponse> {
+
+    public static final String ERR_UNSUPPORTED_OPERATION = "This method is unsupported.";
+    private final @NonNull IPlatformComponents mPlatformComponents;
 
     /**
      * Saves the credentials and tokens returned by the service to the cache.
@@ -207,7 +212,7 @@ public abstract class OAuth2TokenCache
      *
      * @param clientId      The current application.
      * @param accountRecord The AccountRecord whose corollary AccountRecords should be loaded.
-     * @return
+     * @return a list of all matching {@link AccountRecord}s.
      */
     public abstract List<AccountRecord> getAllTenantAccountsForAccountByClientId(final String clientId,
                                                                                  final AccountRecord accountRecord
@@ -280,6 +285,15 @@ public abstract class OAuth2TokenCache
      * @return A Set of ClientIds.
      */
     protected abstract Set<String> getAllClientIds();
+
+    /**
+     * Gets the set of common components that this cache was created with.
+     *
+     * @return The set of common components that this cache was created with.
+     */
+    protected final IPlatformComponents getComponents() {
+        return mPlatformComponents;
+    }
 
     public abstract AccountRecord getAccountByHomeAccountId(@Nullable final String environment,
                                                             @NonNull final String clientId,

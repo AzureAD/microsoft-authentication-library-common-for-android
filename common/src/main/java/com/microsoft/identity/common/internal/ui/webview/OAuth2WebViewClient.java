@@ -52,6 +52,8 @@ import com.microsoft.identity.common.logging.Logger;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
@@ -60,6 +62,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
 
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
 

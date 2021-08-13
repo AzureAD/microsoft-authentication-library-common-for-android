@@ -22,6 +22,10 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
+import com.microsoft.identity.common.java.util.ported.Predicate;
+
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -38,6 +42,12 @@ public interface INameValueStorage<T> {
      */
     @Nullable
     T get(@NonNull String name);
+
+    /**
+     * @return a map containing all the values in this structure.
+     */
+    @NonNull
+    Map<String, T> getAll();
 
     /**
      * Puts a value into the storage.
@@ -65,4 +75,10 @@ public interface INameValueStorage<T> {
      */
     @NonNull
     Set<String> keySet();
+
+    /**
+     *
+     */
+    Iterator<Map.Entry<String, T>> getAllFilteredByKey(Predicate<String> keyFilter);
 }
+

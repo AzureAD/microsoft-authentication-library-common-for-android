@@ -27,8 +27,13 @@ import android.content.Context;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.util.AbstractSharedPrefNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
+
+import java.util.Iterator;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
@@ -37,6 +42,7 @@ import lombok.NonNull;
  */
 public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueStorage<String> {
 
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "Lombok inserts nullchecks")
     public SharedPreferenceStringStorage(@NonNull final Context context,
                                          @NonNull final String sharedPrefFileName) {
         super(SharedPreferencesFileManager.getSharedPreferences(
@@ -49,6 +55,15 @@ public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueSt
     @Override
     public String get(@NonNull String name) {
         return mManager.getString(name);
+    }
+
+    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyPredicate) {
+        return mManager.getAllFilteredByKey(keyPredicate);
+    }
+
+    @Override
+    public @NonNull Map<String, String> getAll() {
+        return mManager.getAll();
     }
 
     @Override

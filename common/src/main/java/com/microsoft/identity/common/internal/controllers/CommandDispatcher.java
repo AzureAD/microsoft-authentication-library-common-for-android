@@ -47,16 +47,17 @@ import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.commands.BaseCommand;
 import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
-import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
-import com.microsoft.identity.common.internal.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -379,24 +380,25 @@ public class CommandDispatcher {
             }
         }
 
+        final String correlationId = command.getParameters().getCorrelationId();
         if (baseException != null) {
             if (baseException instanceof UserCancelException) {
                 commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null,
-                        command.getParameters().getCorrelationId());
+                        correlationId);
             } else {
                 //Post On Error
                 commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException,
-                        command.getParameters().getCorrelationId());
+                        correlationId);
             }
         } else /* baseException == null */ {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
-                        command.getParameters().getCorrelationId());
+                commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
+                        correlationId);
             } else {
                 //For commands that don't return an AcquireTokenResult
                 commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
-                        command.getParameters().getCorrelationId());
+                        correlationId);
             }
         }
 
@@ -505,18 +507,16 @@ public class CommandDispatcher {
     /**
      * Get Commandresult from acquiretokenresult
      *
-     * @param baseException
      * @param result
      */
-    private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
-                                                                 @NonNull AcquireTokenResult result, @NonNull String correlationId) {
+    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
         //Token Commands
         if (result.getSucceeded()) {
             return new CommandResult(CommandResult.ResultStatus.COMPLETED,
                     result.getLocalAuthenticationResult(), correlationId);
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
             } else {

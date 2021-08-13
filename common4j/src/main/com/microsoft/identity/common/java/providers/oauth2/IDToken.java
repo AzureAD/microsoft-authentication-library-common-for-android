@@ -222,7 +222,7 @@ public class IDToken {
      * @return Token claims in Map<String, String>.
      */
     public Map<String, ?> getTokenClaims() {
-        return Collections.unmodifiableMap(mTokenClaims);
+        return mTokenClaims == null ? Collections.<String, Object>emptyMap() : Collections.unmodifiableMap(mTokenClaims);
     }
 
     public static Map<String, ?> parseJWT(@NonNull final String rawIdToken) throws ServiceException {

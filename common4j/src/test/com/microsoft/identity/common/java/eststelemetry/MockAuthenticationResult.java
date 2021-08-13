@@ -23,15 +23,19 @@
 
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.Builder;
 import lombok.NonNull;
 
 @Builder
-public class MockAuthenticationResult implements ILocalAuthenticationResultBase {
+public class MockAuthenticationResult implements ILocalAuthenticationResult {
 
     @Builder.Default
     String accessToken = "MOCK_ACCESS_TOKEN";
@@ -68,6 +72,21 @@ public class MockAuthenticationResult implements ILocalAuthenticationResultBase 
 
     @Builder.Default
     boolean isServicedFromCache = false;
+
+    @Override
+    public @NonNull IAccountRecord getAccountRecord() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public @NonNull AccessTokenRecord getAccessTokenRecord() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public List<ICacheRecord> getCacheRecordWithTenantProfileData() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public @NonNull String getAccessToken() {

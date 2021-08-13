@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.java.commands.parameters;
 
 import com.microsoft.identity.common.java.exception.ArgumentException;
-import com.microsoft.identity.common.exception.TerminalException;
+import com.microsoft.identity.common.java.exception.TerminalException;
 import com.microsoft.identity.common.java.authorities.AzureActiveDirectoryB2CAuthority;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryCloud;
