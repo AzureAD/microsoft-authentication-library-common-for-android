@@ -20,22 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache.registry;
+package com.microsoft.identity.common.java.cache;
 
-import com.microsoft.identity.common.java.cache.ISimpleCache;
+import java.lang.reflect.Type;
 
 /**
- * Interface defining the BrokerApplicationRegistry.
+ * Interface returning {@link Type} tokens for serialization hints to Gson.
  */
-public interface IBrokerApplicationRegistry extends ISimpleCache<BrokerApplicationRegistryData> {
+public interface IListTypeToken {
 
     /**
-     * Gets the appropriate metadata for the provided app criteria.
+     * Gets the Type token associated with a List.
      *
-     * @param clientId    The clientId of the target or binding app.
-     * @param environment The environment of the target or binding app.
-     * @param processUid  The process UID of the target or binding app.
-     * @return The BrokerApplicationRegistryData to return.
+     * @return The {@link Type}.
      */
-    BrokerApplicationRegistryData getMetadata(String clientId, String environment, int processUid);
+    Type getListTypeToken();
+
 }

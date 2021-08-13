@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.migration;
 
-import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallback;
 

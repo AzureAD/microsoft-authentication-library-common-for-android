@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -284,13 +285,14 @@ public class StringUtil {
         }
     }
 
-    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode){
+    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode) {
         return Base64.encodeToString(bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
-    public static String encodeUrlSafeString(@NonNull final String stringToEncode){
+    public static String encodeUrlSafeString(@NonNull final String stringToEncode) {
         return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
+
     /**
      * Create the Hash string of the message.
      *
@@ -328,13 +330,14 @@ public class StringUtil {
      * @return true if the inputs are equal, false otherwise.
      */
     @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
-                        justification = "This is an intentional reference comparison")
+            justification = "This is an intentional reference comparison")
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
 
     /**
      * Return an empty string if the input is null.
+     *
      * @param input an input string to evaluate.
      * @return an empty string if the input is null, the input otherwise.
      */
@@ -345,6 +348,7 @@ public class StringUtil {
     /**
      * If the input is null, return an empty string. Otherwise, return a trimmed, toLowerCase
      * version of the string in question.
+     *
      * @param input a string to evaluate.
      * @return a sanitized version of that string.
      */
@@ -352,6 +356,17 @@ public class StringUtil {
         String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
 
         return outValue;
+    }
+
+    /**
+     * encode string with url form encoding. Space will be +.
+     *
+     * @param source the string to encode.
+     * @return the decoded
+     * @throws UnsupportedEncodingException throws if encoding not supported.
+     */
+    public static String urlFormEncode(String source) throws UnsupportedEncodingException {
+        return URLEncoder.encode(source, ENCODING_UTF8_STRING);
     }
 
     /**

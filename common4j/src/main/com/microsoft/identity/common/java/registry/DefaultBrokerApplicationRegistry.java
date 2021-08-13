@@ -20,18 +20,18 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache.registry;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.registry;
 
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.internal.cache.NameValueStorageFileManagerSimpleCacheImpl;
+import com.microsoft.identity.common.java.cache.NameValueStorageFileManagerSimpleCacheImpl;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import java.lang.reflect.Type;
 import java.util.List;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 /**
  * A basic registry (key/value) style data store for tracking info about apps which bind to the

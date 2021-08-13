@@ -26,7 +26,7 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.controllers.BaseController;
+import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.commands.ICommand;
 
 import java.util.ArrayList;

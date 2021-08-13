@@ -20,12 +20,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.aad.adal;
+package com.microsoft.identity.common.java.strategies;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrategy;
 
-@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
-public final class DateTimeAdapter
-        extends com.microsoft.identity.common.java.adal.cache.DateTimeAdapter {
-    // This class has moved to common. See super.
+import lombok.NonNull;
+
+// Suppressing rawtype warnings due to the generic types IAuthorizationStrategy
+@SuppressWarnings(WarningType.rawtype_warning)
+public interface IAuthorizationStrategyFactory<GenericAuthorizationStrategy extends IAuthorizationStrategy> {
+
+    GenericAuthorizationStrategy getAuthorizationStrategy(
+            @NonNull final InteractiveTokenCommandParameters parameters);
 }
