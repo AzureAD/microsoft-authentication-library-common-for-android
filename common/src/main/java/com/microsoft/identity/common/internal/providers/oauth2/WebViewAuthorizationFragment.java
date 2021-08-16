@@ -133,7 +133,6 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         final String methodName = "#onCreateView";
         final View view = inflater.inflate(R.layout.common_activity_authentication, container, false);
-        final String[] javascriptToExecute = new String[1];
         mProgressBar = view.findViewById(R.id.common_auth_webview_progressbar);
 
         final FragmentActivity activity = getActivity();
@@ -146,6 +145,7 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new OnPageLoadedCallback() {
                     @Override
                     public void onPageLoaded(final String url) {
+                        final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
                         try {
                             javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
