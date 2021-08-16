@@ -28,6 +28,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -35,10 +36,12 @@ import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -282,13 +285,14 @@ public class StringUtil {
         }
     }
 
-    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode){
+    public static String encodeUrlSafeString(@NonNull final byte[] bytesToEncode) {
         return Base64.encodeToString(bytesToEncode, Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
 
-    public static String encodeUrlSafeString(@NonNull final String stringToEncode){
+    public static String encodeUrlSafeString(@NonNull final String stringToEncode) {
         return Base64.encodeToString(toByteArray(stringToEncode), Base64.NO_WRAP | Base64.NO_PADDING | Base64.URL_SAFE);
     }
+
     /**
      * Create the Hash string of the message.
      *
@@ -326,13 +330,14 @@ public class StringUtil {
      * @return true if the inputs are equal, false otherwise.
      */
     @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
-                        justification = "This is an intentional reference comparison")
+            justification = "This is an intentional reference comparison")
     public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
         return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
     }
 
     /**
      * Return an empty string if the input is null.
+     *
      * @param input an input string to evaluate.
      * @return an empty string if the input is null, the input otherwise.
      */
@@ -343,6 +348,7 @@ public class StringUtil {
     /**
      * If the input is null, return an empty string. Otherwise, return a trimmed, toLowerCase
      * version of the string in question.
+     *
      * @param input a string to evaluate.
      * @return a sanitized version of that string.
      */
@@ -350,5 +356,47 @@ public class StringUtil {
         String outValue = null == input ? "" : input.toLowerCase(Locale.US).trim();
 
         return outValue;
+    }
+
+    /**
+     * encode string with url form encoding. Space will be +.
+     *
+     * @param source the string to encode.
+     * @return the decoded
+     * @throws UnsupportedEncodingException throws if encoding not supported.
+     */
+    public static String urlFormEncode(String source) throws UnsupportedEncodingException {
+        return URLEncoder.encode(source, ENCODING_UTF8_STRING);
+    }
+
+    /**
+     * This is a reimplementation of String.join for the android platform.  Possibly this should
+     * shift into PlatformUtils, which could rely on String.join dependent on the android API level.
+     * @param separator a separator for the joined strings.
+     * @param segments a set of segments to join.
+     * @return a new char sequence constructed by joining the segments with the separator.
+     */
+    public static <T extends CharSequence> String join(final CharSequence separator, final @NonNull Iterable<T> segments) {
+        final Iterator<T> itr = segments.iterator();
+        // If the iterable is empty, return empty string.
+        if (!itr.hasNext()) {
+            return "";
+        }
+        final T first = itr.next();
+        // If the iterable has but one value, return it directly.
+        if (!itr.hasNext()) {
+            if (first instanceof String) {
+                return (String) first;
+            }
+            return first.toString();
+        }
+        final StringBuilder sb = new StringBuilder();
+        // This iterator must have at least one value, since it isn't empty.
+        sb.append(first);
+        while (itr.hasNext()) {
+            sb.append(separator);
+            sb.append(itr.next());
+        }
+        return sb.toString();
     }
 }

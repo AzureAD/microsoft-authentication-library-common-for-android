@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.interfaces;
 
-import com.microsoft.identity.common.internal.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -30,7 +30,7 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
-import com.microsoft.identity.common.strategies.IAuthorizationStrategyFactory;
+import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;

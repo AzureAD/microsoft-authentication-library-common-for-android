@@ -23,6 +23,7 @@ package com.microsoft.identity.common.internal.cache;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
 import java.util.HashMap;
