@@ -174,7 +174,6 @@ public class TelemetryTest {
     @Test
     public void testTelemetryMap() {
         testTelemetryMapHelper();
-        testTelemetryMapHelper();
     }
 
     @Test
