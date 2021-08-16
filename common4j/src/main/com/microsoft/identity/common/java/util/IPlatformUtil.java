@@ -85,4 +85,8 @@ public interface IPlatformUtil {
      */
     long getNanosecondTime();
 
+    /**
+     * Posts a runnable for returning the command execution result.
+     */
+    void postCommandResult(@NonNull final Runnable runnable);
 }

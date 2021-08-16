@@ -25,8 +25,8 @@ package com.microsoft.identity.common.internal.controllers;
 
 import android.os.Bundle;
 
-import com.microsoft.identity.common.CodeMarkerManager;
-import com.microsoft.identity.common.PerfConstants;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.java.marker.PerfConstants;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
