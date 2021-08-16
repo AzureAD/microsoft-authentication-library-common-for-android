@@ -59,6 +59,8 @@ public class TelemetryEventStrings {
         public static final String HTTP_START_EVENT = "http_start_event";
         public static final String HTTP_END_EVENT = "http_end_event";
 
+        public static final String UI_SHOWN_EVENT = "ui_shown_event";
+
         public static final String BROKER_START_EVENT = "broker_start_event";
         public static final String BROKER_END_EVENT = "broker_end_event";
     }
@@ -139,6 +141,7 @@ public class TelemetryEventStrings {
         public static final String USER_CANCEL = EVENT_PREFIX +"user_cancel";
         public static final String UI_CANCELLED = EVENT_PREFIX +"ui_cancelled"; //msal only
         public static final String UI_COMPLETE = EVENT_PREFIX +"ui_complete"; //msal only
+        public static final String UI_VISIBLE = EVENT_PREFIX + "ui_visible";
         public static final String SERVER_ERROR_CODE = EVENT_PREFIX + "server_error_code";
         public static final String SERVER_SUBERROR_CODE = EVENT_PREFIX + "server_sub_error_code";
         public static final String RT_AGE = EVENT_PREFIX +"rt_age";
