@@ -1,0 +1,79 @@
+# File: azure-pipelines\templates\steps\nightly-snapshot-releases\vsts-release.yml
+# Description: Template to assemble and publish Snapshot/Latest versions of ${{ parameters.projectName }}
+# Variable: 'ENV_VSTS_MVN_ANDROIDADACCOUNTS_USERNAME' was defined in the Variables tab
+# Variable: 'mvnAccessToken' was defined in the Variables tab
+# Variable: 'gradleTasks' list all the gradle tasks to be used.
+# Variable: 'accessTokenName'  secret used to access the private azure devops maven feed.
+# Variable: 'runUnitTest' boolean: refers to whether the pipeline will run unit tests or not.
+# https://docs.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate
+# Variable: 'versionType' type of version (Latest, Snapshot)
+
+parameters:
+- name: versionType
+  default: ''
+  values:
+  - Snapshot
+  - Latest
+- name: projectName
+  default: none
+- name: gradleTasks
+  default: none
+- name: accessTokenName
+  default: none
+- name: runUnitTest
+  default: false
+
+jobs:
+- job: Phase_1
+  displayName: Publish to Internal Maven (VSTS)
+  timeoutInMinutes: 90
+  cancelTimeoutInMinutes: 1
+  pool:
+    name: Hosted Windows 2019 with VS2019
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - task: CmdLine@1
+    displayName: Set MVN Access Token in Environment
+    inputs:
+      filename: echo
+      arguments: '##vso[task.setvariable variable=${{ parameters.accessTokenName }}]$(mvnAccessToken)'
+  - task: Gradle@2
+    displayName: Run unit tests
+    condition: eq(variables['parameters.runUnitTests'], 'true')
+    inputs:
+      tasks: testDebugUnitTest
+  - task: Gradle@2
+    displayName: ${{ parameters.versionType }} version update
+    condition: and(ne(variables['parameters.versionType'], ''), ne(variables['parameters.gradleTasks'], ''))
+    inputs:
+      tasks: ${{ parameters.projectName }}:version${{ parameters.versionType }}
+      publishJUnitResults: false
+  - task: Gradle@1
+    name: Gradle1
+    displayName: Assemble ${{ parameters.versionType }}
+    inputs:
+      tasks: ${{ parameters.gradleTasks }}
+      publishJUnitResults: false
+      jdkArchitecture: x86
+      sqAnalysisBreakBuildIfQualityGateFailed: false
+  - task: Gradle@2
+    displayName: Publish
+    inputs:
+      tasks: ${{ parameters.projectName }}:publish
+      publishJUnitResults: false
+  - task: CopyFiles@2
+    name: CopyFiles1
+    displayName: Copy Files to Artifact Staging Directory
+    inputs:
+      SourceFolder: ${{ parameters.projectName }}\build\
+      TargetFolder: $(build.artifactstagingdirectory)
+  - task: PublishPipelineArtifact@1
+    name: PublishPipelineArtifacts1
+    displayName: 'Publish Artifact: ${{ parameters.projectName }} ${{ parameters.versionType }}'
+    inputs:
+      ArtifactName: ${{ parameters.projectName }}Release
+      TargetPath: $(Build.SourcesDirectory)/${{ parameters.projectName }}/build/
+...
