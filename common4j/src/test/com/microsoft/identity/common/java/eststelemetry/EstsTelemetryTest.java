@@ -22,14 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.eststelemetry;
 
-import com.microsoft.identity.common.java.InMemoryStorage;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -38,6 +38,7 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -66,16 +67,16 @@ public class EstsTelemetryTest {
 
     @Test
     public void testEmitWithUnsetCorrelationId() {
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, null);
 
         telemetry.emitApiId(apiId);
-        Assert.assertEquals(inMemoryTelemetryMap.mMap.size(), 0);
+        Assert.assertEquals(inMemoryTelemetryMap.size(), 0);
     }
 
     @Test
     public void testEmitApiId() {
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, null);
 
         telemetry.initTelemetryForCommand(
@@ -86,9 +87,9 @@ public class EstsTelemetryTest {
         DiagnosticContext.INSTANCE.getRequestContext().put(CORRELATION_ID, correlationId);
         telemetry.emitApiId(apiId);
 
-        Assert.assertEquals(inMemoryTelemetryMap.mMap.size(), 1);
-        Assert.assertNotNull(inMemoryTelemetryMap.mMap.get(correlationId));
-        Assert.assertEquals(apiId, inMemoryTelemetryMap.mMap.get(correlationId).getApiId());
+        Assert.assertEquals(inMemoryTelemetryMap.size(), 1);
+        Assert.assertNotNull(inMemoryTelemetryMap.get(correlationId));
+        Assert.assertEquals(apiId, inMemoryTelemetryMap.get(correlationId).getApiId());
     }
 
     @Test
@@ -127,22 +128,22 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
                         .build();
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, inMemoryTelemetryMap, null, lastRequestTelemetryMap);
 
         Assert.assertEquals(lastRequestTelemetryMap.size(), 3);
@@ -157,17 +158,17 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
                         .build();
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, null, null, lastRequestTelemetryMap);
         Assert.assertEquals(lastRequestTelemetryMap.size(), 0);
     }
@@ -177,17 +178,17 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
                         .build();
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
@@ -215,12 +216,12 @@ public class EstsTelemetryTest {
                         .resultStatus(ICommandResult.ResultStatus.ERROR)
                         .build();
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         flush(mockCommand, mockCommandResult, inMemoryTelemetryMap, null, lastRequestTelemetryMap);
 
         Assert.assertEquals(lastRequestTelemetryMap.size(), 3);
@@ -254,7 +255,7 @@ public class EstsTelemetryTest {
                         .resultStatus(ICommandResult.ResultStatus.ERROR)
                         .build();
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         lastRequestTelemetryMap.put(LAST_TELEMETRY_OBJECT_CACHE_KEY,
                 "{\"silent_successful_count\":5,\"failed_requests\":[" +
                         "{\"mApiId\":\"API_1\",\"mCorrelationId\":\"COL_ID_1\",\"mError\":\"ERR_1\"}," +
@@ -264,7 +265,7 @@ public class EstsTelemetryTest {
                         "{\"mApiId\":\"API_5\",\"mCorrelationId\":\"COL_ID_5\",\"mError\":\"ERR_5\"}]," +
                         "\"schema_version\":\"2\",\"platform_telemetry\":{}}");
 
-        final InMemorySentFailedRequestsMap sentFailedRequestsMap = new InMemorySentFailedRequestsMap();
+        final InMemoryStorage<Set<FailedRequest>> sentFailedRequestsMap = new InMemoryStorage<>();
         final HashSet<FailedRequest> failedRequestSet = new HashSet<>();
         failedRequestSet.add(new FailedRequest("API_1", "COL_ID_1", "ERR_1"));
         failedRequestSet.add(new FailedRequest("API_2", "COL_ID_2", "ERR_2"));
@@ -273,7 +274,7 @@ public class EstsTelemetryTest {
         failedRequestSet.add(new FailedRequest("API_5", "COL_ID_5", "ERR_5"));
         sentFailedRequestsMap.put(correlationId, failedRequestSet);
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
@@ -305,12 +306,12 @@ public class EstsTelemetryTest {
     public void testGetTelemetryHeaders_CorrelationIdNotSet() {
         DiagnosticContext.INSTANCE.getRequestContext().clear();
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage());
+        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage<String>());
 
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
         Assert.assertTrue(headers.isEmpty());
@@ -320,12 +321,12 @@ public class EstsTelemetryTest {
     public void testGetTelemetryHeaders_EmptyLastTelemetryCache() {
         DiagnosticContext.INSTANCE.getRequestContext().put(CORRELATION_ID, correlationId);
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage());
+        final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, null, new InMemoryStorage<String>());
 
         final Map<String, String> headers = telemetry.getTelemetryHeaders();
 
@@ -338,12 +339,12 @@ public class EstsTelemetryTest {
     public void testGetTelemetryHeaders_WithLastTelemetryCache() {
         DiagnosticContext.INSTANCE.getRequestContext().put(CORRELATION_ID, correlationId);
 
-        final InMemoryTelemetryMap inMemoryTelemetryMap = new InMemoryTelemetryMap();
+        final InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap = new InMemoryStorage<>();
         final CurrentRequestTelemetry currentRequestTelemetry = new CurrentRequestTelemetry();
         currentRequestTelemetry.put(API_ID, apiId);
         inMemoryTelemetryMap.put(correlationId, currentRequestTelemetry);
 
-        final InMemoryStorage lastRequestTelemetryMap = new InMemoryStorage();
+        final InMemoryStorage<String> lastRequestTelemetryMap = new InMemoryStorage<>();
         lastRequestTelemetryMap.put(LAST_TELEMETRY_OBJECT_CACHE_KEY,
                 "{\"silent_successful_count\":5,\"failed_requests\":[" +
                         "{\"mApiId\":\"API_1\",\"mCorrelationId\":\"COL_ID_1\",\"mError\":\"ERR_1\"}," +
@@ -392,12 +393,12 @@ public class EstsTelemetryTest {
                 .willReachTokenEndpoint(true)
                 .build();
 
-        final ILocalAuthenticationResultBase cachedSuccessResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult cachedSuccessResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
 
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(cachedSuccessResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -429,24 +430,24 @@ public class EstsTelemetryTest {
 
     private void flush(@NonNull ICommand<Boolean> mockCommand,
                        @NonNull ICommandResult mockCommandResult,
-                       @Nullable InMemoryTelemetryMap inMemoryTelemetryMap,
-                       @Nullable InMemorySentFailedRequestsMap sentFailedRequestsMap,
-                       @Nullable InMemoryStorage lastRequestTelemetryMap) {
-        inMemoryTelemetryMap = inMemoryTelemetryMap != null ? inMemoryTelemetryMap : new InMemoryTelemetryMap();
-        sentFailedRequestsMap = sentFailedRequestsMap != null ? sentFailedRequestsMap : new InMemorySentFailedRequestsMap();
+                       @Nullable InMemoryStorage<CurrentRequestTelemetry> inMemoryTelemetryMap,
+                       @Nullable InMemoryStorage<Set<FailedRequest>> sentFailedRequestsMap,
+                       @Nullable InMemoryStorage<String> lastRequestTelemetryMap) {
+        inMemoryTelemetryMap = inMemoryTelemetryMap != null ? inMemoryTelemetryMap : new InMemoryStorage<CurrentRequestTelemetry>();
+        sentFailedRequestsMap = sentFailedRequestsMap != null ? sentFailedRequestsMap : new InMemoryStorage<Set<FailedRequest>>();
 
         final EstsTelemetry telemetry = getTelemetry(inMemoryTelemetryMap, sentFailedRequestsMap, lastRequestTelemetryMap);
         telemetry.flush(mockCommand, mockCommandResult);
-        Assert.assertEquals(inMemoryTelemetryMap.mMap.size(), 0);
+        Assert.assertEquals(inMemoryTelemetryMap.size(), 0);
     }
 
-    private EstsTelemetry getTelemetry(@Nullable final InMemoryTelemetryMap mTelemetryMap,
-                                       @Nullable final InMemorySentFailedRequestsMap sentFailedRequestsMap,
-                                       @Nullable final InMemoryStorage lastRequestTelemetryMap) {
+    private EstsTelemetry getTelemetry(@Nullable final InMemoryStorage<CurrentRequestTelemetry> mTelemetryMap,
+                                       @Nullable final InMemoryStorage<Set<FailedRequest>> sentFailedRequestsMap,
+                                       @Nullable final InMemoryStorage<String> lastRequestTelemetryMap) {
 
         final EstsTelemetry telemetry = new EstsTelemetry(
-                mTelemetryMap != null ? mTelemetryMap : new InMemoryTelemetryMap(),
-                sentFailedRequestsMap != null ? sentFailedRequestsMap : new InMemorySentFailedRequestsMap()
+                mTelemetryMap != null ? mTelemetryMap : new InMemoryStorage<CurrentRequestTelemetry>(),
+                sentFailedRequestsMap != null ? sentFailedRequestsMap : new InMemoryStorage<Set<FailedRequest>>()
         );
 
         if (lastRequestTelemetryMap != null) {

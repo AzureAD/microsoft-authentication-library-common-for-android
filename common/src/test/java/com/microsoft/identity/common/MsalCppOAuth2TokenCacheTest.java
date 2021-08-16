@@ -27,10 +27,10 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.BearerAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.AccountDeletionRecord;
+import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
-import com.microsoft.identity.common.internal.cache.MsalCppOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.MsalCppOAuth2TokenCache;
 import com.microsoft.identity.common.java.dto.AccountRecord;
 import com.microsoft.identity.common.java.dto.Credential;
 import com.microsoft.identity.common.java.dto.CredentialType;
@@ -73,7 +73,7 @@ public class MsalCppOAuth2TokenCacheTest {
     public void setUp() throws Exception {
         // Context and related init
         mContext = ApplicationProvider.getApplicationContext();
-        mCppCache = MsalCppOAuth2TokenCache.create(mContext);
+        mCppCache = MsalCppOAuth2TokenCache.create(AndroidPlatformComponents.createFromContext(mContext));
 
         // Credentials for testing
         mTestBundle = new AccountCredentialTestBundle(
@@ -135,6 +135,7 @@ public class MsalCppOAuth2TokenCacheTest {
         final AccountRecord generatedAccount = mTestBundle.mGeneratedAccount;
         mCppCache.saveAccountRecord(generatedAccount);
 
+        @SuppressWarnings("unchecked")
         final List<AccountRecord> accounts = mCppCache.getAllAccounts();
         final AccountRecord restoredAccount = accounts.get(0);
         Assert.assertEquals(generatedAccount, restoredAccount);
@@ -143,12 +144,14 @@ public class MsalCppOAuth2TokenCacheTest {
 
     @Test(expected = UnsupportedOperationException.class)
     public void getAllAccountsResultImmutableTest() {
+        @SuppressWarnings("unchecked")
         final List<AccountRecord> accounts = mCppCache.getAllAccounts();
         accounts.add(mTestBundle.mGeneratedAccount);
     }
 
     @Test
     public void getAllAccountsEmptyTest() {
+        @SuppressWarnings("unchecked")
         final List<AccountRecord> accounts = mCppCache.getAllAccounts();
         Assert.assertTrue(accounts.isEmpty());
     }
@@ -478,6 +481,7 @@ public class MsalCppOAuth2TokenCacheTest {
         Assert.assertNull(restoredAccount);
 
         // Inspect the contents of the cache
+        @SuppressWarnings("unchecked")
         final List<Credential> credentials = mCppCache.getCredentials();
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedAccessToken));
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedIdToken));
@@ -506,6 +510,7 @@ public class MsalCppOAuth2TokenCacheTest {
         Assert.assertNull(restoredAccount);
 
         // Inspect the contents of the cache
+        @SuppressWarnings("unchecked")
         final List<Credential> credentials = mCppCache.getCredentials();
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedAccessToken));
         Assert.assertTrue(credentials.contains(mTestBundle.mGeneratedIdToken));

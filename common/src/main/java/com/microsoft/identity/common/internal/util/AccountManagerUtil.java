@@ -34,6 +34,8 @@ import androidx.annotation.NonNull;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.logging.Logger;
 
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+
 public final class AccountManagerUtil {
     private static final String TAG = AccountManagerUtil.class.getSimpleName();
 
@@ -60,7 +62,7 @@ public final class AccountManagerUtil {
             final DevicePolicyManager devicePolicyManager =
                     (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
             for (final String accountType : devicePolicyManager.getAccountTypesWithManagementDisabled()) {
-                if (AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)) {
+                if (BROKER_ACCOUNT_TYPE.equalsIgnoreCase(accountType)) {
                     Logger.verbose(TAG + methodName, "Broker account type is disabled by MDM.");
                     return false;
                 }

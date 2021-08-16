@@ -26,11 +26,23 @@ import android.os.Build;
 
 import com.microsoft.identity.common.java.platform.AbstractDeviceMetadata;
 
+import lombok.NonNull;
+
 /**
  * Provides device metadata in Android.
  **/
 public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
+
+    private static final String ANDROID_DEVICE_TYPE = "Android";
+
     @Override
+    @NonNull
+    public String getDeviceType() {
+        return ANDROID_DEVICE_TYPE;
+    }
+
+    @Override
+    @NonNull
     public String getCpu() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             //CPU_ABI has been deprecated
@@ -44,17 +56,25 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
         return "UNKNOWN";
     }
 
+    // Returns a SDK version (i.e. 24) instead of a user-friendly android version (i.e. 7.0)
     @Override
-    public String getOs() {
+    public @NonNull String getOsForEsts() {
         return String.valueOf(Build.VERSION.SDK_INT);
     }
 
     @Override
+    public @NonNull String getOsForDrs() {
+        return android.os.Build.VERSION.RELEASE;
+    }
+
+    @Override
+    @NonNull
     public String getDeviceModel() {
         return Build.MODEL;
     }
 
     @Override
+    @NonNull
     public String getManufacturer() {
         return Build.MANUFACTURER;
     }

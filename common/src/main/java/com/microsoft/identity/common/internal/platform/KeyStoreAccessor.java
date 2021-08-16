@@ -30,12 +30,16 @@ import android.security.keystore.KeyProperties;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.Supplier;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
@@ -88,10 +92,11 @@ public class KeyStoreAccessor {
      */
     public static IKeyAccessor forAlias(@NonNull final Context context, @NonNull final String alias, @NonNull final CryptoSuite suite)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
-        final IDevicePopManager popManager = new DevicePopManager(alias);
+        final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
+        final IDevicePopManager popManager = commonComponents.getDevicePopManager(alias);
         if (suite.cipher() instanceof IDevicePopManager.Cipher) {
             if (!popManager.asymmetricKeyExists()) {
-                popManager.generateAsymmetricKey(context);
+                popManager.generateAsymmetricKey();
             }
             return getKeyAccessor((IDevicePopManager.Cipher) suite.cipher(), suite.signingAlgorithm(), popManager);
         }
@@ -189,8 +194,9 @@ public class KeyStoreAccessor {
                                           @NonNull final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
         final String alias = UUID.randomUUID().toString();
-        final IDevicePopManager popManager = new DevicePopManager(alias);
-        popManager.generateAsymmetricKey(context);
+        final IPlatformComponents commonComponents = AndroidPlatformComponents.createFromContext(context);
+        final IDevicePopManager popManager = commonComponents.getDevicePopManager(alias);
+        popManager.generateAsymmetricKey();
         return getKeyAccessor(cipher, signingAlg, popManager);
     }
 

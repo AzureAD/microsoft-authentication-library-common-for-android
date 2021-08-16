@@ -25,161 +25,30 @@ package com.microsoft.identity.common.internal.ui;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationActivityFactory;
-import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationStrategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.ui.browser.Browser;
 import com.microsoft.identity.common.internal.ui.browser.BrowserAuthorizationStrategy;
-import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
-import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
-import com.microsoft.identity.common.internal.ui.browser.CustomTabsManager;
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.oauth2.AuthorizationRequest;
-import com.microsoft.identity.common.java.providers.oauth2.AuthorizationResult;
-import com.microsoft.identity.common.java.util.ResultFuture;
-import com.microsoft.identity.common.logging.Logger;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.List;
-import java.util.concurrent.Future;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
 
 // Suppressing rawtype warnings due to the generic types OAuth2Strategy, AuthorizationRequest and AuthorizationResult
 @SuppressWarnings(WarningType.rawtype_warning)
-public class CurrentTaskBrowserAuthorizationStrategy<GenericOAuth2Strategy extends OAuth2Strategy,
-        GenericAuthorizationRequest extends AuthorizationRequest> extends AuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
-    private final static String TAG = BrowserAuthorizationStrategy.class.getSimpleName();
-
-    private CustomTabsManager mCustomTabManager;
-    private ResultFuture<AuthorizationResult> mAuthorizationResultFuture;
-    private List<BrowserDescriptor> mBrowserSafeList;
-    private boolean mDisposed;
-    private GenericOAuth2Strategy mOAuth2Strategy; //NOPMD
-    private GenericAuthorizationRequest mAuthorizationRequest; //NOPMD
-
+public class CurrentTaskBrowserAuthorizationStrategy<
+        GenericOAuth2Strategy extends OAuth2Strategy,
+        GenericAuthorizationRequest extends AuthorizationRequest>
+        extends BrowserAuthorizationStrategy<GenericOAuth2Strategy, GenericAuthorizationRequest> {
     public CurrentTaskBrowserAuthorizationStrategy(@NonNull Context applicationContext,
                                                    @NonNull Activity activity,
                                                    @Nullable Fragment fragment) {
         super(applicationContext, activity, fragment);
     }
 
-    public void setBrowserSafeList(final List<BrowserDescriptor> browserSafeList) {
-        mBrowserSafeList = browserSafeList;
-    }
-
     @Override
-    public Future<AuthorizationResult> requestAuthorization(
-            GenericAuthorizationRequest authorizationRequest,
-            GenericOAuth2Strategy oAuth2Strategy)
-            throws ClientException {
-        final String methodName = ":requestAuthorization";
-        checkNotDisposed();
-        final Context context = getApplicationContext();
-        mOAuth2Strategy = oAuth2Strategy;
-        mAuthorizationRequest = authorizationRequest;
-        mAuthorizationResultFuture = new ResultFuture<>();
-        final Browser browser = BrowserSelector.select(context, mBrowserSafeList);
-
-        //ClientException will be thrown if no browser found.
-        Intent authIntent;
-        if (browser.isCustomTabsServiceSupported()) {
-            Logger.info(
-                    TAG + methodName,
-                    "CustomTabsService is supported."
-            );
-            //create customTabsIntent
-            mCustomTabManager = new CustomTabsManager(context);
-            if (!mCustomTabManager.bind(context, browser.getPackageName())) {
-                //create browser auth intent
-                authIntent = new Intent(Intent.ACTION_VIEW);
-            } else {
-                authIntent = mCustomTabManager.getCustomTabsIntent().intent;
-            }
-        } else {
-            Logger.warn(
-                    TAG + methodName,
-                    "CustomTabsService is NOT supported"
-            );
-            //create browser auth intent
-            authIntent = new Intent(Intent.ACTION_VIEW);
-        }
-
-        authIntent.setPackage(browser.getPackageName());
-        final URI requestUrl;
-        try {
-            requestUrl = authorizationRequest.getAuthorizationRequestAsHttpRequest();
-        } catch (URISyntaxException e) {
-            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
-        }
-        authIntent.setData(Uri.parse(requestUrl.toString()));
-
-        final Intent intent = buildAuthorizationActivityStartIntent(authIntent, Uri.parse(requestUrl.toString()));
-
-        launchIntent(intent);
-
-        return mAuthorizationResultFuture;
-    }
-
-    // Suppressing unchecked warnings during casting to HashMap<String,String> due to no generic type with mAuthorizationRequest
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private Intent buildAuthorizationActivityStartIntent(Intent authIntent, Uri requestUrl) {
-        return AuthorizationActivityFactory.getAuthorizationActivityIntent(
-                getApplicationContext(),
-                authIntent,
-                requestUrl.toString(),
-                mAuthorizationRequest.getRedirectUri(),
-                mAuthorizationRequest.getRequestHeaders(),
-                AuthorizationAgent.BROWSER,
-                true,
-                true);
-    }
-
-    private void checkNotDisposed() {
-        if (mDisposed) {
-            throw new IllegalStateException("Service has been disposed and rendered inoperable");
-        }
-    }
-
-    @Override
-    public void completeAuthorization(int requestCode, int resultCode, Intent data) {
-        if (requestCode == AuthenticationConstants.UIRequest.BROWSER_FLOW) {
-
-            //Suppressing unchecked warnings due to method createAuthorizationResult being a member of the raw type AuthorizationResultFactory
-            @SuppressWarnings(WarningType.unchecked_warning) final AuthorizationResult result = mOAuth2Strategy
-                    .getAuthorizationResultFactory().createAuthorizationResult(
-                            resultCode,
-                            data,
-                            mAuthorizationRequest
-                    );
-
-            mAuthorizationResultFuture.setResult(result);
-
-            dispose();
-        } else {
-            Logger.warnPII(TAG, "Unknown request code " + requestCode);
-        }
-    }
-
-    /**
-     * Disposes state that will not normally be handled by garbage collection. This should be
-     * called when the authorization service is no longer required, including when any owning
-     * activity is paused or destroyed
-     */
-    public void dispose() {
-        if (mDisposed) {
-            return;
-        }
-        if (mCustomTabManager != null) {
-            mCustomTabManager.unbind();
-        }
-        mDisposed = true;
+    protected void setIntentFlag(@NonNull final Intent intent) {
+        // do nothing
     }
 }

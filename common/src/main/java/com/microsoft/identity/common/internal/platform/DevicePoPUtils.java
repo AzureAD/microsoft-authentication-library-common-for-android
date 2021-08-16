@@ -22,14 +22,13 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.internal.authscheme.IPoPAuthenticationSchemeParams;
-import com.microsoft.identity.common.internal.result.GenerateShrResult;
-import com.microsoft.identity.common.java.util.IClockSkewManager;
+import com.microsoft.identity.common.java.authscheme.IPoPAuthenticationSchemeParams;
+import com.microsoft.identity.common.java.result.GenerateShrResult;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import java.net.URL;
 
@@ -42,30 +41,27 @@ public class DevicePoPUtils {
     /**
      * Generates an AT-less SHR using the PoPMgr's internal signing key.
      *
-     * @param context          The current application's {@link Context}.
-     * @param clockSkewManager An instance of {@link IClockSkewManager}, used to mitigate
-     *                         clock-skew/drift.
-     * @param popSchemeParams  The input params used to create the resulting SHR.
+     * @param platformComponents The current application's {@link IPlatformComponents}.
+     * @param popSchemeParams    The input params used to create the resulting SHR.
      * @return The {@link GenerateShrResult} containing the resulint SHR.
      * @throws ClientException If an error is encountered.
      */
     public static synchronized GenerateShrResult generateSignedHttpRequest(
-            @NonNull final Context context,
-            @NonNull final IClockSkewManager clockSkewManager,
+            @NonNull final IPlatformComponents platformComponents,
             @NonNull final IPoPAuthenticationSchemeParams popSchemeParams) throws ClientException {
         // Clock-skew correction values
         final long ONE_SECOND_MILLIS = 1000L;
-        final long timestampMillis = clockSkewManager.getAdjustedReferenceTime().getTime();
+        final long timestampMillis = platformComponents.getClockSkewManager().getAdjustedReferenceTime().getTime();
 
         final String httpMethodStr = popSchemeParams.getHttpMethod();
         final URL resourceUrl = popSchemeParams.getUrl();
         final String nonce = popSchemeParams.getNonce();
         final String clientClaims = popSchemeParams.getClientClaims();
-        final IDevicePopManager popMgr = Device.getDevicePoPManagerInstance();
+        final IDevicePopManager popMgr = platformComponents.getDefaultDevicePopManager();
 
         // Generate keys, if none exist (should already be initialized)
         if (!popMgr.asymmetricKeyExists()) {
-            popMgr.generateAsymmetricKey(context);
+            popMgr.generateAsymmetricKey();
         }
 
         final String shr = popMgr.mintSignedHttpRequest(

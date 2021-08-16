@@ -104,11 +104,6 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
     public static final String DEVICE_NEEDS_TO_BE_MANAGED_ERROR_DESCRIPTION = "Device needs to be managed to access the resource";
 
     /**
-     * Set when the account needs to be workplace joined to access the resource.
-     */
-    private String mUserName;
-
-    /**
      * Constructor of {@link MicrosoftAuthorizationErrorResponse}.
      *
      * @param error            error string returned from the Authorization Server.
@@ -116,13 +111,5 @@ public class MicrosoftAuthorizationErrorResponse extends AuthorizationErrorRespo
      */
     public MicrosoftAuthorizationErrorResponse(String error, String errorDescription) {
         super(error, errorDescription);
-    }
-
-    public String getUserName() {
-        return mUserName;
-    }
-
-    public void setUserName(String userName) {
-        this.mUserName = userName;
     }
 }

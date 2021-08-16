@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.providers.oauth2;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -32,7 +33,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
-import com.microsoft.identity.common.internal.ui.AuthorizationAgent;
+import com.microsoft.identity.common.java.ui.AuthorizationAgent;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 
@@ -123,4 +124,25 @@ public class AuthorizationActivityFactory {
         return fragment;
     }
 
+    /**
+     * Returns the correct authorization fragment for local (non-broker) authorization flows,
+     * supplying a start bundle for the Fragment state.
+     * Fragments include:
+     * {@link WebViewAuthorizationFragment}
+     * {@link BrowserAuthorizationFragment}
+     * {@link CurrentTaskBrowserAuthorizationFragment}
+     *
+     * @param intent the intent to use to create the fragment.
+     * @param bundle the bundle to add to the Fragment if it is an AuthorizationFragment.
+     * @return returns an Fragment that's used as to authorize a token request.
+     */
+    public static Fragment getAuthorizationFragmentFromStartIntentWithState(@NonNull final Intent intent,
+                                                                            @NonNull final Bundle bundle) {
+        final Fragment fragment = getAuthorizationFragmentFromStartIntent(intent);
+        if (fragment instanceof AuthorizationFragment) {
+            final AuthorizationFragment authFragment = (AuthorizationFragment) fragment;
+            authFragment.setInstanceState(bundle);
+        }
+        return fragment;
+    }
 }

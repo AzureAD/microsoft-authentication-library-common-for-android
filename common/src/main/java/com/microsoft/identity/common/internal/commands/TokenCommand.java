@@ -22,14 +22,13 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands;
 
-import android.content.Intent;
-
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
-import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.controllers.BaseController;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.util.List;
 
@@ -52,7 +51,9 @@ public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
         super(parameters, controllers, callback, publicApiId);
     }
 
-    abstract void notify(int requestCode, int resultCode, final Intent data);
+    abstract void onFinishAuthorizationSession(int requestCode,
+                                               int resultCode,
+                                               @NonNull final PropertyBag data);
 
     @Override
     public boolean willReachTokenEndpoint() {

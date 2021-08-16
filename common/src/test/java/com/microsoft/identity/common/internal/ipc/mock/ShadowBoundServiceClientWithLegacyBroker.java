@@ -88,6 +88,8 @@ public class ShadowBoundServiceClientWithLegacyBroker<T extends IInterface> {
             }
         };
 
-        return (T) authService;
+        @SuppressWarnings("unchecked")
+        final T returnVal = (T) authService;
+        return returnVal;
     }
 }

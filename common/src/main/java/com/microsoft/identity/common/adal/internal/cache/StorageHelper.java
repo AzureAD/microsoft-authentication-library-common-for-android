@@ -92,6 +92,8 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
 
+import net.jcip.annotations.GuardedBy;
+
 @Deprecated
 public class StorageHelper implements IStorageHelper {
     private static final String TAG = "StorageHelper";
@@ -206,6 +208,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Public and private keys that are generated in AndroidKeyStore.
      */
+    @GuardedBy("this")
     private KeyPair mKeyPair;
     private String mBlobVersion;
     private SecretKey mEncryptionKey = null;
@@ -317,7 +320,7 @@ public class StorageHelper implements IStorageHelper {
 
     private String getKeyThumbPrint(final @NonNull SecretKey secretKey, final @NonNull SecretKey hmacKey) throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         final Cipher thumbPrintCipher = Cipher.getInstance(CIPHER_ALGORITHM_FOR_KEY_TRACKING);
-        final byte[] thumbprintBytes = "012345678910111213141516".getBytes();
+        final byte[] thumbprintBytes = "012345678910111213141516".getBytes(AuthenticationConstants.CHARSET_UTF8);
         thumbPrintCipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] bytesOut = thumbPrintCipher.doFinal(thumbprintBytes);
         Mac thumbprintMac = Mac.getInstance(HMAC_ALGORITHM);
@@ -659,7 +662,7 @@ public class StorageHelper implements IStorageHelper {
     /**
      * Encrypt the given unencrypted symmetric key with Keystore key and save to storage.
      */
-    public void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
+    public synchronized void saveKeyStoreEncryptedKey(@NonNull SecretKey unencryptedKey) throws GeneralSecurityException, IOException {
         if (mKeyPair == null) {
             mKeyPair = generateKeyPairFromAndroidKeyStore();
         }
@@ -948,7 +951,7 @@ public class StorageHelper implements IStorageHelper {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressLint("GetInstance")
-    private byte[] wrap(final SecretKey key) throws GeneralSecurityException {
+    private synchronized byte[] wrap(final SecretKey key) throws GeneralSecurityException {
         final String methodName = ":wrap";
 
         Logger.verbose(TAG + methodName, "Wrap secret key.");
@@ -959,7 +962,7 @@ public class StorageHelper implements IStorageHelper {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     @SuppressLint("GetInstance")
-    private SecretKey unwrap(final byte[] keyBlob) throws GeneralSecurityException {
+    private synchronized SecretKey unwrap(final byte[] keyBlob) throws GeneralSecurityException {
         final Cipher wrapCipher = Cipher.getInstance(WRAP_ALGORITHM);
         wrapCipher.init(Cipher.UNWRAP_MODE, mKeyPair.getPrivate());
         try {

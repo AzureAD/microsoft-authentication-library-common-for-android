@@ -24,47 +24,50 @@ package com.microsoft.identity.common;
 
 import android.content.Context;
 
-import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.internal.util.AbstractSharedPrefNameValueStorage;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
+import com.microsoft.identity.common.java.util.ported.Predicate;
+
+import java.util.Iterator;
+import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
 /**
  * An implementation of {@link INameValueStorage} for storing String.
  * Implemented with SharedPreference.
  */
-public class SharedPreferenceStringStorage implements INameValueStorage<String> {
+public class SharedPreferenceStringStorage extends AbstractSharedPrefNameValueStorage<String> {
 
-    final ISharedPreferencesFileManager mSharedPrefs;
-
+    @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "Lombok inserts nullchecks")
     public SharedPreferenceStringStorage(@NonNull final Context context,
                                          @NonNull final String sharedPrefFileName) {
-        mSharedPrefs = SharedPreferencesFileManager.getSharedPreferences(
+        super(SharedPreferencesFileManager.getSharedPreferences(
                 context,
                 sharedPrefFileName,
                 null
-        );
+        ));
     }
 
     @Override
     public String get(@NonNull String name) {
-        return mSharedPrefs.getString(name);
+        return mManager.getString(name);
+    }
+
+    public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyPredicate) {
+        return mManager.getAllFilteredByKey(keyPredicate);
+    }
+
+    @Override
+    public @NonNull Map<String, String> getAll() {
+        return mManager.getAll();
     }
 
     @Override
     public void put(@NonNull String name, @Nullable String value) {
-        mSharedPrefs.putString(name, value);
-    }
-
-    @Override
-    public void remove(@NonNull String name) {
-        mSharedPrefs.remove(name);
-    }
-
-    @Override
-    public void clear() {
-        mSharedPrefs.clear();
+        mManager.putString(name, value);
     }
 }
