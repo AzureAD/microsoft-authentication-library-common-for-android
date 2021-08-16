@@ -30,7 +30,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;

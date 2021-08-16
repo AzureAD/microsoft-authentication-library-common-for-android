@@ -20,51 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.java.commands;
 
-import androidx.annotation.Nullable;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
-import com.microsoft.identity.common.java.commands.ICommandResult;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-
-public class CommandResult implements ICommandResult {
-
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
-
-    private final ResultStatus mStatus;
-    private final Object mResult;
-    private final String mCorrelationId;
-
-    @Setter
-    @Getter
-    @Accessors(prefix = "m")
-    private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
-
-    public CommandResult(ResultStatus status, Object result) {
-        this(status, result, null);
-    }
-
-    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
-        mStatus = status;
-        mResult = result;
-        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
-    }
-
-    public ResultStatus getStatus() {
-        return mStatus;
-    }
-
-    public Object getResult() {
-        return mResult;
-    }
-
+public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
+    void onCancel();
 }
+

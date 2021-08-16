@@ -26,7 +26,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.commands.CommandCallback;
+import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
