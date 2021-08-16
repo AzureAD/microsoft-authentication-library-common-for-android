@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
