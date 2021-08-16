@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.logging.DiagnosticContext;
 
 import lombok.NonNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -311,7 +312,7 @@ public class Telemetry {
             return Collections.emptyList();
         }
 
-        List<Map<String, String>> finalRawMap = new CopyOnWriteArrayList<>();
+        List<Map<String, String>> finalRawMap = new ArrayList<>();
 
         for (final Iterator<Map<String, String>> iterator = mTelemetryRawDataMap.iterator(); iterator.hasNext(); ) {
             final Map<String, String> event = iterator.next();
