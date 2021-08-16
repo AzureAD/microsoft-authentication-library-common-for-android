@@ -31,11 +31,14 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Class is deprecated.
  *
  * @see com.microsoft.identity.common.java.logging.DiagnosticContext
  */
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 @Deprecated
 public final class DiagnosticContext extends com.microsoft.identity.common.logging.DiagnosticContext {
 

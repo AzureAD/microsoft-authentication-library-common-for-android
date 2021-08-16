@@ -31,6 +31,7 @@ import androidx.annotation.RequiresApi;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.security.cert.Certificate;
 import java.util.Date;
@@ -59,19 +60,17 @@ public class AndroidKeystoreAsymmetricRsaKey implements AsymmetricRsaKey {
     /**
      * Constructs a new {@link AndroidKeystoreAsymmetricRsaKey} instance.
      *
-     * @param context    The application Context.
      * @param popManager The underlying {@link IDevicePopManager} to which we'll delegate.
      * @throws ClientException If asymmetric key generation fails.
      */
-    AndroidKeystoreAsymmetricRsaKey(@NonNull final Context context,
-                                    @NonNull final IDevicePopManager popManager,
+    AndroidKeystoreAsymmetricRsaKey(@NonNull final IDevicePopManager popManager,
                                     @NonNull final String alias)
             throws ClientException {
         mDevicePopManager = popManager;
         mAlias = alias;
 
         if (!mDevicePopManager.asymmetricKeyExists()) {
-            mDevicePopManager.generateAsymmetricKey(context);
+            mDevicePopManager.generateAsymmetricKey();
         }
     }
 

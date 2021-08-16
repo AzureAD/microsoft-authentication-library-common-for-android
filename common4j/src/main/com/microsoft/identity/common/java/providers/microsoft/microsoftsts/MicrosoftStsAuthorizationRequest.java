@@ -24,23 +24,22 @@ package com.microsoft.identity.common.java.providers.microsoft.microsoftsts;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.UrlUtil;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
+import cz.msebera.android.httpclient.client.utils.URIBuilder;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequest<MicrosoftStsAuthorizationRequest> {
@@ -79,6 +78,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     @SerializedName("cpVersion")
     private final String mCompanyPortalVersion;
 
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @Getter
     @Accessors(prefix = "m")
     private final transient String mDisplayableId;
@@ -93,12 +93,14 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
      * That said, I'm not sure if removing this will have any unintended side effects,
      * so I'm keeping it here for now.
      */
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     @Getter
     @Accessors(prefix = "m")
     private final transient String mTokenScope;
 
     protected transient AzureActiveDirectorySlice mSlice;
 
+    @SuppressFBWarnings("SE_TRANSIENT_FIELD_NOT_RESTORED")
     protected transient Map<String, String> mFlightParameters;
 
     // TODO private transient InstanceDiscoveryMetadata mInstanceDiscoveryMetadata;
@@ -203,7 +205,7 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
     }
 
     @Override
-    public URI getAuthorizationRequestAsHttpRequest() throws URISyntaxException {
+    public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         final URIBuilder builder = new URIBuilder(super.getAuthorizationRequestAsHttpRequest());
         appendParameterToBuilder(builder, mFlightParameters);
 
@@ -222,11 +224,15 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             builder.addParameter(HIDE_SWITCH_USER_QUERY_PARAMETER, "1");
         }
 
-        return builder.build();
+        try {
+            return builder.build();
+        } catch (final URISyntaxException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 
     @Override
-    public String getAuthorizationEndpoint() throws URISyntaxException {
+    public String getAuthorizationEndpoint() throws ClientException {
         final String methodName = ":getAuthorizationEndpoint";
 
         if (this.getAuthority() == null) {
@@ -235,7 +241,11 @@ public class MicrosoftStsAuthorizationRequest extends MicrosoftAuthorizationRequ
             throw new IllegalStateException("Authority is null.");
         }
 
-        return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT);
+        try {
+            return UrlUtil.appendPathToURL(this.getAuthority(), AUTHORIZATION_ENDPOINT).toString();
+        } catch (final URISyntaxException | MalformedURLException e) {
+            throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
+        }
     }
 }
 

@@ -50,7 +50,12 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, () -> Logger.verbose(tag, correlationId, message), false);
+        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.verbose(tag, correlationId, message);
+            }
+        }, false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -59,7 +64,12 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, () -> Logger.info(tag, correlationId, message), false);
+        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.info(tag, correlationId, message);
+            }
+        }, false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -68,7 +78,12 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, () -> Logger.error(tag, correlationId, message, null), false);
+        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.error(tag, correlationId, message, null);
+            }
+        }, false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -77,7 +92,12 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(logLevel);
-        testLogger(tag, logLevel, correlationId, message, containsPII, () -> Logger.warn(tag, correlationId, message), false);
+        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.warn(tag, correlationId, message);
+            }
+        }, false);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -86,7 +106,12 @@ public class LoggerTest {
         final boolean containsPII = false;
 
         Logger.setLogLevel(Logger.LogLevel.ERROR);
-        testLogger(tag, logLevel, correlationId, message, containsPII, () -> Logger.verbose(tag, correlationId, message), true);
+        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.verbose(tag, correlationId, message);
+            }
+        }, true);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -95,7 +120,12 @@ public class LoggerTest {
         final boolean containsPII = true;
 
         Logger.setAllowPii(false);
-        testLogger(tag, logLevel, correlationId, message, containsPII, () -> Logger.verbosePII(tag, correlationId, message), true);
+        testLogger(tag, logLevel, correlationId, message, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.verbosePII(tag, correlationId, message);
+            }
+        }, true);
     }
 
     @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
@@ -110,7 +140,12 @@ public class LoggerTest {
         DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
         Logger.setAllowPii(false);
-        testLogger(tag, logLevel, newCorrelationId, newThreadName, containsPII, () -> Logger.verbose(tag, ""), false);
+        testLogger(tag, logLevel, newCorrelationId, newThreadName, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.verbose(tag, "");
+            }
+        }, false);
     }
 
     // Each thread should print a different thread name (and correlation ID, if set differently) to the log.
@@ -141,13 +176,23 @@ public class LoggerTest {
                 requestContext.put(DiagnosticContext.CORRELATION_ID, correlationId_2);
                 DiagnosticContext.INSTANCE.setRequestContext(requestContext);
 
-                testLogger(tag, logLevel, correlationId_2, threadName_2[0], containsPII, () -> Logger.verbose(tag, ""), false);
+                testLogger(tag, logLevel, correlationId_2, threadName_2[0], containsPII, new IOperationToTest() {
+                    @Override
+                    public void execute() {
+                        Logger.verbose(tag, "");
+                    }
+                }, false);
                 countDownLatch.countDown();
             }
         }).start();
 
         countDownLatch.await();
-        testLogger(tag, logLevel, correlationId_1, threadName_1, containsPII, () -> Logger.verbose(tag, ""), false);
+        testLogger(tag, logLevel, correlationId_1, threadName_1, containsPII, new IOperationToTest() {
+            @Override
+            public void execute() {
+                Logger.verbose(tag, "");
+            }
+        }, false);
 
         Assert.assertNotEquals(threadName_2[0], threadName_1);
     }

@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 
 public interface IBrokerResultAdapter {
 

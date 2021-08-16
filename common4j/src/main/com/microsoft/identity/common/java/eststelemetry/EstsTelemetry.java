@@ -26,11 +26,13 @@ import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,13 +50,20 @@ import lombok.NonNull;
 public class EstsTelemetry {
     private final static String TAG = EstsTelemetry.class.getSimpleName();
 
+    /**
+     * The name of the storage file on disk for the last request telemetry.
+     */
+    private static final String LAST_REQUEST_TELEMETRY_STORAGE_FILE =
+            "com.microsoft.identity.client.last_request_telemetry";
+
     private static volatile EstsTelemetry sEstsTelemetryInstance = null;
     private LastRequestTelemetryCache mLastRequestTelemetryCache;
     private final INameValueStorage<CurrentRequestTelemetry> mTelemetryMap;
     private final INameValueStorage<Set<FailedRequest>> mSentFailedRequests;
 
     EstsTelemetry() {
-        this(new TelemetryMap(), new SentFailedRequestsMap());
+        this(new InMemoryStorage<CurrentRequestTelemetry>(),
+                new InMemoryStorage<Set<FailedRequest>>());
     }
 
     // Exposed for testing only.
@@ -78,13 +87,33 @@ public class EstsTelemetry {
         return sEstsTelemetryInstance;
     }
 
+    //@VisibleForTesting
+    public synchronized void clear(){
+        mTelemetryMap.clear();
+        mSentFailedRequests.clear();
+        if (mLastRequestTelemetryCache != null) {
+            mLastRequestTelemetryCache.clear();
+        }
+    }
+
     /**
      * Bootstrap an instance of {@link EstsTelemetry}.
      * Must be invoked prior to any operation on this object.
      */
-    public synchronized void setUp(@Nullable final LastRequestTelemetryCache lastRequestTelemetryCache) {
+    public synchronized void setUp(@NonNull final LastRequestTelemetryCache lastRequestTelemetryCache) {
         if (this.mLastRequestTelemetryCache == null) {
             this.mLastRequestTelemetryCache = lastRequestTelemetryCache;
+        }
+    }
+
+    /**
+     * Bootstrap an instance of {@link EstsTelemetry}.
+     * Must be invoked prior to any operation on this object.
+     */
+    public synchronized void setUp(@NonNull final IPlatformComponents platformComponents) {
+        if (this.mLastRequestTelemetryCache == null) {
+            this.mLastRequestTelemetryCache = new LastRequestTelemetryCache(
+                    platformComponents.getNameValueStore(LAST_REQUEST_TELEMETRY_STORAGE_FILE, String.class));
         }
     }
 
@@ -177,7 +206,7 @@ public class EstsTelemetry {
         final CurrentRequestTelemetry currentTelemetry = mTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
             Logger.info(TAG + methodName, "currentTelemetry is null. Nothing to flush.");
-             return;
+            return;
         }
 
         // load the last request object from cache
@@ -215,8 +244,8 @@ public class EstsTelemetry {
                     correlationId,
                     errorCode);
         } else if (commandResult.getResult() != null &&
-                commandResult.getResult() instanceof ILocalAuthenticationResultBase) {
-            final ILocalAuthenticationResultBase localAuthenticationResult = (ILocalAuthenticationResultBase) commandResult.getResult();
+                commandResult.getResult() instanceof ILocalAuthenticationResult) {
+            final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
             if (localAuthenticationResult.isServicedFromCache()) {
                 // we returned a token from cache, let's increment the silent success count
                 lastRequestTelemetry.incrementSilentSuccessCount();
@@ -301,8 +330,8 @@ public class EstsTelemetry {
             // we did not go to token endpoint
             return false;
         } else if (commandResult.getStatus() == ICommandResult.ResultStatus.COMPLETED) {
-            if (commandResult.getResult() instanceof ILocalAuthenticationResultBase) {
-                final ILocalAuthenticationResultBase localAuthenticationResult = (ILocalAuthenticationResultBase) commandResult.getResult();
+            if (commandResult.getResult() instanceof ILocalAuthenticationResult) {
+                final ILocalAuthenticationResult localAuthenticationResult = (ILocalAuthenticationResult) commandResult.getResult();
                 if (localAuthenticationResult.isServicedFromCache()) {
                     // we did not go to token endpoint
                     return false;
@@ -333,7 +362,7 @@ public class EstsTelemetry {
         final RequestTelemetry currentTelemetry = mTelemetryMap.get(correlationId);
         if (currentTelemetry == null) {
             Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
-                    correlationId +" is null.");
+                    correlationId + " is null.");
             return null;
         }
 
@@ -366,7 +395,7 @@ public class EstsTelemetry {
             final CurrentRequestTelemetry currentRequestTelemetry = mTelemetryMap.get(correlationId);
             if (currentRequestTelemetry == null) {
                 Logger.warn(TAG + methodName, "currentTelemetry for correlation ID:" +
-                        correlationId +" is null.");
+                        correlationId + " is null.");
                 return null;
             }
 

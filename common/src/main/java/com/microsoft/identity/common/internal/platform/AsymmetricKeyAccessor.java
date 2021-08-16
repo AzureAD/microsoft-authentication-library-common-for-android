@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 
 import java.security.KeyStore;
 import java.security.KeyStoreException;

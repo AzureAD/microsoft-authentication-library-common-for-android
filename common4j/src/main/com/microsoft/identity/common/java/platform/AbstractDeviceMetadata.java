@@ -35,6 +35,7 @@ public abstract class AbstractDeviceMetadata implements IDeviceMetadata {
         return getDeviceModel() + SEPARATOR +
                 getManufacturer() + SEPARATOR +
                 getCpu() + SEPARATOR +
-                getOs();
+                getOsForEsts() + SEPARATOR +
+                getOsForDrs();
     }
 }

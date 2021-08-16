@@ -22,9 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver} instead.
  **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
 @Deprecated
 public interface ITelemetryAggregatedObserver extends com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver {
 }

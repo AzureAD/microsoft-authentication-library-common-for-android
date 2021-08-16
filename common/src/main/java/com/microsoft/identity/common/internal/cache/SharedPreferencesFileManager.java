@@ -31,10 +31,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.AbstractMap;
@@ -47,10 +49,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Convenience class for accessing {@link SharedPreferences}.
  */
-public class SharedPreferencesFileManager implements ISharedPreferencesFileManager {
-    public interface Predicate<T> {
-        boolean test(T value);
-    }
+public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage {
 
     private static final String TAG = SharedPreferencesFileManager.class.getSimpleName();
 
@@ -65,31 +64,6 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
 
-    /**
-     * Constructs an instance of SharedPreferencesFileManager.
-     *
-     * @param context           Interface to global information about an application environment.
-     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created
-     *                          if it does not exist.
-     * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
-     * @param operatingMode     the mode in which to operate this
-     */
-    @Deprecated
-    public static SharedPreferencesFileManager getSharedPreferences(final Context context,
-                                                                    final String name,
-                                                                    final int operatingMode,
-                                                                    final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
-        SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
-        if (cachedFileManager == null) {
-            cachedFileManager = objectCache.putIfAbsent(key,
-                    new SharedPreferencesFileManager(context, name, operatingMode, encryptionManager));
-            if (cachedFileManager == null) {
-                cachedFileManager = objectCache.get(key);
-            }
-        }
-        return cachedFileManager;
-    }
 
     /**
      * Constructs an instance of SharedPreferencesFileManager. Operating mode is always MODE_PRIVATE.
@@ -102,37 +76,16 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        return getSharedPreferences(context, name, Context.MODE_PRIVATE, encryptionManager);
-    }
-
-    /**
-     * Constructs an instance of SharedPreferencesFileManager.
-     * The default operating mode is {@link Context#MODE_PRIVATE}
-     *
-     * @param context Interface to global information about an application environment.
-     * @param name    The desired {@link android.content.SharedPreferences} file. It will be created
-     *                if it does not exist.
-     */
-    public SharedPreferencesFileManager(
-            final Context context,
-            final String name) {
-        this(context, name, -1, null);
-        Logger.verbose(TAG, "Init: " + TAG);
-    }
-
-    /**
-     * Constructs an instance of SharedPreferencesFileManager.
-     *
-     * @param context       Interface to global information about an application enviroment.
-     * @param name          The desired {@link SharedPreferences} file. It will be created
-     *                      if it does not exist.
-     * @param operatingMode Operating mode {@link Context#getSharedPreferences(String, int)}.
-     */
-    public SharedPreferencesFileManager(
-            final Context context,
-            final String name,
-            final int operatingMode) {
-        this(context, name, operatingMode, null);
+        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE;
+        SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
+        if (cachedFileManager == null) {
+            cachedFileManager = objectCache.putIfAbsent(key,
+                    new SharedPreferencesFileManager(context, name, encryptionManager));
+            if (cachedFileManager == null) {
+                cachedFileManager = objectCache.get(key);
+            }
+        }
+        return cachedFileManager;
     }
 
     /**
@@ -148,34 +101,13 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             final Context context,
             final String name,
             final IKeyAccessor encryptionManager) {
-        this(context, name, -1, encryptionManager);
-    }
-
-    /**
-     * Constructs an instance of SharedPreferencesFileManager.
-     *
-     * @param context                  Interface to global information about an application enviroment.
-     * @param name                     The desired {@link SharedPreferences} file. It will be created
-     *                                 if it does not exist.
-     * @param operatingMode            Operating mode {@link Context#getSharedPreferences(String, int)}.
-     * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
-     */
-    public SharedPreferencesFileManager(
-            final Context context,
-            final String name,
-            final int operatingMode,
-            final IKeyAccessor encryptionManager) {
-        if (operatingMode == -1 && encryptionManager == null) {
+        if (encryptionManager == null) {
             Logger.verbose(TAG, "Init: ");
-        } else if (encryptionManager == null) {
-            Logger.verbose(TAG, "Init with operating mode: " + TAG);
-        } else if (operatingMode == -1) {
-            Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         } else {
-            Logger.verbose(TAG, "Init with operating mode and storage helper " + TAG);
+            Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
         mSharedPreferencesFileName = name;
-        mSharedPreferences = context.getSharedPreferences(name, operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
+        mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
 
         if (encryptionManager != null) {
             mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
@@ -256,7 +188,7 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
     }
 
     @Override
-    public final String getSharedPreferencesFileName() {
+    public final String getStorageFileName() {
         return mSharedPreferencesFileName;
     }
 
@@ -324,6 +256,11 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                 final Map.Entry<String, String> tmp = nextEntry;
                 nextEntry = null;
                 return tmp;
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException("Removal is not supported");
             }
         };
     }

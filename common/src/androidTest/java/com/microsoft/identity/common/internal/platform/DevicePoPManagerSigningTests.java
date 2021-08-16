@@ -22,10 +22,9 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
 import androidx.test.core.app.ApplicationProvider;
 
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
 
@@ -40,17 +39,7 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.MD5_WITH_RSA;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.NONE_WITH_RSA;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_256_WITH_RSA;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_256_WITH_RSA_PSS;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_384_WITH_RSA;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_384_WITH_RSA_PSS;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_512_WITH_RSA;
-import static com.microsoft.identity.common.java.crypto.SigningAlgorithm.SHA_512_WITH_RSA_PSS;
+import java.util.Arrays;
 
 
 // Note: Test cannot use robolectric due to the following open issue
@@ -65,35 +54,19 @@ public class DevicePoPManagerSigningTests {
 
     @Parameterized.Parameters
     public static Iterable<SigningAlgorithm> testParams() {
-        final List<SigningAlgorithm> signingAlgs =
-                new ArrayList<SigningAlgorithm>() {{
-                    add(MD5_WITH_RSA);
-                    add(NONE_WITH_RSA);
-                    add(SHA_256_WITH_RSA);
-                    add(SHA_384_WITH_RSA);
-                    add(SHA_512_WITH_RSA);
-                }};
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Only execute these tests at appropriate API levels...
-            signingAlgs.add(SHA_256_WITH_RSA_PSS);
-            signingAlgs.add(SHA_384_WITH_RSA_PSS);
-            signingAlgs.add(SHA_512_WITH_RSA_PSS);
-        }
-
-        return signingAlgs;
+        return Arrays.asList(SigningAlgorithm.values());
     }
 
     @SuppressWarnings("unused")
     public DevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager();
+        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
         this.signingAlg = signingAlg;
     }
 
     @Before
     public void setUp() throws ClientException {
-        devicePopManager.generateAsymmetricKey(ApplicationProvider.getApplicationContext());
+        devicePopManager.generateAsymmetricKey();
     }
 
     @After

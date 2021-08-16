@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
-import com.microsoft.identity.common.exception.IErrorInformation;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
