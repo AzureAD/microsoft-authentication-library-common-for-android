@@ -37,7 +37,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.CodeMarkerManager;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -104,8 +104,8 @@ import javax.security.auth.x500.X500Principal;
 
 import lombok.SneakyThrows;
 
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;

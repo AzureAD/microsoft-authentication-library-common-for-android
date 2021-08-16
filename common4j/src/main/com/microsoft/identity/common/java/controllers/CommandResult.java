@@ -20,37 +20,38 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.java.controllers;
 
-import java.util.Calendar;
-import java.util.Date;
+import com.microsoft.identity.common.java.commands.ICommandResult;
 
-public class CommandResultCacheItem {
+import edu.umd.cs.findbugs.annotations.Nullable;
 
-    private final static int VALIDITY_DURATION = 30;
+public class CommandResult implements ICommandResult {
 
-    private CommandResult mValue;
-    private Date mExpiresOn;
-
-    public CommandResultCacheItem(CommandResult value){
-        mValue = value;
-        mExpiresOn = getExpiresOn();
+    public String getCorrelationId() {
+        return mCorrelationId;
     }
 
-    private Date getExpiresOn(){
-        final Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.SECOND, VALIDITY_DURATION);
-        return calendar.getTime();
+    private final ResultStatus mStatus;
+    private final Object mResult;
+    private final String mCorrelationId;
+
+    public CommandResult(ResultStatus status, Object result) {
+        this(status, result, null);
     }
 
-    public boolean isExpired(){
-        final Calendar calendar = Calendar.getInstance();
-        final Date now = calendar.getTime();
-
-        return now.after(mExpiresOn);
+    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
+        mStatus = status;
+        mResult = result;
+        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
     }
 
-    public CommandResult getValue(){
-        return mValue;
+    public ResultStatus getStatus() {
+        return mStatus;
     }
+
+    public Object getResult() {
+        return mResult;
+    }
+
 }

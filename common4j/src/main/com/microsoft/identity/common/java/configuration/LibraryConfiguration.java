@@ -20,9 +20,9 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.configuration;
+package com.microsoft.identity.common.java.configuration;
 
-import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
 
 import lombok.NonNull;
 
