@@ -47,9 +47,6 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
-import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
-import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
-import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
