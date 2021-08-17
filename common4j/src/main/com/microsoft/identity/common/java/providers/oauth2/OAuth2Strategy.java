@@ -48,6 +48,8 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.telemetry.events.BaseEvent;
+import com.microsoft.identity.common.java.telemetry.events.HttpEndEvent;
+import com.microsoft.identity.common.java.telemetry.events.HttpStartEvent;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -222,6 +224,7 @@ public abstract class OAuth2Strategy
             );
         }
 
+        Telemetry.emit(new HttpStartEvent());
         final URL requestUrl = new URL(getTokenEndpoint());
         final HttpResponse response = httpClient.post(
                 requestUrl,
@@ -229,6 +232,8 @@ public abstract class OAuth2Strategy
                 requestBody.getBytes(ObjectMapper.ENCODING_SCHEME),
                 null
         );
+
+        Telemetry.emit(new HttpEndEvent());
 
         // Record the clock skew between *this device* and EVO...
         if (null != response.getDate()) {
