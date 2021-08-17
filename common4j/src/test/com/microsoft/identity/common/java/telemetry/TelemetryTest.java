@@ -162,17 +162,13 @@ public class TelemetryTest {
     private void testTelemetryMapHelper() {
         List<Map<String,String>> telemetryData = Telemetry.getInstance().getMap();
         Map<String, String> map = telemetryData.get(0);
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.App.NAME));
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.App.BUILD));
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Device.MODEL));
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Device.NAME));
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Os.NAME));
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Os.VERSION));
-        Assert.assertTrue(map.containsKey(TelemetryEventStrings.Device.TIMEZONE));
+        Assert.assertTrue(map.containsKey("Microsoft.MSAL.method"));
     }
 
     @Test
     public void testTelemetryMap() {
+        Telemetry.emit(new HttpStartEvent().putMethod("GET"));
+        testTelemetryMapHelper();
         testTelemetryMapHelper();
     }
 
