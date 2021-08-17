@@ -41,4 +41,9 @@ public class CopyUtil {
     public static char[] copyIfNotNull(@Nullable final char[] array) {
         return array == null ? null : Arrays.copyOf(array, array.length);
     }
+
+    @Nullable
+    public static byte[] copyIfNotNull(@Nullable final byte[] array) {
+        return array == null ? null : Arrays.copyOf(array, array.length);
+    }
 }

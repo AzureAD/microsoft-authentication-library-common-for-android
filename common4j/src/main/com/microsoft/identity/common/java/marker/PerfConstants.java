@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.common;
+package com.microsoft.identity.common.java.marker;
 
 /**
  * A class having the code marker value of particular event's description.

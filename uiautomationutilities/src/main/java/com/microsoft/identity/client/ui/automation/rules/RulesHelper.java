@@ -47,12 +47,23 @@ public class RulesHelper {
     private final static String TAG = RulesHelper.class.getSimpleName();
 
     /**
-     * Get a RuleChain object containing the necessary rules.
+     * Get a RuleChain object containing the necessary rules
      *
      * @param broker the broker that may be used during this test
      * @return a {@link RuleChain} object
      */
     public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker) {
+        return RulesHelper.getPrimaryRules(broker, new Timeout(10, TimeUnit.MINUTES));
+    }
+
+    /**
+     * Get a RuleChain object containing the necessary rules.
+     *
+     * @param broker  the broker that may be used during this test
+     * @param timeout the timeout of the test
+     * @return a {@link RuleChain} object
+     */
+    public static RuleChain getPrimaryRules(@Nullable final ITestBroker broker, Timeout timeout) {
         Log.i(TAG, "Adding AutomationLoggingRule");
         RuleChain ruleChain = RuleChain.outerRule(new AutomationLoggingRule());
 
@@ -60,7 +71,7 @@ public class RulesHelper {
         ruleChain = ruleChain.around(new RetryTestRule());
 
         Log.i(TAG, "Adding Timeout Rule");
-        ruleChain = ruleChain.around(new Timeout(10, TimeUnit.MINUTES));
+        ruleChain = ruleChain.around(timeout);
 
         Log.i(TAG, "Adding UiAutomatorTestRule");
         ruleChain = ruleChain.around(new UiAutomatorTestRule());

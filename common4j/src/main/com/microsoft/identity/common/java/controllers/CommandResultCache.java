@@ -20,33 +20,39 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
-
-import android.util.LruCache;
+package com.microsoft.identity.common.java.controllers;
 
 import com.microsoft.identity.common.java.WarningType;
-import com.microsoft.identity.common.internal.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.BaseCommand;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Name: CommandResultCache
  * Responsibilities: Caching results of commands on behalf of the command dispatcher
  */
+// Suppressing rawtype warnings due to the generic type BaseCommand
+@SuppressWarnings(WarningType.rawtype_warning)
 public class CommandResultCache {
 
     private final static int DEFAULT_ITEM_COUNT = 250;
 
     private final Object cacheLock = new Object();
     //Cache items allowed is still TBD... for now using default value of 250
-    // Suppressing rawtype warnings due to the generic type BaseCommand
-    @SuppressWarnings(WarningType.rawtype_warning)
-    private LruCache<BaseCommand, CommandResultCacheItem> mCache;
+    private final Map<BaseCommand, CommandResultCacheItem> mCache;
 
     public CommandResultCache() {
-        mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
+        this(DEFAULT_ITEM_COUNT);
     }
 
-    public CommandResultCache(int maxItemCount) {
-        mCache = new LruCache<>(maxItemCount);
+    public CommandResultCache(final int maxItemCount) {
+        mCache = new LinkedHashMap<BaseCommand, CommandResultCacheItem>(maxItemCount + 1, .75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<BaseCommand, CommandResultCacheItem> eldest) {
+                return size() > maxItemCount;
+            }
+        };
     }
 
     public CommandResult get(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key) {
@@ -67,7 +73,6 @@ public class CommandResultCache {
 
     public void put(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand key, CommandResult value) {
         synchronized (cacheLock) {
-
             CommandResultCacheItem cacheItem = new CommandResultCacheItem(value);
             //NOTE: If an existing item using this key already in the cache it will be replaced
             mCache.put(key, cacheItem);
@@ -84,8 +89,7 @@ public class CommandResultCache {
 
     public void clear() {
         synchronized (cacheLock) {
-            mCache = new LruCache<>(DEFAULT_ITEM_COUNT);
+            mCache.clear();
         }
     }
-
 }
