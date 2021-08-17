@@ -35,6 +35,9 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 
 public interface IPlatformUtil {
 
+    /**
+     * Return a list of BrowserDescriptors that are considered safe for the given platform.
+     */
     List<BrowserDescriptor> getBrowserSafeListForBroker();
 
     /**
