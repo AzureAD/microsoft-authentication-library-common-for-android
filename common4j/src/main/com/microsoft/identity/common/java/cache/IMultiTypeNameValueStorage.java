@@ -65,13 +65,6 @@ public interface IMultiTypeNameValueStorage {
     long getLong(String key);
 
     /**
-     * Returns the name of named resource that this data source is backed by.
-     *
-     * @return The name of the file.
-     */
-    String getStorageFileName();
-
-    /**
      * Returns all entries in the named resource.
      * <p>
      * Note that you must not modify the collection returned by this method, or alter any of its
@@ -84,6 +77,7 @@ public interface IMultiTypeNameValueStorage {
     /**
      * Returns an iterator on the shared preferences entries that views only those entries that
      * the predicate evaluates to true on the key.
+     *
      * @param keyFilter A predicate to use to evaluate the key, return true to include key value pair.
      * @return an iterator as a view on the shared preferences file.
      */
