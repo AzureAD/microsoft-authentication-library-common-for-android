@@ -20,51 +20,15 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.controllers;
+package com.microsoft.identity.client.ui.automation.performance;
 
-
-import com.microsoft.identity.common.java.commands.ICommandResult;
-import edu.umd.cs.findbugs.annotations.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-
-public class CommandResult implements ICommandResult {
-
-    public String getCorrelationId() {
-        return mCorrelationId;
+/**
+ * Collect memory information regarding the current process. This will basically return the total memory being used in KiloBytes.
+ */
+public class MemoryMonitor implements PerformanceProfileMonitor<Long> {
+    @Override
+    public Long getStats(ProcessInfo processInfo) {
+        // From the total memory used in the device, calculate the number of bytes being used by the process defined by processInfo.
+        return (long) (processInfo.getMemoryUsage() * processInfo.getUsedSystemMemory()) / 100;
     }
-
-    private final ResultStatus mStatus;
-    private final Object mResult;
-    private final String mCorrelationId;
-
-    @Setter
-    @Getter
-    @Accessors(prefix = "m")
-    private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
-
-    public CommandResult(ResultStatus status, Object result) {
-        this(status, result, null);
-    }
-
-    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
-        mStatus = status;
-        mResult = result;
-        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
-    }
-
-    public ResultStatus getStatus() {
-        return mStatus;
-    }
-
-    public Object getResult() {
-        return mResult;
-    }
-
 }
