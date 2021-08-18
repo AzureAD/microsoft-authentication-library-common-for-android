@@ -54,6 +54,7 @@ Version 3.5.0
 Version 3.4.5
 ----------
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
+- [PATCH] Do not report network errors as authority validation errors (#1440)
 
 Version 3.4.4
 ----------
