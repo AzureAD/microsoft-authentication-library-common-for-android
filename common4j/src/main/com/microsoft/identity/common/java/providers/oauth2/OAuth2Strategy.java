@@ -47,6 +47,7 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationResult;
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.telemetry.events.UiShownEvent;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -142,7 +143,7 @@ public abstract class OAuth2Strategy
         // Suppressing unchecked warnings due to casting an object in reference of current class to the child class GenericOAuth2Strategy while calling method requestAuthorization()
         @SuppressWarnings(WarningType.unchecked_warning) final Future<AuthorizationResult> authorizationFuture =
                 authorizationStrategy.requestAuthorization(request, this);
-        Telemetry.emit(new UiShownEvent().putVisible("true"));
+        Telemetry.emit(new UiShownEvent().putVisible(TelemetryEventStrings.Value.TRUE));
 
         return authorizationFuture;
     }
