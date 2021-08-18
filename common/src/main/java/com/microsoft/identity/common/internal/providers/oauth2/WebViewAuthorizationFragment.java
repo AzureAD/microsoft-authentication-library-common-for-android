@@ -44,7 +44,6 @@ import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.ui.webview.AzureActiveDirectoryWebViewClient;
-import com.microsoft.identity.common.internal.ui.webview.OnPageCommitVisibleCallback;
 import com.microsoft.identity.common.internal.ui.webview.OnPageLoadedCallback;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
@@ -52,6 +51,8 @@ import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.util.HashMap;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.POST_PAGE_LOADED_URL;
@@ -143,23 +144,27 @@ public class WebViewAuthorizationFragment extends AuthorizationFragment {
                 new AuthorizationCompletionCallback(),
                 new OnPageLoadedCallback() {
                     @Override
-                    public void onPageLoaded() {
+                    public void onPageLoaded(final String url) {
+                        final String[] javascriptToExecute = new String[1];
                         mProgressBar.setVisibility(View.INVISIBLE);
-                    }
-                },
-                new OnPageCommitVisibleCallback() {
-                    @Override
-                    public void onPageCommitVisible() {
+                        try {
+                            javascriptToExecute[0] = String.format("window.expectedUrl = '%s';%n%s",
+                                    URLEncoder.encode(url, "UTF-8"),
+                                    mPostPageLoadedJavascript);
+                        } catch (final UnsupportedEncodingException e) {
+                            // Encode url component failed, fallback.
+                            Logger.warn(TAG, "Inject expectedUrl failed.");
+                        }
                         // Inject the javascript string from testing. This should only be evaluated if we haven't sent
                         // an auth result already.
-                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(mPostPageLoadedJavascript)) {
+                        if (!mAuthResultSent && !StringExtensions.isNullOrBlank(javascriptToExecute[0])) {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                                mWebView.evaluateJavascript(mPostPageLoadedJavascript, null);
+                                mWebView.evaluateJavascript(javascriptToExecute[0], null);
                             } else {
                                 // On earlier versions of Android, javascript has to be loaded with a custom scheme.
                                 // In these cases, Android will helpfully unescape any octects it finds. Unfortunately,
                                 // our javascript may contain the '%' character, so we escape it again, to undo that.
-                                mWebView.loadUrl("javascript:" + mPostPageLoadedJavascript.replace("%", "%25"));
+                                mWebView.loadUrl("javascript:" + javascriptToExecute[0].replace("%", "%25"));
                             }
                         }
                     }
