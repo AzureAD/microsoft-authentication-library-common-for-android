@@ -20,9 +20,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.common.java.commands;
 
-import androidx.annotation.NonNull;
+import lombok.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
@@ -51,9 +51,9 @@ public abstract class TokenCommand extends BaseCommand<AcquireTokenResult> {
         super(parameters, controllers, callback, publicApiId);
     }
 
-    abstract void onFinishAuthorizationSession(int requestCode,
-                                               int resultCode,
-                                               @NonNull final PropertyBag data);
+    public abstract void onFinishAuthorizationSession(int requestCode,
+                                                      int resultCode,
+                                                      @NonNull final PropertyBag data);
 
     @Override
     public boolean willReachTokenEndpoint() {

@@ -20,22 +20,20 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.commands.CommandCallback;
-
-import java.util.Date;
+package com.microsoft.identity.client.ui.automation.performance;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * An interface that will help in getting the statistics of a particular {@link PerformanceProfile}.
+ *
+ * @param <T> the type of the result of getting the statistics
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+public interface PerformanceProfileMonitor<T> {
+
+    /**
+     * Get the stats for the {@link PerformanceProfile} for reporting.
+     *
+     * @param processInfo information regarding the current process
+     * @return some data with information regarding the current usage of the {@link PerformanceProfile}
+     */
+    T getStats(ProcessInfo processInfo);
 }

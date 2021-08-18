@@ -95,14 +95,6 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     }
 
     @Test
-    public void testGetSharedPreferencesFileName() {
-        assertEquals(
-                sTEST_SHARED_PREFS_NAME,
-                mSharedPreferencesFileManager.getStorageFileName()
-        );
-    }
-
-    @Test
     public void testGetAll() {
         String[] testKeys = {"1", "2", "3"};
         String[] testValues = {"a", "b", "c"};
@@ -210,6 +202,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         assertEquals(expectedSize, allMap.size());
         assertEquals("b", allMap.get("2"));
     }
+
     @Test
     public void testContainsTrue() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);

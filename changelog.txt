@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] GetMap function for Telemetry (#1514)
+- [MAJOR] Migrate CommandDispatcher to common4j (#1519)
 - [MAJOR] Migrate BaseController to common4j (#1515)
 - [MAJOR] Migrate *TokenCache classes to common4j
 - [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
@@ -42,6 +44,7 @@ V.Next
 - [MINOR] Implements a fix for sovereign cloud TSL scenarios (#1501)
 - [MINOR] Add a method to allow for the setting of Fragment initial state (#1506)
 - [PATCH] Clear asymmetric pop key on KeyPermanentlyInvalidatedException if occurs during signing (#1505)
+- [MINOR] Migrate authorization completion callback to common4j (#1522)
 
 Version 3.5.0
 ----------
