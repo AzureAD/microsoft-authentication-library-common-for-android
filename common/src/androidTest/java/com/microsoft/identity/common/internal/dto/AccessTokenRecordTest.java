@@ -50,7 +50,7 @@ public class AccessTokenRecordTest extends TestCase {
 
         //When expiresOn true
         accessTokenRecord.setExpiresOn("0");
-        assertTrue(accessTokenRecord.shouldRefresh());
+        assertTrue(accessTokenRecord.isExpired());
 
         //When expiresOn false
         final String tomorrow = String.valueOf(Date.from(LocalDate.now().plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant()).getTime());
