@@ -20,22 +20,15 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.common.java.commands.CommandCallback;
-
-import java.util.Date;
+package com.microsoft.identity.client.ui.automation.performance;
 
 /**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
+ * Collect memory information regarding the current process. This will basically return the total memory being used in KiloBytes.
  */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+public class MemoryMonitor implements PerformanceProfileMonitor<Long> {
+    @Override
+    public Long getStats(ProcessInfo processInfo) {
+        // From the total memory used in the device, calculate the number of bytes being used by the process defined by processInfo.
+        return (long) (processInfo.getMemoryUsage() * processInfo.getUsedSystemMemory()) / 100;
+    }
 }

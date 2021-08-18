@@ -158,6 +158,20 @@ public class TelemetryTest {
         Telemetry.getInstance().flush();
     }
 
+
+    private void testTelemetryMapHelper() {
+        List<Map<String,String>> telemetryData = Telemetry.getInstance().getMap();
+        Map<String, String> map = telemetryData.get(0);
+        Assert.assertTrue(map.containsKey("Microsoft.MSAL.method"));
+    }
+
+    @Test
+    public void testTelemetryMap() {
+        Telemetry.emit(new HttpStartEvent().putMethod("GET"));
+        testTelemetryMapHelper();
+        testTelemetryMapHelper();
+    }
+
     @Test
     public void testITelemetryAggregatedObserver() {
         Telemetry.getInstance().addObserver(new ITelemetryAggregatedObserver() {

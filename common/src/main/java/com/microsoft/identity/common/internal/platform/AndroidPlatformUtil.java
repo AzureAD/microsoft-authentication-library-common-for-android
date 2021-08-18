@@ -31,12 +31,14 @@ import android.content.Context;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 
 import com.microsoft.identity.common.adal.internal.net.DefaultConnectionService;
 import com.microsoft.identity.common.internal.broker.BrokerValidator;
 import com.microsoft.identity.common.internal.broker.IntuneMAMEnrollmentIdGateway;
-import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.internal.ui.webview.WebViewUtil;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
@@ -125,6 +127,12 @@ public class AndroidPlatformUtil implements IPlatformUtil {
         } else {
             return System.nanoTime();
         }
+    }
+
+    @Override
+    public void postCommandResult(@NonNull Runnable runnable) {
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(runnable);
     }
 
     /**
