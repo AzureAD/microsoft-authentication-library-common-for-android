@@ -44,7 +44,6 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRefreshToken;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
-import com.microsoft.identity.common.java.util.OAuthUtil;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.io.IOException;
@@ -496,7 +495,7 @@ public class TokenCacheItemMigrationAdapter {
      */
     @NonNull
     public static String getScopesForTokenRequest(@NonNull final String v1Resource) {
-        String scopes = OAuthUtil.getScopeFromResource(v1Resource);
+        String scopes = MicrosoftStsOAuth2Strategy.getScopeFromResource(v1Resource);
 
         // Add the default scopes, as they will not be present
         scopes += " " + BaseController.getDelimitedDefaultScopeString();
