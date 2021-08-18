@@ -20,11 +20,15 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.client.ui.automation.performance;
 
-import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
-
-public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
-    void onCancel();
+/**
+ * This is basically a unit that can be monitored for performance.
+ * <p>
+ * Others include GPU, Battery/Power
+ */
+public enum PerformanceProfile {
+    CPU,
+    MEMORY,
+    NETWORK
 }
-
