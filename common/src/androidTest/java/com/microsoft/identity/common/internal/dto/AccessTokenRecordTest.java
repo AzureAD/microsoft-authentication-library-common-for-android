@@ -43,7 +43,7 @@ public class AccessTokenRecordTest extends TestCase {
         final AccessTokenRecord accessTokenRecord = new AccessTokenRecord();
         //When expiresOn is null
         try {
-            accessTokenRecord.shouldRefresh();
+            accessTokenRecord.isExpired();
         } catch (Exception e) {
             assertEquals(e.getClass(), NumberFormatException.class);
         }
