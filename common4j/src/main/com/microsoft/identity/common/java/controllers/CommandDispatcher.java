@@ -62,6 +62,7 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -239,6 +240,8 @@ public class CommandDispatcher {
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
+                        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(correlationId);
+                        commandResult.setTelemetryMap(telemetryMap);
                         Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);

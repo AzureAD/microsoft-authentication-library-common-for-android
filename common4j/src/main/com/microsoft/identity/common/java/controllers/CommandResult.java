@@ -22,9 +22,17 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
-import com.microsoft.identity.common.java.commands.ICommandResult;
 
+import com.microsoft.identity.common.java.commands.ICommandResult;
 import edu.umd.cs.findbugs.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 public class CommandResult implements ICommandResult {
 
@@ -35,6 +43,11 @@ public class CommandResult implements ICommandResult {
     private final ResultStatus mStatus;
     private final Object mResult;
     private final String mCorrelationId;
+
+    @Setter
+    @Getter
+    @Accessors(prefix = "m")
+    private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
 
     public CommandResult(ResultStatus status, Object result) {
         this(status, result, null);
