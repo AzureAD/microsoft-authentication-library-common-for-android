@@ -397,7 +397,7 @@ public class DevicePoPManagerTests {
         final String publicKey = mDevicePopManager.getPublicKey(JWK);
 
         // Convert it to JSON, parse to verify fields
-        final Map<String, String> jwkObj = new Gson().fromJson(publicKey, new TypeToken<Map<String, String>>(){}.getType());
+        final Map<String, String> jwkObj = new Gson().fromJson(publicKey, TypeToken.getParameterized(Map.class, String.class, String.class).getType());
 
         // We should expect the following claims...
         // 'kty' - Key Type - Identifies the cryptographic alg used with this key (ex: RSA, EC)

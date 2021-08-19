@@ -246,8 +246,7 @@ public class AzureActiveDirectory
      * @throws JSONException If a parsing error is encountered.
      */
     private static List<AzureActiveDirectoryCloud> deserializeClouds(final String jsonCloudArray) throws JSONException {
-        Type listType = new TypeToken<List<AzureActiveDirectoryCloud>>() {
-        }.getType();
+        Type listType = TypeToken.getParameterized(List.class, AzureActiveDirectoryCloud.class).getType();
         return new Gson().fromJson(jsonCloudArray, listType);
     }
 
