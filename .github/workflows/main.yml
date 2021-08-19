@@ -7,7 +7,7 @@ on:
   push:
     branches: [ continuous-delivery ]
     paths-ignore:
-    - 'common/versioning/version.properties'
+    - 'versioning/version.properties'
     - 'common4j/versioning/version.properties'
 
 #For Testing... runs when project is starred
