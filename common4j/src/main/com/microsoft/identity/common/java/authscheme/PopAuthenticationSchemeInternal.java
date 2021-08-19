@@ -40,6 +40,7 @@ import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSch
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
 import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
+import static com.microsoft.identity.common.java.constants.SpotbugsWarning.ME_ENUM_FIELD_SETTER;
 
 /**
  * Internal representation of PoP Authentication Scheme.
