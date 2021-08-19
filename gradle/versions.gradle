@@ -5,10 +5,9 @@ ext {
     automationAppMinSDKVersion = 21
     targetSdkVersion = 30
     compileSdkVersion = 30
-    buildToolsVersion = "28.0.3"
 
     // Plugins
-    gradleVersion = '4.1.0'
+    gradleVersion = '4.2.0'
     androidMavenGradlePluginVersion = "1.4.1"
     
     //Java Language Support

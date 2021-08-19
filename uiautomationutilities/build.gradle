@@ -36,7 +36,6 @@ android {
    
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
 
     boolean usePreInstalledApks = project.hasProperty("preferPreInstalledApks")
 
@@ -97,7 +96,7 @@ android {
 
 
 task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
+    from android{sourceSets.main.java.srcDirs}
     classifier 'sources'
 }
 

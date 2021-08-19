@@ -44,7 +44,7 @@ android {
         versionCode getAppVersionCode()
         versionName getAppVersionName()
         project.archivesBaseName = "common"
-        project.version = android.defaultConfig.versionName
+        project.version = getAppVersionName()
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -78,6 +78,39 @@ android {
         unitTests.all {
             exclude 'com/microsoft/identity/common/integration'
             exclude 'com/microsoft/identity/common/ropc'
+        }
+
+        devices {
+            pixel2api30 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                device = "Pixel 2"
+                apiLevel = 30
+                systemImageSource = "google"
+                abi = "x86"
+            }
+            pixel2api29 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                device = "Pixel 2"
+                apiLevel = 29
+                systemImageSource = "google"
+                abi = "x86"
+            }
+            pixel2api28 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                device = "Pixel 2"
+                apiLevel = 28
+                systemImageSource = "google"
+                abi = "x86"
+            }
+            pixel2api27 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                device = "Pixel 2"
+                apiLevel = 27
+                systemImageSource = "google"
+                abi = "x86"
+            }
+            pixel2api26 (com.android.build.api.dsl.ManagedVirtualDevice) {
+                device = "Pixel 2"
+                apiLevel = 26
+                systemImageSource = "google"
+                abi = "x86"
+            }
         }
 
     }
@@ -221,7 +254,7 @@ dependencies {
 //}
 
 // Create tasks to generate javadoc
-android.libraryVariants.all { variant ->
+android{libraryVariants.all { variant ->
     task("${variant.name}Javadoc", type: Javadoc, dependsOn: "assemble${variant.name.capitalize()}") {
         source = variant.javaCompileProvider.get().source
 
@@ -229,7 +262,7 @@ android.libraryVariants.all { variant ->
 
         // First add all of your dependencies to the classpath, then add the android jars
         doFirst { classpath += files(variant.javaCompiler.classpath.files) }
-        classpath += files(android.getBootClasspath())
+        classpath += files(android{getBootClasspath()})
 
         options.memberLevel = JavadocMemberLevel.PUBLIC
         options.addStringOption('Xdoclint:none', '-quiet')
@@ -237,19 +270,19 @@ android.libraryVariants.all { variant ->
         // We're excluding these generated files
         exclude '**/R.java'
     }
-}
+}}
 
 // Create tasks to generate javadoc jar
-android.libraryVariants.all { variant ->
+android{libraryVariants.all { variant ->
     task("${variant.name}JavadocJar", type: Jar, dependsOn: "${variant.name}Javadoc") {
         classifier = 'javadoc'
         from tasks["${variant.name}Javadoc"].destinationDir
     }
-}
+}}
 
 
 task sourcesJar(type: Jar) {
-    from android.sourceSets.main.java.srcDirs
+    from android{sourceSets.main.java.srcDirs}
     classifier = 'sources'
     destinationDirectory = reporting.file("$project.buildDir/outputs/jar/")
 }
