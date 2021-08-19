@@ -1,3 +1,4 @@
+package com.microsoft.identity.common.java.telemetry.events;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -20,8 +21,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview;
 
-public interface OnPageCommitVisibleCallback {
-    void onPageCommitVisible();
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+
+/** This event is used in telemetry to check if UI was visible to the end user.
+ *  The value is set in case UI is visible, even if it is for a brief second.
+*/
+public class UiShownEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
+    public UiShownEvent() {
+        super();
+        names(Event.UI_SHOWN_EVENT);
+        types(EventType.UI_EVENT);
+    }
+
+    public UiShownEvent putVisible(String value) {
+        put(Key.UI_VISIBLE, value);
+        return this;
+    }
 }
