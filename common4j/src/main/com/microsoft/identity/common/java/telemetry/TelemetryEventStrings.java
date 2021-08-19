@@ -142,6 +142,7 @@ public class TelemetryEventStrings {
         public static final String REQUEST_CODE = EVENT_PREFIX +"request_code"; //msal only
         public static final String RESULT_CODE = EVENT_PREFIX +"result_code"; //msal only
         public static final String USER_CANCEL = EVENT_PREFIX +"user_cancel";
+        public static final String UI_VISIBLE = EVENT_PREFIX + "ui_visible";
         public static final String UI_CANCELLED = EVENT_PREFIX +"ui_cancelled"; //msal only
         public static final String UI_COMPLETE = EVENT_PREFIX +"ui_complete"; //msal only
         public static final String SERVER_ERROR_CODE = EVENT_PREFIX + "server_error_code";

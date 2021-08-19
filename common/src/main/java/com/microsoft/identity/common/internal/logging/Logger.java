@@ -205,7 +205,7 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
     @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
             " the implementation is separate.")
     public void setLogLevel(final LogLevel logLevel) {
-        emitDeprecationEventNonStatic();
+        emitDeprecationEvent();
         mInstanceDelegate.setLogLevel(adapt(logLevel));
     }
 
@@ -217,7 +217,7 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
     @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
             " the implementation is separate.")
     public void setExternalLogger(final ILoggerCallback externalLogger) {
-        emitDeprecationEventNonStatic();
+        emitDeprecationEvent();
         mInstanceDelegate.setExternalLogger(new com.microsoft.identity.common.logging.ILoggerCallback() {
             @Override
             public void log(final String tag,
@@ -259,13 +259,8 @@ public class Logger extends com.microsoft.identity.common.logging.Logger {
         }
     }
 
-    private void emitDeprecationEventNonStatic() {
-        if (sEmitDeprecationEvent) {
-            sEmitDeprecationEvent = false;
-            Telemetry.emit(new DeprecatedApiUsageEvent().putDeprecatedClassUsage(Logger.class));
-        }
-    }
-
+    @SuppressFBWarnings(value = "NM_WRONG_PACKAGE", justification = "This class is deprecated, and" +
+            " the implementation is separate.")
     private static void emitDeprecationEvent() {
         if (sEmitDeprecationEvent) {
             sEmitDeprecationEvent = false;
