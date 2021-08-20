@@ -1350,6 +1350,7 @@ public final class AuthenticationConstants {
         private static final String VERSION_7 = "7.0";
         private static final String BROKER_VERSION_1 = ONE_POINT_ZERO;
         private static final String BROKER_VERSION_2 = TWO_POINT_ZERO;
+        private static final String BROKER_VERSION_3 = VERSION_3;
 
         /**
          * Tie the API paths and codes into a single object structure to stop us from having to keep

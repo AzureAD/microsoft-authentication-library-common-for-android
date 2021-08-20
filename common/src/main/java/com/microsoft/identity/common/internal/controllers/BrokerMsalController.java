@@ -34,6 +34,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
+import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -905,6 +906,10 @@ public class BrokerMsalController extends BaseController {
                 throw new ClientException(ErrorStrings.INVALID_JWT, e.getMessage(), e);
             }
         }
+
+    }
+
+    public Bundle getSsoToken(GetSsoTokenCommandParameters ssoTokenCommandParameters) {
 
     }
 
