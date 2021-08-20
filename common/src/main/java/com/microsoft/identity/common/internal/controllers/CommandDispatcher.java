@@ -43,12 +43,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.CodeMarkerManager;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.internal.commands.BaseCommand;
-import com.microsoft.identity.common.internal.commands.InteractiveTokenCommand;
-import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.result.VoidResult;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.util.ObjectMapper;
@@ -56,7 +51,6 @@ import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.internal.result.FinalizableResultFuture;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.StringUtil;
@@ -67,18 +61,15 @@ import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommand
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
@@ -91,9 +82,6 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
 
 public class CommandDispatcher {
 
@@ -286,7 +274,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
-                        DiagnosticContext.INSTANCE.clear();
+                        DiagnosticContext.clear();
                     }
                     codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
@@ -318,11 +306,9 @@ public class CommandDispatcher {
                         + correlationId
         );
 
-        final Handler handler = new Handler(Looper.getMainLooper());
-
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture = new FinalizableResultFuture<>();
-            finalFuture.whenComplete(getCommandResultConsumer(command, handler));
+            finalFuture.whenComplete(getCommandResultConsumer(command));
             sSilentExecutor.execute(new Runnable() {
                 @Override
                 public void run() {
@@ -368,7 +354,7 @@ public class CommandDispatcher {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
-        Logger.info(TAG, DiagnosticContext.INSTANCE.getRequestContext().toJsonString(),
+        Logger.info(TAG, DiagnosticContext.getRequestContext().toJsonString(),
                 "Starting request for correlation id : ##" + correlationId
                         + ", with PublicApiId : " + publicApiId);
 
@@ -400,7 +386,7 @@ public class CommandDispatcher {
                     return;
                 }
 
-                if (!StringUtil.isNullOrEmpty(result.getCorrelationId())
+                if (!StringUtil.isEmpty(result.getCorrelationId())
                         && !command.getParameters().getCorrelationId().equals(result.getCorrelationId())) {
                     Logger.info(TAG + methodName,
                             "Completed duplicate request with correlation id : **"
@@ -436,7 +422,7 @@ public class CommandDispatcher {
 
         Object result = null;
         BaseException baseException = null;
-        CommandResult commandResult;
+        CommandResult commandResult = null;
 
         try {
             //Try executing request
@@ -465,7 +451,7 @@ public class CommandDispatcher {
                 if (result != null && result instanceof AcquireTokenResult) {
                     commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
                             correlationId);
-                } else if (result instanceof VoidResult){
+                } else if (result instanceof VoidResult) {
                     commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
                             command.getParameters().getCorrelationId());
                 } else {
@@ -475,9 +461,10 @@ public class CommandDispatcher {
                 }
             }
 
-            return commandResult;
-
         }
+
+        return commandResult;
+    }
 
         /**
          * Return the result of the command to the caller via the callback associated with the command
@@ -485,8 +472,9 @@ public class CommandDispatcher {
          * @param command
          * @param result
          */
-        private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
-        @NonNull final CommandResult result) {
+        private static void returnCommandResult (
+        @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
+        @NonNull final CommandResult result){
 
             final IPlatformUtil platformUtil = command.getParameters().getPlatformComponents().getPlatformUtil();
             platformUtil.onReturnCommandResult(command);
@@ -510,15 +498,18 @@ public class CommandDispatcher {
             });
         }
 
+
         // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
         @SuppressWarnings(WarningType.unchecked_warning)
-        private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        private static void commandCallbackOnError (@SuppressWarnings("rawtypes") BaseCommand
+        command, CommandResult result){
             command.getCallback().onError(ExceptionAdapter.baseExceptionFromException((Throwable) result.getResult()));
         }
 
         // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
         @SuppressWarnings(WarningType.unchecked_warning)
-        private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+        private static void commandCallbackOnTaskCompleted
+        (@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result){
             command.getCallback().onTaskCompleted(result.getResult());
         }
 
@@ -530,8 +521,9 @@ public class CommandDispatcher {
          * @param commandResult
          */
         @SuppressWarnings("unused")
-        private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
-                CommandResult commandResult) {
+        private static void cacheCommandResult
+        (@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
+                CommandResult commandResult){
             if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
                 sCommandResultCache.put(command, commandResult);
             }
@@ -543,7 +535,7 @@ public class CommandDispatcher {
          * @param commandResult
          * @return
          */
-        private static boolean eligibleToCache(@NonNull final CommandResult commandResult) {
+        private static boolean eligibleToCache ( @NonNull final CommandResult commandResult){
             final String methodName = ":eligibleToCache";
             switch (commandResult.getStatus()) {
                 case ERROR:
@@ -564,7 +556,8 @@ public class CommandDispatcher {
          *
          * @param result
          */
-        private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
+        private static CommandResult getCommandResultFromTokenResult (@NonNull AcquireTokenResult
+        result, @NonNull String correlationId){
             //Token Commands
             if (result.getSucceeded()) {
                 return new CommandResult(CommandResult.ResultStatus.COMPLETED,
@@ -580,7 +573,7 @@ public class CommandDispatcher {
             }
         }
 
-        public static void beginInteractive(final InteractiveTokenCommand command) {
+        public static void beginInteractive ( final InteractiveTokenCommand command){
             final String methodName = ":beginInteractive";
             synchronized (sLock) {
 
@@ -641,14 +634,14 @@ public class CommandDispatcher {
                             Telemetry.getInstance().flush(correlationId);
                             returnCommandResult(command, commandResult);
                         } finally {
-                            DiagnosticContext.INSTANCE.clear();
+                            DiagnosticContext.clear();
                         }
                     }
                 });
             }
         }
 
-        private static void completeInteractive(final PropertyBag propertyBag) {
+        private static void completeInteractive ( final PropertyBag propertyBag){
             final String methodName = ":completeInteractive";
 
             int requestCode = propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1);
@@ -661,10 +654,11 @@ public class CommandDispatcher {
             }
         }
 
-        public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
+        public static String initializeDiagnosticContext (
+        @Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion){
             final String methodName = ":initializeDiagnosticContext";
 
-            final String correlationId = StringUtil.isNullOrEmpty(requestCorrelationId) ?
+            final String correlationId = StringUtil.isEmpty(requestCorrelationId) ?
                     UUID.randomUUID().toString() :
                     requestCorrelationId;
 
@@ -672,7 +666,7 @@ public class CommandDispatcher {
             rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
             rc.put(PRODUCT, sdkType);
             rc.put(VERSION, sdkVersion);
-            DiagnosticContext.INSTANCE.setRequestContext(rc);
+            DiagnosticContext.setRequestContext(rc);
             Logger.verbose(
                     TAG + methodName,
                     "Initialized new DiagnosticContext"
@@ -681,12 +675,12 @@ public class CommandDispatcher {
             return correlationId;
         }
 
-        public static int getCachedResultCount() {
+        public static int getCachedResultCount () {
             return sCommandResultCache.getSize();
         }
 
-        private static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
-        @NonNull final String correlationId) {
+        private static void setCorrelationIdOnResult ( @NonNull final CommandResult commandResult,
+        @NonNull final String correlationId){
             // set correlation id on Local Authentication Result
             if (commandResult.getResult() != null &&
                     commandResult.getResult() instanceof LocalAuthenticationResult) {
@@ -696,10 +690,11 @@ public class CommandDispatcher {
             }
         }
 
-        private static String statusMsg(String status){
+        private static String statusMsg (String status){
             return ", with the status : " + status;
         }
 
 
-    }
+
+}
 
