@@ -57,7 +57,7 @@ import com.microsoft.identity.common.java.cache.IAccountCredentialCache;
 import com.microsoft.identity.common.java.cache.IBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.cache.MicrosoftFamilyOAuth2TokenCache;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
-import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.java.cache.NameValueStorageBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
@@ -127,7 +127,7 @@ public class BrokerOAuth2TokenCacheTest {
         mContext = ApplicationProvider.getApplicationContext();
         mPlatformComponents = AndroidPlatformComponents.createFromContext(mContext);
 
-        mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mContext);
+        mApplicationMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents);
 
         initFociCache(mPlatformComponents);
         initOtherCaches(mPlatformComponents);
@@ -896,7 +896,7 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache = new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 TEST_APP_UID,
-                new NameValueStorageBrokerApplicationMetadataCache(mContext)
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
         );
 
         assertEquals(
@@ -907,7 +907,7 @@ public class BrokerOAuth2TokenCacheTest {
         final BrokerOAuth2TokenCache brokerOAuth2TokenCache2 = new BrokerOAuth2TokenCache(
                 mPlatformComponents,
                 TEST_APP_UID,
-                new NameValueStorageBrokerApplicationMetadataCache(mContext)
+                new NameValueStorageBrokerApplicationMetadataCache(mPlatformComponents)
         );
 
         assertEquals(
