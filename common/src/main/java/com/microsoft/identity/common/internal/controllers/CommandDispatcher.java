@@ -446,19 +446,17 @@ public class CommandDispatcher {
                         correlationId);
             }
         } else /* baseException == null */ {
-            if (result instanceof AcquireTokenResult) {
-                //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                if (result != null && result instanceof AcquireTokenResult) {
-                    commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
-                            correlationId);
-                } else if (result instanceof VoidResult) {
-                    commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
-                            command.getParameters().getCorrelationId());
-                } else {
-                    //For commands that don't return neither AcquireTokenResult or VoidResult
-                    commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
-                            correlationId);
-                }
+            //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
+            if (result != null && result instanceof AcquireTokenResult) {
+                commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
+                        correlationId);
+            } else if (result instanceof VoidResult) {
+                commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
+                        command.getParameters().getCorrelationId());
+            } else {
+                //For commands that don't return neither AcquireTokenResult or VoidResult
+                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
+                        correlationId);
             }
 
         }
