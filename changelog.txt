@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MAJOR] Move Utility classes (#1526)
 - [MINOR] Telemetry for OneAUth (#1514, #1525)
 - [MAJOR] Migrate CommandDispatcher to common4j (#1519)
 - [MAJOR] Migrate BaseController to common4j (#1515)

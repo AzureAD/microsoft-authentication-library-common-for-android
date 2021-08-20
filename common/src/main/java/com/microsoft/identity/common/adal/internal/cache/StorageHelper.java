@@ -38,7 +38,7 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.util.DateUtilities;
+import com.microsoft.identity.common.java.util.ported.DateUtilities;
 import com.microsoft.identity.common.internal.util.ProcessUtil;
 import com.microsoft.identity.common.java.telemetry.ITelemetryCallback;
 import com.microsoft.identity.common.logging.Logger;
@@ -89,8 +89,8 @@ import javax.security.auth.x500.X500Principal;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
-import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
-import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 
 import net.jcip.annotations.GuardedBy;
 
