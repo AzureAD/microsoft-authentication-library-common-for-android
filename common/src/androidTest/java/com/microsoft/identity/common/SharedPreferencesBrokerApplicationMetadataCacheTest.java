@@ -22,12 +22,19 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.InstrumentationRegistry;
+import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import android.content.Context;
+
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.microsoft.identity.common.java.cache.NameValueStorageBrokerApplicationMetadataCache;
 import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
 import com.microsoft.identity.common.java.cache.IBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.internal.cache.NameValueStorageBrokerApplicationMetadataCache;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,10 +46,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 @RunWith(AndroidJUnit4.class)
 public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
@@ -50,8 +53,12 @@ public class SharedPreferencesBrokerApplicationMetadataCacheTest {
 
     @Before
     public void setUp() {
+        final Context context = ApplicationProvider.getApplicationContext();
+        final IPlatformComponents platformComponents = AndroidPlatformComponents.createFromContext(
+                context
+        );
         mMetadataCache = new NameValueStorageBrokerApplicationMetadataCache(
-                InstrumentationRegistry.getContext()
+                platformComponents
         );
     }
 
