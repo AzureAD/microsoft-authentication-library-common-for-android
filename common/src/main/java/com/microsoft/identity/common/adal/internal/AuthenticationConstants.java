@@ -1132,6 +1132,11 @@ public final class AuthenticationConstants {
         /**
          * String for generate shr result.
          */
+        public static final String BROKER_GENERATE_SSO_TOKEN_RESULT = "broker_generate_sso_token";
+
+        /**
+         * String for generate shr result.
+         */
         public static final String BROKER_GENERATE_SHR_RESULT = "broker_generate_shr_result";
 
         /**
