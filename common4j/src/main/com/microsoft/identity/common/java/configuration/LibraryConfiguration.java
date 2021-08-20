@@ -60,7 +60,7 @@ public class LibraryConfiguration {
     }
 
     private static synchronized LibraryConfiguration createDefaultInstance() {
-        return LibraryConfiguration.builder().authorizationInCurrentTask(false).build();
+        return LibraryConfiguration.builder().authorizationInCurrentTask(false).refreshInEnabled(false).build();
     }
 
     /**
@@ -72,5 +72,10 @@ public class LibraryConfiguration {
      * when the authorizaiton is still in process.
      */
     private boolean authorizationInCurrentTask;
+
+    /**
+     * Determined whether refresh_in feature is enabled by client.
+     */
+    private boolean refreshInEnabled;
 
 }
