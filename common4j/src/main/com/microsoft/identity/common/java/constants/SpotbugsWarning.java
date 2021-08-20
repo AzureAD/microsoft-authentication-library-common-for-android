@@ -26,5 +26,9 @@ package com.microsoft.identity.common.java.constants;
  * Constants for Spotbugs warnings that need to be suppressed.
  */
 public class SpotbugsWarning {
+
+    /**
+     * Public enum method unconditionally sets its field.
+     */
     public static final String ME_ENUM_FIELD_SETTER = "ME_ENUM_FIELD_SETTER";
 }
