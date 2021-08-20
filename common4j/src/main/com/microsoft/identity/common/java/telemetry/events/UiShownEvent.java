@@ -1,3 +1,4 @@
+package com.microsoft.identity.common.java.telemetry.events;
 // Copyright (c) Microsoft Corporation.
 // All rights reserved.
 //
@@ -20,30 +21,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
 
-import java.util.Arrays;
-import java.util.Date;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-
-/**
- * For making copies of mutable objects - if not null
- */
-public class CopyUtil {
-
-    @Nullable
-    public static Date copyIfNotNull(@Nullable final Date date) {
-        return date == null ? null : new Date(date.getTime());
+/** This event is used in telemetry to check if UI was visible to the end user.
+ *  The value is set in case UI is visible, even if it is for a brief second.
+*/
+public class UiShownEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
+    public UiShownEvent() {
+        super();
+        names(Event.UI_SHOWN_EVENT);
+        types(EventType.UI_EVENT);
     }
 
-    @Nullable
-    public static char[] copyIfNotNull(@Nullable final char[] array) {
-        return array == null ? null : Arrays.copyOf(array, array.length);
-    }
-
-    @Nullable
-    public static byte[] copyIfNotNull(@Nullable final byte[] array) {
-        return array == null ? null : Arrays.copyOf(array, array.length);
+    public UiShownEvent putVisible(String value) {
+        put(Key.UI_VISIBLE, value);
+        return this;
     }
 }

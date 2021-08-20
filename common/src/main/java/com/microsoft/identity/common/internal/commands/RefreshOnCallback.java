@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.commands;
 
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 /*

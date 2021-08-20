@@ -20,38 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.client.ui.automation.performance;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.commands.ICommandResult;
-
-public class CommandResult implements ICommandResult {
-
-    public String getCorrelationId() {
-        return mCorrelationId;
+/**
+ * Collects data regarding the cpu usage for the process supplied based on the {@link ProcessInfo} object.
+ */
+public class CPUMonitor implements PerformanceProfileMonitor<Double> {
+    @Override
+    public Double getStats(@NonNull final ProcessInfo processInfo) {
+        return processInfo.getCpuUsage();
     }
-
-    private final ResultStatus mStatus;
-    private final Object mResult;
-    private final String mCorrelationId;
-
-    public CommandResult(ResultStatus status, Object result) {
-        this(status, result, null);
-    }
-
-    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
-        mStatus = status;
-        mResult = result;
-        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
-    }
-
-    public ResultStatus getStatus() {
-        return mStatus;
-    }
-
-    public Object getResult() {
-        return mResult;
-    }
-
 }

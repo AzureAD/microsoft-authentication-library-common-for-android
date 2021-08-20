@@ -25,6 +25,8 @@ package com.microsoft.identity.common.internal.commands;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 
@@ -34,7 +36,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * Command class to call controllers to remove the account and return the result to
- * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 @EqualsAndHashCode(callSuper = true)
 public class GetDeviceModeCommand extends BaseCommand<Boolean> {

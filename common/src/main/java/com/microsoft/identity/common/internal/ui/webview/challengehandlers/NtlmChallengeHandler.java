@@ -31,6 +31,7 @@ import android.widget.EditText;
 
 import com.microsoft.identity.common.R;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
 /**

@@ -20,24 +20,24 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.controllers;
+package com.microsoft.identity.common.java.controllers;
 
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_COMMAND_EXECUTION_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_EXECUTOR_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.text.TextUtils;
-
+import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.result.FinalizableResultFuture;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -61,29 +61,39 @@ import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.logging.RequestContext;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
+import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public class CommandDispatcher {
 
@@ -95,17 +105,10 @@ public class CommandDispatcher {
     private static InteractiveTokenCommand sCommand = null;
     private static final CommandResultCache sCommandResultCache = new CommandResultCache();
 
-    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet<>(
-            Arrays.asList(
-                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
-                    BrokerCommunicationException.Category.CONNECTION_ERROR.toString(),
-                    ClientException.INTERRUPTED_OPERATION,
-                    ClientException.INVALID_BROKER_BUNDLE,
-                    ClientException.IO_ERROR));
-
     private static final Object mapAccessLock = new Object();
-    @GuardedBy("mapAccessLock")
-    // Suppressing rawtype warnings due to the generic type BaseCommand
+
+    //@GuardedBy("mapAccessLock")
+    //Suppressing rawtype warnings due to the generic type BaseCommand
     @SuppressWarnings(WarningType.rawtype_warning)
     private static ConcurrentMap<BaseCommand, FinalizableResultFuture<CommandResult>> sExecutingCommandMap = new ConcurrentHashMap<>();
 
@@ -128,14 +131,14 @@ public class CommandDispatcher {
         sExecutingCommandMap = newMap;
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public static int outstandingCommands() {
         synchronized (mapAccessLock) {
             return sExecutingCommandMap.size();
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public static boolean isCommandOutstanding(BaseCommand c) {
         synchronized (mapAccessLock) {
             for (Map.Entry<BaseCommand, ?> e : sExecutingCommandMap.entrySet()) {
@@ -148,7 +151,7 @@ public class CommandDispatcher {
         }
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public static void clearState() throws Exception {
         synchronized (mapAccessLock) {
             sExecutingCommandMap.clear();
@@ -181,7 +184,7 @@ public class CommandDispatcher {
      *
      * @param command
      */
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitSilentReturningFuture(@SuppressWarnings(WarningType.rawtype_warning)
                                                                                      @NonNull final BaseCommand command) {
         final CodeMarkerManager codeMarkerManager = CodeMarkerManager.getInstance();
@@ -198,7 +201,6 @@ public class CommandDispatcher {
 
         logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
 
-        final Handler handler = new Handler(Looper.getMainLooper());
         synchronized (mapAccessLock) {
             final FinalizableResultFuture<CommandResult> finalFuture;
             if (command.isEligibleForCaching()) {
@@ -210,21 +212,21 @@ public class CommandDispatcher {
 
                     if (null == putValue) {
                         // our value was inserted.
-                        future.whenComplete(getCommandResultConsumer(command, handler));
+                        future.whenComplete(getCommandResultConsumer(command));
                     } else {
                         // Our value was not inserted, grab the one that was and hang a new listener off it
-                        putValue.whenComplete(getCommandResultConsumer(command, handler));
+                        putValue.whenComplete(getCommandResultConsumer(command));
                         return putValue;
                     }
                 } else {
-                    future.whenComplete(getCommandResultConsumer(command, handler));
+                    future.whenComplete(getCommandResultConsumer(command));
                     return future;
                 }
 
                 finalFuture = future;
             } else {
                 finalFuture = new FinalizableResultFuture<>();
-                finalFuture.whenComplete(getCommandResultConsumer(command, handler));
+                finalFuture.whenComplete(getCommandResultConsumer(command));
             }
 
             sSilentExecutor.execute(new Runnable() {
@@ -260,6 +262,8 @@ public class CommandDispatcher {
                         // TODO 1309671 : change required to stop the LocalAuthenticationResult object from mutating in cases of cached command.
                         // set correlation id on Local Authentication Result
                         setCorrelationIdOnResult(commandResult, correlationId);
+                        final List<Map<String, String>> telemetryMap = Telemetry.getInstance().getMap(correlationId);
+                        commandResult.setTelemetryMap(telemetryMap);
                         Telemetry.getInstance().flush(correlationId);
                         EstsTelemetry.getInstance().flush(command, commandResult);
                         finalFuture.setResult(commandResult);
@@ -282,7 +286,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
-                        DiagnosticContext.clear();
+                        DiagnosticContext.INSTANCE.clear();
                     }
                     codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
@@ -364,7 +368,7 @@ public class CommandDispatcher {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
-        Logger.info(TAG, DiagnosticContext.getRequestContext().toJsonString(),
+        Logger.info(TAG, DiagnosticContext.INSTANCE.getRequestContext().toJsonString(),
                 "Starting request for correlation id : ##" + correlationId
                         + ", with PublicApiId : " + publicApiId);
 
@@ -376,8 +380,7 @@ public class CommandDispatcher {
     }
 
     private static BiConsumer<CommandResult, Throwable> getCommandResultConsumer(
-            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
-            @NonNull final Handler handler) {
+            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command) {
 
         final String methodName = ":getCommandResultConsumer";
 
@@ -387,15 +390,17 @@ public class CommandDispatcher {
                 if (null != throwable) {
                     Logger.info(TAG + methodName, "Request encountered an exception " +
                             "(this maybe a duplicate request which caries the exception encountered by the original request)");
-                    handler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            commandCallBackOnError(command, throwable);
-                        }
-                    });
+                    command.getParameters().getPlatformComponents().getPlatformUtil().postCommandResult(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    commandCallBackOnError(command, throwable);
+                                }
+                            });
                     return;
                 }
-                if (!StringUtil.isEmpty(result.getCorrelationId())
+
+                if (!StringUtil.isNullOrEmpty(result.getCorrelationId())
                         && !command.getParameters().getCorrelationId().equals(result.getCorrelationId())) {
                     Logger.info(TAG + methodName,
                             "Completed duplicate request with correlation id : **"
@@ -404,7 +409,7 @@ public class CommandDispatcher {
                                     + result.getStatus().getLogStatus());
                 }
                 // Return command result will post() result for us.
-                returnCommandResult(command, result, handler);
+                returnCommandResult(command, result);
             }
         };
     }
@@ -415,7 +420,7 @@ public class CommandDispatcher {
         command.getCallback().onError(ExceptionAdapter.baseExceptionFromException(throwable));
     }
 
-    static void clearCommandCache() {
+    public static void clearCommandCache() {
         sCommandResultCache.clear();
     }
 
@@ -457,263 +462,244 @@ public class CommandDispatcher {
         } else /* baseException == null */ {
             if (result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
-                commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
-                        correlationId);
-            } else if (result instanceof VoidResult){
-                commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
-                        command.getParameters().getCorrelationId());
-            } else {
-                //For commands that don't return neither AcquireTokenResult or VoidResult
-                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
-                        correlationId);
-            }
-        }
-
-        return commandResult;
-
-    }
-
-    /**
-     * Return the result of the command to the caller via the callback associated with the command
-     *
-     * @param command
-     * @param result
-     * @param handler
-     */
-    private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) final BaseCommand command,
-                                            final CommandResult result, @NonNull final Handler handler) {
-
-        command.getParameters().getPlatformComponents().getPlatformUtil().onReturnCommandResult(command);
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                switch (result.getStatus()) {
-                    case ERROR:
-                        commandCallbackOnError(command, result);
-                        break;
-                    case COMPLETED:
-                        commandCallbackOnTaskCompleted(command, result);
-                        break;
-                    case CANCEL:
-                        command.getCallback().onCancel();
-                        break;
-                    default:
-
+                if (result != null && result instanceof AcquireTokenResult) {
+                    commandResult = getCommandResultFromTokenResult((AcquireTokenResult) result,
+                            correlationId);
+                } else if (result instanceof VoidResult){
+                    commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
+                            command.getParameters().getCorrelationId());
+                } else {
+                    //For commands that don't return neither AcquireTokenResult or VoidResult
+                    commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
+                            correlationId);
                 }
             }
-        });
-    }
 
-    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
-        command.getCallback().onError(ExceptionAdapter.baseExceptionFromException((Throwable) result.getResult()));
-    }
+            return commandResult;
 
-    // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
-    @SuppressWarnings(WarningType.unchecked_warning)
-    private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
-        command.getCallback().onTaskCompleted(result.getResult());
-    }
-
-    /**
-     * Cache the result of the command (if eligible to do so) in order to protect the service from clients
-     * making the requests in a tight loop
-     *
-     * @param command
-     * @param commandResult
-     */
-    @SuppressWarnings("unused")
-    private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
-                                           CommandResult commandResult) {
-        if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
-            sCommandResultCache.put(command, commandResult);
         }
-    }
 
-    /**
-     * Determine if the command result should be cached
-     *
-     * @param commandResult
-     * @return
-     */
-    private static boolean eligibleToCache(CommandResult commandResult) {
-        switch (commandResult.getStatus()) {
-            case ERROR:
-                return eligibleToCacheException((BaseException) commandResult.getResult());
-            case COMPLETED:
-                return true;
-            default:
-                return false;
-        }
-    }
+        /**
+         * Return the result of the command to the caller via the callback associated with the command
+         *
+         * @param command
+         * @param result
+         */
+        private static void returnCommandResult(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command,
+        @NonNull final CommandResult result) {
 
-    /**
-     * Determine if the exception type is eligible to be cached
-     *
-     * @param exception
-     * @return
-     */
-    private static boolean eligibleToCacheException(BaseException exception) {
-        final String errorCode;
-        if (exception instanceof BrokerCommunicationException) {
-            errorCode = ((BrokerCommunicationException) exception).getCategory().toString();
-        } else {
-            errorCode = exception.getErrorCode();
-        }
-        //TODO : ADO 1373343 Add the whole transient exception category.
-        if (exception instanceof IntuneAppProtectionPolicyRequiredException
-                || nonCacheableErrorCodes.contains(errorCode)) {
-            return false;
-        }
-        return true;
-    }
-
-
-    /**
-     * Get Commandresult from acquiretokenresult
-     *
-     * @param result
-     */
-    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
-
-        if (result.getSucceeded()) {
-            return new CommandResult(CommandResult.ResultStatus.COMPLETED,
-                    result.getLocalAuthenticationResult(), correlationId);
-        } else {
-            //Get MsalException from Authorization and/or Token Error Response
-            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
-            if (baseException instanceof UserCancelException) {
-                return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
-            } else {
-                return new CommandResult(CommandResult.ResultStatus.ERROR,
-                        baseException, correlationId);
-            }
-        }
-    }
-
-    public static void beginInteractive(final InteractiveTokenCommand command) {
-        final String methodName = ":beginInteractive";
-        synchronized (sLock) {
-
-            //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
-            if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
-                // Send a broadcast to cancel if any active auth request is present.
-                LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
-            }
-
-            sInteractiveExecutor.execute(new Runnable() {
+            final IPlatformUtil platformUtil = command.getParameters().getPlatformComponents().getPlatformUtil();
+            platformUtil.onReturnCommandResult(command);
+            platformUtil.postCommandResult(new Runnable() {
                 @Override
                 public void run() {
-                    final CommandParameters commandParameters = command.getParameters();
-                    final String correlationId = initializeDiagnosticContext(
-                            commandParameters.getCorrelationId(),
-                            commandParameters.getSdkType() == null ?
-                                    SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
-                            commandParameters.getSdkVersion()
-                    );
-                    try {
-                        // set correlation id on parameters as it may not already be set
-                        commandParameters.setCorrelationId(correlationId);
+                    switch (result.getStatus()) {
+                        case ERROR:
+                            commandCallbackOnError(command, result);
+                            break;
+                        case COMPLETED:
+                            commandCallbackOnTaskCompleted(command, result);
+                            break;
+                        case CANCEL:
+                            command.getCallback().onCancel();
+                            break;
+                        default:
 
-                        logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
-
-                        EstsTelemetry.getInstance().initTelemetryForCommand(command);
-
-                        EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
-
-                        final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
-                            @Override
-                            public void onReceive(@NonNull PropertyBag dataBag) {
-                                completeInteractive(dataBag);
-                            }
-                        };
-
-                        CommandResult commandResult;
-                        Handler handler = new Handler(Looper.getMainLooper());
-
-                        LocalBroadcaster.INSTANCE.registerCallback(
-                                RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
-
-                        sCommand = command;
-
-                        //Try executing request
-                        commandResult = executeCommand(command);
-                        sCommand = null;
-
-                        LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
-
-                        // set correlation id on Local Authentication Result
-                        setCorrelationIdOnResult(commandResult, correlationId);
-
-                        Logger.info(TAG + methodName,
-                                "Completed interactive request for correlation id : **" + correlationId +
-                                        statusMsg(commandResult.getStatus().getLogStatus()));
-
-                        EstsTelemetry.getInstance().flush(command, commandResult);
-                        Telemetry.getInstance().flush(correlationId);
-                        returnCommandResult(command, commandResult, handler);
-                    } finally {
-                        DiagnosticContext.clear();
                     }
                 }
             });
         }
-    }
 
-    private static void completeInteractive(final PropertyBag propertyBag) {
-        final String methodName = ":completeInteractive";
-
-        int requestCode = propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1);
-        int resultCode = propertyBag.<Integer>getOrDefault(RESULT_CODE, -1);
-
-        if (sCommand != null) {
-            sCommand.onFinishAuthorizationSession(requestCode, resultCode, propertyBag);
-        } else {
-            Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
+        // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallbackWithError
+        @SuppressWarnings(WarningType.unchecked_warning)
+        private static void commandCallbackOnError(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+            command.getCallback().onError(ExceptionAdapter.baseExceptionFromException((Throwable) result.getResult()));
         }
-    }
 
-    public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
-        final String methodName = ":initializeDiagnosticContext";
-
-        final String correlationId = TextUtils.isEmpty(requestCorrelationId) ?
-                UUID.randomUUID().toString() :
-                requestCorrelationId;
-
-        final com.microsoft.identity.common.internal.logging.RequestContext rc =
-                new com.microsoft.identity.common.internal.logging.RequestContext();
-        rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
-        rc.put(PRODUCT, sdkType);
-        rc.put(VERSION, sdkVersion);
-        DiagnosticContext.setRequestContext(rc);
-        Logger.verbose(
-                TAG + methodName,
-                "Initialized new DiagnosticContext"
-        );
-
-        return correlationId;
-    }
-
-    public static int getCachedResultCount() {
-        return sCommandResultCache.getSize();
-    }
-
-    private static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
-                                                 @NonNull final String correlationId) {
-        // set correlation id on Local Authentication Result
-        if (commandResult.getResult() != null &&
-                commandResult.getResult() instanceof LocalAuthenticationResult) {
-            final LocalAuthenticationResult localAuthenticationResult =
-                    (LocalAuthenticationResult) commandResult.getResult();
-            localAuthenticationResult.setCorrelationId(correlationId);
+        // Suppressing unchecked warnings due to casting of the result to the generic type of TaskCompletedCallback
+        @SuppressWarnings(WarningType.unchecked_warning)
+        private static void commandCallbackOnTaskCompleted(@SuppressWarnings("rawtypes") BaseCommand command, CommandResult result) {
+            command.getCallback().onTaskCompleted(result.getResult());
         }
+
+        /**
+         * Cache the result of the command (if eligible to do so) in order to protect the service from clients
+         * making the requests in a tight loop
+         *
+         * @param command
+         * @param commandResult
+         */
+        @SuppressWarnings("unused")
+        private static void cacheCommandResult(@SuppressWarnings(WarningType.rawtype_warning) BaseCommand command,
+                CommandResult commandResult) {
+            if (command.isEligibleForCaching() && eligibleToCache(commandResult)) {
+                sCommandResultCache.put(command, commandResult);
+            }
+        }
+
+        /**
+         * Determine if the command result should be cached
+         *
+         * @param commandResult
+         * @return
+         */
+        private static boolean eligibleToCache(@NonNull final CommandResult commandResult) {
+            final String methodName = ":eligibleToCache";
+            switch (commandResult.getStatus()) {
+                case ERROR:
+                    if (commandResult.getResult() instanceof BaseException) {
+                        return ((BaseException) commandResult.getResult()).isCacheable();
+                    }
+                    Logger.warn(TAG + methodName, "Get status ERROR, but result is not a BaseException");
+                    return true;
+                case COMPLETED:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /**
+         * Get Commandresult from acquiretokenresult
+         *
+         * @param result
+         */
+        private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
+            //Token Commands
+            if (result.getSucceeded()) {
+                return new CommandResult(CommandResult.ResultStatus.COMPLETED,
+                        result.getLocalAuthenticationResult(), correlationId);
+            } else {
+                //Get MsalException from Authorization and/or Token Error Response
+                final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+                if (baseException instanceof UserCancelException) {
+                    return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
+                } else {
+                    return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+                }
+            }
+        }
+
+        public static void beginInteractive(final InteractiveTokenCommand command) {
+            final String methodName = ":beginInteractive";
+            synchronized (sLock) {
+
+                //Cancel interactive request if authorizationInCurrentTask() returns true OR this is a broker request.
+                if (LibraryConfiguration.getInstance().isAuthorizationInCurrentTask() || command.getParameters() instanceof BrokerInteractiveTokenCommandParameters) {
+                    // Send a broadcast to cancel if any active auth request is present.
+                    LocalBroadcaster.INSTANCE.broadcast(CANCEL_AUTHORIZATION_REQUEST, new PropertyBag());
+                }
+
+                sInteractiveExecutor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        final CommandParameters commandParameters = command.getParameters();
+                        final String correlationId = initializeDiagnosticContext(
+                                commandParameters.getCorrelationId(),
+                                commandParameters.getSdkType() == null ?
+                                        SdkType.UNKNOWN.getProductName() : commandParameters.getSdkType().getProductName(),
+                                commandParameters.getSdkVersion()
+                        );
+                        try {
+                            // set correlation id on parameters as it may not already be set
+                            commandParameters.setCorrelationId(correlationId);
+
+                            logParameters(TAG + methodName, correlationId, commandParameters, command.getPublicApiId());
+
+                            initTelemetryForCommand(command);
+
+                            EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
+
+                            final LocalBroadcaster.IReceiverCallback resultReceiver = new LocalBroadcaster.IReceiverCallback() {
+                                @Override
+                                public void onReceive(@NonNull PropertyBag dataBag) {
+                                    completeInteractive(dataBag);
+                                }
+                            };
+
+                            CommandResult commandResult;
+
+                            LocalBroadcaster.INSTANCE.registerCallback(
+                                    RETURN_AUTHORIZATION_REQUEST_RESULT, resultReceiver);
+
+                            sCommand = command;
+
+                            //Try executing request
+                            commandResult = executeCommand(command);
+                            sCommand = null;
+
+                            LocalBroadcaster.INSTANCE.unregisterCallback(RETURN_AUTHORIZATION_REQUEST_RESULT);
+
+                            // set correlation id on Local Authentication Result
+                            setCorrelationIdOnResult(commandResult, correlationId);
+
+                            Logger.info(TAG + methodName,
+                                    "Completed interactive request for correlation id : **" + correlationId +
+                                            statusMsg(commandResult.getStatus().getLogStatus()));
+
+                            EstsTelemetry.getInstance().flush(command, commandResult);
+                            Telemetry.getInstance().flush(correlationId);
+                            returnCommandResult(command, commandResult);
+                        } finally {
+                            DiagnosticContext.INSTANCE.clear();
+                        }
+                    }
+                });
+            }
+        }
+
+        private static void completeInteractive(final PropertyBag propertyBag) {
+            final String methodName = ":completeInteractive";
+
+            int requestCode = propertyBag.<Integer>getOrDefault(REQUEST_CODE, -1);
+            int resultCode = propertyBag.<Integer>getOrDefault(RESULT_CODE, -1);
+
+            if (sCommand != null) {
+                sCommand.onFinishAuthorizationSession(requestCode, resultCode, propertyBag);
+            } else {
+                Logger.warn(TAG + methodName, "sCommand is null, No interactive call in progress to complete.");
+            }
+        }
+
+        public static String initializeDiagnosticContext(@Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion) {
+            final String methodName = ":initializeDiagnosticContext";
+
+            final String correlationId = StringUtil.isNullOrEmpty(requestCorrelationId) ?
+                    UUID.randomUUID().toString() :
+                    requestCorrelationId;
+
+            final RequestContext rc = new RequestContext();
+            rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
+            rc.put(PRODUCT, sdkType);
+            rc.put(VERSION, sdkVersion);
+            DiagnosticContext.INSTANCE.setRequestContext(rc);
+            Logger.verbose(
+                    TAG + methodName,
+                    "Initialized new DiagnosticContext"
+            );
+
+            return correlationId;
+        }
+
+        public static int getCachedResultCount() {
+            return sCommandResultCache.getSize();
+        }
+
+        private static void setCorrelationIdOnResult(@NonNull final CommandResult commandResult,
+        @NonNull final String correlationId) {
+            // set correlation id on Local Authentication Result
+            if (commandResult.getResult() != null &&
+                    commandResult.getResult() instanceof LocalAuthenticationResult) {
+                final LocalAuthenticationResult localAuthenticationResult =
+                        (LocalAuthenticationResult) commandResult.getResult();
+                localAuthenticationResult.setCorrelationId(correlationId);
+            }
+        }
+
+        private static String statusMsg(String status){
+            return ", with the status : " + status;
+        }
+
+
     }
 
-    private static String statusMsg(String status){
-        return ", with the status : " + status;
-    }
-
-
-}

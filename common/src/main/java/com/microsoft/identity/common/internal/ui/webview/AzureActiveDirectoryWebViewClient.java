@@ -35,14 +35,13 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ClientCertAuthChallengeHandler;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
 import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallengeFactory;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.PKeyAuthChallengeHandler;
@@ -83,15 +82,7 @@ public class AzureActiveDirectoryWebViewClient extends OAuth2WebViewClient {
                                              @NonNull final IAuthorizationCompletionCallback completionCallback,
                                              @NonNull final OnPageLoadedCallback pageLoadedCallback,
                                              @NonNull final String redirectUrl) {
-        this(activity, completionCallback, pageLoadedCallback, null, redirectUrl);
-    }
-
-    public AzureActiveDirectoryWebViewClient(@NonNull final Activity activity,
-                                             @NonNull final IAuthorizationCompletionCallback completionCallback,
-                                             @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                                             @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback,
-                                             @NonNull final String redirectUrl) {
-        super(activity, completionCallback, pageLoadedCallback, pageCommitVisibleCallback);
+        super(activity, completionCallback, pageLoadedCallback);
         mRedirectUrl = redirectUrl;
     }
 

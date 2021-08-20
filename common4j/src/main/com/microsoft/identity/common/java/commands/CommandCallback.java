@@ -20,22 +20,11 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.commands;
+package com.microsoft.identity.common.java.commands;
 
-import androidx.annotation.NonNull;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 
-import com.microsoft.identity.common.java.commands.CommandCallback;
-
-import java.util.Date;
-
-/**
- * Extension of the CommandCallback class to allow Device Code Flow to display the user_code,
- * verification_uri, and message midway through the protocol. This is done through the
- * getUserCode() method shown below
- */
-public interface DeviceCodeFlowCommandCallback<T, U> extends CommandCallback<T, U> {
-    void onUserCodeReceived(@NonNull String vUri,
-                            @NonNull String userCode,
-                            @NonNull String message,
-                            @NonNull final Date sessionExpirationDate);
+public interface CommandCallback<T, U> extends TaskCompletedCallbackWithError<T, U> {
+    void onCancel();
 }
+

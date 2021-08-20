@@ -36,13 +36,12 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
@@ -60,10 +59,7 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
-    @NonNull
     private final OnPageLoadedCallback mPageLoadedCallback;
-    @Nullable
-    private final OnPageCommitVisibleCallback mPageCommitVisibleCallback;
     private final Activity mActivity;
 
     @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
@@ -94,27 +90,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final IAuthorizationCompletionCallback completionCallback,
                         @NonNull final OnPageLoadedCallback pageLoadedCallback) {
-        this(activity, completionCallback, pageLoadedCallback, null);
-    }
-
-    /**
-     * Constructor for the OAuth2 basic web view client.
-     *
-     * @param activity                  app Context
-     * @param completionCallback        Challenge completion callback
-     * @param pageLoadedCallback        callback to be triggered on page load. For UI purposes.
-     * @param pageCommitVisibleCallback callback to be triggered on page commit visible, For UI purposes.
-     */
-    OAuth2WebViewClient(@NonNull final Activity activity,
-                        @NonNull final IAuthorizationCompletionCallback completionCallback,
-                        @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                        @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
-        mPageCommitVisibleCallback = pageCommitVisibleCallback;
-    }
+     }
 
     @Override
     public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler,
@@ -204,22 +184,14 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     }
 
     @Override
-    public void onPageCommitVisible(final WebView view, final String url) {
-        super.onPageCommitVisible(view, url);
-        if (mPageCommitVisibleCallback != null) {
-            mPageCommitVisibleCallback.onPageCommitVisible();
-        }
-    }
-
-    @Override
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
-        mPageLoadedCallback.onPageLoaded();
+        mPageLoadedCallback.onPageLoaded(url);
 
         //Supports UI Automation... informing that the webview resource is now idle
         if (mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
-            mExpectedPage.mCallback.onPageLoaded();
+            mExpectedPage.mCallback.onPageLoaded(url);
         }
 
         // Once web view is fully loaded,set to visible

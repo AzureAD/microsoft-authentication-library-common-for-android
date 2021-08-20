@@ -2,6 +2,8 @@ V.Next
 ----------
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MINOR] Telemetry for OneAUth (#1514, #1525)
+- [MAJOR] Migrate CommandDispatcher to common4j (#1519)
 - [MAJOR] Migrate BaseController to common4j (#1515)
 - [MAJOR] Migrate *TokenCache classes to common4j
 - [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
@@ -44,6 +46,10 @@ V.Next
 - [MINOR] Implements a fix for sovereign cloud TSL scenarios (#1501)
 - [MINOR] Add a method to allow for the setting of Fragment initial state (#1506)
 - [PATCH] Clear asymmetric pop key on KeyPermanentlyInvalidatedException if occurs during signing (#1505)
+- [PATCH] Modify MSAL-CPP injecting javascript loop (#1490)
+- [MINOR] Migrate authorization completion callback to common4j (#1522)
+- [PATCH] Remove deprecation logging in Logger class (#1502)
+- [MINOR] Migrate broker application metadata cache to common4j (#1530)
 
 Version 3.5.0
 ----------
@@ -53,6 +59,7 @@ Version 3.5.0
 Version 3.4.5
 ----------
 - [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
+- [PATCH] Do not report network errors as authority validation errors (#1440)
 
 Version 3.4.4
 ----------

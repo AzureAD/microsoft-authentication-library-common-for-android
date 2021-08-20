@@ -34,6 +34,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
 import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.commands.BaseCommand;
 
 import java.io.IOException;
 

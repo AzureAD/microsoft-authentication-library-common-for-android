@@ -81,4 +81,9 @@ public class IntuneAppProtectionPolicyRequiredException extends ServiceException
     public String getExceptionName(){
         return sName;
     }
+
+    @Override
+    public boolean isCacheable() {
+        return false;
+    }
 }

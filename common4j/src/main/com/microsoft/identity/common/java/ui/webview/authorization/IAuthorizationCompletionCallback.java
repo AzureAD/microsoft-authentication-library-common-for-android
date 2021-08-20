@@ -20,8 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview;
+package com.microsoft.identity.common.java.ui.webview.authorization;
 
-public interface OnPageCommitVisibleCallback {
-    void onPageCommitVisible();
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+
+import edu.umd.cs.findbugs.annotations.NonNull;
+
+/**
+ * This is the callback interface to send the authorization challenge response
+ * back to the activity which will implement this interface.
+ * <p>
+ * TODO AuthenticationActivity should implement the onChallengeResponseReceived method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
+ */
+public interface IAuthorizationCompletionCallback {
+    /**
+     * Send the authorization challenge response back to the activity.
+     *
+     * @param response   challenge response
+     */
+    void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response);
+
+    void setPKeyAuthStatus(boolean status);
 }

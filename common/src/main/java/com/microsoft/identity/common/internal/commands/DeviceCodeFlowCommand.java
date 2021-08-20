@@ -25,6 +25,7 @@ package com.microsoft.identity.common.internal.commands;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.TokenCommand;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
@@ -111,9 +112,9 @@ public class DeviceCodeFlowCommand extends TokenCommand {
     }
 
     @Override
-    void onFinishAuthorizationSession(final int requestCode,
-                                      final int resultCode,
-                                      @NonNull final PropertyBag data) {
+    public void onFinishAuthorizationSession(final int requestCode,
+                                             final int resultCode,
+                                             @NonNull final PropertyBag data) {
         throw new UnsupportedOperationException();
     }
 }

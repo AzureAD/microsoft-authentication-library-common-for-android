@@ -20,25 +20,28 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
+package com.microsoft.identity.common.java.telemetry.events;
 
-import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 
-import edu.umd.cs.findbugs.annotations.NonNull;
+import javax.annotation.Nonnull;
 
-/**
- * This is the callback interface to send the authorization challenge response
- * back to the activity which will implement this interface.
- * <p>
- * TODO AuthenticationActivity should implement the onChallengeResponseReceived method and call Activity.setResult() and Activity.finish() to return the UI response to the caller.
- */
-public interface IAuthorizationCompletionCallback {
-    /**
-     * Send the authorization challenge response back to the activity.
-     *
-     * @param response   challenge response
-     */
-    void onChallengeResponseReceived(@NonNull final RawAuthorizationResult response);
+public class DeprecatedApiUsageEvent extends BaseEvent {
 
-    void setPKeyAuthStatus(boolean status);
+    public DeprecatedApiUsageEvent() {
+        super();
+        names(TelemetryEventStrings.Event.DEPRECATED_API_USAGE_EVENT)
+                .types(TelemetryEventStrings.EventType.LIBRARY_CONSUMER_EVENT);
+    }
+
+    public DeprecatedApiUsageEvent putDeprecatedClassUsage(@Nonnull final Class<?> deprecatedClass) {
+        put(TelemetryEventStrings.Key.PACKAGE_NAME, deprecatedClass.getPackage().toString());
+        put(TelemetryEventStrings.Key.CLASS_NAME, deprecatedClass.getSimpleName());
+        return this;
+    }
+
+    public DeprecatedApiUsageEvent putDeprecatedMethodUsage(@Nonnull final Class<?> methodClass, @Nonnull final String methodName) {
+        put(TelemetryEventStrings.Key.CLASS_METHOD, methodName);
+        return putDeprecatedClassUsage(methodClass);
+    }
 }

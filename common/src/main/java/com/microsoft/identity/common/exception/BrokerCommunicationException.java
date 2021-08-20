@@ -82,4 +82,9 @@ public class BrokerCommunicationException extends BaseException {
     public String getMessage() {
         return "[" + category.toString() +"] [" +  strategyType.toString() +"] :" + super.getMessage();
     }
+
+    @Override
+    public boolean isCacheable() {
+        return category != Category.CONNECTION_ERROR;
+    }
 }

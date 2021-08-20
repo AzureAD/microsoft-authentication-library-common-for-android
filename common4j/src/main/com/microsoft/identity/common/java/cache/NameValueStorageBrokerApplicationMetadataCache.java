@@ -20,27 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.cache;
-
-import android.content.Context;
-import android.text.TextUtils;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.microsoft.identity.common.java.cache;
 
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.AndroidPlatformComponents;
-import com.microsoft.identity.common.java.cache.BrokerApplicationMetadata;
-import com.microsoft.identity.common.java.cache.IBrokerApplicationMetadataCache;
-import com.microsoft.identity.common.java.cache.NameValueStorageFileManagerSimpleCacheImpl;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
-import com.microsoft.identity.common.logging.Logger;
+import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public class NameValueStorageBrokerApplicationMetadataCache
         extends NameValueStorageFileManagerSimpleCacheImpl<BrokerApplicationMetadata>
@@ -52,14 +46,10 @@ public class NameValueStorageBrokerApplicationMetadataCache
 
     private static final String KEY_CACHE_LIST = "app-meta-cache";
 
-    public NameValueStorageBrokerApplicationMetadataCache(@NonNull final Context context) {
-        super(AndroidPlatformComponents.createFromContext(context),
-                DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
-    }
-
     public NameValueStorageBrokerApplicationMetadataCache(@NonNull final IPlatformComponents context) {
         super(context, DEFAULT_APP_METADATA_CACHE_NAME, KEY_CACHE_LIST, true);
     }
+
     @Override
     public Set<String> getAllClientIds() {
         final String methodName = ":getAllClientIds";
@@ -120,11 +110,11 @@ public class NameValueStorageBrokerApplicationMetadataCache
 
         for (final BrokerApplicationMetadata metadata : getAll()) {
             if (!inverseMatch) { // match FoCI
-                if (!TextUtils.isEmpty(metadata.getFoci())) {
+                if (!StringUtil.isNullOrEmpty(metadata.getFoci())) {
                     allFociClientIds.add(metadata.getClientId());
                 }
             } else { // match non FoCI
-                if (TextUtils.isEmpty(metadata.getFoci())) {
+                if (StringUtil.isNullOrEmpty(metadata.getFoci())) {
                     allFociClientIds.add(metadata.getClientId());
                 }
             }

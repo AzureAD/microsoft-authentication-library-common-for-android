@@ -92,9 +92,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
      * Constructs an instance of SharedPreferencesFileManager.
      * The default operating mode is {@link Context#MODE_PRIVATE}
      *
-     * @param context                  Interface to global information about an application environment.
-     * @param name                     The desired {@link android.content.SharedPreferences} file. It will be created
-     *                                 if it does not exist.
+     * @param context           Interface to global information about an application environment.
+     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created
+     *                          if it does not exist.
      * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
@@ -185,11 +185,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         );
 
         remove(key);
-    }
-
-    @Override
-    public final String getStorageFileName() {
-        return mSharedPreferencesFileName;
     }
 
     @Override
