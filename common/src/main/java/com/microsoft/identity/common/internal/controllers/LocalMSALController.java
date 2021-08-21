@@ -27,6 +27,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.controllers.CommandDispatcher;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -320,13 +321,17 @@ public class LocalMSALController extends BaseController {
         // subsequent CacheRecords represent other profiles (projections) of this principal in
         // other tenants. Those tokens will be 'sparse', meaning that their AT/RT will not be loaded
         final ICacheRecord fullCacheRecord = cacheRecords.get(0);
-        if (fullCacheRecord.getAccessToken() != null && fullCacheRecord.getAccessToken().refreshOnIsActive()) {
+        if (LibraryConfiguration.getInstance().isRefreshInEnabled()
+                && fullCacheRecord.getAccessToken() != null
+                && fullCacheRecord.getAccessToken().refreshOnIsActive()) {
             Logger.info(
                     TAG,
                     "RefreshOn is active. This will extend your token usage in the rare case servers are not available."
             );
         }
-        if (fullCacheRecord.getAccessToken() != null && fullCacheRecord.getAccessToken().shouldRefresh()) {
+        if (LibraryConfiguration.getInstance().isRefreshInEnabled()
+                && fullCacheRecord.getAccessToken() != null
+                && fullCacheRecord.getAccessToken().shouldRefresh()) {
             if (!fullCacheRecord.getAccessToken().isExpired()) {
                 setAcquireTokenResult(acquireTokenSilentResult, parametersWithScopes, cacheRecords);
                 final RefreshOnCommand refreshOnCommand = new RefreshOnCommand(parameters, this, PublicApiId.MSAL_REFRESH_ON);
