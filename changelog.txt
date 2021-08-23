@@ -1,6 +1,6 @@
 V.Next
 ----------
-- [MINOR] Telemetry for OneAUth (#1514, #1525)
+- [MINOR] Telemetry for OneAuth (#1514, #1525)
 - [MAJOR] Migrate CommandDispatcher to common4j (#1519)
 - [MAJOR] Migrate BaseController to common4j (#1515)
 - [MAJOR] Migrate *TokenCache classes to common4j
@@ -48,6 +48,16 @@ V.Next
 - [MINOR] Migrate authorization completion callback to common4j (#1522)
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
+
+Version 3.6.0
+----------
+- [PATCH] Allow retry generation of Device PoP key without attempting attestation cert gen (#1456, #1507)
+- [MAJOR/MINOR (Rebrand)] Please note! This is technically an API breaking change that we have elected to voluntarily ship as "MINOR" due to lack of usage. Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489, #1508)
+- [MINOR] Increase visibility of internal SSOStateSerializer for OneAuth usage (integration steps available at aka.ms/AAd2vt8) (#1448, #1509)
+- [MINOR] Add a method to allow for the setting of Fragment initial state (#1506, #1512)
+- [MINOR] Adds ContentProvider Constants used for Intune ContentProvider call (#1513, #1657)
+- [PATCH] Clear asymmetric pop key on KeyPermanentlyInvalidatedException if occurs during signing (#1505, #1517)
+- [MINOR] Adds Intune Application specific ContentProvider Constants (#1521, #1513)
 
 Version 3.5.0
 ----------
