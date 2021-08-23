@@ -10,7 +10,7 @@ apply from: '../versioning/version_tasks.gradle'
 
 def desugarCode = false
 
-if(project.hasProperty("sugar")){
+if (project.hasProperty("sugar")) {
     desugarCode = sugar.toBoolean()
 }
 
@@ -23,8 +23,8 @@ buildSystem {
 //To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
 //tasks.withType(Test) {
 //    jacoco.includeNoLocationClasses = true
-    //This needs to be excluded for JDK 11
-    //SEE: https://support.circleci.com/hc/en-us/articles/360047926852-Android-Builds-Fail-with-java-lang-ClassNotFoundException-jdk-internal-reflect-GeneratedSerializationConstructorAccessor1-
+//This needs to be excluded for JDK 11
+//SEE: https://support.circleci.com/hc/en-us/articles/360047926852-Android-Builds-Fail-with-java-lang-ClassNotFoundException-jdk-internal-reflect-GeneratedSerializationConstructorAccessor1-
 //    jacoco.excludes = ['jdk.internal.*']
 //}
 
@@ -135,7 +135,7 @@ dependencies {
         transitive = false
     }
 
-    implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
+    implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
@@ -306,10 +306,10 @@ afterEvaluate {
                 pom {
                     name = 'common'
                     description = 'This library contains code shared between the Active Directory ' +
-                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
-                                    'Authentication Library (MSAL) for Android. This library ' +
-                                    'includes only internal classes and is NOT part of the ' +
-                                    'public API'
+                            'Authentication Library (ADAL) for Android and the Microsoft ' +
+                            'Authentication Library (MSAL) for Android. This library ' +
+                            'includes only internal classes and is NOT part of the ' +
+                            'public API'
                     url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
                     developers {
                         developer {
@@ -327,7 +327,7 @@ afterEvaluate {
                         url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
                     }
                     properties = [
-                            branch: 'master',
+                            branch : 'master',
                             version: project.version
                     ]
                 }
@@ -364,6 +364,10 @@ afterEvaluate {
 }
 
 tasks.whenTaskAdded { task ->
+    if (task.name.contains("assemble")) {
+        task.dependsOn 'pmd'
+    }
+
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }
