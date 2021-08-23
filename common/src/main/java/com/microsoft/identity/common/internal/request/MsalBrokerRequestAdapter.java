@@ -148,25 +148,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return brokerRequest;
     }
 
-    @NonNull
-    private static AbstractAuthenticationScheme getAuthenticationScheme(
-            @NonNull final Context context,
-            @NonNull final BrokerRequest request) {
-        final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
-
-        if (null == requestScheme) {
-            // Default assumes the scheme is Bearer
-            return new BearerAuthenticationSchemeInternal();
-        } else {
-            if (requestScheme instanceof PopAuthenticationSchemeInternal) {
-                final IClockSkewManager clockSkewManager = AndroidPlatformComponents.createFromContext(context).getClockSkewManager();
-                ((PopAuthenticationSchemeInternal) requestScheme).setClockSkewManager(clockSkewManager);
-            }
-
-            return requestScheme;
-        }
-    }
-
     /**
      * Method to construct a request bundle for broker hello request.
      *
@@ -377,16 +358,5 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         browserDescriptors.add(chrome);
 
         return browserDescriptors;
-    }
-
-    /**
-     * Helper method to validate in Broker that the calling package in Microsoft Intune
-     * to allow System Webview Support.
-     */
-    private boolean isCallingPackageIntune(@NonNull final String packageName) {
-        final String methodName = ":isCallingPackageIntune";
-        final String intunePackageName = "com.microsoft.intune";
-        Logger.info(TAG + methodName, "Calling package name : " + packageName);
-        return intunePackageName.equalsIgnoreCase(packageName);
     }
 }
