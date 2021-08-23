@@ -26,7 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 /**
  * Represents an RSA asymmetric key. This object represents a single keypair instance inside of an

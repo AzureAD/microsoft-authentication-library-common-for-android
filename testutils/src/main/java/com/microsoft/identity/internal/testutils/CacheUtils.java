@@ -22,22 +22,20 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.arch.core.util.Function;
 
-import com.microsoft.identity.common.internal.cache.CacheKeyValueDelegate;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.dto.AccessTokenRecord;
-import com.microsoft.identity.common.internal.dto.Credential;
-import com.microsoft.identity.common.internal.dto.CredentialType;
-import com.microsoft.identity.common.internal.dto.IdTokenRecord;
-import com.microsoft.identity.common.internal.dto.RefreshTokenRecord;
+import com.microsoft.identity.common.java.cache.CacheKeyValueDelegate;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.java.dto.AccessTokenRecord;
+import com.microsoft.identity.common.java.dto.Credential;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.dto.IdTokenRecord;
+import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
 import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.providers.oauth2.RefreshToken;
 
 import java.util.Map;
 import java.util.Random;
@@ -84,7 +82,7 @@ public class CacheUtils {
     public void editAllTokenInCache(@NonNull final String sharedPrefName, @NonNull final Predicate<String> predicate,
                                     @NonNull Function<String, Class<? extends Credential>> classFunction, @NonNull final Function<String, String> editor,
                                              final boolean encrypted) {
-        final SharedPreferencesFileManager sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+        final IMultiTypeNameValueStorage sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
                 TestUtils.getSharedPreferences(sharedPrefName);
         final Map<String, ?> cacheEntries = sharedPref.getAll();
 
@@ -201,7 +199,7 @@ public class CacheUtils {
     }
 
     public void clear(String sharedPrefName, boolean encrypted) {
-        final SharedPreferencesFileManager sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
+        final IMultiTypeNameValueStorage sharedPref = encrypted ? TestUtils.getEncryptedSharedPreferences(sharedPrefName) :
                 TestUtils.getSharedPreferences(sharedPrefName);
         sharedPref.clear();
     }

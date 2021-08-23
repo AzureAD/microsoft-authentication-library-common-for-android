@@ -22,20 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.logging;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.logging.Logger;
+
+import java.util.HashMap;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * This class is deprecated.
  *
- * @see com.microsoft.identity.common.logging.RequestContext
+ * @see com.microsoft.identity.common.java.logging.RequestContext
  */
 @Deprecated
-public class RequestContext extends com.microsoft.identity.common.logging.RequestContext {
+public class RequestContext extends HashMap<String, String> implements IRequestContext {
 
     private static final String TAG = RequestContext.class.getSimpleName();
 
+    private static final Gson mGson = new Gson();
+
     private static boolean sLogDeprecationWarning = true;
 
+    @SuppressFBWarnings("ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD")
     @Override
     public String toJsonString() {
         if (sLogDeprecationWarning) {
@@ -45,6 +53,6 @@ public class RequestContext extends com.microsoft.identity.common.logging.Reques
                     + "Migrate usage to: com.microsoft.identity.common.logging.RequestContext");
         }
 
-        return super.toJsonString();
+        return mGson.toJson(this);
     }
 }

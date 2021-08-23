@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
-import java.util.List;
-import java.util.Map;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * The default telemetry observer interface which upload raw telemetry data.
- */
-public interface ITelemetryDefaultObserver extends ITelemetryObserver<List<Map<String, String>>> {
-    @Override
-    void onReceived(List<Map<String, String>> telemetryData);
+ * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver} instead.
+ **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
+@Deprecated
+public interface ITelemetryDefaultObserver extends com.microsoft.identity.common.java.telemetry.observers.ITelemetryDefaultObserver {
 }

@@ -1,0 +1,22 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
+rootProject.name = "com.microsoft.identity.java"
+
+// Pure Java Projects
+include(':common4j')
+project(':common4j').projectDir = new File('../common4j')
+
+include(':keyvault')
+project(':keyvault').projectDir = new File('../keyvault')
+
+include(':labapi')
+project(':labapi').projectDir = new File('../labapi')
+
+include(':LabApiUtilities')
+project(':LabApiUtilities').projectDir = new File('../LabApiUtilities')

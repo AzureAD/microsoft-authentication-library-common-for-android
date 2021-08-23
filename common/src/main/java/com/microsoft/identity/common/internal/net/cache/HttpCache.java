@@ -33,7 +33,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Utility class for caching HTTP and HTTPS responses.
+ * Utility class for caching HTTP and HTTPS responses in Android.
  *
  * @see HttpResponseCache
  */
@@ -77,6 +77,15 @@ public class HttpCache {
                     e
             );
         }
+
+        com.microsoft.identity.common.java.cache.HttpCache.setHttpCache(
+                new com.microsoft.identity.common.java.cache.HttpCache.IHttpCacheCallback() {
+                    @Override
+                    public void flush() {
+                        HttpCache.flush();
+                    }
+                }
+        );
 
         return success;
     }

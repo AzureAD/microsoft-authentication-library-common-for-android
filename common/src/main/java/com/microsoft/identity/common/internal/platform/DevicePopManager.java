@@ -37,12 +37,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.controllers.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.internal.util.Supplier;
-import com.microsoft.identity.common.internal.util.ThreadUtils;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.crypto.IKeyManager;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.logging.Logger;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -62,7 +67,6 @@ import java.lang.reflect.Type;
 import java.math.BigInteger;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
@@ -92,7 +96,6 @@ import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -101,33 +104,35 @@ import javax.security.auth.x500.X500Principal;
 
 import lombok.SneakyThrows;
 
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
-import static com.microsoft.identity.common.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
-import static com.microsoft.identity.common.exception.ClientException.BAD_KEY_SIZE;
-import static com.microsoft.identity.common.exception.ClientException.BAD_PADDING;
-import static com.microsoft.identity.common.exception.ClientException.INTERRUPTED_OPERATION;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_ALG_PARAMETER;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_BLOCK_SIZE;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_KEY_MISSING;
-import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.JSON_CONSTRUCTION_FAILED;
-import static com.microsoft.identity.common.exception.ClientException.JWT_SIGNING_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.exception.ClientException.SIGNING_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
-import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
 import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
+import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_KEY_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.INTERRUPTED_OPERATION;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_BLOCK_SIZE;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_KEY_MISSING;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.java.exception.ClientException.JSON_CONSTRUCTION_FAILED;
+import static com.microsoft.identity.common.java.exception.ClientException.JWT_SIGNING_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
+import static com.microsoft.identity.common.java.exception.ClientException.SIGNING_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.THUMBPRINT_COMPUTATION_FAILURE;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_EXPORT_FORMAT;
 
 /**
  * Concrete class providing convenience functions around AndroidKeystore to support PoP.
  */
 @SuppressWarnings("PMD.AvoidDuplicateLiterals")
-class DevicePopManager implements IDevicePopManager {
+public class DevicePopManager implements IDevicePopManager {
 
     private static final String TAG = DevicePopManager.class.getSimpleName();
 
@@ -163,6 +168,17 @@ class DevicePopManager implements IDevicePopManager {
     public static final Gson GSON = new Gson();
 
     /**
+     * Error message from underlying KeyStore that StrongBox HAL is unavailable.
+     */
+    public static final String STRONG_BOX_UNAVAILABLE_EXCEPTION = "StrongBoxUnavailableException";
+
+    /**
+     * Error message from underlying KeyStore that an attestation certificate could not be
+     * generated, typically due to lack of API support via {@link KeyGenParameterSpec.Builder#setAttestationChallenge(byte[])}.
+     */
+    public static final String FAILED_TO_GENERATE_ATTESTATION_CERTIFICATE_CHAIN = "Failed to generate attestation certificate chain";
+
+    /**
      * Manager class for interacting with key storage mechanism.
      */
     private final IKeyManager<KeyStore.PrivateKeyEntry> mKeyManager;
@@ -176,6 +192,11 @@ class DevicePopManager implements IDevicePopManager {
      * A background worker to service async tasks.
      */
     private static final ExecutorService sThreadExecutor = Executors.newFixedThreadPool(5);
+
+    /**
+     * Reference to our perf-marker object.
+     */
+    private static final CodeMarkerManager sCodeMarkerManager = CodeMarkerManager.getInstance();
 
     /**
      * Properties used by the self-signed certificate.
@@ -257,9 +278,11 @@ class DevicePopManager implements IDevicePopManager {
         static final String RSA = "RSA";
     }
 
-    DevicePopManager() throws KeyStoreException, CertificateException,
+    private final Context mContext;
+
+    public DevicePopManager(@NonNull final Context context) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
-        this(DEFAULT_KEYSTORE_ENTRY_ALIAS);
+        this(context, DEFAULT_KEYSTORE_ENTRY_ALIAS);
     }
 
     @Override
@@ -267,7 +290,8 @@ class DevicePopManager implements IDevicePopManager {
         return mKeyManager;
     }
 
-    DevicePopManager(@NonNull final String alias) throws KeyStoreException, CertificateException,
+    public DevicePopManager(@NonNull final Context context,
+                            @NonNull final String alias) throws KeyStoreException, CertificateException,
             NoSuchAlgorithmException, IOException {
         final KeyStore instance = KeyStore.getInstance(ANDROID_KEYSTORE);
         instance.load(null);
@@ -281,6 +305,7 @@ class DevicePopManager implements IDevicePopManager {
                     }
                 })
                 .build();
+        mContext = context;
     }
 
     @Override
@@ -336,14 +361,13 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public void generateAsymmetricKey(@NonNull final Context context,
-                                      @NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
+    public void generateAsymmetricKey(@NonNull final TaskCompletedCallbackWithError<String, ClientException> callback) {
         sThreadExecutor.submit(
                 new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            callback.onTaskCompleted(generateAsymmetricKey(context));
+                            callback.onTaskCompleted(generateAsymmetricKey());
                         } catch (final ClientException e) {
                             callback.onError(e);
                         }
@@ -353,12 +377,13 @@ class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public String generateAsymmetricKey(@NonNull final Context context) throws ClientException {
+    public String generateAsymmetricKey() throws ClientException {
         final Exception exception;
         final String errCode;
 
         try {
-            final KeyPair keyPair = generateNewRsaKeyPair(context, RSA_KEY_SIZE);
+            sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START);
+            final KeyPair keyPair = generateNewRsaKeyPair(mContext, RSA_KEY_SIZE);
             final RSAKey rsaKey = getRsaKeyForKeyPair(keyPair);
             return getThumbprintForRsaKey(rsaKey);
         } catch (final UnsupportedOperationException e) {
@@ -376,6 +401,8 @@ class DevicePopManager implements IDevicePopManager {
         } catch (final JOSEException e) {
             exception = e;
             errCode = THUMBPRINT_COMPUTATION_FAILURE;
+        } finally {
+            sCodeMarkerManager.markCode(GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END);
         }
 
         final ClientException clientException = new ClientException(
@@ -583,7 +610,7 @@ class DevicePopManager implements IDevicePopManager {
         try {
             final KeyStore.PrivateKeyEntry keyEntry = mKeyManager.getEntry();
 
-            if (!(keyEntry instanceof KeyStore.PrivateKeyEntry)) {
+            if (keyEntry == null) {
                 Logger.warn(
                         TAG + methodName,
                         PRIVATE_KEY_NOT_FOUND
@@ -868,7 +895,7 @@ class DevicePopManager implements IDevicePopManager {
             final PublicKey publicKey = rsaKeyPair.getPublic();
             final byte[] publicKeybytes = publicKey.getEncoded();
             final byte[] bytesBase64Encoded = Base64.encode(publicKeybytes, Base64.DEFAULT);
-            return new String(bytesBase64Encoded);
+            return new String(bytesBase64Encoded, AuthenticationConstants.CHARSET_UTF8);
         } catch (final KeyStoreException e) {
             exception = e;
             errCode = KEYSTORE_NOT_INITIALIZED;
@@ -1153,7 +1180,6 @@ class DevicePopManager implements IDevicePopManager {
         return isStrongBoxException;
     }
 
-
     private SecureHardwareState getSecureHardwareState(@NonNull final KeyPair kp) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             try {
@@ -1259,7 +1285,7 @@ class DevicePopManager implements IDevicePopManager {
                             final boolean trySetAttestationChallenge) throws InvalidAlgorithmParameterException {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             initializePre23(context, keyPairGenerator, keySize);
-        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P){
+        } else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
             initialize23(keyPairGenerator, keySize, useStrongbox, trySetAttestationChallenge);
         } else {
             initialize28(keyPairGenerator, keySize, useStrongbox, enableImport, trySetAttestationChallenge);

@@ -1,15 +1,30 @@
-apply plugin: 'com.android.library'
-apply plugin: 'pmd'
-apply plugin: 'checkstyle'
-apply plugin: 'maven-publish'
-apply from: 'versioning/version_tasks.gradle'
+plugins {
+    id 'com.microsoft.identity.buildsystem' version '0.1.1'
+    id 'com.android.library'
+    id 'pmd'
+    id 'checkstyle'
+    id 'maven-publish'
+}
+
+apply from: '../versioning/version_tasks.gradle'
+
+def desugarCode = false
+
+if (project.hasProperty("sugar")) {
+    desugarCode = sugar.toBoolean()
+}
+
+buildSystem {
+    desugar = desugarCode
+}
+
 //apply plugin: 'jacoco'
 
 //To include Robolectric tests in the Jacoco report, flag -> "includeNolocationClasses" is set to true
 //tasks.withType(Test) {
 //    jacoco.includeNoLocationClasses = true
-    //This needs to be excluded for JDK 11
-    //SEE: https://support.circleci.com/hc/en-us/articles/360047926852-Android-Builds-Fail-with-java-lang-ClassNotFoundException-jdk-internal-reflect-GeneratedSerializationConstructorAccessor1-
+//This needs to be excluded for JDK 11
+//SEE: https://support.circleci.com/hc/en-us/articles/360047926852-Android-Builds-Fail-with-java-lang-ClassNotFoundException-jdk-internal-reflect-GeneratedSerializationConstructorAccessor1-
 //    jacoco.excludes = ['jdk.internal.*']
 //}
 
@@ -18,46 +33,9 @@ def unitTestType = "UnitTest"
 def androidTestType = "AndroidTest"
 def bothTestType = "BothTest"
 
-project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
-project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
-
 android {
-//
-//    testOptions {
-//        compileOptions {
-//            // Flag to enable support for the new language APIs
-//            coreLibraryDesugaringEnabled true
-//            // Sets Java compatibility to Java 8
-//            sourceCompatibility JavaVersion.VERSION_1_8
-//            targetCompatibility JavaVersion.VERSION_1_8
-//        }
-//        dependencies {
-//            coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
-//        }
-//    }
-    /*
-    //Commenting out until the next major version of common/msal/etc...
-    compileOptions {
-        // Flag to enable support for the new language APIs
-        coreLibraryDesugaringEnabled true
-        // Sets Java compatibility to Java 8
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    */
 
     compileSdkVersion rootProject.ext.compileSdkVersion
-
-    def sliceParameter = "" // will be blank unless specified by developer
-    def dcParameter = "" // will be blank unless specified by developer
-
-    if (project.hasProperty("slice")) {
-        sliceParameter = slice
-    }
-
-    if (project.hasProperty("dc")) {
-        dcParameter = dc
-    }
 
     defaultConfig {
         multiDexEnabled true
@@ -68,13 +46,12 @@ android {
         project.archivesBaseName = "common"
         project.version = android.defaultConfig.versionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        buildConfigField("String", "SLICE", "\"$sliceParameter\"")
-        buildConfigField("String", "DC", "\"$dcParameter\"")
     }
 
     buildTypes {
         debug {
             //testCoverageEnabled true
+            minifyEnabled false
         }
         release {
             minifyEnabled false
@@ -105,9 +82,27 @@ android {
 
     }
 
+    flavorDimensions "main"
+
+    productFlavors {
+        // The 'local' productFlavor sources common4j from mavenLocal and is intended to be used
+        // during development.
+        local {
+            dimension "main"
+        }
+
+        // The 'dist' productFlavor sources common from a central repository and is intended
+        // to be used for releases.
+        dist {
+            dimension "main"
+        }
+    }
+
     sourceSets {
         main {
             manifest.srcFile 'src/main/AndroidManifest.xml'
+
+            // Also load source from common-java
             java.srcDirs = ['src/main/java']
             res.srcDirs = ['src/main/res']
         }
@@ -127,19 +122,28 @@ android {
 }
 
 dependencies {
-
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.2.3'
-    //Commenting out until the next major version of common/msal/etc...
-    //Java 8 - Desugaring
-    //coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
-    implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
+    //Java 8 - Desugaring - Enabled/Disabled via plugin
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:$rootProject.ext.coreLibraryDesugaringVersion"
 
+    localApi(project(":common4j")) {
+        transitive = false
+    }
+
+    distApi("com.microsoft.identity:common4j:0.0.+") {
+        transitive = false
+    }
+
+    implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
+
+    implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.appCompatVersion"
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+    compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
     annotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -155,6 +159,9 @@ dependencies {
     testImplementation "org.powermock:powermock-classloading-xstream:$rootProject.ext.powerMockVersion"
     testImplementation "org.robolectric:robolectric:$rootProject.ext.robolectricVersion"
     testImplementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
+
+    testCompileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
+    testAnnotationProcessor "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
 
     // Instrumented dependencies
     androidTestImplementation "androidx.test.ext:junit:$rootProject.ext.androidxJunitVersion"
@@ -289,8 +296,8 @@ afterEvaluate {
 
     publishing {
         publications {
-            release(MavenPublication) {
-                from components.release
+            distRelease(MavenPublication) {
+                from components.distRelease
                 groupId 'com.microsoft.identity'
                 artifactId 'common'
                 //Edit the 'version' here for VSTS RC build
@@ -299,10 +306,10 @@ afterEvaluate {
                 pom {
                     name = 'common'
                     description = 'This library contains code shared between the Active Directory ' +
-                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
-                                    'Authentication Library (MSAL) for Android. This library ' +
-                                    'includes only internal classes and is NOT part of the ' +
-                                    'public API'
+                            'Authentication Library (ADAL) for Android and the Microsoft ' +
+                            'Authentication Library (MSAL) for Android. This library ' +
+                            'includes only internal classes and is NOT part of the ' +
+                            'public API'
                     url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
                     developers {
                         developer {
@@ -320,13 +327,13 @@ afterEvaluate {
                         url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
                     }
                     properties = [
-                            branch: 'master',
+                            branch : 'master',
                             version: project.version
                     ]
                 }
             }
-            debug(MavenPublication) {
-                from components.debug
+            distDebug(MavenPublication) {
+                from components.distDebug
                 groupId 'com.microsoft.identity'
                 artifactId 'common-debug'
                 //Edit the 'version' here for VSTS RC build
@@ -340,16 +347,16 @@ afterEvaluate {
                 name "vsts-maven-adal-android"
                 url "https://identitydivision.pkgs.visualstudio.com/_packaging/AndroidADAL/maven/v1"
                 credentials {
-                    username project.vstsUsername
-                    password project.vstsPassword
+                    username System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+                    password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
                 }
             }
             maven {
                 name "vsts-maven-android"
                 url 'https://identitydivision.pkgs.visualstudio.com/IDDP/_packaging/Android/maven/v1'
                 credentials {
-                    username project.vstsUsername
-                    password project.vstsPassword
+                    username System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
+                    password System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
                 }
             }
         }
@@ -357,6 +364,10 @@ afterEvaluate {
 }
 
 tasks.whenTaskAdded { task ->
+    if (task.name.contains("assemble")) {
+        task.dependsOn 'pmd'
+    }
+
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }

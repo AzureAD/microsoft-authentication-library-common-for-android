@@ -119,4 +119,6 @@ public final class PublicApiId {
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST = "1100";
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST_ASYNC = "1101";
     //endregion
+
+    public static final String PCA_GET_DEVICE_MODE = "1200";
 }

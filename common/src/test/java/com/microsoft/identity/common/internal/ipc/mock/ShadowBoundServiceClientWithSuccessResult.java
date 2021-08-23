@@ -31,7 +31,7 @@ import android.os.RemoteException;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.client.IMicrosoftAuthService;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.broker.BoundServiceClient;
 import com.microsoft.identity.common.internal.ipc.IpcStrategyTests;
 
@@ -89,6 +89,8 @@ public class ShadowBoundServiceClientWithSuccessResult<T extends IInterface> {
             }
         };
 
-        return (T) authService;
+        @SuppressWarnings("unchecked")
+        final T returnVal = (T) authService;
+        return returnVal;
     }
 }

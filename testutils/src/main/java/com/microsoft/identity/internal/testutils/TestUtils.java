@@ -22,17 +22,17 @@
 // THE SOFTWARE.
 package com.microsoft.identity.internal.testutils;
 
-import android.app.Activity;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.google.gson.Gson;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesAccountCredentialCache;
-import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
-import com.microsoft.identity.common.internal.dto.CredentialType;
+import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
+import com.microsoft.identity.common.java.cache.SharedPreferencesAccountCredentialCache;
+import com.microsoft.identity.common.java.dto.CredentialType;
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 
 import java.util.Map;
 
@@ -59,10 +59,10 @@ public class TestUtils {
         return SharedPreferencesAccountCredentialCache.getCredentialTypeForCredentialCacheKey(cacheKey) == CredentialType.RefreshToken;
     }
 
-    public static SharedPreferencesFileManager getSharedPreferences(final String sharedPrefName) {
-        final Context context = ApplicationProvider.getApplicationContext();
+    public static IMultiTypeNameValueStorage getSharedPreferences(final String sharedPrefName) {
+        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
 
-        return SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, null);
+        return components.getFileStore(sharedPrefName);
     }
 
     /**
@@ -71,20 +71,22 @@ public class TestUtils {
      * @param sharedPrefName the name of the shared preferences file.
      * @return A SharedPreferences that decrypts and encrypts the values.
      */
-    public static SharedPreferencesFileManager getEncryptedSharedPreferences(final String sharedPrefName) {
-        final Context context = ApplicationProvider.getApplicationContext();
-        final StorageHelper storageHelper = new StorageHelper(context);
-        final SharedPreferencesFileManager barePreferences = SharedPreferencesFileManager.getSharedPreferences(context, sharedPrefName, storageHelper);
+    public static IMultiTypeNameValueStorage getEncryptedSharedPreferences(final String sharedPrefName) {
+        final IPlatformComponents components = AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext());
+        final IMultiTypeNameValueStorage barePreferences = components.getEncryptedFileStore(
+                sharedPrefName,
+                components.
+                        getStorageEncryptionManager());
         return barePreferences;
     }
 
     public static void clearCache(final String sharedPrefName) {
-        SharedPreferencesFileManager sharedPreferences = getSharedPreferences(sharedPrefName);
+        IMultiTypeNameValueStorage sharedPreferences = getSharedPreferences(sharedPrefName);
         sharedPreferences.clear();
     }
 
     public static void removeAccessTokenFromCache(final String sharedPrefName) {
-        SharedPreferencesFileManager sharedPreferences = getSharedPreferences(sharedPrefName);
+        IMultiTypeNameValueStorage sharedPreferences = getSharedPreferences(sharedPrefName);
         final Map<String, ?> cacheValues = sharedPreferences.getAll();
         final String keyToRemove = getCacheKeyForAccessToken(cacheValues);
         if (keyToRemove != null) {

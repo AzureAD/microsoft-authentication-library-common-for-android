@@ -126,6 +126,11 @@ public class LabConstants {
         public static final String HOST_AZURE_AD = "hostazuread";
     }
 
+    public static final class GuestHomeAzureEnvironment {
+        public static final String AZURE_US_GOV = "azureusgovernment";
+        public static final String AZURE_CHINA_CLOUD = "azurechinacloud";
+    }
+
     public static final class IsAdminConsented {
         public static final String YES = "yes";
         public static final String NO = "no";

@@ -24,17 +24,17 @@ package com.microsoft.identity.common.internal.telemetry.events;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.BaseException;
-import com.microsoft.identity.common.exception.UserCancelException;
-import com.microsoft.identity.common.internal.controllers.ExceptionAdapter;
-import com.microsoft.identity.common.internal.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.controllers.ExceptionAdapter;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
 
-public class ApiEndEvent extends BaseEvent {
+public class ApiEndEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     public ApiEndEvent() {
         super();
         names(Event.API_END_EVENT);
@@ -80,7 +80,7 @@ public class ApiEndEvent extends BaseEvent {
         return this;
     }
 
-    public ApiEndEvent putApiId(@NonNull final String apiId) {
+    public @NonNull ApiEndEvent putApiId(@NonNull final String apiId) {
         put(Key.API_ID, apiId);
         return this;
     }

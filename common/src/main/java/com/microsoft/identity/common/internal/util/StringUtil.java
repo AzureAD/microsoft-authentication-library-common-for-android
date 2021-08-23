@@ -23,16 +23,19 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.text.TextUtils;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
 
+import java.util.AbstractMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * String utilities.
@@ -116,7 +119,7 @@ public final class StringUtil {
      * @return A Pair of Strings representing the uid/utid of the supplied home_account_id.
      * Return value cannot be null, but its values (pair.first, pair.second) may be.
      */
-    public static Pair<String, String> getTenantInfo(@NonNull final String homeAccountId) {
+    public static Map.Entry<String, String> getTenantInfo(@NonNull final String homeAccountId) {
         // Split this value by its parts... <uid>.<utid>
         final int EXPECTED_LENGTH = 2;
         final int INDEX_UID = 0;
@@ -134,7 +137,7 @@ public final class StringUtil {
             utid = uidUtidArray[INDEX_UTID];
         }
 
-        return new Pair<>(uid, utid);
+        return new AbstractMap.SimpleEntry<>(uid, utid);
     }
 
     /**
@@ -190,73 +193,15 @@ public final class StringUtil {
     }
 
     /**
-     * Counts the number of occurrences of one String in another.
-     *
-     * @param str
-     * @param subString
-     * @return int
-     */
-    public static int countMatches(@NonNull final String str, @Nullable final String subString) {
-        int count = 0;
-
-        if (StringUtil.isEmpty(str) || StringUtil.isEmpty(subString)) {
-            return count;
-        }
-
-        for (int i = 0; i <= (str.length() - subString.length()); i++) {
-            if (str.substring(i, i + subString.length()).equalsIgnoreCase(subString)) {
-                count++;
-            }
-        }
-
-        return count;
-    }
-
-    /**
-     * Util method to check if a string is a UUID or not
-     *
-     * @param inputString : inputString
-     * @return true if the inputString is a UUID else false;
-     */
-    public static boolean isUuid(@NonNull final String inputString) {
-        try {
-            UUID.fromString(inputString);
-            return true;
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    /**
      * Utility to null-safe-compare string in a case-insensitive manner.
      *
      * @param one The first string to compare.
      * @param two The second string to compare.
      */
+    @SuppressFBWarnings(value = "ES_COMPARING_PARAMETER_STRING_WITH_EQ",
+                        justification = "This is actually a reference comparison")
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
         return one == two || (one != null && one.equalsIgnoreCase(two));
     }
 
-    /**
-     * Utility to null-safe-compare strings in a case-insensitive manner, trimming the second input.
-     *
-     * @param one The first string to compare.
-     * @param two The second string to compare.
-     * @return true if the inputs are equal, false otherwise.
-     */
-    public static boolean equalsIgnoreCaseTrim(@Nullable final String one, @Nullable final String two) {
-        return one == two || (two != null && equalsIgnoreCase(one, two.trim()));
-    }
-
-    /**
-     * Utility to null-safe-compare strings in a case-insensitive manner, trimming both inputs.
-     *
-     * @param one The first string to compare.
-     * @param two The second string to compare.
-     * @return true if the inputs are equal, false otherwise.
-     */
-    public static boolean equalsIgnoreCaseTrimBoth(@Nullable final String one,
-                                                   @Nullable final String two) {
-        return equalsIgnoreCaseTrim(null != one ? one.trim() : one, two);
-    }
 }

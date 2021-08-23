@@ -26,6 +26,7 @@ package com.microsoft.identity.common.exception;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
+import com.microsoft.identity.common.java.exception.BaseException;
 
 import lombok.Getter;
 
@@ -80,5 +81,10 @@ public class BrokerCommunicationException extends BaseException {
     @Override
     public String getMessage() {
         return "[" + category.toString() +"] [" +  strategyType.toString() +"] :" + super.getMessage();
+    }
+
+    @Override
+    public boolean isCacheable() {
+        return category != Category.CONNECTION_ERROR;
     }
 }
