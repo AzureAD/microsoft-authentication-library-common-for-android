@@ -22,8 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authscheme;
 
-import edu.umd.cs.findbugs.annotations.Nullable;
-import lombok.NonNull;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
+import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
 
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
@@ -32,14 +34,11 @@ import com.microsoft.identity.common.java.util.IClockSkewManager;
 
 import java.net.URL;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
-
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.CLIENT_CLAIMS;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.HTTP_METHOD;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.NONCE;
-import static com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal.SerializedNames.URL;
 
 /**
  * Internal representation of PoP Authentication Scheme.
