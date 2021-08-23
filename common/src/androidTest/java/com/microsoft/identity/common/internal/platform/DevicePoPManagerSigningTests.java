@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -39,18 +37,7 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.MD5_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.NONE_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA_PSS;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
