@@ -31,7 +31,6 @@ import com.microsoft.identity.common.exception.ClientException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -45,8 +44,6 @@ import java.util.List;
 
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_1AndMGF1Padding;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_256AndMGF1Padding;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_384AndMGF1Padding;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_OAEPWithSHA_512AndMGF1Padding;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_ECB_PKCS1_PADDING;
 import static com.microsoft.identity.common.internal.platform.IDevicePopManager.Cipher.RSA_NONE_OAEPWithSHA_1AndMGF1Padding;
 
@@ -75,8 +72,6 @@ public class DevicePoPManagerEncryptionTests {
             ciphers.add(RSA_NONE_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_1AndMGF1Padding);
             ciphers.add(RSA_ECB_OAEPWithSHA_256AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_384AndMGF1Padding);
-            ciphers.add(RSA_ECB_OAEPWithSHA_512AndMGF1Padding);
         }
 
         return ciphers;

@@ -22,8 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.exception.ClientException;
@@ -39,17 +37,7 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
-
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.MD5_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.NONE_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA_PSS;
+import java.util.Arrays;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
@@ -63,23 +51,7 @@ public class DevicePoPManagerSigningTests {
 
     @Parameterized.Parameters
     public static Iterable<IDevicePopManager.SigningAlgorithm> testParams() {
-        final List<IDevicePopManager.SigningAlgorithm> signingAlgs =
-                new ArrayList<IDevicePopManager.SigningAlgorithm>() {{
-                    add(MD5_WITH_RSA);
-                    add(NONE_WITH_RSA);
-                    add(SHA_256_WITH_RSA);
-                    add(SHA_384_WITH_RSA);
-                    add(SHA_512_WITH_RSA);
-                }};
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Only execute these tests at appropriate API levels...
-            signingAlgs.add(SHA_256_WITH_RSA_PSS);
-            signingAlgs.add(SHA_384_WITH_RSA_PSS);
-            signingAlgs.add(SHA_512_WITH_RSA_PSS);
-        }
-
-        return signingAlgs;
+        return Arrays.asList(IDevicePopManager.SigningAlgorithm.values());
     }
 
     @SuppressWarnings("unused")
