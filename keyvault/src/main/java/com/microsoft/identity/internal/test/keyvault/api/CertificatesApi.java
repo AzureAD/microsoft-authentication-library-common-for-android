@@ -305,7 +305,7 @@ public class CertificatesApi {
      */
     public ApiResponse<DeletedCertificateBundle> deleteCertificateWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteCertificateValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = TypeToken.get(DeletedCertificateBundle.class).getType();
+        final Type localVarReturnType = TypeToken.get(DeletedCertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
