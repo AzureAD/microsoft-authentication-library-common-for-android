@@ -430,7 +430,7 @@ public class CertificatesApi {
      */
     public ApiResponse<Contacts> deleteCertificateContactsWithHttpInfo(String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteCertificateContactsValidateBeforeCall(apiVersion, null, null);
-        Type localVarReturnType = TypeToken.get(Contacts.class).getType();
+        final Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
