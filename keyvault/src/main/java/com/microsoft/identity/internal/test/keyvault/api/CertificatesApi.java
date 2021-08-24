@@ -170,7 +170,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateOperation> createCertificateWithHttpInfo(String certificateName, CertificateCreateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = createCertificateValidateBeforeCall(certificateName, parameters, apiVersion, null, null);
-        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
+        final Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
