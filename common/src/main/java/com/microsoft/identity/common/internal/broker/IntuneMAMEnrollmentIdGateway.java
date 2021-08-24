@@ -30,6 +30,9 @@ import android.util.LruCache;
 
 import com.microsoft.identity.common.logging.Logger;
 
+import lombok.EqualsAndHashCode;
+import lombok.NonNull;
+
 /**
  * Utility class to retrieve the Intune MAM enrollment id from the Intune
  * Company Portal, if available.  The enrollment id is required for token
@@ -60,33 +63,16 @@ public class IntuneMAMEnrollmentIdGateway {
     // time to become compliant and re-request the token.
     private static final long CACHE_TTL_FOR_NULLS_MS = 1500;
 
+    @EqualsAndHashCode
     private static final class CacheKey {
         public final String userId;
         public final String packageName;
 
-        public CacheKey(String userId, String packageName) {
+        public CacheKey(@NonNull final String userId, @NonNull final String packageName) {
             // note: keep values in lower case so string comparisons
             // don't have to be case-insensitive.
             this.userId = userId.toLowerCase();
             this.packageName = packageName.toLowerCase();
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            CacheKey cacheKey = (CacheKey) o;
-
-            if (!userId.equals(cacheKey.userId)) return false;
-            return packageName.equals(cacheKey.packageName);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = userId.hashCode();
-            result = 31 * result + packageName.hashCode();
-            return result;
         }
     }
 
@@ -155,8 +141,9 @@ public class IntuneMAMEnrollmentIdGateway {
                     SELECTION, selectionArgs, null);
 
             if (found != null) {
-                if (found.moveToFirst())
+                if (found.moveToFirst()) {
                     result = found.getString(0);
+                }
 
                 found.close();
             }

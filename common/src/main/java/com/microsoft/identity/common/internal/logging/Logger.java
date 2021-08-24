@@ -38,8 +38,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 @SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_SUPERCLASS")
 public class Logger extends com.microsoft.identity.common.logging.Logger {
 
-    private static final String TAG = Logger.class.getSimpleName();
-
     private static boolean sEmitDeprecationEvent = true;
 
     private static final Logger INSTANCE = new Logger();
