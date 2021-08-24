@@ -598,7 +598,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = deleteCertificateIssuerValidateBeforeCall(issuerName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
+        final Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
