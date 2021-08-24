@@ -48,6 +48,7 @@ V.Next
 - [MINOR] Migrate authorization completion callback to common4j (#1522)
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
+- [MINOR] Add ropc command and ropc flow to BaseController (#1539)
 
 Version 3.5.0
 ----------
