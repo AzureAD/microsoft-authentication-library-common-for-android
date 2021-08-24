@@ -56,7 +56,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private final Object cacheLock = new Object();
     @GuardedBy("cacheLock")
     private final LruCache<String, String> fileCache = new LruCache<>(256);
-    private final String mSharedPreferencesFileName;
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
@@ -106,7 +105,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         } else {
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
-        mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
 
         if (encryptionManager != null) {
