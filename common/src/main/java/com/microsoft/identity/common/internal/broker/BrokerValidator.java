@@ -189,6 +189,9 @@ public class BrokerValidator {
 
         // package name and/or signature not matched so this is not a valid broker.
         return false;
+
+
+ //       return true;
     }
 
     @SuppressLint("PackageManagerGetSignatures")
