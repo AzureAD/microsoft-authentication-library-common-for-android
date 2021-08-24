@@ -44,6 +44,7 @@ import lombok.NonNull;
 
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_HOST_APP_PACKAGE_NAME_2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 
 /**
@@ -103,7 +104,8 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
         }
 
         if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
-                BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
+                BROKER_HOST_APP_PACKAGE_NAME_2.equalsIgnoreCase(packageName)) {
             return mLegacyCPKeyLoader;
         }
 
@@ -119,7 +121,8 @@ public class AndroidBrokerStorageEncryptionManager extends StorageEncryptionMana
 
         if (isEncryptedByThisKeyIdentifier(cipherText, PredefinedKeyLoader.USER_PROVIDED_KEY_IDENTIFIER)) {
             if (COMPANY_PORTAL_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
-                    BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName)) {
+                    BROKER_HOST_APP_PACKAGE_NAME.equalsIgnoreCase(packageName) ||
+                    BROKER_HOST_APP_PACKAGE_NAME_2.equalsIgnoreCase(packageName)) {
                 keyLoaders.add(mLegacyCPKeyLoader);
                 keyLoaders.add(mLegacyAuthAppKeyLoader);
                 return keyLoaders;
