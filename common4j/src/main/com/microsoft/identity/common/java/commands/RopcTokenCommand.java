@@ -24,41 +24,40 @@ package com.microsoft.identity.common.java.commands;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.util.List;
 
-import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
-@EqualsAndHashCode(callSuper = true)
-public class InteractiveTokenCommand extends TokenCommand {
-    private static final String TAG = InteractiveTokenCommand.class.getSimpleName();
+public class RopcTokenCommand extends TokenCommand {
 
-    public InteractiveTokenCommand(@NonNull final InteractiveTokenCommandParameters parameters,
-                                   @NonNull final BaseController controller,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
-                                   @NonNull final String publicApiId) {
+    private static final String TAG = RopcTokenCommand.class.getSimpleName();
+
+    public RopcTokenCommand(@NonNull final RopcTokenCommandParameters parameters,
+                            @NonNull final BaseController controller,
+                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                            @NonNull final String publicApiId) {
         super(parameters, controller, callback, publicApiId);
     }
 
-    public InteractiveTokenCommand(@NonNull InteractiveTokenCommandParameters parameters,
-                                   @NonNull List<BaseController> controllers,
-                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull CommandCallback callback,
-                                   @NonNull final String publicApiId) {
+    public RopcTokenCommand(@NonNull final RopcTokenCommandParameters parameters,
+                            @NonNull final List<BaseController> controllers,
+                            @SuppressWarnings(WarningType.rawtype_warning) @NonNull final CommandCallback callback,
+                            @NonNull final String publicApiId) {
         super(parameters, controllers, callback, publicApiId);
     }
 
     @Override
     public AcquireTokenResult execute() throws Exception {
         final String methodName = ":execute";
-        if (getParameters() instanceof InteractiveTokenCommandParameters) {
+        if (getParameters() instanceof RopcTokenCommandParameters) {
             Logger.info(
                     TAG + methodName,
-                    "Executing interactive token command..."
+                    "Executing ROPC token command..."
             );
 
             return getDefaultController()
@@ -70,14 +69,13 @@ public class InteractiveTokenCommand extends TokenCommand {
         }
     }
 
-    public void onFinishAuthorizationSession(int requestCode,
-                                             int resultCode,
-                                             @NonNull final PropertyBag data) {
-        getDefaultController().onFinishAuthorizationSession(requestCode, resultCode, data);
+    @Override
+    public boolean isEligibleForEstsTelemetry() {
+        return false;
     }
 
     @Override
-    public boolean isEligibleForEstsTelemetry() {
+    public boolean isEligibleForCaching() {
         return true;
     }
 }

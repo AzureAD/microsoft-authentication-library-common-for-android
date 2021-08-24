@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.controllers;
 import static com.microsoft.identity.common.java.authorities.Authority.B2C;
 
 
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.foci.FociQueryUtilities;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
@@ -33,6 +34,8 @@ import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommand
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsRopcTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
@@ -147,6 +150,99 @@ public abstract class BaseController {
     public abstract AcquireTokenResult acquireDeviceCodeFlowToken(@SuppressWarnings(WarningType.rawtype_warning) final AuthorizationResult authorizationResult, final DeviceCodeFlowCommandParameters parameters)
             throws Exception;
 
+    public AcquireTokenResult acquireTokenWithPassword(@NonNull final RopcTokenCommandParameters parameters) throws Exception {
+        final String methodName = ":acquireToken";
+
+        Logger.verbose(
+                TAG + methodName,
+                "Acquiring token..."
+        );
+
+        final AcquireTokenResult acquireTokenResult = new AcquireTokenResult();
+
+        //00) Validate MSAL Parameters
+        parameters.validate();
+
+        // Add default scopes
+        final Set<String> mergedScopes = addDefaultScopes(parameters);
+
+        final RopcTokenCommandParameters parametersWithScopes = parameters
+                .toBuilder()
+                .scopes(mergedScopes)
+                .build();
+
+        logParameters(TAG, parametersWithScopes);
+
+        //0) Get known authority result
+        parametersWithScopes.getPlatformComponents()
+                .getPlatformUtil()
+                .throwIfNetworkNotAvailable(parametersWithScopes.isPowerOptCheckEnabled());
+
+        Authority.KnownAuthorityResult authorityResult = Authority.getKnownAuthorityResult(parametersWithScopes.getAuthority());
+
+        //0.1 If not known throw resulting exception
+        if (!authorityResult.getKnown()) {
+            Logger.error(TAG + methodName, "Authority is not known.", authorityResult.getClientException());
+            throw authorityResult.getClientException();
+        }
+
+        // Build up params for Strategy construction
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.getPlatformComponents())
+                .build();
+
+        //1) Get oAuth2Strategy for Authority Type
+        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2Strategy oAuth2Strategy = parametersWithScopes
+                .getAuthority()
+                .createOAuth2Strategy(strategyParameters);
+
+        //2) Get the token by exchanging password
+        final TokenRequest ropcTokenRequest = oAuth2Strategy.createRopcTokenRequest(
+                parametersWithScopes
+        );
+
+        final TokenResult tokenResult = oAuth2Strategy.requestToken(ropcTokenRequest);
+
+        acquireTokenResult.setTokenResult(tokenResult);
+
+        @SuppressWarnings(WarningType.rawtype_warning) final OAuth2TokenCache tokenCache = parameters.getOAuth2TokenCache();
+
+        if (tokenResult != null && tokenResult.getSuccess()) {
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = tokenCache.saveAndLoadAggregatedAccountData(
+                    oAuth2Strategy,
+                    getAuthorizationRequest(oAuth2Strategy, parameters),
+                    tokenResult.getTokenResponse()
+            );
+
+            final ICacheRecord savedRecord = savedRecords.get(0);
+
+            // Create a new AuthenticationResult to hold the saved record
+            final LocalAuthenticationResult authenticationResult = new LocalAuthenticationResult(
+                    finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme()),
+                    savedRecords,
+                    parameters.getSdkType(),
+                    false
+            );
+
+            // Set the client telemetry...
+            if (null != tokenResult.getCliTelemInfo()) {
+                final CliTelemInfo cliTelemInfo = tokenResult.getCliTelemInfo();
+                authenticationResult.setSpeRing(cliTelemInfo.getSpeRing());
+                authenticationResult.setRefreshTokenAge(cliTelemInfo.getRefreshTokenAge());
+                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+            } else {
+                // we can't put SpeInfo as the CliTelemInfo is null
+                Telemetry.emit(new CacheEndEvent());
+            }
+
+            // Set the AuthenticationResult on the final result object
+            acquireTokenResult.setLocalAuthenticationResult(authenticationResult);
+        }
+
+        return acquireTokenResult;
+    }
+
     /**
      * Pre-filled ALL the fields in AuthorizationRequest.Builder
      */
@@ -248,7 +344,7 @@ public abstract class BaseController {
             final String installedCompanyPortalVersion =
                     parameters.getPlatformComponents().getPlatformUtil().getInstalledCompanyPortalVersion();
 
-            if (!StringUtil.isNullOrEmpty(installedCompanyPortalVersion)){
+            if (!StringUtil.isNullOrEmpty(installedCompanyPortalVersion)) {
                 msBuilder.setInstalledCompanyPortalVersion(installedCompanyPortalVersion);
             }
         }

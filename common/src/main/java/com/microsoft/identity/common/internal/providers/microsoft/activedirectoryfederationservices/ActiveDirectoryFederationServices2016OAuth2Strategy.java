@@ -24,6 +24,7 @@ package com.microsoft.identity.common.internal.providers.microsoft.activedirecto
 
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.commands.parameters.RopcTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
@@ -115,6 +116,11 @@ public class ActiveDirectoryFederationServices2016OAuth2Strategy extends OAuth2S
 
     @Override
     public TokenRequest createRefreshTokenRequest(AbstractAuthenticationScheme scheme) {
+        return null;
+    }
+
+    @Override
+    public TokenRequest createRopcTokenRequest(RopcTokenCommandParameters tokenCommandParameters) throws ClientException {
         return null;
     }
 

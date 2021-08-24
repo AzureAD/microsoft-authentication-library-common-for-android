@@ -33,7 +33,8 @@ buildConfig {
 
 sourceSets {
     main {
-        java.srcDirs = ['src/main']
+        buildConfigField("String", "LAB_CLIENT_SECRET", "\"$labClientSecret\"")
+        java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
     }
     test {
         java.srcDirs = ['src/test', "$project.buildDir/generated/source/buildConfig/test"]
