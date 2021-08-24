@@ -26,11 +26,19 @@ import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.eststelemetry.LastRequestTelemetryCache;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
+
+import java.util.List;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 
 public interface IPlatformUtil {
+
+    /**
+     * Return a list of BrowserDescriptors that are considered safe for the given platform.
+     */
+    List<BrowserDescriptor> getBrowserSafeListForBroker();
 
     /**
      * Gets version of the installed Company Portal app.
