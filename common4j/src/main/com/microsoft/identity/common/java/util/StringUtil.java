@@ -370,6 +370,15 @@ public class StringUtil {
     }
 
     /**
+     * Given a byte array, return a base64-encoded String representing that byte array.
+     * @param bytes the bytes to encode.
+     * @return the Base64 representation of those bytes, without line-wrapping.
+     */
+    public static String bytesAsBase64(final @NonNull byte[] bytes) {
+        return StringUtil.fromByteArray(Base64.encode(bytes, Base64.NO_WRAP));
+    }
+
+    /**
      * This is a reimplementation of String.join for the android platform.  Possibly this should
      * shift into PlatformUtils, which could rely on String.join dependent on the android API level.
      * @param separator a separator for the joined strings.
