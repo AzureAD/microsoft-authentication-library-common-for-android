@@ -206,7 +206,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = createCertificateValidateBeforeCall(certificateName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
+        final Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
