@@ -26,6 +26,7 @@ import android.os.Build;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.ported.DateUtilities;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -52,8 +53,8 @@ import javax.crypto.SecretKey;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
-import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
-import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.java.exception.ClientException.CERTIFICATE_LOAD_FAILURE;
 import static com.microsoft.identity.common.java.exception.ClientException.INVALID_ALG_PARAMETER;
