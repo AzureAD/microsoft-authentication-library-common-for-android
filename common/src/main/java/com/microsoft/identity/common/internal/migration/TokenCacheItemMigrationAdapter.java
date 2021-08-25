@@ -74,7 +74,6 @@ public class TokenCacheItemMigrationAdapter {
      * ExecutorService to handle background computation.
      */
     public static final ExecutorService sBackgroundExecutor = Executors.newCachedThreadPool();
-    private static final String RESOURCE_DEFAULT_SCOPE = "/.default";
 
     /**
      * For a list of supplied tokens, filter them to find the 'most preferred' when migrating.
@@ -496,23 +495,12 @@ public class TokenCacheItemMigrationAdapter {
      */
     @NonNull
     public static String getScopesForTokenRequest(@NonNull final String v1Resource) {
-        String scopes = getScopeFromResource(v1Resource);
+        String scopes = MicrosoftStsOAuth2Strategy.getScopeFromResource(v1Resource);
 
         // Add the default scopes, as they will not be present
         scopes += " " + BaseController.getDelimitedDefaultScopeString();
 
         return scopes;
-    }
-
-    /**
-     * Given a v1 resource uri, append '/.default' to convert it to a v2 scope.
-     *
-     * @param resource The v1 resource uri.
-     * @return The v1 resource uri as a scope.
-     */
-    @NonNull
-    public static String getScopeFromResource(@NonNull final String resource) {
-        return resource + RESOURCE_DEFAULT_SCOPE;
     }
 
     /**
