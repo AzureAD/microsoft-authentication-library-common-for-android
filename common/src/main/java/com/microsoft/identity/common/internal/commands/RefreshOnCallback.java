@@ -20,35 +20,37 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands;
+package com.microsoft.identity.common.internal.commands;
 
-/**
- * Interface for Broker/MSAL command result.
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.logging.Logger;
+
+/*
+    Null Object Pattern for Commands who's result should be ignored.
  */
-public interface ICommandResult {
+public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, BaseException> {
 
-    enum ResultStatus {
-        CANCEL,
-        COMPLETED,
-        ERROR,
-        VOID;
+    private static final String TAG = RefreshOnCallback.class.getSimpleName();
 
-        public String getLogStatus() {
-            return this.name();
-        }
+    @Override
+    public void onCancel() {}
+
+    @Override
+    public void onTaskCompleted(AcquireTokenResult result) {
+        Logger.verbose(
+                TAG + ":onTaskCompleted",
+                "Task succeeded: " + result.getSucceeded() + " . CorrelationId: " + result.getLocalAuthenticationResult().getCorrelationId()
+        );
     }
-    /**
-     * Returns a correlation ID associated to the command.
-     */
-    String getCorrelationId();
 
-    /**
-     * Returns the result status.
-     */
-    ResultStatus getStatus();
+    @Override
+    public void onError(BaseException error) {
+        Logger.verbose(
+                TAG + ":onError",
+                error.getMessage()
+        );
+    }
 
-    /**
-     * Gets the result object.
-     */
-    Object getResult();
 }

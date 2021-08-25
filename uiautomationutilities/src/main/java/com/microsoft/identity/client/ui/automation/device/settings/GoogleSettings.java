@@ -38,6 +38,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
@@ -151,7 +152,17 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        Logger.i(TAG, "Forwarding Time For One Day on Google Device..");
+        forwardDeviceTime(TimeUnit.DAYS.toSeconds(1));
+    }
+
+    /**
+     * Change the time on the device by advancing the clock by seconds.
+     *
+     * @param seconds amount to advance time by
+     */
+    @Override
+    public void forwardDeviceTime(long seconds) {
+        Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Google Device");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
         // Launch the date time settings page
@@ -168,8 +179,8 @@ public class GoogleSettings extends BaseSettings {
 
             final Calendar cal = Calendar.getInstance();
 
-            // add one to move to next day
-            cal.add(Calendar.DATE, 1);
+            // add the # of seconds to forward device time
+            cal.add(Calendar.SECOND, (int) seconds);
 
             // this is the new date
             final int dateToSet = cal.get(Calendar.DATE);
@@ -193,6 +204,15 @@ public class GoogleSettings extends BaseSettings {
         }
     }
 
+    private UiObject obtainDateButton() {
+        Logger.i(TAG, "Obtain Date Button on Google Device..");
+        if (android.os.Build.VERSION.SDK_INT == 28) {
+            return UiAutomatorUtils.obtainUiObjectWithText("Set date");
+        }
+
+        return UiAutomatorUtils.obtainEnabledUiObjectWithExactText("Date");
+    }
+
     @Override
     public void activateAdmin() {
         Logger.i(TAG, "Activating Admin on Google Device..");
@@ -209,15 +229,6 @@ public class GoogleSettings extends BaseSettings {
         } catch (final UiObjectNotFoundException e) {
             throw new AssertionError(e);
         }
-    }
-
-    private UiObject obtainDateButton() {
-        Logger.i(TAG, "Obtain Date Button on Google Device..");
-        if (android.os.Build.VERSION.SDK_INT == 28) {
-            return UiAutomatorUtils.obtainUiObjectWithText("Set date");
-        }
-
-        return UiAutomatorUtils.obtainEnabledUiObjectWithExactText("Date");
     }
 
     private UiObject obtainButtonInScrollable(final String Text) {
