@@ -78,6 +78,7 @@ public class MicrosoftStsAccountCredentialAdapter
         try {
             final long cachedAt = getCachedAt();
             final long expiresOn = getExpiresOn(response);
+            final long refreshOn = getRefreshOn(response);
             final ClientInfo clientInfo = new ClientInfo(response.getClientInfo());
 
             final AccessTokenRecord accessToken = new AccessTokenRecord();
@@ -95,6 +96,7 @@ public class MicrosoftStsAccountCredentialAdapter
             );
             accessToken.setCachedAt(String.valueOf(cachedAt)); // generated @ client side
             accessToken.setExpiresOn(String.valueOf(expiresOn));
+            accessToken.setRefreshOn(String.valueOf(refreshOn));
             accessToken.setSecret(response.getAccessToken());
 
             // Optional fields
@@ -290,4 +292,14 @@ public class MicrosoftStsAccountCredentialAdapter
         return currentTimeSecs + expiresIn;
     }
 
+    private long getRefreshOn(final MicrosoftStsTokenResponse msTokenResponse) {
+        final long currentTimeMillis = System.currentTimeMillis();
+        final long currentTimeSecs = TimeUnit.MILLISECONDS.toSeconds(currentTimeMillis);
+        final long refreshIn = msTokenResponse.getRefreshIn() == null ? msTokenResponse.getExpiresIn() : msTokenResponse.getRefreshIn();
+
+        return currentTimeSecs + refreshIn;
+    }
+
+
 }
+
