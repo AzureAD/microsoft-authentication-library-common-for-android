@@ -155,9 +155,11 @@ public class GoogleSettings extends BaseSettings {
     }
 
     /**
-     * @param seconds amount to advance time by
      * Change the time on the device by advancing the clock by seconds.
+     *
+     * @param seconds amount to advance time by
      */
+    @Override
     public void forwardDeviceTime(int seconds) {
         Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Google Device");
         // Disable Automatic TimeZone

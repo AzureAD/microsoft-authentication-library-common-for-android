@@ -76,7 +76,7 @@ public abstract class AuthResult {
         Assert.assertNotNull(exception);
     }
 
-    public boolean isAccessTokenEqual(AuthResult o){
-        return o.getAccessToken().equals(this.accessToken);
+    public boolean isAccessTokenEqual(String accessToken){
+        return accessToken.equals(this.accessToken);
     }
 }

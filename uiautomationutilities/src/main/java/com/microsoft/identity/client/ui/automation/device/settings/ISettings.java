@@ -83,8 +83,9 @@ public interface ISettings {
     void forwardDeviceTimeForOneDay();
 
     /**
-     * @seconds time to advance device time by
      * Change the time on the device by seconds.
+     *
+     * @seconds time to advance device time by
      */
     void forwardDeviceTime(int seconds);
 
