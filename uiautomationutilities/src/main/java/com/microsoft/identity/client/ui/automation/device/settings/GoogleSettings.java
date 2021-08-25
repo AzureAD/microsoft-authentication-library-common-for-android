@@ -151,7 +151,7 @@ public class GoogleSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        forwardDeviceTime(86400);
+        forwardDeviceTime(TimeUnit.DAYS.toSeconds(1));
     }
 
     /**
