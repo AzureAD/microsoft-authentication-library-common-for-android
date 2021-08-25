@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] Enabling refresh_in feature (#1310)
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
 - [MAJOR] Move Utility classes (#1526)
 - [MINOR] Telemetry for OneAUth (#1514, #1525)
 - [MAJOR] Migrate CommandDispatcher to common4j (#1519)

@@ -20,35 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands;
+package com.microsoft.identity.common.internal.result;
 
-/**
- * Interface for Broker/MSAL command result.
+/*
+    Null Object Pattern for Commands who's result should be ignored.
  */
-public interface ICommandResult {
-
-    enum ResultStatus {
-        CANCEL,
-        COMPLETED,
-        ERROR,
-        VOID;
-
-        public String getLogStatus() {
-            return this.name();
-        }
-    }
-    /**
-     * Returns a correlation ID associated to the command.
-     */
-    String getCorrelationId();
-
-    /**
-     * Returns the result status.
-     */
-    ResultStatus getStatus();
-
-    /**
-     * Gets the result object.
-     */
-    Object getResult();
+public class VoidResult {
 }
