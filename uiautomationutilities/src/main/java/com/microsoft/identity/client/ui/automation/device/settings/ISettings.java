@@ -91,6 +91,13 @@ public interface ISettings {
     void forwardDeviceTime(int seconds);
 
     /**
+     * Change the time on the device by seconds.
+     *
+     * @seconds time to advance device time by
+     */
+    void forwardDeviceTime(long seconds);
+
+    /**
      * Activate this admin app. This method is supposed to be called when the Activate Device Admin
      * UI appears on the device. It will activate the admin for whichever admin requested the activation.
      */
@@ -117,4 +124,5 @@ public interface ISettings {
      * @param packageName the package for which to open app info page
      */
     void launchAppInfoPage(String packageName);
+
 }
