@@ -38,6 +38,7 @@ import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 import org.junit.Assert;
 
 import java.util.Calendar;
+import java.util.concurrent.TimeUnit;
 
 import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
@@ -160,7 +161,7 @@ public class GoogleSettings extends BaseSettings {
      * @param seconds amount to advance time by
      */
     @Override
-    public void forwardDeviceTime(int seconds) {
+    public void forwardDeviceTime(long seconds) {
         Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Google Device");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
@@ -179,7 +180,7 @@ public class GoogleSettings extends BaseSettings {
             final Calendar cal = Calendar.getInstance();
 
             // add the # of seconds to forward device time
-            cal.add(Calendar.SECOND, seconds);
+            cal.add(Calendar.SECOND, (int) seconds);
 
             // this is the new date
             final int dateToSet = cal.get(Calendar.DATE);

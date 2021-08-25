@@ -149,7 +149,7 @@ public class SamsungSettings extends BaseSettings {
         forwardDeviceTime(86400);
     }
 
-    public void forwardDeviceTime(int seconds) {
+    public void forwardDeviceTime(long seconds) {
         Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Samsung Device..");
         // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
@@ -169,7 +169,7 @@ public class SamsungSettings extends BaseSettings {
             final Calendar cal = Calendar.getInstance();
 
             // add the # of seconds to forward device time
-            cal.add(Calendar.SECOND, seconds);
+            cal.add(Calendar.SECOND, (int) seconds);
 
             // this is the new date
             final int dateToSet = cal.get(Calendar.DATE);

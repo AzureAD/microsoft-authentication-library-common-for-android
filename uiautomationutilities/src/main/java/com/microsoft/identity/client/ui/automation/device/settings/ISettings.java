@@ -87,7 +87,7 @@ public interface ISettings {
      *
      * @seconds time to advance device time by
      */
-    void forwardDeviceTime(int seconds);
+    void forwardDeviceTime(long seconds);
 
     /**
      * Activate this admin app. This method is supposed to be called when the Activate Device Admin
