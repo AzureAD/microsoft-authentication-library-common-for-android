@@ -43,27 +43,21 @@ import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.result.FinalizableResultFuture;
-import androidx.annotation.GuardedBy;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.exception.BrokerCommunicationException;
-import com.microsoft.identity.common.internal.result.VoidResult;
 import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
+import com.microsoft.identity.common.java.result.VoidResult;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.logging.DiagnosticContext;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.internal.telemetry.Telemetry;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.logging.Logger;
@@ -90,6 +84,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.NonNull;
 
 public class CommandDispatcher {
 
@@ -312,7 +309,7 @@ public class CommandDispatcher {
                             }
                             finalFuture.setCleanedUp();
                         }
-                        DiagnosticContext.clear();
+                        DiagnosticContext.INSTANCE.clear();
                     }
                     codeMarkerManager.markCode(ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END);
                 }
@@ -325,7 +322,7 @@ public class CommandDispatcher {
         submitAndForgetReturningFuture(command);
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    //@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static FinalizableResultFuture<CommandResult> submitAndForgetReturningFuture(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BaseCommand command){
         final String methodName = ":submit";
 
@@ -372,7 +369,7 @@ public class CommandDispatcher {
                         Logger.info(TAG + methodName, "Request encountered an exception with correlation id : **" + correlationId);
                         finalFuture.setException(new ExecutionException(t));
                     } finally {
-                        DiagnosticContext.clear();
+                        DiagnosticContext.INSTANCE.clear();
                     }
 
                 }
@@ -392,7 +389,7 @@ public class CommandDispatcher {
         final String TAG = tag + ":" + parameters.getClass().getSimpleName();
 
         //TODO:1315871 - conversion of PublicApiId in readable form.
-        Logger.info(TAG, DiagnosticContext.getRequestContext().toJsonString(),
+        Logger.info(TAG, DiagnosticContext.INSTANCE.getRequestContext().toJsonString(),
                 "Starting request for correlation id : ##" + correlationId
                         + ", with PublicApiId : " + publicApiId);
 
@@ -424,7 +421,7 @@ public class CommandDispatcher {
                     return;
                 }
 
-                if (!StringUtil.isEmpty(result.getCorrelationId())
+                if (!StringUtil.isNullOrEmpty(result.getCorrelationId())
                         && !command.getParameters().getCorrelationId().equals(result.getCorrelationId())) {
                     Logger.info(TAG + methodName,
                             "Completed duplicate request with correlation id : **"
@@ -670,7 +667,7 @@ public class CommandDispatcher {
                             Telemetry.getInstance().flush(correlationId);
                             returnCommandResult(command, commandResult);
                         } finally {
-                            DiagnosticContext.clear();
+                            DiagnosticContext.INSTANCE.clear();
                         }
                     }
                 });
@@ -694,7 +691,7 @@ public class CommandDispatcher {
         @Nullable final String requestCorrelationId, final String sdkType, final String sdkVersion){
             final String methodName = ":initializeDiagnosticContext";
 
-            final String correlationId = StringUtil.isEmpty(requestCorrelationId) ?
+            final String correlationId = StringUtil.isNullOrEmpty(requestCorrelationId) ?
                     UUID.randomUUID().toString() :
                     requestCorrelationId;
 
@@ -702,7 +699,7 @@ public class CommandDispatcher {
             rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
             rc.put(PRODUCT, sdkType);
             rc.put(VERSION, sdkVersion);
-            DiagnosticContext.setRequestContext(rc);
+            DiagnosticContext.INSTANCE.setRequestContext(rc);
             Logger.verbose(
                     TAG + methodName,
                     "Initialized new DiagnosticContext"
