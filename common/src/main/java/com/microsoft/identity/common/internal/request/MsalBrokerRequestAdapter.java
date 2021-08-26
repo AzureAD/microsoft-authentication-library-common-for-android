@@ -46,8 +46,8 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.internal.commands.parameters.GenerateShrCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.RemoveAccountCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
 import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.internal.util.BrokerProtocolVersionUtil;
 import com.microsoft.identity.common.internal.util.QueryParamsAdapter;
@@ -146,25 +146,6 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
                 .build();
 
         return brokerRequest;
-    }
-
-    @NonNull
-    private static AbstractAuthenticationScheme getAuthenticationScheme(
-            @NonNull final Context context,
-            @NonNull final BrokerRequest request) {
-        final AbstractAuthenticationScheme requestScheme = request.getAuthenticationScheme();
-
-        if (null == requestScheme) {
-            // Default assumes the scheme is Bearer
-            return new BearerAuthenticationSchemeInternal();
-        } else {
-            if (requestScheme instanceof PopAuthenticationSchemeInternal) {
-                final IClockSkewManager clockSkewManager = AndroidPlatformComponents.createFromContext(context).getClockSkewManager();
-                ((PopAuthenticationSchemeInternal) requestScheme).setClockSkewManager(clockSkewManager);
-            }
-
-            return requestScheme;
-        }
     }
 
     /**
@@ -377,16 +358,5 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         browserDescriptors.add(chrome);
 
         return browserDescriptors;
-    }
-
-    /**
-     * Helper method to validate in Broker that the calling package in Microsoft Intune
-     * to allow System Webview Support.
-     */
-    private boolean isCallingPackageIntune(@NonNull final String packageName) {
-        final String methodName = ":isCallingPackageIntune";
-        final String intunePackageName = "com.microsoft.intune";
-        Logger.info(TAG + methodName, "Calling package name : " + packageName);
-        return intunePackageName.equalsIgnoreCase(packageName);
     }
 }

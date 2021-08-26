@@ -22,17 +22,16 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.adal.internal.cache;
 
-
 import android.net.Uri;
 import android.os.Build;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.microsoft.aad.adal.DateTimeAdapter;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
 import com.microsoft.identity.common.java.BaseAccount;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.adal.cache.CacheKey;
+import com.microsoft.identity.common.java.adal.cache.DateTimeAdapter;
 import com.microsoft.identity.common.java.cache.AccountDeletionRecord;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.cache.IShareSingleSignOnState;

@@ -75,4 +75,8 @@ public abstract class AuthResult {
         Logger.i(TAG, "Assert Failure if there is exception being set..");
         Assert.assertNotNull(exception);
     }
+
+    public boolean isAccessTokenEqual(String accessToken){
+        return accessToken.equals(this.accessToken);
+    }
 }

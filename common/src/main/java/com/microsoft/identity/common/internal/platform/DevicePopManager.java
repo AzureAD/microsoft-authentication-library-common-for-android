@@ -27,6 +27,7 @@ import android.content.Context;
 import android.os.Build;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyInfo;
+import android.security.keystore.KeyPermanentlyInvalidatedException;
 import android.security.keystore.KeyProperties;
 import android.security.keystore.StrongBoxUnavailableException;
 import android.text.TextUtils;
@@ -36,7 +37,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.common.CodeMarkerManager;
+import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -103,11 +104,11 @@ import javax.security.auth.x500.X500Principal;
 
 import lombok.SneakyThrows;
 
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
-import static com.microsoft.identity.common.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_END;
+import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.GENERATE_AT_POP_ASYMMETRIC_KEYPAIR_START;
 import static com.microsoft.identity.common.adal.internal.cache.StorageHelper.applyKeyStoreLocaleWorkarounds;
-import static com.microsoft.identity.common.internal.util.DateUtilities.LOCALE_CHANGE_LOCK;
-import static com.microsoft.identity.common.internal.util.DateUtilities.isLocaleCalendarNonGregorian;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.LOCALE_CHANGE_LOCK;
+import static com.microsoft.identity.common.java.util.ported.DateUtilities.isLocaleCalendarNonGregorian;
 import static com.microsoft.identity.common.java.exception.ClientException.ANDROID_KEYSTORE_UNAVAILABLE;
 import static com.microsoft.identity.common.java.exception.ClientException.BAD_KEY_SIZE;
 import static com.microsoft.identity.common.java.exception.ClientException.BAD_PADDING;
@@ -151,7 +152,7 @@ public class DevicePopManager implements IDevicePopManager {
      * Log message when private key material cannot be found.
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
-    public static final Type MAP_STRING_STRING_TYPE = new TypeToken<Map<String, String>>(){}.getType();
+    public static final Type MAP_STRING_STRING_TYPE = TypeToken.getParameterized(Map.class, String.class, String.class).getType();
     public static final Gson GSON = new Gson();
 
     /**
@@ -1049,6 +1050,12 @@ public class DevicePopManager implements IDevicePopManager {
         } catch (final UnrecoverableEntryException e) {
             exception = e;
             errCode = INVALID_PROTECTION_PARAMS;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && exception.getCause() instanceof KeyPermanentlyInvalidatedException) {
+            Logger.warn(TAG, "Unable to access asymmetric key - clearing.");
+            clearAsymmetricKey();
         }
 
         final ClientException clientException = new ClientException(

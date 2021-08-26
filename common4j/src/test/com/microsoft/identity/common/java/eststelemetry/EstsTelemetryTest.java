@@ -27,7 +27,7 @@ import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.result.ILocalAuthenticationResultBase;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.TelemetryEventStrings;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
@@ -128,11 +128,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -158,11 +158,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -178,11 +178,11 @@ public class EstsTelemetryTest {
         final ICommand<Boolean> mockCommand = MockCommand.builder()
                 .correlationId(correlationId)
                 .build();
-        final ILocalAuthenticationResultBase successResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult successResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(successResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)
@@ -393,12 +393,12 @@ public class EstsTelemetryTest {
                 .willReachTokenEndpoint(true)
                 .build();
 
-        final ILocalAuthenticationResultBase cachedSuccessResult = MockAuthenticationResult.builder()
+        final ILocalAuthenticationResult cachedSuccessResult = MockAuthenticationResult.builder()
                 .isServicedFromCache(true)
                 .build();
 
         final ICommandResult mockCommandResult =
-                MockCommandResult.<ILocalAuthenticationResultBase>builder()
+                MockCommandResult.<ILocalAuthenticationResult>builder()
                         .correlationId(correlationId)
                         .result(cachedSuccessResult)
                         .resultStatus(ICommandResult.ResultStatus.COMPLETED)

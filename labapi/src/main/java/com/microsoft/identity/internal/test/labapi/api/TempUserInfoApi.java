@@ -138,7 +138,7 @@ public class TempUserInfoApi {
      */
     public ApiResponse<TempUserInfo> apiTempUserInfoGetWithHttpInfo(String upn) throws ApiException {
         com.squareup.okhttp.Call call = apiTempUserInfoGetValidateBeforeCall(upn, null, null);
-        Type localVarReturnType = new TypeToken<TempUserInfo>(){}.getType();
+        Type localVarReturnType = TypeToken.get(TempUserInfo.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -172,7 +172,7 @@ public class TempUserInfoApi {
         }
 
         com.squareup.okhttp.Call call = apiTempUserInfoGetValidateBeforeCall(upn, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<TempUserInfo>(){}.getType();
+        Type localVarReturnType = TypeToken.get(TempUserInfo.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

@@ -22,11 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
-import com.microsoft.identity.common.exception.IErrorInformation;
 import com.microsoft.identity.common.java.util.StringUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.TreeSet;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
@@ -37,6 +38,13 @@ public class BaseException extends Exception implements IErrorInformation {
 
     public static final String sName =  BaseException.class.getName();
     private static final long serialVersionUID = -5166242728507796770L;
+
+    private static final TreeSet<String> nonCacheableErrorCodes = new TreeSet<>(
+            Arrays.asList(
+                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
+                    ClientException.INTERRUPTED_OPERATION,
+                    ClientException.INVALID_BROKER_BUNDLE,
+                    ClientException.IO_ERROR));
 
     @Nullable
     private String mSpeRing;
@@ -183,5 +191,10 @@ public class BaseException extends Exception implements IErrorInformation {
 
     public String getExceptionName(){
         return sName;
+    }
+
+    public boolean isCacheable(){
+        //TODO : ADO 1373343 Add the whole transient exception category.
+        return !nonCacheableErrorCodes.contains(mErrorCode);
     }
 }

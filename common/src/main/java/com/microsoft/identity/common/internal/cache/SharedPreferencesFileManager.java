@@ -31,6 +31,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.java.WarningType;
+import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.KeyAccessorStringAdapter;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -55,7 +56,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private final Object cacheLock = new Object();
     @GuardedBy("cacheLock")
     private final LruCache<String, String> fileCache = new LruCache<>(256);
-    private final String mSharedPreferencesFileName;
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
@@ -91,9 +91,9 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
      * Constructs an instance of SharedPreferencesFileManager.
      * The default operating mode is {@link Context#MODE_PRIVATE}
      *
-     * @param context                  Interface to global information about an application environment.
-     * @param name                     The desired {@link android.content.SharedPreferences} file. It will be created
-     *                                 if it does not exist.
+     * @param context           Interface to global information about an application environment.
+     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created
+     *                          if it does not exist.
      * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
@@ -105,7 +105,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         } else {
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
-        mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
 
         if (encryptionManager != null) {
@@ -184,11 +183,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         );
 
         remove(key);
-    }
-
-    @Override
-    public final String getStorageFileName() {
-        return mSharedPreferencesFileName;
     }
 
     @Override

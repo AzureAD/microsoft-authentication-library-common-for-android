@@ -30,7 +30,7 @@ import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 import org.junit.Before;
@@ -95,7 +95,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 },
                 new OnPageLoadedCallback() {
                     @Override
-                    public void onPageLoaded() {
+                    public void onPageLoaded(final String url) {
                         return;
                     }
                 },

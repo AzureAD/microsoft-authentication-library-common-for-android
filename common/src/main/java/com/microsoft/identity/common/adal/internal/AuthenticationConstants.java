@@ -687,11 +687,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
 
         /**
-         * String of broker client ID.
-         */
-        public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
-
-        /**
          * Authtoken type string.
          */
         public static final String AUTHTOKEN_TYPE = "adal.authtoken.type";
@@ -970,6 +965,11 @@ public final class AuthenticationConstants {
          * Broker Host app package name.
          */
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
+
+        /**
+         * Intune app package name.
+         */
+        public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
 
         /**
          * Azure Authenticator app package name.
@@ -1552,6 +1552,36 @@ public final class AuthenticationConstants {
 
     }
 
+    public static final class IntuneContentProviderCall {
+
+        /**
+         * Intune's ContentProvider URI code constant for AppDataClearAction request.
+         */
+        public static final String AUTHORITY =
+                "content://com.microsoft.intune.shareduserlessdataclear/datacollection";
+
+        /**
+         * A functional mapping in Intune's ContentProvider result Bundle for AppDataClearAction.
+         */
+        public static final String IS_APP_DATA_CLEAR_ACTION = "AppDataClearResult";
+
+        /**
+         * A functional mapping in Intune's ContentProvider result Bundle for Pending Intent.
+         */
+        public static final String INTUNE_PENDING_INTENT = "AppDataClearIntent";
+
+        /**
+         * String value indicating unsupported AppDataClearAction.
+         */
+        public static final String APP_DATA_CLEAR_UNSUPPORTED = "UNSUPPORTED";
+
+        /**
+         * String value indicating supported AppDataClearAction.
+         */
+        public static final String APP_DATA_CLEAR_SUPPORTED = "SUPPORTED";
+
+    }
+
     public static final class AuthorizationIntentKey {
 
         public static final String AUTH_INTENT = "com.microsoft.identity.auth.intent";
@@ -1592,137 +1622,6 @@ public final class AuthenticationConstants {
          * to launch custom tabs and intent flags to clear the task.
          */
         public static final String REFRESH_TO_CLOSE= "refresh_to_close";
-    }
-
-    /**
-     * Represents the oauth2 error code.
-     */
-    public static final class OAuth2ErrorCode {
-        /**
-         * Oauth2 error code invalid_grant.
-         */
-        public static final String INVALID_GRANT = "invalid_grant";
-
-        /**
-         * Oauth2 error code unauthorized_client.
-         */
-        public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
-
-        /**
-         * The refresh token used to redeem access token is invalid and auth code request is needed.
-         * This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
-         */
-        public static final String INTERACTION_REQUIRED = "interaction_required";
-    }
-
-    /**
-     * Represents the oauth2 sub error code.
-     */
-    public static final class OAuth2SubErrorCode {
-
-        /**
-         * Oauth2 suberror code for unauthorized_client.
-         * <p>
-         * Suberror code when Intune App Protection Policy is required.
-         */
-        public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Suberror code when token is expired or invalid for all resources
-         * and scopes and shouldn't be retried again as-is.
-         */
-        public static final String BAD_TOKEN = "bad_token";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Suberror code when failed to do device authentication during a token request.
-         * Broker should make a request to DRS to get the current device status and act accordingly.
-         */
-        public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * SubError code for cases when client not in the Microsoft first party family group
-         * redeems auth code or refresh token given to a client in the family.
-         */
-        public static final String CLIENT_MISMATCH = "client_mismatch";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code when a policy enforces token lifetime.
-         */
-        public static final String TOKEN_EXPIRED = "token_expired";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code which indicates a simple action is required by the end user, like MFA.
-         */
-        public static final String BASIC_ACTION = "basic_action";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code which indicates additional action is
-         * required that is in the user control, but is outside of the sign in session.
-         * For example, enroll in MDM or register install an app that uses Intune app protection.
-         */
-        public static final String ADDITIONAL_ACTION = "additional_action";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code where user will be shown an informational
-         * message with no immediate remediation steps.
-         * For example access was blocked due to location or the device is not domain joined.
-         */
-        public static final String MESSAGE_ONLY = "message_only";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * OpenId connect suberror code, where user consent is required.
-         */
-        public static final String CONSENT_REQUIRED = "consent_required";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Custom sub error that notifies the user that their password has expired.
-         */
-        public static final String USER_PASSWORD_EXPIRED = "user_password_expired";
-    }
-
-    /**
-     * HTTP header fields.
-     */
-    public static final class HeaderField {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc1945#appendix-D.2.1">RFC-1945</a>
-         */
-        public static final String ACCEPT = "Accept";
-
-        /**
-         * Header used to track SPE Ring for telemetry.
-         */
-        public static final String X_MS_CLITELEM = "x-ms-clitelem";
-    }
-
-    /**
-     * Identifiers for file formats and format contents.
-     */
-    public static final class MediaType {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
-         */
-        public static final String APPLICATION_JSON = "application/json";
     }
 
     public static final class TelemetryEvents {

@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -65,6 +66,11 @@ public class AuthenticationConstants {
      * Default access token expiration time in seconds.
      */
     public static final int DEFAULT_EXPIRATION_TIME_SEC = 3600;
+
+    /**
+     * HTTPS scheme.
+     */
+    public static final String HTTPS_PROTOCOL_STRING = "https";
 
     /**
      * Default scopes for OAuth2.
@@ -500,6 +506,12 @@ public class AuthenticationConstants {
      */
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     public static final class Broker {
+
+        /**
+         * Default timeout for broker tasks/futures.
+         */
+        public static final long BROKER_TASK_DEFAULT_TIMEOUT_MILLISECONDS = TimeUnit.SECONDS.toMillis(30);
+
         /**
          * String of challenge response header.
          */
@@ -529,6 +541,11 @@ public class AuthenticationConstants {
          * Account type string.
          */
         public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
+
+        /**
+         * String of broker client ID.
+         */
+        public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

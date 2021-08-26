@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.ADALError;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.exception.ArgumentException;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -39,6 +40,7 @@ import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.java.exception.ServiceException;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.util.SchemaUtil;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.logging.Logger;
@@ -151,7 +153,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
     }
 
     @Override
-    public @NonNull ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
+    public @NonNull
+    ILocalAuthenticationResult authenticationResultFromBundle(Bundle resultBundle) {
         throw new UnsupportedOperationException();
     }
 
@@ -296,9 +299,8 @@ public class AdalBrokerResultAdapter implements IBrokerResultAdapter {
         }
 
         //INTERACTION_REQUIRED is marked as deprecated
-        if (AuthenticationConstants.OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(serviceException.getErrorCode())
-                || AuthenticationConstants.OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())
-        ) {
+        if (OAuth2ErrorCode.INVALID_GRANT.equalsIgnoreCase(serviceException.getErrorCode())
+                || OAuth2ErrorCode.INTERACTION_REQUIRED.equalsIgnoreCase(serviceException.getErrorCode())) {
 
             resultBundle.putString(
                     AuthenticationConstants.OAuth2.ERROR,

@@ -59,7 +59,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     public void write(final JsonWriter out, final List<Map.Entry<String, String>> queryParams) throws IOException {
         out.beginObject();
 
-        for(final Map.Entry<String, String> keyValuePair : queryParams){
+        for (final Map.Entry<String, String> keyValuePair : queryParams) {
             out.name(keyValuePair.getKey());
             out.value(keyValuePair.getValue());
         }
@@ -70,7 +70,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException {
         in.beginObject();
         final List<Map.Entry<String, String>> result = new ArrayList<>();
-        while (in.hasNext()){
+        while (in.hasNext()) {
             final String key = in.nextName();
             final String value = in.nextString();
             final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(key, value);
@@ -81,16 +81,22 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     public static String _toJson(final List<Map.Entry<String, String>> extraQueryStringParameters) {
-        final Type listType = new TypeToken<List<Map.Entry<String, String>>>(){}.getType();
-        return mGson.toJson(extraQueryStringParameters, listType);
+        return mGson.toJson(extraQueryStringParameters, getListType());
     }
 
     public static List<Map.Entry<String, String>> _fromJson(final String jsonString) {
         if (TextUtils.isEmpty(jsonString)) {
             return new ArrayList<>();
         }
-        final Type listType = new TypeToken<List<Map.Entry<String, String>>>(){}.getType();
-        return mGson.fromJson(jsonString, listType);
+        return mGson.fromJson(jsonString, getListType());
     }
 
+    /**
+     * Create a Type for the List of query params
+     *
+     * @return a Type object representing the type of the query params in this case List<Map.Entry<String, String>>
+     */
+    private static Type getListType() {
+        return TypeToken.getParameterized(List.class, TypeToken.getParameterized(Map.Entry.class, String.class, String.class).getRawType()).getType();
+    }
 }

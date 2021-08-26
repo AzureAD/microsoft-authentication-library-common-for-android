@@ -141,7 +141,7 @@ public class AppApi {
      */
     public ApiResponse<List<AppInfo>> apiAppAppidGetWithHttpInfo(String appid) throws ApiException {
         com.squareup.okhttp.Call call = apiAppAppidGetValidateBeforeCall(appid, null, null);
-        Type localVarReturnType = new TypeToken<List<AppInfo>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, AppInfo.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -175,7 +175,7 @@ public class AppApi {
         }
 
         com.squareup.okhttp.Call call = apiAppAppidGetValidateBeforeCall(appid, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<List<AppInfo>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, AppInfo.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -283,7 +283,7 @@ public class AppApi {
      */
     public ApiResponse<List<AppInfo>> apiAppGetWithHttpInfo(String apptype, String azureenvironment, String signinaudience, String isadminconsented, String publicclient) throws ApiException {
         com.squareup.okhttp.Call call = apiAppGetValidateBeforeCall(apptype, azureenvironment, signinaudience, isadminconsented, publicclient, null, null);
-        Type localVarReturnType = new TypeToken<List<AppInfo>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, AppInfo.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -321,7 +321,7 @@ public class AppApi {
         }
 
         com.squareup.okhttp.Call call = apiAppGetValidateBeforeCall(apptype, azureenvironment, signinaudience, isadminconsented, publicclient, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<List<AppInfo>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, AppInfo.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
