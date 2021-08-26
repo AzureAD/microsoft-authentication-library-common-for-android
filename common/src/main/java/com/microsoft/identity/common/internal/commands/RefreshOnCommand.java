@@ -27,7 +27,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.controllers.BaseController;
-import com.microsoft.identity.common.internal.result.VoidResult;
+import com.microsoft.identity.common.java.result.VoidResult;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
 import com.microsoft.identity.common.java.exception.ClientException;
