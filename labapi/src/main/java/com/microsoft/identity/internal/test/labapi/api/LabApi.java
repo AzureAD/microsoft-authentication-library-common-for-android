@@ -141,7 +141,7 @@ public class LabApi {
      */
     public ApiResponse<List<LabInfo>> apiLabLabnameGetWithHttpInfo(String labname) throws ApiException {
         com.squareup.okhttp.Call call = apiLabLabnameGetValidateBeforeCall(labname, null, null);
-        Type localVarReturnType = new TypeToken<List<LabInfo>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, LabInfo.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -175,7 +175,7 @@ public class LabApi {
         }
 
         com.squareup.okhttp.Call call = apiLabLabnameGetValidateBeforeCall(labname, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<List<LabInfo>>(){}.getType();
+        Type localVarReturnType = TypeToken.getParameterized(List.class, LabInfo.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

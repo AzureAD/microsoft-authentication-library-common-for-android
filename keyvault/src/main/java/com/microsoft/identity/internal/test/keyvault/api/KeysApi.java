@@ -161,7 +161,7 @@ public class KeysApi {
      */
     public ApiResponse<BackupKeyResult> backupKeyWithHttpInfo(String keyName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = backupKeyValidateBeforeCall(keyName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<BackupKeyResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(BackupKeyResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -196,7 +196,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = backupKeyValidateBeforeCall(keyName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<BackupKeyResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(BackupKeyResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -303,7 +303,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyBundle> createKeyWithHttpInfo(String keyName, KeyCreateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = createKeyValidateBeforeCall(keyName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -339,7 +339,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = createKeyValidateBeforeCall(keyName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -455,7 +455,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyOperationResult> decryptWithHttpInfo(String keyName, String keyVersion, KeyOperationsParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = decryptValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -492,7 +492,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = decryptValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -591,7 +591,7 @@ public class KeysApi {
      */
     public ApiResponse<DeletedKeyBundle> deleteKeyWithHttpInfo(String keyName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteKeyValidateBeforeCall(keyName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<DeletedKeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedKeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -626,7 +626,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = deleteKeyValidateBeforeCall(keyName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedKeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedKeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -742,7 +742,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyOperationResult> encryptWithHttpInfo(String keyName, String keyVersion, KeyOperationsParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = encryptValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -779,7 +779,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = encryptValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -887,7 +887,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyBundle> getKeyWithHttpInfo(String keyName, String keyVersion, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getKeyValidateBeforeCall(keyName, keyVersion, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -923,7 +923,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = getKeyValidateBeforeCall(keyName, keyVersion, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1027,7 +1027,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyListResult> getKeyVersionsWithHttpInfo(String keyName, String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getKeyVersionsValidateBeforeCall(keyName, apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<KeyListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1063,7 +1063,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = getKeyVersionsValidateBeforeCall(keyName, apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1158,7 +1158,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyListResult> getKeysWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getKeysValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<KeyListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1193,7 +1193,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = getKeysValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1300,7 +1300,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyBundle> importKeyWithHttpInfo(String keyName, KeyImportParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = importKeyValidateBeforeCall(keyName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1336,7 +1336,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = importKeyValidateBeforeCall(keyName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1434,7 +1434,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyBundle> restoreKeyWithHttpInfo(KeyRestoreParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = restoreKeyValidateBeforeCall(parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1469,7 +1469,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = restoreKeyValidateBeforeCall(parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1585,7 +1585,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyOperationResult> signWithHttpInfo(String keyName, String keyVersion, KeySignParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = signValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1622,7 +1622,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = signValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1738,7 +1738,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyOperationResult> unwrapKeyWithHttpInfo(String keyName, String keyVersion, KeyOperationsParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = unwrapKeyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1775,7 +1775,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = unwrapKeyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1891,7 +1891,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyBundle> updateKeyWithHttpInfo(String keyName, String keyVersion, KeyUpdateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateKeyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1928,7 +1928,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = updateKeyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2044,7 +2044,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyVerifyResult> verifyWithHttpInfo(String keyName, String keyVersion, KeyVerifyParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = verifyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyVerifyResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyVerifyResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2081,7 +2081,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = verifyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyVerifyResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyVerifyResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2197,7 +2197,7 @@ public class KeysApi {
      */
     public ApiResponse<KeyOperationResult> wrapKeyWithHttpInfo(String keyName, String keyVersion, KeyOperationsParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = wrapKeyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2234,7 +2234,7 @@ public class KeysApi {
         }
 
         com.squareup.okhttp.Call call = wrapKeyValidateBeforeCall(keyName, keyVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyOperationResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyOperationResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
