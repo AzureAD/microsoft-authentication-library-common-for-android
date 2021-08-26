@@ -47,8 +47,6 @@ public class InteractiveTokenCommandParameters extends TokenCommandParameters {
 
     private final boolean brokerBrowserSupportEnabled;
 
-    private final String loginHint;
-
     @Expose()
     private final OpenIdConnectPromptParameter prompt;
 

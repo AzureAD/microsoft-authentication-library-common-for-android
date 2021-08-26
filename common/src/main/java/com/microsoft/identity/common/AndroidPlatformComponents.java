@@ -35,6 +35,7 @@ import androidx.fragment.app.Fragment;
 
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
+import com.microsoft.identity.common.internal.net.cache.HttpCache;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
@@ -100,10 +101,11 @@ public class AndroidPlatformComponents implements IPlatformComponents {
      * TODO: Once we finish the work, this should be extracted out.
      *       It should be init separately, not as part of this class' construction.
      */
-    public static synchronized void initializeStaticClasses() {
+    private static synchronized void initializeStaticClasses(@NonNull final Context context) {
         if (!sInitialized) {
             Device.setDeviceMetadata(new AndroidDeviceMetadata());
             Logger.setAndroidLogger();
+            HttpCache.initialize(context.getCacheDir());
             sInitialized = true;
         }
     }
@@ -134,7 +136,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         mContext = applicationContext;
         mActivity = activity;
         mFragment = fragment;
-        initializeStaticClasses();
+        initializeStaticClasses(applicationContext);
     }
 
     // TODO: The caller of this base 'common' class is unclear whether it's in Broker or ADAL/MSAL.
