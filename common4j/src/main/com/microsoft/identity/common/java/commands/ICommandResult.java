@@ -30,19 +30,13 @@ public interface ICommandResult {
     enum ResultStatus {
         CANCEL,
         COMPLETED,
-        ERROR;
+        ERROR,
+        VOID;
 
         public String getLogStatus() {
-            if (ResultStatus.COMPLETED == this) {
-                return "SUCCESS";
-            } else if (ResultStatus.ERROR == this) {
-                return "ERROR";
-            } else {
-                return "CANCEL";
-            }
+            return this.name();
         }
     }
-
     /**
      * Returns a correlation ID associated to the command.
      */

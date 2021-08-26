@@ -120,5 +120,13 @@ public final class PublicApiId {
     public static final String PCA_GENERATE_SIGNED_HTTP_REQUEST_ASYNC = "1101";
     //endregion
 
+    // region RefreshOn API
+    //==============================================================================================
+    public static final String MSAL_REFRESH_ON= "1201";
+    public static final String BROKER_REFRESH_ON = "1202";
+    //endregion
+
+
+
     public static final String PCA_GET_DEVICE_MODE = "1200";
 }

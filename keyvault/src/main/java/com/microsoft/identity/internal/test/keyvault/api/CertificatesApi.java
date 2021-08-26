@@ -170,7 +170,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateOperation> createCertificateWithHttpInfo(String certificateName, CertificateCreateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = createCertificateValidateBeforeCall(certificateName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -206,7 +206,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = createCertificateValidateBeforeCall(certificateName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -305,7 +305,7 @@ public class CertificatesApi {
      */
     public ApiResponse<DeletedCertificateBundle> deleteCertificateWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteCertificateValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<DeletedCertificateBundle>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(DeletedCertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -340,7 +340,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = deleteCertificateValidateBeforeCall(certificateName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedCertificateBundle>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(DeletedCertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -430,7 +430,7 @@ public class CertificatesApi {
      */
     public ApiResponse<Contacts> deleteCertificateContactsWithHttpInfo(String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteCertificateContactsValidateBeforeCall(apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<Contacts>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -464,7 +464,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = deleteCertificateContactsValidateBeforeCall(apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<Contacts>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -563,7 +563,7 @@ public class CertificatesApi {
      */
     public ApiResponse<IssuerBundle> deleteCertificateIssuerWithHttpInfo(String issuerName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteCertificateIssuerValidateBeforeCall(issuerName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -598,7 +598,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = deleteCertificateIssuerValidateBeforeCall(issuerName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -697,7 +697,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateOperation> deleteCertificateOperationWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteCertificateOperationValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        final Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -732,7 +732,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = deleteCertificateOperationValidateBeforeCall(certificateName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -840,7 +840,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateBundle> getCertificateWithHttpInfo(String certificateName, String certificateVersion, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getCertificateValidateBeforeCall(certificateName, certificateVersion, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -876,7 +876,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificateValidateBeforeCall(certificateName, certificateVersion, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -966,7 +966,7 @@ public class CertificatesApi {
      */
     public ApiResponse<Contacts> getCertificateContactsWithHttpInfo(String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getCertificateContactsValidateBeforeCall(apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<Contacts>(){}.getType();
+        Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1000,7 +1000,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificateContactsValidateBeforeCall(apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<Contacts>(){}.getType();
+        Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1099,7 +1099,7 @@ public class CertificatesApi {
      */
     public ApiResponse<IssuerBundle> getCertificateIssuerWithHttpInfo(String issuerName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getCertificateIssuerValidateBeforeCall(issuerName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1134,7 +1134,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificateIssuerValidateBeforeCall(issuerName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1229,7 +1229,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateIssuerListResult> getCertificateIssuersWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getCertificateIssuersValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<CertificateIssuerListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateIssuerListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1264,7 +1264,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificateIssuersValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateIssuerListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateIssuerListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1363,7 +1363,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateOperation> getCertificateOperationWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getCertificateOperationValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1398,7 +1398,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificateOperationValidateBeforeCall(certificateName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1497,7 +1497,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificatePolicy> getCertificatePolicyWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getCertificatePolicyValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificatePolicy>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificatePolicy.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1532,7 +1532,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificatePolicyValidateBeforeCall(certificateName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificatePolicy>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificatePolicy.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1636,7 +1636,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateListResult> getCertificateVersionsWithHttpInfo(String certificateName, String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getCertificateVersionsValidateBeforeCall(certificateName, apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<CertificateListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1672,7 +1672,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificateVersionsValidateBeforeCall(certificateName, apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1767,7 +1767,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateListResult> getCertificatesWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getCertificatesValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<CertificateListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1802,7 +1802,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getCertificatesValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1909,7 +1909,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateBundle> importCertificateWithHttpInfo(String certificateName, CertificateImportParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = importCertificateValidateBeforeCall(certificateName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1945,7 +1945,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = importCertificateValidateBeforeCall(certificateName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2052,7 +2052,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateBundle> mergeCertificateWithHttpInfo(String certificateName, CertificateMergeParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = mergeCertificateValidateBeforeCall(certificateName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2088,7 +2088,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = mergeCertificateValidateBeforeCall(certificateName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2186,7 +2186,7 @@ public class CertificatesApi {
      */
     public ApiResponse<Contacts> setCertificateContactsWithHttpInfo(Contacts contacts, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = setCertificateContactsValidateBeforeCall(contacts, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<Contacts>(){}.getType();
+        Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2221,7 +2221,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = setCertificateContactsValidateBeforeCall(contacts, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<Contacts>(){}.getType();
+        Type localVarReturnType = TypeToken.get(Contacts.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2328,7 +2328,7 @@ public class CertificatesApi {
      */
     public ApiResponse<IssuerBundle> setCertificateIssuerWithHttpInfo(String issuerName, CertificateIssuerSetParameters parameter, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = setCertificateIssuerValidateBeforeCall(issuerName, parameter, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2364,7 +2364,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = setCertificateIssuerValidateBeforeCall(issuerName, parameter, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2480,7 +2480,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateBundle> updateCertificateWithHttpInfo(String certificateName, String certificateVersion, CertificateUpdateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateCertificateValidateBeforeCall(certificateName, certificateVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2517,7 +2517,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = updateCertificateValidateBeforeCall(certificateName, certificateVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2624,7 +2624,7 @@ public class CertificatesApi {
      */
     public ApiResponse<IssuerBundle> updateCertificateIssuerWithHttpInfo(String issuerName, CertificateIssuerUpdateParameters parameter, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateCertificateIssuerValidateBeforeCall(issuerName, parameter, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2660,7 +2660,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = updateCertificateIssuerValidateBeforeCall(issuerName, parameter, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<IssuerBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(IssuerBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2767,7 +2767,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificateOperation> updateCertificateOperationWithHttpInfo(String certificateName, CertificateOperationUpdateParameter certificateOperation, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateCertificateOperationValidateBeforeCall(certificateName, certificateOperation, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2803,7 +2803,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = updateCertificateOperationValidateBeforeCall(certificateName, certificateOperation, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateOperation>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateOperation.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -2910,7 +2910,7 @@ public class CertificatesApi {
      */
     public ApiResponse<CertificatePolicy> updateCertificatePolicyWithHttpInfo(String certificateName, CertificatePolicy certificatePolicy, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateCertificatePolicyValidateBeforeCall(certificateName, certificatePolicy, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificatePolicy>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificatePolicy.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -2946,7 +2946,7 @@ public class CertificatesApi {
         }
 
         com.squareup.okhttp.Call call = updateCertificatePolicyValidateBeforeCall(certificateName, certificatePolicy, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificatePolicy>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificatePolicy.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

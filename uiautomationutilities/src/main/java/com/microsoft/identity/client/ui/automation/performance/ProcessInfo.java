@@ -30,6 +30,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,6 +43,7 @@ import lombok.experimental.Accessors;
 @Accessors(prefix = "m")
 @Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProcessInfo {
 
     // static in order to calculate the application uid

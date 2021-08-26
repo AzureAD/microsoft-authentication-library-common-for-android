@@ -152,7 +152,7 @@ public class DevicePopManager implements IDevicePopManager {
      * Log message when private key material cannot be found.
      */
     private static final String PRIVATE_KEY_NOT_FOUND = "Not an instance of a PrivateKeyEntry";
-    public static final Type MAP_STRING_STRING_TYPE = new TypeToken<Map<String, String>>(){}.getType();
+    public static final Type MAP_STRING_STRING_TYPE = TypeToken.getParameterized(Map.class, String.class, String.class).getType();
     public static final Gson GSON = new Gson();
 
     /**
