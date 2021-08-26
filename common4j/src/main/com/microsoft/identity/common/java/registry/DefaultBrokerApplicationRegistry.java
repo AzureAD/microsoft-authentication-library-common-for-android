@@ -52,8 +52,7 @@ public class DefaultBrokerApplicationRegistry
 
     @Override
     public Type getListTypeToken() {
-        return new TypeToken<List<BrokerApplicationRegistryData>>() {
-        }.getType();
+        return TypeToken.getParameterized(List.class, BrokerApplicationRegistryData.class).getType();
     }
 
     @Override

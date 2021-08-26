@@ -150,7 +150,7 @@ public class DeletedCertificatesApi {
      */
     public ApiResponse<DeletedCertificateBundle> getDeletedCertificateWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getDeletedCertificateValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<DeletedCertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedCertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -185,7 +185,7 @@ public class DeletedCertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getDeletedCertificateValidateBeforeCall(certificateName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedCertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedCertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -280,7 +280,7 @@ public class DeletedCertificatesApi {
      */
     public ApiResponse<DeletedCertificateListResult> getDeletedCertificatesWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getDeletedCertificatesValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<DeletedCertificateListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedCertificateListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -315,7 +315,7 @@ public class DeletedCertificatesApi {
         }
 
         com.squareup.okhttp.Call call = getDeletedCertificatesValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedCertificateListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedCertificateListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -544,7 +544,7 @@ public class DeletedCertificatesApi {
      */
     public ApiResponse<CertificateBundle> recoverDeletedCertificateWithHttpInfo(String certificateName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = recoverDeletedCertificateValidateBeforeCall(certificateName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -579,7 +579,7 @@ public class DeletedCertificatesApi {
         }
 
         com.squareup.okhttp.Call call = recoverDeletedCertificateValidateBeforeCall(certificateName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<CertificateBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(CertificateBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

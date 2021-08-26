@@ -155,7 +155,7 @@ public class SecretsApi {
      */
     public ApiResponse<BackupSecretResult> backupSecretWithHttpInfo(String secretName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = backupSecretValidateBeforeCall(secretName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<BackupSecretResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(BackupSecretResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -190,7 +190,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = backupSecretValidateBeforeCall(secretName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<BackupSecretResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(BackupSecretResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -289,7 +289,7 @@ public class SecretsApi {
      */
     public ApiResponse<DeletedSecretBundle> deleteSecretWithHttpInfo(String secretName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteSecretValidateBeforeCall(secretName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<DeletedSecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedSecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -324,7 +324,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = deleteSecretValidateBeforeCall(secretName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedSecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedSecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -432,7 +432,7 @@ public class SecretsApi {
      */
     public ApiResponse<SecretBundle> getSecretWithHttpInfo(String secretName, String secretVersion, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getSecretValidateBeforeCall(secretName, secretVersion, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -468,7 +468,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = getSecretValidateBeforeCall(secretName, secretVersion, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -572,7 +572,7 @@ public class SecretsApi {
      */
     public ApiResponse<SecretListResult> getSecretVersionsWithHttpInfo(String secretName, String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getSecretVersionsValidateBeforeCall(secretName, apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<SecretListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -608,7 +608,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = getSecretVersionsValidateBeforeCall(secretName, apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -703,7 +703,7 @@ public class SecretsApi {
      */
     public ApiResponse<SecretListResult> getSecretsWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getSecretsValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<SecretListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -738,7 +738,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = getSecretsValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -836,7 +836,7 @@ public class SecretsApi {
      */
     public ApiResponse<SecretBundle> restoreSecretWithHttpInfo(SecretRestoreParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = restoreSecretValidateBeforeCall(parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -871,7 +871,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = restoreSecretValidateBeforeCall(parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -978,7 +978,7 @@ public class SecretsApi {
      */
     public ApiResponse<SecretBundle> setSecretWithHttpInfo(String secretName, SecretSetParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = setSecretValidateBeforeCall(secretName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1014,7 +1014,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = setSecretValidateBeforeCall(secretName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1130,7 +1130,7 @@ public class SecretsApi {
      */
     public ApiResponse<SecretBundle> updateSecretWithHttpInfo(String secretName, String secretVersion, SecretUpdateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateSecretValidateBeforeCall(secretName, secretVersion, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1167,7 +1167,7 @@ public class SecretsApi {
         }
 
         com.squareup.okhttp.Call call = updateSecretValidateBeforeCall(secretName, secretVersion, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
