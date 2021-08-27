@@ -20,9 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
-
-import com.microsoft.identity.common.java.crypto.Algorithm;
+package com.microsoft.identity.common.java.crypto;
 
 import lombok.NonNull;
 
@@ -33,8 +31,8 @@ public interface SymmetricAlgorithm extends Algorithm {
     @Override
     String name();
 
-    class Builder {
-        static SymmetricAlgorithm of(@NonNull final String name) {
+    public class Builder {
+        public static SymmetricAlgorithm of(@NonNull final String name) {
             return new SymmetricAlgorithm() {
                 @Override
                 public String name() {
