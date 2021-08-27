@@ -56,4 +56,3 @@ jobs:
           azure-pipeline-name: 'Latest Common VSTS Release'
           # Paste personal access token of the user as value of secret variable:AZURE_DEVOPS_TOKEN
           azure-devops-token: '${{ secrets.IDDP_PIPELINE }}'
-  
