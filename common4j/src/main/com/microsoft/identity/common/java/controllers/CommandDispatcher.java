@@ -605,28 +605,6 @@ public class CommandDispatcher {
             }
         }
 
-        /**
-         * Get Commandresult from acquiretokenresult
-         *
-         * @param result
-         */
-        private static CommandResult getCommandResultFromTokenResult (@NonNull AcquireTokenResult
-        result, @NonNull String correlationId){
-            //Token Commands
-            if (result.getSucceeded()) {
-                return new CommandResult(CommandResult.ResultStatus.COMPLETED,
-                        result.getLocalAuthenticationResult(), correlationId);
-            } else {
-                //Get MsalException from Authorization and/or Token Error Response
-                final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
-                if (baseException instanceof UserCancelException) {
-                    return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
-                } else {
-                    return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
-                }
-            }
-        }
-
         public static void beginInteractive ( final InteractiveTokenCommand command){
             final String methodName = ":beginInteractive";
             synchronized (sLock) {

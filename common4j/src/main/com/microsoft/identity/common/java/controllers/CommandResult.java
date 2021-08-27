@@ -41,9 +41,20 @@ public class CommandResult<T> implements ICommandResult<T> {
         return mCorrelationId;
     }
 
+    @Getter
+    @Accessors(prefix = "m")
     private final ResultStatus mStatus;
+
+    @Getter
+    @Accessors(prefix = "m")
     private final T mResult;
+
+    @Getter
+    @Accessors(prefix = "m")
     private final String mCorrelationId;
+
+    @Getter
+    @Accessors(prefix = "m")
     private final Class<T> mResultClass;
 
     @Setter
@@ -62,7 +73,7 @@ public class CommandResult<T> implements ICommandResult<T> {
         mResultClass = (Class<T>) (result == null ? Void.class : result.getClass());
     }
 
-    public CommandResult(final @NonNull ResultStatus status, @Nullable String correlationId) {
+    private CommandResult(final @NonNull ResultStatus status, @Nullable String correlationId) {
         mStatus = status;
         mResult = null;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
@@ -70,15 +81,6 @@ public class CommandResult<T> implements ICommandResult<T> {
     }
 
     public static CommandResult<Void> ofNull(ResultStatus status, @Nullable String correlationId) {
-        return new CommandResult<Void>(status, null, correlationId);
+        return new CommandResult<Void>(status, correlationId);
     }
-
-    public ResultStatus getStatus() {
-        return mStatus;
-    }
-
-    public T getResult() {
-        return mResult;
-    }
-
 }
