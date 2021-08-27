@@ -26,9 +26,10 @@ jobs:
     needs: mergeToContinuousDelivery
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@pedroro/continuous-delivery
+    - uses: actions/checkout@v2
       with:
         token: ${{ secrets.ACTION_PAT }}
+        ref: pedroro/continuous-delivery
     - uses: actions/setup-java@v1
       with:
         java-version: 8
