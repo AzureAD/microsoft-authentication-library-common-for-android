@@ -20,32 +20,10 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
+package com.microsoft.identity.common.java.result;
 
-import lombok.NonNull;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class HeaderSerializationUtil {
-
-    public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
-    }
-
-    public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
-        return new Gson()
-                .fromJson(
-                        jsonIn,
-                        TypeToken.getParameterized(
-                                HashMap.class,
-                                String.class,
-                                TypeToken.getParameterized(List.class, String.class).getRawType()
-                        ).getType()
-                );
-    }
+/*
+    Null Object Pattern for Commands who's result should be ignored.
+ */
+public class VoidResult {
 }

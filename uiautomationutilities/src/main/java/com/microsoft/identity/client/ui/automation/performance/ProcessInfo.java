@@ -44,6 +44,7 @@ import lombok.experimental.Accessors;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class ProcessInfo {
 
     // static in order to calculate the application uid

@@ -20,32 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
+package com.microsoft.identity.common.java.commands;
 
-import lombok.NonNull;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-public class HeaderSerializationUtil {
-
-    public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
+/**
+ * A command callback that does nothing.
+ */
+public class EmptyCommandCallback<T, U> implements CommandCallback<T, U>{
+    @Override
+    public void onCancel() {
     }
 
-    public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
-        return new Gson()
-                .fromJson(
-                        jsonIn,
-                        TypeToken.getParameterized(
-                                HashMap.class,
-                                String.class,
-                                TypeToken.getParameterized(List.class, String.class).getRawType()
-                        ).getType()
-                );
+    @Override
+    public void onTaskCompleted(T t) {
+    }
+
+    @Override
+    public void onError(U error) {
     }
 }

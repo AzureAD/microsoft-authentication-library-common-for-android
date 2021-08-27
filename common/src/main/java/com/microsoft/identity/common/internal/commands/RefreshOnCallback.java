@@ -20,32 +20,37 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.util;
+package com.microsoft.identity.common.internal.commands;
 
-import lombok.NonNull;
+import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.logging.Logger;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+/*
+    Null Object Pattern for Commands who's result should be ignored.
+ */
+public class RefreshOnCallback implements CommandCallback<AcquireTokenResult, BaseException> {
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+    private static final String TAG = RefreshOnCallback.class.getSimpleName();
 
-public class HeaderSerializationUtil {
+    @Override
+    public void onCancel() {}
 
-    public static String toJson(@NonNull final Map<String, List<String>> headersIn) {
-        return new Gson().toJson(headersIn);
+    @Override
+    public void onTaskCompleted(AcquireTokenResult result) {
+        Logger.verbose(
+                TAG + ":onTaskCompleted",
+                "Task succeeded: " + result.getSucceeded() + " . CorrelationId: " + result.getLocalAuthenticationResult().getCorrelationId()
+        );
     }
 
-    public static HashMap<String, List<String>> fromJson(@NonNull final String jsonIn) {
-        return new Gson()
-                .fromJson(
-                        jsonIn,
-                        TypeToken.getParameterized(
-                                HashMap.class,
-                                String.class,
-                                TypeToken.getParameterized(List.class, String.class).getRawType()
-                        ).getType()
-                );
+    @Override
+    public void onError(BaseException error) {
+        Logger.verbose(
+                TAG + ":onError",
+                error.getMessage()
+        );
     }
+
 }

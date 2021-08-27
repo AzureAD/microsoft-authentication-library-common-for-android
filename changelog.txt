@@ -1,5 +1,7 @@
 V.Next
 ----------
+- [MINOR] Enabling refresh_in feature (#1310)
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
 - [MAJOR] Move Utility classes (#1526)
 - [MINOR] Telemetry for OneAUth (#1514, #1525)
 - [MAJOR] Migrate CommandDispatcher to common4j (#1519)
@@ -49,6 +51,7 @@ V.Next
 - [MINOR] Migrate authorization completion callback to common4j (#1522)
 - [PATCH] Remove deprecation logging in Logger class (#1502)
 - [MINOR] Migrate broker application metadata cache to common4j (#1530)
+- [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
 
 Version 3.6.0
 ----------

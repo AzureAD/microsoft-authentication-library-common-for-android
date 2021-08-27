@@ -331,6 +331,11 @@ public final class ErrorStrings {
     public static final String DEVICE_REGISTRATION_FAILED = "Device registration failed";
 
     /**
+     * Device unregistration/leave failed.
+     */
+    public static final String DEVICE_LEAVE_FAILED = "device_leave_failed";
+
+    /**
      * Request Cancelled for unknown reasons.
      */
     public static final String BROKER_REQUEST_CANCELLED = "Broker request cancelled";

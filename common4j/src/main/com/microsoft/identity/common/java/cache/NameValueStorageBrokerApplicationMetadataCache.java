@@ -170,7 +170,6 @@ public class NameValueStorageBrokerApplicationMetadataCache
 
     @Override
     public Type getListTypeToken() {
-        return new TypeToken<List<BrokerApplicationMetadata>>() {
-        }.getType();
+        return TypeToken.getParameterized(List.class, BrokerApplicationMetadata.class).getType();
     }
 }
