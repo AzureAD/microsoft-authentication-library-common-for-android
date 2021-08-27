@@ -31,39 +31,53 @@ import java.util.List;
 import java.util.Map;
 
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
-public class CommandResult implements ICommandResult {
+public class CommandResult<T> implements ICommandResult<T> {
 
     public String getCorrelationId() {
         return mCorrelationId;
     }
 
     private final ResultStatus mStatus;
-    private final Object mResult;
+    private final T mResult;
     private final String mCorrelationId;
+    private final Class<T> mResultClass;
 
     @Setter
     @Getter
     @Accessors(prefix = "m")
     private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
 
-    public CommandResult(ResultStatus status, Object result) {
+    public CommandResult(ResultStatus status, T result) {
         this(status, result, null);
     }
 
-    public CommandResult(ResultStatus status, Object result, @Nullable String correlationId) {
+    public CommandResult(final @NonNull ResultStatus status, final @NonNull T result, @Nullable String correlationId) {
         mStatus = status;
         mResult = result;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
+        mResultClass = (Class<T>) (result == null ? Void.class : result.getClass());
+    }
+
+    public CommandResult(final @NonNull ResultStatus status, @Nullable String correlationId) {
+        mStatus = status;
+        mResult = null;
+        mCorrelationId = correlationId == null ? "UNSET" : correlationId;
+        mResultClass = (Class<T>) Void.class;
+    }
+
+    public static CommandResult<Void> ofNull(ResultStatus status, @Nullable String correlationId) {
+        return new CommandResult<Void>(status, null, correlationId);
     }
 
     public ResultStatus getStatus() {
         return mStatus;
     }
 
-    public Object getResult() {
+    public T getResult() {
         return mResult;
     }
 
