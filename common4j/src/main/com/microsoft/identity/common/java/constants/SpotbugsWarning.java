@@ -20,41 +20,15 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.commands;
+package com.microsoft.identity.common.java.constants;
 
 /**
- * Interface for Broker/MSAL command result.
+ * Constants for Spotbugs warnings that need to be suppressed.
  */
-public interface ICommandResult<T> {
-
-    enum ResultStatus {
-        CANCEL,
-        COMPLETED,
-        ERROR;
-
-        public String getLogStatus() {
-            if (ResultStatus.COMPLETED == this) {
-                return "SUCCESS";
-            } else if (ResultStatus.ERROR == this) {
-                return "ERROR";
-            } else {
-                return "CANCEL";
-            }
-        }
-    }
+public class SpotbugsWarning {
 
     /**
-     * Returns a correlation ID associated to the command.
+     * Public enum method unconditionally sets its field.
      */
-    String getCorrelationId();
-
-    /**
-     * Returns the result status.
-     */
-    ResultStatus getStatus();
-
-    /**
-     * Gets the result object.
-     */
-    T getResult();
+    public static final String ME_ENUM_FIELD_SETTER = "ME_ENUM_FIELD_SETTER";
 }

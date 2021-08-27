@@ -967,6 +967,11 @@ public final class AuthenticationConstants {
         public static final String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
 
         /**
+         * Intune app package name.
+         */
+        public static final String INTUNE_APP_PACKAGE_NAME = "com.microsoft.intune";
+
+        /**
          * Broker Host app package name.
          */
         public static final String BROKER_HOST_APP_PACKAGE_NAME_2 = "com.microsoft.workaccount.test";
@@ -1554,6 +1559,36 @@ public final class AuthenticationConstants {
          * BrokerContentProvider URI code constant for MSAL-to-Broker generateSHR request.
          */
         public static final int MSAL_GENERATE_SHR_CODE = 13;
+
+    }
+
+    public static final class IntuneContentProviderCall {
+
+        /**
+         * Intune's ContentProvider URI code constant for AppDataClearAction request.
+         */
+        public static final String AUTHORITY =
+                "content://com.microsoft.intune.shareduserlessdataclear/datacollection";
+
+        /**
+         * A functional mapping in Intune's ContentProvider result Bundle for AppDataClearAction.
+         */
+        public static final String IS_APP_DATA_CLEAR_ACTION = "AppDataClearResult";
+
+        /**
+         * A functional mapping in Intune's ContentProvider result Bundle for Pending Intent.
+         */
+        public static final String INTUNE_PENDING_INTENT = "AppDataClearIntent";
+
+        /**
+         * String value indicating unsupported AppDataClearAction.
+         */
+        public static final String APP_DATA_CLEAR_UNSUPPORTED = "UNSUPPORTED";
+
+        /**
+         * String value indicating supported AppDataClearAction.
+         */
+        public static final String APP_DATA_CLEAR_SUPPORTED = "SUPPORTED";
 
     }
 
