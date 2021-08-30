@@ -862,6 +862,61 @@ public class BrokerMsalController extends BaseController {
         });
     }
 
+    public AcquirePrtSsoCookieResult acquireSsoToken(final @NonNull String parameters) {
+        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<AcquirePrtSsoCookieResult>() {
+
+            private String negotiatedBrokerProtocolVersion;
+
+            @Override
+            public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                negotiatedBrokerProtocolVersion = hello(strategy, Broker);
+            }
+
+            @NonNull
+            @Override
+            public BrokerOperationBundle getBundle() throws ClientException {
+                return new BrokerOperationBundle(
+                        MSAL_GENERATE_SHR,
+                        mActiveBrokerPackageName,
+                        mRequestAdapter.getRequestBundleForGenerateShr(
+                                parameters,
+                                negotiatedBrokerProtocolVersion
+                        )
+                );
+            }
+
+            @NonNull
+            @Override
+            public GenerateShrResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                if (null == resultBundle) {
+                    throw mResultAdapter.getExceptionForEmptyResultBundle();
+                }
+
+                return mResultAdapter.getGenerateShrResultFromResultBundle(resultBundle);
+            }
+
+            @NonNull
+            @Override
+            public String getMethodName() {
+                return ":generateSignedHttpRequest";
+            }
+
+            @Nullable
+            @Override
+            public String getTelemetryApiId() {
+                // TODO Needed?
+                return null;
+            }
+
+            @Override
+            public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                               @NonNull final GenerateShrResult result) {
+                // TODO Needed?
+            }
+        });
+
+    }
+
     /**
      * Checks if the account returns is a MSA Account and sets single on state in cache
      */
