@@ -1,3 +1,7 @@
+Version 3.6.1
+----------
+- [PATCH] Additional API for method to clear the singleton shared preferences cache
+
 Version 3.6.0
 ----------
 - [PATCH] Allow retry generation of Device PoP key without attempting attestation cert gen (#1456, #1507)
