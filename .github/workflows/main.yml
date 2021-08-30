@@ -1,50 +1,22 @@
 # This is a workflow to run the deploy snapshot pipeline in Azure DevOps
-name: continousDeliveryUpdated
+name: dev_updated
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the dev branch
 on:
   push:
-    branches: [ continuous-delivery ]
+    branches: [ dev ]
     paths-ignore:
-    - 'versioning/version.properties'
+    - 'common/versioning/version.properties'
     - 'common4j/versioning/version.properties'
 
-#For Testing... runs when project is starred
-#on:
-#  watch:
-#    types: [started]
-#    branches: [dev]
-
-# Jobs run in parallel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
-  # Increment 
-  incrementLatestPatch:
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        token: ${{ secrets.ACTION_PAT }}
-    - uses: actions/setup-java@v1
-      with:
-        java-version: 8
-    - uses: eskatos/gradle-command-action@v1
-      with:
-        arguments: common:incrementLatestVersion common4j:incrementLatestVersion
-    - run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
-        git add .
-        git commit -m "Increment latest patch version"
-        git push
-  build:
-    # Make this workflow sequential by indicating what this job needs in order to run
-    needs: incrementLatestPatch
+  # Merge to continuous-delivery branch
+  mergeToContinuousDelivery:
     runs-on: ubuntu-latest
     steps:
-      - name: Azure Pipelines Action
-        uses: Azure/pipelines@v1
+      - uses: actions/checkout@v2
+      - uses: everlytic/branch-merge@1.1.2
         with:
           github_token: ${{ github.token }}
           source_ref: ${{ github.ref }}
