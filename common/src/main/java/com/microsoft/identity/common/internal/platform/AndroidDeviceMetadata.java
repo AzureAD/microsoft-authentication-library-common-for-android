@@ -63,6 +63,9 @@ public class AndroidDeviceMetadata extends AbstractDeviceMetadata {
     }
 
     @Override
+    public @NonNull String getOsForMats() { return android.os.Build.VERSION.RELEASE; }
+
+    @Override
     public @NonNull String getOsForDrs() {
         return android.os.Build.VERSION.RELEASE;
     }
