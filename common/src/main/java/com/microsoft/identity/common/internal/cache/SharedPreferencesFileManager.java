@@ -80,7 +80,8 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
                                                                     final String name,
                                                                     final int operatingMode,
                                                                     final IStorageHelper storageHelper) {
-        String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode);
+        String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode) +
+                "/" + ((storageHelper == null) ? "clear" : storageHelper.getClass().getCanonicalName());
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if(cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key, new SharedPreferencesFileManager(context, name, operatingMode, storageHelper));
@@ -89,6 +90,14 @@ public class SharedPreferencesFileManager implements ISharedPreferencesFileManag
             }
         }
         return cachedFileManager;
+    }
+
+    /**
+     * This method clears the singleton cache in use by the system, in the case that unsafe operations
+     * have been performed on disk and the actual data needs to be removed.
+     */
+    public static void clearSingletonCache() {
+        objectCache.clear();
     }
 
     /**
