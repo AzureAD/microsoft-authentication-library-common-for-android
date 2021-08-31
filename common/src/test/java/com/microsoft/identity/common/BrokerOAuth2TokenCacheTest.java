@@ -286,7 +286,7 @@ public class BrokerOAuth2TokenCacheTest {
     }
 
     private INameValueStorage<String> getAppUidFileManager(final IPlatformComponents components,
-                                                   final int appUid) {
+                                                           final int appUid) {
         if (!(components instanceof AndroidPlatformComponents)) {
             throw new IllegalStateException("This component must be migrated to support the new platform abstraction");
         }

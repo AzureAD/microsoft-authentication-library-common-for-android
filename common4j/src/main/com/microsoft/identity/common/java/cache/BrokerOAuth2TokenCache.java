@@ -133,10 +133,10 @@ public class BrokerOAuth2TokenCache
          * Returns an instance of the {@link MsalOAuth2TokenCache} for the supplied params.
          *
          * @param context           The application context to use.
-         * @param bindingProcessUid The process UID of the current binding-app.
+         * @param uid               Unix's UID.
          * @return
          */
-        MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context, final int bindingProcessUid);
+        MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context, final int uid);
     }
 
     /**
