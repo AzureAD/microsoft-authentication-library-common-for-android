@@ -53,6 +53,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.internal.commands.AcquirePrtSsoCookieResult;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
@@ -869,7 +870,7 @@ public class BrokerMsalController extends BaseController {
 
             @Override
             public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                negotiatedBrokerProtocolVersion = hello(strategy, Broker);
+                negotiatedBrokerProtocolVersion = hello(strategy, AuthenticationConstants.BrokerContentProvider.API.GET_SSO_TOKEN.getMsalVersion());
             }
 
             @NonNull
@@ -878,7 +879,7 @@ public class BrokerMsalController extends BaseController {
                 return new BrokerOperationBundle(
                         MSAL_GENERATE_SHR,
                         mActiveBrokerPackageName,
-                        mRequestAdapter.getRequestBundleForGenerateShr(
+                        mRequestAdapter.getBrokerRequestForSsoToken(
                                 parameters,
                                 negotiatedBrokerProtocolVersion
                         )
@@ -887,12 +888,12 @@ public class BrokerMsalController extends BaseController {
 
             @NonNull
             @Override
-            public GenerateShrResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+            public AcquirePrtSsoCookieResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
                 if (null == resultBundle) {
                     throw mResultAdapter.getExceptionForEmptyResultBundle();
                 }
 
-                return mResultAdapter.getGenerateShrResultFromResultBundle(resultBundle);
+                return mResultAdapter.getAcquirePrtSsoTokenResultFromBundle(resultBundle);
             }
 
             @NonNull
@@ -910,7 +911,7 @@ public class BrokerMsalController extends BaseController {
 
             @Override
             public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
-                                               @NonNull final GenerateShrResult result) {
+                                               @NonNull final AcquirePrtSsoCookieResult result) {
                 // TODO Needed?
             }
         });
