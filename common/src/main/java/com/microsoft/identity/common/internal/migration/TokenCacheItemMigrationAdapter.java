@@ -118,28 +118,6 @@ public class TokenCacheItemMigrationAdapter {
     }
 
 
-    /**
-     * Testing whether the given client ID can use the cached foci to refresh token.
-     *
-     * @param clientId    String of the given client id.
-     * @param redirectUri redirect url string of the given client id.
-     * @param cacheRecord Foci cache record.
-     * @return true if the given client id can use the cached foci token. False, otherwise.
-     * @throws ClientException
-     * @throws IOException
-     */
-    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
-                                                        @NonNull final String clientId,
-                                                        @NonNull final String redirectUri,
-                                                        @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
-        return FociQueryUtilities.tryFociTokenWithGivenClientId(
-                brokerOAuth2TokenCache,
-                clientId, redirectUri,
-                cacheRecord.getRefreshToken(),
-                cacheRecord.getAccount()
-        );
-    }
-
     private static List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> renewTokens(
             @NonNull final Map<String, String> redirects,
             @NonNull final List<ADALTokenCacheItem> filteredTokens) {
