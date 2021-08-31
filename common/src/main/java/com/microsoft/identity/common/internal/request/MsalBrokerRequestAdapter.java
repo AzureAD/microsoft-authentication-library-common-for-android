@@ -314,9 +314,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
             );
         }
 
-        String correlationIdString = bundle.getString(
-                brokerRequest.getCorrelationId()
-        );
+        String correlationIdString = brokerRequest.getCorrelationId();
+
         if (TextUtils.isEmpty(correlationIdString)) {
             UUID correlationId = UUID.randomUUID();
             correlationIdString = correlationId.toString();
