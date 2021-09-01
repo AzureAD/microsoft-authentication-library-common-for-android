@@ -31,6 +31,7 @@ public enum SdkType {
     ADAL,
     MSAL,
     MSAL_CPP,
+    MSAL_XPLAT_LINUX,
     UNKNOWN;
 
     /**
@@ -46,6 +47,8 @@ public enum SdkType {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL;
         } else if ((SdkType.MSAL_CPP == this)) {
             return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_CPP;
+        } else if (SdkType.MSAL_XPLAT_LINUX == this) {
+            return AuthenticationConstants.SdkPlatformFields.PRODUCT_NAME_MSAL_XPLAT_LINUX;
         } else {
             // value(SdkType.UNKNOWN) is intended for test-cases, eg. CommandDispatcherTest.java.
             return "";
@@ -59,6 +62,8 @@ public enum SdkType {
      * @return True if Sdk supports Microsoft Personal Accounts, false otherwise.
      */
     public boolean isCapableOfMSA() {
-        return (this == SdkType.MSAL) || (this == SdkType.MSAL_CPP);
+        return (this == SdkType.MSAL)
+                || (this == SdkType.MSAL_CPP)
+                || (this == SdkType.MSAL_XPLAT_LINUX);
     }
 }
