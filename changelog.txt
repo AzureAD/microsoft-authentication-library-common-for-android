@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
 - [MAJOR] Move Utility classes (#1526)
