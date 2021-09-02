@@ -27,7 +27,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.commands.AcquirePrtSsoCookieResult;
+import com.microsoft.identity.common.internal.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 
@@ -73,5 +73,6 @@ public interface IBrokerResultAdapter {
      * @param resultBundle the bundle to interpret.
      * @return a new AcquirePrtSsoCookieResult.
      */
-    @NonNull AcquirePrtSsoCookieResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle);
+    @NonNull
+    AcquirePrtSsoTokenResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle);
 }

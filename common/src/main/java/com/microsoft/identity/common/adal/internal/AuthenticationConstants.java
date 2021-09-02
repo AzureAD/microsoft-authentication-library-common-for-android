@@ -597,6 +597,10 @@ public final class AuthenticationConstants {
          * The newest Msal-To-Broker protocol version.
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
+        /**
+         * The key indicating that this is an ssoUrl parameter in a Bundle.
+         */
+        public static final String BROKER_SSO_URL_KEY = "ssoUrl";
 
         @VisibleForTesting
         public static String computeMaxMsalBrokerProtocol() {

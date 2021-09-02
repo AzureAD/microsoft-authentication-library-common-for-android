@@ -20,21 +20,34 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
+package com.microsoft.identity.common.java.commands.parameters;
 
-package com.microsoft.identity.common.internal.request;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
-import android.os.Bundle;
-
-import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
-
-public interface IBrokerRequestAdapter {
-
-    BrokerRequest brokerRequestFromAcquireTokenParameters(InteractiveTokenCommandParameters parameters);
-
-    BrokerRequest brokerRequestFromSilentOperationParameters(SilentTokenCommandParameters parameters);
-
-    Bundle getBrokerRequestForSsoToken(AcquirePrtSsoTokenCommandParameters parameters, String negotiatedBrokerProtocolVersion);
+/**
+ * This is a set of command parameters for generating SSO tokens.  This is only being
+ * created to conform to the interface for the packages that talk to the broker, since
+ * it is mostly irrelevant for any api usage (there is no non-broker implementation of
+ * this).
+ */
+@Getter
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+@Accessors(prefix = "m")
+public class AcquirePrtSsoTokenCommandParameters extends CommandParameters {
+    /**
+     * The sso url parameter for the token being fetched.
+     */
+    private final String mSsoUrl;
+    /**
+     * The account name for the token being fetched.
+     */
+    private final String mAccountName;
+    /**
+     * The authority for the token being fetched.
+     */
+    private final String mAccountAuthority;
 }

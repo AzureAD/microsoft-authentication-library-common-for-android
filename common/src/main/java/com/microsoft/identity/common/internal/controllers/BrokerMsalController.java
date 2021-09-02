@@ -34,6 +34,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -53,7 +54,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.PropertyBagUtil;
-import com.microsoft.identity.common.internal.commands.AcquirePrtSsoCookieResult;
+import com.microsoft.identity.common.internal.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
@@ -68,6 +69,7 @@ import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
@@ -863,8 +865,8 @@ public class BrokerMsalController extends BaseController {
         });
     }
 
-    public AcquirePrtSsoCookieResult acquireSsoToken(final @NonNull String parameters) {
-        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<AcquirePrtSsoCookieResult>() {
+    public AcquirePrtSsoTokenResult getSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<AcquirePrtSsoTokenResult>() {
 
             private String negotiatedBrokerProtocolVersion;
 
@@ -877,7 +879,7 @@ public class BrokerMsalController extends BaseController {
             @Override
             public BrokerOperationBundle getBundle() throws ClientException {
                 return new BrokerOperationBundle(
-                        MSAL_GENERATE_SHR,
+                        MSAL_SSO_TOKEN,
                         mActiveBrokerPackageName,
                         mRequestAdapter.getBrokerRequestForSsoToken(
                                 parameters,
@@ -888,7 +890,7 @@ public class BrokerMsalController extends BaseController {
 
             @NonNull
             @Override
-            public AcquirePrtSsoCookieResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+            public AcquirePrtSsoTokenResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
                 if (null == resultBundle) {
                     throw mResultAdapter.getExceptionForEmptyResultBundle();
                 }
@@ -911,7 +913,7 @@ public class BrokerMsalController extends BaseController {
 
             @Override
             public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
-                                               @NonNull final AcquirePrtSsoCookieResult result) {
+                                               @NonNull final AcquirePrtSsoTokenResult result) {
                 // TODO Needed?
             }
         });
