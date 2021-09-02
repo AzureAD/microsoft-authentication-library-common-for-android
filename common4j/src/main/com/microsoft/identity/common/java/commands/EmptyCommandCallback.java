@@ -20,10 +20,21 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.internal.result;
+package com.microsoft.identity.common.java.commands;
 
-/*
-    Null Object Pattern for Commands who's result should be ignored.
+/**
+ * A command callback that does nothing.
  */
-public class VoidResult {
+public class EmptyCommandCallback<T, U> implements CommandCallback<T, U>{
+    @Override
+    public void onCancel() {
+    }
+
+    @Override
+    public void onTaskCompleted(T t) {
+    }
+
+    @Override
+    public void onError(U error) {
+    }
 }

@@ -309,8 +309,11 @@ public abstract class OAuth2Strategy
         // Any code below 300 (HTTP_MULT_CHOICE) is considered a success
         if (response.getStatusCode() < HttpsURLConnection.HTTP_MULT_CHOICE) {
             // Get and parse response body
-            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, String>>() {
-            }.getType());
+            final HashMap<String, String> parsedResponseBody = new Gson().fromJson(
+                    response.getBody(),
+                    TypeToken.getParameterized(HashMap.class, String.class, String.class)
+                            .getType()
+            );
 
             // Create response and result objects
             // "code" can be left null since it's DCF
@@ -331,8 +334,11 @@ public abstract class OAuth2Strategy
         // Request failed
         else {
             // Get and parse response body
-            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(response.getBody(), new TypeToken<HashMap<String, Object>>() {
-            }.getType());
+            final HashMap<String, Object> parsedResponseBody = new Gson().fromJson(
+                    response.getBody(),
+                    TypeToken.getParameterized(HashMap.class, String.class, Object.class)
+                            .getType()
+            );
 
             // Create response and result objects
             final MicrosoftStsAuthorizationErrorResponse authorizationErrorResponse =

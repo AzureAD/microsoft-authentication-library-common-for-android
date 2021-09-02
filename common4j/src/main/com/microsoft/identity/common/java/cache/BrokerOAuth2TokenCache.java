@@ -98,18 +98,18 @@ public class BrokerOAuth2TokenCache
 
     private final IBrokerApplicationMetadataCache mApplicationMetadataCache;
     private final MicrosoftFamilyOAuth2TokenCache mFociCache;
-    private final int mCallingProcessUid;
+    private final int mUid;
     private ProcessUidCacheFactory mDelegate = null;
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
      * @param components               The current platform components.
-     * @param callingProcessUid        The UID of the current broker-calling app.
+     * @param uid                      UID of the current unix user.
      * @param applicationMetadataCache The metadata cache to use.
      */
     public BrokerOAuth2TokenCache(@NonNull final IPlatformComponents components,
-                                  int callingProcessUid,
+                                  int uid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache) {
         super(components);
 
@@ -118,7 +118,7 @@ public class BrokerOAuth2TokenCache
                 "Init::" + TAG
         );
 
-        mCallingProcessUid = callingProcessUid;
+        mUid = uid;
         mFociCache = initializeFociCache(getComponents());
         mApplicationMetadataCache = applicationMetadataCache;
     }
@@ -133,21 +133,24 @@ public class BrokerOAuth2TokenCache
          * Returns an instance of the {@link MsalOAuth2TokenCache} for the supplied params.
          *
          * @param context           The application context to use.
-         * @param bindingProcessUid The process UID of the current binding-app.
+         * @param uid               Unix's UID.
          * @return
          */
-        MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context, final int bindingProcessUid);
+        MsalOAuth2TokenCache getTokenCache(final IPlatformComponents context, final int uid);
     }
 
     /**
      * Constructs a new BrokerOAuth2TokenCache.
      *
-     * @param components The current application components.
-     * @param fociCache  The FOCI cache implementation to use.
+     * @param components               The current application components.
+     * @param uid                      UID of the current unix user.
+     * @param delegate                 {@link ProcessUidCacheFactory}
+     * @param applicationMetadataCache The metadata cache to use.
+     * @param fociCache                The FOCI cache implementation to use.
      */
     //@VisibleForTesting
     public BrokerOAuth2TokenCache(@NonNull IPlatformComponents components,
-                                  final int callingProcessUid,
+                                  final int uid,
                                   @NonNull IBrokerApplicationMetadataCache applicationMetadataCache,
                                   @NonNull ProcessUidCacheFactory delegate,
                                   @NonNull final MicrosoftFamilyOAuth2TokenCache fociCache) {
@@ -161,7 +164,7 @@ public class BrokerOAuth2TokenCache
         );
 
         mApplicationMetadataCache = applicationMetadataCache;
-        mCallingProcessUid = callingProcessUid;
+        mUid = uid;
         mDelegate = delegate;
         mFociCache = fociCache;
     }
@@ -206,7 +209,7 @@ public class BrokerOAuth2TokenCache
             MsalOAuth2TokenCache targetCache = getTokenCacheForClient(
                     idTokenRecord.getClientId(),
                     idTokenRecord.getEnvironment(),
-                    mCallingProcessUid
+                    mUid
             );
 
             if (null == targetCache) {
@@ -217,7 +220,7 @@ public class BrokerOAuth2TokenCache
 
                 targetCache = initializeProcessUidCache(
                         getComponents(),
-                        mCallingProcessUid
+                        mUid
                 );
             }
 
@@ -232,7 +235,7 @@ public class BrokerOAuth2TokenCache
                 result.getAccessToken().getClientId(),
                 result.getAccessToken().getEnvironment(),
                 familyId,
-                mCallingProcessUid
+                mUid
         );
 
         return result;
@@ -279,7 +282,7 @@ public class BrokerOAuth2TokenCache
             // Save to the processUid cache... or create a new one
             final MsalOAuth2TokenCache targetCache = initializeProcessUidCache(
                     getComponents(),
-                    mCallingProcessUid
+                    mUid
             );
 
             result = targetCache.save(
@@ -294,7 +297,7 @@ public class BrokerOAuth2TokenCache
                 result.getAccessToken().getClientId(),
                 result.getAccessToken().getEnvironment(),
                 familyId,
-                mCallingProcessUid
+                mUid
         );
 
         return result;
@@ -351,13 +354,13 @@ public class BrokerOAuth2TokenCache
         final MsalOAuth2TokenCache cache = getTokenCacheForClient(
                 clientId,
                 environment,
-                mCallingProcessUid
+                mUid
         );
 
         if (cache == null){
             Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
                     "environment:" + environment +
-                    "processUid: " + mCallingProcessUid);
+                    "processUid: " + mUid);
             return null;
         }
 
@@ -399,7 +402,7 @@ public class BrokerOAuth2TokenCache
             targetCache = mFociCache;
         } else {
             // Try to find an existing cache for this application
-            targetCache = initializeProcessUidCache(getComponents(), mCallingProcessUid);
+            targetCache = initializeProcessUidCache(getComponents(), mUid);
         }
 
         // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance targetCache while calling method save
@@ -413,7 +416,7 @@ public class BrokerOAuth2TokenCache
                 result.getRefreshToken().getClientId(),
                 result.getRefreshToken().getEnvironment(),
                 result.getRefreshToken().getFamilyId(),
-                mCallingProcessUid
+                mUid
         );
 
         return result;
@@ -442,7 +445,7 @@ public class BrokerOAuth2TokenCache
             if (isFoci) {
                 targetCache = mFociCache;
             } else {
-                targetCache = initializeProcessUidCache(getComponents(), mCallingProcessUid);
+                targetCache = initializeProcessUidCache(getComponents(), mUid);
             }
 
             final List<ICacheRecord> result = targetCache.saveAndLoadAggregatedAccountData(
@@ -458,7 +461,7 @@ public class BrokerOAuth2TokenCache
                     justSavedRecord.getRefreshToken().getClientId(),
                     justSavedRecord.getRefreshToken().getEnvironment(),
                     justSavedRecord.getRefreshToken().getFamilyId(),
-                    mCallingProcessUid
+                    mUid
             );
 
             return result;
@@ -468,14 +471,14 @@ public class BrokerOAuth2TokenCache
     private void updateApplicationMetadataCache(@NonNull final String clientId,
                                                 @NonNull final String environment,
                                                 @Nullable final String familyId,
-                                                int callingProcessUid) {
+                                                int uid) {
         final String methodName = ":updateApplicationMetadataCache";
 
         final BrokerApplicationMetadata applicationMetadata = new BrokerApplicationMetadata();
         applicationMetadata.setClientId(clientId);
         applicationMetadata.setEnvironment(environment);
         applicationMetadata.setFoci(familyId);
-        applicationMetadata.setUid(callingProcessUid);
+        applicationMetadata.setUid(uid);
 
         Logger.verbose(
                 TAG + methodName,
@@ -538,7 +541,7 @@ public class BrokerOAuth2TokenCache
         final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
                 clientId,
                 account.getEnvironment(),
-                mCallingProcessUid
+                mUid
         );
 
         boolean isKnownFoci = false;
@@ -555,7 +558,7 @@ public class BrokerOAuth2TokenCache
         final OAuth2TokenCache targetCache = getTokenCacheForClient(
                 clientId,
                 account.getEnvironment(),
-                mCallingProcessUid
+                mUid
         );
 
         final boolean shouldUseFociCache = null == targetCache || isKnownFoci;
@@ -634,7 +637,7 @@ public class BrokerOAuth2TokenCache
             final BrokerApplicationMetadata appMetadata = mApplicationMetadataCache.getMetadata(
                     clientId,
                     account.getEnvironment(),
-                    mCallingProcessUid
+                    mUid
             );
 
             boolean isKnownFoci = false;
@@ -714,7 +717,7 @@ public class BrokerOAuth2TokenCache
         final OAuth2TokenCache targetCache = getTokenCacheForClient(
                 credential.getClientId(),
                 credential.getEnvironment(),
-                mCallingProcessUid
+                mUid
         );
 
         boolean removed = false;
@@ -754,7 +757,7 @@ public class BrokerOAuth2TokenCache
             targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             if (null == targetCache) {
@@ -810,7 +813,7 @@ public class BrokerOAuth2TokenCache
             targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             if (null == targetCache) {
@@ -872,7 +875,7 @@ public class BrokerOAuth2TokenCache
                     containsFoci = true;
                 } else if (!processUidCacheInitialized) {
                     // App is not foci, see if we can find its real cache...
-                    final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mCallingProcessUid);
+                    final OAuth2TokenCache candidateCache = initializeProcessUidCache(getComponents(), mUid);
 
                     if (null != candidateCache) {
                         result.add(candidateCache);
@@ -901,7 +904,7 @@ public class BrokerOAuth2TokenCache
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             Logger.info(
@@ -955,7 +958,7 @@ public class BrokerOAuth2TokenCache
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             Logger.info(
@@ -1009,7 +1012,7 @@ public class BrokerOAuth2TokenCache
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             if (null != targetCache) {
@@ -1052,13 +1055,13 @@ public class BrokerOAuth2TokenCache
         final OAuth2TokenCache cache = getTokenCacheForClient(
                 clientId,
                 accountRecord.getEnvironment(),
-                mCallingProcessUid
+                mUid
         );
 
         if (cache == null) {
             Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
                     "environment:" + accountRecord.getEnvironment() +
-                    "processUid: " + mCallingProcessUid);
+                    "processUid: " + mUid);
             return Collections.emptyList();
         }
 
@@ -1084,7 +1087,7 @@ public class BrokerOAuth2TokenCache
             targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             if (null == targetCache) {
@@ -1140,13 +1143,13 @@ public class BrokerOAuth2TokenCache
             final OAuth2TokenCache cache = getTokenCacheForClient(
                     clientId,
                     accountEnv,
-                    mCallingProcessUid
+                    mUid
             );
 
             if (cache == null) {
                 Logger.warn(TAG + methodName, "Cache not found for clientid: " + clientId +
                         "environment:" + accountRecord.getEnvironment() +
-                        "processUid: " + mCallingProcessUid);
+                        "processUid: " + mUid);
                 return Collections.emptyList();
             }
 
@@ -1454,7 +1457,7 @@ public class BrokerOAuth2TokenCache
                     metadata.getEnvironment(),
                     deviceWide
                             ? metadata.getUid() // Supports the removeAccountFromDevice() function
-                            : mCallingProcessUid
+                            : mUid
             );
 
             if (null != candidateCache) {
@@ -1507,7 +1510,7 @@ public class BrokerOAuth2TokenCache
             OAuth2TokenCache targetCache = getTokenCacheForClient(
                     clientId,
                     environment,
-                    mCallingProcessUid
+                    mUid
             );
 
             Logger.info(
@@ -1551,7 +1554,7 @@ public class BrokerOAuth2TokenCache
     }
 
     private MsalOAuth2TokenCache initializeProcessUidCache(@NonNull final IPlatformComponents components,
-                                                           final int bindingProcessUid) {
+                                                           final int uid) {
         final String methodName = ":initializeProcessUidCache";
 
         Logger.verbose(
@@ -1565,13 +1568,13 @@ public class BrokerOAuth2TokenCache
                     "Using swapped delegate cache."
             );
 
-            return mDelegate.getTokenCache(components, bindingProcessUid);
+            return mDelegate.getTokenCache(components, uid);
         }
 
         final INameValueStorage<String> sharedPreferencesFileManager =
                 components.getEncryptedNameValueStore(
                         SharedPreferencesAccountCredentialCache
-                                .getBrokerUidSequesteredFilename(bindingProcessUid),
+                                .getBrokerUidSequesteredFilename(uid),
                         components.
                                 getStorageEncryptionManager(),
                         String.class
@@ -1664,20 +1667,20 @@ public class BrokerOAuth2TokenCache
      *
      * @param clientId          The target client id.
      * @param environment       The target environment.
-     * @param callingProcessUid The uid of the calling process. This value is unique to the calling app and is assigned during installation.
+     * @param uid               uid of the current unix user.
      * @return The {@link MsalOAuth2TokenCache} matching the supplied criteria or null, if no matching
      * cache was found.
      */
     @Nullable
     private MsalOAuth2TokenCache getTokenCacheForClient(@NonNull final String clientId,
                                                         @NonNull final String environment,
-                                                        final int callingProcessUid) {
+                                                        final int uid) {
         final String methodName = ":getTokenCacheForClient(id, env, uid)";
 
         final BrokerApplicationMetadata metadata = mApplicationMetadataCache.getMetadata(
                 clientId,
                 environment,
-                callingProcessUid
+                uid
         );
 
         Logger.info(TAG + methodName, "Found metadata? " + (null != metadata));

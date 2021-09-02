@@ -150,7 +150,7 @@ public class DeletedKeysApi {
      */
     public ApiResponse<DeletedKeyBundle> getDeletedKeyWithHttpInfo(String keyName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getDeletedKeyValidateBeforeCall(keyName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<DeletedKeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedKeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -185,7 +185,7 @@ public class DeletedKeysApi {
         }
 
         com.squareup.okhttp.Call call = getDeletedKeyValidateBeforeCall(keyName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedKeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedKeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -280,7 +280,7 @@ public class DeletedKeysApi {
      */
     public ApiResponse<DeletedKeyListResult> getDeletedKeysWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getDeletedKeysValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<DeletedKeyListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedKeyListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -315,7 +315,7 @@ public class DeletedKeysApi {
         }
 
         com.squareup.okhttp.Call call = getDeletedKeysValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedKeyListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedKeyListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -544,7 +544,7 @@ public class DeletedKeysApi {
      */
     public ApiResponse<KeyBundle> recoverDeletedKeyWithHttpInfo(String keyName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = recoverDeletedKeyValidateBeforeCall(keyName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -579,7 +579,7 @@ public class DeletedKeysApi {
         }
 
         com.squareup.okhttp.Call call = recoverDeletedKeyValidateBeforeCall(keyName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<KeyBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(KeyBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

@@ -151,7 +151,7 @@ public class DeletedSecretsApi {
      */
     public ApiResponse<DeletedSecretBundle> getDeletedSecretWithHttpInfo(String secretName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getDeletedSecretValidateBeforeCall(secretName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<DeletedSecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedSecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -186,7 +186,7 @@ public class DeletedSecretsApi {
         }
 
         com.squareup.okhttp.Call call = getDeletedSecretValidateBeforeCall(secretName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedSecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedSecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -281,7 +281,7 @@ public class DeletedSecretsApi {
      */
     public ApiResponse<DeletedSecretListResult> getDeletedSecretsWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getDeletedSecretsValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<DeletedSecretListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedSecretListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -316,7 +316,7 @@ public class DeletedSecretsApi {
         }
 
         com.squareup.okhttp.Call call = getDeletedSecretsValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<DeletedSecretListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(DeletedSecretListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -545,7 +545,7 @@ public class DeletedSecretsApi {
      */
     public ApiResponse<SecretBundle> recoverDeletedSecretWithHttpInfo(String secretName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = recoverDeletedSecretValidateBeforeCall(secretName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -580,7 +580,7 @@ public class DeletedSecretsApi {
         }
 
         com.squareup.okhttp.Call call = recoverDeletedSecretValidateBeforeCall(secretName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SecretBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SecretBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

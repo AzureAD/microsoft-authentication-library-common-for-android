@@ -56,9 +56,9 @@ public interface IBrokerApplicationMetadataCache extends ISimpleCache<BrokerAppl
      *
      * @param clientId    The target client id.
      * @param environment The target environment.
-     * @param processUid  The uid of the app calling broker.
+     * @param uid         The uid of current unix user.
      * @return The matching {@link BrokerApplicationMetadata} or null if a match cannot be found.
      */
     @Nullable
-    BrokerApplicationMetadata getMetadata(String clientId, String environment, int processUid);
+    BrokerApplicationMetadata getMetadata(String clientId, String environment, int uid);
 }

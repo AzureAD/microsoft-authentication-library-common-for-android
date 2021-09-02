@@ -63,6 +63,8 @@ public class TokenCommandParameters extends CommandParameters {
     @Expose()
     private final boolean forceRefresh;
 
+    private final String loginHint;
+
     private final List<Map.Entry<String, String>> extraOptions;
 
     public Set<String> getScopes() {
