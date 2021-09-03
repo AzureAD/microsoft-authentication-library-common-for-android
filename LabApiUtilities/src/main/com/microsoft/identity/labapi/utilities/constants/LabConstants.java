@@ -45,6 +45,17 @@ public class LabConstants {
         public static final String AUTO_MFA_ON_ALL = "automfaonall";
     }
 
+    static final class OptionalClaim {
+        public static final String NONE = LabConstants.NONE;
+        public static final String REFRESH_IN = "refresh_in";
+        public static final String PWD_EXP = "pwd_exp";
+    }
+
+    static final class AppPlatform {
+        public static final String WEB = "web";
+        public static final String SPA = "spa";
+    }
+
     static final class ProtectionPolicy {
         public static final String NONE = LabConstants.NONE;
         public static final String CA = "ca";

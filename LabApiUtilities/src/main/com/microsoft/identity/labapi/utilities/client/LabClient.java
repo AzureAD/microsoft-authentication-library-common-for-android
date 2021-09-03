@@ -126,8 +126,8 @@ public class LabClient implements ILabClient {
                     valueOf(query.getTokenLifetimePolicy()),
                     valueOf(query.getTokenType()),
                     valueOf(query.getTokenLifetime()),
-                    valueOf(query.isAdminConsented()),
-                    valueOf(query.optionalClaim())
+                    valueOf(query.getIsAdminConsented()),
+                    valueOf(query.getOptionalClaim())
             );
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
