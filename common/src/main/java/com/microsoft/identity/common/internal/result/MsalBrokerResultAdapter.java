@@ -84,6 +84,7 @@ import static com.microsoft.identity.common.internal.util.GzipUtil.compressStrin
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getName();
+    public static final Gson GSON = new Gson();
 
     @Override
     public @NonNull
@@ -226,7 +227,7 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
     @NonNull
     @Override
     public AcquirePrtSsoTokenResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle) {
-        return new Gson().fromJson(resultBundle.getString(BROKER_GENERATE_SSO_TOKEN_RESULT), AcquirePrtSsoTokenResult.class);
+        return GSON.fromJson(resultBundle.getString(BROKER_GENERATE_SSO_TOKEN_RESULT), AcquirePrtSsoTokenResult.class);
     }
 
     public @NonNull
