@@ -15,8 +15,8 @@ Gets Lab Info based on Lab Name
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.LabApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.LabApi;
 
 
 LabApi apiInstance = new LabApi();

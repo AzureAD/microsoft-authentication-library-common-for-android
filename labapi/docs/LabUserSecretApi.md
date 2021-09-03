@@ -17,8 +17,8 @@ If not found it will return the KeyVault providers generic error message &#x27;n
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.LabUserSecretApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.LabUserSecretApi;
 
 
 LabUserSecretApi apiInstance = new LabUserSecretApi();

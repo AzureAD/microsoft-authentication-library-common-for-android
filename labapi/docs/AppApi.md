@@ -16,8 +16,8 @@ Gets App Info based on App ID
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.AppApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.AppApi;
 
 
 AppApi apiInstance = new AppApi();
@@ -59,8 +59,8 @@ Gets App Info based on Azure Environment or Sign-in Audience
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.AppApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.AppApi;
 
 
 AppApi apiInstance = new AppApi();

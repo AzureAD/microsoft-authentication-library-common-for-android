@@ -17,8 +17,8 @@ Enable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Als
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.EnablePolicyApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.EnablePolicyApi;
 
 
 EnablePolicyApi apiInstance = new EnablePolicyApi();

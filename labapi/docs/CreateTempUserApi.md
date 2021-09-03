@@ -17,8 +17,8 @@ You can create the following type of cloud users.        1. Basic : Account can 
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.CreateTempUserApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.CreateTempUserApi;
 
 
 CreateTempUserApi apiInstance = new CreateTempUserApi();

@@ -17,8 +17,8 @@ Provides generic error messages
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.ResetApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.ResetApi;
 
 
 ResetApi apiInstance = new ResetApi();

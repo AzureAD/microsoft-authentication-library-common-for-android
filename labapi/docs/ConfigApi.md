@@ -16,8 +16,8 @@ Gets the Lab Configurartion (User/App/Lab) Based on Query Parameters with predef
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.ConfigApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 
 
 ConfigApi apiInstance = new ConfigApi();
@@ -107,8 +107,8 @@ Gets a single Lab User Config with Lab and App Info based on UPN
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.ConfigApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.ConfigApi;
 
 
 ConfigApi apiInstance = new ConfigApi();

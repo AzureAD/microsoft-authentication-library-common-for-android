@@ -17,8 +17,8 @@ Disable Policy can be used for GlobalMFA, MAMCA, MDMCA, MFAONSPO, MFAONEXO.   Al
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.DisablePolicyApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.DisablePolicyApi;
 
 
 DisablePolicyApi apiInstance = new DisablePolicyApi();

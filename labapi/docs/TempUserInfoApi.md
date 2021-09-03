@@ -17,8 +17,8 @@ When you create temporary user, it gets created with \&quot;Locked_\&quot; in it
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.TempUserInfoApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.TempUserInfoApi;
 
 
 TempUserInfoApi apiInstance = new TempUserInfoApi();

@@ -16,8 +16,8 @@ Gets the Lab User(s) Based on Query Parameters with predefined defaults.   You c
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.UserApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.UserApi;
 
 
 UserApi apiInstance = new UserApi();
@@ -107,8 +107,8 @@ Gets a single Lab User based on UPN
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.UserApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.UserApi;
 
 
 UserApi apiInstance = new UserApi();

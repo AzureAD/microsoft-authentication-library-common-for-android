@@ -17,8 +17,8 @@ Query this when a test fails to see if the failure is because of a lab. If so re
 ### Example
 ```java
 // Import classes:
-//import io.swagger.client.ApiException;
-//import io.swagger.client.api.LabAvailabilityApi;
+//import com.microsoft.identity.internal.test.labapi.ApiException;
+//import com.microsoft.identity.internal.test.labapi.api.LabAvailabilityApi;
 
 
 LabAvailabilityApi apiInstance = new LabAvailabilityApi();
