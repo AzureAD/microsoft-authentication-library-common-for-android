@@ -122,6 +122,11 @@ public class LabConstants {
         public static final String AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT = "azureadandpersonalmicrosoftaccount";
     }
 
+    public static final class AppPlatform {
+        public static final String WEB = "web";
+        public static final String SPA = "spa";
+    }
+
     public static final class GuestHomedIn {
         public static final String NONE = LabConstants.NONE;
         public static final String ON_PREM = "onprem";

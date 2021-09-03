@@ -38,6 +38,7 @@ public class LabUserQuery {
     public String azureEnvironment;
     public String guestHomeAzureEnvironment;
     public String appType;
+    public String appplatform;
     public String publicClient;
     public String signInAudience;
     public String guestHomedIn;
@@ -49,6 +50,8 @@ public class LabUserQuery {
     public String tokenLifetimePolicy;
     public String tokenType;
     public String tokenLifetime;
+    public String isadminconsented;
+    public String optionalclaim;
 
     public boolean isUpnQuery(){
         return this.upn!=null && !this.upn.isEmpty();

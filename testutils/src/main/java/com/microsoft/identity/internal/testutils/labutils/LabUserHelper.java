@@ -79,6 +79,7 @@ public class LabUserHelper {
                         query.azureEnvironment,
                         query.guestHomeAzureEnvironment,
                         query.appType,
+                        query.appplatform,
                         query.publicClient,
                         query.signInAudience,
                         query.guestHomedIn,
@@ -89,7 +90,9 @@ public class LabUserHelper {
                         query.passwordPolicyNotificationDays,
                         query.tokenLifetimePolicy,
                         query.tokenType,
-                        query.tokenLifetime);
+                        query.tokenLifetime,
+                        query.isadminconsented,
+                        query.optionalclaim);
             }
 
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
@@ -126,6 +129,22 @@ public class LabUserHelper {
         String constant;
 
         SignInAudience(String constant) {
+            this.constant = constant;
+        }
+
+        String getValue() {
+            return constant;
+        }
+
+    }
+
+    public enum AppPlatform {
+        WEB(LabConstants.AppPlatform.WEB),
+        SPA(LabConstants.AppPlatform.SPA),
+        ;
+        String constant;
+
+        AppPlatform(String constant) {
             this.constant = constant;
         }
 
@@ -311,16 +330,16 @@ public class LabUserHelper {
 
     public static AppInfo getDefaultAppInfo() {
         instance.setupApiClientWithAccessToken();
-        return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
+        return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, AppPlatform.WEB, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
                 IsAdminConsented.YES, PublicClient.YES);
     }
 
-    public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
+    public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, AppPlatform appPlatform, SignInAudience audience,
                                      IsAdminConsented isAdminConsented, PublicClient publicClient) {
         instance.setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
-            return api.apiAppGet(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
+            return api.apiAppGet(userType.getValue(), appPlatform.getValue(), azureEnvironment.getValue(), audience.getValue(),
                     isAdminConsented.getValue(), publicClient.getValue()).get(0);
         } catch (ApiException e) {
             throw new RuntimeException(e);
