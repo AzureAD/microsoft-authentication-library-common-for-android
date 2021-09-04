@@ -29,7 +29,6 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -67,18 +66,15 @@ public class BrokerData {
             BROKER_HOST_APP_SIGNATURE
     );
 
-    public static final BrokerData BROKER_HOST_2 = new BrokerData(
-            "com.microsoft.workaccount.test",
-            BROKER_HOST_APP_SIGNATURE
-    );
+    private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+        add(MICROSOFT_AUTHENTICATOR_DEBUG);
+        add(BROKER_HOST);
+    }});
 
-    private static final Set<BrokerData> DEBUG_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>(
-        Arrays.asList(MICROSOFT_AUTHENTICATOR_DEBUG, BROKER_HOST, BROKER_HOST_2)
-    ));
-
-    private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>(
-        Arrays.asList(MICROSOFT_AUTHENTICATOR_PROD, COMPANY_PORTAL)
-    ));
+    private static final Set<BrokerData> PROD_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
+        add(MICROSOFT_AUTHENTICATOR_PROD);
+        add(COMPANY_PORTAL);
+    }});
 
     private static final Set<BrokerData> ALL_BROKERS = Collections.unmodifiableSet(new HashSet<BrokerData>() {{
         addAll(DEBUG_BROKERS);
