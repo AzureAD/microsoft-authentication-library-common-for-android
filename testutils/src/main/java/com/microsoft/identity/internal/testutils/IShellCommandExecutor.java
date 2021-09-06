@@ -21,32 +21,8 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.internal.testutils.networkutils;
+package com.microsoft.identity.internal.testutils;
 
-import android.content.Context;
-import android.net.wifi.WifiManager;
-
-import androidx.annotation.NonNull;
-
-import com.microsoft.identity.internal.testutils.IShellCommandExecutor;
-
-import javax.annotation.Nullable;
-
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-/**
- * Used to define the state of the network during a test run by defining the networkInterface
- * being used by the device, and for how long it will be active. The {@link NetworkTestStateManager}
- * builds a list of these objects to define the changing network state during a test run.
- */
-@Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class NetworkTestState {
-    private NetworkTestConstants.InterfaceType interfaceType;
-    private int time;
+public interface IShellCommandExecutor {
+    String execute(String shellCommand);
 }

@@ -24,9 +24,14 @@ package com.microsoft.identity.internal.testutils.networkutils;
 
 public class NetworkTestConstants {
 
-    public static enum InterfaceType {
+    /**
+     * Defines the different network interfaces we can switch to during a test run.
+     * The NONE interface means both WIFI and CELLULAR are turned off.
+     */
+    public enum InterfaceType {
         NONE("NONE"),
         WIFI("WIFI"),
+        WIFI_AND_CELLULAR("WIFI_AND_CELLULAR"),
         CELLULAR("CELLULAR");
 
         private final String value;
@@ -37,6 +42,25 @@ public class NetworkTestConstants {
 
         public String getValue() {
             return value;
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(value);
+        }
+
+        /**
+         * Set the interfaceType from a string representation of {@link NetworkTestConstants.InterfaceType}
+         *
+         * @param value a string representation of {@link NetworkTestConstants.InterfaceType}
+         */
+        public static InterfaceType fromValue(final String value) {
+            for (NetworkTestConstants.InterfaceType interfaceType : NetworkTestConstants.InterfaceType.values()) {
+                if (interfaceType.getValue().equals(value)) {
+                    return interfaceType;
+                }
+            }
+            return null;
         }
     }
 }
