@@ -608,6 +608,11 @@ public class AuthenticationConstants {
          * The String representing the MSAL.CPP SdkType.
          */
         public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+
+        /**
+         * The String representing the MSAL.XPLAT.Linux SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL_XPLAT_LINUX = "MSAL.xplat.Linux";
     }
 
     /**

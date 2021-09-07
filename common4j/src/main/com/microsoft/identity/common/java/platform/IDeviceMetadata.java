@@ -61,6 +61,12 @@ public interface IDeviceMetadata {
     String getOsForDrs();
 
     /**
+     * Get the OS of this device to be sent to MATS.
+     */
+    @NonNull
+    String getOsForMats();
+
+    /**
      * Get the model name of this device.
      *
      * @return a String representing the device's model
