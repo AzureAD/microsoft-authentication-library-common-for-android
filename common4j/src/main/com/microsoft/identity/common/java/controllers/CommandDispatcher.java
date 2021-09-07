@@ -578,10 +578,8 @@ public class CommandDispatcher {
             final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
                 return CommandResult.ofNull(CommandResult.ResultStatus.CANCEL, correlationId);
-            } else if (baseException != null) {
-                return new CommandResult<>(CommandResult.ResultStatus.ERROR, baseException, correlationId);
             } else {
-                return CommandResult.ofNull(CommandResult.ResultStatus.ERROR, correlationId);
+                return new CommandResult<>(CommandResult.ResultStatus.ERROR, baseException, correlationId);
             }
         }
     }

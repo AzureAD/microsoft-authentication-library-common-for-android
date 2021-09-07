@@ -34,8 +34,10 @@ import java.util.List;
 import java.util.Set;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
+@SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "Lombok inserts more null checks than we need")
 public class NameValueStorageBrokerApplicationMetadataCache
         extends NameValueStorageFileManagerSimpleCacheImpl<BrokerApplicationMetadata>
         implements IBrokerApplicationMetadataCache {
