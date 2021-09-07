@@ -37,10 +37,6 @@ import lombok.experimental.Accessors;
 
 public class CommandResult<T> implements ICommandResult<T> {
 
-    public String getCorrelationId() {
-        return mCorrelationId;
-    }
-
     @Getter
     @Accessors(prefix = "m")
     private final ResultStatus mStatus;
