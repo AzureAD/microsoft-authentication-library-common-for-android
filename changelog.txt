@@ -56,6 +56,7 @@ V.Next
 - [MINOR] Add more operation names to ArgumentException (#1553)
 - [MINOR] Add msal linux sdk type (#1554)
 - [PATCH] Fix extracting http response body (#1557)
+- [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 
 Version 3.6.0
 ----------
