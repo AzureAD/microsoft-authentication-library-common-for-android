@@ -26,13 +26,16 @@ import org.threeten.bp.OffsetDateTime;
  * AppInfo
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-09-03T13:06:09.180-05:00[America/Chicago]")
 public class AppInfo {
   @SerializedName("objectId")
   private String objectId = null;
 
   @SerializedName("appType")
   private String appType = null;
+
+  @SerializedName("appPlatform")
+  private String appPlatform = null;
 
   @SerializedName("publicClient")
   private String publicClient = null;
@@ -89,7 +92,7 @@ public class AppInfo {
   private String lastUpdatedBy = null;
 
   @SerializedName("lastUpdatedDate")
-  private String lastUpdatedDate = null;
+  private OffsetDateTime lastUpdatedDate = null;
 
   public AppInfo objectId(String objectId) {
     this.objectId = objectId;
@@ -125,6 +128,24 @@ public class AppInfo {
 
   public void setAppType(String appType) {
     this.appType = appType;
+  }
+
+  public AppInfo appPlatform(String appPlatform) {
+    this.appPlatform = appPlatform;
+    return this;
+  }
+
+   /**
+   * Get appPlatform
+   * @return appPlatform
+  **/
+  @Schema(description = "")
+  public String getAppPlatform() {
+    return appPlatform;
+  }
+
+  public void setAppPlatform(String appPlatform) {
+    this.appPlatform = appPlatform;
   }
 
   public AppInfo publicClient(String publicClient) {
@@ -451,7 +472,7 @@ public class AppInfo {
     this.lastUpdatedBy = lastUpdatedBy;
   }
 
-  public AppInfo lastUpdatedDate(String lastUpdatedDate) {
+  public AppInfo lastUpdatedDate(OffsetDateTime lastUpdatedDate) {
     this.lastUpdatedDate = lastUpdatedDate;
     return this;
   }
@@ -461,11 +482,11 @@ public class AppInfo {
    * @return lastUpdatedDate
   **/
   @Schema(description = "")
-  public String getLastUpdatedDate() {
+  public OffsetDateTime getLastUpdatedDate() {
     return lastUpdatedDate;
   }
 
-  public void setLastUpdatedDate(String lastUpdatedDate) {
+  public void setLastUpdatedDate(OffsetDateTime lastUpdatedDate) {
     this.lastUpdatedDate = lastUpdatedDate;
   }
 
@@ -481,6 +502,7 @@ public class AppInfo {
     AppInfo appInfo = (AppInfo) o;
     return Objects.equals(this.objectId, appInfo.objectId) &&
         Objects.equals(this.appType, appInfo.appType) &&
+        Objects.equals(this.appPlatform, appInfo.appPlatform) &&
         Objects.equals(this.publicClient, appInfo.publicClient) &&
         Objects.equals(this.resourceAppId, appInfo.resourceAppId) &&
         Objects.equals(this.signInAudience, appInfo.signInAudience) &&
@@ -504,7 +526,7 @@ public class AppInfo {
 
   @Override
   public int hashCode() {
-    return Objects.hash(objectId, appType, publicClient, resourceAppId, signInAudience, appName, appId, redirectUri, authority, b2cAuthorities, defaultScopes, identifierUris, homePage, multiTenantApp, appRoles, isAdminConsented, clientSecret, clientCertificate, labName, lastUpdatedBy, lastUpdatedDate);
+    return Objects.hash(objectId, appType, appPlatform, publicClient, resourceAppId, signInAudience, appName, appId, redirectUri, authority, b2cAuthorities, defaultScopes, identifierUris, homePage, multiTenantApp, appRoles, isAdminConsented, clientSecret, clientCertificate, labName, lastUpdatedBy, lastUpdatedDate);
   }
 
 
@@ -515,6 +537,7 @@ public class AppInfo {
     
     sb.append("    objectId: ").append(toIndentedString(objectId)).append("\n");
     sb.append("    appType: ").append(toIndentedString(appType)).append("\n");
+    sb.append("    appPlatform: ").append(toIndentedString(appPlatform)).append("\n");
     sb.append("    publicClient: ").append(toIndentedString(publicClient)).append("\n");
     sb.append("    resourceAppId: ").append(toIndentedString(resourceAppId)).append("\n");
     sb.append("    signInAudience: ").append(toIndentedString(signInAudience)).append("\n");

@@ -53,9 +53,7 @@ import com.microsoft.identity.internal.test.labapi.auth.OAuth;
 
 public class ApiClient {
 
-    private final String AUTH_TYPE = "Access Token";
-
-    private String basePath = "https://msidlab.com";
+    private String basePath = "/";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private String tempFolderPath = null;
@@ -92,9 +90,6 @@ public class ApiClient {
 
         // Setup authentications (key: authentication name, value: authentication).
         authentications = new HashMap<String, Authentication>();
-
-        authentications.put("Access Token", new OAuth());
-
         // Prevent the authentications from being modified.
         authentications = Collections.unmodifiableMap(authentications);
     }
@@ -111,7 +106,7 @@ public class ApiClient {
     /**
      * Set base path
      *
-     * @param basePath Base path of the URL (e.g https://msidlab.com
+     * @param basePath Base path of the URL (e.g /
      * @return An instance of OkHttpClient
      */
     public ApiClient setBasePath(String basePath) {
@@ -947,10 +942,6 @@ public class ApiClient {
      * @throws ApiException If fail to serialize the request body object
      */
     public Call buildCall(String path, String method, List<Pair> queryParams, List<Pair> collectionQueryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String[] authNames, ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
-        if(authNames.length == 0) {
-            authNames = new String[]{AUTH_TYPE};
-        }
-
         Request request = buildRequest(path, method, queryParams, collectionQueryParams, body, headerParams, formParams, authNames, progressRequestListener);
 
         return httpClient.newCall(request);

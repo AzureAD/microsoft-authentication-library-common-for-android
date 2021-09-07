@@ -138,7 +138,7 @@ public class LabUserSecretApi {
      */
     public ApiResponse<SecretResponse> apiLabUserSecretGetWithHttpInfo(String secret) throws ApiException {
         com.squareup.okhttp.Call call = apiLabUserSecretGetValidateBeforeCall(secret, null, null);
-        Type localVarReturnType = TypeToken.get(SecretResponse.class).getType();
+        Type localVarReturnType = new TypeToken<SecretResponse>(){}.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -172,7 +172,7 @@ public class LabUserSecretApi {
         }
 
         com.squareup.okhttp.Call call = apiLabUserSecretGetValidateBeforeCall(secret, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(SecretResponse.class).getType();
+        Type localVarReturnType = new TypeToken<SecretResponse>(){}.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

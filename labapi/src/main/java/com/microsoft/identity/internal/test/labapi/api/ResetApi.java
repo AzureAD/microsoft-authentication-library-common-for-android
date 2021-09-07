@@ -143,7 +143,7 @@ public class ResetApi {
      */
     public ApiResponse<CustomSuccessResponse> apiResetPutWithHttpInfo(String upn, String operation) throws ApiException {
         com.squareup.okhttp.Call call = apiResetPutValidateBeforeCall(upn, operation, null, null);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = new TypeToken<CustomSuccessResponse>(){}.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -178,7 +178,7 @@ public class ResetApi {
         }
 
         com.squareup.okhttp.Call call = apiResetPutValidateBeforeCall(upn, operation, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = new TypeToken<CustomSuccessResponse>(){}.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

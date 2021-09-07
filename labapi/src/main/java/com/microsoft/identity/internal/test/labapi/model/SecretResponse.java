@@ -25,7 +25,7 @@ import java.io.IOException;
  * SecretResponse
  */
 @Schema(description = "SecretResponse")
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-09-03T13:06:09.180-05:00[America/Chicago]")
 public class SecretResponse {
   @SerializedName("secret")
   private String secret = null;
@@ -39,10 +39,10 @@ public class SecretResponse {
   }
 
    /**
-   * Get secret
+   * secret
    * @return secret
   **/
-  @Schema(description = "")
+  @Schema(description = "secret")
   public String getSecret() {
     return secret;
   }
@@ -57,10 +57,10 @@ public class SecretResponse {
   }
 
    /**
-   * Get value
+   * value
    * @return value
   **/
-  @Schema(description = "")
+  @Schema(description = "value")
   public String getValue() {
     return value;
   }
