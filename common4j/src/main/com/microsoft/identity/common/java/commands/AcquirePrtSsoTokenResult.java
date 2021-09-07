@@ -1,6 +1,4 @@
-package com.microsoft.identity.common.internal.commands;
-
-import android.accounts.Account;
+package com.microsoft.identity.common.java.commands;
 
 import com.google.gson.annotations.SerializedName;
 

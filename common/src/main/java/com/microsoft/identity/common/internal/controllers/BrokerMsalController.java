@@ -54,7 +54,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.PropertyBagUtil;
-import com.microsoft.identity.common.internal.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
