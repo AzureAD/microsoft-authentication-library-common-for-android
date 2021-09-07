@@ -66,7 +66,7 @@ public class CommandResult<T> implements ICommandResult<T> {
         mStatus = status;
         mResult = result;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
-        mResultClass = (Class<T>) (result == null ? Void.class : result.getClass());
+        mResultClass = ((Class<T>) result.getClass());
     }
 
     private CommandResult(final @NonNull ResultStatus status, @Nullable String correlationId) {

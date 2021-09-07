@@ -488,12 +488,13 @@ public class CommandDispatcher {
             } else if (result instanceof VoidResult) {
                 commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
                         command.getParameters().getCorrelationId());
+            } else if (result == null) {
+                commandResult = CommandResult.ofNull(CommandResult.ResultStatus.COMPLETED, correlationId);
             } else {
                 //For commands that don't return an AcquireTokenResult
                 commandResult = new CommandResult<>(CommandResult.ResultStatus.COMPLETED, result,
                         correlationId);
             }
-
         }
 
         return commandResult;
@@ -576,9 +577,11 @@ public class CommandDispatcher {
             //Get MsalException from Authorization and/or Token Error Response
             final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
             if (baseException instanceof UserCancelException) {
-                return new CommandResult<Void>(CommandResult.ResultStatus.CANCEL, null, correlationId);
-            } else {
+                return CommandResult.ofNull(CommandResult.ResultStatus.CANCEL, correlationId);
+            } else if (baseException != null) {
                 return new CommandResult<>(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+            } else {
+                return CommandResult.ofNull(CommandResult.ResultStatus.ERROR, correlationId);
             }
         }
     }
