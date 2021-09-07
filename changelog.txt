@@ -55,6 +55,7 @@ V.Next
 - [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
 - [MINOR] Add more operation names to ArgumentException (#1553)
 - [MINOR] Add msal linux sdk type (#1554)
+- [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 
 Version 3.6.0
 ----------
