@@ -131,6 +131,18 @@ public class BrokerMsalController extends BaseController {
 
     private final Context mApplicationContext;
 
+    public BrokerMsalController(@NonNull final Context applicationContext, @NonNull final IPlatformComponents components) {
+        mComponents = components;
+        mApplicationContext = applicationContext;
+        mActiveBrokerPackageName = getActiveBrokerPackageName();
+        if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
+            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
+        }
+
+        mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
+        mHelloCache = getHelloCache();
+    }
+
     public BrokerMsalController(@NonNull final Context applicationContext) {
         mComponents = AndroidPlatformComponents.createFromContext(applicationContext);
         mApplicationContext = applicationContext;
@@ -158,7 +170,8 @@ public class BrokerMsalController extends BaseController {
      * Gets a list of communication strategies.
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
-    private static @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
                                                                 final String activeBrokerPackageName) {
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);

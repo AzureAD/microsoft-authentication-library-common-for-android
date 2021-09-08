@@ -58,10 +58,17 @@ public class CommandResult<T> implements ICommandResult<T> {
     @Accessors(prefix = "m")
     private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
 
+    @Deprecated
     public CommandResult(ResultStatus status, T result) {
         this(status, result, null);
     }
 
+    /**
+     * Construct a command result with the corresponding status, and correlation id.
+     * @param status the ResultStatus of the command.
+     * @param result the command result, may <strong>NOT</strong> be null.
+     * @param correlationId an optional correlation Id for the command.
+     */
     public CommandResult(final @NonNull ResultStatus status, final @NonNull T result, @Nullable String correlationId) {
         mStatus = status;
         mResult = result;
@@ -69,6 +76,11 @@ public class CommandResult<T> implements ICommandResult<T> {
         mResultClass = ((Class<T>) result.getClass());
     }
 
+    /**
+     * Construct a command that does not contain a result object.
+     * @param status the result status.
+     * @param correlationId an optional correlation id.
+     */
     private CommandResult(final @NonNull ResultStatus status, @Nullable String correlationId) {
         mStatus = status;
         mResult = null;
@@ -76,7 +88,19 @@ public class CommandResult<T> implements ICommandResult<T> {
         mResultClass = (Class<T>) Void.class;
     }
 
-    public static CommandResult<Void> ofNull(ResultStatus status, @Nullable String correlationId) {
+    public static CommandResult<Void> ofNull(final @NonNull ResultStatus status, final @Nullable String correlationId) {
         return new CommandResult<Void>(status, correlationId);
+    }
+
+    /**
+     * A factory method for constructing command results.
+     * @param status the result status.
+     * @param result the result of the command.
+     * @param correlationId an optional correlation id.
+     * @param <T> the type of the result.
+     * @return a commandResult object containing the above values.
+     */
+    public static <T> CommandResult<T> of(final @NonNull ResultStatus status, final @NonNull T result, final @Nullable String correlationId) {
+        return new CommandResult<T>(status, result, correlationId);
     }
 }
