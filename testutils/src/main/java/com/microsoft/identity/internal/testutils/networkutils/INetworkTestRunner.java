@@ -20,24 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-
 package com.microsoft.identity.internal.testutils.networkutils;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import com.microsoft.identity.common.java.util.ResultFuture;
 
 /**
- * Used to define the state of the network during a test run by defining the networkInterface
- * being used by the device, and for how long it will be active. The {@link NetworkTestingManager}
- * builds a list of these objects to define the changing network state during a test run.
+ * Allows running of a test under specific network conditions. The results of the test run SHOULD
+ * be passed to resultFuture for analysis.
+ *
+ * @param <T>
  */
-@Builder
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
-public class NetworkTestState {
-    private NetworkTestConstants.InterfaceType interfaceType;
-    private int time;
+public interface INetworkTestRunner<T> {
+    void runTest(ResultFuture<T> resultFuture);
 }
