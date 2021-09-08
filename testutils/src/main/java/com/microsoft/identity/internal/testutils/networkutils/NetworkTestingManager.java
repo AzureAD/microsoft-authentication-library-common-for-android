@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import lombok.SneakyThrows;
 
@@ -203,8 +204,7 @@ public class NetworkTestingManager {
      * @param nextState the next network state
      */
     public void switchState(@NonNull final NetworkTestState nextState) {
-        changeNetworkState(shellCommandExecutor, NetworkTestConstants.InterfaceType.NONE, true);
-        changeNetworkState(shellCommandExecutor, nextState.getInterfaceType(), true);
+        changeNetworkState(shellCommandExecutor, nextState.getInterfaceType());
 
         Logger.info(TAG, "Switching network state to [" + nextState.getInterfaceType() + "] for " + nextState.getTime() + "s ");
     }
@@ -232,27 +232,12 @@ public class NetworkTestingManager {
      *
      * @param shellCommandExecutor to run a shell command on the device
      * @param interfaceType        a {@link NetworkTestConstants.InterfaceType}
-     * @param active               whether the interfaceType is active or not
      */
     public static void changeNetworkState(
             @NonNull final IShellCommandExecutor shellCommandExecutor,
-            @NonNull final NetworkTestConstants.InterfaceType interfaceType,
-            final boolean active
+            @NonNull final NetworkTestConstants.InterfaceType interfaceType
     ) {
-        switch (interfaceType) {
-            case WIFI:
-                shellCommandExecutor.execute("svc wifi " + (active ? "enable" : "disable"));
-                break;
-            case CELLULAR:
-                shellCommandExecutor.execute("svc data " + (active ? "enable" : "disable"));
-                break;
-            case WIFI_AND_CELLULAR:
-                changeNetworkState(shellCommandExecutor, NetworkTestConstants.InterfaceType.WIFI, active);
-                changeNetworkState(shellCommandExecutor, NetworkTestConstants.InterfaceType.CELLULAR, active);
-                break;
-            case NONE:
-                changeNetworkState(shellCommandExecutor, NetworkTestConstants.InterfaceType.WIFI_AND_CELLULAR, !active);
-                break;
-        }
+        shellCommandExecutor.execute("svc wifi " + (interfaceType.wifiActive() ? "enable" : "disable"));
+        shellCommandExecutor.execute("svc data " + (interfaceType.cellularActive() ? "enable" : "disable"));
     }
 }

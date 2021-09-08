@@ -63,7 +63,7 @@ public class NetworkTestResult {
         final String testId = "Test [" + this.id + "]";
         long timeTaken;
         try {
-            T result = resultFuture.get();
+            final T result = resultFuture.get();
 
             timeTaken = Math.round((System.currentTimeMillis() - startTime) / 1000.0);
 
