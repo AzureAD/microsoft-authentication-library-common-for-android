@@ -22,8 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.exception;
 
-import com.microsoft.identity.common.java.exception.BaseException;
-
 public class ArgumentException extends BaseException {
 
     public static final String sName =  ArgumentException.class.getName();
@@ -32,6 +30,10 @@ public class ArgumentException extends BaseException {
     public final static String ACQUIRE_TOKEN_OPERATION_NAME = "acquireToken";
     public final static String ACQUIRE_TOKEN_SILENT_OPERATION_NAME = "acquireTokenSilent";
     public final static String BROKER_TOKEN_REQUEST_OPERATION_NAME = "brokerTokenRequest";
+    public final static String GET_ACCOUNTS_OPERATION_NAME = "getAllAccounts";
+    public final static String REMOVE_ACCOUNT_OPERATION_NAME = "removeAccount";
+    public final static String GENERATE_SHR_OPERATION_NAME = "generateShr";
+    public final static String ACQUIRE_PRT_SSO_COOKIE_OPERATION_NAME = "acquirePrtSsoCookie";
 
     public final static String SCOPE_ARGUMENT_NAME = "scopes";
     public final static String AUTHORITY_ARGUMENT_NAME = "authority";
