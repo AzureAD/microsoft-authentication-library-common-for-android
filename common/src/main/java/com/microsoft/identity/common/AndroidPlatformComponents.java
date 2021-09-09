@@ -29,6 +29,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.NO_SU
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.SharedPreferences;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -57,6 +58,7 @@ import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
 import com.microsoft.identity.common.java.util.ClockSkewManager;
 import com.microsoft.identity.common.java.util.IClockSkewManager;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.java.strategies.IAuthorizationStrategyFactory;
 
@@ -64,6 +66,8 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
+import java.util.Iterator;
+import java.util.Map;
 
 import lombok.NonNull;
 
@@ -240,6 +244,64 @@ public class AndroidPlatformComponents implements IPlatformComponents {
     @Override
     public IMultiTypeNameValueStorage getFileStore(final @NonNull String storeName) {
         return SharedPreferencesFileManager.getSharedPreferences(mContext, storeName, null);
+    }
+
+    @Override
+    public INameValueStorage<String> getMultiProcessStringStore(final @NonNull String storeName) {
+        final SharedPreferences sharedPreferences = mContext.getSharedPreferences(storeName, Context.MODE_MULTI_PROCESS);
+        return new SharedPrefStringNameValueStorage(new IMultiTypeNameValueStorage() {
+            @Override
+            public void putString(String key, String value) {
+                sharedPreferences.edit().putString(key, value);
+            }
+
+            @Override
+            public String getString(String key) {
+                return sharedPreferences.getString(key, null);
+            }
+
+            @Override
+            public void putLong(String key, long value) {
+                sharedPreferences.edit().putString(key, Long.toString(value));
+            }
+
+            @Override
+            public long getLong(String key) {
+                try {
+                    if (!sharedPreferences.contains(key)) {
+                        return 0;
+                    }
+                    return Long.parseLong(sharedPreferences.getString(key, "0"));
+                } catch (final NumberFormatException nfe) {
+                    return 0;
+                }
+            }
+
+            @Override
+            public Map<String, String> getAll() {
+                return (Map<String, String>) sharedPreferences.getAll();
+            }
+
+            @Override
+            public Iterator<Map.Entry<String, String>> getAllFilteredByKey(Predicate<String> keyFilter) {
+                return null;
+            }
+
+            @Override
+            public boolean contains(String key) {
+                return sharedPreferences.contains(key);
+            }
+
+            @Override
+            public void clear() {
+                sharedPreferences.edit().clear().commit();
+            }
+
+            @Override
+            public void remove(String key) {
+                sharedPreferences.edit().remove(key).commit();
+            }
+        });
     }
 
     @SuppressWarnings(WarningType.rawtype_warning)
