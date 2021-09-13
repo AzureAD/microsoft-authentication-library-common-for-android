@@ -42,8 +42,6 @@ public final class BrokerAccountDataName {
 
     public static final String PRT_ID_TOKEN = "workplaceJoin.key.prt.idtoken.key";
 
-    public static final String ENCODED_SESSION_KEY = "workplaceJoin.key.session.key";
-
     public static final String EMAIL = "workplaceJoin.key.email";
 
     /**

@@ -72,6 +72,8 @@ public class AuthenticationConstants {
      */
     public static final String HTTPS_PROTOCOL_STRING = "https";
 
+    public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
+
     /**
      * Default scopes for OAuth2.
      */

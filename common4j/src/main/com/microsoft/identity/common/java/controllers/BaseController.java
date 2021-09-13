@@ -520,7 +520,7 @@ public abstract class BaseController {
         //Get cacheRecord from cache
         final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
-                String.join(" ", parameters.getScopes()),
+                StringUtil.join(" ", parameters.getScopes()),
                 targetAccount,
                 authScheme
         );
@@ -883,7 +883,8 @@ public abstract class BaseController {
 
     public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
                                                      @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
-        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
+        if (scheme instanceof ITokenAuthenticationSchemeInternal &&
+                !StringUtil.isNullOrEmpty(cacheRecord.getAccessToken().getSecret())) {
             final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
             cacheRecord
                     .getAccessToken()
