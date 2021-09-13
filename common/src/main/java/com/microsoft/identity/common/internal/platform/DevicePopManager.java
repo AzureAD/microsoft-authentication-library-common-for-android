@@ -43,7 +43,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
-import com.microsoft.identity.common.java.crypto.IKeyManager;
+import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -169,7 +169,7 @@ public class DevicePopManager implements IDevicePopManager {
     /**
      * Manager class for interacting with key storage mechanism.
      */
-    private final IKeyManager<KeyStore.PrivateKeyEntry> mKeyManager;
+    private final IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> mKeyManager;
 
     /**
      * The name of the KeyStore to use.
@@ -274,7 +274,7 @@ public class DevicePopManager implements IDevicePopManager {
     }
 
     @Override
-    public IKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+    public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
         return mKeyManager;
     }
 
