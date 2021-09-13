@@ -1,3 +1,7 @@
+Version 3.6.2
+----------
+- [MINOR] Fixing Redirect Uri for Authenticator App, when migrating to MSAL
+
 Version 3.6.1
 ----------
 - [PATCH] Additional API for method to clear the singleton shared preferences cache
