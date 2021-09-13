@@ -21,12 +21,12 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.internal.testutils.networkutils;
+package com.microsoft.identity.client.ui.automation.network;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.internal.testutils.IShellCommandExecutor;
+import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.internal.testutils.kusto.CSVReader;
 
 import java.io.IOException;
@@ -36,9 +36,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
-
-import lombok.SneakyThrows;
 
 /**
  * This stores a list of {@link NetworkTestState} that define the different states of the network
@@ -48,6 +45,18 @@ public class NetworkTestingManager {
 
 
     private final String TAG = NetworkTestingManager.class.getSimpleName();
+
+    private static NetworkTestConstants.InterfaceType currentInterface = null;
+
+
+    /**
+     * Returns the {@link NetworkTestConstants.InterfaceType} that is currently applied.
+     *
+     * @return the {@link NetworkTestConstants.InterfaceType} that is currently applied to the device.
+     */
+    public static NetworkTestConstants.InterfaceType getCurrentInterface() {
+        return currentInterface;
+    }
 
 
     /**
@@ -71,7 +80,6 @@ public class NetworkTestingManager {
      */
     public static List<NetworkTestingManager> readCSVFile(
             @NonNull final Class<?> testClass,
-            @NonNull IShellCommandExecutor shellCommandExecutor,
             @NonNull final String inputFile,
             @NonNull final String expectedResultFile
     ) throws ClassNotFoundException, IOException {
@@ -85,7 +93,7 @@ public class NetworkTestingManager {
         }
 
         for (int i = 0; i < input.size(); i++) {
-            final NetworkTestingManager networkTestingManager = new NetworkTestingManager(shellCommandExecutor);
+            final NetworkTestingManager networkTestingManager = new NetworkTestingManager();
 
             networkTestingManager.parseNetworkStates(input.get(i), expectedResult.get(i));
 
@@ -107,12 +115,10 @@ public class NetworkTestingManager {
     }
 
     private List<NetworkTestState> states;
-    private final IShellCommandExecutor shellCommandExecutor;
     private String id;
     private NetworkTestResult testResult;
 
-    public NetworkTestingManager(IShellCommandExecutor shellCommandExecutor) {
-        this.shellCommandExecutor = shellCommandExecutor;
+    public NetworkTestingManager() {
     }
 
     /**
@@ -204,9 +210,9 @@ public class NetworkTestingManager {
      * @param nextState the next network state
      */
     public void switchState(@NonNull final NetworkTestState nextState) {
-        changeNetworkState(shellCommandExecutor, nextState.getInterfaceType());
+        changeNetworkState(nextState.getInterfaceType());
 
-        Logger.info(TAG, "Switching network state to [" + nextState.getInterfaceType() + "] for " + nextState.getTime() + "s ");
+        Logger.i(TAG, "Switching network state to [" + nextState.getInterfaceType() + "] for " + nextState.getTime() + "s ");
     }
 
     /**
@@ -230,14 +236,13 @@ public class NetworkTestingManager {
     /**
      * Changes the state of the network by executing shell commands to turn WIFI and mobile data ON/OFF.
      *
-     * @param shellCommandExecutor to run a shell command on the device
-     * @param interfaceType        a {@link NetworkTestConstants.InterfaceType}
+     * @param interfaceType a {@link NetworkTestConstants.InterfaceType}
      */
     public static void changeNetworkState(
-            @NonNull final IShellCommandExecutor shellCommandExecutor,
             @NonNull final NetworkTestConstants.InterfaceType interfaceType
     ) {
-        shellCommandExecutor.execute("svc wifi " + (interfaceType.wifiActive() ? "enable" : "disable"));
-        shellCommandExecutor.execute("svc data " + (interfaceType.cellularActive() ? "enable" : "disable"));
+        currentInterface = interfaceType;
+        AdbShellUtils.executeShellCommand("svc wifi " + (interfaceType.wifiActive() ? "enable" : "disable"));
+        AdbShellUtils.executeShellCommand("svc data " + (interfaceType.cellularActive() ? "enable" : "disable"));
     }
 }

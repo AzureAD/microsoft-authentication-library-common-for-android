@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 
-package com.microsoft.identity.internal.testutils.networkutils;
+package com.microsoft.identity.client.ui.automation.network;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

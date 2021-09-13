@@ -20,16 +20,16 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.networkutils;
+package com.microsoft.identity.client.ui.automation.network;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.java.util.ResultFuture;
+
+import com.microsoft.identity.client.ui.automation.sdk.ResultFuture;
 
 import org.junit.Assert;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 import lombok.AllArgsConstructor;
@@ -49,35 +49,31 @@ public class NetworkTestResult {
     private String id;
     // Whether the test should pass or fail
     private boolean passed;
-    // For how long should the test run. (in seconds)
-    private int time;
     // A regex for the expected result string representation
     private Pattern resultRegex;
-    // The expected exception class
-    private Class<?> exceptionClass;
-    // The expected exception message
-    private String exceptionMessage;
 
 
-    public <T> void verifyResult(ResultFuture<T> resultFuture, long startTime) {
+    public void verifyResult(ResultFuture<String, Exception> resultFuture) {
         final String testId = "Test [" + this.id + "]";
-        long timeTaken;
+        String result;
+
+        boolean testPassed = false;
+
         try {
-            final T result = resultFuture.get();
-
-            timeTaken = Math.round((System.currentTimeMillis() - startTime) / 1000.0);
-
-            Assert.assertTrue(testId, this.resultRegex.matcher(String.valueOf(result)).find());
-            Assert.assertTrue(testId + " passed but it should have failed.", this.passed);
-
+            result = resultFuture.get();
+            testPassed = true;
         } catch (Exception ex) {
-            timeTaken = Math.round((System.currentTimeMillis() - startTime) / 1000.0);
+            result = ex.getMessage();
+        }
 
-            Assert.assertEquals(testId, this.exceptionMessage, ex.getMessage());
-            Assert.assertEquals(testId, this.exceptionClass.getName(), ex.getCause().getClass().getName());
+
+        Assert.assertTrue(String.format("%s: %s does not match %s", testId, result, resultRegex.pattern()), String.valueOf(result).matches(resultRegex.pattern()));
+
+        if (testPassed) {
+            Assert.assertTrue(testId + " passed but it should have failed.", this.passed);
+        } else {
             Assert.assertFalse(String.format("%s failed but it should have passed.", testId), this.passed);
         }
-        Assert.assertEquals(testId, this.time, timeTaken);
     }
 
 
@@ -85,14 +81,14 @@ public class NetworkTestResult {
      * Parses an input string to create a {@link NetworkTestResult} object.
      *
      * @param input a list representing an expected test result.
-     *              Example: <b>TEST1,Fail,1,java.lang.RuntimeException,An error occurred</b>
+     *              Example: <b>TEST1,Fail,1,An error occurred</b>
      * @return an object representing a network test failure
      * @throws ClassNotFoundException if the test failure exception class does not exist
      */
     public static NetworkTestResult fromInput(final @NonNull List<String> input) throws ClassNotFoundException {
         final NetworkTestResult networkTestResult = new NetworkTestResult();
 
-        if (input.size() < 4) {
+        if (input.size() < 3) {
             throw new IllegalArgumentException("Invalid test result input string: " + input);
         }
 
@@ -103,17 +99,8 @@ public class NetworkTestResult {
         }
 
         networkTestResult.setPassed(input.get(1).equalsIgnoreCase("Pass"));
-        networkTestResult.setTime(Integer.parseInt(input.get(2)));
+        networkTestResult.setResultRegex(Pattern.compile(input.get(2)));
 
-        if (networkTestResult.isPassed()) {
-            networkTestResult.setResultRegex(Pattern.compile(input.get(3)));
-        } else {
-            if (input.size() < 5) {
-                throw new IllegalArgumentException("Invalid test result input string: " + input);
-            }
-            networkTestResult.setExceptionMessage(input.get(3));
-            networkTestResult.setExceptionClass(Class.forName(input.get(4)));
-        }
         return networkTestResult;
     }
 }

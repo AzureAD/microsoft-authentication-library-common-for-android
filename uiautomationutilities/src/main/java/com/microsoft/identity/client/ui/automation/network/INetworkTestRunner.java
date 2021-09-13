@@ -20,16 +20,14 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.networkutils;
+package com.microsoft.identity.client.ui.automation.network;
 
-import com.microsoft.identity.common.java.util.ResultFuture;
+import com.microsoft.identity.client.ui.automation.sdk.ResultFuture;
 
 /**
  * Allows running of a test under specific network conditions. The results of the test run SHOULD
  * be passed to resultFuture for analysis.
- *
- * @param <T>
  */
-public interface INetworkTestRunner<T> {
-    void runTest(ResultFuture<T> resultFuture);
+public interface INetworkTestRunner {
+    void runTest(ResultFuture<String, Exception> resultFuture);
 }
