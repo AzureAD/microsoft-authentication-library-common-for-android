@@ -102,6 +102,10 @@ public interface IPlatformComponents {
      */
     IMultiTypeNameValueStorage getFileStore(String storeName);
 
+    /**
+     * @param storeName the name of the string store to use.
+     * @return A INameValueStorage<String> that's safe for multi process use.
+     */
     INameValueStorage<String> getMultiProcessStringStore(@NonNull String storeName);
 
     /**
