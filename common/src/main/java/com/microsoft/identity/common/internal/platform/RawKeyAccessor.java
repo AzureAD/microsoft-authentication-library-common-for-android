@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SP800108KeyGen;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;

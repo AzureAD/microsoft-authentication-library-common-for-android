@@ -37,7 +37,7 @@ import java.util.Date;
  * metadata that can be retrieved from the underlying storage mechanism of whatever variety.
  * @param <K> the type of KeyStore entry being managed.
  */
-public interface IKeyManager<K extends KeyStore.Entry> {
+public interface IAndroidKeyStoreKeyManager<K extends KeyStore.Entry> {
     /**
      * @return true if the key that is being managed exists.
      */
