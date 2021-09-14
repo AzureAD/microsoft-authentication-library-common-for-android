@@ -25,7 +25,7 @@ package com.microsoft.identity.common.internal.platform;
 import android.os.Build;
 import android.security.keystore.KeyInfo;
 
-import com.microsoft.identity.common.java.crypto.IKeyManager;
+import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.Supplier;
@@ -61,7 +61,7 @@ import static com.microsoft.identity.common.java.exception.ClientException.UNKNO
  * @param <K> the type of KeyStore.Entry being managed.
  */
 @Accessors(prefix = "m")
-public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K> {
+public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeyStoreKeyManager<K> {
 
     private static final String TAG = DeviceKeyManager.class.getSimpleName();
     private final KeyStore mKeyStore;

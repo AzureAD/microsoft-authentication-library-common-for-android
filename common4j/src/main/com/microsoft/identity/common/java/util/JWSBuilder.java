@@ -27,19 +27,16 @@ import static com.microsoft.identity.common.java.AuthenticationConstants.ENCODIN
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import com.microsoft.identity.common.java.crypto.ISigner;
+import com.microsoft.identity.common.java.crypto.BasicSigner;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.logging.Logger;
 
-import java.io.UnsupportedEncodingException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.Signature;
-import java.security.SignatureException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
 
 import cz.msebera.android.httpclient.extras.Base64;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -56,11 +53,13 @@ public class JWSBuilder {
     private static final String JWS_HEADER_ALG = "RS256";
 
     /**
-     * Algorithm name in this provider.
+     * Algorithm name for signing.
      */
-    private static final String JWS_ALGORITHM = "SHA256withRSA";
+    private static final String SIGNING_ALGORITHM = "SHA256withRSA";
 
     private static final String TAG = "JWSBuilder";
+
+    private static final ISigner sSigner = new BasicSigner();
 
     /**
      * Payload for JWS.
@@ -109,8 +108,8 @@ public class JWSBuilder {
     /**
      * Generate the signed JWT.
      */
-    public String generateSignedJWT(String nonce, String audience, RSAPrivateKey privateKey,
-                                    RSAPublicKey pubKey, X509Certificate cert) throws ClientException {
+    public String generateSignedJWT(String nonce, String audience, PrivateKey privateKey,
+                                    PublicKey pubKey, X509Certificate cert) throws ClientException {
         // http://tools.ietf.org/html/draft-ietf-jose-json-web-signature-25
         // In the JWS Compact Serialization, a JWS object is represented as the
         // combination of these three string values,
@@ -166,37 +165,12 @@ public class JWSBuilder {
             signingInput = StringUtil.encodeUrlSafeString(headerJsonString)
                     + "."
                     + StringUtil.encodeUrlSafeString(claimsJsonString);
-            signature = sign(privateKey, signingInput.getBytes(ENCODING_UTF8));
+            signature = StringUtil.encodeUrlSafeString(
+                    sSigner.sign(privateKey, SIGNING_ALGORITHM, signingInput.getBytes(ENCODING_UTF8)));
         } catch (final CertificateEncodingException e) {
             throw new ClientException(ErrorStrings.CERTIFICATE_ENCODING_ERROR,
                     "Certificate encoding error", e);
         }
         return signingInput + "." + signature;
-    }
-
-    /**
-     * Signs the input with the private key.
-     *
-     * @param privateKey the key to sign input with
-     * @param input      the data that needs to be signed
-     * @return String signed string
-     */
-    private static String sign(RSAPrivateKey privateKey, final byte[] input) throws ClientException {
-        final Signature signer;
-        try {
-            signer = Signature.getInstance(JWS_ALGORITHM);
-            signer.initSign(privateKey);
-            signer.update(input);
-            return StringUtil.encodeUrlSafeString(signer.sign());
-        } catch (InvalidKeyException e) {
-            throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION,
-                    "Invalid private RSA key: " + e.getMessage(), e);
-        } catch (SignatureException e) {
-            throw new ClientException(ErrorStrings.SIGNATURE_EXCEPTION,
-                    "RSA signature exception: " + e.getMessage(), e);
-        } catch (NoSuchAlgorithmException e) {
-            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM,
-                    "Unsupported RSA algorithm: " + e.getMessage(), e);
-        }
     }
 }
