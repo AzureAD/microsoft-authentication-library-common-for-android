@@ -73,7 +73,9 @@ public class CommandResult<T> implements ICommandResult<T> {
         mStatus = status;
         mResult = result;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
-        mResultClass = ((Class<T>) result.getClass());
+        @SuppressWarnings("unchecked")
+        final Class<T> aClass = (Class<T>) result.getClass();
+        mResultClass = aClass;
     }
 
     /**
@@ -85,7 +87,8 @@ public class CommandResult<T> implements ICommandResult<T> {
         mStatus = status;
         mResult = null;
         mCorrelationId = correlationId == null ? "UNSET" : correlationId;
-        mResultClass = (Class<T>) Void.class;
+        final Class<T> aClass = (Class<T>) Void.class;
+        this.mResultClass = aClass;
     }
 
     public static CommandResult<Void> ofNull(final @NonNull ResultStatus status, final @Nullable String correlationId) {

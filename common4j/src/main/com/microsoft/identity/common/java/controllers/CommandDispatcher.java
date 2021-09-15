@@ -266,7 +266,7 @@ public class CommandDispatcher {
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                        CommandResult commandResult = null;
+                        CommandResult<?> commandResult = null;
 
                         //Log operation parameters
                         if (command.getParameters() instanceof SilentTokenCommandParameters) {
@@ -457,7 +457,7 @@ public class CommandDispatcher {
 
         Object result = null;
         BaseException baseException = null;
-        CommandResult commandResult = null;
+        CommandResult<?> commandResult = null;
 
         try {
             //Try executing request

@@ -299,9 +299,10 @@ public class SettablePlatformComponents implements IPlatformComponents {
 
     @Override
     public synchronized <T> INameValueStorage<T> getNameValueStore(String storeName, Class<T> clazz) {
+        @SuppressWarnings("unchecked")
         INameValueStorage<T> ret = (INameValueStorage<T>) mStores.get(storeName);
         if (ret == null) {
-            mStores.put(storeName, new InMemoryStorage<>());
+            mStores.put(storeName, new InMemoryStorage<T>());
             ret = (INameValueStorage<T>) mStores.get(storeName);
         }
         return ret;
@@ -311,6 +312,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
 
     @Override
     public <T> INameValueStorage<T> getEncryptedNameValueStore(String storeName, IKeyAccessor helper, Class<T> clazz) {
+        @SuppressWarnings("unchecked")
         INameValueStorage<T> ret = (INameValueStorage<T>) mEncryptedStores.get(storeName);
         if (ret == null) {
             mEncryptedStores.put(storeName, new InMemoryStorage<>());
