@@ -36,6 +36,7 @@ import com.microsoft.identity.common.java.util.StringUtil;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.security.PrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.util.HashMap;
 import java.util.List;
@@ -174,7 +175,7 @@ public class PKeyAuthChallenge implements Serializable {
             IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
             if (deviceCertProxy.isValidIssuer(mCertAuthorities)
                     || StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), mThumbprint)) {
-                RSAPrivateKey privateKey = deviceCertProxy.getRSAPrivateKey();
+                final PrivateKey privateKey = deviceCertProxy.getPrivateKey();
                 if (privateKey == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
                 }
@@ -182,7 +183,7 @@ public class PKeyAuthChallenge implements Serializable {
                         mNonce,
                         mSubmitUrl,
                         privateKey,
-                        deviceCertProxy.getRSAPublicKey(),
+                        deviceCertProxy.getPublicKey(),
                         deviceCertProxy.getCertificate());
                 authorizationHeaderValue = String.format(
                         "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",

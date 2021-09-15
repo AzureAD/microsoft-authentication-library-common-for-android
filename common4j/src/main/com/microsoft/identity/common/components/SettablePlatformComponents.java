@@ -27,9 +27,9 @@ import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -195,7 +195,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
         }
 
         @Override
-        public IKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+        public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
             throw new UnsupportedOperationException();
         }
     };
@@ -325,7 +325,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
     public synchronized IMultiTypeNameValueStorage getEncryptedFileStore(String storeName, IKeyAccessor helper) {
         IMultiTypeNameValueStorage ret = mEncryptedFileStores.get(storeName);
         if (ret == null) {
-            mEncryptedFileStores.put(storeName, new MapBackedPreferencesManager(storeName));
+            mEncryptedFileStores.put(storeName, MapBackedPreferencesManager.builder().name(storeName).build());
             ret = (IMultiTypeNameValueStorage) mEncryptedFileStores.get(storeName);
         }
         return ret;
@@ -337,7 +337,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
     public IMultiTypeNameValueStorage getFileStore(String storeName) {
         IMultiTypeNameValueStorage ret = mFileStores.get(storeName);
         if (ret == null) {
-            mFileStores.put(storeName, new MapBackedPreferencesManager(storeName));
+            mFileStores.put(storeName, MapBackedPreferencesManager.builder().name(storeName).build());
             ret = (IMultiTypeNameValueStorage) mFileStores.get(storeName);
         }
         return ret;
