@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -68,6 +69,8 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_A
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PackageUtils {
 
+
+    private static final Pattern HEX_PATTERN = Pattern.compile("([A-Fa-f0-9]{2}:)*[A-Fa-f0-9]{2}");
 
     /**
      * Find all the signatures for packages with a given name.
@@ -146,7 +149,10 @@ public final class PackageUtils {
             hashListStringBuilder.append(',');
 
             while (validHashes.hasNext()) {
-                final String hash = validHashes.next();
+                String hash = validHashes.next();
+                if (HEX_PATTERN.matcher(hash).matches()) {
+                    hash = convertToBase64(hash);
+                }
                 if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
                     return signatureHash;
                 }
@@ -154,6 +160,23 @@ public final class PackageUtils {
         }
 
         throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+    }
+
+    /**
+     * Given a String in colon-separated octet format, convert it to a base64-encoded byte array.
+     * @param hash the string to convert.
+     * @return a byte array containing the base-64-encoded version of the bytes represented by the
+     * string.
+     */
+    static String convertToBase64(String hash) {
+        String[] hexSegments = hash.split(":");
+        byte[] values = new byte[hexSegments.length];
+        int i = 0;
+        for (String hexString : hexSegments) {
+            String segment = hexSegments[i];
+            values[i] = (byte) (Long.parseLong(segment, 16) & 0xff);
+        }
+        return Base64.encodeToString(values, Base64.NO_WRAP);
     }
 
     /**
