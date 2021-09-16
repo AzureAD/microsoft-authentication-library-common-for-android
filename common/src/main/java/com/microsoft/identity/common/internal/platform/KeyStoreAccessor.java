@@ -33,7 +33,7 @@ import androidx.annotation.Nullable;
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IKeyManager;
+import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -121,7 +121,7 @@ public class KeyStoreAccessor {
         return new AsymmetricKeyAccessor() {
 
             @Override
-            public IKeyManager<KeyStore.PrivateKeyEntry> getManager() {
+            public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getManager() {
                 return popManager.getKeyManager();
             }
 

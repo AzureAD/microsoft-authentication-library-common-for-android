@@ -20,54 +20,40 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.challengehandlers;
+package com.microsoft.identity.common.java.crypto;
+
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.List;
+
+import lombok.NonNull;
 
 /**
- * Work place join related certificate is required to respond device challenge.
+ * Interface for a Signer.
  */
-public interface IDeviceCertificate {
+public interface ISigner {
 
     /**
-     * Checks valid issuer for cert authorities.
+     * Signs with a {@link PrivateKey}.
      *
-     * @param certAuthorities list of cert authorities
-     * @return status if valid issue
+     * @param key                  the key to sign.
+     * @param signingAlgorithm     algorithm for signing the data.
+     * @param dataToBeSigned       the data to be signed.
+     * @return signed data.
      */
-    boolean isValidIssuer(final List<String> certAuthorities);
+    byte[] sign(@NonNull final PrivateKey key,
+                @NonNull final String signingAlgorithm,
+                byte[] dataToBeSigned) throws ClientException;
 
     /**
-     * Gets certificate.
+     * Signs with a HMac key.
      *
-     * @return {@link X509Certificate}
+     * @param keyData           the HMac key data.
+     * @param hmacAlgorithm     algorithm for generating key/signing the data.
+     * @param dataToBeSigned    the data to be signed.
+     * @return signed data.
      */
-    X509Certificate getCertificate();
-
-    /**
-     * Gets a private key.
-     *
-     * @return private key
-     */
-    PrivateKey getPrivateKey();
-
-    /**
-     * Gets a public key.
-     *
-     * @return RSA public key.
-     */
-    PublicKey getPublicKey();
-
-    /**
-     * Gets thumbPrint for certificate.
-     *
-     * @return thumbPrint for certificate.
-     */
-    String getThumbPrint();
+    byte[] signWithHMac(final byte[] keyData,
+                        @NonNull final String hmacAlgorithm,
+                        final byte[] dataToBeSigned) throws ClientException;
 }
-

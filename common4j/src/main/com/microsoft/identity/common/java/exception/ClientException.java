@@ -50,6 +50,11 @@ public class ClientException extends BaseException {
     public static final String PKCE_FAILURE = "pkce_failure";
 
     /**
+     * Experienced a failure when attempting to generate PKCS.
+     */
+    public static final String PKCS_FAILURE = "pkcs_failure";
+
+    /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
      * or refresh token from the cache. Likely it's a bug in the sdk when caching tokens or authority
      * is not proviced in the silent request and multiple tokens were found.
@@ -112,6 +117,10 @@ public class ClientException extends BaseException {
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
 
     public static final String NO_SUCH_PROVIDER = "no_such_provider";
+
+    public static final String INVALID_KEY_SPEC = "invalid_key_spec";
+
+    public static final String INVALID_CERTIFICATE_REQUEST = "invalid_cert_request";
 
     /**
      * JWT returned by the server is not valid, empty or malformed.
