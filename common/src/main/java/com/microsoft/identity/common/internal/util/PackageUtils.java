@@ -173,8 +173,8 @@ public final class PackageUtils {
         byte[] values = new byte[hexSegments.length];
         int i = 0;
         for (String hexString : hexSegments) {
-            String segment = hexSegments[i];
-            values[i] = (byte) (Long.parseLong(segment, 16) & 0xff);
+            String segment = hexString;
+            values[i++] = (byte) (Long.parseLong(segment, 16) & 0xff);
         }
         return Base64.encodeToString(values, Base64.NO_WRAP);
     }
