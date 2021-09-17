@@ -48,8 +48,10 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
+import com.microsoft.identity.common.java.commands.JsonAccountRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
@@ -79,6 +81,7 @@ import java.util.List;
 public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     private static final String TAG = MsalBrokerRequestAdapter.class.getName();
+    private static final Gson GSON = new Gson();
 
     @Override
     public BrokerRequest brokerRequestFromAcquireTokenParameters(@NonNull final InteractiveTokenCommandParameters parameters) {
@@ -152,7 +155,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
 
     public Bundle getRequestBundleForSsoToken(AcquirePrtSsoTokenCommandParameters parameters, String negotiatedBrokerProtocolVersion) {
         Bundle requestBundle = new Bundle();
-        requestBundle.putString(ACCOUNT_NAME, parameters.getAccountName());
+        requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT, GSON.toJson(JsonAccountRecord.of(parameters.getAccount())));
         if (parameters.getAccountAuthority() != null) {
             requestBundle.putString(ACCOUNT_AUTHORITY, parameters.getAccountAuthority());
         }

@@ -69,7 +69,9 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_A
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PackageUtils {
 
-
+    /**
+     * This pattern should match hexadecimal strings of the form "12:3a:ff" and nothing else.
+     */
     private static final Pattern HEX_PATTERN = Pattern.compile("([A-Fa-f0-9]{2}:)*[A-Fa-f0-9]{2}");
 
     /**

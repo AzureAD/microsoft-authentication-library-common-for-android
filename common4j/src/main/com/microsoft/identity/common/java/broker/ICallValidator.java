@@ -33,7 +33,9 @@ import lombok.NonNull;
  */
 public interface ICallValidator {
     /**
-     * Throws a ClientException if the caller cannot be validated or is unauthorized.
+     * Throws a ClientException if the caller cannot be validated or is unauthorized.  In android,
+     * this will end up taking a map of package name to string of signatures.  In Linux, this is
+     * probably a list of client ids.
      * @param methodName the method name for logging purposes.
      * @param callingUid the identifier for the caller, platform dependent.
      * @param allowedApplications A map of name to iterable of verification string for calling apps.

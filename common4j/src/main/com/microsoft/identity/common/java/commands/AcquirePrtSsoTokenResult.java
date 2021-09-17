@@ -51,7 +51,7 @@ public class AcquirePrtSsoTokenResult {
      *
      */
     @SerializedName("account")
-    private final @Nullable String mAccountName;
+    private final @Nullable JsonAccountRecord mAccount;
     /**
      * Account authority.
      */

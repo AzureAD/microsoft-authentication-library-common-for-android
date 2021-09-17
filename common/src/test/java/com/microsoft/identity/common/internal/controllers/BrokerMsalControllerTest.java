@@ -37,6 +37,7 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
+import com.microsoft.identity.common.java.commands.JsonAccountRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 
 import org.junit.Assert;
@@ -81,7 +82,7 @@ public class BrokerMsalControllerTest {
                             retBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, "7.0");
                         } else if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_SSO_TOKEN)) {
                             AcquirePrtSsoTokenResult result = AcquirePrtSsoTokenResult.builder()
-                                    .accountName(anAccountName)
+                                    .account(JsonAccountRecord.builder().username(anAccountName).build())
                                     .accountAuthority(accountAuthority)
                                     .cookieName("x-ms-RefreshTokenCredential")
                                     .cookieContent(aCookie)
@@ -103,13 +104,13 @@ public class BrokerMsalControllerTest {
         AcquirePrtSsoTokenCommandParameters params = AcquirePrtSsoTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId(aCorrelationId)
-                .accountName(anAccountName)
+                .account(JsonAccountRecord.builder().username(anAccountName).build())
                 .accountAuthority(accountAuthority)
                 .ssoUrl(ssoUrl)
                 .build();
         final AcquirePrtSsoTokenResult ssoTokenResult = controller.getSsoToken(params);
         Assert.assertEquals(accountAuthority, ssoTokenResult.getAccountAuthority());
-        Assert.assertEquals(anAccountName, ssoTokenResult.getAccountName());
+        Assert.assertEquals(anAccountName, ssoTokenResult.getAccount().getUsername());
         Assert.assertEquals(aCookie, ssoTokenResult.getCookieContent());
         Assert.assertEquals("x-ms-RefreshTokenCredential", ssoTokenResult.getCookieName());
     }

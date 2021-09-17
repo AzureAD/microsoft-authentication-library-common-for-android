@@ -22,6 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.commands.parameters;
 
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -45,7 +47,7 @@ public class AcquirePrtSsoTokenCommandParameters extends CommandParameters {
     /**
      * The account name for the token being fetched.
      */
-    private final String mAccountName;
+    private final IAccountRecord mAccount;
     /**
      * The authority for the token being fetched.
      */

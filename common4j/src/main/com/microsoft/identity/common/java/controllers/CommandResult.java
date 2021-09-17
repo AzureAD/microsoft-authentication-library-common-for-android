@@ -35,27 +35,20 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+
+@Getter
+@Accessors(prefix = "m")
 public class CommandResult<T> implements ICommandResult<T> {
 
-    @Getter
-    @Accessors(prefix = "m")
     private final ResultStatus mStatus;
 
-    @Getter
-    @Accessors(prefix = "m")
     private final T mResult;
 
-    @Getter
-    @Accessors(prefix = "m")
     private final String mCorrelationId;
 
-    @Getter
-    @Accessors(prefix = "m")
     private final Class<T> mResultClass;
 
     @Setter
-    @Getter
-    @Accessors(prefix = "m")
     private List<Map<String, String>> mTelemetryMap = new ArrayList<>();
 
     @Deprecated
@@ -99,7 +92,7 @@ public class CommandResult<T> implements ICommandResult<T> {
      * @return A command result with a null result, given the status provided.
      */
     public static CommandResult<Void> ofNull(final @NonNull ResultStatus status, final @Nullable String correlationId) {
-        return new CommandResult<Void>(status, correlationId);
+        return new CommandResult<>(status, correlationId);
     }
 
     /**

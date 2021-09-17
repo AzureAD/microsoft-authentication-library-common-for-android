@@ -131,6 +131,7 @@ public class BrokerMsalController extends BaseController {
 
     private final Context mApplicationContext;
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
     public BrokerMsalController(@NonNull final Context applicationContext, @NonNull final IPlatformComponents components) {
         mComponents = components;
         mApplicationContext = applicationContext;
@@ -914,7 +915,7 @@ public class BrokerMsalController extends BaseController {
             @NonNull
             @Override
             public String getMethodName() {
-                return ":generateSignedHttpRequest";
+                return ":getSsoToken";
             }
 
             @Nullable

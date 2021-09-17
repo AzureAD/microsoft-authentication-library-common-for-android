@@ -597,7 +597,10 @@ public final class AuthenticationConstants {
          * The newest Msal-To-Broker protocol version.
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
-        /**
+
+        public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
+
+         /**
          * The key indicating that this is an ssoUrl parameter in a Bundle.
          */
         public static final String BROKER_SSO_URL_KEY = "ssoUrl";
@@ -804,6 +807,11 @@ public final class AuthenticationConstants {
          * String of key for account name.
          */
         public static final String FLIGHT_INFO = "com.microsoft.identity.broker.flights";
+
+        /**
+         * String with json-formatted account object.
+         */
+        public static final String ACCOUNT = "account.object";
 
         /**
          * String of key for account name.
