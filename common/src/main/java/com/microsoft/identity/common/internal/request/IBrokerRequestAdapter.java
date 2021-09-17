@@ -36,5 +36,4 @@ public interface IBrokerRequestAdapter {
 
     BrokerRequest brokerRequestFromSilentOperationParameters(SilentTokenCommandParameters parameters);
 
-    Bundle getBrokerRequestForSsoToken(AcquirePrtSsoTokenCommandParameters parameters, String negotiatedBrokerProtocolVersion);
 }

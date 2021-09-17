@@ -91,6 +91,13 @@ public class CommandResult<T> implements ICommandResult<T> {
         this.mResultClass = aClass;
     }
 
+    /**
+     * This is a special method for constructing a result with a null value.  This is to insure
+     * that we can have null-checking on the parameters for the other construction methods.
+     * @param status the {@link com.microsoft.identity.common.java.commands.ICommandResult.ResultStatus}.
+     * @param correlationId a correlation id.
+     * @return A command result with a null result, given the status provided.
+     */
     public static CommandResult<Void> ofNull(final @NonNull ResultStatus status, final @Nullable String correlationId) {
         return new CommandResult<Void>(status, correlationId);
     }

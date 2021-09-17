@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.cache;
 
 import com.google.gson.reflect.TypeToken;
+import com.microsoft.identity.common.java.constants.SpotbugsWarning;
 import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
@@ -37,7 +38,7 @@ import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
 
-@SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", justification = "Lombok inserts more null checks than we need")
+@SuppressFBWarnings(value = SpotbugsWarning.RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE, justification = "Lombok inserts more null checks than we need")
 public class NameValueStorageBrokerApplicationMetadataCache
         extends NameValueStorageFileManagerSimpleCacheImpl<BrokerApplicationMetadata>
         implements IBrokerApplicationMetadataCache {

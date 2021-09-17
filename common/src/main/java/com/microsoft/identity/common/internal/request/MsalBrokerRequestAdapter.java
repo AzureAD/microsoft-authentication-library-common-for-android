@@ -150,8 +150,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return brokerRequest;
     }
 
-    @Override
-    public Bundle getBrokerRequestForSsoToken(AcquirePrtSsoTokenCommandParameters parameters, String negotiatedBrokerProtocolVersion) {
+    public Bundle getRequestBundleForSsoToken(AcquirePrtSsoTokenCommandParameters parameters, String negotiatedBrokerProtocolVersion) {
         Bundle requestBundle = new Bundle();
         requestBundle.putString(ACCOUNT_NAME, parameters.getAccountName());
         if (parameters.getAccountAuthority() != null) {

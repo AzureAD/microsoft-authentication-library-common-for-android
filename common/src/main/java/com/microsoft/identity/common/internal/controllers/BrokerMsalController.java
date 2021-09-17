@@ -894,7 +894,7 @@ public class BrokerMsalController extends BaseController {
                 return new BrokerOperationBundle(
                         MSAL_SSO_TOKEN,
                         mActiveBrokerPackageName,
-                        mRequestAdapter.getBrokerRequestForSsoToken(
+                        mRequestAdapter.getRequestBundleForSsoToken(
                                 parameters,
                                 negotiatedBrokerProtocolVersion
                         )

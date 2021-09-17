@@ -168,12 +168,12 @@ public final class PackageUtils {
      * @return a byte array containing the base-64-encoded version of the bytes represented by the
      * string.
      */
-    static String convertToBase64(String hash) {
-        String[] hexSegments = hash.split(":");
-        byte[] values = new byte[hexSegments.length];
+    static String convertToBase64(final @NonNull String hash) {
+        final String[] hexSegments = hash.split(":");
+        final byte[] values = new byte[hexSegments.length];
         int i = 0;
-        for (String hexString : hexSegments) {
-            String segment = hexString;
+        for (final String hexString : hexSegments) {
+            final String segment = hexString;
             values[i++] = (byte) (Long.parseLong(segment, 16) & 0xff);
         }
         return Base64.encodeToString(values, Base64.NO_WRAP);
