@@ -153,7 +153,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         return brokerRequest;
     }
 
-    public Bundle getRequestBundleForSsoToken(AcquirePrtSsoTokenCommandParameters parameters, String negotiatedBrokerProtocolVersion) {
+    public @NonNull Bundle getRequestBundleForSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters,
+                                                       final @NonNull String negotiatedBrokerProtocolVersion) {
         Bundle requestBundle = new Bundle();
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT, GSON.toJson(JsonAccountRecord.of(parameters.getAccount())));
         if (parameters.getAccountAuthority() != null) {
