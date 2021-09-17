@@ -46,28 +46,26 @@ public class AcquirePrtSsoTokenResult {
      */
     @SerializedName("error")
     private final @Nullable String mError;
-    /**
-     * Account name.
-     *
-     */
-    @SerializedName("account")
-    private final @Nullable JsonAccountRecord mAccount;
+
     /**
      * Account authority.
      */
     private final @Nullable String mAccountAuthority;
+
     /**
      * SSO cookie name
      *
      */
     @SerializedName("cookieName")
     private final @Nullable String mCookieName;
+
     /**
      * SSO cookie content
      *
      */
     @SerializedName("ssoToken")
     private final @Nullable String mCookieContent;
+
     /**
      * telemetry data
      *

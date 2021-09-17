@@ -36,58 +36,24 @@ import lombok.experimental.Accessors;
 @Getter
 @Builder
 @Accessors(prefix = "m")
-public class JsonAccountRecord implements IAccountRecord {
+public class JsonAccountInfoRecord {
     @SerializedName("homeAccountId")
     private String mHomeAccountId;
-    @SerializedName("environment")
-    private String mEnvironment;
-    @SerializedName("realm")
-    private String mRealm;
     @SerializedName("localAccountId")
     private String mLocalAccountId;
     @SerializedName("username")
     private String mUsername;
-    @SerializedName("authorityType")
-    private String mAuthorityType;
-    @SerializedName("alternativeAccountId")
-    private String mAlternativeAccountId;
-    @SerializedName("firstName")
-    private String mFirstName;
-    @SerializedName("familyName")
-    private String mFamilyName;
-    @SerializedName("middleName")
-    private String mMiddleName;
-    @SerializedName("name")
-    private String mName;
-    @SerializedName("avatarUrl")
-    private String mAvatarUrl;
-    @SerializedName("clientInfo")
-    private String mClientInfo;
 
     /**
      * Provide a translation to JsonAccountRecord for any IAccountRecord class.
      * @param record
      * @return
      */
-    public static JsonAccountRecord of(final @NonNull IAccountRecord record) {
-        // Don't make useless copies if we're sloppy.
-        if (record instanceof JsonAccountRecord) {
-            return (JsonAccountRecord) record;
-        }
-        return JsonAccountRecord.builder()
+    public static JsonAccountInfoRecord of(final @NonNull IAccountRecord record) {
+        return JsonAccountInfoRecord.builder()
                 .homeAccountId(record.getHomeAccountId())
-                .environment(record.getEnvironment())
-                .realm(record.getRealm())
                 .localAccountId(record.getLocalAccountId())
                 .username(record.getUsername())
-                .authorityType(record.getAuthorityType())
-                .alternativeAccountId(record.getAlternativeAccountId())
-                .firstName(record.getFirstName())
-                .familyName(record.getFamilyName())
-                .middleName(record.getMiddleName())
-                .name(record.getName())
-                .avatarUrl(record.getAvatarUrl())
-                .clientInfo(record.getClientInfo())
         .build();
     }
 }

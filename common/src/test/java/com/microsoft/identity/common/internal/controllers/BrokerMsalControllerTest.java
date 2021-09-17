@@ -37,7 +37,7 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
-import com.microsoft.identity.common.java.commands.JsonAccountRecord;
+import com.microsoft.identity.common.java.commands.JsonAccountInfoRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 
 import org.junit.Assert;
@@ -82,7 +82,7 @@ public class BrokerMsalControllerTest {
                             retBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, "7.0");
                         } else if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_SSO_TOKEN)) {
                             AcquirePrtSsoTokenResult result = AcquirePrtSsoTokenResult.builder()
-                                    .account(JsonAccountRecord.builder().username(anAccountName).build())
+                                    .account(JsonAccountInfoRecord.builder().username(anAccountName).build())
                                     .accountAuthority(accountAuthority)
                                     .cookieName("x-ms-RefreshTokenCredential")
                                     .cookieContent(aCookie)
@@ -104,7 +104,7 @@ public class BrokerMsalControllerTest {
         AcquirePrtSsoTokenCommandParameters params = AcquirePrtSsoTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId(aCorrelationId)
-                .account(JsonAccountRecord.builder().username(anAccountName).build())
+                .account(JsonAccountInfoRecord.builder().username(anAccountName).build())
                 .accountAuthority(accountAuthority)
                 .ssoUrl(ssoUrl)
                 .build();

@@ -22,17 +22,14 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_ACCESS_TOKEN;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_AUTHORITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_REDIRECT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.AUTH_SCHEME_PARAMS_POP;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_REQUEST_V2_COMPRESSED;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_SSO_URL_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CALLER_INFO_UID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_ADVERTISED_MAXIMUM_BP_VERSION_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.CLIENT_CONFIGURED_MINIMUM_BP_VERSION_KEY;
@@ -51,7 +48,7 @@ import androidx.annotation.Nullable;
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.java.commands.JsonAccountRecord;
+import com.microsoft.identity.common.java.commands.JsonAccountInfoRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
@@ -156,7 +153,7 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
     public @NonNull Bundle getRequestBundleForSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters,
                                                        final @NonNull String negotiatedBrokerProtocolVersion) {
         Bundle requestBundle = new Bundle();
-        requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT, GSON.toJson(JsonAccountRecord.of(parameters.getAccount())));
+        requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT, GSON.toJson(JsonAccountInfoRecord.of(parameters.getAccount())));
         if (parameters.getAccountAuthority() != null) {
             requestBundle.putString(ACCOUNT_AUTHORITY, parameters.getAccountAuthority());
         }
