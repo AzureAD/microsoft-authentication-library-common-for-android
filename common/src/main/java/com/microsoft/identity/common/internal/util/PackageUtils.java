@@ -152,6 +152,11 @@ public final class PackageUtils {
 
             while (validHashes.hasNext()) {
                 String hash = validHashes.next();
+                // We're accepting these from our configuration in one of two formats:
+                // * base64-encoded bytes
+                // * hexadecimal strings (ab:cd:34)
+                // This is done to ease the confusion on us when we need to accept a hash
+                // from a user who has it in the hex format.
                 if (HEX_PATTERN.matcher(hash).matches()) {
                     hash = convertToBase64(hash);
                 }
