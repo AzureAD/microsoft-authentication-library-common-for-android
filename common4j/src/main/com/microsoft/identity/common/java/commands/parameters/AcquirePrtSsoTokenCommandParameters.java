@@ -41,13 +41,22 @@ import lombok.experimental.SuperBuilder;
 @Accessors(prefix = "m")
 public class AcquirePrtSsoTokenCommandParameters extends CommandParameters {
     /**
+     * The home account id.
+     */
+    private final String mHomeAccountId;
+    /**
+     * The local account id.
+     */
+    private final String mLocalAccountId;
+    /**
+     * The account name.
+     */
+    private final String mAccountName;
+    /**
      * The sso url parameter for the token being fetched.
      */
     private final String mSsoUrl;
-    /**
-     * The account name for the token being fetched.
-     */
-    private final IAccountRecord mAccount;
+
     /**
      * The authority for the token being fetched.
      */

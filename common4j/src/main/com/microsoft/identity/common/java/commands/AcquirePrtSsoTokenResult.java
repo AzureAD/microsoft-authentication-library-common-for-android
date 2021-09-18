@@ -41,6 +41,21 @@ import lombok.experimental.Accessors;
 public class AcquirePrtSsoTokenResult {
 
     /**
+     * The home account id.
+     */
+    @SerializedName("homeAccountId")
+    private final String mHomeAccountId;
+    /**
+     * The local account id.
+     */
+    @SerializedName("localAccountId")
+    private final String mLocalAccountId;
+    /**
+     * The account name.
+     */
+    @SerializedName("accountName")
+    private final String mAccountName;
+    /**
      * Object holding auth error information
      *
      */
@@ -50,6 +65,7 @@ public class AcquirePrtSsoTokenResult {
     /**
      * Account authority.
      */
+    @SerializedName("accountAuthority")
     private final @Nullable String mAccountAuthority;
 
     /**

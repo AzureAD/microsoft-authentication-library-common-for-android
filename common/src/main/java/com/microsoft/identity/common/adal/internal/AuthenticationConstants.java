@@ -819,7 +819,12 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
-         * String of key for account name.
+         * String of key for local account id.
+         */
+        public static final String ACCOUNT_LOCAL_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_LOCAL_ACCOUNT_ID;
+
+        /**
+         * String of key for home account id.
          */
         public static final String ACCOUNT_HOME_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
 

@@ -59,6 +59,8 @@ public class BrokerMsalControllerTest {
     @Test
     public void testPrtSsoToken() throws Exception {
         final String anAccountName = "anAccountName";
+        final String aHomeAccountId = "aHomeAccountId";
+        final String aLocalAccountId = "aLocalAccountId";
         final String aCorrelationId = "aCorrelationId";
         final String accountAuthority = "https://login.microsoft.com/anAuthority";
         final String ssoUrl = "https://a.url.that.we.need/that/has/a/path?one_useless_param&sso_nonce=aNonceToUse&anotherUselessParam=foo";
@@ -82,7 +84,9 @@ public class BrokerMsalControllerTest {
                             retBundle.putString(AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY, "7.0");
                         } else if (bundle.getOperation().equals(BrokerOperationBundle.Operation.MSAL_SSO_TOKEN)) {
                             AcquirePrtSsoTokenResult result = AcquirePrtSsoTokenResult.builder()
-                                    .account(JsonAccountInfoRecord.builder().username(anAccountName).build())
+                                    .accountName(anAccountName)
+                                    .localAccountId(aLocalAccountId)
+                                    .homeAccountId(aHomeAccountId)
                                     .accountAuthority(accountAuthority)
                                     .cookieName("x-ms-RefreshTokenCredential")
                                     .cookieContent(aCookie)
@@ -104,13 +108,15 @@ public class BrokerMsalControllerTest {
         AcquirePrtSsoTokenCommandParameters params = AcquirePrtSsoTokenCommandParameters.builder()
                 .platformComponents(components)
                 .correlationId(aCorrelationId)
-                .account(JsonAccountInfoRecord.builder().username(anAccountName).build())
+                .accountName(anAccountName)
                 .accountAuthority(accountAuthority)
                 .ssoUrl(ssoUrl)
                 .build();
         final AcquirePrtSsoTokenResult ssoTokenResult = controller.getSsoToken(params);
         Assert.assertEquals(accountAuthority, ssoTokenResult.getAccountAuthority());
-        Assert.assertEquals(anAccountName, ssoTokenResult.getAccount().getUsername());
+        Assert.assertEquals(anAccountName, ssoTokenResult.getAccountName());
+        Assert.assertEquals(aHomeAccountId, ssoTokenResult.getHomeAccountId());
+        Assert.assertEquals(aLocalAccountId, ssoTokenResult.getLocalAccountId());
         Assert.assertEquals(aCookie, ssoTokenResult.getCookieContent());
         Assert.assertEquals("x-ms-RefreshTokenCredential", ssoTokenResult.getCookieName());
     }
