@@ -598,6 +598,9 @@ public final class AuthenticationConstants {
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
 
+        /**
+         * A client id for requesting the SSO token.
+         */
         public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
 
          /**
