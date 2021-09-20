@@ -1,5 +1,5 @@
 plugins {
-    id 'com.microsoft.identity.buildsystem' version '0.1.1'
+    id 'com.microsoft.identity.buildsystem' version '0.2.0'
     id 'com.android.library'
     id 'pmd'
     id 'checkstyle'
@@ -39,7 +39,6 @@ android {
             minifyEnabled false
         }
         release {
-            testCoverageEnabled true
             minifyEnabled false
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
