@@ -88,8 +88,8 @@ public final class BrokerActivity extends Activity {
 
     @Override
     protected void onDestroy() {
-        // If result hasn't been received. It means that this activity is prematurely killed.
-        // In this case, we want to properly cancel the activity so that it doesn't block MSAL from making a subsequent interactive call.
+        // If the broker process crashes, onActivityResult() will not be triggered.
+        // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher).
         if (!mBrokerResultReceived) {
             returnsExceptionOnActivityUnexpectedlyKilled();
         }
@@ -151,7 +151,7 @@ public final class BrokerActivity extends Activity {
             LocalBroadcaster.INSTANCE.broadcast(
                     RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
         } else {
-            // This means the broker is unexpectedly killed.
+            // This means the broker is unexpectedly killed. (tested by killing the broker process via adb).
             returnsExceptionOnActivityUnexpectedlyKilled();
         }
 
