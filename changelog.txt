@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
