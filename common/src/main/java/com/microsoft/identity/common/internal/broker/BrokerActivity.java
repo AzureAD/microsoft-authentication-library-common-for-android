@@ -29,14 +29,13 @@ import android.os.Bundle;
 import com.microsoft.identity.common.PropertyBagUtil;
 import com.microsoft.identity.common.internal.result.BrokerResultAdapterFactory;
 import com.microsoft.identity.common.internal.result.IBrokerResultAdapter;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.exception.UserCancelException;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
@@ -92,20 +91,24 @@ public final class BrokerActivity extends Activity {
         // If result hasn't been received. It means that this activity is prematurely killed.
         // In this case, we want to properly cancel the activity so that it doesn't block MSAL from making a subsequent interactive call.
         if (!mBrokerResultReceived) {
-            final IBrokerResultAdapter resultAdapter = BrokerResultAdapterFactory.getBrokerResultAdapter(SdkType.MSAL);
-            final Bundle resultBundle = resultAdapter.bundleFromBaseException(
-                    new UserCancelException(ErrorStrings.USER_CANCELLED,
-                            "Activity is killed by user"), null);
-
-            final PropertyBag propertyBag = PropertyBagUtil.fromBundle(resultBundle);
-            propertyBag.put(REQUEST_CODE, BROKER_FLOW);
-            propertyBag.put(RESULT_CODE, BROKER_OPERATION_CANCELLED);
-
-            LocalBroadcaster.INSTANCE.broadcast(
-                    RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
+            returnsExceptionOnActivityUnexpectedlyKilled();
         }
 
         super.onDestroy();
+    }
+
+    private void returnsExceptionOnActivityUnexpectedlyKilled() {
+        final IBrokerResultAdapter resultAdapter = BrokerResultAdapterFactory.getBrokerResultAdapter(SdkType.MSAL);
+        final Bundle resultBundle = resultAdapter.bundleFromBaseException(
+                new ClientException(ErrorStrings.BROKER_REQUEST_CANCELLED,
+                        "The activity is killed unexpectedly."), null);
+
+        final PropertyBag propertyBag = PropertyBagUtil.fromBundle(resultBundle);
+        propertyBag.put(REQUEST_CODE, BROKER_FLOW);
+        propertyBag.put(RESULT_CODE, BROKER_OPERATION_CANCELLED);
+
+        LocalBroadcaster.INSTANCE.broadcast(
+                RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
     }
 
     @Override
@@ -134,12 +137,23 @@ public final class BrokerActivity extends Activity {
 
         mBrokerResultReceived = true;
 
-        final PropertyBag propertyBag = PropertyBagUtil.fromBundle(data.getExtras());
-        propertyBag.put(REQUEST_CODE, BROKER_FLOW);
-        propertyBag.put(RESULT_CODE, resultCode);
+        final PropertyBag propertyBag;
+        if (resultCode == BROKER_SUCCESS_RESPONSE
+                || resultCode == BROKER_OPERATION_CANCELLED
+                || resultCode == BROKER_ERROR_RESPONSE) {
 
-        LocalBroadcaster.INSTANCE.broadcast(
-                RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
+            Logger.verbose(TAG + methodName, "Completing interactive request ");
+
+            propertyBag = PropertyBagUtil.fromBundle(data.getExtras());
+            propertyBag.put(REQUEST_CODE, BROKER_FLOW);
+            propertyBag.put(RESULT_CODE, resultCode);
+
+            LocalBroadcaster.INSTANCE.broadcast(
+                    RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
+        } else {
+            // This means the broker is unexpectedly killed.
+            returnsExceptionOnActivityUnexpectedlyKilled();
+        }
 
         finish();
     }
