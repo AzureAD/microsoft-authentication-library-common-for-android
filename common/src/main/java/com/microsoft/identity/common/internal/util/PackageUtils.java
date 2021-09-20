@@ -175,7 +175,7 @@ public final class PackageUtils {
      * @return a byte array containing the base-64-encoded version of the bytes represented by the
      * string.
      */
-    static String convertToBase64(final @NonNull String hash) {
+    public static String convertToBase64(final @NonNull String hash) {
         final String[] hexSegments = hash.split(":");
         final byte[] values = new byte[hexSegments.length];
         int i = 0;

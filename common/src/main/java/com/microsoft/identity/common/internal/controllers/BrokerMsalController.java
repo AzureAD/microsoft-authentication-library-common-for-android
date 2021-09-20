@@ -136,7 +136,7 @@ public class BrokerMsalController extends BaseController {
         mComponents = components;
         mApplicationContext = applicationContext;
         mActiveBrokerPackageName = getActiveBrokerPackageName();
-        if (TextUtils.isEmpty(mActiveBrokerPackageName)) {
+        if (StringUtil.isEmpty(mActiveBrokerPackageName)) {
             throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
         }
 
