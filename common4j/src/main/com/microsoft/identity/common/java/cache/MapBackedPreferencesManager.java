@@ -30,9 +30,11 @@ import java.util.Map;
 
 import lombok.Builder;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Accessors;
 
 @Builder
 @RequiredArgsConstructor
+@Accessors(prefix = "m")
 /**
  * A SharedPreferencesFileManager backed by a HashMap.  This is mainly for testing purposes,
  * where it doesn't make sense to instantiate shared preferences files.

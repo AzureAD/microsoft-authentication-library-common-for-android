@@ -45,9 +45,14 @@ public final class BrokerAccountDataName {
     public static final String EMAIL = "workplaceJoin.key.email";
 
     /**
-     * String of key for account name.
+     * String of key for home account id.
      */
     public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+
+    /**
+     * String of key for local account id.
+     */
+    public static final String ACCOUNT_LOCAL_ACCOUNT_ID = "account.local.account.id";
 
     /**
      * String of key for account id token.

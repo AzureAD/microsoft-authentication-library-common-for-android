@@ -36,6 +36,7 @@ import androidx.fragment.app.Fragment;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
 import com.microsoft.identity.common.crypto.AndroidBrokerStorageEncryptionManager;
 import com.microsoft.identity.common.internal.net.cache.HttpCache;
+import com.microsoft.identity.common.java.broker.ICallValidator;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.platform.AndroidDeviceMetadata;
