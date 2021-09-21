@@ -1,6 +1,7 @@
 Version 3.6.2
 ----------
-- [MINOR] Fixing Redirect Uri for Authenticator App, when migrating to MSAL
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)
+- [PATCH] Fixing Redirect Uri for Authenticator App, when migrating to MSAL (#1567)
 
 Version 3.6.1
 ----------
@@ -8,7 +9,6 @@ Version 3.6.1
 - [PATCH] Log and swallow failures from CustomTabsService unbind (#1549)
 - [PATCH] Fix correlation id error
 - [PATCH] Fix crash related to fall back to webview when no browser present
-- [PATCH] Handle the scenario where broker activity is killed wrongly.
 
 Version 3.6.0
 ----------
