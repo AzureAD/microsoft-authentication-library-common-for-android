@@ -518,6 +518,7 @@ public abstract class BaseController {
         final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
 
         //Get cacheRecord from cache
+        @SuppressWarnings("unchecked")
         final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
                 parameters.getClientId(),
                 StringUtil.join(" ", parameters.getScopes()),

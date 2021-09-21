@@ -23,7 +23,9 @@
 package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.crypto.SymmetricAlgorithm;
 
 import org.junit.Assert;
 import org.junit.Test;

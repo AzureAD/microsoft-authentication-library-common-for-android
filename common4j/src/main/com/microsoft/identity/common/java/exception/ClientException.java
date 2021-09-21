@@ -28,6 +28,12 @@ public class ClientException extends BaseException {
     private static final long serialVersionUID = -2318746536590284648L;
 
     /**
+     * Indicates that a request was made for a specific environment, and this information was not
+     * present on the device.
+     */
+    public static final String ENVIRONMENT_NOT_PRESENT = "environment_token_not_present";
+
+    /**
      * Indicates that an invalid algorithm parameter is in use.
      */
     public static final String INVALID_ALG_PARAMETER = "invalid_algorithm_parameter";

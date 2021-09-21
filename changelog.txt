@@ -58,6 +58,7 @@ V.Next
 - [MINOR] Add msal linux sdk type (#1554)
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
+- [PATCH] Support SSO token api (#1543)
 
 Version 3.6.0
 ----------

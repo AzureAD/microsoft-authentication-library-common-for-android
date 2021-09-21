@@ -20,16 +20,45 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.constants;
+package com.microsoft.identity.common.java.commands.parameters;
+
+import com.microsoft.identity.common.java.dto.IAccountRecord;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.experimental.Accessors;
+import lombok.experimental.SuperBuilder;
 
 /**
- * Constants for Spotbugs warnings that need to be suppressed.
+ * This is a set of command parameters for generating SSO tokens.  This is only being
+ * created to conform to the interface for the packages that talk to the broker, since
+ * it is mostly irrelevant for any api usage (there is no non-broker implementation of
+ * this).
  */
-public class SpotbugsWarning {
+@Getter
+@SuperBuilder(toBuilder = true)
+@EqualsAndHashCode(callSuper = true)
+@Accessors(prefix = "m")
+public class AcquirePrtSsoTokenCommandParameters extends CommandParameters {
+    /**
+     * The home account id.
+     */
+    private final String mHomeAccountId;
+    /**
+     * The local account id.
+     */
+    private final String mLocalAccountId;
+    /**
+     * The account name.
+     */
+    private final String mAccountName;
+    /**
+     * The sso url parameter for the token being fetched.
+     */
+    private final String mSsoUrl;
 
     /**
-     * Public enum method unconditionally sets its field.
+     * The authority for the token being fetched.
      */
-    public static final String ME_ENUM_FIELD_SETTER = "ME_ENUM_FIELD_SETTER";
-    public static final String RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE";
+    private final String mRequestAuthority;
 }

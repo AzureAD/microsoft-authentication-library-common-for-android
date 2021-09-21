@@ -35,47 +35,41 @@ import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarker
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_FUTURE_OBJECT_CREATION_END;
 import static com.microsoft.identity.common.java.marker.PerfConstants.CodeMarkerConstants.ACQUIRE_TOKEN_SILENT_START;
 
+import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.BaseCommand;
 import com.microsoft.identity.common.java.commands.ICommandResult;
 import com.microsoft.identity.common.java.commands.InteractiveTokenCommand;
 import com.microsoft.identity.common.java.commands.SilentTokenCommand;
-import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
-import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.exception.ErrorStrings;
-import com.microsoft.identity.common.java.result.FinalizableResultFuture;
-
-import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
-import com.microsoft.identity.common.java.result.VoidResult;
-import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.microsoft.identity.common.java.util.StringUtil;
-import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
-import com.microsoft.identity.common.java.util.ported.PropertyBag;
-import com.microsoft.identity.common.java.logging.DiagnosticContext;
-import com.microsoft.identity.common.java.result.AcquireTokenResult;
-import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
-import com.microsoft.identity.common.java.telemetry.Telemetry;
-import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.eststelemetry.EstsTelemetry;
 import com.microsoft.identity.common.java.exception.BaseException;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.java.exception.UserCancelException;
+import com.microsoft.identity.common.java.logging.DiagnosticContext;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.logging.RequestContext;
 import com.microsoft.identity.common.java.marker.CodeMarkerManager;
 import com.microsoft.identity.common.java.request.SdkType;
 import com.microsoft.identity.common.java.result.AcquireTokenResult;
+import com.microsoft.identity.common.java.result.FinalizableResultFuture;
 import com.microsoft.identity.common.java.result.ILocalAuthenticationResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
+import com.microsoft.identity.common.java.result.VoidResult;
+import com.microsoft.identity.common.java.telemetry.Telemetry;
 import com.microsoft.identity.common.java.util.BiConsumer;
 import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.ObjectMapper;
+import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.java.util.ported.PropertyBag;
 
 import java.lang.reflect.Field;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -266,7 +260,7 @@ public class CommandDispatcher {
 
                         EstsTelemetry.getInstance().emitApiId(command.getPublicApiId());
 
-                        CommandResult commandResult = null;
+                        CommandResult<?> commandResult = null;
 
                         //Log operation parameters
                         if (command.getParameters() instanceof SilentTokenCommandParameters) {
@@ -457,7 +451,7 @@ public class CommandDispatcher {
 
         Object result = null;
         BaseException baseException = null;
-        CommandResult commandResult = null;
+        CommandResult<?> commandResult = null;
 
         try {
             //Try executing request
@@ -473,11 +467,11 @@ public class CommandDispatcher {
         final String correlationId = command.getParameters().getCorrelationId();
         if (baseException != null) {
             if (baseException instanceof UserCancelException) {
-                commandResult = new CommandResult(CommandResult.ResultStatus.CANCEL, null,
+                commandResult = CommandResult.ofNull(CommandResult.ResultStatus.CANCEL,
                         correlationId);
             } else {
                 //Post On Error
-                commandResult = new CommandResult(CommandResult.ResultStatus.ERROR, baseException,
+                commandResult = CommandResult.of(CommandResult.ResultStatus.ERROR, baseException,
                         correlationId);
             }
         } else /* baseException == null */ {
@@ -488,12 +482,13 @@ public class CommandDispatcher {
             } else if (result instanceof VoidResult) {
                 commandResult = new CommandResult(CommandResult.ResultStatus.VOID, result,
                         command.getParameters().getCorrelationId());
+            } else if (result == null) {
+                commandResult = CommandResult.ofNull(CommandResult.ResultStatus.COMPLETED, correlationId);
             } else {
-                //For commands that don't return neither AcquireTokenResult or VoidResult
-                commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
+                //For commands that don't return an AcquireTokenResult
+                commandResult = new CommandResult<>(CommandResult.ResultStatus.COMPLETED, result,
                         correlationId);
             }
-
         }
 
         return commandResult;
@@ -562,13 +557,34 @@ public class CommandDispatcher {
             }
         }
 
+    /**
+     * Get Commandresult from acquiretokenresult
+     *
+     * @param result
+     */
+    private static CommandResult getCommandResultFromTokenResult(@NonNull AcquireTokenResult result, @NonNull String correlationId) {
+        //Token Commands
+        if (result.getSucceeded()) {
+            return new CommandResult<>(CommandResult.ResultStatus.COMPLETED,
+                    result.getLocalAuthenticationResult(), correlationId);
+        } else {
+            //Get MsalException from Authorization and/or Token Error Response
+            final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            if (baseException instanceof UserCancelException) {
+                return CommandResult.ofNull(CommandResult.ResultStatus.CANCEL, correlationId);
+            } else {
+                return new CommandResult<>(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+            }
+        }
+    }
+
         /**
          * Determine if the command result should be cached
          *
          * @param commandResult
          * @return
          */
-        private static boolean eligibleToCache ( @NonNull final CommandResult commandResult){
+        private static boolean eligibleToCache ( @NonNull final CommandResult commandResult) {
             final String methodName = ":eligibleToCache";
             switch (commandResult.getStatus()) {
                 case ERROR:
@@ -581,28 +597,6 @@ public class CommandDispatcher {
                     return true;
                 default:
                     return false;
-            }
-        }
-
-        /**
-         * Get Commandresult from acquiretokenresult
-         *
-         * @param result
-         */
-        private static CommandResult getCommandResultFromTokenResult (@NonNull AcquireTokenResult
-        result, @NonNull String correlationId){
-            //Token Commands
-            if (result.getSucceeded()) {
-                return new CommandResult(CommandResult.ResultStatus.COMPLETED,
-                        result.getLocalAuthenticationResult(), correlationId);
-            } else {
-                //Get MsalException from Authorization and/or Token Error Response
-                final BaseException baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
-                if (baseException instanceof UserCancelException) {
-                    return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
-                } else {
-                    return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
-                }
             }
         }
 
