@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.request;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_AUTHORITY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CLIENTID_KEY;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_CORRELATIONID;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID;
@@ -36,6 +35,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.ENVIRONMENT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.MSAL_TO_BROKER_PROTOCOL_VERSION_CODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REQUEST_AUTHORITY;
 import static com.microsoft.identity.common.internal.util.GzipUtil.compressString;
 
 import android.content.Context;
@@ -45,10 +45,8 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerRequest;
-import com.microsoft.identity.common.java.commands.JsonAccountInfoRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
@@ -155,8 +153,8 @@ public class MsalBrokerRequestAdapter implements IBrokerRequestAdapter {
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_NAME, parameters.getAccountName());
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_HOME_ACCOUNT_ID, parameters.getHomeAccountId());
         requestBundle.putString(AuthenticationConstants.Broker.ACCOUNT_LOCAL_ACCOUNT_ID, parameters.getLocalAccountId());
-        if (parameters.getAccountAuthority() != null) {
-            requestBundle.putString(ACCOUNT_AUTHORITY, parameters.getAccountAuthority());
+        if (parameters.getRequestAuthority() != null) {
+            requestBundle.putString(REQUEST_AUTHORITY, parameters.getRequestAuthority());
         }
         if (parameters.getSsoUrl() != null) {
             requestBundle.putString(AuthenticationConstants.Broker.BROKER_SSO_URL_KEY, parameters.getSsoUrl());

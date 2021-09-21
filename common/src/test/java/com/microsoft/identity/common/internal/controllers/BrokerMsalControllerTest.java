@@ -37,7 +37,6 @@ import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
-import com.microsoft.identity.common.java.commands.JsonAccountInfoRecord;
 import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 
 import org.junit.Assert;
@@ -109,7 +108,7 @@ public class BrokerMsalControllerTest {
                 .platformComponents(components)
                 .correlationId(aCorrelationId)
                 .accountName(anAccountName)
-                .accountAuthority(accountAuthority)
+                .requestAuthority(accountAuthority)
                 .ssoUrl(ssoUrl)
                 .build();
         final AcquirePrtSsoTokenResult ssoTokenResult = controller.getSsoToken(params);

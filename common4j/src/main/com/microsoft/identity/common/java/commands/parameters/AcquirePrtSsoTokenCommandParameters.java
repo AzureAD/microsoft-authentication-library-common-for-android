@@ -60,5 +60,5 @@ public class AcquirePrtSsoTokenCommandParameters extends CommandParameters {
     /**
      * The authority for the token being fetched.
      */
-    private final String mAccountAuthority;
+    private final String mRequestAuthority;
 }

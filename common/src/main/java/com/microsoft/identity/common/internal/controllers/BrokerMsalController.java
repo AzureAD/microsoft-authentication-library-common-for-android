@@ -886,7 +886,7 @@ public class BrokerMsalController extends BaseController {
 
             @Override
             public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
-                negotiatedBrokerProtocolVersion = hello(strategy, AuthenticationConstants.BrokerContentProvider.API.GET_SSO_TOKEN.getMsalVersion());
+                negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
             }
 
             @NonNull

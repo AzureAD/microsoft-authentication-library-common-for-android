@@ -772,6 +772,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_AUTHORITY = "account.authority";
 
         /**
+         * String of account authority.
+         */
+        public static final String REQUEST_AUTHORITY = "request.authority";
+
+        /**
          * String of account refresh token.
          */
         public static final String ACCOUNT_REFRESH_TOKEN = "account.refresh.token";
