@@ -20,16 +20,29 @@
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
-package com.microsoft.identity.common.java.constants;
+package com.microsoft.identity.common.java.broker;
+
+import com.microsoft.identity.common.java.exception.ClientException;
+
+import java.util.Map;
+
+import lombok.NonNull;
 
 /**
- * Constants for Spotbugs warnings that need to be suppressed.
+ * An interface that throws an exception if the caller is not acceptable given a UID.
  */
-public class SpotbugsWarning {
-
+public interface ICallValidator {
     /**
-     * Public enum method unconditionally sets its field.
+     * Throws a ClientException if the caller cannot be validated or is unauthorized.  In android,
+     * this will end up taking a map of package name to string of signatures.  In Linux, this is
+     * probably a list of client ids.
+     * @param methodName the method name for logging purposes.
+     * @param callingUid the identifier for the caller, platform dependent.
+     * @param allowedApplications A map of name to iterable of verification string for calling apps.
+     * @throws ClientException if the caller cannot be validated.
      */
-    public static final String ME_ENUM_FIELD_SETTER = "ME_ENUM_FIELD_SETTER";
-    public static final String RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE = "RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE";
+    void throwIfNotInvokedByAcceptableApp(@NonNull String methodName,
+                                          int callingUid,
+                                          @NonNull Map<String, Iterable<String>> allowedApplications)
+            throws ClientException;
 }

@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
 - [MINOR] Enabling refresh_in feature (#1310)
 - [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
@@ -57,6 +58,7 @@ V.Next
 - [MINOR] Add msal linux sdk type (#1554)
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
+- [PATCH] Support SSO token api (#1543)
 
 Version 3.6.0
 ----------

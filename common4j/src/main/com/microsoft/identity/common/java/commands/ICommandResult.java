@@ -25,7 +25,7 @@ package com.microsoft.identity.common.java.commands;
 /**
  * Interface for Broker/MSAL command result.
  */
-public interface ICommandResult {
+public interface ICommandResult<T> {
 
     enum ResultStatus {
         CANCEL,
@@ -50,5 +50,5 @@ public interface ICommandResult {
     /**
      * Gets the result object.
      */
-    Object getResult();
+    T getResult();
 }

@@ -23,7 +23,7 @@
 package com.microsoft.identity.common.internal.platform;
 
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IKeyManager;
+import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
 
 import java.security.KeyStore;
 
@@ -38,5 +38,5 @@ public interface IManagedKeyAccessor<K extends KeyStore.Entry> extends IKeyAcces
      * @return a IKeyManager for this key.  If this returns null, it should be
      * regarded as an error.
      */
-    IKeyManager<K> getManager();
+    IAndroidKeyStoreKeyManager<K> getManager();
 }

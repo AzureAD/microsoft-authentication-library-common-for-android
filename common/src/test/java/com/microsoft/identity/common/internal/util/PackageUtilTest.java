@@ -20,54 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.challengehandlers;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.List;
+package com.microsoft.identity.common.internal.util;
 
-/**
- * Work place join related certificate is required to respond device challenge.
- */
-public interface IDeviceCertificate {
+import android.util.Base64;
 
-    /**
-     * Checks valid issuer for cert authorities.
-     *
-     * @param certAuthorities list of cert authorities
-     * @return status if valid issue
-     */
-    boolean isValidIssuer(final List<String> certAuthorities);
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import org.robolectric.RobolectricTestRunner;
 
-    /**
-     * Gets certificate.
-     *
-     * @return {@link X509Certificate}
-     */
-    X509Certificate getCertificate();
+@RunWith(RobolectricTestRunner.class)
+public class PackageUtilTest {
 
-    /**
-     * Gets a private key.
-     *
-     * @return private key
-     */
-    PrivateKey getPrivateKey();
-
-    /**
-     * Gets a public key.
-     *
-     * @return RSA public key.
-     */
-    PublicKey getPublicKey();
-
-    /**
-     * Gets thumbPrint for certificate.
-     *
-     * @return thumbPrint for certificate.
-     */
-    String getThumbPrint();
+    @Test
+    public void testHexStringConversion() {
+        String string = PackageUtils.convertToBase64("DE:AD:BE:EF");
+        Assert.assertEquals(Base64.encodeToString(new byte[]{(byte) (0xde & 0xff), (byte) (0xad &0xff), (byte) (0xbe & 0xff), (byte) (0xef & 0xff)}, Base64.NO_WRAP),
+                string);
+    }
 }
-

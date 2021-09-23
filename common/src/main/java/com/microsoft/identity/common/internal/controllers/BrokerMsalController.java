@@ -34,6 +34,7 @@ import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationB
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_GET_INTENT_FOR_INTERACTIVE_REQUEST;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_REMOVE_ACCOUNT;
 import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SIGN_OUT_FROM_SHARED_DEVICE;
+import static com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle.Operation.MSAL_SSO_TOKEN;
 import static com.microsoft.identity.common.internal.controllers.BrokerOperationExecutor.BrokerOperation;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
@@ -53,6 +54,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.AndroidPlatformComponents;
 import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.broker.BrokerActivity;
@@ -67,6 +69,7 @@ import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
 import com.microsoft.identity.common.java.cache.MsalOAuth2TokenCache;
 import com.microsoft.identity.common.internal.commands.parameters.AndroidActivityInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.AcquirePrtSsoTokenCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.DeviceCodeFlowCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
 import com.microsoft.identity.common.java.commands.parameters.RemoveAccountCommandParameters;
@@ -128,6 +131,19 @@ public class BrokerMsalController extends BaseController {
 
     private final Context mApplicationContext;
 
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    public BrokerMsalController(@NonNull final Context applicationContext, @NonNull final IPlatformComponents components) {
+        mComponents = components;
+        mApplicationContext = applicationContext;
+        mActiveBrokerPackageName = getActiveBrokerPackageName();
+        if (StringUtil.isEmpty(mActiveBrokerPackageName)) {
+            throw new IllegalStateException("Active Broker not found. This class should not be initialized.");
+        }
+
+        mBrokerOperationExecutor = new BrokerOperationExecutor(getIpcStrategies(mApplicationContext, mActiveBrokerPackageName));
+        mHelloCache = getHelloCache();
+    }
+
     public BrokerMsalController(@NonNull final Context applicationContext) {
         mComponents = AndroidPlatformComponents.createFromContext(applicationContext);
         mApplicationContext = applicationContext;
@@ -155,7 +171,8 @@ public class BrokerMsalController extends BaseController {
      * Gets a list of communication strategies.
      * Order of objects in the list will reflects the order of strategies that will be used.
      */
-    private static @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    protected @NonNull List<IIpcStrategy> getIpcStrategies(final Context applicationContext,
                                                                 final String activeBrokerPackageName) {
         final List<IIpcStrategy> strategies = new ArrayList<>();
         final StringBuilder sb = new StringBuilder(100);
@@ -860,6 +877,61 @@ public class BrokerMsalController extends BaseController {
                 // TODO Needed?
             }
         });
+    }
+
+    public AcquirePrtSsoTokenResult getSsoToken(final @NonNull AcquirePrtSsoTokenCommandParameters parameters) throws BaseException {
+        return mBrokerOperationExecutor.execute(parameters, new BrokerOperation<AcquirePrtSsoTokenResult>() {
+
+            private String negotiatedBrokerProtocolVersion;
+
+            @Override
+            public void performPrerequisites(final @NonNull IIpcStrategy strategy) throws BaseException {
+                negotiatedBrokerProtocolVersion = hello(strategy, parameters.getRequiredBrokerProtocolVersion());
+            }
+
+            @NonNull
+            @Override
+            public BrokerOperationBundle getBundle() throws ClientException {
+                return new BrokerOperationBundle(
+                        MSAL_SSO_TOKEN,
+                        mActiveBrokerPackageName,
+                        mRequestAdapter.getRequestBundleForSsoToken(
+                                parameters,
+                                negotiatedBrokerProtocolVersion
+                        )
+                );
+            }
+
+            @NonNull
+            @Override
+            public AcquirePrtSsoTokenResult extractResultBundle(@Nullable final Bundle resultBundle) throws BaseException {
+                if (null == resultBundle) {
+                    throw mResultAdapter.getExceptionForEmptyResultBundle();
+                }
+
+                return mResultAdapter.getAcquirePrtSsoTokenResultFromBundle(resultBundle);
+            }
+
+            @NonNull
+            @Override
+            public String getMethodName() {
+                return ":getSsoToken";
+            }
+
+            @Nullable
+            @Override
+            public String getTelemetryApiId() {
+                // TODO Needed?
+                return null;
+            }
+
+            @Override
+            public void putValueInSuccessEvent(@NonNull final ApiEndEvent event,
+                                               @NonNull final AcquirePrtSsoTokenResult result) {
+                // TODO Needed?
+            }
+        });
+
     }
 
     /**

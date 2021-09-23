@@ -20,27 +20,24 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.crypto;
 
-import com.microsoft.identity.common.java.crypto.Algorithm;
-
-import lombok.NonNull;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchProviderException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 /**
- * Marker interface for Symmetric algorithm classes.
+ * A Function-esque interface for createing X509 Certificates out of strings.
  */
-public interface SymmetricAlgorithm extends Algorithm {
-    @Override
-    String name();
-
-    class Builder {
-        static SymmetricAlgorithm of(@NonNull final String name) {
-            return new SymmetricAlgorithm() {
-                @Override
-                public String name() {
-                    return name;
-                }
-            };
-        }
-    }
+public interface ICertificateGeneratorFunction {
+    /**
+     *
+     * @param certificateData an encoded version of a certificate.
+     * @return an X509Certificate.
+     * @throws CertificateException If the certificate is invalid.
+     * @throws UnsupportedEncodingException if the certificate is encoded in an unknown format.
+     * @throws NoSuchProviderException if the provider for the certificate could not be found.
+     */
+    X509Certificate apply(String certificateData) throws CertificateException, UnsupportedEncodingException, NoSuchProviderException;
 }

@@ -20,54 +20,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.java.challengehandlers;
+package com.microsoft.identity.common.java.crypto;
 
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.List;
+import lombok.NonNull;
 
 /**
- * Work place join related certificate is required to respond device challenge.
+ * Marker interface for Symmetric algorithm classes.
  */
-public interface IDeviceCertificate {
+public interface SymmetricAlgorithm extends Algorithm {
+    @Override
+    String name();
 
-    /**
-     * Checks valid issuer for cert authorities.
-     *
-     * @param certAuthorities list of cert authorities
-     * @return status if valid issue
-     */
-    boolean isValidIssuer(final List<String> certAuthorities);
-
-    /**
-     * Gets certificate.
-     *
-     * @return {@link X509Certificate}
-     */
-    X509Certificate getCertificate();
-
-    /**
-     * Gets a private key.
-     *
-     * @return private key
-     */
-    PrivateKey getPrivateKey();
-
-    /**
-     * Gets a public key.
-     *
-     * @return RSA public key.
-     */
-    PublicKey getPublicKey();
-
-    /**
-     * Gets thumbPrint for certificate.
-     *
-     * @return thumbPrint for certificate.
-     */
-    String getThumbPrint();
+    public class Builder {
+        public static SymmetricAlgorithm of(@NonNull final String name) {
+            return new SymmetricAlgorithm() {
+                @Override
+                public String name() {
+                    return name;
+                }
+            };
+        }
+    }
 }
-
