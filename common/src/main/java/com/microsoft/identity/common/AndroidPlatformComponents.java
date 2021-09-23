@@ -253,7 +253,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
         return new SharedPrefStringNameValueStorage(new IMultiTypeNameValueStorage() {
             @Override
             public void putString(String key, String value) {
-                sharedPreferences.edit().putString(key, value);
+                sharedPreferences.edit().putString(key, value).apply();
             }
 
             @Override
@@ -263,7 +263,7 @@ public class AndroidPlatformComponents implements IPlatformComponents {
 
             @Override
             public void putLong(String key, long value) {
-                sharedPreferences.edit().putString(key, Long.toString(value));
+                sharedPreferences.edit().putString(key, Long.toString(value)).apply();
             }
 
             @Override
