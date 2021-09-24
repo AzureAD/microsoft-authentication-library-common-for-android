@@ -37,7 +37,7 @@ public class AzureActiveDirectorySlice {
     }
 
     public String getDC() {
-        return mDataCenter;
+        return "ESTS-PUB-WUS2-AZ1-FD000-TEST1";
     }
 
 }
