@@ -403,6 +403,7 @@ public class LocalMSALController extends BaseController {
     @Override
     @WorkerThread
     public List<ICacheRecord> getAccounts(@NonNull final CommandParameters parameters) {
+        final String methodName = ":getAccounts";
         Telemetry.emit(
                 new ApiStartEvent()
                         .putProperties(parameters)
@@ -416,6 +417,8 @@ public class LocalMSALController extends BaseController {
                                 null, // * wildcard
                                 parameters.getClientId()
                         );
+
+        Logger.info(TAG + methodName, "Records returned: " + accountsInCache.size());
 
         Telemetry.emit(
                 new ApiEndEvent()

@@ -64,7 +64,7 @@ public class GetCurrentAccountCommand extends BaseCommand<List<ICacheRecord>> {
 
         for (int ii = 0; ii < getControllers().size(); ii++) {
             final BaseController controller = getControllers().get(ii);
-            com.microsoft.identity.common.internal.logging.Logger.verbose(
+            com.microsoft.identity.common.internal.logging.Logger.info(
                     TAG + methodName,
                     "Executing with controller: "
                             + controller.getClass().getSimpleName()

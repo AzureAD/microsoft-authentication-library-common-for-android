@@ -430,6 +430,7 @@ public class BrokerMsalController extends BaseController {
      */
     @Override
     public @NonNull List<ICacheRecord> getAccounts(final @NonNull CommandParameters parameters) throws BaseException {
+        final String methodName = ":getAccounts";
         return mBrokerOperationExecutor.execute(parameters,
                 new BrokerOperation<List<ICacheRecord>>() {
                     private String negotiatedBrokerProtocolVersion;
