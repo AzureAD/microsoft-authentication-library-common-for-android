@@ -100,6 +100,10 @@ public abstract class Authority {
             slice.setDataCenter(BuildConfig.DC);
             mSlice = slice;
         }
+
+        com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice slice = new AzureActiveDirectorySlice();
+        slice.setDataCenter("ESTS-PUB-WUS2-AZ1-FD000-TEST1");
+        mSlice = slice;
     }
 
     /**
