@@ -9,8 +9,9 @@ public class AzureActiveDirectorySlice {
 
     @SerializedName(SLICE_PARAMETER)
     private String mSlice;
+
     @SerializedName(DC_PARAMETER)
-    private String mDataCenter;
+    private final String mDataCenter = "ESTS-PUB-WUS2-AZ1-FD000-TEST1";
 
     public String getSlice() {
         return mSlice;
@@ -25,7 +26,6 @@ public class AzureActiveDirectorySlice {
     }
 
     public void setDataCenter(String dc) {
-        mDataCenter = dc;
     }
 
 }

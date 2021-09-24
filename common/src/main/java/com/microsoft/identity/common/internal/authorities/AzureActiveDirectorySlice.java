@@ -30,14 +30,14 @@ public class AzureActiveDirectorySlice {
     private String mSlice;
 
     @SerializedName("dc")
-    private String mDataCenter;
+    private final String mDataCenter = "ESTS-PUB-WUS2-AZ1-FD000-TEST1";
 
     public String getSlice() {
         return mSlice;
     }
 
     public String getDC() {
-        return "ESTS-PUB-WUS2-AZ1-FD000-TEST1";
+        return mDataCenter;
     }
 
 }
