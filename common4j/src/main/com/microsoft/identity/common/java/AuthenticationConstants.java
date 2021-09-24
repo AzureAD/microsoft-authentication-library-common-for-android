@@ -548,6 +548,7 @@ public class AuthenticationConstants {
          * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
+
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)

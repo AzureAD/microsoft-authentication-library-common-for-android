@@ -57,7 +57,7 @@ public class ExceptionAdapter {
 
     private static final String TAG = ExceptionAdapter.class.getSimpleName();
 
-    @Nullable
+    @NonNull
     public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
         final String methodName = ":exceptionFromAcquireTokenResult";
 
