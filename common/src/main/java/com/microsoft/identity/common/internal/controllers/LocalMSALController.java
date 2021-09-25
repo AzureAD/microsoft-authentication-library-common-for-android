@@ -409,7 +409,7 @@ public class LocalMSALController extends BaseController {
                         .putProperties(parameters)
                         .putApiId(TelemetryEventStrings.Api.LOCAL_GET_ACCOUNTS)
         );
-
+        
         @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> accountsInCache =
                 parameters
                         .getOAuth2TokenCache()

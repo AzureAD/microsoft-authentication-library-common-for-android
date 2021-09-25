@@ -1117,7 +1117,7 @@ public class BrokerOAuth2TokenCache
             );
 
             if (null == targetCache) {
-                Logger.verbose(
+                Logger.info(
                         TAG + methodName,
                         "Falling back to FoCI cache..."
                 );
@@ -1131,6 +1131,7 @@ public class BrokerOAuth2TokenCache
 
             result = targetCacheAccountsWithAggregatedAccountData;
         } else {
+            Logger.info(TAG + methodName, "No environment specified.");
             // If no environment was specified, return all of the accounts across all of the envs...
             // Callers should really specify an environment...
             final List<OAuth2TokenCache> caches = getTokenCachesForClientId(clientId);
@@ -1147,7 +1148,10 @@ public class BrokerOAuth2TokenCache
                 result.addAll(cacheAccountsWithAggregatedAccountData);
             }
         }
-
+        Logger.info(
+                TAG + methodName,
+                "Accounts returning : " + result.size()
+        );
         return result;
     }
 

@@ -1192,6 +1192,12 @@ public class MsalOAuth2TokenCache
                 null // requestedClaims
         );
 
+        Logger.info(
+                TAG + methodName,
+                "Found " + appCredentials.size() + " accounts after getCredentialsFilteredBy()"
+        );
+
+
         // For each Account with an associated RT, add it to the result List...
         for (final AccountRecord account : accountsForEnvironment) {
             if (accountHasCredential(account, appCredentials)) {
@@ -1274,7 +1280,7 @@ public class MsalOAuth2TokenCache
 
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + result.size() + " accounts with IdTokens"
         );
