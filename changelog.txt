@@ -1,6 +1,5 @@
 V.Next
 ----------
-- [MINOR] Added support for http intercept of device code request (#1572)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
 - [MINOR] Enabling refresh_in feature (#1310)
