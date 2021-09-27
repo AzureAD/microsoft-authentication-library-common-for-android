@@ -75,7 +75,8 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE;
+        String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode) +
+                "/" + ((storageHelper == null) ? "clear" : storageHelper.getClass().getCanonicalName());
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if (cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key,
@@ -85,6 +86,14 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             }
         }
         return cachedFileManager;
+    }
+
+    /**
+     * This method clears the singleton cache in use by the system, in the case that unsafe operations
+     * have been performed on disk and the actual data needs to be removed.
+     */
+    public static void clearSingletonCache() {
+        objectCache.clear();
     }
 
     /**
