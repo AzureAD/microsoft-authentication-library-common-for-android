@@ -53,7 +53,7 @@ import com.microsoft.identity.internal.test.labapi.auth.OAuth;
 
 public class ApiClient {
 
-    private String basePath = "";
+    private String basePath = "https://msidlab.com";
     private boolean debugging = false;
     private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
     private String tempFolderPath = null;
