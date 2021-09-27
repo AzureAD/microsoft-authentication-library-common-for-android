@@ -41,9 +41,12 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.COMPANY_PORTAL_APP_RELEASE_SIGNATURE;
 
+import lombok.ToString;
+
 /**
  * Represents packageName and SignatureHash of a broker app.
  */
+@ToString
 public class BrokerData {
 
     public static final BrokerData MICROSOFT_AUTHENTICATOR_DEBUG = new BrokerData(

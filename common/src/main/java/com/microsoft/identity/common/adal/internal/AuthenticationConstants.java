@@ -598,6 +598,16 @@ public final class AuthenticationConstants {
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
 
+        /**
+         * A client id for requesting the SSO token.
+         */
+        public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
+
+         /**
+         * The key indicating that this is an ssoUrl parameter in a Bundle.
+         */
+        public static final String BROKER_SSO_URL_KEY = "ssoUrl";
+
         @VisibleForTesting
         public static String computeMaxMsalBrokerProtocol() {
             String stringVersion = BrokerContentProvider.BROKER_VERSION_1;
@@ -762,6 +772,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_AUTHORITY = "account.authority";
 
         /**
+         * String of account authority.
+         */
+        public static final String REQUEST_AUTHORITY = "request.authority";
+
+        /**
          * String of account refresh token.
          */
         public static final String ACCOUNT_REFRESH_TOKEN = "account.refresh.token";
@@ -802,12 +817,22 @@ public final class AuthenticationConstants {
         public static final String FLIGHT_INFO = "com.microsoft.identity.broker.flights";
 
         /**
+         * String with json-formatted account object.
+         */
+        public static final String ACCOUNT = "account.object";
+
+        /**
          * String of key for account name.
          */
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
-         * String of key for account name.
+         * String of key for local account id.
+         */
+        public static final String ACCOUNT_LOCAL_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_LOCAL_ACCOUNT_ID;
+
+        /**
+         * String of key for home account id.
          */
         public static final String ACCOUNT_HOME_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
 
@@ -1133,6 +1158,11 @@ public final class AuthenticationConstants {
          * This is used to determine what PublicClientApplication MSAL will return to its caller.
          */
         public static final String BROKER_DEVICE_MODE = "broker_device_mode";
+
+        /**
+         * String for generate shr result.
+         */
+        public static final String BROKER_GENERATE_SSO_TOKEN_RESULT = "broker_generate_sso_token";
 
         /**
          * String for generate shr result.

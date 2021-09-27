@@ -29,9 +29,11 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.util.HashMapExtensions;
 import com.microsoft.identity.common.adal.internal.util.JsonExtensions;
+import com.microsoft.identity.common.java.commands.AcquirePrtSsoTokenResult;
 import com.microsoft.identity.common.internal.request.AuthenticationSchemeTypeAdapter;
 import com.microsoft.identity.common.java.constants.OAuth2ErrorCode;
 import com.microsoft.identity.common.java.constants.OAuth2SubErrorCode;
@@ -68,6 +70,7 @@ import static com.microsoft.identity.common.adal.internal.AuthenticationConstant
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_ACTIVITY_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_DEVICE_MODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SHR_RESULT;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_GENERATE_SSO_TOKEN_RESULT;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_PACKAGE_NAME;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.BROKER_RESULT_V2_COMPRESSED;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.NEGOTIATED_BP_VERSION_KEY;
@@ -81,6 +84,7 @@ import static com.microsoft.identity.common.internal.util.GzipUtil.compressStrin
 public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     private static final String TAG = MsalBrokerResultAdapter.class.getName();
+    public static final Gson GSON = new Gson();
 
     @Override
     public @NonNull
@@ -218,6 +222,12 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
                     "using error codes to transform to the right exception");
             return getBaseExceptionFromErrorCodes(brokerResult);
         }
+    }
+
+    @NonNull
+    @Override
+    public AcquirePrtSsoTokenResult getAcquirePrtSsoTokenResultFromBundle(Bundle resultBundle) {
+        return GSON.fromJson(resultBundle.getString(BROKER_GENERATE_SSO_TOKEN_RESULT), AcquirePrtSsoTokenResult.class);
     }
 
     public @NonNull

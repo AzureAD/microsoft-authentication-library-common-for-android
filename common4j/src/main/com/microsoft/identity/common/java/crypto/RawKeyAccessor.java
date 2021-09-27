@@ -20,13 +20,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.crypto;
 
+import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SP800108KeyGen;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
-import com.microsoft.identity.common.java.crypto.CryptoSuite;
 
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
@@ -45,9 +45,10 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import androidx.annotation.Nullable;
 
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -60,17 +61,17 @@ import static com.microsoft.identity.common.java.exception.ClientException.INVAL
 import static com.microsoft.identity.common.java.exception.ClientException.IO_ERROR;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
 import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_PADDING;
-import static com.microsoft.identity.common.internal.platform.KeyStoreAccessor.UTF8;
 
 /**
  * Key accessor for using a raw symmetric key.
  */
 @Builder
 @Getter
+@AllArgsConstructor
 @Accessors(prefix = "m")
 @SuppressFBWarnings("EI_EXPOSE_REP")
 public class RawKeyAccessor implements IKeyAccessor {
-    private static final SecureRandom mRandom = new SecureRandom();
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * The cryptoSuite to use with this RawKeyAccessor.
@@ -103,7 +104,7 @@ public class RawKeyAccessor implements IKeyAccessor {
             final SecretKeySpec keySpec = new SecretKeySpec(mKey, mSuite.cipher().name());
             final Cipher c = Cipher.getInstance(keySpec.getAlgorithm());
             final byte[] iv = new byte[12];
-            mRandom.nextBytes(iv);
+            SECURE_RANDOM.nextBytes(iv);
             final IvParameterSpec ivSpec = new IvParameterSpec(iv);
             c.init(Cipher.ENCRYPT_MODE, keySpec, ivSpec);
             byte[] text = c.update(plaintext);
@@ -202,7 +203,7 @@ public class RawKeyAccessor implements IKeyAccessor {
         try {
             cipher = Cipher.getInstance(keySpec.getAlgorithm());
             final MessageDigest digest = MessageDigest.getInstance("SHA256");
-            return digest.digest(cipher.doFinal((keySpec.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(UTF8)));
+            return digest.digest(cipher.doFinal((keySpec.getAlgorithm() + cipher.getBlockSize() + cipher.getParameters()).getBytes(AuthenticationConstants.CHARSET_UTF8)));
         } catch (final NoSuchAlgorithmException e) {
             errCode = NO_SUCH_ALGORITHM;
             exception = e;
