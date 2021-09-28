@@ -30,15 +30,20 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
+import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
+import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
+import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -92,6 +97,78 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public void testGetString() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+    }
+
+    @Test
+    public void testGetSharedPreferences() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        f.setAccessible(true);
+
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+        ));
+    }
+
+    @Test
+    public void testGetSharedPreferencesNoStorageHelper() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        f.setAccessible(true);
+        IStorageHelper storageHelper = (IStorageHelper) f.get(mSharedPreferencesFileManager);
+        IStorageHelper newStorageHelper;
+        if (storageHelper == null) {
+            newStorageHelper = new StorageHelper(InstrumentationRegistry.getTargetContext());
+        } else {
+            newStorageHelper = null;
+        }
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                newStorageHelper)
+        );
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                storageHelper)
+        );
+    }
+
+    @Test
+    public void testGetSharedPreferencesWithAndWithoutStorageHelper() throws Exception {
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                null)
+        );
+    }
+
+    @Test
+    public void testGetSharedPreferencesClear() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        f.setAccessible(true);
+
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+        ));
+
+        SharedPreferencesFileManager.clearSingletonCache();
+
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+        ));
+    }
+
+    @Test
+    public void testGetSharedPreferencesFileName() {
+        assertEquals(
+                sTEST_SHARED_PREFS_NAME,
+                mSharedPreferencesFileManager.getSharedPreferencesFileName()
+        );
     }
 
     @Test
