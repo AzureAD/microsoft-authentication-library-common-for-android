@@ -75,8 +75,8 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + (operatingMode == -1 ? Context.MODE_PRIVATE : operatingMode) +
-                "/" + ((storageHelper == null) ? "clear" : storageHelper.getClass().getCanonicalName());
+        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE +
+                "/" + ((encryptionManager == null) ? "clear" : encryptionManager.getClass().getCanonicalName());
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if (cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key,
