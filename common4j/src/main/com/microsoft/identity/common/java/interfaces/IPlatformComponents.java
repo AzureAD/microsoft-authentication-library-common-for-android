@@ -102,6 +102,8 @@ public interface IPlatformComponents {
      */
     IMultiTypeNameValueStorage getFileStore(String storeName);
 
+    INameValueStorage<String> getMultiProcessStringStore(@NonNull String storeName);
+
     /**
      * Gets {@link IAuthorizationStrategyFactory} of each platform.
      */
