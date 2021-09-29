@@ -49,10 +49,17 @@ public class BrokerHost extends AbstractTestBroker {
     public final static String BROKER_HOST_APP_PACKAGE_NAME = "com.microsoft.identity.testuserapp";
     public final static String BROKER_HOST_APP_NAME = "Broker Host App";
     public final static String BROKER_HOST_APK = "BrokerHost.apk";
-
+    public final static String BROKER_HOST_APK_PROD = "BrokerHostProd.apk";
+    public final static String BROKER_HOST_APK_RC = "BrokerHostRC.apk";
+    
     public BrokerHost() {
         super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
         localApkFileName = BROKER_HOST_APK;
+    }
+
+    public BrokerHost(@NonNull final String brokerHostApkName) {
+        super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
+        localApkFileName = brokerHostApkName;
     }
 
     @Override
@@ -176,36 +183,9 @@ public class BrokerHost extends AbstractTestBroker {
     @Override
     public String obtainDeviceId() {
         Logger.i(TAG, "Obtain Device Id..");
-        launch(); // launch Broker Host app
-
-        if (shouldHandleFirstRun) {
-            handleFirstRun(); // handle first run experience
-        }
-
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonDeviceId");
-
-        // Look for the device id dialog box
-        final UiObject deviceIdDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
-                "android:id/message"
-        );
-
-        Assert.assertTrue(deviceIdDialog.exists());
-
-        try {
-            // get the text on the device id dialog box
-            final String[] deviceIdDialogText = deviceIdDialog.getText().split(":");
-            // look for the device id if present
-            if (deviceIdDialogText[0].equalsIgnoreCase("DeviceId")) {
-                return deviceIdDialogText[1];
-            } else {
-                return null;
-            }
-        } catch (UiObjectNotFoundException e) {
-            throw new AssertionError(e);
-        } finally {
-            // dismiss the dialog
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
-        }
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonDeviceId";
+        final String textId = "DeviceId";
+        return basicButtonHandler(resourceButtonId,textId);
     }
 
     @Override
@@ -250,35 +230,66 @@ public class BrokerHost extends AbstractTestBroker {
     @Nullable
     public String getAccountUpn() {
         Logger.i(TAG, "Get Account Upn..");
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonGetWpjUpn";
+        final String textId = "UPN";
+        return basicButtonHandler(resourceButtonId,textId);
+    }
+
+    @Nullable
+    public String getDeviceState() {
+        Logger.i(TAG, "Get Device State ..");
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonDeviceState";
+        final String textId = "DeviceState";
+        return basicButtonHandler(resourceButtonId,textId);
+    }
+
+    @Nullable
+    public boolean isDeviceShared() {
+        Logger.i(TAG, "Check if device is shared..");
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonIsDeviceShared";
+        final String textId = "DeviceShared";
+        final String isDeviceSharedText= basicButtonHandler(resourceButtonId,textId);
+        return "Device is shared".equalsIgnoreCase(isDeviceSharedText);
+    }
+
+    @Nullable
+    public String wpjLeave() {
+        Logger.i(TAG, "Wpj Leave ..");
+        final String resourceButtonId = "com.microsoft.identity.testuserapp:id/buttonLeave";
+        final String textId = "wpjLeave";
+        return basicButtonHandler(resourceButtonId,textId);
+    }
+
+    @Nullable
+    private final String basicButtonHandler(@NonNull final String resourceButtonId, @NonNull final String textId){
         launch(); // launch Broker Host app
 
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
 
-        UiAutomatorUtils.handleButtonClick("com.microsoft.identity.testuserapp:id/buttonGetWpjUpn");
+        UiAutomatorUtils.handleButtonClick(resourceButtonId);
 
-        // Look for the UPN dialog box
-        final UiObject showUpnDialog = UiAutomatorUtils.obtainUiObjectWithResourceId(
+        // Look for the dialog box
+        final UiObject dialogBox = UiAutomatorUtils.obtainUiObjectWithResourceId(
                 "android:id/message"
         );
-
-        Assert.assertTrue(showUpnDialog.exists());
+        dialogBox.waitForExists(FIND_UI_ELEMENT_TIMEOUT);
+        Assert.assertTrue(dialogBox.exists());
 
         try {
-            // Obtain the text on the UPN dialog box
-            final String[] upnDialogTextParts = showUpnDialog.getText().split(":");
-
-            // get the UPN if it is there, else return null (in case of error)
-            if ("UPN".equalsIgnoreCase(upnDialogTextParts[0])) {
-                return upnDialogTextParts[1];
+            // get the textId if it is there, else return null (in case of error)
+            final String[] dialogBoxText = dialogBox.getText().split(":");
+            // look for the textId if present
+            if (dialogBoxText[0].equalsIgnoreCase(textId)) {
+                return dialogBoxText[1];
             } else {
                 return null;
             }
-        } catch (final UiObjectNotFoundException e) {
+        } catch (UiObjectNotFoundException e) {
             throw new AssertionError(e);
         } finally {
-            // dismiss dialog
+            // dismiss the dialog
             UiAutomatorUtils.handleButtonClick("android:id/button1");
         }
     }
