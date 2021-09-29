@@ -59,6 +59,7 @@ V.Next
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
+- [MINOR] Add flighting parameters to commmandParameters (#1562)
 
 Version 3.6.2
 ----------
