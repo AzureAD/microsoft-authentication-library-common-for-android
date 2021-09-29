@@ -28,6 +28,10 @@ import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2TokenCache;
 import com.microsoft.identity.common.java.request.SdkType;
 
+import java.util.Collections;
+import java.util.Map;
+
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
@@ -74,6 +78,9 @@ public class CommandParameters {
 
     @Expose()
     private boolean powerOptCheckEnabled;
+
+    @Builder.Default
+    private transient Map<String, String> flightInformation = Collections.emptyMap();
 
     @Setter
     @EqualsAndHashCode.Exclude
