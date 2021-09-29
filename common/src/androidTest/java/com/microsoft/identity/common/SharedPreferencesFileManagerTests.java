@@ -27,13 +27,11 @@ import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.InstrumentationRegistry;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
 import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
-import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
-import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
@@ -101,43 +99,43 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
 
     @Test
     public void testGetSharedPreferences() throws Exception {
-        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
 
         Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+                (IKeyAccessor) f.get(mSharedPreferencesFileManager)
         ));
     }
 
     @Test
-    public void testGetSharedPreferencesNoStorageHelper() throws Exception {
-        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+    public void testGetSharedPreferencesNoKeyAccessor() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
-        IStorageHelper storageHelper = (IStorageHelper) f.get(mSharedPreferencesFileManager);
-        IStorageHelper newStorageHelper;
-        if (storageHelper == null) {
-            newStorageHelper = new StorageHelper(InstrumentationRegistry.getTargetContext());
+        IKeyAccessor keyAccessor = (IKeyAccessor) f.get(mSharedPreferencesFileManager);
+        IKeyAccessor newKeyAccessor;
+        if (keyAccessor == null) {
+            newKeyAccessor = new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null);
         } else {
-            newStorageHelper = null;
+            newKeyAccessor = null;
         }
         Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                newStorageHelper)
+                newKeyAccessor)
         );
         Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                storageHelper)
+                keyAccessor)
         );
     }
 
     @Test
-    public void testGetSharedPreferencesWithAndWithoutStorageHelper() throws Exception {
+    public void testGetSharedPreferencesWithAndWithoutKeyAccessor() throws Exception {
         Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 mSharedPreferencesFileManager.getSharedPreferencesFileName(),
                 null)
         );
@@ -145,21 +143,21 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
 
     @Test
     public void testGetSharedPreferencesClear() throws Exception {
-        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
 
         Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+                (IKeyAccessor) f.get(mSharedPreferencesFileManager)
         ));
 
         SharedPreferencesFileManager.clearSingletonCache();
 
         Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                InstrumentationRegistry.getTargetContext(),
+                ApplicationProvider.getApplicationContext(),
                 mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+                (IKeyAccessor) f.get(mSharedPreferencesFileManager)
         ));
     }
 
