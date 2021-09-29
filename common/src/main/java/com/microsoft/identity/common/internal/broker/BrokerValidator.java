@@ -227,7 +227,17 @@ public class BrokerValidator {
                                                 @NonNull final String packageName) {
         final String methodName = ":isValidBrokerRedirect";
         final String expectedBrokerRedirectUri = getBrokerRedirectUri(context, packageName);
-        final boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+            final PackageHelper info = new PackageHelper(context.getPackageManager());
+            final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
+            if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
+                || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+                // If the caller is the Authenticator, check if the redirect uri matches with either
+                // the one generated with package name and signature or broker redirect uri.
+                isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
+            }
+        }
 
         if (!isValidBrokerRedirect) {
             Logger.error(
