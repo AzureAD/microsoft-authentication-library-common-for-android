@@ -59,6 +59,7 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
+    private final String mSharedPreferencesFileName;
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
@@ -115,12 +116,17 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-
+        mSharedPreferencesFileName = name;
+        
         if (encryptionManager != null) {
             mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
         } else {
             mEncryptionManager = null;
         }
+    }
+
+    public final String getSharedPreferencesFileName() {
+        return mSharedPreferencesFileName;
     }
 
     @Override
