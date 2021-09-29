@@ -139,15 +139,6 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         );
     }
 
-    @Test
-    public void testGetSharedPreferencesWithAndWithoutKeyAccessor() throws Exception {
-        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
-                ApplicationProvider.getApplicationContext(),
-                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
-                null)
-        );
-    }
-    
     public void testGetSharedPreferencesClear() throws Exception {
         Field f = SharedPreferencesFileManager.class.getDeclaredField("mEncryptionManager");
         f.setAccessible(true);
