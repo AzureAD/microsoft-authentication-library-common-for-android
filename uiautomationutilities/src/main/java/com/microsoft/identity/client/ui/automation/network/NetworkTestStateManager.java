@@ -23,7 +23,15 @@
 
 package com.microsoft.identity.client.ui.automation.network;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
+import android.os.Build;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
@@ -36,15 +44,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This stores a list of {@link NetworkTestState} that define the different states of the network
  * that will be applied during a single test run.
  */
-public class NetworkTestingManager {
+public class NetworkTestStateManager {
 
 
-    private final String TAG = NetworkTestingManager.class.getSimpleName();
+    private final String TAG = NetworkTestStateManager.class.getSimpleName();
 
     private static NetworkTestConstants.InterfaceType currentInterface = null;
 
@@ -62,45 +72,36 @@ public class NetworkTestingManager {
     /**
      * An input CSV file may contain multiple lines each defining a list of network states to be applied to
      * a running test.
-     * Therefore, we will create a {@link NetworkTestingManager} for each line of the input CSV. We will
+     * Therefore, we will create a {@link NetworkTestStateManager} for each line of the input CSV. We will
      * also read the corresponding output file, and create {@link NetworkTestResult} for each of the
-     * {@link NetworkTestingManager}.
+     * {@link NetworkTestStateManager}.
      * If we are unable to parse
      * the input/output file, an {@link IllegalArgumentException} will be thrown.
      *
-     * @param testClass            the calling test class, this will help in reading the
-     *                             `androidTest/resources` directory for the specified file.
-     * @param shellCommandExecutor an object to allow running shell commands to manage network state
-     * @param inputFile            a string representing the name of the CSV file that contains the network
-     *                             states.
-     * @param expectedResultFile   a string representing the name of the CSV file that defines the expected result after
-     *                             the the test is run
-     * @return a list containing a {@link NetworkTestingManager}. Each
-     * {@link NetworkTestingManager} represents a line in the file
+     * @param testClass the calling test class, this will help in reading the
+     *                  `androidTest/resources` directory for the specified file.
+     * @param inputFile a string representing the name of the CSV file that contains the network
+     *                  states.
+     * @return a list containing a {@link NetworkTestStateManager}. Each
+     * {@link NetworkTestStateManager} represents a line in the file
      */
-    public static List<NetworkTestingManager> readCSVFile(
+    public static List<NetworkTestStateManager> readCSVFile(
             @NonNull final Class<?> testClass,
-            @NonNull final String inputFile,
-            @NonNull final String expectedResultFile
-    ) throws ClassNotFoundException, IOException {
-        final List<NetworkTestingManager> networkTestingManagers = new ArrayList<>();
+            @NonNull final String inputFile
+    ) throws IOException {
+        final List<NetworkTestStateManager> stateManagers = new ArrayList<>();
 
         final List<List<String>> input = readFile(testClass, inputFile);
-        final List<List<String>> expectedResult = readFile(testClass, expectedResultFile);
-
-        if (input.size() != expectedResult.size()) {
-            throw new IllegalArgumentException("The input and expected result should have the same number of test runs.");
-        }
 
         for (int i = 0; i < input.size(); i++) {
-            final NetworkTestingManager networkTestingManager = new NetworkTestingManager();
+            final NetworkTestStateManager networkTestStateManager = new NetworkTestStateManager();
 
-            networkTestingManager.parseNetworkStates(input.get(i), expectedResult.get(i));
+            networkTestStateManager.parseNetworkStates(input.get(i));
 
-            networkTestingManagers.add(networkTestingManager);
+            stateManagers.add(networkTestStateManager);
         }
 
-        return networkTestingManagers;
+        return stateManagers;
     }
 
 
@@ -116,37 +117,23 @@ public class NetworkTestingManager {
 
     private List<NetworkTestState> states;
     private String id;
-    private NetworkTestResult testResult;
 
-    public NetworkTestingManager() {
+    public NetworkTestStateManager() {
     }
 
     /**
      * Parse an input string that represents the network interface states. The result is stored in
      * the "states" class variable.
      *
-     * @param networkStates  a list representation of the network states for a single test run. The
-     *                       first column represents the ID of the state list
-     *                       Example:
-     *                       TEST1,WIFI,1,CELLULAR,2,NONE,7
-     * @param expectedResult a list representation of the expected result after running a test under the
-     *                       defined networkStatesInput.
-     *                       Example:
-     *                       TEST1,Fail,1,java.lang.RuntimeException,An error occurred
+     * @param networkStates a list representation of the network states for a single test run. The
+     *                      first column represents the ID of the state list
+     *                      Example:
+     *                      TEST1,WIFI,1,CELLULAR,2,NONE,7
      */
-    private void parseNetworkStates(
-            @NonNull final List<String> networkStates,
-            @NonNull final List<String> expectedResult
-    ) throws ClassNotFoundException {
+    private void parseNetworkStates(@NonNull final List<String> networkStates) {
         // There should be an even number of columns, excluding the ID
         if (networkStates.size() % 2 == 0) {
             throw new IllegalArgumentException("The networkStatesInput input stream is invalid.");
-        }
-
-        if (!networkStates.get(0).equals(expectedResult.get(0))) {
-            throw new IllegalArgumentException(
-                    "The input [" + networkStates + "] and expected result [" + expectedResult + "] should have the same ID"
-            );
         }
 
         this.id = networkStates.get(0);
@@ -172,7 +159,6 @@ public class NetworkTestingManager {
         }
 
         // Read the expected result
-        this.testResult = NetworkTestResult.fromInput(expectedResult);
         this.states = Collections.unmodifiableList(stateList);
     }
 
@@ -213,6 +199,7 @@ public class NetworkTestingManager {
         changeNetworkState(nextState.getInterfaceType());
 
         Logger.i(TAG, "Switching network state to [" + nextState.getInterfaceType() + "] for " + nextState.getTime() + "s ");
+        Log.d(TAG, "Switching network state to [" + nextState.getInterfaceType() + "] for " + nextState.getTime() + "s");
     }
 
     /**
@@ -225,12 +212,36 @@ public class NetworkTestingManager {
     }
 
     /**
-     * Get the expected result of the test after the network states are applied.
-     *
-     * @return a {@link NetworkTestResult}
+     * Reset the network state to WIFI
      */
-    public NetworkTestResult getTestResult() {
-        return testResult;
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static void resetNetworkState(final Context context) {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        final ConnectivityManager.NetworkCallback networkCallback;
+
+        final NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+        if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
+            NetworkTestStateManager.changeNetworkState(NetworkTestConstants.InterfaceType.WIFI_AND_CELLULAR);
+
+            final CountDownLatch wifiWaiter = new CountDownLatch(1);
+
+            connectivityManager.registerDefaultNetworkCallback(networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(@NonNull Network network) {
+                    wifiWaiter.countDown();
+                }
+            });
+
+            try {
+                // If the device is not connected to the internet, wait for WIFI to turn ON
+                wifiWaiter.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+            }
+
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
     }
 
     /**

@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Used to define the state of the network during a test run by defining the networkInterface
- * being used by the device, and for how long it will be active. The {@link NetworkTestingManager}
+ * being used by the device, and for how long it will be active. The {@link NetworkTestStateManager}
  * builds a list of these objects to define the changing network state during a test run.
  */
 @Builder

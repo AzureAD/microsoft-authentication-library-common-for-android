@@ -24,12 +24,14 @@ package com.microsoft.identity.client.ui.automation.network;
 
 import androidx.annotation.NonNull;
 
-
 import com.microsoft.identity.client.ui.automation.sdk.ResultFuture;
 
 import org.junit.Assert;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import lombok.AllArgsConstructor;
@@ -39,7 +41,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * It defines the expected test result after running a test under a specific state
- * defined in #{@link NetworkTestingManager}.
+ * defined in #{@link NetworkTestStateManager}.
  */
 @Data
 @AllArgsConstructor
@@ -53,26 +55,38 @@ public class NetworkTestResult {
     private Pattern resultRegex;
 
 
-    public void verifyResult(ResultFuture<String, Exception> resultFuture) {
-        final String testId = "Test [" + this.id + "]";
+    public void verifyResult(final long timeoutSeconds, final ResultFuture<String, Exception> resultFuture, final long startTime) {
         String result;
 
         boolean testPassed = false;
 
         try {
-            result = resultFuture.get();
+            result = resultFuture.get(timeoutSeconds, TimeUnit.SECONDS);
             testPassed = true;
-        } catch (Exception ex) {
-            result = ex.getMessage();
+        } catch (Throwable throwable) {
+            result = throwable.getMessage();
         }
 
+        final long totalSeconds = (System.currentTimeMillis() - startTime) / 1000;
+        final NetworkTestConstants.InterfaceType currentInterface = NetworkTestStateManager.getCurrentInterface();
 
-        Assert.assertTrue(String.format("%s: %s does not match %s", testId, result, resultRegex.pattern()), String.valueOf(result).matches(resultRegex.pattern()));
+
+        Assert.assertTrue(
+                String.format(Locale.getDefault(),
+                        "[Time: %d, NetworkInterface: %s] => [%s] does not match [%s]", totalSeconds, currentInterface, result, resultRegex.pattern()),
+                String.valueOf(result).matches(resultRegex.pattern())
+        );
 
         if (testPassed) {
-            Assert.assertTrue(testId + " passed but it should have failed.", this.passed);
+            Assert.assertTrue(
+                    String.format(Locale.getDefault(), "[Time: %d, NetworkInterface: %s] => Passed but it should have failed.", totalSeconds, currentInterface),
+                    this.passed
+            );
         } else {
-            Assert.assertFalse(String.format("%s failed but it should have passed.", testId), this.passed);
+            Assert.assertFalse(
+                    String.format(Locale.getDefault(), "[Time: %d, NetworkInterface: %s] => Failed but it should have passed.", totalSeconds, currentInterface),
+                    this.passed
+            );
         }
     }
 
