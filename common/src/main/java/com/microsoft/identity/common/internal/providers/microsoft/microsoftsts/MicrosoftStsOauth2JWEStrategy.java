@@ -8,16 +8,17 @@ import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.logging.Logger;
-import com.microsoft.identity.common.internal.net.ObjectMapper;
-import com.microsoft.identity.common.internal.platform.JweResponse;
-import com.microsoft.identity.common.internal.platform.KeyAccessor;
-import com.microsoft.identity.common.internal.platform.RawKeyAccessor;
+import com.microsoft.identity.common.internal.platform.KeyStoreAccessor;
 import com.microsoft.identity.common.internal.platform.SymmetricCipher;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
+import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.platform.JweResponse;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -43,7 +44,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
     private final String TAG = MicrosoftStsOauth2JWEStrategy.class.getSimpleName();
 
-    private final KeyAccessor mSessionKey;
+    private final IKeyAccessor mSessionKey;
     public static final Gson GSON = new Gson();
     private static final SecureRandom random;
     static {
@@ -69,7 +70,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
      */
     public MicrosoftStsOauth2JWEStrategy(@NonNull final MicrosoftStsOAuth2Configuration config,
                                          @NonNull final OAuth2StrategyParameters parameters,
-                                         @NonNull final KeyAccessor sessionKey) {
+                                         @NonNull final IKeyAccessor sessionKey) throws ClientException {
         super(config, parameters);
         setTokenEndpoint(config.getTokenEndpoint().toString());
         mSessionKey = sessionKey;
@@ -84,7 +85,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
                                                 RawKeyAccessor skAccessor)
             throws ClientException {
         byte[] label = AuthenticationConstants.SP800_108_LABEL.getBytes(Charset.forName("ASCII"));
-        KeyAccessor derivedKey = skAccessor.generateDerivedKey(label, ctx, SymmetricCipher.AES_GCM_NONE_HMACSHA256);
+        IKeyAccessor derivedKey = skAccessor.generateDerivedKey(label, ctx, SymmetricCipher.AES_GCM_NONE_HMACSHA256);
 
         byte[] cryptobuf = new byte[ivBytes.length + encryptedBytes.length];
         System.arraycopy(ivBytes, 0, encryptedBytes, 0, ivBytes.length);
@@ -103,7 +104,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
      * @throws ClientException
      */
     public String decryptTokenResponse(@androidx.annotation.NonNull final String jwe,
-                                       @lombok.NonNull final KeyAccessor skAccessor)
+                                       @lombok.NonNull final IKeyAccessor skAccessor)
             throws JSONException, ClientException {
 
         final JweResponse jweResponse = JweResponse.parseJwe(jwe);
@@ -111,8 +112,8 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
             throw new UnsupportedOperationException("This accessor is not currently supported.");
         }
 
-        if (!jweResponse.getJweHeader().mHeaderEncryptionAlgorithm.equalsIgnoreCase("A256GCM")
-                && !jweResponse.getJweHeader().mHeaderEncryptionAlgorithm.equalsIgnoreCase("dir")) {
+        if (!jweResponse.getJweHeader().getEncryptionAlgorithm().equalsIgnoreCase("A256GCM")
+                && !jweResponse.getJweHeader().getEncryptionAlgorithm().equalsIgnoreCase("dir")) {
             throw new IllegalArgumentException("Invalid encryption algorithm");
         }
 
@@ -122,7 +123,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
         // CTX is inside the mJweHeader and comes as Base64 not base64urlencode
         final byte[] derivedKeyCtx = Base64.decode(
-                jweResponse.getJweHeader().mHeaderContext,
+                jweResponse.getJweHeader().getContext(),
                 Base64.DEFAULT
         );
 
@@ -158,7 +159,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
     @Override
     protected String getRequestBody(MicrosoftStsTokenRequest request) throws ClientException, UnsupportedEncodingException {
-        Map<String, String> bodyMap = ObjectMapper.constuctMapFromObject(request);
+        Map<String, String> bodyMap = ObjectMapper.constructMapFromObject(request);
         Map<String, String> headerMap = new LinkedHashMap<>();
         byte[] ctx = new byte[256];
         random.nextBytes(ctx);
