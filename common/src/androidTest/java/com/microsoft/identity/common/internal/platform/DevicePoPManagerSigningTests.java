@@ -22,11 +22,11 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
-import android.os.Build;
-
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -39,17 +39,8 @@ import java.io.IOException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.MD5_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.NONE_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_384_WITH_RSA_PSS;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA;
-import static com.microsoft.identity.common.internal.platform.IDevicePopManager.SigningAlgorithm.SHA_512_WITH_RSA_PSS;
 
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
@@ -59,39 +50,23 @@ public class DevicePoPManagerSigningTests {
     private static final String DATA_TO_SIGN = "The quick brown fox jumped over the lazy dog.";
 
     private final IDevicePopManager devicePopManager;
-    private final IDevicePopManager.SigningAlgorithm signingAlg;
+    private final SigningAlgorithm signingAlg;
 
     @Parameterized.Parameters
-    public static Iterable<IDevicePopManager.SigningAlgorithm> testParams() {
-        final List<IDevicePopManager.SigningAlgorithm> signingAlgs =
-                new ArrayList<IDevicePopManager.SigningAlgorithm>() {{
-                    add(MD5_WITH_RSA);
-                    add(NONE_WITH_RSA);
-                    add(SHA_256_WITH_RSA);
-                    add(SHA_384_WITH_RSA);
-                    add(SHA_512_WITH_RSA);
-                }};
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Only execute these tests at appropriate API levels...
-            signingAlgs.add(SHA_256_WITH_RSA_PSS);
-            signingAlgs.add(SHA_384_WITH_RSA_PSS);
-            signingAlgs.add(SHA_512_WITH_RSA_PSS);
-        }
-
-        return signingAlgs;
+    public static Iterable<SigningAlgorithm> testParams() {
+        return Arrays.asList(SigningAlgorithm.values());
     }
 
     @SuppressWarnings("unused")
-    public DevicePoPManagerSigningTests(final IDevicePopManager.SigningAlgorithm signingAlg)
+    public DevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager();
+        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
         this.signingAlg = signingAlg;
     }
 
     @Before
     public void setUp() throws ClientException {
-        devicePopManager.generateAsymmetricKey(ApplicationProvider.getApplicationContext());
+        devicePopManager.generateAsymmetricKey();
     }
 
     @After

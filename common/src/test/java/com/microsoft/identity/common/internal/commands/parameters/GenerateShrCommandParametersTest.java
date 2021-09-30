@@ -22,25 +22,26 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
-import com.microsoft.identity.common.internal.authscheme.PopAuthenticationSchemeInternal;
-import com.microsoft.identity.common.internal.cache.MapBackedPreferencesManager;
-import com.microsoft.identity.common.internal.commands.Command;
-import com.microsoft.identity.common.internal.commands.CommandCallback;
-import com.microsoft.identity.common.internal.commands.GenerateShrCommand;
-import com.microsoft.identity.common.internal.controllers.BaseController;
-import com.microsoft.identity.common.internal.util.ClockSkewManager;
-import com.microsoft.identity.common.internal.util.IClockSkewManager;
-import com.microsoft.identity.common.internal.util.UrlUtils;
+import androidx.test.core.app.ApplicationProvider;
+
+import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.authscheme.PopAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.commands.CommandCallback;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.GenerateShrCommandParameters;
+import com.microsoft.identity.common.java.util.ClockSkewManager;
+import com.microsoft.identity.common.java.util.UrlUtil;
+import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
-import java.net.URL;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+@RunWith(RobolectricTestRunner.class)
 public class GenerateShrCommandParametersTest {
     private static final CommandCallback EMPTY_CALLBACK = new CommandCallback() {
         @Override public void onCancel() {  }
@@ -49,56 +50,61 @@ public class GenerateShrCommandParametersTest {
     };
 
     public static final GenerateShrCommandParameters PARAMS_ONE = GenerateShrCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .url(UrlUtil.makeUrlSilent("https://url"))
                     .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommandParameters PARAMS_ONE_CLONE = GenerateShrCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .url(UrlUtil.makeUrlSilent("https://url"))
                     .nonce("one")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
     public static final GenerateShrCommandParameters PARAMS_TWO = GenerateShrCommandParameters.builder()
+            .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
             .homeAccountId("One")
             .popParameters(PopAuthenticationSchemeInternal.builder()
                     .clientClaims("claims")
                     .httpMethod("GET")
-                    .url(UrlUtils.makeUrlSilent("https://url"))
+                    .url(UrlUtil.makeUrlSilent("https://url"))
                     .nonce("two")
-                    .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                    .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                     .build())
             .build();
 
     @Test
     public void testMappability() throws Exception {
         GenerateShrCommandParameters commandOne = GenerateShrCommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
                 .homeAccountId("One")
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(UrlUtils.makeUrlSilent("https://url"))
+                        .url(UrlUtil.makeUrlSilent("https://url"))
                         .nonce("one")
-                        .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                         .build())
                 .build();
         GenerateShrCommandParameters commandTwo = GenerateShrCommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
                 .homeAccountId("One")
                 .popParameters(PopAuthenticationSchemeInternal.builder()
                         .clientClaims("claims")
                         .httpMethod("GET")
-                        .url(UrlUtils.makeUrlSilent("https://url"))
+                        .url(UrlUtil.makeUrlSilent("https://url"))
                         .nonce("two")
-                        .clockSkewManager(new ClockSkewManager(new MapBackedPreferencesManager("name")))
+                        .clockSkewManager(new ClockSkewManager(new InMemoryStorage<Long>()))
                         .build())
                 .build();
 

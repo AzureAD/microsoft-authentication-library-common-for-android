@@ -60,11 +60,16 @@ public class HttpCache {
      *                       entries are removed according to an LRU strategy.
      * @return True if the cache was successfully installed. False otherwise.
      */
-    public static boolean initialize(@NonNull final File cacheDirectory,
-                                     @NonNull final String cacheFileName,
-                                     final long maxSizeBytes) {
+    public static synchronized boolean initialize(@NonNull final File cacheDirectory,
+                                                  @NonNull final String cacheFileName,
+                                                  final long maxSizeBytes) {
         final String methodName = ":initialize (File, Filename, Capacity)";
         boolean success = false;
+
+        if (HttpResponseCache.getInstalled() != null){
+            Logger.verbose(TAG + methodName, "Cache is already initialized");
+            return true;
+        }
 
         try {
             final File httpCacheDir = new File(cacheDirectory, cacheFileName);
@@ -78,6 +83,15 @@ public class HttpCache {
             );
         }
 
+        com.microsoft.identity.common.java.cache.HttpCache.setHttpCache(
+                new com.microsoft.identity.common.java.cache.HttpCache.IHttpCacheCallback() {
+                    @Override
+                    public void flush() {
+                        HttpCache.flush();
+                    }
+                }
+        );
+
         return success;
     }
 
@@ -87,7 +101,7 @@ public class HttpCache {
      * @param cacheDirectory The parent-directory in which the cache should reside.
      * @return True if the cache was successfully installed. False otherwise.
      */
-    public static boolean initialize(@NonNull final File cacheDirectory) {
+    public static synchronized boolean initialize(@NonNull final File cacheDirectory) {
         return initialize(
                 cacheDirectory,
                 DEFAULT_HTTP_CACHE_NAME,

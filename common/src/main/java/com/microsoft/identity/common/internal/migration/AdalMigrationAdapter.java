@@ -26,7 +26,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -35,18 +34,20 @@ import androidx.annotation.VisibleForTesting;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
-import com.microsoft.identity.common.exception.ServiceException;
-import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftRefreshToken;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
-import com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectory.ClientInfo;
-import com.microsoft.identity.common.internal.providers.oauth2.IDToken;
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.java.exception.ServiceException;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAccount;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftRefreshToken;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectory;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectoryAccount;
+import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.ClientInfo;
+import com.microsoft.identity.common.java.providers.oauth2.IDToken;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -108,8 +109,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
     }
 
     @Override
-    public List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
-        final List<Pair<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
+    public List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> adapt(Map<String, String> cacheItems) {
+        final List<Map.Entry<MicrosoftAccount, MicrosoftRefreshToken>> result = new ArrayList<>();
 
         synchronized (sLock) { // To prevent multiple threads from potentially running migration
             final boolean hasMigrated = getMigrationStatus();
@@ -173,7 +174,8 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
             clientInfo.addProperty("utid", utid);
 
             final String clientInfoJson = clientInfo.toString();
-            final String base64EncodedClientInfo = new String(Base64.encode(clientInfoJson.getBytes(), 0));
+            final String base64EncodedClientInfo = new String(Base64.encode(clientInfoJson.getBytes(AuthenticationConstants.CHARSET_UTF8), 0),
+                    AuthenticationConstants.CHARSET_UTF8);
             final ClientInfo clientInfoObj = new ClientInfo(base64EncodedClientInfo);
             final IDToken idToken = new IDToken(rawIdToken);
 
@@ -236,7 +238,7 @@ public class AdalMigrationAdapter implements IMigrationAdapter<MicrosoftAccount,
         if (!AzureActiveDirectory.isInitialized()) {
             try {
                 AzureActiveDirectory.performCloudDiscovery();
-            } catch (IOException e) {
+            } catch (final IOException | URISyntaxException e) {
                 Logger.error(
                         TAG + methodName,
                         "Failed to load instance discovery metadata",

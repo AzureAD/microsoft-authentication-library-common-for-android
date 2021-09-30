@@ -166,7 +166,7 @@ public class StorageApi {
      */
     public ApiResponse<SasDefinitionBundle> deleteSasDefinitionWithHttpInfo(String storageAccountName, String sasDefinitionName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -202,7 +202,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = deleteSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -301,7 +301,7 @@ public class StorageApi {
      */
     public ApiResponse<StorageBundle> deleteStorageAccountWithHttpInfo(String storageAccountName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = deleteStorageAccountValidateBeforeCall(storageAccountName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -336,7 +336,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = deleteStorageAccountValidateBeforeCall(storageAccountName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -444,7 +444,7 @@ public class StorageApi {
      */
     public ApiResponse<SasDefinitionBundle> getSasDefinitionWithHttpInfo(String storageAccountName, String sasDefinitionName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -480,7 +480,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = getSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -584,7 +584,7 @@ public class StorageApi {
      */
     public ApiResponse<SasDefinitionListResult> getSasDefinitionsWithHttpInfo(String storageAccountName, String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getSasDefinitionsValidateBeforeCall(storageAccountName, apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<SasDefinitionListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -620,7 +620,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = getSasDefinitionsValidateBeforeCall(storageAccountName, apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SasDefinitionListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -719,7 +719,7 @@ public class StorageApi {
      */
     public ApiResponse<StorageBundle> getStorageAccountWithHttpInfo(String storageAccountName, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = getStorageAccountValidateBeforeCall(storageAccountName, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -754,7 +754,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = getStorageAccountValidateBeforeCall(storageAccountName, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -849,7 +849,7 @@ public class StorageApi {
      */
     public ApiResponse<StorageListResult> getStorageAccountsWithHttpInfo(String apiVersion, Integer maxresults) throws ApiException {
         com.squareup.okhttp.Call call = getStorageAccountsValidateBeforeCall(apiVersion, maxresults, null, null);
-        Type localVarReturnType = new TypeToken<StorageListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageListResult.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -884,7 +884,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = getStorageAccountsValidateBeforeCall(apiVersion, maxresults, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<StorageListResult>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageListResult.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -991,7 +991,7 @@ public class StorageApi {
      */
     public ApiResponse<StorageBundle> regenerateStorageAccountKeyWithHttpInfo(String storageAccountName, StorageAccountRegenerteKeyParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = regenerateStorageAccountKeyValidateBeforeCall(storageAccountName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1027,7 +1027,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = regenerateStorageAccountKeyValidateBeforeCall(storageAccountName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1143,7 +1143,7 @@ public class StorageApi {
      */
     public ApiResponse<SasDefinitionBundle> setSasDefinitionWithHttpInfo(String storageAccountName, String sasDefinitionName, SasDefinitionCreateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = setSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1180,7 +1180,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = setSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1287,7 +1287,7 @@ public class StorageApi {
      */
     public ApiResponse<StorageBundle> setStorageAccountWithHttpInfo(String storageAccountName, StorageAccountCreateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = setStorageAccountValidateBeforeCall(storageAccountName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1323,7 +1323,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = setStorageAccountValidateBeforeCall(storageAccountName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1439,7 +1439,7 @@ public class StorageApi {
      */
     public ApiResponse<SasDefinitionBundle> updateSasDefinitionWithHttpInfo(String storageAccountName, String sasDefinitionName, SasDefinitionUpdateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1476,7 +1476,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = updateSasDefinitionValidateBeforeCall(storageAccountName, sasDefinitionName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<SasDefinitionBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(SasDefinitionBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -1583,7 +1583,7 @@ public class StorageApi {
      */
     public ApiResponse<StorageBundle> updateStorageAccountWithHttpInfo(String storageAccountName, StorageAccountUpdateParameters parameters, String apiVersion) throws ApiException {
         com.squareup.okhttp.Call call = updateStorageAccountValidateBeforeCall(storageAccountName, parameters, apiVersion, null, null);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -1619,7 +1619,7 @@ public class StorageApi {
         }
 
         com.squareup.okhttp.Call call = updateStorageAccountValidateBeforeCall(storageAccountName, parameters, apiVersion, progressListener, progressRequestListener);
-        Type localVarReturnType = new TypeToken<StorageBundle>(){}.getType();
+        Type localVarReturnType = TypeToken.get(StorageBundle.class).getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

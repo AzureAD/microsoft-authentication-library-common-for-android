@@ -24,7 +24,7 @@ package com.microsoft.identity.internal.testutils;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

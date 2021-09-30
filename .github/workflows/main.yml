@@ -10,22 +10,26 @@ on:
     - 'common/versioning/version.properties'
     - 'common4j/versioning/version.properties'
 
-#For Testing... runs when project is starred
-#on:
-#  watch:
-#    types: [started]
-#    branches: [dev]
-
-# Jobs run in parallel by default.  Use "needs:" to indicate dependencies run sequentially
 jobs:
-  # Increment 
-  incrementLatestPatch:
+  # Merge to continuous-delivery branch
+  mergeToContinuousDelivery:
     runs-on: ubuntu-latest
-
+    steps:
+      - uses: actions/checkout@v2
+      - uses: everlytic/branch-merge@1.1.2
+        with:
+          github_token: ${{ github.token }}
+          source_ref: ${{ github.ref }}
+          target_branch: 'continuous-delivery'
+          commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
+  incrementLatestPatch:
+    needs: mergeToContinuousDelivery
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         token: ${{ secrets.ACTION_PAT }}
+        ref: continuous-delivery
     - uses: actions/setup-java@v1
       with:
         java-version: 8

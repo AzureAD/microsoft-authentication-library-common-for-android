@@ -22,6 +22,11 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.platform;
 
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.crypto.SymmetricAlgorithm;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -69,7 +74,7 @@ public class RawKeyAccessorTest {
             }
 
             @Override
-            public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
+            public SigningAlgorithm signingAlgorithm() {
                 return null;
             }
         }, "12345678123456781234567812345678".getBytes("UTF-8"), null);

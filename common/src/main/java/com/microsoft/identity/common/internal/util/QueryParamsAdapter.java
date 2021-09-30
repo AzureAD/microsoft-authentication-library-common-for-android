@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.util;
 
 import android.text.TextUtils;
-import android.util.Pair;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -34,14 +33,16 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Class to serialize and deserialize query parameters from List<Pair<String, String>> to json String
  * and vice versa
  */
-public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> {
+public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, String>>> {
 
     private static final Gson mGson;
 
@@ -55,41 +56,47 @@ public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> 
     }
 
     @Override
-    public void write(final JsonWriter out, final List<Pair<String, String>> queryParams) throws IOException {
+    public void write(final JsonWriter out, final List<Map.Entry<String, String>> queryParams) throws IOException {
         out.beginObject();
 
-        for(final Pair<String, String> pair : queryParams){
-            out.name(pair.first);
-            out.value(pair.second);
+        for (final Map.Entry<String, String> keyValuePair : queryParams) {
+            out.name(keyValuePair.getKey());
+            out.value(keyValuePair.getValue());
         }
         out.endObject();
     }
 
     @Override
-    public List<Pair<String, String>> read(final JsonReader in) throws IOException {
+    public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException {
         in.beginObject();
-        final List<Pair<String, String>> result = new ArrayList<>();
-        while (in.hasNext()){
+        final List<Map.Entry<String, String>> result = new ArrayList<>();
+        while (in.hasNext()) {
             final String key = in.nextName();
             final String value = in.nextString();
-            final Pair<String, String> pair = new Pair<>(key, value);
-            result.add(pair);
+            final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(key, value);
+            result.add(keyValuePair);
         }
         in.endObject();
         return result;
     }
 
-    public static String _toJson(final List<Pair<String, String>> extraQueryStringParameters) {
-        final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
-        return mGson.toJson(extraQueryStringParameters, listType);
+    public static String _toJson(final List<Map.Entry<String, String>> extraQueryStringParameters) {
+        return mGson.toJson(extraQueryStringParameters, getListType());
     }
 
-    public static List<Pair<String, String>> _fromJson(final String jsonString) {
+    public static List<Map.Entry<String, String>> _fromJson(final String jsonString) {
         if (TextUtils.isEmpty(jsonString)) {
             return new ArrayList<>();
         }
-        final Type listType = new TypeToken<List<Pair<String, String>>>(){}.getType();
-        return mGson.fromJson(jsonString, listType);
+        return mGson.fromJson(jsonString, getListType());
     }
 
+    /**
+     * Create a Type for the List of query params
+     *
+     * @return a Type object representing the type of the query params in this case List<Map.Entry<String, String>>
+     */
+    private static Type getListType() {
+        return TypeToken.getParameterized(List.class, TypeToken.getParameterized(Map.Entry.class, String.class, String.class).getRawType()).getType();
+    }
 }

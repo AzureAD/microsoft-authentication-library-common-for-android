@@ -22,13 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.internal.testutils.strategies;
 
+import static com.microsoft.identity.common.java.net.HttpConstants.HeaderField.X_MS_CLITELEM;
+
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.net.HttpResponse;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.internal.testutils.mocks.MockTokenResponse;
 
@@ -77,7 +79,7 @@ public class MockDelayedResponseStrategy extends ResourceOwnerPasswordCredential
     public HttpResponse makeHttpResponseFromResponseObject(final Object obj) {
         final String httpResponseBody = ObjectMapper.serializeObjectToJsonString(obj);
         final HashMap<String, List<String>> responseHeaders = new HashMap<>();
-        responseHeaders.put(AuthenticationConstants.HeaderField.X_MS_CLITELEM, new ArrayList<>(Collections.singleton("1,0,0,,")));
+        responseHeaders.put(X_MS_CLITELEM, new ArrayList<>(Collections.singleton("1,0,0,,")));
         final HttpResponse httpResponse = new HttpResponse(200, httpResponseBody, responseHeaders);
         return httpResponse;
     }

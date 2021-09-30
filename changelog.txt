@@ -1,6 +1,30 @@
 V.Next
 ----------
-- [PATCH] Fix/Suppress SpotBugs issue (#1367) 
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
+- [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
+- [MINOR] Enabling refresh_in feature (#1310)
+- [PATCH] Msal removeAccount shouldn't invoke broker's removeAccount (#1336)
+- [MAJOR] Move Utility classes (#1526)
+- [MINOR] Telemetry for OneAUth (#1514, #1525)
+- [MAJOR] Migrate CommandDispatcher to common4j (#1519)
+- [MAJOR] Migrate BaseController to common4j (#1515)
+- [MAJOR] Migrate *TokenCache classes to common4j
+- [MAJOR] Migrate ISharedPreferencesFileManager to common4j (#1465)
+- [MAJOR] Migrate Strategies and Parameters. (#1488)
+- [MAJOR] Migrate AccountManager's Account (#1483)
+- [MAJOR] Migrate Strategies part 1/2 (#1475)
+- [MINOR] Move predefined key loader to common4j from common (#1477)
+- [PATCH] Add method to check if two authorities belong to same cloud (#1471)
+- [MINOR] Adds new cache encryption key migration API for OneAuth (#1464)
+- [MAJOR] Migrate StorageHelper to common4j (#1450)
+- [MAJOR] Migrate Exceptions from common to common4j (#1442)
+- [PATCH] Fixing removeAccount method for msal cpp when the realm is empty (#1422)
+- [MINOR] Migrate Requests/Responses (#1424)
+- [MAJOR] Add SSL context support to UrlConnectionHttpClient(#1396)
+- [MAJOR] Migrate AuthRequests to common4j (#1394)
+- [MINOR] Migrate Device, ObjectMapper, ClockSkewManager and IHasExtraParameters to common4j (#1383)
+- [MINOR] Migrate eSTS Telemetry to common4j (#1372)
+- [PATCH] Fix/Suppress SpotBugs issue (#1367)
 - [MINOR] Migrate HTTP Layer to common java lib. (#1347)
 - [PATCH] Port eSTS telemetry layer to common-java (#1328)
 - [MINOR] Added support for handling null taskAffinity.  InteractiveTokenCommmand now captures whether taskAFfinity is null and records taskId (#1282)
@@ -8,10 +32,76 @@ V.Next
 - [MAJOR] New API on KeyAccessor (#1309)
 - [PATCH] Fixes deprecated PackageInfo.signatures and PackageManager.GET_SIGNATURES (#1256)
 - [MINOR] Converting Classic Azure DevOps Pipelines to YAML (#1274)
-- [PATCH] Add common-java. Migrate Logger. (#1300)
-- [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
+- [MINOR] Add common-java. Migrate Logger. (#1300)
+- [PATCH] Add additional logic to support downlevel devices in KeyStoreAccessor (#1366)
+- [PATCH] Adding codemarkers for usage in the Test cases of brokered and non-brokered Acquire Token silently scenarios. (#1185)
+- [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
+- [PATCH] Avoid unnecessary BAM-cache reload (#1426)
+- [PATCH] Using singleton/LRU cached BAM-Cache implementation (#1420)
+- [MINOR] Add a method to IDeviceMetadata to get all metadata as a String (#1433)
+- [MINOR] Creates ICommonComponents for sharing interfaces across Android, Linux (including non-brokered components) (#1431)
+- [PATCH] Avoid needless BAM-cache lookups for non-foci apps when doing cache discovery (#1427)
+- [PATCH] Avoid multiple reads of BAM-Cache when inserting new data (#1429)
+- [MAJOR] Relocate SSOStatesSerializer out of internal namespace (integration steps available at aka.ms/AAd2vt8) (#1448)
+- [MINOR] Adds new Device#isDevicePoPSupported() API to test PoP compat + support for retrying key generation without requesting cert attestation (#1456)
+- [MINOR] Move Account Manager User Data look-up constants from common, AADAuthenticator to common4j (#1486)
+- [MAJOR] Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489)
+- [MINOR] Implements a fix for sovereign cloud TSL scenarios (#1501)
+- [MINOR] Add a method to allow for the setting of Fragment initial state (#1506)
+- [PATCH] Clear asymmetric pop key on KeyPermanentlyInvalidatedException if occurs during signing (#1505)
+- [PATCH] Modify MSAL-CPP injecting javascript loop (#1490)
+- [MINOR] Migrate authorization completion callback to common4j (#1522)
+- [PATCH] Remove deprecation logging in Logger class (#1502)
+- [MINOR] Migrate broker application metadata cache to common4j (#1530)
+- [PATCH] Replace unsafe TypeToken instance with TypeToken#getParameterized (#1485)
+- [MINOR] Add more operation names to ArgumentException (#1553)
+- [MINOR] Add msal linux sdk type (#1554)
+- [PATCH] Fix extracting http response body (#1557)
+- [PATCH] Fix print stack trace for Throwable in Logs (#1556)
+- [PATCH] Support SSO token api (#1543)
+- [MINOR] Add flighting parameters to commmandParameters (#1562)
+
+Version 3.6.2
+----------
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)
+- [PATCH] Fixing Redirect Uri for Authenticator App, when migrating to MSAL (#1567)
+
+Version 3.6.1
+----------
+- [PATCH] Additional API for method to clear the singleton shared preferences cache
+- [PATCH] Log and swallow failures from CustomTabsService unbind (#1549)
+- [PATCH] Fix correlation id error
+- [PATCH] Fix crash related to fall back to webview when no browser present
+
+Version 3.6.0
+----------
+- [PATCH] Allow retry generation of Device PoP key without attempting attestation cert gen (#1456, #1507)
+- [MAJOR/MINOR (Rebrand)] Please note! This is technically an API breaking change that we have elected to voluntarily ship as "MINOR" due to lack of usage. Removes support for SHA-384/512, MD5 w. RSA due to incompatibilities on certain devices (#1489, #1508)
+- [MINOR] Increase visibility of internal SSOStateSerializer for OneAuth usage (integration steps available at aka.ms/AAd2vt8) (#1448, #1509)
+- [MINOR] Add a method to allow for the setting of Fragment initial state (#1506, #1512)
+- [MINOR] Adds ContentProvider Constants used for Intune ContentProvider call (#1513, #1657)
+- [PATCH] Clear asymmetric pop key on KeyPermanentlyInvalidatedException if occurs during signing (#1505, #1517)
+- [MINOR] Adds Intune Application specific ContentProvider Constants (#1521, #1513)
+
+Version 3.5.0
+----------
+- [MINOR] Code changes for new OneAuth cache key migration API (#1464)
+- [PATCH] Correct the production of JSON JWKs by the popManager code (#1479)
+
+Version 3.4.5
+----------
+- [PATCH] Fix for misconfigured ADALOAuth2TokenCache, adds new SharedPreferencesFileManager that defaults to MODE_PRIVATE (#1444)
+- [PATCH] Do not report network errors as authority validation errors (#1440)
+
+Version 3.4.4
+----------
+- [MINOR] Introduce support for authorization activities to be performed in the Android Task as the Activity that was provided for an interactive request.
 - [PATCH] Rev Nimbus version: 8.2 -> 9.9 (#1346)
+- [PATCH] Perf: Avoid repeated calls to getCredentials() when loading from cache (#1334)
+- [PATCH] Only hit cache once when loading x-tenant idtokens (#1385)
 - [PATCH] Disregard pageload errors for the non-primary frame during interactive auth (#1357)
+- [PATCH] Avoid unnecessary BAM-cache reload (#1439, cherry-picked from #1426)
+- [PATCH] Concurrency fix: revert thread pool construction changes in CommandDispatcher (#1434)
 
 Version 3.4.3
 ----------

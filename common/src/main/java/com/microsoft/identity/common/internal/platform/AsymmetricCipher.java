@@ -26,6 +26,11 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.CryptoSuite;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.crypto.AsymmetricAlgorithm;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+
 import java.security.KeyStore;
 
 /**
@@ -60,8 +65,8 @@ public enum AsymmetricCipher implements CryptoSuite {
 
         @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
-        public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
-            return IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
+        public SigningAlgorithm signingAlgorithm() {
+            return SigningAlgorithm.SHA_256_WITH_RSA;
         }
     },
     RSA_ECB_PKCS1_PADDING_HMACSHA256 {
@@ -92,8 +97,8 @@ public enum AsymmetricCipher implements CryptoSuite {
 
         @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
         @Override
-        public IDevicePopManager.SigningAlgorithm signingAlgorithm() {
-            return IDevicePopManager.SigningAlgorithm.SHA_256_WITH_RSA;
+        public SigningAlgorithm signingAlgorithm() {
+            return SigningAlgorithm.SHA_256_WITH_RSA;
         }
     };
 }

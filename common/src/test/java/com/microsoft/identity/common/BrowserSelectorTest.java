@@ -36,11 +36,11 @@ import android.os.Build;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.ui.browser.Browser;
-import com.microsoft.identity.common.internal.ui.browser.BrowserDescriptor;
 import com.microsoft.identity.common.internal.ui.browser.BrowserSelector;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

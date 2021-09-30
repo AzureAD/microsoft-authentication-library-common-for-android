@@ -13,8 +13,8 @@ parameters:
   - Latest
 
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: assemble_publish
+  displayName: Assemble and publish Snapshot/Latest Release
   timeoutInMinutes: 90
   cancelTimeoutInMinutes: 1
   pool:
@@ -24,9 +24,6 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: ../credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: common
   - task: CmdLine@1
     displayName: Set MVN Access Token in Environment
     inputs:
@@ -66,6 +63,4 @@ jobs:
     inputs:
       ArtifactName: CommonRelease
       TargetPath: $(Build.SourcesDirectory)/common/build/
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...

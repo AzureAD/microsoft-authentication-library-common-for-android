@@ -22,6 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
+import com.microsoft.identity.common.java.providers.oauth2.DefaultStateGenerator;
 import com.microsoft.identity.common.logging.Logger;
 
 import lombok.Getter;
@@ -47,6 +48,7 @@ public class AndroidTaskStateGenerator extends DefaultStateGenerator {
     }
 
     @Override
+    @NonNull
     public String generate() {
         String state = super.generate();
         state = String.format("%d%s%s", this.taskId, SPLITTER, state);
