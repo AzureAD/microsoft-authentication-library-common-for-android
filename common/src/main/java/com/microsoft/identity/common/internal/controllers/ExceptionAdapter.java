@@ -22,6 +22,10 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.internal.controllers;
 
+import android.app.Service;
+import android.text.TextUtils;
+import android.util.Pair;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -31,10 +35,16 @@ import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.exception.BaseException;
 import com.microsoft.identity.common.exception.ClientException;
 import com.microsoft.identity.common.exception.DeviceRegistrationRequiredException;
+import com.microsoft.identity.common.exception.IntuneAppProtectionPolicyRequiredException;
 import com.microsoft.identity.common.exception.TerminalException;
 import com.microsoft.identity.common.exception.ServiceException;
 import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
+import com.microsoft.identity.common.internal.authorities.Authority;
+import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.net.HttpResponse;
 import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationErrorResponse;
 import com.microsoft.identity.common.internal.providers.oauth2.AuthorizationErrorResponse;
@@ -51,13 +61,14 @@ import org.json.JSONException;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
+import java.util.regex.Pattern;
 
 public class ExceptionAdapter {
 
     private static final String TAG = ExceptionAdapter.class.getSimpleName();
 
     @Nullable
-    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result) {
+    public static BaseException exceptionFromAcquireTokenResult(final AcquireTokenResult result, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromAcquireTokenResult";
 
         @SuppressWarnings(WarningType.rawtype_warning)
@@ -110,7 +121,7 @@ public class ExceptionAdapter {
             );
         }
 
-        return exceptionFromTokenResult(result.getTokenResult());
+        return exceptionFromTokenResult(result.getTokenResult(), commandParameters);
     }
 
     /**
@@ -119,7 +130,7 @@ public class ExceptionAdapter {
      * @param tokenResult
      * @return ServiceException, UiRequiredException
      * */
-    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult) {
+    public static ServiceException exceptionFromTokenResult(final TokenResult tokenResult, final CommandParameters commandParameters) {
         final String methodName = ":exceptionFromTokenResult";
 
         ServiceException outErr;
@@ -129,7 +140,7 @@ public class ExceptionAdapter {
                 tokenResult.getErrorResponse() != null &&
                 !StringUtil.isEmpty(tokenResult.getErrorResponse().getError())) {
 
-            outErr = getExceptionFromTokenErrorResponse(tokenResult.getErrorResponse());
+            outErr = getExceptionFromTokenErrorResponse(commandParameters, tokenResult.getErrorResponse());
             applyCliTelemInfo(tokenResult.getCliTelemInfo(), outErr);
         }else {
             Logger.warn(
@@ -171,7 +182,6 @@ public class ExceptionAdapter {
      * @return ServiceException, UiRequiredException
      * */
     public static ServiceException getExceptionFromTokenErrorResponse(@NonNull final TokenErrorResponse errorResponse) {
-        final String methodName = ":getExceptionFromTokenErrorResponse";
 
         final ServiceException outErr;
 
@@ -188,24 +198,143 @@ public class ExceptionAdapter {
         }
 
         outErr.setOauthSubErrorCode(errorResponse.getSubError());
+        setHttpResponseUsingTokenErrorResponse(outErr, errorResponse);
+        return outErr;
+    }
+
+
+    public static ServiceException getExceptionFromTokenErrorResponse(@Nullable final CommandParameters commandParameters,
+                                                                      @NonNull final TokenErrorResponse errorResponse) {
+
+        if(isIntunePolicyRequiredError(errorResponse)){
+            if(commandParameters == null || !(commandParameters instanceof BrokerSilentTokenCommandParameters)){
+                Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
+                return getExceptionFromTokenErrorResponse(errorResponse);
+            }
+            IntuneAppProtectionPolicyRequiredException policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                    errorResponse.getError(),
+                    errorResponse.getErrorDescription()
+            );
+            policyRequiredException.setOauthSubErrorCode(errorResponse.getSubError());
+            setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
+
+            setIntuneExceptionProperties(
+                    policyRequiredException,
+                    (BrokerSilentTokenCommandParameters) commandParameters
+            );
+            return policyRequiredException;
+        }else{
+            return getExceptionFromTokenErrorResponse(errorResponse);
+        }
+
+
+    }
+
+    /**
+     * Name: setHttpResponseUsingTokenErrorResponse
+     * @param exception ServiceException to which we will append an HttpResponse
+     * @param errorResponse A TokenErrorResponse from which we will recontruct an HttpResponse
+     */
+
+    private static void setHttpResponseUsingTokenErrorResponse(@NonNull final ServiceException exception,
+            @NonNull final TokenErrorResponse errorResponse){
 
         try {
-            outErr.setHttpResponse(
+            exception.setHttpResponse(
                     synthesizeHttpResponse(
-                            errorResponse.getStatusCode(),
-                            errorResponse.getResponseHeadersJson(),
-                            errorResponse.getResponseBody()
-                    )
-            );
-        }
-        catch (JSONException e) {
+                    errorResponse.getStatusCode(),
+                    errorResponse.getResponseHeadersJson(),
+                    errorResponse.getResponseBody()));
+        } catch (JSONException e) {
             Logger.warn(
-                    TAG + methodName,
+                    TAG,
                     "Failed to deserialize error data: status, headers, response body."
             );
         }
 
-        return outErr;
+    }
+
+    /**
+     * Helper method to get uid from home account id
+     * V2 home account format : <uid>.<utid>
+     * V1 : it's stored as <uid>
+     *
+     * @param homeAccountId
+     * @return valid uid or null if it's not in either of the format.
+     */
+    @Nullable
+    public static String getUIdFromHomeAccountId(@Nullable String homeAccountId) {
+        //TODO: This method is from BrokerOperationParameterUtils...
+        // seems like this is not broker specific per se and should move to somewhere better
+        final String methodName = ":getUIdFromHomeAccountId";
+        final String DELIMITER_TENANTED_USER_ID = ".";
+        final int EXPECTED_ARGS_LEN = 2;
+        final int INDEX_USER_ID = 0;
+
+        if (!TextUtils.isEmpty(homeAccountId)) {
+            final String[] homeAccountIdSplit = homeAccountId.split(
+                    Pattern.quote(DELIMITER_TENANTED_USER_ID)
+            );
+
+            if (homeAccountIdSplit.length == EXPECTED_ARGS_LEN) {
+                com.microsoft.identity.common.internal.logging.Logger.info(TAG + methodName,
+                        "Home account id is tenanted, returning uid "
+                );
+                return homeAccountIdSplit[INDEX_USER_ID];
+            } else if (homeAccountIdSplit.length == 1) {
+                com.microsoft.identity.common.internal.logging.Logger.info(TAG + methodName,
+                        "Home account id not tenanted, it's the uid added by v1 broker "
+                );
+                return homeAccountIdSplit[INDEX_USER_ID];
+            }
+        }
+
+        com.microsoft.identity.common.internal.logging.Logger.warn(TAG + methodName,
+                "Home Account id doesn't have uid or tenant id information, returning null "
+        );
+
+        return null;
+    }
+
+    private static void setIntuneExceptionProperties(
+            @NonNull final IntuneAppProtectionPolicyRequiredException exception,
+            @NonNull final BrokerSilentTokenCommandParameters requestParameters) {
+
+        com.microsoft.identity.common.internal.logging.Logger.info(TAG, "Setting properties to IntuneAppProtectionPolicyRequiredException ");
+
+        final String upn = (requestParameters.getAccountManagerAccount() != null) ?
+                requestParameters.getAccountManagerAccount().name :
+                requestParameters.getLoginHint();
+        exception.setAccountUpn(upn);
+
+        String uId = requestParameters.getLocalAccountId();
+
+        if (TextUtils.isEmpty(uId)) {
+            com.microsoft.identity.common.internal.logging.Logger.info(TAG, "Local account id is empty, attempting get user id from home account id");
+            uId = getUIdFromHomeAccountId(
+                    requestParameters.getHomeAccountId()
+            );
+        }
+
+        exception.setAccountUserId(uId);
+
+        final Authority authority = requestParameters.getAuthority();
+        exception.setAuthorityUrl(authority.getAuthorityURL().toString());
+
+        final String homeAccountId = requestParameters.getHomeAccountId();
+        String tenantId = null;
+
+        if (homeAccountId != null) {
+            final Pair<String, String> tenantInfo = StringUtil.getTenantInfo(homeAccountId);
+            tenantId = tenantInfo.second;
+        }
+
+        if (TextUtils.isEmpty(tenantId) && authority instanceof AzureActiveDirectoryAuthority) {
+            tenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
+
+        }
+        exception.setTenantId(tenantId);
+
     }
 
     public static void applyCliTelemInfo(@Nullable final CliTelemInfo cliTelemInfo,
@@ -273,5 +402,14 @@ public class ExceptionAdapter {
                 ClientException.UNKNOWN_ERROR,
                 e.getMessage(),
                 e);
+    }
+
+    private static boolean isIntunePolicyRequiredError(
+            @NonNull final TokenErrorResponse errorResponse) {
+
+        return !TextUtils.isEmpty(errorResponse.getError()) &&
+                !TextUtils.isEmpty(errorResponse.getSubError()) &&
+                errorResponse.getError().equalsIgnoreCase(AuthenticationConstants.OAuth2ErrorCode.UNAUTHORIZED_CLIENT) &&
+                errorResponse.getSubError().equalsIgnoreCase(AuthenticationConstants.OAuth2SubErrorCode.PROTECTION_POLICY_REQUIRED);
     }
 }
