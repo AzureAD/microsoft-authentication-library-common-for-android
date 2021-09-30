@@ -28,6 +28,12 @@ public class ClientException extends BaseException {
     private static final long serialVersionUID = -2318746536590284648L;
 
     /**
+     * Indicates that a request was made for a specific environment, and this information was not
+     * present on the device.
+     */
+    public static final String ENVIRONMENT_NOT_PRESENT = "environment_token_not_present";
+
+    /**
      * Indicates that an invalid algorithm parameter is in use.
      */
     public static final String INVALID_ALG_PARAMETER = "invalid_algorithm_parameter";
@@ -48,6 +54,11 @@ public class ClientException extends BaseException {
      * Experienced a failure when attempting to execute PKCE.
      */
     public static final String PKCE_FAILURE = "pkce_failure";
+
+    /**
+     * Experienced a failure when attempting to generate PKCS.
+     */
+    public static final String PKCS_FAILURE = "pkcs_failure";
 
     /**
      * There are multiple cache entries found, the sdk cannot pick the correct access token
@@ -112,6 +123,10 @@ public class ClientException extends BaseException {
     public static final String NO_SUCH_ALGORITHM = "no_such_algorithm";
 
     public static final String NO_SUCH_PROVIDER = "no_such_provider";
+
+    public static final String INVALID_KEY_SPEC = "invalid_key_spec";
+
+    public static final String INVALID_CERTIFICATE_REQUEST = "invalid_cert_request";
 
     /**
      * JWT returned by the server is not valid, empty or malformed.

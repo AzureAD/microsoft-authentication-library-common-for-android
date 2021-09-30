@@ -30,7 +30,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.microsoft.identity.common.internal.configuration.LibraryConfiguration;
+import com.microsoft.identity.common.java.configuration.LibraryConfiguration;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiStartEvent;
 import com.microsoft.identity.common.java.ui.AuthorizationAgent;
@@ -77,7 +77,11 @@ public class AuthorizationActivityFactory {
         final LibraryConfiguration libraryConfig = LibraryConfiguration.getInstance();
         if (ProcessUtil.isBrokerProcess(context)) {
             intent = new Intent(context, BrokerAuthorizationActivity.class);
-        } else if (libraryConfig.isAuthorizationInCurrentTask()) {
+        } else if (libraryConfig.isAuthorizationInCurrentTask() && !authorizationAgent.equals(AuthorizationAgent.WEBVIEW)) {
+        // We exclude the case when the authorization agent is already selected as WEBVIEW because of confusion
+        // that results from attempting to use the CurrentTaskAuthorizationActivity in that case, because as webview
+        // already uses the current task, attempting to manually simulate that behavior ends up supplying an incorrect
+        // Fragment to the activity.
                 intent = new Intent(context, CurrentTaskAuthorizationActivity.class);
         } else {
                 intent = new Intent(context, AuthorizationActivity.class);

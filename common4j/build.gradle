@@ -145,7 +145,7 @@ if (project.hasProperty("dc")) {
 
 sourceSets {
     main {
-        java.srcDirs = ['src/main', 'build/generated/source/buildConfig/main']
+        java.srcDirs = ['src/main', "$project.buildDir/generated/source/buildConfig/main"]
         buildConfigField("String", "SLICE", "\"$sliceParameter\"")
         buildConfigField("String", "DC", "\"$dcParameter\"")
     }

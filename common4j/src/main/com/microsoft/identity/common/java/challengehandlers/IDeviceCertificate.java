@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.challengehandlers;
 
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
@@ -48,11 +50,18 @@ public interface IDeviceCertificate {
     X509Certificate getCertificate();
 
     /**
-     * Gets RSA private key.
+     * Gets a private key.
      *
-     * @return RSA private key
+     * @return private key
      */
-    RSAPrivateKey getRSAPrivateKey();
+    PrivateKey getPrivateKey();
+
+    /**
+     * Gets a public key.
+     *
+     * @return RSA public key.
+     */
+    PublicKey getPublicKey();
 
     /**
      * Gets thumbPrint for certificate.
@@ -60,12 +69,5 @@ public interface IDeviceCertificate {
      * @return thumbPrint for certificate.
      */
     String getThumbPrint();
-
-    /**
-     * Gets RSA public key.
-     *
-     * @return RSA public key.
-     */
-    RSAPublicKey getRSAPublicKey();
 }
 

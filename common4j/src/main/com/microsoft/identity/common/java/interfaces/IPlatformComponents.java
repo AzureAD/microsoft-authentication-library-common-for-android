@@ -61,6 +61,14 @@ public interface IPlatformComponents {
     IDevicePopManager getDefaultDevicePopManager() throws ClientException;
 
     /**
+     * Gets a {@link IDevicePopManager} associated to the alias.
+     *
+     * @throws ClientException if it fails to initalize, or if the operation is not supported by the platform.
+     */
+    @NonNull
+    IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
+
+    /**
      * Retrieve a name-value store with a given identifier.
      *
      * @param storeName The name of a new KeyValue store.
@@ -94,8 +102,7 @@ public interface IPlatformComponents {
      */
     IMultiTypeNameValueStorage getFileStore(String storeName);
 
-    @NonNull
-    IDevicePopManager getDevicePopManager(@Nullable final String alias) throws ClientException;
+    INameValueStorage<String> getMultiProcessStringStore(@NonNull String storeName);
 
     /**
      * Gets {@link IAuthorizationStrategyFactory} of each platform.

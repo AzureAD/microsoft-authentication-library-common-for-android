@@ -37,6 +37,8 @@ import com.microsoft.identity.common.java.result.AcquireTokenResult;
 import com.microsoft.identity.common.java.result.GenerateShrResult;
 import com.microsoft.identity.common.java.result.LocalAuthenticationResult;
 import com.microsoft.identity.common.java.telemetry.Telemetry;
+import com.microsoft.identity.common.java.providers.oauth2.IResult;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.telemetry.events.CacheEndEvent;
 import com.microsoft.identity.common.java.AuthenticationConstants;
 import com.microsoft.identity.common.java.WarningType;
@@ -92,6 +94,9 @@ import java.util.regex.Pattern;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
+
+import static com.microsoft.identity.common.java.exception.ServiceException.SERVICE_NOT_AVAILABLE;
+import static com.microsoft.identity.common.java.util.ResultUtil.logExposedFieldsOfObject;
 
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public abstract class BaseController {
@@ -305,7 +310,7 @@ public abstract class BaseController {
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
                                     @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
                                     @NonNull final ICacheRecord cacheRecord)
-            throws IOException, ClientException {
+            throws IOException, ClientException, ServiceException {
         final String methodName = ":renewAccessToken";
         Logger.info(
                 TAG + methodName,
@@ -378,8 +383,207 @@ public abstract class BaseController {
                                     + isRemoved
                     );
                 }
+
+                /*
+                    Intended to cover the AAD outage scenario for the refresh_in logic.
+                    Should return existing AT without refreshing it.
+                    This way caller will know whether to refresh based on this exception.
+                 */
+                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
+                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
+                }
+
             } else {
                 Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
+            }
+        }
+    }
+
+    /*
+        Light version of:
+        protected renewAccessToken(@NonNull final SilentTokenCommandParameters parameters,
+                                   @NonNull final AcquireTokenResult acquireTokenSilentResult,
+                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2TokenCache tokenCache,
+                                   @SuppressWarnings(WarningType.rawtype_warning) @NonNull final OAuth2Strategy strategy,
+                                   @NonNull final ICacheRecord cacheRecord)
+
+        Diffs
+        1) acquireTokenSilentResult updates omitted.
+        2) All arguments derived from SilentTokenCommandParameters
+        3) New logic replacing old Access Token
+     */
+    public TokenResult renewAccessToken(@NonNull final SilentTokenCommandParameters parameters)
+            throws IOException, ClientException, ServiceException {
+        final String methodName = ":renewAccessToken";
+        Logger.info(
+                TAG + methodName,
+                "Renewing access token..."
+        );
+
+        OAuth2Strategy strategy = getStrategy(parameters);
+        OAuth2TokenCache cache = getTokenCache(parameters);
+        ICacheRecord cacheRecord = getCacheRecord(parameters);
+
+        Logger.info(
+                TAG + methodName,
+                "Attempting renewal of Access Token because it's refresh-expired. RefreshIn was expired at " + cacheRecord.getAccessToken().getRefreshOn() + ". Regular expiry is at " + cacheRecord.getAccessToken().getExpiresOn() + "."
+                        + "Currently executing acquireTokenSilent(..), SilentTokenCommand with CorrelationId: " + parameters.getCorrelationId()
+        );
+        //Get tokenResult
+        RefreshTokenRecord refreshTokenRecord = cacheRecord.getRefreshToken();
+        logParameters(TAG, parameters);
+        final TokenResult tokenResult = performSilentTokenRequest(
+                strategy,
+                refreshTokenRecord,
+                parameters
+        );
+
+        logResult(TAG + methodName, tokenResult);
+        if (tokenResult.getSuccess()) {
+            Logger.info(
+                    TAG + methodName,
+                    "Token request was successful"
+            );
+
+            // Remove old Access Token
+            Logger.info(
+                    TAG + methodName,
+                    "Access token is refresh-expired. Removing from cache..."
+            );
+            final AccessTokenRecord accessTokenRecord = cacheRecord.getAccessToken();
+            cache.removeCredential(accessTokenRecord);
+
+            // Suppressing unchecked warnings due to casting of rawtypes to generic types of OAuth2TokenCache's instance tokenCache while calling method saveAndLoadAggregatedAccountData
+            @SuppressWarnings(WarningType.unchecked_warning) final List<ICacheRecord> savedRecords = cache.saveAndLoadAggregatedAccountData(
+                    strategy,
+                    getAuthorizationRequest(strategy, parameters),
+                    tokenResult.getTokenResponse()
+            );
+
+            final ICacheRecord savedRecord = savedRecords.get(0);
+            finalizeCacheRecordForResult(savedRecord, parameters.getAuthenticationScheme());
+            // Set the client telemetry...
+            if (null != tokenResult.getCliTelemInfo()) {
+                Telemetry.emit(new CacheEndEvent().putSpeInfo(tokenResult.getCliTelemInfo().getSpeRing()));
+            } else {
+                // we can't put SpeInfo as the CliTelemInfo is null
+                Telemetry.emit(new CacheEndEvent());
+            }
+
+        } else {
+            if (tokenResult.getErrorResponse() != null) {
+                final String errorCode = tokenResult.getErrorResponse().getError();
+                final String subErrorCode = tokenResult.getErrorResponse().getSubError();
+                Logger.warn(TAG, "Error: " + errorCode + " Suberror: " + subErrorCode);
+
+                if (OAuth2ErrorCode.INVALID_GRANT.equals(errorCode) && OAuth2SubErrorCode.BAD_TOKEN.equals(subErrorCode)) {
+                    boolean isRemoved = cache.removeCredential(cacheRecord.getRefreshToken());
+                    Logger.info(
+                            TAG,
+                            "Refresh token is invalid, "
+                                    + "attempting to delete the RT from cache, result:"
+                                    + isRemoved
+                    );
+                }
+
+                /*
+                    Intended to cover the AAD outage scenario for the refresh_in logic.
+                    Should return existing AT without refreshing it.
+                    This way caller will know whether to refresh based on this exception.
+                 */
+                if(SERVICE_NOT_AVAILABLE.equals(errorCode)){
+                    throw new ServiceException(SERVICE_NOT_AVAILABLE, "AAD is not available.", tokenResult.getErrorResponse().getStatusCode(), null);
+                }
+
+            } else {
+                Logger.warn(TAG, "Invalid state, No token success or error response on the token result");
+            }
+        }
+
+        return tokenResult;
+    }
+
+    public OAuth2Strategy getStrategy(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        final OAuth2StrategyParameters strategyParameters = OAuth2StrategyParameters.builder()
+                .platformComponents(parameters.getPlatformComponents())
+                .build();
+
+        return parameters.getAuthority().createOAuth2Strategy(strategyParameters);
+    }
+
+    public ICacheRecord getCacheRecord(@NonNull final SilentTokenCommandParameters parameters) throws ClientException {
+        //Extract cache from parameters
+        final AccountRecord targetAccount = getCachedAccountRecord(parameters);
+        final AbstractAuthenticationScheme authScheme = parameters.getAuthenticationScheme();
+        final OAuth2TokenCache cache = parameters.getOAuth2TokenCache();
+
+        //Get cacheRecord from cache
+        @SuppressWarnings("unchecked")
+        final List<ICacheRecord> cacheRecords = cache.loadWithAggregatedAccountData(
+                parameters.getClientId(),
+                StringUtil.join(" ", parameters.getScopes()),
+                targetAccount,
+                authScheme
+        );
+        return cacheRecords.get(0);
+    }
+
+    public OAuth2TokenCache getTokenCache(@NonNull final SilentTokenCommandParameters parameters){
+        //Extract cache from parameters
+        return parameters.getOAuth2TokenCache();
+    }
+
+    /**
+     * Log IResult objects.  IResult objects are returned from Authorization and Token Requests
+     *
+     * @param tag    The log tag to use.
+     * @param result The result object to log.
+     */
+    public static void logResult(@NonNull final String tag,
+                                 @NonNull final IResult result) {
+        final String TAG = tag + ":" + result.getClass().getSimpleName();
+
+        if (result.getSuccess()) {
+            Logger.info(
+                    TAG,
+                    "Success Result"
+            );
+
+            logExposedFieldsOfObject(TAG, result.getSuccessResponse());
+        } else {
+            Logger.warn(
+                    TAG,
+                    "Failure Result"
+            );
+
+            if (result.getErrorResponse() != null) {
+                if (result.getErrorResponse().getError() != null) {
+                    Logger.warn(
+                            TAG,
+                            "Error: " + result.getErrorResponse().getError()
+                    );
+                }
+
+                if (result.getErrorResponse().getErrorDescription() != null) {
+                    Logger.warnPII(
+                            TAG,
+                            "Description: " + result.getErrorResponse().getErrorDescription()
+                    );
+                }
+
+                logExposedFieldsOfObject(TAG, result.getErrorResponse());
+            }
+        }
+
+        if (result instanceof AuthorizationResult) {
+            @SuppressWarnings(WarningType.rawtype_warning)
+            AuthorizationResult authResult = (AuthorizationResult) result;
+
+            if (authResult.getAuthorizationStatus() != null) {
+                Logger.info(
+                        TAG,
+                        "Authorization Status: " + authResult.getAuthorizationStatus().toString()
+                );
             }
         }
     }
@@ -680,7 +884,8 @@ public abstract class BaseController {
 
     public ICacheRecord finalizeCacheRecordForResult(@NonNull final ICacheRecord cacheRecord,
                                                      @NonNull final AbstractAuthenticationScheme scheme) throws ClientException {
-        if (scheme instanceof ITokenAuthenticationSchemeInternal) {
+        if (scheme instanceof ITokenAuthenticationSchemeInternal &&
+                !StringUtil.isNullOrEmpty(cacheRecord.getAccessToken().getSecret())) {
             final ITokenAuthenticationSchemeInternal tokenAuthScheme = (ITokenAuthenticationSchemeInternal) scheme;
             cacheRecord
                     .getAccessToken()

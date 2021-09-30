@@ -10,7 +10,7 @@ apply from: '../versioning/version_tasks.gradle'
 
 def desugarCode = false
 
-if(project.hasProperty("sugar")){
+if (project.hasProperty("sugar")) {
     desugarCode = sugar.toBoolean()
 }
 
@@ -113,7 +113,7 @@ dependencies {
         transitive = false
     }
 
-    implementation (group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
+    implementation(group: 'com.microsoft.device.display', name: 'display-mask', version: '0.3.0')
 
     implementation "cz.msebera.android:httpclient:$rootProject.ext.mseberaApacheHttpClientVersion"
     implementation "com.nimbusds:nimbus-jose-jwt:$rootProject.ext.nimbusVersion"
@@ -121,6 +121,7 @@ dependencies {
     implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.browser:browser:$rootProject.ext.browserVersion"
     implementation "androidx.constraintlayout:constraintlayout:$rootProject.ext.constraintLayoutVersion"
+
     compileOnly 'com.github.spotbugs:spotbugs-annotations:4.3.0'
 
     compileOnly "org.projectlombok:lombok:$rootProject.ext.lombokVersion"
@@ -235,10 +236,10 @@ afterEvaluate {
                 pom {
                     name = 'common'
                     description = 'This library contains code shared between the Active Directory ' +
-                                    'Authentication Library (ADAL) for Android and the Microsoft ' +
-                                    'Authentication Library (MSAL) for Android. This library ' +
-                                    'includes only internal classes and is NOT part of the ' +
-                                    'public API'
+                            'Authentication Library (ADAL) for Android and the Microsoft ' +
+                            'Authentication Library (MSAL) for Android. This library ' +
+                            'includes only internal classes and is NOT part of the ' +
+                            'public API'
                     url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android'
                     developers {
                         developer {
@@ -256,7 +257,7 @@ afterEvaluate {
                         url = 'https://github.com/AzureAD/microsoft-authentication-library-common-for-android/tree/master'
                     }
                     properties = [
-                            branch: 'master',
+                            branch : 'master',
                             version: project.version
                     ]
                 }
@@ -293,6 +294,10 @@ afterEvaluate {
 }
 
 tasks.whenTaskAdded { task ->
+    if (task.name.contains("assemble")) {
+        task.dependsOn 'pmd'
+    }
+
     if (task.name == 'assembleDebug' || task.name == 'assembleRelease') {
         task.dependsOn 'lint', 'sourcesJar', 'pmd'
     }

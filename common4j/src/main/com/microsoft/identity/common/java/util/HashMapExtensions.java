@@ -43,10 +43,10 @@ public class HashMapExtensions {
         final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !StringUtil.isNullOrEmpty(webResponse.getBody())) {
             final JSONObject jsonObject = new JSONObject(webResponse.getBody());
-            final Iterator<?> i = jsonObject.keys();
-            while (i.hasNext()) {
-                String key = (String) i.next();
-                response.put(key, jsonObject.getString(key));
+            final Iterator<String> keyIterator = jsonObject.keys();
+            while (keyIterator.hasNext()) {
+                String key = keyIterator.next();
+                response.put(key, jsonObject.get(key).toString());
             }
         }
         return response;

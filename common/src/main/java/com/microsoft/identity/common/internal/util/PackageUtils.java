@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -68,6 +69,10 @@ import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_A
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class PackageUtils {
 
+    /**
+     * This pattern should match hexadecimal strings of the form "12:3a:ff" and nothing else.
+     */
+    private static final Pattern HEX_PATTERN = Pattern.compile("([A-Fa-f0-9]{2}:)*[A-Fa-f0-9]{2}");
 
     /**
      * Find all the signatures for packages with a given name.
@@ -146,7 +151,15 @@ public final class PackageUtils {
             hashListStringBuilder.append(',');
 
             while (validHashes.hasNext()) {
-                final String hash = validHashes.next();
+                String hash = validHashes.next();
+                // We're accepting these from our configuration in one of two formats:
+                // * base64-encoded bytes
+                // * hexadecimal strings (ab:cd:34)
+                // This is done to ease the confusion on us when we need to accept a hash
+                // from a user who has it in the hex format.
+                if (HEX_PATTERN.matcher(hash).matches()) {
+                    hash = convertToBase64(hash);
+                }
                 if (!TextUtils.isEmpty(hash) && hash.equals(signatureHash)) {
                     return signatureHash;
                 }
@@ -154,6 +167,23 @@ public final class PackageUtils {
         }
 
         throw new ClientException(BROKER_APP_VERIFICATION_FAILED, "SignatureHashes: " + hashListStringBuilder.toString());
+    }
+
+    /**
+     * Given a String in colon-separated octet format, convert it to a base64-encoded byte array.
+     * @param hash the string to convert.
+     * @return a byte array containing the base-64-encoded version of the bytes represented by the
+     * string.
+     */
+    public static String convertToBase64(final @NonNull String hash) {
+        final String[] hexSegments = hash.split(":");
+        final byte[] values = new byte[hexSegments.length];
+        int i = 0;
+        for (final String hexString : hexSegments) {
+            final String segment = hexString;
+            values[i++] = (byte) (Long.parseLong(segment, 16) & 0xff);
+        }
+        return Base64.encodeToString(values, Base64.NO_WRAP);
     }
 
     /**

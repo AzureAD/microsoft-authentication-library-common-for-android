@@ -26,6 +26,8 @@ import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACC
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.authscheme.BearerAuthenticationSchemeInternal;
+import com.microsoft.identity.common.java.cache.BrokerOAuth2TokenCache;
+import com.microsoft.identity.common.java.cache.ICacheRecord;
 import com.microsoft.identity.common.java.controllers.BaseController;
 import com.microsoft.identity.common.java.dto.IAccountRecord;
 import com.microsoft.identity.common.java.dto.RefreshTokenRecord;
@@ -55,6 +57,29 @@ import lombok.NonNull;
 public class FociQueryUtilities {
 
     private static final String TAG = FociQueryUtilities.class.getSimpleName();
+
+    /**
+     * Testing whether the given client ID can use the cached foci to refresh token.
+     *
+     * @param clientId    String of the given client id.
+     * @param redirectUri redirect url string of the given client id.
+     * @param cacheRecord Foci cache record.
+     * @return true if the given client id can use the cached foci token. False, otherwise.
+     * @throws ClientException
+     * @throws IOException
+     */
+    public static boolean tryFociTokenWithGivenClientId(@SuppressWarnings(WarningType.rawtype_warning) @NonNull final BrokerOAuth2TokenCache brokerOAuth2TokenCache,
+                                                        @NonNull final String clientId,
+                                                        @NonNull final String redirectUri,
+                                                        @NonNull final ICacheRecord cacheRecord) throws IOException, ClientException {
+        return tryFociTokenWithGivenClientId(
+                brokerOAuth2TokenCache,
+                clientId, redirectUri,
+                cacheRecord.getRefreshToken(),
+                cacheRecord.getAccount()
+        );
+    }
+
     /**
      * Testing whether the given client ID can use the cached foci to refresh token.
      *

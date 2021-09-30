@@ -72,6 +72,8 @@ public class AuthenticationConstants {
      */
     public static final String HTTPS_PROTOCOL_STRING = "https";
 
+    public static final String SP800_108_LABEL = "AzureAD-SecureConversation";
+
     /**
      * Default scopes for OAuth2.
      */
@@ -546,6 +548,7 @@ public class AuthenticationConstants {
          * String of broker client ID.
          */
         public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
+
     }
 
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -608,6 +611,11 @@ public class AuthenticationConstants {
          * The String representing the MSAL.CPP SdkType.
          */
         public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+
+        /**
+         * The String representing the MSAL.XPLAT.Linux SdkType.
+         */
+        public static final String PRODUCT_NAME_MSAL_XPLAT_LINUX = "MSAL.xplat.Linux";
     }
 
     /**

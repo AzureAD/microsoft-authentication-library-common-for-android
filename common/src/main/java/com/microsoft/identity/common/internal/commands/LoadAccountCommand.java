@@ -26,6 +26,8 @@ import androidx.annotation.NonNull;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.ICacheRecord;
+import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.java.controllers.BaseController;
 
@@ -36,7 +38,7 @@ import lombok.EqualsAndHashCode;
 
 /**
  * Command class to call controllers to load accounts and return the account list to
- * {@see com.microsoft.identity.common.internal.controllers.CommandDispatcher}.
+ * {@see com.microsoft.identity.common.java.controllers.CommandDispatcher}.
  */
 @EqualsAndHashCode(callSuper = true)
 public class LoadAccountCommand extends BaseCommand<List<ICacheRecord>> {

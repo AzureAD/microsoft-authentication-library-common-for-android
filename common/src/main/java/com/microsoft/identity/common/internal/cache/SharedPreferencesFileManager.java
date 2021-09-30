@@ -29,6 +29,7 @@ import android.util.LruCache;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
@@ -56,10 +57,11 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     private final Object cacheLock = new Object();
     @GuardedBy("cacheLock")
     private final LruCache<String, String> fileCache = new LruCache<>(256);
-    private final String mSharedPreferencesFileName;
     @GuardedBy("cacheLock")
     private final SharedPreferences mSharedPreferences;
     private final KeyAccessorStringAdapter mEncryptionManager;
+    @VisibleForTesting
+    private final String mSharedPreferencesFileName;
     // This is making a huge assumption - that we don't need to separate this cache by context.
     private static final ConcurrentMap<String, SharedPreferencesFileManager> objectCache =
             new ConcurrentHashMap<String, SharedPreferencesFileManager>(16, 0.75f, 1);
@@ -76,7 +78,8 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     public static SharedPreferencesFileManager getSharedPreferences(final Context context,
                                                                     final String name,
                                                                     final IKeyAccessor encryptionManager) {
-        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE;
+        String key = name + "/" + context.getPackageName() + "/" + Context.MODE_PRIVATE +
+                "/" + ((encryptionManager == null) ? "clear" : encryptionManager.getClass().getCanonicalName());
         SharedPreferencesFileManager cachedFileManager = objectCache.get(key);
         if (cachedFileManager == null) {
             cachedFileManager = objectCache.putIfAbsent(key,
@@ -89,12 +92,20 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
     }
 
     /**
+     * This method clears the singleton cache in use by the system, in the case that unsafe operations
+     * have been performed on disk and the actual data needs to be removed.
+     */
+    public static void clearSingletonCache() {
+        objectCache.clear();
+    }
+
+    /**
      * Constructs an instance of SharedPreferencesFileManager.
      * The default operating mode is {@link Context#MODE_PRIVATE}
      *
-     * @param context                  Interface to global information about an application environment.
-     * @param name                     The desired {@link android.content.SharedPreferences} file. It will be created
-     *                                 if it does not exist.
+     * @param context           Interface to global information about an application environment.
+     * @param name              The desired {@link android.content.SharedPreferences} file. It will be created
+     *                          if it does not exist.
      * @param encryptionManager The {@link IKeyAccessor} to handle encryption/decryption of values.
      */
     public SharedPreferencesFileManager(
@@ -106,14 +117,18 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         } else {
             Logger.verbose(TAG, "Init with storage helper:  " + TAG);
         }
-        mSharedPreferencesFileName = name;
         mSharedPreferences = context.getSharedPreferences(name, Context.MODE_PRIVATE);
-
+        mSharedPreferencesFileName = name;
+        
         if (encryptionManager != null) {
             mEncryptionManager = new KeyAccessorStringAdapter(encryptionManager);
         } else {
             mEncryptionManager = null;
         }
+    }
+
+    public final String getSharedPreferencesFileName() {
+        return mSharedPreferencesFileName;
     }
 
     @Override
@@ -185,11 +200,6 @@ public class SharedPreferencesFileManager implements IMultiTypeNameValueStorage 
         );
 
         remove(key);
-    }
-
-    @Override
-    public final String getStorageFileName() {
-        return mSharedPreferencesFileName;
     }
 
     @Override

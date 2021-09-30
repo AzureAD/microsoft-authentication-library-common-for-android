@@ -38,6 +38,8 @@ import org.junit.Assert;
 
 import java.util.Calendar;
 
+import static com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils.obtainUiObjectWithExactText;
+
 /**
  * A model representing the Settings app on a Samsung device. Please note that this class is
  * currently optimized for a Samsung Galaxy S6 device.
@@ -144,45 +146,50 @@ public class SamsungSettings extends BaseSettings {
 
     @Override
     public void forwardDeviceTimeForOneDay() {
-        Logger.i(TAG, "Forwarding Time For One Day on Samsung Device..");
-        // Disable automatic time zone
+        forwardDeviceTime(86400);
+    }
+
+    public void forwardDeviceTime(long seconds) {
+        Logger.i(TAG, "Forwarding Time by " + seconds + " seconds on Samsung Device..");
+        // Disable Automatic TimeZone
         AdbShellUtils.disableAutomaticTimeZone();
-        // Open the date & time settings page
+        // Launch the date time settings page
         launchDateTimeSettingsPage();
 
         try {
-            // Click set date btn
+            // Click the set date button
             final UiObject setDateBtn = UiAutomatorUtils.obtainUiObjectWithText("Set date");
             setDateBtn.click();
 
             // Make sure we are seeing the calendar
             final UiObject datePicker = UiAutomatorUtils.obtainUiObjectWithResourceId("android:id/sem_datepicker_calendar_header");
             Assert.assertTrue("Date Picker appears.", datePicker.exists());
+            setDateBtn.click();
 
             final Calendar cal = Calendar.getInstance();
 
-            // add one to move to next day
-            cal.add(Calendar.DATE, 1);
+            // add the # of seconds to forward device time
+            cal.add(Calendar.SECOND, (int) seconds);
 
             // this is the new date
             final int dateToSet = cal.get(Calendar.DATE);
 
             if (dateToSet == 1) {
                 // looks we are into the next month, so let's update month here too
-                UiAutomatorUtils.handleButtonClick("android:id/sem_datepicker_calendar_header_next_button");
+                UiAutomatorUtils.handleButtonClick("android:id/next");
             }
 
-            // Click the calendar item for this date (index = date - 1)
-            UiObject specifiedDateIcon = UiAutomatorUtils.obtainUiObjectWithClassAndIndex(
-                    View.class,
-                    dateToSet - 1
+            // Click on this new date in this calendar
+            UiObject specifiedDateIcon = obtainUiObjectWithExactText(
+                    String.valueOf(dateToSet)
             );
             specifiedDateIcon.click();
 
-            // Click ok to set date
-            UiAutomatorUtils.handleButtonClick("android:id/button1");
+            // Confirm setting date
+            final UiObject okBtn = UiAutomatorUtils.obtainUiObjectWithText("OK");
+            okBtn.click();
         } catch (final UiObjectNotFoundException e) {
-           throw new AssertionError(e);
+            throw new AssertionError(e);
         }
     }
 

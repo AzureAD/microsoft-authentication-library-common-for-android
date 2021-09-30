@@ -24,6 +24,8 @@ package com.microsoft.identity.common.internal.commands;
 
 import androidx.annotation.NonNull;
 
+import com.microsoft.identity.common.java.commands.BaseCommand;
+import com.microsoft.identity.common.java.commands.CommandCallback;
 import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.exception.UiRequiredException;
