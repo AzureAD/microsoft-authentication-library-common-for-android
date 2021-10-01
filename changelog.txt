@@ -59,6 +59,19 @@ V.Next
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
+- [MINOR] Add flighting parameters to commmandParameters (#1562)
+
+Version 3.6.2
+----------
+- [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)
+- [PATCH] Fixing Redirect Uri for Authenticator App, when migrating to MSAL (#1567)
+
+Version 3.6.1
+----------
+- [PATCH] Additional API for method to clear the singleton shared preferences cache
+- [PATCH] Log and swallow failures from CustomTabsService unbind (#1549)
+- [PATCH] Fix correlation id error
+- [PATCH] Fix crash related to fall back to webview when no browser present
 
 Version 3.6.0
 ----------
