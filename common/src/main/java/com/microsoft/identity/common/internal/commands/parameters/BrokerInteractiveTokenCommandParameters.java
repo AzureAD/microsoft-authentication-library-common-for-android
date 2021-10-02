@@ -22,6 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.commands.parameters;
 
+import android.accounts.Account;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.exception.ArgumentException;
@@ -52,6 +53,12 @@ public class BrokerInteractiveTokenCommandParameters extends InteractiveTokenCom
     private final Iterable<Map.Entry<String, String>> extraParameters;
 
     private final String enrollmentId;
+
+    //Needed to supply information that's needed for IntuneAppProtectionPolicyException
+    private final Account accountManagerAccount;
+    private final String homeAccountId;
+    private final String localAccountId;
+
 
     /**
      * Helper method to identify if the request originated from Broker itself or from client libraries.

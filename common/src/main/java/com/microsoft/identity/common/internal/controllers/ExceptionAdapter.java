@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.controllers;
 
 import android.app.Service;
+import android.media.session.MediaSession;
 import android.text.TextUtils;
 import android.util.Pair;
 
@@ -42,6 +43,8 @@ import com.microsoft.identity.common.exception.UiRequiredException;
 import com.microsoft.identity.common.exception.UserCancelException;
 import com.microsoft.identity.common.internal.authorities.Authority;
 import com.microsoft.identity.common.internal.authorities.AzureActiveDirectoryAuthority;
+import com.microsoft.identity.common.internal.commands.Command;
+import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
@@ -207,21 +210,27 @@ public class ExceptionAdapter {
                                                                       @NonNull final TokenErrorResponse errorResponse) {
 
         if(isIntunePolicyRequiredError(errorResponse)){
-            if(commandParameters == null || !(commandParameters instanceof BrokerSilentTokenCommandParameters)){
+            if(commandParameters == null || !(isBrokerTokenCommandParameters(commandParameters))){
                 Logger.warn(TAG, "In order to properly construct the IntuneAppProtectionPolicyRequiredException we need the command parameters to be supplied.  Returning as service exception instead.");
                 return getExceptionFromTokenErrorResponse(errorResponse);
             }
-            IntuneAppProtectionPolicyRequiredException policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
-                    errorResponse.getError(),
-                    errorResponse.getErrorDescription()
-            );
+            IntuneAppProtectionPolicyRequiredException policyRequiredException;
+            if(commandParameters instanceof BrokerInteractiveTokenCommandParameters) {
+                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription(),
+                        (BrokerInteractiveTokenCommandParameters) commandParameters
+                        );
+            }else{
+                policyRequiredException = new IntuneAppProtectionPolicyRequiredException(
+                        errorResponse.getError(),
+                        errorResponse.getErrorDescription(),
+                        (BrokerSilentTokenCommandParameters) commandParameters
+                );
+            }
             policyRequiredException.setOauthSubErrorCode(errorResponse.getSubError());
             setHttpResponseUsingTokenErrorResponse(policyRequiredException, errorResponse);
 
-            setIntuneExceptionProperties(
-                    policyRequiredException,
-                    (BrokerSilentTokenCommandParameters) commandParameters
-            );
             return policyRequiredException;
         }else{
             return getExceptionFromTokenErrorResponse(errorResponse);
@@ -254,87 +263,8 @@ public class ExceptionAdapter {
 
     }
 
-    /**
-     * Helper method to get uid from home account id
-     * V2 home account format : <uid>.<utid>
-     * V1 : it's stored as <uid>
-     *
-     * @param homeAccountId
-     * @return valid uid or null if it's not in either of the format.
-     */
-    @Nullable
-    public static String getUIdFromHomeAccountId(@Nullable String homeAccountId) {
-        //TODO: This method is from BrokerOperationParameterUtils...
-        // seems like this is not broker specific per se and should move to somewhere better
-        final String methodName = ":getUIdFromHomeAccountId";
-        final String DELIMITER_TENANTED_USER_ID = ".";
-        final int EXPECTED_ARGS_LEN = 2;
-        final int INDEX_USER_ID = 0;
-
-        if (!TextUtils.isEmpty(homeAccountId)) {
-            final String[] homeAccountIdSplit = homeAccountId.split(
-                    Pattern.quote(DELIMITER_TENANTED_USER_ID)
-            );
-
-            if (homeAccountIdSplit.length == EXPECTED_ARGS_LEN) {
-                com.microsoft.identity.common.internal.logging.Logger.info(TAG + methodName,
-                        "Home account id is tenanted, returning uid "
-                );
-                return homeAccountIdSplit[INDEX_USER_ID];
-            } else if (homeAccountIdSplit.length == 1) {
-                com.microsoft.identity.common.internal.logging.Logger.info(TAG + methodName,
-                        "Home account id not tenanted, it's the uid added by v1 broker "
-                );
-                return homeAccountIdSplit[INDEX_USER_ID];
-            }
-        }
-
-        com.microsoft.identity.common.internal.logging.Logger.warn(TAG + methodName,
-                "Home Account id doesn't have uid or tenant id information, returning null "
-        );
-
-        return null;
-    }
-
-    private static void setIntuneExceptionProperties(
-            @NonNull final IntuneAppProtectionPolicyRequiredException exception,
-            @NonNull final BrokerSilentTokenCommandParameters requestParameters) {
-
-        com.microsoft.identity.common.internal.logging.Logger.info(TAG, "Setting properties to IntuneAppProtectionPolicyRequiredException ");
-
-        final String upn = (requestParameters.getAccountManagerAccount() != null) ?
-                requestParameters.getAccountManagerAccount().name :
-                requestParameters.getLoginHint();
-        exception.setAccountUpn(upn);
-
-        String uId = requestParameters.getLocalAccountId();
-
-        if (TextUtils.isEmpty(uId)) {
-            com.microsoft.identity.common.internal.logging.Logger.info(TAG, "Local account id is empty, attempting get user id from home account id");
-            uId = getUIdFromHomeAccountId(
-                    requestParameters.getHomeAccountId()
-            );
-        }
-
-        exception.setAccountUserId(uId);
-
-        final Authority authority = requestParameters.getAuthority();
-        exception.setAuthorityUrl(authority.getAuthorityURL().toString());
-
-        final String homeAccountId = requestParameters.getHomeAccountId();
-        String tenantId = null;
-
-        if (homeAccountId != null) {
-            final Pair<String, String> tenantInfo = StringUtil.getTenantInfo(homeAccountId);
-            tenantId = tenantInfo.second;
-        }
-
-        if (TextUtils.isEmpty(tenantId) && authority instanceof AzureActiveDirectoryAuthority) {
-            tenantId = ((AzureActiveDirectoryAuthority) authority).mAudience.getTenantId();
-
-        }
-        exception.setTenantId(tenantId);
-
+    private static boolean isBrokerTokenCommandParameters(CommandParameters commandParameters){
+        return ((commandParameters instanceof BrokerSilentTokenCommandParameters) || (commandParameters instanceof BrokerInteractiveTokenCommandParameters));
     }
 
     public static void applyCliTelemInfo(@Nullable final CliTelemInfo cliTelemInfo,
