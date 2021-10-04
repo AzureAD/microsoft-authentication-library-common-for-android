@@ -194,4 +194,14 @@ public class MockServerResponse {
         );
         return response;
     }
+
+    public static HttpResponse getMockDeviceCodeFlowAuthorizationHttpResponse(){
+        final String responseBody = "{\"user_code\":\"FRWHLEZCG\"," +
+                "\"device_code\":\"FAQABAAEAAAD--DLA3VO7QrddgJg7Wevrugei0F87xjf1Crvgjfn-IAPwAVQlsTzhLqlJhpbtTBAI6TuHtzs4eHmdLgYFO92EQtbtfOq_YMi1EqDnEzWeRu9hP2MYGR-53SAkjk7Hnm14HU_3ZPAH6weXX9soVd25qMz-GM-DPv1dR_Cp9L626jkCQNg_ix_h525kkgxxAXEgAA\"," +
+                "\"verification_uri\":\"https://microsoft.com/devicelogin\"," +
+                "\"expires_in\":900," +
+                "\"interval\":5," +
+                "\"message\":\"To sign in, use a web browser to open the page https://microsoft.com/devicelogin and enter the code FRWHLEZCG to authenticate.\"}";
+        return new HttpResponse(200, responseBody, new HashMap<>());
+    }
 }
