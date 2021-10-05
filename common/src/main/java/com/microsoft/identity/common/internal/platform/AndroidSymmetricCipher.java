@@ -40,7 +40,7 @@ import java.security.KeyStore;
  * Having generalized Cipher to CryptoSuite, enable us to distinguish symmetric
  * ciphers of interest.
  */
-public enum SymmetricCipher implements CryptoSuite {
+public enum AndroidSymmetricCipher implements CryptoSuite {
 
     @RequiresApi(Build.VERSION_CODES.JELLY_BEAN)
     AES_GCM_NONE_HMACSHA256(SymmetricAlgorithm.Builder.of("AES/GCM/NoPadding"), "HmacSHA256", 256) {
@@ -59,7 +59,7 @@ public enum SymmetricCipher implements CryptoSuite {
     String mMacString;
     int mKeySize;
 
-    SymmetricCipher(@NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
+    AndroidSymmetricCipher(@NonNull final SymmetricAlgorithm value, @NonNull String macValue, int keySize) {
         mValue = value;
         mMacString = macValue;
         mKeySize = keySize;

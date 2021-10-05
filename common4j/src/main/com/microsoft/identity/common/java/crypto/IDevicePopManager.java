@@ -395,5 +395,5 @@ public interface IDevicePopManager {
      * management.  This is exposed mainly in order to allow uses beyond POP.
      * @return the key manager that backs this DevicePopManager.
      */
-    IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager();
+    IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager();
 }

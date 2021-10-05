@@ -27,7 +27,8 @@ import com.microsoft.identity.common.java.cache.MapBackedPreferencesManager;
 import com.microsoft.identity.common.java.commands.ICommand;
 import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
@@ -44,13 +45,18 @@ import com.microsoft.identity.common.java.util.IPlatformUtil;
 import com.microsoft.identity.common.java.util.TaskCompletedCallbackWithError;
 import com.microsoft.identity.common.java.util.ported.InMemoryStorage;
 
+import java.io.IOException;
 import java.net.URL;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -195,7 +201,7 @@ public class SettablePlatformComponents implements IPlatformComponents {
         }
 
         @Override
-        public IAndroidKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
+        public IKeyStoreKeyManager<KeyStore.PrivateKeyEntry> getKeyManager() {
             throw new UnsupportedOperationException();
         }
     };
@@ -354,6 +360,31 @@ public class SettablePlatformComponents implements IPlatformComponents {
             ret = (INameValueStorage<String>) mStores.get(storeName);
         }
         return ret;
+    }
+
+    @Override
+    public IKeyStoreAccessor getKeyStore() {
+        return new IKeyStoreAccessor() {
+            @Override
+            public IKeyAccessor forAlias(@edu.umd.cs.findbugs.annotations.NonNull IPlatformComponents commonComponents, @edu.umd.cs.findbugs.annotations.NonNull String alias, @edu.umd.cs.findbugs.annotations.NonNull CryptoSuite suite) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor newInstance(@edu.umd.cs.findbugs.annotations.NonNull IPlatformComponents commonComponents, @edu.umd.cs.findbugs.annotations.NonNull IDevicePopManager.Cipher cipher, @edu.umd.cs.findbugs.annotations.NonNull SigningAlgorithm signingAlg) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor newInstance(@edu.umd.cs.findbugs.annotations.NonNull CryptoSuite cipher, @edu.umd.cs.findbugs.annotations.NonNull boolean needRawAccess) throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException, NoSuchProviderException, InvalidAlgorithmParameterException {
+                return null;
+            }
+
+            @Override
+            public IKeyAccessor importSymmetricKey(@edu.umd.cs.findbugs.annotations.NonNull IPlatformComponents context, @edu.umd.cs.findbugs.annotations.NonNull CryptoSuite cipher, @edu.umd.cs.findbugs.annotations.NonNull String keyAlias, @edu.umd.cs.findbugs.annotations.NonNull String key_jwe, @edu.umd.cs.findbugs.annotations.NonNull IKeyAccessor stk_accessor) throws ParseException, CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException, ClientException {
+                return null;
+            }
+        };
     }
 
     @Builder.Default

@@ -25,6 +25,7 @@ package com.microsoft.identity.common.java.interfaces;
 import com.microsoft.identity.common.java.cache.IMultiTypeNameValueStorage;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IKeyStoreAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.providers.oauth2.IStateGenerator;
@@ -123,4 +124,9 @@ public interface IPlatformComponents {
      */
     @NonNull
     IPlatformUtil getPlatformUtil();
+
+    /**
+     * Get access to the platform specific KeyStoreAccessor.
+     */
+    IKeyStoreAccessor getKeyStore();
 }

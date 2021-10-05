@@ -27,8 +27,9 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
+import com.microsoft.identity.common.java.crypto.IManagedKeyAccessor;
 import com.microsoft.identity.common.java.crypto.SecureHardwareState;
 import com.microsoft.identity.common.java.exception.ClientException;
 
@@ -203,7 +204,7 @@ public class SecretKeyAccessor implements IManagedKeyAccessor<KeyStore.SecretKey
     }
 
     @Override
-    public IAndroidKeyStoreKeyManager<KeyStore.SecretKeyEntry> getManager() {
+    public IKeyStoreKeyManager<KeyStore.SecretKeyEntry> getManager() {
         return mKeyManager;
     }
 }

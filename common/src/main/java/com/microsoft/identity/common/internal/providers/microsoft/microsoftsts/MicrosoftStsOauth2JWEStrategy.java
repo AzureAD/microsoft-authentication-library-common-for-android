@@ -1,15 +1,13 @@
 package com.microsoft.identity.common.internal.providers.microsoft.microsoftsts;
 
 import android.os.Build;
-import android.text.TextUtils;
 import android.util.Base64;
 
 import androidx.annotation.NonNull;
 
 import com.google.gson.Gson;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.platform.KeyStoreAccessor;
-import com.microsoft.identity.common.internal.platform.SymmetricCipher;
+import com.microsoft.identity.common.internal.platform.AndroidSymmetricCipher;
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
 import com.microsoft.identity.common.java.crypto.RawKeyAccessor;
 import com.microsoft.identity.common.java.exception.ClientException;
@@ -19,11 +17,6 @@ import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.Micro
 import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.ObjectMapper;
-import com.nimbusds.jose.JOSEObjectType;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.SignedJWT;
 
 import org.json.JSONException;
 
@@ -34,7 +27,6 @@ import java.security.SecureRandom;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 /**
  * In addition to the normal requests that we handle, some of these need to use a specific
@@ -85,7 +77,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
                                                 RawKeyAccessor skAccessor)
             throws ClientException {
         byte[] label = AuthenticationConstants.SP800_108_LABEL.getBytes(Charset.forName("ASCII"));
-        IKeyAccessor derivedKey = skAccessor.generateDerivedKey(label, ctx, SymmetricCipher.AES_GCM_NONE_HMACSHA256);
+        IKeyAccessor derivedKey = skAccessor.generateDerivedKey(label, ctx, AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256);
 
         byte[] cryptobuf = new byte[ivBytes.length + encryptedBytes.length];
         System.arraycopy(ivBytes, 0, encryptedBytes, 0, ivBytes.length);
@@ -168,7 +160,7 @@ public class MicrosoftStsOauth2JWEStrategy extends MicrosoftStsOAuth2Strategy {
 
         RawKeyAccessor derivedKey = (RawKeyAccessor) ((RawKeyAccessor) mSessionKey)
                 .generateDerivedKey(AuthenticationConstants.SP800_108_LABEL.getBytes(AuthenticationConstants.CHARSET_UTF8),
-                                    ctx, SymmetricCipher.AES_GCM_NONE_HMACSHA256);
+                                    ctx, AndroidSymmetricCipher.AES_GCM_NONE_HMACSHA256);
 
         String bodyString = GSON.toJson(headerMap) + "." + GSON.toJson(bodyMap);
 

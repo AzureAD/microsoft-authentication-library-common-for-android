@@ -20,10 +20,10 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.crypto.IKeyAccessor;
-import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.IKeyStoreKeyManager;
 
 import java.security.KeyStore;
 
@@ -38,5 +38,5 @@ public interface IManagedKeyAccessor<K extends KeyStore.Entry> extends IKeyAcces
      * @return a IKeyManager for this key.  If this returns null, it should be
      * regarded as an error.
      */
-    IAndroidKeyStoreKeyManager<K> getManager();
+    IKeyStoreKeyManager<K> getManager();
 }

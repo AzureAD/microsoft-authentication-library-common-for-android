@@ -26,6 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.microsoft.identity.common.java.crypto.AsymmetricCipher;
 import com.microsoft.identity.common.java.crypto.CryptoSuite;
 import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
 import com.microsoft.identity.common.java.crypto.AsymmetricAlgorithm;
@@ -36,7 +37,7 @@ import java.security.KeyStore;
 /**
  * Definitions for Asymmetric Crypto suites.
  */
-public enum AsymmetricCipher implements CryptoSuite {
+public enum AndroidAsymmetricCipher implements AsymmetricCipher {
     RSA_NONE_OAEPWithSHA_1AndMGF1PaddingAndHmacSha256 {
         @Override
         public AsymmetricAlgorithm cipher() {

@@ -20,7 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.common.internal.platform;
+package com.microsoft.identity.common.java.crypto;
 
 import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.crypto.IDevicePopManager;
@@ -32,7 +32,7 @@ import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 
 /**
- * An accessor for asymmetric keys.  The main differnce between this an a KeyAccessor is that
+ * An accessor for asymmetric keys.  The main difference between this an a KeyAccessor is that
  * this accessor allows for retrieval of the public key of the key pair.
  */
 public interface AsymmetricKeyAccessor extends IManagedKeyAccessor<KeyStore.PrivateKeyEntry> {
