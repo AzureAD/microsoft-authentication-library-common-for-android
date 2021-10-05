@@ -516,7 +516,7 @@ public class BrokerOAuth2TokenCache
         applicationMetadata.setFoci(familyId);
         applicationMetadata.setUid(callingProcessUid);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Adding cache entry for clientId: ["
                         + clientId

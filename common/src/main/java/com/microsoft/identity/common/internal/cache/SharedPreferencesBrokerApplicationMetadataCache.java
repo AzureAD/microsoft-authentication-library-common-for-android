@@ -87,7 +87,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
             allClientIds.add(metadata.getClientId());
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allClientIds.size()
@@ -147,7 +147,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allFociClientIds.size()
@@ -171,7 +171,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
             if (clientId.equals(metadata.getClientId())
                     && environment.equals(metadata.getEnvironment())
                     && processUid == metadata.getUid()) {
-                Logger.verbose(
+                Logger.info(
                         TAG + metadata,
                         "Metadata located."
                 );
