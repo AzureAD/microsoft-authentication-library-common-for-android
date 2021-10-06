@@ -1155,7 +1155,7 @@ public class MsalOAuth2TokenCache
                                            @NonNull final String clientId) {
         final String methodName = ":getAccounts";
 
-        Logger.verbosePII(
+        Logger.info(
                 TAG + methodName,
                 "Environment: [" + environment + "]"
                         + "\n"
@@ -1172,7 +1172,7 @@ public class MsalOAuth2TokenCache
                         null // wildcard (*) realm
                 );
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + accountsForEnvironment.size() + " accounts for this environment"
         );
@@ -1192,6 +1192,12 @@ public class MsalOAuth2TokenCache
                 null // requestedClaims
         );
 
+        Logger.info(
+                TAG + methodName,
+                "Found " + appCredentials.size() + " accounts after getCredentialsFilteredBy()"
+        );
+
+
         // For each Account with an associated RT, add it to the result List...
         for (final AccountRecord account : accountsForEnvironment) {
             if (accountHasCredential(account, appCredentials)) {
@@ -1199,7 +1205,7 @@ public class MsalOAuth2TokenCache
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + accountsForThisApp.size() + " accounts for this clientId"
         );
@@ -1258,6 +1264,7 @@ public class MsalOAuth2TokenCache
 
             if (idTokensForAccount == null || idTokensForAccount.size() == 0) {
                 // Skip returning account record if there is no corresponding idToken record in the cache for the given clientId
+                Logger.info(TAG + methodName, "No idTokens record for given client id for the records found :" + allMatchingAccounts.size());
                 continue;
             }
 
@@ -1273,7 +1280,7 @@ public class MsalOAuth2TokenCache
 
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found " + result.size() + " accounts with IdTokens"
         );

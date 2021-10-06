@@ -550,22 +550,23 @@ public class MsalBrokerResultAdapter implements IBrokerResultAdapter {
 
     public @NonNull Bundle bundleFromAccounts(@NonNull final List<ICacheRecord> cacheRecords,
                                               @Nullable final String negotiatedProtocolVersion) {
+        final String methodName = ":bundleFromAccounts";
         final Bundle resultBundle = new Bundle();
 
         final String jsonString = JsonExtensions.getJsonStringFromICacheRecordList(cacheRecords);
         if (BrokerProtocolVersionUtil.canCompressBrokerPayloads(negotiatedProtocolVersion)) {
             try {
                 byte[] bytes = GzipUtil.compressString(jsonString);
-                Logger.info(TAG, "Get accounts, raw payload size :"
+                Logger.info(TAG + methodName, "Get accounts, raw payload size :"
                         + jsonString.getBytes().length + " compressed size " + bytes.length
                 );
                 resultBundle.putByteArray(BROKER_ACCOUNTS_COMPRESSED, bytes);
             } catch (IOException e) {
-                Logger.error(TAG, " Failed to compress account list to bytes, sending as jsonString", e);
+                Logger.error(TAG + methodName, " Failed to compress account list to bytes, sending as jsonString", e);
                 resultBundle.putString(BROKER_ACCOUNTS, jsonString);
             }
         } else {
-            Logger.info(TAG, "Broker protocol version: " + negotiatedProtocolVersion +
+            Logger.info(TAG + methodName, "Broker protocol version: " + negotiatedProtocolVersion +
                     " lower than compression changes, sending as string"
             );
             resultBundle.putString(BROKER_ACCOUNTS, jsonString);

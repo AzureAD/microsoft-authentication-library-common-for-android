@@ -79,7 +79,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
         final String methodName = ":insert";
 
         final Set<T> allMetadata = new HashSet<>(getAll());
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Existing metadata contained ["
                         + allMetadata.size()
@@ -88,24 +88,24 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
         allMetadata.add(t);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
-                "New metadata set size: ["
+                "AddingNew metadata set size: ["
                         + allMetadata.size()
                         + "]"
         );
 
         final String json = mGson.toJson(allMetadata);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
-                "Writing cache entry."
+                "Writing cache entry : " + json
         );
 
         final boolean success = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
 
         if (success) {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Cache successfully updated."
             );
@@ -125,7 +125,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
         final Set<T> allMetadata = new HashSet<>(getAll());
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Existing metadata contained ["
                         + allMetadata.size()
@@ -134,7 +134,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
 
         final boolean removed = allMetadata.remove(t);
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "New metadata set size: ["
                         + allMetadata.size()
@@ -152,14 +152,14 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
         } else {
             final String json = mGson.toJson(allMetadata);
 
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
-                    "Writing new cache values..."
+                    "Writing new cache values..." + json
             );
 
             final boolean written = mSharedPrefs.edit().putString(mKeySingleEntry, json).commit();
 
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Updated cache contents written? ["
                             + written
@@ -182,7 +182,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
                 listType
         );
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + result.size()
@@ -204,7 +204,7 @@ public abstract class SharedPreferencesSimpleCacheImpl<T> implements ISimpleCach
                     "Failed to clear cache."
             );
         } else {
-            Logger.verbose(
+            Logger.info(
                     TAG + methodName,
                     "Cache successfully cleared."
             );

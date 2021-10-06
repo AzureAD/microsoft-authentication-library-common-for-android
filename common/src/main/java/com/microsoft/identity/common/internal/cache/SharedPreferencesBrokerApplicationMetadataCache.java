@@ -63,6 +63,18 @@ public class SharedPreferencesBrokerApplicationMetadataCache
         return super.insert(brokerApplicationMetadata);
     }
 
+    public void remove(@NonNull final String clientId,
+                          final int processUid){
+        final List<BrokerApplicationMetadata> allMetadata = getAll();
+
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            if (clientId.equalsIgnoreCase(metadata.getClientId())
+                    && processUid == metadata.getUid()) {
+                remove(metadata);
+            }
+        }
+    }
+
     private void disposeOfDuplicateRecords(@NonNull final String clientId,
                                            @NonNull final String environment,
                                            final int uid) {
@@ -87,7 +99,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
             allClientIds.add(metadata.getClientId());
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allClientIds.size()
@@ -147,7 +159,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
             }
         }
 
-        Logger.verbose(
+        Logger.info(
                 TAG + methodName,
                 "Found ["
                         + allFociClientIds.size()
@@ -171,7 +183,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
             if (clientId.equals(metadata.getClientId())
                     && environment.equals(metadata.getEnvironment())
                     && processUid == metadata.getUid()) {
-                Logger.verbose(
+                Logger.info(
                         TAG + metadata,
                         "Metadata located."
                 );
@@ -194,6 +206,7 @@ public class SharedPreferencesBrokerApplicationMetadataCache
 
         return result;
     }
+
 
     @Override
     protected Type getListTypeToken() {
