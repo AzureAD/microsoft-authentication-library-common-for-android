@@ -67,6 +67,7 @@ public class ConfigApi {
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param guesthomeazureenvironment Allowed Values :  \&quot;none\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azureusgovernment\&quot; (optional, default to none)
      * @param apptype Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param appplatform Allowed Values :  \&quot;web\&quot;, \&quot;spa\&quot; (optional, default to web)
      * @param publicclient Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param signinaudience Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
      * @param guesthomedin Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
@@ -78,12 +79,14 @@ public class ConfigApi {
      * @param tokenlifetimepolicy Allowed Values :  \&quot;OrganizationDefault\&quot;, \&quot;CAE\&quot;, \&quot;CTL\&quot; (optional, default to OrganizationDefault)
      * @param tokentype Allowed Values :  \&quot;Access\&quot; (optional, default to Access)
      * @param tokenlifetime Allowed Values :  \&quot;default\&quot;, \&quot;short\&quot;, \&quot;long\&quot; (optional, default to default)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param optionalclaim Allowed Values :  \&quot;none\&quot;, \&quot;refresh_in\&quot;, \&quot;pwd_exp\&quot; (optional, default to none)
      * @param progressListener Progress listener
      * @param progressRequestListener Progress request listener
      * @return Call to execute
      * @throws ApiException If fail to serialize the request body object
      */
-    public com.squareup.okhttp.Call apiConfigGetCall(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    public com.squareup.okhttp.Call apiConfigGetCall(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String appplatform, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, String isadminconsented, String optionalclaim, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         Object localVarPostBody = null;
         
         // create path and map variables
@@ -113,6 +116,8 @@ public class ConfigApi {
         localVarQueryParams.addAll(apiClient.parameterToPair("guesthomeazureenvironment", guesthomeazureenvironment));
         if (apptype != null)
         localVarQueryParams.addAll(apiClient.parameterToPair("apptype", apptype));
+        if (appplatform != null)
+        localVarQueryParams.addAll(apiClient.parameterToPair("appplatform", appplatform));
         if (publicclient != null)
         localVarQueryParams.addAll(apiClient.parameterToPair("publicclient", publicclient));
         if (signinaudience != null)
@@ -135,6 +140,10 @@ public class ConfigApi {
         localVarQueryParams.addAll(apiClient.parameterToPair("tokentype", tokentype));
         if (tokenlifetime != null)
         localVarQueryParams.addAll(apiClient.parameterToPair("tokenlifetime", tokenlifetime));
+        if (isadminconsented != null)
+        localVarQueryParams.addAll(apiClient.parameterToPair("isadminconsented", isadminconsented));
+        if (optionalclaim != null)
+        localVarQueryParams.addAll(apiClient.parameterToPair("optionalclaim", optionalclaim));
 
         Map<String, String> localVarHeaderParams = new HashMap<String, String>();
 
@@ -169,9 +178,9 @@ public class ConfigApi {
     }
     
     @SuppressWarnings("rawtypes")
-    private com.squareup.okhttp.Call apiConfigGetValidateBeforeCall(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
+    private com.squareup.okhttp.Call apiConfigGetValidateBeforeCall(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String appplatform, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, String isadminconsented, String optionalclaim, final ProgressResponseBody.ProgressListener progressListener, final ProgressRequestBody.ProgressRequestListener progressRequestListener) throws ApiException {
         
-        com.squareup.okhttp.Call call = apiConfigGetCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, progressListener, progressRequestListener);
+        com.squareup.okhttp.Call call = apiConfigGetCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, appplatform, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, isadminconsented, optionalclaim, progressListener, progressRequestListener);
         return call;
 
         
@@ -194,6 +203,7 @@ public class ConfigApi {
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param guesthomeazureenvironment Allowed Values :  \&quot;none\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azureusgovernment\&quot; (optional, default to none)
      * @param apptype Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param appplatform Allowed Values :  \&quot;web\&quot;, \&quot;spa\&quot; (optional, default to web)
      * @param publicclient Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param signinaudience Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
      * @param guesthomedin Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
@@ -205,11 +215,13 @@ public class ConfigApi {
      * @param tokenlifetimepolicy Allowed Values :  \&quot;OrganizationDefault\&quot;, \&quot;CAE\&quot;, \&quot;CTL\&quot; (optional, default to OrganizationDefault)
      * @param tokentype Allowed Values :  \&quot;Access\&quot; (optional, default to Access)
      * @param tokenlifetime Allowed Values :  \&quot;default\&quot;, \&quot;short\&quot;, \&quot;long\&quot; (optional, default to default)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param optionalclaim Allowed Values :  \&quot;none\&quot;, \&quot;refresh_in\&quot;, \&quot;pwd_exp\&quot; (optional, default to none)
      * @return List&lt;ConfigInfo&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public List<ConfigInfo> apiConfigGet(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime) throws ApiException {
-        ApiResponse<List<ConfigInfo>> resp = apiConfigGetWithHttpInfo(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime);
+    public List<ConfigInfo> apiConfigGet(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String appplatform, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, String isadminconsented, String optionalclaim) throws ApiException {
+        ApiResponse<List<ConfigInfo>> resp = apiConfigGetWithHttpInfo(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, appplatform, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, isadminconsented, optionalclaim);
         return resp.getData();
     }
 
@@ -227,6 +239,7 @@ public class ConfigApi {
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param guesthomeazureenvironment Allowed Values :  \&quot;none\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azureusgovernment\&quot; (optional, default to none)
      * @param apptype Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param appplatform Allowed Values :  \&quot;web\&quot;, \&quot;spa\&quot; (optional, default to web)
      * @param publicclient Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param signinaudience Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
      * @param guesthomedin Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
@@ -238,12 +251,14 @@ public class ConfigApi {
      * @param tokenlifetimepolicy Allowed Values :  \&quot;OrganizationDefault\&quot;, \&quot;CAE\&quot;, \&quot;CTL\&quot; (optional, default to OrganizationDefault)
      * @param tokentype Allowed Values :  \&quot;Access\&quot; (optional, default to Access)
      * @param tokenlifetime Allowed Values :  \&quot;default\&quot;, \&quot;short\&quot;, \&quot;long\&quot; (optional, default to default)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param optionalclaim Allowed Values :  \&quot;none\&quot;, \&quot;refresh_in\&quot;, \&quot;pwd_exp\&quot; (optional, default to none)
      * @return ApiResponse&lt;List&lt;ConfigInfo&gt;&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public ApiResponse<List<ConfigInfo>> apiConfigGetWithHttpInfo(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime) throws ApiException {
-        com.squareup.okhttp.Call call = apiConfigGetValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, null, null);
-        Type localVarReturnType = TypeToken.getParameterized(List.class, ConfigInfo.class).getType();
+    public ApiResponse<List<ConfigInfo>> apiConfigGetWithHttpInfo(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String appplatform, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, String isadminconsented, String optionalclaim) throws ApiException {
+        com.squareup.okhttp.Call call = apiConfigGetValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, appplatform, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, isadminconsented, optionalclaim, null, null);
+        Type localVarReturnType = new TypeToken<List<ConfigInfo>>(){}.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -261,6 +276,7 @@ public class ConfigApi {
      * @param azureenvironment Allowed Values :  \&quot;azureb2ccloud\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azuregermanycloud\&quot;, \&quot;azureppe\&quot;, \&quot;azureusgovernment\&quot; (optional, default to azurecloud)
      * @param guesthomeazureenvironment Allowed Values :  \&quot;none\&quot;, \&quot;azurechinacloud\&quot;, \&quot;azurecloud\&quot;, \&quot;azureusgovernment\&quot; (optional, default to none)
      * @param apptype Allowed Values :  \&quot;cloud\&quot;, \&quot;onprem\&quot; (optional, default to cloud)
+     * @param appplatform Allowed Values :  \&quot;web\&quot;, \&quot;spa\&quot; (optional, default to web)
      * @param publicclient Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
      * @param signinaudience Allowed Values :  \&quot;azureadmyorg\&quot;, \&quot;azureadmultipleorgs\&quot;, \&quot;azureadandpersonalmicrosoftaccount\&quot; (optional, default to azureadmultipleorgs)
      * @param guesthomedin Allowed Values :  \&quot;none\&quot;, \&quot;onprem\&quot;, \&quot;hostazuread\&quot; (optional, default to none)
@@ -272,11 +288,13 @@ public class ConfigApi {
      * @param tokenlifetimepolicy Allowed Values :  \&quot;OrganizationDefault\&quot;, \&quot;CAE\&quot;, \&quot;CTL\&quot; (optional, default to OrganizationDefault)
      * @param tokentype Allowed Values :  \&quot;Access\&quot; (optional, default to Access)
      * @param tokenlifetime Allowed Values :  \&quot;default\&quot;, \&quot;short\&quot;, \&quot;long\&quot; (optional, default to default)
+     * @param isadminconsented Allowed Values :  \&quot;yes\&quot;, \&quot;no\&quot; (optional, default to yes)
+     * @param optionalclaim Allowed Values :  \&quot;none\&quot;, \&quot;refresh_in\&quot;, \&quot;pwd_exp\&quot; (optional, default to none)
      * @param callback The callback to be executed when the API call finishes
      * @return The request call
      * @throws ApiException If fail to process the API call, e.g. serializing the request body object
      */
-    public com.squareup.okhttp.Call apiConfigGetAsync(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, final ApiCallback<List<ConfigInfo>> callback) throws ApiException {
+    public com.squareup.okhttp.Call apiConfigGetAsync(String usertype, String userrole, String mfa, String protectionpolicy, String homedomain, String homeupn, String b2cprovider, String federationprovider, String azureenvironment, String guesthomeazureenvironment, String apptype, String appplatform, String publicclient, String signinaudience, String guesthomedin, String hasaltid, String altidsource, String altidtype, String passwordpolicyvalidityperiod, String passwordpolicynotificationdays, String tokenlifetimepolicy, String tokentype, String tokenlifetime, String isadminconsented, String optionalclaim, final ApiCallback<List<ConfigInfo>> callback) throws ApiException {
 
         ProgressResponseBody.ProgressListener progressListener = null;
         ProgressRequestBody.ProgressRequestListener progressRequestListener = null;
@@ -297,8 +315,8 @@ public class ConfigApi {
             };
         }
 
-        com.squareup.okhttp.Call call = apiConfigGetValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.getParameterized(List.class, ConfigInfo.class).getType();
+        com.squareup.okhttp.Call call = apiConfigGetValidateBeforeCall(usertype, userrole, mfa, protectionpolicy, homedomain, homeupn, b2cprovider, federationprovider, azureenvironment, guesthomeazureenvironment, apptype, appplatform, publicclient, signinaudience, guesthomedin, hasaltid, altidsource, altidtype, passwordpolicyvalidityperiod, passwordpolicynotificationdays, tokenlifetimepolicy, tokentype, tokenlifetime, isadminconsented, optionalclaim, progressListener, progressRequestListener);
+        Type localVarReturnType = new TypeToken<List<ConfigInfo>>(){}.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }
@@ -389,7 +407,7 @@ public class ConfigApi {
      */
     public ApiResponse<List<ConfigInfo>> apiConfigUpnGetWithHttpInfo(String upn) throws ApiException {
         com.squareup.okhttp.Call call = apiConfigUpnGetValidateBeforeCall(upn, null, null);
-        Type localVarReturnType = TypeToken.getParameterized(List.class, ConfigInfo.class).getType();
+        Type localVarReturnType = new TypeToken<List<ConfigInfo>>(){}.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -423,7 +441,7 @@ public class ConfigApi {
         }
 
         com.squareup.okhttp.Call call = apiConfigUpnGetValidateBeforeCall(upn, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.getParameterized(List.class, ConfigInfo.class).getType();
+        Type localVarReturnType = new TypeToken<List<ConfigInfo>>(){}.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

@@ -24,6 +24,7 @@ package com.microsoft.identity.labapi.utilities.client;
 
 import com.microsoft.identity.labapi.utilities.constants.AltIdSource;
 import com.microsoft.identity.labapi.utilities.constants.AltIdType;
+import com.microsoft.identity.labapi.utilities.constants.AppPlatform;
 import com.microsoft.identity.labapi.utilities.constants.AppType;
 import com.microsoft.identity.labapi.utilities.constants.AzureEnvironment;
 import com.microsoft.identity.labapi.utilities.constants.B2CProvider;
@@ -35,6 +36,7 @@ import com.microsoft.identity.labapi.utilities.constants.HomeDomain;
 import com.microsoft.identity.labapi.utilities.constants.HomeUpn;
 import com.microsoft.identity.labapi.utilities.constants.IsAdminConsented;
 import com.microsoft.identity.labapi.utilities.constants.Mfa;
+import com.microsoft.identity.labapi.utilities.constants.OptionalClaim;
 import com.microsoft.identity.labapi.utilities.constants.PasswordPolicyNotificationDays;
 import com.microsoft.identity.labapi.utilities.constants.PasswordPolicyValidityPeriod;
 import com.microsoft.identity.labapi.utilities.constants.ProtectionPolicy;
@@ -72,6 +74,7 @@ public class LabQuery {
     private final AzureEnvironment mAzureEnvironment;
     private final GuestHomeAzureEnvironment mGuestHomeAzureEnvironment;
     private final AppType mAppType;
+    private final AppPlatform mAppPlatform;
     private final PublicClient mPublicClient;
     private final SignInAudience mSignInAudience;
     private final GuestHomedIn mGuestHomedIn;
@@ -84,4 +87,5 @@ public class LabQuery {
     private final TokenType mTokenType;
     private final TokenLifetimePolicy mTokenLifetime;
     private final IsAdminConsented mIsAdminConsented;
+    private final OptionalClaim mOptionalClaim;
 }

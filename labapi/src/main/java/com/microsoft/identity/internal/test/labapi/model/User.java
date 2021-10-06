@@ -26,7 +26,7 @@ import org.threeten.bp.OffsetDateTime;
  * User
  */
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-09-03T13:06:09.180-05:00[America/Chicago]")
 public class User {
   @SerializedName("objectId")
   private String objectId = null;
@@ -106,6 +106,9 @@ public class User {
   @SerializedName("tokenLifeTime")
   private String tokenLifeTime = null;
 
+  @SerializedName("optionalClaim")
+  private String optionalClaim = null;
+
   @SerializedName("labName")
   private String labName = null;
 
@@ -113,7 +116,7 @@ public class User {
   private String lastUpdatedBy = null;
 
   @SerializedName("lastUpdatedDate")
-  private String lastUpdatedDate = null;
+  private OffsetDateTime lastUpdatedDate = null;
 
   public User objectId(String objectId) {
     this.objectId = objectId;
@@ -583,6 +586,24 @@ public class User {
     this.tokenLifeTime = tokenLifeTime;
   }
 
+  public User optionalClaim(String optionalClaim) {
+    this.optionalClaim = optionalClaim;
+    return this;
+  }
+
+   /**
+   * Get optionalClaim
+   * @return optionalClaim
+  **/
+  @Schema(description = "")
+  public String getOptionalClaim() {
+    return optionalClaim;
+  }
+
+  public void setOptionalClaim(String optionalClaim) {
+    this.optionalClaim = optionalClaim;
+  }
+
   public User labName(String labName) {
     this.labName = labName;
     return this;
@@ -619,7 +640,7 @@ public class User {
     this.lastUpdatedBy = lastUpdatedBy;
   }
 
-  public User lastUpdatedDate(String lastUpdatedDate) {
+  public User lastUpdatedDate(OffsetDateTime lastUpdatedDate) {
     this.lastUpdatedDate = lastUpdatedDate;
     return this;
   }
@@ -629,11 +650,11 @@ public class User {
    * @return lastUpdatedDate
   **/
   @Schema(description = "")
-  public String getLastUpdatedDate() {
+  public OffsetDateTime getLastUpdatedDate() {
     return lastUpdatedDate;
   }
 
-  public void setLastUpdatedDate(String lastUpdatedDate) {
+  public void setLastUpdatedDate(OffsetDateTime lastUpdatedDate) {
     this.lastUpdatedDate = lastUpdatedDate;
   }
 
@@ -673,6 +694,7 @@ public class User {
         Objects.equals(this.tokenLifeTimePolicy, user.tokenLifeTimePolicy) &&
         Objects.equals(this.tokenType, user.tokenType) &&
         Objects.equals(this.tokenLifeTime, user.tokenLifeTime) &&
+        Objects.equals(this.optionalClaim, user.optionalClaim) &&
         Objects.equals(this.labName, user.labName) &&
         Objects.equals(this.lastUpdatedBy, user.lastUpdatedBy) &&
         Objects.equals(this.lastUpdatedDate, user.lastUpdatedDate);
@@ -680,7 +702,7 @@ public class User {
 
   @Override
   public int hashCode() {
-    return Objects.hash(objectId, homeObjectId, userType, userRole, displayName, givenName, surName, licenses, domainAccount, upn, mfa, protectionPolicy, homeDomain, tenantID, homeTenantID, homeUPN, guestHomeAzureEnvironment, b2cProvider, guestHomedIn, hasAltID, altIdSource, altIdType, nonRoutableID, tokenLifeTimePolicy, tokenType, tokenLifeTime, labName, lastUpdatedBy, lastUpdatedDate);
+    return Objects.hash(objectId, homeObjectId, userType, userRole, displayName, givenName, surName, licenses, domainAccount, upn, mfa, protectionPolicy, homeDomain, tenantID, homeTenantID, homeUPN, guestHomeAzureEnvironment, b2cProvider, guestHomedIn, hasAltID, altIdSource, altIdType, nonRoutableID, tokenLifeTimePolicy, tokenType, tokenLifeTime, optionalClaim, labName, lastUpdatedBy, lastUpdatedDate);
   }
 
 
@@ -715,6 +737,7 @@ public class User {
     sb.append("    tokenLifeTimePolicy: ").append(toIndentedString(tokenLifeTimePolicy)).append("\n");
     sb.append("    tokenType: ").append(toIndentedString(tokenType)).append("\n");
     sb.append("    tokenLifeTime: ").append(toIndentedString(tokenLifeTime)).append("\n");
+    sb.append("    optionalClaim: ").append(toIndentedString(optionalClaim)).append("\n");
     sb.append("    labName: ").append(toIndentedString(labName)).append("\n");
     sb.append("    lastUpdatedBy: ").append(toIndentedString(lastUpdatedBy)).append("\n");
     sb.append("    lastUpdatedDate: ").append(toIndentedString(lastUpdatedDate)).append("\n");

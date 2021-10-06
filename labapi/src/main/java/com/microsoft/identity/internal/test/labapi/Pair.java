@@ -12,7 +12,7 @@
 
 package com.microsoft.identity.internal.test.labapi;
 
-@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")public class Pair {
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-09-03T13:06:09.180-05:00[America/Chicago]")public class Pair {
     private String name = "";
     private String value = "";
 

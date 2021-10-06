@@ -143,7 +143,7 @@ public class DisablePolicyApi {
      */
     public ApiResponse<CustomSuccessResponse> apiDisablePolicyPutWithHttpInfo(String upn, String policy) throws ApiException {
         com.squareup.okhttp.Call call = apiDisablePolicyPutValidateBeforeCall(upn, policy, null, null);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = new TypeToken<CustomSuccessResponse>(){}.getType();
         return apiClient.execute(call, localVarReturnType);
     }
 
@@ -178,7 +178,7 @@ public class DisablePolicyApi {
         }
 
         com.squareup.okhttp.Call call = apiDisablePolicyPutValidateBeforeCall(upn, policy, progressListener, progressRequestListener);
-        Type localVarReturnType = TypeToken.get(CustomSuccessResponse.class).getType();
+        Type localVarReturnType = new TypeToken<CustomSuccessResponse>(){}.getType();
         apiClient.executeAsync(call, localVarReturnType, callback);
         return call;
     }

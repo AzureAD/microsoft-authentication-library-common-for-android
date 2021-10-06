@@ -20,40 +20,21 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-package com.microsoft.identity.internal.testutils.labutils;
+package com.microsoft.identity.labapi.utilities.constants;
 
-import lombok.EqualsAndHashCode;
+public enum OptionalClaim {
+    NONE(LabConstants.OptionalClaim.NONE),
+    REFRESH_IN(LabConstants.OptionalClaim.REFRESH_IN),
+    PWD_EXP(LabConstants.OptionalClaim.PWD_EXP);
 
-@EqualsAndHashCode
-public class LabUserQuery {
-    public String userType;
-    public String userRole;
-    public String mfa;
-    public String protectionPolicy;
-    public String homeDomain;
-    public String upn;
-    public String homeUpn;
-    public String b2cProvider;
-    public String federationProvider;
-    public String azureEnvironment;
-    public String guestHomeAzureEnvironment;
-    public String appType;
-    public String appplatform;
-    public String publicClient;
-    public String signInAudience;
-    public String guestHomedIn;
-    public String hasAltId;
-    public String altIdSource;
-    public String altIdType;
-    public String passwordPolicyValidityPeriod;
-    public String passwordPolicyNotificationDays;
-    public String tokenLifetimePolicy;
-    public String tokenType;
-    public String tokenLifetime;
-    public String isadminconsented;
-    public String optionalclaim;
+    final String value;
 
-    public boolean isUpnQuery(){
-        return this.upn!=null && !this.upn.isEmpty();
+    OptionalClaim(final String value) {
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
     }
 }

@@ -63,29 +63,37 @@ public class LabUserHelper {
         List<ConfigInfo> configInfos;
 
         try {
-            configInfos = api.apiConfigGet(
-                    query.userType,
-                    query.userRole,
-                    query.mfa,
-                    query.protectionPolicy,
-                    query.homeDomain,
-                    query.homeUpn,
-                    query.b2cProvider,
-                    query.federationProvider,
-                    query.azureEnvironment,
-                    query.guestHomeAzureEnvironment,
-                    query.appType,
-                    query.publicClient,
-                    query.signInAudience,
-                    query.guestHomedIn,
-                    query.hasAltId,
-                    query.altIdSource,
-                    query.altIdType,
-                    query.passwordPolicyValidityPeriod,
-                    query.passwordPolicyNotificationDays,
-                    query.tokenLifetimePolicy,
-                    query.tokenType,
-                    query.tokenLifetime);
+
+            if(query.isUpnQuery()){
+                configInfos = api.apiConfigUpnGet(query.upn);
+            } else{
+                configInfos = api.apiConfigGet(
+                        query.userType,
+                        query.userRole,
+                        query.mfa,
+                        query.protectionPolicy,
+                        query.homeDomain,
+                        query.homeUpn,
+                        query.b2cProvider,
+                        query.federationProvider,
+                        query.azureEnvironment,
+                        query.guestHomeAzureEnvironment,
+                        query.appType,
+                        query.appplatform,
+                        query.publicClient,
+                        query.signInAudience,
+                        query.guestHomedIn,
+                        query.hasAltId,
+                        query.altIdSource,
+                        query.altIdType,
+                        query.passwordPolicyValidityPeriod,
+                        query.passwordPolicyNotificationDays,
+                        query.tokenLifetimePolicy,
+                        query.tokenType,
+                        query.tokenLifetime,
+                        query.isadminconsented,
+                        query.optionalclaim);
+            }
 
         } catch (com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new RuntimeException("Error retrieving lab user", ex);
@@ -121,6 +129,22 @@ public class LabUserHelper {
         String constant;
 
         SignInAudience(String constant) {
+            this.constant = constant;
+        }
+
+        String getValue() {
+            return constant;
+        }
+
+    }
+
+    public enum AppPlatform {
+        WEB(LabConstants.AppPlatform.WEB),
+        SPA(LabConstants.AppPlatform.SPA),
+        ;
+        String constant;
+
+        AppPlatform(String constant) {
             this.constant = constant;
         }
 
@@ -306,16 +330,16 @@ public class LabUserHelper {
 
     public static AppInfo getDefaultAppInfo() {
         instance.setupApiClientWithAccessToken();
-        return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
+        return getAppInfo(UserType.CLOUD, AzureEnvironment.AZURE_CLOUD, AppPlatform.WEB, SignInAudience.AZURE_AD_MULTIPLE_ORGS,
                 IsAdminConsented.YES, PublicClient.YES);
     }
 
-    public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, SignInAudience audience,
+    public static AppInfo getAppInfo(UserType userType, AzureEnvironment azureEnvironment, AppPlatform appPlatform, SignInAudience audience,
                                      IsAdminConsented isAdminConsented, PublicClient publicClient) {
         instance.setupApiClientWithAccessToken();
         AppApi api = new AppApi();
         try {
-            return api.apiAppGet(userType.getValue(), azureEnvironment.getValue(), audience.getValue(),
+            return api.apiAppGet(userType.getValue(), appPlatform.getValue(), azureEnvironment.getValue(), audience.getValue(),
                     isAdminConsented.getValue(), publicClient.getValue()).get(0);
         } catch (ApiException e) {
             throw new RuntimeException(e);

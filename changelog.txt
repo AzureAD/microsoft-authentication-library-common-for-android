@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [MINOR] Regenerate Client for LabApi using the latest labapi swagger spec [#1395]
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
 - [MINOR] Enabling refresh_in feature (#1310)

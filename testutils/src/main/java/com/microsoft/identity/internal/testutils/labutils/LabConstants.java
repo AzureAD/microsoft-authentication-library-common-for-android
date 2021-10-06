@@ -63,6 +63,7 @@ public class LabConstants {
         public static final String LAB_2 = "msidlab2.com";
         public static final String LAB_3 = "msidlab3.com";
         public static final String LAB_4 = "msidlab4.com";
+        public static final String LAB_6 = "msidlab6.com";
     }
 
     public static final class HomeUpn {
@@ -70,6 +71,7 @@ public class LabConstants {
         public static final String LAB_2 = "gidlab@msidlab2.com";
         public static final String LAB_3 = "gidlab@msidlab3.com";
         public static final String LAB_4 = "gidlab@msidlab4.com";
+        public static final String LAB_6 = "gidlab@msidlab6.com";
     }
 
     public static final class B2CProvider {
@@ -118,6 +120,11 @@ public class LabConstants {
         public static final String AZURE_AD_MY_ORG = "azureadmyorg";
         public static final String AZURE_AD_MULTIPLE_ORGS = "azureadmultipleorgs";
         public static final String AZURE_AD_AND_PERSONAL_MICROSOFT_ACCOUNT = "azureadandpersonalmicrosoftaccount";
+    }
+
+    public static final class AppPlatform {
+        public static final String WEB = "web";
+        public static final String SPA = "spa";
     }
 
     public static final class GuestHomedIn {

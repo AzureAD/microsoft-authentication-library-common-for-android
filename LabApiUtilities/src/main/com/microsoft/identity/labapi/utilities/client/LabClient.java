@@ -114,6 +114,7 @@ public class LabClient implements ILabClient {
                     valueOf(query.getAzureEnvironment()),
                     valueOf(query.getGuestHomeAzureEnvironment()),
                     valueOf(query.getAppType()),
+                    valueOf(query.getAppPlatform()),
                     valueOf(query.getPublicClient()),
                     valueOf(query.getSignInAudience()),
                     valueOf(query.getGuestHomedIn()),
@@ -124,7 +125,9 @@ public class LabClient implements ILabClient {
                     valueOf(query.getPasswordPolicyNotificationDays()),
                     valueOf(query.getTokenLifetimePolicy()),
                     valueOf(query.getTokenType()),
-                    valueOf(query.getTokenLifetime())
+                    valueOf(query.getTokenLifetime()),
+                    valueOf(query.getIsAdminConsented()),
+                    valueOf(query.getOptionalClaim())
             );
         } catch (final com.microsoft.identity.internal.test.labapi.ApiException ex) {
             throw new LabApiException(LabError.FAILED_TO_GET_ACCOUNT_FROM_LAB, ex);
