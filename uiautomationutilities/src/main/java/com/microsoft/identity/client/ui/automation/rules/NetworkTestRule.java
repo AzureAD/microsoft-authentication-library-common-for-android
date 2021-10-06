@@ -1,33 +1,31 @@
 package com.microsoft.identity.client.ui.automation.rules;
 
-import android.content.Context;
 import android.os.Build;
-import android.util.Log;
 
 import androidx.annotation.RequiresApi;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.client.ui.automation.annotations.NetworkStatesFile;
 import com.microsoft.identity.client.ui.automation.annotations.NetworkTestTimeout;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.network.NetworkTestStateManager;
 import com.microsoft.identity.client.ui.automation.sdk.ResultFuture;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class NetworkTestRule<T> implements TestRule {
 
-    private long testStartTime, testEndTime;
     private static final String TAG = NetworkTestRule.class.getSimpleName();
+    private static final long FIND_UI_ELEMENT_TIMEOUT = CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
+
     private ResultFuture<T, Exception> testResult = new ResultFuture<>();
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+    private NetworkTestStateManager currentStateManager = null;
 
     @Override
     public Statement apply(Statement base, Description description) {
@@ -38,6 +36,10 @@ public class NetworkTestRule<T> implements TestRule {
                 Logger.i(TAG, "Applying rule...");
                 NetworkStatesFile statesFile = description.getAnnotation(NetworkStatesFile.class);
                 NetworkTestTimeout testTimeout = description.getAnnotation(NetworkTestTimeout.class);
+
+                // Update the timeout for waiting of a UI element
+                CommonUtils.FIND_UI_ELEMENT_TIMEOUT =
+                        testTimeout == null ? FIND_UI_ELEMENT_TIMEOUT : TimeUnit.SECONDS.toMillis(testTimeout.seconds());
 
                 if (statesFile == null) {
                     Logger.i(TAG, "Method[" + description.getMethodName() + "] does not have any network states file annotation...");
@@ -50,60 +52,43 @@ public class NetworkTestRule<T> implements TestRule {
                             .readCSVFile(description.getTestClass(), statesFile.value());
 
                     for (NetworkTestStateManager stateManager : stateManagers) {
-                        executeTest(stateManager, base, testTimeout == null ? 0 : testTimeout.seconds());
+                        currentStateManager = stateManager;
+                        if (stateManager.isIgnored()) {
+                            Logger.i(TAG, "Skipping network test [" + stateManager.getId() + "] since it was marked as ignored.");
+                        } else {
+                            base.evaluate();
+
+                            cleanUp();
+                        }
                     }
+                } else {
+                    Logger.e(TAG, "No tests to be run. Network states input file is not defined.");
                 }
             }
         };
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private void executeTest(final NetworkTestStateManager stateManager, final Statement base, final int timeoutSeconds) throws InterruptedException {
-        Log.d(TAG, "Running network test: " + stateManager.getId());
-
-        NetworkTestStateManager.resetNetworkState(mContext);
-
-        final Thread networkStateThread = stateManager.execute();
-        final ExecutorService executorService = Executors.newFixedThreadPool(2);
-
-        executorService.execute(networkStateThread);
-        executorService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(2000);
-                    testStartTime = System.currentTimeMillis();
-                    base.evaluate();
-                } catch (Throwable throwable) {
-                    testResult.setException(new Exception(throwable));
-                } finally {
-                    testEndTime = System.currentTimeMillis();
-                }
-            }
-        });
-        executorService.shutdown();
-
-        try {
-            T result;
-            if (timeoutSeconds == 0) result = testResult.get();
-            else result = testResult.get(timeoutSeconds, TimeUnit.SECONDS);
-
-            Log.d(TAG, "Test [" + stateManager.getId() + "] result: " + result);
-        } catch (Throwable throwable) {
-            Log.e(TAG, "Test [" + stateManager.getId() + "] threw an exception", throwable);
-        }
-
-        Log.d(TAG, "Network test: " + stateManager.getId() + " completed after: " + (testEndTime - testStartTime) + " ms");
-
-        executorService.shutdownNow();
+    private void cleanUp() {
         testResult = new ResultFuture<>();
     }
 
     public void setResult(T result) {
-        this.testResult.setResult(result);
+        testResult.setResult(result);
     }
 
     public void setException(Exception exception) {
-        this.testResult.setException(exception);
+        testResult.setException(exception);
+    }
+
+    public NetworkTestStateManager getCurrentStateManager() {
+        return currentStateManager;
+    }
+
+    public T getResult(long timeoutSeconds, TimeUnit timeUnit) throws Throwable {
+        return testResult.get(timeoutSeconds, timeUnit);
+    }
+
+    public T getResult() throws Exception {
+        return testResult.get();
     }
 }

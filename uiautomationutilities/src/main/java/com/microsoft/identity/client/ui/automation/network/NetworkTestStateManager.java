@@ -60,6 +60,54 @@ public class NetworkTestStateManager {
 
 
     /**
+     * Reset the network state to WIFI
+     */
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public static void resetNetworkState(final Context context) {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        final ConnectivityManager.NetworkCallback networkCallback;
+
+        final NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
+
+        if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
+            NetworkTestStateManager.changeNetworkState(NetworkTestConstants.InterfaceType.WIFI_AND_CELLULAR);
+
+            final CountDownLatch wifiWaiter = new CountDownLatch(1);
+
+            connectivityManager.registerDefaultNetworkCallback(networkCallback = new ConnectivityManager.NetworkCallback() {
+                @Override
+                public void onAvailable(@NonNull Network network) {
+                    wifiWaiter.countDown();
+                }
+            });
+
+            try {
+                // If the device is not connected to the internet, wait for WIFI to turn ON
+                wifiWaiter.await(10, TimeUnit.SECONDS);
+            } catch (InterruptedException ignored) {
+            }
+
+            connectivityManager.unregisterNetworkCallback(networkCallback);
+        }
+    }
+
+
+    /**
+     * Changes the state of the network by executing shell commands to turn WIFI and mobile data ON/OFF.
+     *
+     * @param interfaceType a {@link NetworkTestConstants.InterfaceType}
+     */
+    public static void changeNetworkState(
+            @NonNull final NetworkTestConstants.InterfaceType interfaceType
+    ) {
+        currentInterface = interfaceType;
+        AdbShellUtils.executeShellCommand("svc wifi " + (interfaceType.wifiActive() ? "enable" : "disable"));
+        AdbShellUtils.executeShellCommand("svc data " + (interfaceType.cellularActive() ? "enable" : "disable"));
+    }
+
+
+    /**
      * Returns the {@link NetworkTestConstants.InterfaceType} that is currently applied.
      *
      * @return the {@link NetworkTestConstants.InterfaceType} that is currently applied to the device.
@@ -117,6 +165,7 @@ public class NetworkTestStateManager {
 
     private List<NetworkTestState> states;
     private String id;
+    private boolean ignored;
 
     public NetworkTestStateManager() {
     }
@@ -137,6 +186,9 @@ public class NetworkTestStateManager {
         }
 
         this.id = networkStates.get(0);
+
+        this.ignored = this.id.endsWith("-ignore");
+        this.id = this.id.replaceAll("(-ignore)$", "");
 
         // Read the input
 
@@ -179,8 +231,12 @@ public class NetworkTestStateManager {
             public void run() {
                 try {
                     for (NetworkTestState state : states) {
-                        switchState(state);
-                        Thread.sleep(state.getTime() * 1000);
+                        if (state.getTime() > 0) {
+                            switchState(state);
+                            Thread.sleep(state.getTime() * 1000);
+                        } else {
+                            Logger.i(TAG, "Cannot apply network state [" + state.getInterfaceType() + "] with time: " + state.getTime());
+                        }
                     }
                 } catch (InterruptedException ignored) {
                 }
@@ -212,48 +268,11 @@ public class NetworkTestStateManager {
     }
 
     /**
-     * Reset the network state to WIFI
-     */
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    public static void resetNetworkState(final Context context) {
-        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        final ConnectivityManager.NetworkCallback networkCallback;
-
-        final NetworkInfo networkInfo = connectivityManager.getActiveNetworkInfo();
-
-        if (networkInfo == null || !networkInfo.isConnectedOrConnecting()) {
-            NetworkTestStateManager.changeNetworkState(NetworkTestConstants.InterfaceType.WIFI_AND_CELLULAR);
-
-            final CountDownLatch wifiWaiter = new CountDownLatch(1);
-
-            connectivityManager.registerDefaultNetworkCallback(networkCallback = new ConnectivityManager.NetworkCallback() {
-                @Override
-                public void onAvailable(@NonNull Network network) {
-                    wifiWaiter.countDown();
-                }
-            });
-
-            try {
-                // If the device is not connected to the internet, wait for WIFI to turn ON
-                wifiWaiter.await(10, TimeUnit.SECONDS);
-            } catch (InterruptedException ignored) {
-            }
-
-            connectivityManager.unregisterNetworkCallback(networkCallback);
-        }
-    }
-
-    /**
-     * Changes the state of the network by executing shell commands to turn WIFI and mobile data ON/OFF.
+     * Determine whether a test will use this state manager.
      *
-     * @param interfaceType a {@link NetworkTestConstants.InterfaceType}
+     * @return a boolean value that defines whether this state manager will be ignored.
      */
-    public static void changeNetworkState(
-            @NonNull final NetworkTestConstants.InterfaceType interfaceType
-    ) {
-        currentInterface = interfaceType;
-        AdbShellUtils.executeShellCommand("svc wifi " + (interfaceType.wifiActive() ? "enable" : "disable"));
-        AdbShellUtils.executeShellCommand("svc data " + (interfaceType.cellularActive() ? "enable" : "disable"));
+    public boolean isIgnored() {
+        return this.ignored;
     }
 }

@@ -23,6 +23,7 @@
 package com.microsoft.identity.client.ui.automation.interaction;
 
 import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
+import com.microsoft.identity.client.ui.automation.utils.CommonUtils;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -142,4 +143,11 @@ public class PromptHandlerParameters {
 
     @Builder.Default
     private final UiResponse staySignedInResponse = UiResponse.ACCEPT;
+
+
+    /**
+     * The timeout in seconds to find a UI Element
+     */
+    @Builder.Default
+    private final long findUiElementTimeout = CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
 }

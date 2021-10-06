@@ -47,7 +47,7 @@ import java.util.concurrent.TimeUnit;
 public class CommonUtils {
 
     private final static String TAG = CommonUtils.class.getSimpleName();
-    public final static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
+    public static long FIND_UI_ELEMENT_TIMEOUT = TimeUnit.SECONDS.toMillis(30);
 
     private final static String SD_CARD = "/sdcard";
 
@@ -199,5 +199,24 @@ public class CommonUtils {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         intent.setData(data);
         context.startActivity(intent);
+    }
+
+
+    public static boolean deleteDirectory(File directory) {
+        if (directory != null && directory.isDirectory()) {
+            final String[] children = directory.list();
+            if (null != children) {
+                for (String child : children) {
+                    if (!deleteDirectory(new File(directory, child))) {
+                        return false;
+                    }
+                }
+            }
+            return directory.delete();
+        } else if (directory != null && directory.isFile()) {
+            return directory.delete();
+        } else {
+            return false;
+        }
     }
 }
