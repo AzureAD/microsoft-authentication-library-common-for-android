@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import lombok.NonNull;
 
 import com.google.gson.annotations.SerializedName;
@@ -37,6 +36,7 @@ import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory.AzureActiveDirectorySlice;
 import com.microsoft.identity.common.java.logging.Logger;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -121,12 +121,12 @@ public class AzureActiveDirectoryAuthority extends Authority {
     public URI getAuthorityUri() {
         try {
             getAzureActiveDirectoryCloud();
-            URIBuilder issuer;
+            CommonURIBuilder issuer;
 
             if (mAzureActiveDirectoryCloud == null) {
-                issuer = new URIBuilder(mAudience.getCloudUrl());
+                issuer = new CommonURIBuilder(mAudience.getCloudUrl());
             } else {
-                issuer = new URIBuilder("https://" + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
+                issuer = new CommonURIBuilder("https://" + mAzureActiveDirectoryCloud.getPreferredNetworkHostName());
             }
 
             if (!StringUtil.isNullOrEmpty(mAudience.getTenantId())) {

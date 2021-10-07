@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.NonNull;
 
@@ -59,12 +58,12 @@ public class UrlUtil {
             return urlToAppend;
         }
 
-        final URIBuilder pathBuilder = new URIBuilder();
+        final CommonURIBuilder pathBuilder = new CommonURIBuilder();
         pathBuilder.setPath(pathString);
 
         final List<String> pathSegmentsToAppend = pathBuilder.getPathSegments();
 
-        final URIBuilder builder = new URIBuilder(urlToAppend.toString());
+        final CommonURIBuilder builder = new CommonURIBuilder(urlToAppend.toString());
         final List<String> pathSegments = builder.getPathSegments();
 
         final List<String> combinedPathSegments = new ArrayList<>(pathSegments);
