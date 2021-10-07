@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.java.util;
 
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.ported.ObjectUtils;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -93,7 +94,7 @@ public class StringUtil {
      * @param two The second string to compare.
      */
     public static boolean equalsIgnoreCase(@Nullable final String one, @Nullable final String two) {
-        return Objects.equals(one, two) || (one != null && one.equalsIgnoreCase(two));
+        return ObjectUtils.equals(one, two) || (one != null && one.equalsIgnoreCase(two));
     }
 
     /**
@@ -221,13 +222,13 @@ public class StringUtil {
     /**
      * Get a string from the given exception.
      *
-     * @param exception an exception object to extract a stack trace string from.
+     * @param throwable an throwable object to extract a stack trace string from.
      * @return A stack trace string
      */
-    public static String getStackTraceAsString(@NonNull final Exception exception) {
+    public static String getStackTraceAsString(@NonNull final Throwable throwable) {
         final StringWriter sw = new StringWriter();
         final PrintWriter pw = new PrintWriter(sw);
-        exception.printStackTrace(pw);
+        throwable.printStackTrace(pw);
         return pw.toString();
     }
 
