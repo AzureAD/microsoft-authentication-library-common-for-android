@@ -33,7 +33,7 @@ public enum DiagnosticContext {
 
     // This is thread-safe.
     @SuppressFBWarnings("SE_BAD_FIELD_STORE")
-    private final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
+    private transient final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
             new ThreadLocal<IRequestContext>() {
                 @Override // This is the default value for the RequestContext if it's unset
                 protected RequestContext initialValue() {
