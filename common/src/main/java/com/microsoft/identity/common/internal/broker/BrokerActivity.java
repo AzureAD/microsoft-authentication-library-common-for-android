@@ -36,7 +36,7 @@ import com.microsoft.identity.common.java.util.ported.PropertyBag;
 import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
