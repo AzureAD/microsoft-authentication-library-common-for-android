@@ -630,7 +630,7 @@ public class AuthenticationConstants {
         public static final String CANCEL_AUTHORIZATION_REQUEST = "cancel_authorization_request";
 
         /**
-         * an alias that the intent contains authorization results, was formerly RETURN_INTERACTIVE_REQUEST_RESULT
+         * An alias that the intent contains authorization results, was formerly RETURN_INTERACTIVE_REQUEST_RESULT.
          */
         public static final String RETURN_AUTHORIZATION_REQUEST_RESULT = "return_authorization_request_result";
 
