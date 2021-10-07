@@ -57,9 +57,9 @@ public class BrokerHost extends AbstractTestBroker {
         localApkFileName = BROKER_HOST_APK;
     }
 
-    public BrokerHost(@NonNull final String brokerHostApkName) {
+    public BrokerHost(@Nullable final String brokerHostApkName) {
         super(BROKER_HOST_APP_PACKAGE_NAME, BROKER_HOST_APP_NAME, new LocalApkInstaller());
-        localApkFileName = brokerHostApkName;
+        localApkFileName = null == brokerHostApkName ? BROKER_HOST_APK : brokerHostApkName;
     }
 
     @Override
