@@ -148,12 +148,7 @@ public class BrowserEdge extends App implements IBrowser {
     private void signInWithWorkOrSchoolAccount(@NonNull final String username,
                                                @NonNull final String password,
                                                @NonNull final FirstPartyAppPromptHandlerParameters promptHandlerParameters) throws UiObjectNotFoundException {
-        final UiObject signInWithWorkAccountBtn = UiAutomatorUtils.obtainUiObjectWithText(
-                "Sign in with a work or school account"
-        );
-
-        // click Sign In with work or school account btn
-        signInWithWorkAccountBtn.click();
+        UiAutomatorUtils.handleButtonClick("com.microsoft.emmx:id/fre_add_account");
 
         Logger.i(TAG, "Handle Sign-In Prompt for Work or School account..");
         // handle prompt
