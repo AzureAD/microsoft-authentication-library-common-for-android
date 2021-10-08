@@ -22,8 +22,8 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.controllers;
 
-import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
-import static com.microsoft.identity.common.java.AuthenticationConstants.LobalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
 import static com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.PRODUCT;
