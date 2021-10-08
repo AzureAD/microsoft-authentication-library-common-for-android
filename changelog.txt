@@ -1,5 +1,6 @@
 V.Next
 ----------
+- [PATCH] Make it clear if adding a query param should overwrite or leave as is (#1581)
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1568)
 - [MINOR] Add GetOsForMats to IDeviceMetadata (#1552)
 - [MINOR] Enabling refresh_in feature (#1310)
@@ -59,6 +60,7 @@ V.Next
 - [PATCH] Fix extracting http response body (#1557)
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
+- [MINOR] Add flighting parameters to commmandParameters (#1562)
 
 Version 3.6.2
 ----------

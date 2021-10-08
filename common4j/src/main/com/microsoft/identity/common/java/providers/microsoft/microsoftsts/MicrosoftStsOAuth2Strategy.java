@@ -36,8 +36,6 @@ import com.microsoft.identity.common.java.providers.oauth2.IAuthorizationStrateg
 import com.microsoft.identity.common.java.providers.oauth2.TokenErrorResponse;
 import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.NonNull;
@@ -66,6 +64,7 @@ import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.java.net.UrlConnectionHttpClient;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -669,7 +668,7 @@ public class MicrosoftStsOAuth2Strategy
             @NonNull final MicrosoftStsAuthorizationResponse response) throws ClientException {
         if (!StringUtil.isNullOrEmpty(response.getCloudInstanceHostName())) {
             try {
-                return new URIBuilder(mTokenEndpoint)
+                return new CommonURIBuilder(mTokenEndpoint)
                         .setHost(response.getCloudInstanceHostName())
                         .build()
                         .toString();

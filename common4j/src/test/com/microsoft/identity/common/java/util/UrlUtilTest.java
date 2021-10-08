@@ -31,8 +31,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Map;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-
 public class UrlUtilTest {
 
     @Test
