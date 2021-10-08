@@ -21,22 +21,53 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-package com.microsoft.identity.common.internal.util;
+package com.microsoft.identity.common.java.util;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
+import org.junit.runners.JUnit4;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(RobolectricTestRunner.class)
+@RunWith(JUnit4.class)
 public class QueryParamsAdapterTest {
+
+    @Test
+    public void testConvertToJson() throws Exception {
+        final List<Map.Entry<String, String>> input = new ArrayList<>();
+        input.add(new AbstractMap.SimpleEntry<String, String>("eqp1", "1"));
+        input.add(new AbstractMap.SimpleEntry<String, String>("eqp2", "2"));
+
+        final String expected = "[{\"first\":\"eqp1\",\"second\":\"1\"},{\"first\":\"eqp2\",\"second\":\"2\"}]";
+
+        Assert.assertEquals(expected, QueryParamsAdapter._toJson(input));
+    }
+
+    @Test
+    public void testConvertToProperJsonFormat() throws Exception{
+        final String expected = "{\"eqp1\":\"1\",\"eqp2\":\"2\"}";
+
+        final List<Map.Entry<String, String>> input = new ArrayList<>();
+        input.add(new AbstractMap.SimpleEntry<String, String>("eqp1", "1"));
+        input.add(new AbstractMap.SimpleEntry<String, String>("eqp2", "2"));
+
+        final GsonBuilder gsonBuilder = new GsonBuilder();
+        gsonBuilder.registerTypeAdapter(
+                QueryParamsAdapter.getListType(),
+                new QueryParamsAdapter(true)
+        );
+        final Gson gson = gsonBuilder.create();
+
+        Assert.assertEquals(expected, gson.toJson(input, QueryParamsAdapter.getListType()));
+    }
 
     @Test
     public void testConvertFromNullJsonString() throws Exception {
@@ -51,17 +82,6 @@ public class QueryParamsAdapterTest {
     }
 
     @Test
-    public void testConvertToJson() throws Exception {
-        final List<Map.Entry<String, String>> input = new ArrayList<>();
-        input.add(new AbstractMap.SimpleEntry<String, String>("eqp1", "1"));
-        input.add(new AbstractMap.SimpleEntry<String, String>("eqp2", "2"));
-
-        final String expected = "[{\"first\":\"eqp1\",\"second\":\"1\"},{\"first\":\"eqp2\",\"second\":\"2\"}]";
-
-        Assert.assertEquals(expected, QueryParamsAdapter._toJson(input));
-    }
-
-    @Test
     public void testConvertFromJson() throws Exception {
         final String input = "[{\"first\":\"eqp1\",\"second\":\"1\"},{\"first\":\"eqp2\",\"second\":\"2\"}]";
 
@@ -73,15 +93,32 @@ public class QueryParamsAdapterTest {
     }
 
     @Test
-    public void testConvertFromIncorrectJson() throws Exception {
+    public void testConvertFromProperJsonFormat() throws Exception{
+        final String input = "{\"eqp1\": \"1\", \"eqp2\": \"2\"}";
+
+        final List<Map.Entry<String, String>> expected = new ArrayList<>();
+        expected.add(new AbstractMap.SimpleEntry<String, String>("eqp1", "1"));
+        expected.add(new AbstractMap.SimpleEntry<String, String>("eqp2", "2"));
+
+        Assert.assertEquals(expected, QueryParamsAdapter._fromJson(input));
+    }
+
+    @Test
+    public void testConvertFromUnsupportedJson() throws Exception {
         // This is what we get if we serialized List<Map.Entry> directly.
+        // the difference from List<Pair> is first->key and second->value.
         final String input = "[{\"key\":\"eqp1\",\"value\":\"1\"},{\"key\":\"eqp2\",\"value\":\"2\"}]";
-        Assert.assertEquals(0, QueryParamsAdapter._fromJson(input).size());
+        try {
+            QueryParamsAdapter._fromJson(input);
+            Assert.fail();
+        } catch (final ClientException e){
+            Assert.assertEquals(ClientException.JSON_PARSE_FAILURE, e.getErrorCode());
+        }
     }
 
     @Test
     public void testConvertFromMalformedJson(){
-        final String input = "[{\"eqp1\", \"1\"}, {\"eqp2\", \"2\"}]";
+        final String input = "[{\"eqp1\"}, {\"eqp2\", \"2\"}]";
         try {
             QueryParamsAdapter._fromJson(input);
             Assert.fail();
