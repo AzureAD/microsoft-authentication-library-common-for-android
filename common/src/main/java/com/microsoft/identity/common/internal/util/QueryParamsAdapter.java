@@ -43,51 +43,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Class to serialize and deserialize query parameters from List<Pair<String, String>> to json String
+ * Class to serialize and deserialize query parameters from List<Map.Entry<String, String>> to json String
  * and vice versa.
  *
  * NOTE: Even we no longer use Pair (Since it's android-only), we are keeping this the same
  *       to maintain backcompat with serialized value from older common that still uses it.
  */
-public class QueryParamsAdapter extends TypeAdapter<List<Pair<String, String>>> {
+public class QueryParamsAdapter {
 
     private static final String TAG = QueryParamsAdapter.class.getSimpleName();
 
     private static final Gson mGson;
 
     static {
-        final GsonBuilder gsonBuilder = new GsonBuilder();
-        gsonBuilder.registerTypeAdapter(
-                QueryParamsAdapter.class,
-                new QueryParamsAdapter()
-        );
-        mGson = gsonBuilder.create();
-    }
-
-    @Override
-    public void write(final JsonWriter out, final List<Pair<String, String>> queryParams) throws IOException {
-        out.beginObject();
-
-        for (final Pair<String, String> keyValuePair : queryParams) {
-            out.name(keyValuePair.first);
-            out.value(keyValuePair.second);
-        }
-
-        out.endObject();
-    }
-
-    @Override
-    public List<Pair<String, String>> read(final JsonReader in) throws IOException {
-        in.beginObject();
-        final List<Pair<String, String>> result = new ArrayList<>();
-        while (in.hasNext()) {
-            final String key = in.nextName();
-            final String value = in.nextString();
-            final Pair<String, String> keyValuePair = new Pair<>(key, value);
-            result.add(keyValuePair);
-        }
-        in.endObject();
-        return result;
+        mGson = new GsonBuilder().create();
     }
 
     public static String _toJson(final List<Map.Entry<String, String>> extraQueryStringParameters) {
