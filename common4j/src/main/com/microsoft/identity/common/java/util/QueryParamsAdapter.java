@@ -110,9 +110,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     @Override
-    public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException {
-        final List<Map.Entry<String, String>> result = new ArrayList<>();
-
+    public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException { 
         switch (in.peek()) {
             // Backcompat to support the old "List<Pair<String,String>>" format
             // i.e. [{"first":"eqp1","second":"1"},{"first":"eqp2","second":"2"}]
@@ -125,7 +123,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
                 return readProperFormat(in);
         }
 
-        return result;
+        return new ArrayList<>();
     }
 
     private List<Map.Entry<String, String>> readProperFormat(final JsonReader in) throws IOException {
