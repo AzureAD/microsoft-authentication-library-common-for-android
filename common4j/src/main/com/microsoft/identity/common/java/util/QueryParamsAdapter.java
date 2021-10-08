@@ -110,7 +110,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     @Override
-    public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException { 
+    public List<Map.Entry<String, String>> read(final JsonReader in) throws IOException {
         switch (in.peek()) {
             // Backcompat to support the old "List<Pair<String,String>>" format
             // i.e. [{"first":"eqp1","second":"1"},{"first":"eqp2","second":"2"}]
@@ -131,9 +131,7 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
 
         in.beginObject();
         while (in.hasNext()) {
-            final String key = in.nextName();
-            final String value = in.nextString();
-            final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(key, value);
+            final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(in.nextName(), in.nextString());
             result.add(keyValuePair);
         }
         in.endObject();
@@ -161,18 +159,29 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
                 }
             }
 
-            final Map.Entry<String, String> keyValuePair = new AbstractMap.SimpleEntry<>(key, value);
-            result.add(keyValuePair);
+            result.add(new AbstractMap.SimpleEntry<>(key, value));
             in.endObject();
         }
         in.endArray();
         return result;
     }
 
+    /**
+     * Serializes a List<Map.Entry<String, String>>.
+     *
+     * @param extraQueryStringParameters an object to serialize.
+     * @return a serialized string.
+     * */
     public static String _toJson(final List<Map.Entry<String, String>> extraQueryStringParameters) {
         return mGson.toJson(extraQueryStringParameters, getListType());
     }
 
+    /**
+     * Deerializes a string into a List<Map.Entry<String, String>>.
+     *
+     * @param jsonString a string to deserialize.
+     * @return a deserialized object.
+     * */
     public static List<Map.Entry<String, String>> _fromJson(final String jsonString)
             throws ClientException{
         final String methodName = ":_fromJson";
@@ -191,9 +200,9 @@ public class QueryParamsAdapter extends TypeAdapter<List<Map.Entry<String, Strin
     }
 
     /**
-     * Create a Type for the List of query params
+     * Create a Type for the List of query params.
      *
-     * @return a Type object representing the type of the query params in this case List<Pair<String, String>>
+     * @return a Type object representing the type of the query params in this case List<Map.Entry<String, String>>
      */
     public static Type getListType() {
         return TypeToken.getParameterized(List.class, TypeToken.getParameterized(Map.Entry.class, String.class, String.class).getRawType()).getType();
