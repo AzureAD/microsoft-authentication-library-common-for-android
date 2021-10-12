@@ -146,6 +146,7 @@ public class JWSBuilder {
         final String signingInput;
         final String signature;
         try {
+
             // Server side expects x5c in the header to verify the signer and
             // lookup the certificate from device registration
             // Each string in the array is a base64
