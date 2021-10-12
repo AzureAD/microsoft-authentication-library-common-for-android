@@ -1,5 +1,9 @@
 Version 3.6.2
 ----------
+- [PATCH] Add helper method to remove the metadataCache entry (#1593, #1749)
+
+Version 3.6.2
+----------
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)
 - [PATCH] Fixing Redirect Uri for Authenticator App, when migrating to MSAL (#1567)
 
