@@ -46,6 +46,7 @@ import java.util.UUID;
 
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_PKCE_CHALLENGE;
 import static com.microsoft.identity.common.java.providers.Constants.MOCK_STATE;
+import static com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsAuthorizationRequest.HIDE_SWITCH_USER_QUERY_PARAMETER;
 import static org.junit.Assert.assertTrue;
 
 public class MicrosoftStsAuthorizationRequestTests {
@@ -168,6 +169,20 @@ public class MicrosoftStsAuthorizationRequestTests {
         final String actualCodeRequestUrlWithLoginHint = requestWithLoginHint.getAuthorizationRequestAsHttpRequest().toString();
         assertTrue("Matching login hint", actualCodeRequestUrlWithLoginHint.contains("login_hint=" + DEFAULT_TEST_LOGIN_HINT));
         assertTrue("Matching HideSwitchUser", actualCodeRequestUrlWithLoginHint.contains("hsu=1"));
+    }
+
+    @Test
+    public void testGetCodeRequestWithDuplicatedExtraQueryParametersHsu() throws MalformedURLException, ClientException {
+        final int expectedCount = 1;
+        final MicrosoftStsAuthorizationRequest.Builder requestWithLoginHint = new MicrosoftStsAuthorizationRequest.Builder()
+                .setLoginHint(DEFAULT_TEST_LOGIN_HINT)
+                .setAuthority(getValidRequestUrl());
+        final List<Map.Entry<String, String>> extraQueryParameter = new LinkedList<>();
+        extraQueryParameter.add(new AbstractMap.SimpleEntry<>(HIDE_SWITCH_USER_QUERY_PARAMETER, "1"));
+        requestWithLoginHint.setExtraQueryParams(extraQueryParameter);
+        final String actualCodeRequestUrl = requestWithLoginHint.build().getAuthorizationRequestAsHttpRequest().toString();
+
+        Assert.assertEquals(expectedCount, TestUtils.countMatches(actualCodeRequestUrl, HIDE_SWITCH_USER_QUERY_PARAMETER));
     }
 
     @Test

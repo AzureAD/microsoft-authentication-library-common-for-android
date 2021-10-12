@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.providers.microsoft.azureactivedirectory;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import lombok.NonNull;
 
 import com.google.gson.Gson;
@@ -39,6 +38,7 @@ import com.microsoft.identity.common.java.providers.IdentityProvider;
 import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 import com.microsoft.identity.common.java.util.StringUtil;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import org.json.JSONException;
 
@@ -184,9 +184,9 @@ public class AzureActiveDirectory
     public static synchronized void performCloudDiscovery()
             throws IOException, URISyntaxException {
         final String methodName = ":performCloudDiscovery";
-        final URI instanceDiscoveryRequestUri = new URIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
-                .addParameter(API_VERSION, API_VERSION_VALUE)
-                .addParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
+        final URI instanceDiscoveryRequestUri = new CommonURIBuilder(getDefaultCloudUrl() + AAD_INSTANCE_DISCOVERY_ENDPOINT)
+                .setParameter(API_VERSION, API_VERSION_VALUE)
+                .setParameter(AUTHORIZATION_ENDPOINT, AUTHORIZATION_ENDPOINT_VALUE)
                 .build();
 
         final HttpResponse response =

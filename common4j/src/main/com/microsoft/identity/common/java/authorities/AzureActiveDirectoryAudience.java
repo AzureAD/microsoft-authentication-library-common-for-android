@@ -22,7 +22,6 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.authorities;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
 import lombok.NonNull;
 
 import com.google.gson.annotations.SerializedName;
@@ -33,13 +32,13 @@ import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigu
 import com.microsoft.identity.common.java.providers.oauth2.OpenIdProviderConfigurationClient;
 import com.microsoft.identity.common.java.util.StringUtil;
 import com.microsoft.identity.common.java.logging.Logger;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Locale;
 
 import static com.microsoft.identity.common.java.authorities.AllAccounts.ALL_ACCOUNTS_TENANT_ID;
-import static com.microsoft.identity.common.java.authorities.AnyPersonalAccount.ANY_PERSONAL_ACCOUNT_TENANT_ID;
 
 public abstract class AzureActiveDirectoryAudience {
 
@@ -95,9 +94,9 @@ public abstract class AzureActiveDirectoryAudience {
                 loadOpenIdProviderConfigurationMetadata(authority);
 
         final String issuer = providerConfiguration.getIssuer();
-        final URIBuilder issuerUri;
+        final CommonURIBuilder issuerUri;
         try {
-            issuerUri = new URIBuilder(issuer);
+            issuerUri = new CommonURIBuilder(issuer);
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL,
                     "Failed to construct issuerUri", e);
