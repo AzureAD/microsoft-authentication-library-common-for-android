@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-apply from: '../common/versioning/version_tasks.gradle'
+apply from: '../versioning/version_tasks.gradle'
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
@@ -71,6 +71,13 @@ android {
         buildConfigField("String", "INSTALL_SOURCE_PLAY_STORE", "\"$installSourcePlayStore\"")
         buildConfigField("String", "INSTALL_SOURCE_LOCAL_APK", "\"$installSourceLocalApk\"")
         buildConfigField("boolean", "PREFER_PRE_INSTALLED_APKS", "$usePreInstalledApks")
+
+        // Specifies a sorted list of flavors that the plugin should try to use from
+        // a given dimension. The following tells the plugin that, when encountering
+        // a dependency that includes a "main" dimension, it should select the
+        // "local" flavor. You can include additional flavor names to provide a
+        // sorted list of fallbacks for the dimension.
+        missingDimensionStrategy 'main', 'local'
     }
 
     buildTypes {

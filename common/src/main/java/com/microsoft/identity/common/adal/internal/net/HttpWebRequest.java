@@ -25,9 +25,10 @@ package com.microsoft.identity.common.adal.internal.net;
 import android.content.Context;
 import android.os.Debug;
 
+import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -40,6 +41,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Webrequest are called in background thread from API level. HttpWebRequest
@@ -78,6 +81,7 @@ public class HttpWebRequest {
      * @param requestContent     byte[]
      * @param requestContentType String
      */
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
     public HttpWebRequest(
             URL requestURL,
             String requestMethod,
@@ -176,51 +180,6 @@ public class HttpWebRequest {
 
         return response;
     }
-    /**
-     * Check if the network is available. If the network is unavailable, {@link ClientException}
-     * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
-     * when connection is not available to refresh token because power optimization is enabled, or
-     * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
-     *
-     * @param context Context : application context
-     *
-     * @throws ClientException throw network exception
-     */
-    public static void throwIfNetworkNotAvailable(final Context context)
-            throws ClientException {
-        throwIfNetworkNotAvailable(context, false);
-    }
-
-    /**
-     * Check if the network is available. If the network is unavailable, {@link ClientException}
-     * will throw with error code {@link ErrorStrings#NO_NETWORK_CONNECTION_POWER_OPTIMIZATION}
-     * when connection is not available to refresh token because power optimization is enabled, or
-     * throw with error code {@link ErrorStrings#DEVICE_NETWORK_NOT_AVAILABLE} otherwise.
-     *
-     * @param context                       application context
-     * @param performPowerOptimizationCheck True, if power optimization checks should be performed.
-     *                                      False otherwise.
-     * @throws ClientException throw network exception
-     */
-    public static void throwIfNetworkNotAvailable(final Context context,
-                                                  final boolean performPowerOptimizationCheck)
-            throws ClientException {
-
-        final DefaultConnectionService connectionService = new DefaultConnectionService(context);
-
-        if (performPowerOptimizationCheck && connectionService.isNetworkDisabledFromOptimizations()) {
-            throw new ClientException(
-                    ErrorStrings.NO_NETWORK_CONNECTION_POWER_OPTIMIZATION,
-                    "Connection is not available to refresh token because power optimization is "
-                            + "enabled. And the device is in doze mode or the app is standby");
-        }
-
-        if (!connectionService.isConnectionAvailable()) {
-            throw new ClientException(
-                    ErrorStrings.DEVICE_NETWORK_NOT_AVAILABLE,
-                    "Connection is not available to refresh token");
-        }
-    }
 
     /**
      * Convert stream into the string.
@@ -229,10 +188,10 @@ public class HttpWebRequest {
      * @return The converted string
      * @throws IOException Thrown when failing to access inputStream stream.
      */
-    private static String convertStreamToString(InputStream inputStream) throws IOException {
+    private static String convertStreamToString(final InputStream inputStream) throws IOException {
         BufferedReader reader = null;
         try {
-            reader = new BufferedReader(new InputStreamReader(inputStream));
+            reader = new BufferedReader(new InputStreamReader(inputStream, AuthenticationConstants.CHARSET_UTF8));
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {

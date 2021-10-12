@@ -47,7 +47,7 @@ public class LabResetHelper {
 
         try {
             final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = resetApi.putResetInfo(upn, LabConstants.ResetOperation.PASSWORD);
+            customSuccessResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.PASSWORD);
             final String expectedResult = ("Password reset successful for user : " + upn)
                     .toLowerCase();
             return customSuccessResponse.getResult().toLowerCase().contains(expectedResult);
@@ -68,7 +68,7 @@ public class LabResetHelper {
 
         try {
             final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = resetApi.putResetInfo(upn, LabConstants.ResetOperation.MFA);
+            customSuccessResponse = resetApi.apiResetPut(upn, LabConstants.ResetOperation.MFA);
             return customSuccessResponse.getResult().contains(
                     "MFA reset successful for user : " + upn
             );

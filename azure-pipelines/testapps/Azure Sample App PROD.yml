@@ -1,13 +1,12 @@
-# 'Allow scripts to access the OAuth token' was selected in pipeline.  Add the following YAML to any steps requiring access:
-#       env:
-#           MY_ACCESS_TOKEN: $(System.AccessToken)
-# Variable 'android:serverUrl' was defined in the Variables tab
-# Variable 'distMsalVersion' was defined in the Variables tab
-# Variable 'ENV_VSTS_MVN_ANDROID_MSAL_USERNAME' was defined in the Variables tab
-# Variable 'mvnAccessToken' was defined in the Variables tab
-# Variable 'test_repo_branch' was defined in the Variables tab
-# Variable 'test_repo_dir' was defined in the Variables tab
+# File: azure-pipelines\testapps\Azure Sample App PROD.yml
+# Description: Assemble External Release Azure Sample App APK
+# Variable: 'distMsalVersion' was defined in the Variables tab
+# https://github.com/AzureAD/android-complete/blob/master/docs/ProjectBuild/gradle_project_properties.md
 name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+pr: none
+
 resources:
   repositories:
   - repository: ms-identity-android-java
@@ -15,9 +14,10 @@ resources:
     name: Azure-Samples/ms-identity-android-java
     ref: master
     endpoint: ANDROID_GITHUB
+
 jobs:
-- job: Phase_1
-  displayName: Phase 1
+- job: assemble_external_release_azure_sample_app_apk
+  displayName: Assemble External Release Azure Sample App APK
   cancelTimeoutInMinutes: 1
   pool:
     name: Hosted Windows 2019 with VS2019
@@ -26,9 +26,6 @@ jobs:
     clean: true
     submodules: recursive
     persistCredentials: True
-  - template: ../templates/steps/credscan-policheck.yml
-    parameters:
-      policheckCmdLineArgsDir: adal
   - task: PowerShell@2
     displayName: Generate Assemble Task Name for building Azure Sample App
     inputs:
@@ -72,6 +69,4 @@ jobs:
     inputs:
       PathtoPublish: $(Build.SourcesDirectory)/MsalVersion.txt
       ArtifactName: MsalVersion
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: Component Detection
 ...

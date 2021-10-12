@@ -1,0 +1,41 @@
+# File: azure-pipelines\pull-request-validation\common4j.yml
+# Description: Run test in common4j
+name: $(date:yyyyMMdd)$(rev:.r)
+
+trigger: none
+
+resources:
+  repositories:
+  - repository: self
+    type: git
+    ref: dev
+
+pool:
+  name: Hosted Windows 2019 with VS2019
+
+jobs:
+- job: build_test
+  displayName: Build & Test
+  steps:
+  - checkout: self
+    clean: true
+    submodules: recursive
+    persistCredentials: True
+  - template: ../templates/steps/automation-cert.yml
+  - task: Gradle@1
+    name: Gradle1
+    displayName: Assembles the outputs of this project.
+    inputs:
+      cwd: $(Build.SourcesDirectory)/common-java-root
+      tasks: clean common4j:assemble
+  - template: ../templates/steps/spotbugs.yml
+    parameters:
+      project: common4j
+      cwd: $(Build.SourcesDirectory)/common-java-root
+      spotbugsCommand: spotbugsMain
+  - task: Gradle@2
+    displayName: Run the unit tests.
+    inputs:
+      cwd: $(Build.SourcesDirectory)/common-java-root
+      tasks: common4j:test -Psugar=true
+...

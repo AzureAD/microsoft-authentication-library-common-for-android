@@ -22,6 +22,8 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.logging;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 public enum DiagnosticContext {
     INSTANCE;
 
@@ -30,7 +32,8 @@ public enum DiagnosticContext {
     public static final String THREAD_NAME = "thread_name";
 
     // This is thread-safe.
-    private final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
+    @SuppressFBWarnings("SE_BAD_FIELD_STORE")
+    private transient final ThreadLocal<IRequestContext> REQUEST_CONTEXT_THREAD_LOCAL =
             new ThreadLocal<IRequestContext>() {
                 @Override // This is the default value for the RequestContext if it's unset
                 protected RequestContext initialValue() {

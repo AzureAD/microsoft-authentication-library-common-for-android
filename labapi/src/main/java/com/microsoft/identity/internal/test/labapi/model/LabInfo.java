@@ -10,19 +10,22 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.model;
 
 import java.util.Objects;
-
+import java.util.Arrays;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-
-import io.swagger.annotations.ApiModelProperty;
-
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.IOException;
 /**
  * LabInfo
  */
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2020-04-07T02:41:56.083Z")
+
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
 public class LabInfo {
   @SerializedName("labName")
   private String labName = null;
@@ -60,6 +63,12 @@ public class LabInfo {
   @SerializedName("adfsEndpoint")
   private String adfsEndpoint = null;
 
+  @SerializedName("passwordPolicyValidityPeriod")
+  private Integer passwordPolicyValidityPeriod = null;
+
+  @SerializedName("passwordPolicyNotificationDays")
+  private Integer passwordPolicyNotificationDays = null;
+
   public LabInfo labName(String labName) {
     this.labName = labName;
     return this;
@@ -69,7 +78,7 @@ public class LabInfo {
    * Get labName
    * @return labName
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getLabName() {
     return labName;
   }
@@ -87,7 +96,7 @@ public class LabInfo {
    * Get domain
    * @return domain
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getDomain() {
     return domain;
   }
@@ -105,7 +114,7 @@ public class LabInfo {
    * Get region
    * @return region
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getRegion() {
     return region;
   }
@@ -123,7 +132,7 @@ public class LabInfo {
    * Get id
    * @return id
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public Integer getId() {
     return id;
   }
@@ -141,7 +150,7 @@ public class LabInfo {
    * Get active
    * @return active
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getActive() {
     return active;
   }
@@ -159,7 +168,7 @@ public class LabInfo {
    * Get tenantId
    * @return tenantId
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getTenantId() {
     return tenantId;
   }
@@ -177,7 +186,7 @@ public class LabInfo {
    * Get federationProvider
    * @return federationProvider
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getFederationProvider() {
     return federationProvider;
   }
@@ -195,7 +204,7 @@ public class LabInfo {
    * Get defaultLab
    * @return defaultLab
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getDefaultLab() {
     return defaultLab;
   }
@@ -213,7 +222,7 @@ public class LabInfo {
    * Get azureEnvironment
    * @return azureEnvironment
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getAzureEnvironment() {
     return azureEnvironment;
   }
@@ -231,7 +240,7 @@ public class LabInfo {
    * Get credentialVaultKeyName
    * @return credentialVaultKeyName
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getCredentialVaultKeyName() {
     return credentialVaultKeyName;
   }
@@ -249,7 +258,7 @@ public class LabInfo {
    * Get authority
    * @return authority
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getAuthority() {
     return authority;
   }
@@ -267,13 +276,49 @@ public class LabInfo {
    * Get adfsEndpoint
    * @return adfsEndpoint
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public String getAdfsEndpoint() {
     return adfsEndpoint;
   }
 
   public void setAdfsEndpoint(String adfsEndpoint) {
     this.adfsEndpoint = adfsEndpoint;
+  }
+
+  public LabInfo passwordPolicyValidityPeriod(Integer passwordPolicyValidityPeriod) {
+    this.passwordPolicyValidityPeriod = passwordPolicyValidityPeriod;
+    return this;
+  }
+
+   /**
+   * Get passwordPolicyValidityPeriod
+   * @return passwordPolicyValidityPeriod
+  **/
+  @Schema(description = "")
+  public Integer getPasswordPolicyValidityPeriod() {
+    return passwordPolicyValidityPeriod;
+  }
+
+  public void setPasswordPolicyValidityPeriod(Integer passwordPolicyValidityPeriod) {
+    this.passwordPolicyValidityPeriod = passwordPolicyValidityPeriod;
+  }
+
+  public LabInfo passwordPolicyNotificationDays(Integer passwordPolicyNotificationDays) {
+    this.passwordPolicyNotificationDays = passwordPolicyNotificationDays;
+    return this;
+  }
+
+   /**
+   * Get passwordPolicyNotificationDays
+   * @return passwordPolicyNotificationDays
+  **/
+  @Schema(description = "")
+  public Integer getPasswordPolicyNotificationDays() {
+    return passwordPolicyNotificationDays;
+  }
+
+  public void setPasswordPolicyNotificationDays(Integer passwordPolicyNotificationDays) {
+    this.passwordPolicyNotificationDays = passwordPolicyNotificationDays;
   }
 
 
@@ -297,12 +342,14 @@ public class LabInfo {
         Objects.equals(this.azureEnvironment, labInfo.azureEnvironment) &&
         Objects.equals(this.credentialVaultKeyName, labInfo.credentialVaultKeyName) &&
         Objects.equals(this.authority, labInfo.authority) &&
-        Objects.equals(this.adfsEndpoint, labInfo.adfsEndpoint);
+        Objects.equals(this.adfsEndpoint, labInfo.adfsEndpoint) &&
+        Objects.equals(this.passwordPolicyValidityPeriod, labInfo.passwordPolicyValidityPeriod) &&
+        Objects.equals(this.passwordPolicyNotificationDays, labInfo.passwordPolicyNotificationDays);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(labName, domain, region, id, active, tenantId, federationProvider, defaultLab, azureEnvironment, credentialVaultKeyName, authority, adfsEndpoint);
+    return Objects.hash(labName, domain, region, id, active, tenantId, federationProvider, defaultLab, azureEnvironment, credentialVaultKeyName, authority, adfsEndpoint, passwordPolicyValidityPeriod, passwordPolicyNotificationDays);
   }
 
 
@@ -323,6 +370,8 @@ public class LabInfo {
     sb.append("    credentialVaultKeyName: ").append(toIndentedString(credentialVaultKeyName)).append("\n");
     sb.append("    authority: ").append(toIndentedString(authority)).append("\n");
     sb.append("    adfsEndpoint: ").append(toIndentedString(adfsEndpoint)).append("\n");
+    sb.append("    passwordPolicyValidityPeriod: ").append(toIndentedString(passwordPolicyValidityPeriod)).append("\n");
+    sb.append("    passwordPolicyNotificationDays: ").append(toIndentedString(passwordPolicyNotificationDays)).append("\n");
     sb.append("}");
     return sb.toString();
   }
@@ -339,4 +388,3 @@ public class LabInfo {
   }
 
 }
-

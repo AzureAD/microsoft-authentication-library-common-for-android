@@ -3,7 +3,7 @@ plugins {
     id 'maven-publish'
 }
 
-apply from: '../common/versioning/version_tasks.gradle'
+apply from: '../versioning/version_tasks.gradle'
 
 project.ext.vstsUsername = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_USERNAME") : project.findProperty("vstsUsername")
 project.ext.vstsPassword = System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") != null ? System.getenv("ENV_VSTS_MVN_ANDROIDCOMMON_ACCESSTOKEN") : project.findProperty("vstsMavenAccessToken")
@@ -49,7 +49,7 @@ publishing {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'io.swagger:swagger-annotations:1.5.17'
+    implementation 'io.swagger.core.v3:swagger-annotations:2.1.9'
     implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0'
     implementation group: 'com.sun.xml.bind', name: 'jaxb-core', version: '2.3.0'
     implementation group: 'com.sun.xml.bind', name: 'jaxb-impl', version: '2.3.0'

@@ -23,7 +23,6 @@
 package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.net.http.SslError;
@@ -37,33 +36,33 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.ChallengeFactory;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IChallengeHandler;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallenge;
 import com.microsoft.identity.common.internal.ui.webview.challengehandlers.NtlmChallengeHandler;
 import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Browser.SSL_HELP_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public abstract class OAuth2WebViewClient extends WebViewClient {
     /* constants */
     private static final String TAG = OAuth2WebViewClient.class.getSimpleName();
 
     private final IAuthorizationCompletionCallback mCompletionCallback;
-    @NonNull private final OnPageLoadedCallback mPageLoadedCallback;
-    @Nullable private final OnPageCommitVisibleCallback mPageCommitVisibleCallback;
+    private final OnPageLoadedCallback mPageLoadedCallback;
     private final Activity mActivity;
 
+    @SuppressFBWarnings(value = "MS_SHOULD_BE_FINAL", justification = "This is only exposed in testing")
     @VisibleForTesting
     public static ExpectedPage mExpectedPage = null;
 
@@ -91,27 +90,11 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
     OAuth2WebViewClient(@NonNull final Activity activity,
                         @NonNull final IAuthorizationCompletionCallback completionCallback,
                         @NonNull final OnPageLoadedCallback pageLoadedCallback) {
-        this(activity, completionCallback, pageLoadedCallback, null);
-    }
-
-    /**
-     * Constructor for the OAuth2 basic web view client.
-     *
-     * @param activity           app Context
-     * @param completionCallback Challenge completion callback
-     * @param pageLoadedCallback callback to be triggered on page load. For UI purposes.
-     * @param pageCommitVisibleCallback callback to be triggered on page commit visible, For UI purposes.
-     */
-    OAuth2WebViewClient(@NonNull final Activity activity,
-                        @NonNull final IAuthorizationCompletionCallback completionCallback,
-                        @NonNull final OnPageLoadedCallback pageLoadedCallback,
-                        @Nullable final OnPageCommitVisibleCallback pageCommitVisibleCallback) {
         //the validation of redirect url and authorization request should be in upper level before launching the webview.
         mActivity = activity;
         mCompletionCallback = completionCallback;
         mPageLoadedCallback = pageLoadedCallback;
-        mPageCommitVisibleCallback = pageCommitVisibleCallback;
-    }
+     }
 
     @Override
     public void onReceivedHttpAuthRequest(WebView view, final HttpAuthHandler handler,
@@ -140,12 +123,35 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
         sendErrorToCallback(view, errorCode, description);
     }
 
+    /**
+     * API 23+ overload of {@link #onReceivedError(WebView, int, String, String)} - unlike the pre-23
+     * impl, this overload will trigger pageload errors for subframes of the page. As these may not
+     * necessarily affect the sign-in experience (such as failed scripts in an iframe), we are going
+     * to ignore errors for the non-main-frame such that the pre-API 23 behavior is preserved.
+     * <p>
+     * More info:
+     * https://stackoverflow.com/questions/44068123/how-to-detect-errors-only-from-the-main-page-in-new-onreceivederror-from-webview
+     * https://developer.android.com/reference/android/webkit/WebViewClient#onReceivedError(android.webkit.WebView,%20android.webkit.WebResourceRequest,%20android.webkit.WebResourceError)
+     *
+     * @param view    The WebView which triggered the error.
+     * @param request The request which failed within the page.
+     * @param error   The error yielded by the failing request.
+     * @see #onReceivedError(WebView, int, String, String)
+     */
     @Override
     @RequiresApi(api = Build.VERSION_CODES.M)
     public void onReceivedError(@NonNull final WebView view,
                                 @NonNull final WebResourceRequest request,
                                 @NonNull final WebResourceError error) {
-        sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
+        final String methodName = "onReceivedError (23)";
+        final boolean isForMainFrame = request.isForMainFrame();
+
+        Logger.warn(TAG + methodName, "WebResourceError - isForMainFrame? " + isForMainFrame);
+        Logger.warnPII(TAG + methodName, "Failing url: " + request.getUrl());
+
+        if (request.isForMainFrame()) {
+            sendErrorToCallback(view, error.getErrorCode(), error.getDescription().toString());
+        }
     }
 
     private void sendErrorToCallback(@NonNull final WebView view,
@@ -153,13 +159,10 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
                                      @NonNull final String description) {
         view.stopLoading();
 
-        // Create result intent when webView received an error.
-        final Intent resultIntent = new Intent();
-        resultIntent.putExtra(RESPONSE_ERROR_CODE, "Error Code:" + errorCode);
-        resultIntent.putExtra(RESPONSE_ERROR_MESSAGE, description);
-
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
+        mCompletionCallback.onChallengeResponseReceived(
+                RawAuthorizationResult.fromException(
+                        new ClientException("Code:" + errorCode, description)));
     }
 
     @Override
@@ -174,32 +177,21 @@ public abstract class OAuth2WebViewClient extends WebViewClient {
 
         Logger.error(TAG + ":onReceivedSslError", errMsg, null);
 
-        // WebView received the ssl error and create the result intent.
-        final Intent resultIntent = new Intent();
-        resultIntent.putExtra(RESPONSE_ERROR_CODE, "Code:" + ERROR_FAILED_SSL_HANDSHAKE);
-        resultIntent.putExtra(RESPONSE_ERROR_MESSAGE, error.toString());
-
         // Send the result back to the calling activity
-        mCompletionCallback.onChallengeResponseReceived(BROWSER_CODE_ERROR, resultIntent);
-    }
-
-    @Override
-    public void onPageCommitVisible(final WebView view, final String url) {
-        super.onPageCommitVisible(view, url);
-        if (mPageCommitVisibleCallback != null) {
-            mPageCommitVisibleCallback.onPageCommitVisible();
-        }
+        mCompletionCallback.onChallengeResponseReceived(
+                RawAuthorizationResult.fromException(
+                        new ClientException("Code:" + ERROR_FAILED_SSL_HANDSHAKE, error.toString())));
     }
 
     @Override
     public void onPageFinished(final WebView view,
                                final String url) {
         super.onPageFinished(view, url);
-        mPageLoadedCallback.onPageLoaded();
+        mPageLoadedCallback.onPageLoaded(url);
 
         //Supports UI Automation... informing that the webview resource is now idle
         if (mExpectedPage != null && url.startsWith(mExpectedPage.mExpectedPageUrlStartsWith)) {
-            mExpectedPage.mCallback.onPageLoaded();
+            mExpectedPage.mCallback.onPageLoaded(url);
         }
 
         // Once web view is fully loaded,set to visible

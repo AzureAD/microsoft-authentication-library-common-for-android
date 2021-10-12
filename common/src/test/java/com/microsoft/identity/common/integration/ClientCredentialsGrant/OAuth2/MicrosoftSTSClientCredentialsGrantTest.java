@@ -22,18 +22,18 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.integration.ClientCredentialsGrant.OAuth2;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.internal.providers.keys.CertificateCredential;
-import com.microsoft.identity.common.internal.providers.keys.ClientCertificateMetadata;
-import com.microsoft.identity.common.internal.providers.keys.KeyStoreConfiguration;
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftClientAssertion;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2Strategy;
-import com.microsoft.identity.common.internal.providers.oauth2.OAuth2StrategyParameters;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenRequest;
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Strategy;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.keys.CertificateCredential;
+import com.microsoft.identity.common.java.providers.keys.ClientCertificateMetadata;
+import com.microsoft.identity.common.java.providers.keys.KeyStoreConfiguration;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftClientAssertion;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsOAuth2Configuration;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2Strategy;
+import com.microsoft.identity.common.java.providers.oauth2.OAuth2StrategyParameters;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResult;
+import com.microsoft.identity.common.java.providers.microsoft.microsoftsts.MicrosoftStsTokenRequest;
+import com.microsoft.identity.common.java.providers.oauth2.TokenRequest;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -64,7 +64,7 @@ public class MicrosoftSTSClientCredentialsGrantTest {
 
     @Test
     public void test_ClientCredentials() throws CertificateException, UnrecoverableKeyException,
-            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException {
+            NoSuchAlgorithmException, KeyStoreException, NoSuchProviderException, IOException, ClientException {
         final CertificateCredential credential = new CertificateCredential.CertificateCredentialBuilder(CLIENT_ID)
                 .clientCertificateMetadata(new ClientCertificateMetadata(CERTIFICATE_ALIAS, null))
                 .keyStoreConfiguration(new KeyStoreConfiguration(KEYSTORE_TYPE, KEYSTORE_PROVIDER, null))
@@ -82,13 +82,14 @@ public class MicrosoftSTSClientCredentialsGrantTest {
         tr.setScope(SCOPE);
         tr.setGrantType(GRANT_TYPE);
 
-        final OAuth2StrategyParameters options = new OAuth2StrategyParameters();
+        final OAuth2StrategyParameters options = OAuth2StrategyParameters.builder().build();
         final OAuth2Strategy strategy = new MicrosoftStsOAuth2Strategy(
                 new MicrosoftStsOAuth2Configuration(),
                 options
         );
 
         try {
+            @SuppressWarnings("unchecked")
             final TokenResult tokenResult = strategy.requestToken(tr);
 
             assertEquals(true, tokenResult.getSuccess());

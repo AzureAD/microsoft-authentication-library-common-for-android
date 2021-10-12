@@ -26,14 +26,23 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
+import com.microsoft.identity.common.PropertyBagUtil;
+import com.microsoft.identity.common.internal.result.BrokerResultAdapterFactory;
+import com.microsoft.identity.common.internal.result.IBrokerResultAdapter;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.request.SdkType;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROKER_FLOW;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_OPERATION_CANCELLED;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_ERROR_RESPONSE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.BrokerResponse.BROKER_SUCCESS_RESPONSE;
 
 public final class BrokerActivity extends Activity {
 
@@ -45,6 +54,7 @@ public final class BrokerActivity extends Activity {
 
     private Intent mBrokerInteractiveRequestIntent;
     private Boolean mBrokerIntentStarted = false;
+    private Boolean mBrokerResultReceived = false;
 
 
     @Override
@@ -76,6 +86,30 @@ public final class BrokerActivity extends Activity {
         super.onStop();
     }
 
+    @Override
+    protected void onDestroy() {
+        // If the broker process crashes, onActivityResult() will not be triggered.
+        // (tested by throwing an exception in AccountChooserActivity, and by killing the activity via App Switcher).
+        if (!mBrokerResultReceived) {
+            returnsExceptionOnActivityUnexpectedlyKilled();
+        }
+
+        super.onDestroy();
+    }
+
+    private void returnsExceptionOnActivityUnexpectedlyKilled() {
+        final IBrokerResultAdapter resultAdapter = BrokerResultAdapterFactory.getBrokerResultAdapter(SdkType.MSAL);
+        final Bundle resultBundle = resultAdapter.bundleFromBaseException(
+                new ClientException(ErrorStrings.BROKER_REQUEST_CANCELLED,
+                        "The activity is killed unexpectedly."), null);
+
+        final PropertyBag propertyBag = PropertyBagUtil.fromBundle(resultBundle);
+        propertyBag.put(REQUEST_CODE, BROKER_FLOW);
+        propertyBag.put(RESULT_CODE, BROKER_OPERATION_CANCELLED);
+
+        LocalBroadcaster.INSTANCE.broadcast(
+                RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
+    }
 
     @Override
     protected void onSaveInstanceState(final Bundle outState) {
@@ -101,20 +135,26 @@ public final class BrokerActivity extends Activity {
                         + " Result code: " + requestCode
         );
 
-        if (resultCode == AuthenticationConstants.UIResponse.TOKEN_BROKER_RESPONSE ||
-                resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL
-                || resultCode == AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR) {
+        mBrokerResultReceived = true;
+
+        final PropertyBag propertyBag;
+        if (resultCode == BROKER_SUCCESS_RESPONSE
+                || resultCode == BROKER_OPERATION_CANCELLED
+                || resultCode == BROKER_ERROR_RESPONSE) {
 
             Logger.verbose(TAG + methodName, "Completing interactive request ");
 
-            data.setAction(RETURN_INTERACTIVE_REQUEST_RESULT);
-            data.putExtra(REQUEST_CODE, AuthenticationConstants.UIRequest.BROWSER_FLOW);
-            data.putExtra(RESULT_CODE, resultCode);
+            propertyBag = PropertyBagUtil.fromBundle(data.getExtras());
+            propertyBag.put(REQUEST_CODE, BROKER_FLOW);
+            propertyBag.put(RESULT_CODE, resultCode);
 
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(data);
+            LocalBroadcaster.INSTANCE.broadcast(
+                    RETURN_BROKER_INTERACTIVE_ACQUIRE_TOKEN_RESULT, propertyBag);
+        } else {
+            // This means the broker is unexpectedly killed. (tested by killing the broker process via adb).
+            returnsExceptionOnActivityUnexpectedlyKilled();
         }
+
         finish();
     }
-
-
 }

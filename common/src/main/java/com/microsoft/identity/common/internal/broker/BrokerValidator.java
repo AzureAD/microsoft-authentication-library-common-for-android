@@ -33,8 +33,8 @@ import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.BuildConfig;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.util.PackageUtils;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
@@ -46,6 +46,11 @@ import java.security.cert.X509Certificate;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import static com.microsoft.identity.common.java.AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND;
+import static com.microsoft.identity.common.java.exception.ErrorStrings.BROKER_VERIFICATION_FAILED;
 
 public class BrokerValidator {
 
@@ -104,11 +109,11 @@ public class BrokerValidator {
 
             return signatureHash;
         } catch (NameNotFoundException e) {
-            throw new ClientException(ErrorStrings.APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
+            throw new ClientException(APP_PACKAGE_NAME_NOT_FOUND, e.getMessage(), e);
         } catch (NoSuchAlgorithmException e) {
-            throw new ClientException(ErrorStrings.NO_SUCH_ALGORITHM, e.getMessage(), e);
+            throw new ClientException(NO_SUCH_ALGORITHM, e.getMessage(), e);
         } catch (final IOException | GeneralSecurityException e) {
-            throw new ClientException(ErrorStrings.BROKER_VERIFICATION_FAILED, e.getMessage(), e);
+            throw new ClientException(BROKER_VERIFICATION_FAILED, e.getMessage(), e);
         }
     }
 
@@ -209,7 +214,7 @@ public class BrokerValidator {
     public String getCurrentActiveBrokerPackageName() {
         AuthenticatorDescription[] authenticators = AccountManager.get(mContext).getAuthenticatorTypes();
         for (AuthenticatorDescription authenticator : authenticators) {
-            if (authenticator.type.equals(AuthenticationConstants.Broker.BROKER_ACCOUNT_TYPE)
+            if (authenticator.type.equals(BROKER_ACCOUNT_TYPE)
                     && verifySignature(authenticator.packageName)) {
                 return authenticator.packageName;
             }
@@ -222,7 +227,17 @@ public class BrokerValidator {
                                                 @NonNull final String packageName) {
         final String methodName = ":isValidBrokerRedirect";
         final String expectedBrokerRedirectUri = getBrokerRedirectUri(context, packageName);
-        final boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        boolean isValidBrokerRedirect = StringUtil.equalsIgnoreCase(redirectUri, expectedBrokerRedirectUri);
+        if (packageName.equals(AuthenticationConstants.Broker.AZURE_AUTHENTICATOR_APP_PACKAGE_NAME)) {
+            final PackageHelper info = new PackageHelper(context.getPackageManager());
+            final String signatureDigest = info.getCurrentSignatureForPackage(packageName);
+            if (BrokerData.MICROSOFT_AUTHENTICATOR_PROD.signatureHash.equals(signatureDigest)
+                || BrokerData.MICROSOFT_AUTHENTICATOR_DEBUG.signatureHash.equals(signatureDigest)) {
+                // If the caller is the Authenticator, check if the redirect uri matches with either
+                // the one generated with package name and signature or broker redirect uri.
+                isValidBrokerRedirect |= StringUtil.equalsIgnoreCase(redirectUri, AuthenticationConstants.Broker.BROKER_REDIRECT_URI);
+            }
+        }
 
         if (!isValidBrokerRedirect) {
             Logger.error(

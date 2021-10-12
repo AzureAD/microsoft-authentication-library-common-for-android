@@ -22,7 +22,6 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
 import lombok.NonNull;
 
 import java.util.TimeZone;

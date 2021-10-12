@@ -32,8 +32,10 @@ import android.os.Build;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.ui.BrowserDescriptor;
 import com.microsoft.identity.common.logging.Logger;
 import com.microsoft.identity.common.internal.broker.PackageHelper;
 
@@ -59,9 +61,9 @@ public class BrowserSelector {
         final List<Browser> allBrowsers = getAllBrowsers(context);
         Logger.verbose(TAG, "Select the browser to launch.");
 
-        for (Browser browser : allBrowsers) {
-            for (BrowserDescriptor browserDescriptor : browserSafeList) {
-                if (browserDescriptor.matches(browser)) {
+        for (final Browser browser : allBrowsers) {
+            for (final BrowserDescriptor browserDescriptor : browserSafeList) {
+                if (matches(browserDescriptor, browser)) {
                     Logger.info(
                             TAG,
                             "Browser's package name: "
@@ -77,9 +79,42 @@ public class BrowserSelector {
         throw new ClientException(ErrorStrings.NO_AVAILABLE_BROWSER_FOUND, "No available browser installed on the device.");
     }
 
+    private static boolean matches(@NonNull final BrowserDescriptor browserDescriptor,
+                                   @NonNull Browser browser) {
+        final String methodName = ":matches";
+
+        final BrowserDescriptor descriptor;
+        try {
+            descriptor = (BrowserDescriptor) browserDescriptor;
+        } catch (final ClassCastException e) {
+            Logger.error(TAG + methodName, "Cannot cast IBrowserDescriptor to BrowserDescriptor", e);
+            return false;
+        }
+
+        if (!StringUtil.equalsIgnoreCase(descriptor.getPackageName(), browser.getPackageName())) {
+            return false;
+        }
+
+        if (!descriptor.getSignatureHashes().equals(browser.getSignatureHashes())) {
+            return false;
+        }
+
+        if (!StringUtil.isEmpty(descriptor.getVersionLowerBound())
+                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionLowerBound()) == -1) {
+            return false;
+        }
+
+        if (!StringUtil.isEmpty(descriptor.getVersionUpperBound())
+                && StringUtil.compareSemanticVersion(browser.getVersion(), descriptor.getVersionUpperBound()) == 1) {
+            return false;
+        }
+
+        return true;
+    }
+
     /**
      * Retrieves the full list of browsers installed on the device.
-     * If the browser supports custom tabs, it will {@link Browser#mIsCustomTabsServiceSupported}
+     * If the browser supports custom tabs, it will {@link Browser#isCustomTabsServiceSupported()}
      * flag set to `true` in one and `false` in the other. The list is in the
      * order returned by the package manager, so indirectly reflects the user's preferences
      * (i.e. their default browser, if set, should be the first entry in the list).

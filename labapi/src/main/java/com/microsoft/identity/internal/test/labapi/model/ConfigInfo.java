@@ -10,19 +10,25 @@
  * Do not edit the class manually.
  */
 
-
 package com.microsoft.identity.internal.test.labapi.model;
 
 import java.util.Objects;
-
+import java.util.Arrays;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-
-import io.swagger.annotations.ApiModelProperty;
-
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import com.microsoft.identity.internal.test.labapi.model.AppInfo;
+import com.microsoft.identity.internal.test.labapi.model.LabInfo;
+import com.microsoft.identity.internal.test.labapi.model.UserInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
+import java.io.IOException;
 /**
  * ConfigInfo
  */
-@javax.annotation.Generated(value = "io.swagger.codegen.languages.JavaClientCodegen", date = "2019-10-29T14:56:43.172-07:00")
+
+@javax.annotation.Generated(value = "io.swagger.codegen.v3.generators.java.JavaClientCodegen", date = "2021-06-01T10:19:44.716-07:00[America/Los_Angeles]")
 public class ConfigInfo {
   @SerializedName("user")
   private UserInfo userInfo = null;
@@ -42,7 +48,7 @@ public class ConfigInfo {
    * Get userInfo
    * @return userInfo
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public UserInfo getUserInfo() {
     return userInfo;
   }
@@ -60,7 +66,7 @@ public class ConfigInfo {
    * Get appInfo
    * @return appInfo
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public AppInfo getAppInfo() {
     return appInfo;
   }
@@ -78,7 +84,7 @@ public class ConfigInfo {
    * Get labInfo
    * @return labInfo
   **/
-  @ApiModelProperty(value = "")
+  @Schema(description = "")
   public LabInfo getLabInfo() {
     return labInfo;
   }
@@ -132,4 +138,3 @@ public class ConfigInfo {
   }
 
 }
-

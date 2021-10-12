@@ -22,28 +22,33 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common;
 
-import androidx.test.InstrumentationRegistry;
+import static junit.framework.Assert.assertEquals;
+import static junit.framework.Assert.assertFalse;
+import static junit.framework.Assert.assertTrue;
+
+import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AndroidSecretKeyEnabledHelper;
+import com.microsoft.identity.common.crypto.AndroidAuthSdkStorageEncryptionManager;
+import com.microsoft.identity.common.adal.internal.cache.IStorageHelper;
 import com.microsoft.identity.common.adal.internal.cache.StorageHelper;
 import com.microsoft.identity.common.internal.cache.ISharedPreferencesFileManager;
 import com.microsoft.identity.common.internal.cache.SharedPreferencesFileManager;
+import com.microsoft.identity.common.java.util.ported.Predicate;
 
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHelper {
@@ -52,26 +57,22 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     private static final String sTEST_KEY = "test_key";
     private static final String sTEST_VALUE = "test_value";
 
-    private ISharedPreferencesFileManager mSharedPreferencesFileManager;
+    private SharedPreferencesFileManager mSharedPreferencesFileManager;
 
     @Parameterized.Parameters
-    public static Iterable<ISharedPreferencesFileManager> testParams() {
-        return Arrays.asList(new ISharedPreferencesFileManager[]{
+    public static Iterable<SharedPreferencesFileManager> testParams() {
+        return Arrays.asList(new SharedPreferencesFileManager[]{
+                SharedPreferencesFileManager.getSharedPreferences(ApplicationProvider.getApplicationContext(),
+                        sTEST_SHARED_PREFS_NAME, null),
                 SharedPreferencesFileManager.getSharedPreferences(
-                        InstrumentationRegistry.getTargetContext(),
+                        ApplicationProvider.getApplicationContext(),
                         sTEST_SHARED_PREFS_NAME,
-                        -1, null
-                ),
-                SharedPreferencesFileManager.getSharedPreferences(
-                        InstrumentationRegistry.getTargetContext(),
-                        sTEST_SHARED_PREFS_NAME,
-                        -1,
-                        new StorageHelper(InstrumentationRegistry.getTargetContext())
+                        new AndroidAuthSdkStorageEncryptionManager(ApplicationProvider.getApplicationContext(), null)
                 )
         });
     }
 
-    public SharedPreferencesFileManagerTests(final ISharedPreferencesFileManager sharedPreferencesFileManager) {
+    public SharedPreferencesFileManagerTests(final SharedPreferencesFileManager sharedPreferencesFileManager) {
         mSharedPreferencesFileManager = sharedPreferencesFileManager;
     }
 
@@ -96,6 +97,70 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
     public void testGetString() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);
         assertEquals(sTEST_VALUE, mSharedPreferencesFileManager.getString(sTEST_KEY));
+    }
+
+    @Test
+    public void testGetSharedPreferences() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        f.setAccessible(true);
+
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+        ));
+    }
+
+    @Test
+    public void testGetSharedPreferencesNoStorageHelper() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        f.setAccessible(true);
+        IStorageHelper storageHelper = (IStorageHelper) f.get(mSharedPreferencesFileManager);
+        IStorageHelper newStorageHelper;
+        if (storageHelper == null) {
+            newStorageHelper = new StorageHelper(InstrumentationRegistry.getTargetContext());
+        } else {
+            newStorageHelper = null;
+        }
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                newStorageHelper)
+        );
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                storageHelper)
+        );
+    }
+
+    @Test
+    public void testGetSharedPreferencesWithAndWithoutStorageHelper() throws Exception {
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                null)
+        );
+    }
+
+    @Test
+    public void testGetSharedPreferencesClear() throws Exception {
+        Field f = SharedPreferencesFileManager.class.getDeclaredField("mStorageHelper");
+        f.setAccessible(true);
+
+        Assert.assertSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+        ));
+
+        SharedPreferencesFileManager.clearSingletonCache();
+
+        Assert.assertNotSame(mSharedPreferencesFileManager, SharedPreferencesFileManager.getSharedPreferences(
+                InstrumentationRegistry.getTargetContext(),
+                mSharedPreferencesFileManager.getSharedPreferencesFileName(),
+                (IStorageHelper) f.get(mSharedPreferencesFileManager)
+        ));
     }
 
     @Test
@@ -128,7 +193,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return true;
@@ -151,7 +216,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return true;
@@ -175,7 +240,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return false;
@@ -199,7 +264,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
             mSharedPreferencesFileManager.putString(testKeys[ii], testValues[ii]);
         }
         Map<String, String> allMap = new HashMap<String, String>();
-        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new SharedPreferencesFileManager.Predicate<String>() {
+        Iterator<Map.Entry<String, String>> itr = mSharedPreferencesFileManager.getAllFilteredByKey(new Predicate<String>() {
             @Override
             public boolean test(String value) {
                 return value.equals("2");
@@ -214,6 +279,7 @@ public class SharedPreferencesFileManagerTests extends AndroidSecretKeyEnabledHe
         assertEquals(expectedSize, allMap.size());
         assertEquals("b", allMap.get("2"));
     }
+
     @Test
     public void testContainsTrue() {
         mSharedPreferencesFileManager.putString(sTEST_KEY, sTEST_VALUE);

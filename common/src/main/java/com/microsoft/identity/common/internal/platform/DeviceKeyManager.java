@@ -25,7 +25,9 @@ package com.microsoft.identity.common.internal.platform;
 import android.os.Build;
 import android.security.keystore.KeyInfo;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IAndroidKeyStoreKeyManager;
+import com.microsoft.identity.common.java.crypto.SecureHardwareState;
+import com.microsoft.identity.common.java.exception.ClientException;
 import com.microsoft.identity.common.internal.util.Supplier;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -48,10 +50,10 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.experimental.Accessors;
 
-import static com.microsoft.identity.common.exception.ClientException.INVALID_PROTECTION_PARAMS;
-import static com.microsoft.identity.common.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
-import static com.microsoft.identity.common.exception.ClientException.NO_SUCH_ALGORITHM;
-import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_ERROR;
+import static com.microsoft.identity.common.java.exception.ClientException.INVALID_PROTECTION_PARAMS;
+import static com.microsoft.identity.common.java.exception.ClientException.KEYSTORE_NOT_INITIALIZED;
+import static com.microsoft.identity.common.java.exception.ClientException.NO_SUCH_ALGORITHM;
+import static com.microsoft.identity.common.java.exception.ClientException.UNKNOWN_ERROR;
 
 /**
  * A manager class for providing access to a particular entry in a KeyStore.
@@ -59,7 +61,7 @@ import static com.microsoft.identity.common.exception.ClientException.UNKNOWN_ER
  * @param <K> the type of KeyStore.Entry being managed.
  */
 @Accessors(prefix = "m")
-public class DeviceKeyManager<K extends KeyStore.Entry> implements IKeyManager<K> {
+public class DeviceKeyManager<K extends KeyStore.Entry> implements IAndroidKeyStoreKeyManager<K> {
 
     private static final String TAG = DeviceKeyManager.class.getSimpleName();
     private final KeyStore mKeyStore;

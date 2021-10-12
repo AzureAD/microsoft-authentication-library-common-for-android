@@ -22,30 +22,28 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.oauth2;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
+import com.microsoft.identity.common.java.logging.RequestContext;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.ported.PropertyBag;
+import com.microsoft.identity.common.java.util.ported.LocalBroadcaster;
+import com.microsoft.identity.common.logging.DiagnosticContext;
 import com.microsoft.identity.common.logging.Logger;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.CANCEL_INTERACTIVE_REQUEST;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.RETURN_INTERACTIVE_REQUEST_RESULT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CANCELLED_BY_USER;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.REQUEST_CODE;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.RESULT_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.CANCEL_AUTHORIZATION_REQUEST;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterAliases.RETURN_AUTHORIZATION_REQUEST_RESULT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.LocalBroadcasterFields.REQUEST_CODE;
+import static com.microsoft.identity.common.java.AuthenticationConstants.UIRequest.BROWSER_FLOW;
 
 /**
  * This base classes
@@ -69,10 +67,10 @@ public abstract class AuthorizationFragment extends Fragment {
     /**
      * Listens to an operation cancellation event.
      */
-    private BroadcastReceiver mCancelRequestReceiver = new BroadcastReceiver() {
+    private final LocalBroadcaster.IReceiverCallback mCancelRequestReceiver = new LocalBroadcaster.IReceiverCallback() {
         @Override
-        public void onReceive(Context context, Intent intent) {
-            cancelAuthorization(intent.getBooleanExtra(REQUEST_CANCELLED_BY_USER, false));
+        public void onReceive(@NonNull final PropertyBag propertyBag) {
+            cancelAuthorization(propertyBag.getOrDefault(CANCEL_AUTHORIZATION_REQUEST, false));
         }
     };
 
@@ -81,14 +79,13 @@ public abstract class AuthorizationFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
+    public void onCreate(@Nullable final Bundle savedInstanceState) {
         final String methodName = "#onCreate";
         super.onCreate(savedInstanceState);
 
         // Register Broadcast receiver to cancel the auth request
         // if another incoming request is launched by the app
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(mCancelRequestReceiver,
-                new IntentFilter(CANCEL_INTERACTIVE_REQUEST));
+        LocalBroadcaster.INSTANCE.registerCallback(CANCEL_AUTHORIZATION_REQUEST, mCancelRequestReceiver);
 
         if (savedInstanceState == null && mInstanceState == null) {
             Logger.warn(TAG, "No stored state. Unable to handle response");
@@ -113,8 +110,9 @@ public abstract class AuthorizationFragment extends Fragment {
         } else {
             // The calling activity is not owned by MSAL/Broker.
             // Just remove this fragment.
-            if (getFragmentManager() != null) {
-                getFragmentManager()
+            final FragmentManager fragmentManager = getFragmentManager();
+            if (fragmentManager != null) {
+                fragmentManager
                         .beginTransaction()
                         .setTransitionStyle(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                         .remove(this)
@@ -123,6 +121,10 @@ public abstract class AuthorizationFragment extends Fragment {
         }
     }
 
+    /**
+     * Get the state form the provided bundle and act on it as needed
+     * @param state a bundle containing data provided when the activity was created
+     */
     void extractState(@NonNull final Bundle state) {
         setDiagnosticContextForNewThread(state.getString(DiagnosticContext.CORRELATION_ID));
     }
@@ -131,29 +133,27 @@ public abstract class AuthorizationFragment extends Fragment {
      * When authorization fragment is launched.  It will be launched on a new thread. (TODO: verify this)
      * Initialize based on value provided in intent.
      */
-    private static String setDiagnosticContextForNewThread(String correlationId) {
+    private static void setDiagnosticContextForNewThread(final String correlationId) {
         final String methodName = ":setDiagnosticContextForAuthorizationActivity";
-        final com.microsoft.identity.common.internal.logging.RequestContext rc =
-                new com.microsoft.identity.common.internal.logging.RequestContext();
+        final RequestContext rc = new RequestContext();
         rc.put(DiagnosticContext.CORRELATION_ID, correlationId);
         DiagnosticContext.setRequestContext(rc);
         Logger.verbose(
                 TAG + methodName,
                 "Initializing diagnostic context for AuthorizationActivity"
         );
-
-        return correlationId;
     }
 
     @Override
     public void onStop() {
         final String methodName = ":onStop";
-        if (!mAuthResultSent && getActivity().isFinishing()) {
+        final FragmentActivity activity = getActivity();
+        if (!mAuthResultSent && (activity == null || activity.isFinishing())) {
             Logger.info(TAG + methodName,
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
             );
             Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
+            sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
         super.onStop();
     }
@@ -167,10 +167,10 @@ public abstract class AuthorizationFragment extends Fragment {
                     "Hosting Activity is destroyed before Auth request is completed, sending request cancel"
             );
             Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, new Intent());
+            sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
 
-        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mCancelRequestReceiver);
+        LocalBroadcaster.INSTANCE.unregisterCallback(CANCEL_AUTHORIZATION_REQUEST);
         super.onDestroy();
     }
 
@@ -182,27 +182,27 @@ public abstract class AuthorizationFragment extends Fragment {
         return false;
     }
 
-    void sendResult(int resultCode, final Intent resultIntent) {
-        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + resultCode);
+    void sendResult(final RawAuthorizationResult.ResultCode resultCode) {
+        sendResult(RawAuthorizationResult.fromResultCode(resultCode));
+    }
 
-        resultIntent.setAction(RETURN_INTERACTIVE_REQUEST_RESULT);
-        resultIntent.putExtra(REQUEST_CODE, AuthenticationConstants.UIRequest.BROWSER_FLOW);
-        resultIntent.putExtra(RESULT_CODE, resultCode);
+    void sendResult(@NonNull final RawAuthorizationResult result) {
+        Logger.info(TAG, "Sending result from Authorization Activity, resultCode: " + result.getResultCode());
 
-        LocalBroadcastManager.getInstance(getContext()).sendBroadcast(resultIntent);
+        final PropertyBag propertyBag = RawAuthorizationResult.toPropertyBag(result);
+        propertyBag.put(REQUEST_CODE, BROWSER_FLOW);
+
+        LocalBroadcaster.INSTANCE.broadcast(RETURN_AUTHORIZATION_REQUEST_RESULT, propertyBag);
         mAuthResultSent = true;
     }
 
-    void cancelAuthorization(boolean isCancelledByUser) {
-        final Intent resultIntent = new Intent();
-        resultIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
+    void cancelAuthorization(final boolean isCancelledByUser) {
         if (isCancelledByUser) {
             Logger.info(TAG, "Received Authorization flow cancelled by the user");
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
+            sendResult(RawAuthorizationResult.ResultCode.CANCELLED);
         } else {
             Logger.info(TAG, "Received Authorization flow cancel request from SDK");
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_SDK_CANCEL, resultIntent);
+            sendResult(RawAuthorizationResult.ResultCode.SDK_CANCELLED);
         }
 
         Telemetry.emit(new UiEndEvent().isUserCancelled());

@@ -24,13 +24,14 @@ package com.microsoft.identity.common.internal.ui.webview;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.webkit.WebView;
 
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.internal.ui.webview.challengehandlers.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -67,7 +68,8 @@ public class AzureActiveDirectoryWebViewClientTest {
     private static final String TEST_REDIRECT_URL = "ABC12/xyz";
     private static final String TEST_WEBSITE_REQUEST_URL = "browser://abcxyz/a";
     private static final String TEST_BROWSER_DEVICE_CA_URL_QUERY_STRING_PARAMETER = "browser://abcxyz/xyz&ismdmurl=1";
-    private static final String TEST_INSTALL_REQUEST_URL = "msauth://com.msft.identity.client.sample.local/1wIqXSqBj7w%2Bh11Z";
+    private static final String TEST_INSTALL_REQUEST_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com&app_link=https%3a%2f%2fplay.google.com%2fstore%2fapps%2fdetails%3fid%3dcom.azure.authenticator%26referrer%3dcom.msft.identity.client.sample.local";
+    private static final String TEST_DEVICE_REGISTRATION_URL = "msauth://wpj/?username=someusername%somedomain.onmicrosoft.com";
     private static final String TEST_BLANK_PAGE_REQUEST_URL = "about:blank";
     private static final String TEST_PKEY_AUTH_URL = "urn:http-auth:PKeyAuth/xyz";
     private static final String TEST_WEB_CP_URL = "companyportal://abc/123";
@@ -82,8 +84,8 @@ public class AzureActiveDirectoryWebViewClientTest {
                 mActivity,
                 new IAuthorizationCompletionCallback() {
                     @Override
-                    public void onChallengeResponseReceived(int returnCode, Intent responseIntent) {
-                        return;
+                    public void onChallengeResponseReceived(@NonNull RawAuthorizationResult response) {
+
                     }
 
                     @Override
@@ -93,7 +95,7 @@ public class AzureActiveDirectoryWebViewClientTest {
                 },
                 new OnPageLoadedCallback() {
                     @Override
-                    public void onPageLoaded() {
+                    public void onPageLoaded(final String url) {
                         return;
                     }
                 },
@@ -124,6 +126,11 @@ public class AzureActiveDirectoryWebViewClientTest {
     @Test
     public void testUrlOverrideHandlesInstallRequest() {
         assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_INSTALL_REQUEST_URL));
+    }
+
+    @Test
+    public void testUrlOverrideHandlesDeviceRegistrationRequest() {
+        assertTrue(mWebViewClient.shouldOverrideUrlLoading(mMockWebView, TEST_DEVICE_REGISTRATION_URL));
     }
 
     @Test

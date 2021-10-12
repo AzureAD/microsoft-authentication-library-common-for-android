@@ -31,12 +31,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.exception.BaseException;
+import com.microsoft.identity.common.AndroidPlatformComponents;
+import com.microsoft.identity.common.java.exception.BaseException;
 import com.microsoft.identity.common.exception.BrokerCommunicationException;
 import com.microsoft.identity.common.internal.broker.ipc.BrokerOperationBundle;
 import com.microsoft.identity.common.internal.broker.ipc.IIpcStrategy;
 import com.microsoft.identity.common.internal.cache.HelloCache;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
 import com.microsoft.identity.common.internal.controllers.BrokerMsalController;
 import com.microsoft.identity.common.internal.util.StringUtil;
 
@@ -199,7 +200,9 @@ public class HelloCacheTests {
 
         final MockController controller = new MockController(ApplicationProvider.getApplicationContext());
         final MockStrategy strategy = new MockStrategy();
-        final CommandParameters parameters = CommandParameters.builder().requiredBrokerProtocolVersion(minimumVer).build();
+        final CommandParameters parameters = CommandParameters.builder()
+                .platformComponents(AndroidPlatformComponents.createFromContext(ApplicationProvider.getApplicationContext()))
+                .requiredBrokerProtocolVersion(minimumVer).build();
 
         try {
             final String negotiatedProtocolVersion = controller.hello(strategy, parameters.getRequiredBrokerProtocolVersion());
@@ -219,7 +222,7 @@ public class HelloCacheTests {
 
         class HelloCacheMock extends HelloCache {
             public HelloCacheMock(@NonNull Context context, @NonNull String protocolName, @NonNull String targetAppPackageName) {
-                super(context, protocolName, targetAppPackageName);
+                super(context, protocolName, targetAppPackageName, AndroidPlatformComponents.createFromContext(context));
             }
 
             @NonNull @Override public String getVersionCode() throws PackageManager.NameNotFoundException {

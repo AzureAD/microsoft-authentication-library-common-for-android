@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.common.java.telemetry;
 
-import com.microsoft.identity.common.java.interfaces.IKeyPairStorage;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.java.util.StringUtil;
 import lombok.NonNull;
 
@@ -40,9 +40,9 @@ public class TelemetryPropertiesCache {
     private static final String DEVICE_ID_GUID = "device_id_guid";
     // endregion
 
-    private final IKeyPairStorage mStorage;
+    private final INameValueStorage<String> mStorage;
 
-    public TelemetryPropertiesCache(@NonNull final IKeyPairStorage storage) {
+    public TelemetryPropertiesCache(@NonNull final INameValueStorage<String> storage) {
         mStorage = storage;
     }
 

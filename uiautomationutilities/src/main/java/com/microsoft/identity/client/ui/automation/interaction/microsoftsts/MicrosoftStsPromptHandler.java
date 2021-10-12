@@ -26,7 +26,6 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.client.ui.automation.app.OutlookApp;
 import com.microsoft.identity.client.ui.automation.interaction.AbstractPromptHandler;
 import com.microsoft.identity.client.ui.automation.interaction.PromptHandlerParameters;
 import com.microsoft.identity.client.ui.automation.interaction.PromptParameter;
@@ -77,7 +76,7 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
             loginComponentHandler.handleEmailField(username);
         }
 
-        if (parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
+        if (parameters.isPasswordPageExpected() || parameters.getPrompt() == PromptParameter.LOGIN || !parameters.isSessionExpected()) {
             loginComponentHandler.handlePasswordField(password);
         }
 
@@ -92,6 +91,10 @@ public class MicrosoftStsPromptHandler extends AbstractPromptHandler {
 
         final IMicrosoftStsLoginComponentHandler aadLoginComponentHandler =
                 (IMicrosoftStsLoginComponentHandler) loginComponentHandler;
+
+        if (parameters.isStaySignedInPageExpected()) {
+            aadLoginComponentHandler.handleStaySignedIn(parameters.getStaySignedInResponse());
+        }
 
         if (parameters.isSpeedBumpExpected()) {
             aadLoginComponentHandler.handleSpeedBump();
