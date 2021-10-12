@@ -129,6 +129,9 @@ public class JWSBuilder {
         if (privateKey == null) {
             throw new IllegalArgumentException("privateKey");
         }
+        if (pubKey == null) {
+            throw new IllegalArgumentException("pubKey");
+        }
 
         Gson gson = new Gson();
         Claims claims = new Claims();
