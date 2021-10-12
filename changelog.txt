@@ -1,6 +1,6 @@
-Version 3.6.2
+Version 3.6.3
 ----------
-- [PATCH] Add helper method to remove the metadataCache entry (#1593, #1749)
+- [PATCH] Add helper method to remove the metadataCache entry (#1593)
 
 Version 3.6.2
 ----------
