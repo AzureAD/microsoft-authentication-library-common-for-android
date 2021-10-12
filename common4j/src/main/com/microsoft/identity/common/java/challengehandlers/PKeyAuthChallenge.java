@@ -182,9 +182,6 @@ public class PKeyAuthChallenge implements Serializable {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
                 }
                 final PublicKey publicKey = deviceCertProxy.getPublicKey();
-                if (publicKey == null) {
-                    throw new ClientException(ErrorStrings.KEY_CHAIN_PUBLIC_KEY_EXCEPTION);
-                }
                 final X509Certificate certificate = deviceCertProxy.getCertificate();
                 if (certificate == null) {
                     throw new ClientException(ErrorStrings.KEY_CHAIN_CERTIFICATE_EXCEPTION);
