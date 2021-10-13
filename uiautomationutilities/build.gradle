@@ -166,6 +166,7 @@ dependencies {
     implementation 'junit:junit:4.13'
     implementation "androidx.test.uiautomator:uiautomator:$rootProject.ext.uiAutomatorVersion"
     implementation "androidx.test:monitor:$rootProject.ext.androidxTestMonitorVersion"
+    implementation "com.google.code.gson:gson:$rootProject.ext.gsonVersion"
     implementation "androidx.test:core:$rootProject.ext.androidxTestCoreVersion"
     if (findProject(":testutils") != null) {
         //Use project reference if available

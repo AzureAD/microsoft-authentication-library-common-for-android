@@ -1,0 +1,238 @@
+<!doctype html>
+<html>
+
+<head>
+  <title>{{ pageTitle }}</title>
+  <script type="text/javascript" src="https://unpkg.com/vis-timeline@latest/standalone/umd/vis-timeline-graph2d.min.js"></script>
+
+  <script src="https://unpkg.com/@popperjs/core@2"></script>
+  <script src="https://unpkg.com/tippy.js@6"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js" charset="utf-8"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/humanize-duration/3.27.0/humanize-duration.min.js" charset="utf-8"></script>
+
+  <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+  <link href="https://unpkg.com/vis-timeline@latest/styles/vis-timeline-graph2d.min.css" rel="stylesheet" type="text/css" />
+  <style type="text/css">
+    .visualization {
+      width: "100%";
+      border: 1px solid lightgray;
+      padding: 10px;
+      margin-bottom: 20px;
+    }
+
+    #header {
+      text-align: center;
+    }
+
+    .vis-item {
+      border-radius: 0 !important;
+      border: 1px solid rgba(0, 0, 0, .1);
+    }
+
+    .timeline-content {
+      padding: 20px;
+    }
+
+    .vis-item-content i {
+      font-size: 0.8em;
+      color: rgba(0, 0, 0, .8);
+    }
+
+    .timeline-item {
+      padding-bottom: 30px;
+      position: relative;
+    }
+
+    .vis-item-overflow.failed {
+      border: 1px solid red !important;
+      background-color: #EF9A9A !important;
+    }
+
+    .tippy-box[data-theme~="failed"] {
+      border: 1px solid black !important;
+      background-color: #B71C1C;
+    }
+
+    .result-item {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+    }
+
+    .result-item>div:first-child {
+      font-weight: bold;
+    }
+
+    #resultModal.failed #resultModalCategory {
+      color: red !important;
+    }
+
+    #resultModalContent {
+      background: rgba(0, 0, 0, .1);
+      padding: 10px;
+    }
+
+    #resultModal.failed #resultModalContent {
+      background: rgba(255, 0, 0, .1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="timeline-content">
+    <h1 id="header">{{ header }}</h1>
+    <div id="visualizations"> </div>
+  </div>
+  <div class="modal fade" id="resultModal" tabindex="-1" role="dialog" aria-labelledby="resultModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="resultModalTitle"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="resultModalBody">
+          <div class="pb-8">
+            <h3 id="resultModalCategory"></h3>
+            <p id="resultModalDescription"></p>
+            <div class="result-item">
+              <div>Start Time: </div>
+              <span id="resultModalStartTime"></span>
+            </div>
+            <div class="result-item">
+              <div>End Time: </div>
+              <span id="resultModalEndTime"></span>
+            </div>
+            <div class="result-item">
+              <div>Duration: </div>
+              <span id="resultModalDuration"></span>
+            </div>
+          </div>
+          <hr>
+          <h5 class="result-status" id="resultModalStatus"></h5>
+          <div id="resultModalContent"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    const visualizationsContainer = document.getElementById('visualizations');
+
+    function hashCode(str) {
+      var hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        var character = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + character;
+        hash = hash & hash;
+      }
+      return hash;
+    }
+
+    const timelines = {{ timelines }};
+
+
+    timelines.forEach(timeline => {
+      let count = 0;
+
+      const items = new vis.DataSet(timeline.eventSeries.reduce((acc, group) => ([
+        ...acc, ...group.events.map((item) => {
+          return {
+            id: count++,
+            ...item,
+            content: item.category,
+            failed: item.failed,
+            start: item.startTime,
+            end: item.endTime,
+            group: item.entity,
+          }
+        })
+      ]), []));
+
+
+      const colors = [
+        "#FFEBEE", "#FCE4EC", "#F3E5F5", "#EDE7F6", "#E8EAF6", "#E3F2FD", "#E1F5FE", "#E0F7FA", "#E0F2F1", "#E8F5E9",
+        "#F1F8E9", "#F9FBE7", "#FFFDE7", "#FFF8E1", "#FFF3E0", "#FBE9E7", "#EFEBE9", "#FAFAFA", "#ECEFF1", "#F5F5F5",
+      ]
+
+
+      const groups = timeline.eventSeries.map(group => ({
+        id: group.entity,
+        content: group.entity,
+        order: group.order
+      }));
+
+      const options = {
+        stack: false,
+        clickToUse: true,
+        template: function(item, element, data) {
+
+          tippy(element.parentElement, {
+            allowHTML: true,
+            content: item.content,
+            followCursor: true,
+            theme: data.failed ? 'failed' : 'material'
+          });
+
+          $(element).parent().attr('data-target', "#resultModal")
+            .attr('data-toggle', 'modal')
+            .css({
+              'backgroundColor': colors[hashCode(data.content) % colors.length]
+            }).addClass(data.failed ? 'failed' : 'completed');
+
+          const duration = humanizeDuration(moment(item.end).diff(item.start));
+
+          $(element).parent().click(() => {
+            $("#resultModal").addClass(data.failed ? "failed" : 'completed');
+            $("#resultModalTitle").html(item.entity);
+            $("#resultModalBody").html(item.result);
+            $("#resultModalCategory").html(item.category);
+            $("#resultModalDescription").html(item.description || '--');
+            $("#resultModalStartTime").html(moment(item.start).format("DD/MM/YYYY hh:mm:ss:SSS"));
+            $("#resultModalEndTime").html(moment(item.end).format("DD/MM/YYYY hh:mm:ss:SSS"));
+            $("#resultModalDuration").html(duration);
+            $("#resultModalContent").html(data.result ? data.result : "&lt;no result&gt;");
+            $("#resultModalStatus").html(item.failed ? "Failed" : "Completed");
+          })
+
+          return `
+              <div>
+                <h6>${item.content}</h6>
+                <i>${duration}</i>
+              </div>
+              `;
+        }
+      };
+
+      const timelineDuration = humanizeDuration(moment(timeline.endTime).diff(timeline.startTime));
+
+      const container = document.createElement("div");
+      const header = document.createElement("h2");
+      header.innerHTML = timeline.title;
+
+      const durationLabel = document.createElement("p");
+      durationLabel.innerHTML = timelineDuration;
+
+      const timelineContainer = document.createElement("div");
+      $(timelineContainer).addClass("timeline-item");
+      $(container).addClass("visualization");
+
+      container.appendChild(header);
+      container.appendChild(durationLabel);
+      container.appendChild(timelineContainer);
+
+      visualizationsContainer.appendChild(container);
+
+      new vis.Timeline(timelineContainer, items, groups, options);
+    })
+  </script>
+</body>
+
+</html>

@@ -66,7 +66,7 @@ public class CSVWriter implements Closeable, Flushable {
      *                 entry.
      * @throws IOException Exceptions thrown by the writer supplied to CSVWriter.
      */
-    protected void writeNext(String[] nextLine) throws IOException {
+    public void writeNext(String[] nextLine) throws IOException {
         final Appendable appendable = new StringBuilder(INITIAL_STRING_SIZE);
 
 
@@ -84,6 +84,13 @@ public class CSVWriter implements Closeable, Flushable {
 
             if (nextElement == null) {
                 continue;
+            }
+
+            // escape characters
+            if (nextElement.contains(String.valueOf(separator)) || nextElement.contains("\"")) {
+                nextElement = nextElement.replaceAll(String.valueOf(separator), "\\" + separator);
+                nextElement = nextElement.replaceAll("\"", "\\\"");
+                nextElement = "\"" + nextElement + "\"";
             }
 
             appendable.append(nextElement);

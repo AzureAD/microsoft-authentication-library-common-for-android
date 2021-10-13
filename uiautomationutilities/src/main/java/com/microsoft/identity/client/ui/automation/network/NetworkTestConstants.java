@@ -90,4 +90,10 @@ public class NetworkTestConstants {
             return null;
         }
     }
+
+    public static class TimelineEntities {
+        public static final String NETWORK_TEST_RUN = "Network test run";
+        public static final String TEST_EXECUTION_STAGE = "Test execution stage";
+        public static final String NETWORK_STATES = "Applied network states";
+    }
 }

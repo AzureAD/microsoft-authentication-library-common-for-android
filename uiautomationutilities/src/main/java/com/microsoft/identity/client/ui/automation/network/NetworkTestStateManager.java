@@ -34,6 +34,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
 import com.microsoft.identity.client.ui.automation.logging.Logger;
+import com.microsoft.identity.client.ui.automation.reporting.Timeline;
 import com.microsoft.identity.client.ui.automation.utils.AdbShellUtils;
 import com.microsoft.identity.internal.testutils.kusto.CSVReader;
 
@@ -232,6 +233,8 @@ public class NetworkTestStateManager {
                 try {
                     for (NetworkTestState state : states) {
                         if (state.getTime() > 0) {
+                            Timeline.start(NetworkTestConstants.TimelineEntities.NETWORK_STATES, state.getInterfaceType().getKey());
+
                             switchState(state);
                             Thread.sleep(state.getTime() * 1000);
                         } else {

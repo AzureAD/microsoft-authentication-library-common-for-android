@@ -22,12 +22,15 @@
 //  THE SOFTWARE.
 package com.microsoft.identity.client.ui.automation.utils;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
+import android.webkit.CookieManager;
+import android.webkit.ValueCallback;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -40,9 +43,13 @@ import com.microsoft.identity.client.ui.automation.broker.ITestBroker;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CommonUtils {
 
@@ -218,5 +225,51 @@ public class CommonUtils {
         } else {
             return false;
         }
+    }
+
+    /**
+     * Write content to a file.
+     *
+     * @param file    the file to be written
+     * @param content the content to be written to the file
+     * @param append  a flag on whether the content will be appended to the existing content of the file
+     * @throws IOException an error occurred when writing content to the file
+     */
+    public static void writeToFile(@NonNull final File file, @NonNull final String content, final boolean append) throws IOException {
+        final FileWriter fileWriter = new FileWriter(file, append);
+        fileWriter.write(content);
+        fileWriter.flush();
+        fileWriter.close();
+    }
+
+
+    /**
+     * Clear all WebView cookies.
+     *
+     * @param activity an activity class for the application
+     * @return a boolean representing whether the cookies were cleared.
+     * @throws InterruptedException thrown when the latch waiting for the asynchronous clearing of the cookies is interrupted.
+     */
+    public static boolean clearCookiesSync(final Activity activity) throws InterruptedException {
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        final CookieManager cookieManager = CookieManager.getInstance();
+        final AtomicBoolean cleared = new AtomicBoolean(true);
+
+        if (cookieManager.hasCookies()) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    cookieManager.removeAllCookies(new ValueCallback<Boolean>() {
+                        @Override
+                        public void onReceiveValue(Boolean value) {
+                            cleared.set(cleared.get() && value);
+                            countDownLatch.countDown();
+                        }
+                    });
+                }
+            });
+            countDownLatch.await();
+        }
+        return cleared.get();
     }
 }

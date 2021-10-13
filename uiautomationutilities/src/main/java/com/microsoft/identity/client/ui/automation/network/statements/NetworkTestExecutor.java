@@ -6,7 +6,7 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
-import com.microsoft.identity.client.ui.automation.annotations.NetworkTestTimeout;
+import com.microsoft.identity.client.ui.automation.annotations.NetworkTest;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.network.NetworkTestStateManager;
 import com.microsoft.identity.client.ui.automation.rules.NetworkTestRule;
@@ -31,7 +31,14 @@ public class NetworkTestExecutor<T> extends Statement {
     private final FrameworkMethod method;
     private long testStartTime, testEndTime;
 
-    public NetworkTestExecutor(FrameworkMethod method, Context mContext, List<FrameworkMethod> befores, Object target, Statement statement, NetworkTestRule<T> networkTestRule) {
+    public NetworkTestExecutor(
+            FrameworkMethod method,
+            Context mContext,
+            List<FrameworkMethod> befores,
+            Object target,
+            Statement statement,
+            NetworkTestRule<T> networkTestRule
+    ) {
         this.method = method;
         this.mContext = mContext;
         this.befores = befores;
@@ -51,7 +58,7 @@ public class NetworkTestExecutor<T> extends Statement {
 
         final Thread networkStateThread = stateManager.execute();
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
-        NetworkTestTimeout testTimeout = method.getAnnotation(NetworkTestTimeout.class);
+        NetworkTest testAnnotation = method.getAnnotation(NetworkTest.class);
 
         for (FrameworkMethod before : befores) {
             before.invokeExplosively(target);
@@ -71,7 +78,7 @@ public class NetworkTestExecutor<T> extends Statement {
         });
         executorService.shutdown();
 
-        long timeoutSeconds = testTimeout.seconds();
+        long timeoutSeconds = testAnnotation.testTimeout();
         Log.d(TAG, "Test timeout: " + timeoutSeconds);
         try {
             T result;
