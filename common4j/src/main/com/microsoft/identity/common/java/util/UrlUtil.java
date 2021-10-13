@@ -146,7 +146,7 @@ public class UrlUtil {
             return Collections.emptyMap();
         }
 
-        return urlFormDecode(uri.getQuery());
+        return urlFormDecode(uri.getRawQuery());
     }
 
     /**
