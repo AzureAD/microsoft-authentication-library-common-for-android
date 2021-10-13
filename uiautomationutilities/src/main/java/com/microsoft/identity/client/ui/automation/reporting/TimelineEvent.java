@@ -4,12 +4,16 @@ import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.Expose;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Date;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 
 @Data
+@EqualsAndHashCode
 public class TimelineEvent {
     protected static final String[] HEADER = new String[]{"Entity", "Category", "Description", "Failed", "Result", "Duration", "Start Time", "End Time"};
 
@@ -24,9 +28,12 @@ public class TimelineEvent {
     @Expose
     private String result;
     @Expose
+    @EqualsAndHashCode.Exclude
     private Date startTime;
     @Expose
+    @EqualsAndHashCode.Exclude
     private Date endTime;
+    @EqualsAndHashCode.Exclude
     private Throwable failureException;
 
     public TimelineEvent(@NonNull final String entity, @NonNull final String category, @Nullable final String description, @NonNull final Date startTime) {
@@ -57,7 +64,16 @@ public class TimelineEvent {
     public void finish(@Nullable final Throwable failureException) {
         if (!isComplete()) {
             this.failureException = failureException;
-            this.finish(true, failureException == null ? "" : failureException.getMessage());
+            final StringWriter stringWriter = new StringWriter();
+            final PrintWriter printWriter = new PrintWriter(stringWriter);
+
+            if (failureException != null) {
+                failureException.printStackTrace(printWriter);
+            }
+            printWriter.flush();
+            printWriter.close();
+
+            this.finish(true, String.format("<pre>%s</pre>", stringWriter.toString()));
         }
     }
 

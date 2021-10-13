@@ -27,19 +27,19 @@ public class NetworkTestRunner extends BlockJUnit4ClassRunner {
     @Override
     protected Statement withBefores(FrameworkMethod method, Object target, Statement statement) {
         final List<FrameworkMethod> befores = getTestClass().getAnnotatedMethods(Before.class);
-        final NetworkTestRule<?> networkTestRule = getNetworkTestRule(target);
+        final NetworkTestRule networkTestRule = getNetworkTestRule(target);
 
         return befores.isEmpty() || networkTestRule == null ?
-                statement : new NetworkTestExecutor<>(method, mContext, befores, target, statement, networkTestRule);
+                statement : new NetworkTestExecutor(method, mContext, befores, target, statement, networkTestRule);
     }
 
-    private NetworkTestRule<?> getNetworkTestRule(final Object target) {
+    private NetworkTestRule getNetworkTestRule(final Object target) {
         final List<TestRule> rules = getTestRules(target);
 
-        NetworkTestRule<?> networkTestRule = null;
+        NetworkTestRule networkTestRule = null;
         for (TestRule testRule : rules) {
             if (testRule instanceof NetworkTestRule) {
-                networkTestRule = (NetworkTestRule<?>) testRule;
+                networkTestRule = (NetworkTestRule) testRule;
             }
         }
         return networkTestRule;

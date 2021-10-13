@@ -27,7 +27,7 @@ public class NetworkTestConstants {
     /**
      * Defines the different network interfaces we can switch to during a test run.
      * The value of the interface holds bit information regarding whether WIFI and CELLULAR are active.
-     *
+     * <p>
      * 0 - 0,0 [Both WIFI and CELLULAR are OFF]
      * 1 - 0,1 [WIFI is turned ON]
      * 2 - 1,0 [CELLULAR is turned ON]
@@ -92,8 +92,9 @@ public class NetworkTestConstants {
     }
 
     public static class TimelineEntities {
-        public static final String NETWORK_TEST_RUN = "Network test run";
+        public static final String NETWORK_AVAILABILITY_STATE = "Network availability state";
         public static final String TEST_EXECUTION_STAGE = "Test execution stage";
         public static final String NETWORK_STATES = "Applied network states";
+        public static final String ACQUIRE_TOKEN_SILENT_FLOW = "Acquire silent token flow";
     }
 }

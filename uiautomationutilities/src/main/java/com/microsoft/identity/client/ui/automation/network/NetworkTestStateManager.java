@@ -237,11 +237,14 @@ public class NetworkTestStateManager {
 
                             switchState(state);
                             Thread.sleep(state.getTime() * 1000);
+
+                            Timeline.finish(NetworkTestConstants.TimelineEntities.NETWORK_STATES);
                         } else {
                             Logger.i(TAG, "Cannot apply network state [" + state.getInterfaceType() + "] with time: " + state.getTime());
                         }
                     }
-                } catch (InterruptedException ignored) {
+                } catch (InterruptedException exception) {
+                    Timeline.finish(NetworkTestConstants.TimelineEntities.NETWORK_STATES);
                 }
             }
         });

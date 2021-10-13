@@ -67,13 +67,18 @@
       font-weight: bold;
     }
 
+    #resultModal.completed #resultModalCategory {
+      color: black !important;
+    }
+
     #resultModal.failed #resultModalCategory {
       color: red !important;
     }
 
-    #resultModalContent {
+    #resultModal.completed #resultModalContent {
       background: rgba(0, 0, 0, .1);
       padding: 10px;
+      overflow-wrap: anywhere;
     }
 
     #resultModal.failed #resultModalContent {
@@ -88,7 +93,7 @@
     <div id="visualizations"> </div>
   </div>
   <div class="modal fade" id="resultModal" tabindex="-1" role="dialog" aria-labelledby="resultModalTitle" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="resultModalTitle"></h5>
@@ -187,12 +192,11 @@
               'backgroundColor': colors[hashCode(data.content) % colors.length]
             }).addClass(data.failed ? 'failed' : 'completed');
 
-          const duration = humanizeDuration(moment(item.end).diff(item.start));
+          const duration = item.end ? humanizeDuration(moment(item.end).diff(item.start)) : '';
 
           $(element).parent().click(() => {
-            $("#resultModal").addClass(data.failed ? "failed" : 'completed');
+            $("#resultModal").removeClass('failed completed').addClass(data.failed ? "failed" : 'completed');
             $("#resultModalTitle").html(item.entity);
-            $("#resultModalBody").html(item.result);
             $("#resultModalCategory").html(item.category);
             $("#resultModalDescription").html(item.description || '--');
             $("#resultModalStartTime").html(moment(item.start).format("DD/MM/YYYY hh:mm:ss:SSS"));

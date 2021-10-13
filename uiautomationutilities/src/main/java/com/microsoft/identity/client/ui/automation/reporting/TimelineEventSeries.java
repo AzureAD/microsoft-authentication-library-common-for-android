@@ -34,17 +34,18 @@ public class TimelineEventSeries {
     @NonNull
     public TimelineEvent startEvent(@NonNull final String title, @Nullable final String description) {
         final TimelineEvent first = eventStack.peekFirst();
-        if (first != null && !first.isComplete()) {
+        final TimelineEvent newEvent = new TimelineEvent(entity, title, description);
+
+        if (first != null && !first.isComplete() && first != newEvent) {
             first.finish();
             observer.onEventEnd(first);
         }
 
-        final TimelineEvent started = new TimelineEvent(entity, title, description);
-        eventStack.push(started);
-        observer.onEventStart(started);
+        eventStack.push(newEvent);
+        observer.onEventStart(newEvent);
         order = eventStack.size();
 
-        return started;
+        return newEvent;
     }
 
     @Nullable

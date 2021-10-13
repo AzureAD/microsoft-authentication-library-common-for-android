@@ -25,14 +25,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class NetworkTestRule<T> implements TestRule {
+public class NetworkTestRule implements TestRule {
 
     private static final String TAG = NetworkTestRule.class.getSimpleName();
     private static final long FIND_UI_ELEMENT_TIMEOUT = CommonUtils.FIND_UI_ELEMENT_TIMEOUT;
     private final static String LOG_FOLDER_NAME = "automation_timeline";
     private static final Timeline timeline = Timeline.getInstance();
 
-    private ResultFuture<T, Exception> testResult = new ResultFuture<>();
+    private ResultFuture<String, Exception> testResult = new ResultFuture<>();
     private NetworkTestStateManager currentStateManager = null;
     private final List<JsonElement> timelineRecords = new ArrayList<>();
 
@@ -89,14 +89,18 @@ public class NetworkTestRule<T> implements TestRule {
                 if (recordTimeline) {
                     timeline.stopRecording();
 
-                    timelineRecords.add(timeline.toJson("Network test run [" + stateManager.getId() + "]"));
+                    timelineRecords.add(timeline.toJson(stateManager.getId()));
                 }
             }
         }
 
         // Create the output files.
         CommonUtils.writeToFile(timelineOutputFile, timelineRecords.toString(), false);
-        Timeline.createHTMLVisuals(timelineVisualFile, description.getTestClass().getSimpleName(), timelineRecords);
+        Timeline.createHTMLVisuals(
+                timelineVisualFile,
+                description.getTestClass().getSimpleName() + "#" + description.getMethodName(),
+                timelineRecords
+        );
 
         // Copy the files to SD card
         CommonUtils.copyFileToFolderInSdCard(timelineOutputFile, LOG_FOLDER_NAME);
@@ -107,7 +111,7 @@ public class NetworkTestRule<T> implements TestRule {
         testResult = new ResultFuture<>();
     }
 
-    public void setResult(T result) {
+    public void setResult(String result) {
         testResult.setResult(result);
     }
 
@@ -119,11 +123,11 @@ public class NetworkTestRule<T> implements TestRule {
         return currentStateManager;
     }
 
-    public T getResult(long timeoutSeconds, TimeUnit timeUnit) throws Throwable {
+    public String getResult(long timeoutSeconds, TimeUnit timeUnit) throws Throwable {
         return testResult.get(timeoutSeconds, timeUnit);
     }
 
-    public T getResult() throws Exception {
+    public String getResult() throws Exception {
         return testResult.get();
     }
 
