@@ -44,7 +44,7 @@ public class LoggerTest {
         DiagnosticContext.INSTANCE.clear();
     }
 
-    @Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
+    //@Test(timeout = TEST_TIME_OUT_IN_MILLISECONDS)
     public void logWithVerbose() throws InterruptedException {
         final Logger.LogLevel logLevel = Logger.LogLevel.VERBOSE;
         final boolean containsPII = false;
