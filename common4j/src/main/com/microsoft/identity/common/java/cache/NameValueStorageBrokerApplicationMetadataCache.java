@@ -171,6 +171,18 @@ public class NameValueStorageBrokerApplicationMetadataCache
         return result;
     }
 
+    public void remove(@NonNull final String clientId,
+                       final int processUid) {
+        final List<BrokerApplicationMetadata> allMetadata = getAll();
+
+        for (final BrokerApplicationMetadata metadata : allMetadata) {
+            if (clientId.equalsIgnoreCase(metadata.getClientId())
+                    && processUid == metadata.getUid()) {
+                remove(metadata);
+            }
+        }
+    }
+
     @Override
     public Type getListTypeToken() {
         return TypeToken.getParameterized(List.class, BrokerApplicationMetadata.class).getType();
