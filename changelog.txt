@@ -61,6 +61,10 @@ V.Next
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
 
+Version 3.6.3
+----------
+- [PATCH] Add helper method to remove the metadataCache entry (#1593)
+
 Version 3.6.2
 ----------
 - [PATCH] Handle the scenario where broker activity is killed wrongly. (#1569)
