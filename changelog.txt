@@ -60,7 +60,6 @@ V.Next
 - [PATCH] Fix print stack trace for Throwable in Logs (#1556)
 - [PATCH] Support SSO token api (#1543)
 - [MINOR] Add flighting parameters to commmandParameters (#1562)
-- [PATCH] Code coverage addition (#1503)
 
 Version 3.6.2
 ----------

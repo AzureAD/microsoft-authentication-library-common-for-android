@@ -8,7 +8,7 @@
 
 plugins {
     id 'java-library'
-    id 'com.microsoft.identity.buildsystem' version '0.2.0'
+    id 'com.microsoft.identity.buildsystem' version '0.2.1'
     id 'maven-publish'
 
     // the below build plugin allows to generate BuildConfig files in a JAVA gradle project.
