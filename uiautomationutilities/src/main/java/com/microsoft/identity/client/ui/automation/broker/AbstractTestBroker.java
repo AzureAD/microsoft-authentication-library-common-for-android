@@ -56,7 +56,7 @@ import static com.microsoft.identity.client.ui.automation.utils.CommonUtils.getR
 public abstract class AbstractTestBroker extends App implements ITestBroker {
 
     private final static String TAG = AbstractTestBroker.class.getSimpleName();
-    protected final static IAppInstaller DEFAULT_BROKER_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
+    public final static IAppInstaller DEFAULT_BROKER_APP_INSTALLER = BuildConfig.INSTALL_SOURCE_LOCAL_APK
             .equalsIgnoreCase(BuildConfig.BROKER_INSTALL_SOURCE)
             ? new LocalApkInstaller() : new PlayStore();
     @Override
