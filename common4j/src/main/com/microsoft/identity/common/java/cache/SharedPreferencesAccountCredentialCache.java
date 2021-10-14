@@ -95,7 +95,7 @@ public class SharedPreferencesAccountCredentialCache extends AbstractAccountCred
      * Constructor of SharedPreferencesAccountCredentialCache.
      *
      * @param accountCacheValueDelegate    ICacheKeyValueDelegate
-     * @param sharedPreferencesFileManager ISharedPreferencesFileManager
+     * @param sharedPreferencesFileManager INameValueStorage
      */
     public SharedPreferencesAccountCredentialCache(
             @NonNull final ICacheKeyValueDelegate accountCacheValueDelegate,

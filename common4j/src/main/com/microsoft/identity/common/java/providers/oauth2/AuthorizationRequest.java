@@ -26,20 +26,17 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.microsoft.identity.common.java.WarningType;
 import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.util.CommonURIBuilder;
 import com.microsoft.identity.common.java.util.ObjectMapper;
 
 import java.io.Serializable;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import cz.msebera.android.httpclient.client.utils.URIBuilder;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 /**
@@ -241,34 +238,12 @@ public abstract class AuthorizationRequest<T extends AuthorizationRequest<T>> im
      */
     public URI getAuthorizationRequestAsHttpRequest() throws ClientException {
         try {
-            final URIBuilder builder = new URIBuilder(getAuthorizationEndpoint());
-            appendParameterToBuilder(builder, ObjectMapper.serializeObjectHashMap(this));
-            appendParameterToBuilder(builder, mExtraQueryParams);
+            final CommonURIBuilder builder = new CommonURIBuilder(getAuthorizationEndpoint());
+            builder.addParametersIfAbsent(ObjectMapper.serializeObjectHashMap(this));
+            builder.addParametersIfAbsent(mExtraQueryParams);
             return builder.build();
         } catch (final URISyntaxException e) {
             throw new ClientException(ClientException.MALFORMED_URL, e.getMessage(), e);
-        }
-    }
-
-    protected void appendParameterToBuilder(@NonNull final URIBuilder builder,
-                                            @Nullable final Map<String, ?> params) {
-        if (params == null) {
-            return;
-        }
-
-        for (final Map.Entry<String, ?> entry : params.entrySet()) {
-            builder.addParameter(entry.getKey(), String.valueOf(entry.getValue()));
-        }
-    }
-
-    protected void appendParameterToBuilder(@NonNull final URIBuilder builder,
-                                            @Nullable final List<Map.Entry<String, String>> params) {
-        if (params == null) {
-            return;
-        }
-
-        for (Map.Entry<String, String> entry : params) {
-            builder.addParameter(entry.getKey(), entry.getValue());
         }
     }
 }

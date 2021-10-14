@@ -345,6 +345,17 @@ public class SettablePlatformComponents implements IPlatformComponents {
         return ret;
     }
 
+    @Override
+    public INameValueStorage<String> getMultiProcessStringStore(@NonNull String storeName) {
+        @SuppressWarnings("unchecked")
+        INameValueStorage<String> ret = (INameValueStorage<String>) mStores.get(storeName);
+        if (ret == null) {
+            mStores.put(storeName, new InMemoryStorage<String>());
+            ret = (INameValueStorage<String>) mStores.get(storeName);
+        }
+        return ret;
+    }
+
     @Builder.Default
     private final IAuthorizationStrategyFactory mAuthorizationStrategyFactory = new IAuthorizationStrategyFactory() {
         @Override
