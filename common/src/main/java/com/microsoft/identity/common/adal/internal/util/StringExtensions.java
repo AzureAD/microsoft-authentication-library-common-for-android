@@ -26,7 +26,7 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
-import com.microsoft.identity.common.exception.ErrorStrings;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
 import com.microsoft.identity.common.logging.Logger;
 
 import java.io.UnsupportedEncodingException;
@@ -89,10 +89,10 @@ public final class StringExtensions {
     }
 
     /**
-     * encode string with url form encoding. Space will be +.
+     * Encode string with url form encoding. Space will be replaced by '+'.
      *
      * @param source the string to encode.
-     * @return the decoded
+     * @return the decoded string.
      * @throws UnsupportedEncodingException throws if encoding not supported.
      */
     public static String urlFormEncode(String source) throws UnsupportedEncodingException {

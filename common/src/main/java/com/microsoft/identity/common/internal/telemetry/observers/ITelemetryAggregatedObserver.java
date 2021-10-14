@@ -22,13 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
-import java.util.Map;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
- * Telemetry observer interface for MATS (Microsoft Authentication Telemetry Service) format.
- * The calling application need to implement the interface for further data processing.
- */
-public interface ITelemetryAggregatedObserver extends ITelemetryObserver<Map<String, String>> {
-    @Override
-    void onReceived(Map<String, String> telemetryData);
+ * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver} instead.
+ **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
+@Deprecated
+public interface ITelemetryAggregatedObserver extends com.microsoft.identity.common.java.telemetry.observers.ITelemetryAggregatedObserver {
 }

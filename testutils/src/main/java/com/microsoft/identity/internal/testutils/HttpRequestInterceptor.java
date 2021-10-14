@@ -25,8 +25,8 @@ package com.microsoft.identity.internal.testutils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.microsoft.identity.common.internal.net.HttpClient;
-import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.java.net.HttpClient;
+import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.internal.testutils.shadows.ShadowHttpClient;
 
 import java.io.IOException;
@@ -46,9 +46,9 @@ public interface HttpRequestInterceptor {
      * @return the http response object
      * @throws IOException throws an exception when something went wrong during the http request
      */
-    HttpResponse intercept(@NonNull HttpClient.HttpMethod httpMethod,
-                           @NonNull URL requestUrl,
-                           @NonNull Map<String, String> requestHeaders,
-                           @Nullable byte[] requestContent) throws IOException;
+    HttpResponse performIntercept(@NonNull HttpClient.HttpMethod httpMethod,
+                                  @NonNull URL requestUrl,
+                                  @NonNull Map<String, String> requestHeaders,
+                                  @Nullable byte[] requestContent) throws IOException;
 
 }

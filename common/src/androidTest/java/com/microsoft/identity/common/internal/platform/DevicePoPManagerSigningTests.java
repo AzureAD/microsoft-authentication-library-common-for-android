@@ -24,7 +24,9 @@ package com.microsoft.identity.common.internal.platform;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.microsoft.identity.common.exception.ClientException;
+import com.microsoft.identity.common.java.crypto.IDevicePopManager;
+import com.microsoft.identity.common.java.crypto.SigningAlgorithm;
+import com.microsoft.identity.common.java.exception.ClientException;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -39,6 +41,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.util.Arrays;
 
+
 // Note: Test cannot use robolectric due to the following open issue
 // https://github.com/robolectric/robolectric/issues/1518
 @RunWith(Parameterized.class)
@@ -47,23 +50,23 @@ public class DevicePoPManagerSigningTests {
     private static final String DATA_TO_SIGN = "The quick brown fox jumped over the lazy dog.";
 
     private final IDevicePopManager devicePopManager;
-    private final IDevicePopManager.SigningAlgorithm signingAlg;
+    private final SigningAlgorithm signingAlg;
 
     @Parameterized.Parameters
-    public static Iterable<IDevicePopManager.SigningAlgorithm> testParams() {
-        return Arrays.asList(IDevicePopManager.SigningAlgorithm.values());
+    public static Iterable<SigningAlgorithm> testParams() {
+        return Arrays.asList(SigningAlgorithm.values());
     }
 
     @SuppressWarnings("unused")
-    public DevicePoPManagerSigningTests(final IDevicePopManager.SigningAlgorithm signingAlg)
+    public DevicePoPManagerSigningTests(final SigningAlgorithm signingAlg)
             throws CertificateException, NoSuchAlgorithmException, KeyStoreException, IOException {
-        devicePopManager = new DevicePopManager();
+        devicePopManager = new DevicePopManager(ApplicationProvider.getApplicationContext());
         this.signingAlg = signingAlg;
     }
 
     @Before
     public void setUp() throws ClientException {
-        devicePopManager.generateAsymmetricKey(ApplicationProvider.getApplicationContext());
+        devicePopManager.generateAsymmetricKey();
     }
 
     @After

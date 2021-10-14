@@ -26,14 +26,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.internal.authorities.Authority;
-import com.microsoft.identity.common.internal.authscheme.AbstractAuthenticationScheme;
-import com.microsoft.identity.common.internal.commands.parameters.BrokerInteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.BrokerSilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.CommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.InteractiveTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.SilentTokenCommandParameters;
-import com.microsoft.identity.common.internal.commands.parameters.TokenCommandParameters;
+import com.microsoft.identity.common.java.authorities.Authority;
+import com.microsoft.identity.common.java.authscheme.AbstractAuthenticationScheme;
+import com.microsoft.identity.common.java.commands.parameters.BrokerInteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.BrokerSilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.CommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.InteractiveTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.SilentTokenCommandParameters;
+import com.microsoft.identity.common.java.commands.parameters.TokenCommandParameters;
 import com.microsoft.identity.common.internal.util.StringUtil;
 import com.microsoft.identity.common.logging.Logger;
 
@@ -42,12 +42,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Event;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.EventType;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Key;
-import static com.microsoft.identity.common.internal.telemetry.TelemetryEventStrings.Value;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Event;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.EventType;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Key;
+import static com.microsoft.identity.common.java.telemetry.TelemetryEventStrings.Value;
 
-public class ApiStartEvent extends BaseEvent {
+public class ApiStartEvent extends com.microsoft.identity.common.java.telemetry.events.BaseEvent {
     private static final String TAG = ApiStartEvent.class.getSimpleName();
 
     public ApiStartEvent() {

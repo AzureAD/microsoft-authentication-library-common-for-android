@@ -22,7 +22,9 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.internal.providers.microsoft.MicrosoftAuthorizationRequest;
+import com.microsoft.identity.common.java.providers.microsoft.MicrosoftAuthorizationRequest;
+
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Azure Active Directory B2C Authorization Request.
@@ -33,6 +35,7 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
 
     private AzureActiveDirectoryB2CAuthorizationRequest(final Builder builder) {
         super(builder);
+        this.mPrompt = builder.mPrompt;
     }
 
     public static final class Builder extends MicrosoftAuthorizationRequest.Builder<AzureActiveDirectoryB2CAuthorizationRequest.Builder> {
@@ -41,6 +44,7 @@ public class AzureActiveDirectoryB2CAuthorizationRequest extends MicrosoftAuthor
         public Builder() {
         }
 
+        @SuppressFBWarnings("URF_UNREAD_FIELD")
         public Builder setPrompt(String prompt) {
             mPrompt = prompt;
             return this;

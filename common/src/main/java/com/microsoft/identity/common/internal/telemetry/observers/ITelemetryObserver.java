@@ -22,15 +22,12 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.telemetry.observers;
 
-/**
- * The interface function for apps to override if they want to get the Telemetry.
- */
-public interface ITelemetryObserver<T> {
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-    /**
-     * Invoked when telemetry data is received.
-     *
-     * @param telemetryData telemetry data
-     */
-    void onReceived(T telemetryData);
+/**
+ * Deprecated. Use {@link com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver} instead.
+ **/
+@SuppressFBWarnings("NM_SAME_SIMPLE_NAME_AS_INTERFACE")
+@Deprecated
+public interface ITelemetryObserver<T> extends com.microsoft.identity.common.java.telemetry.observers.ITelemetryObserver<T> {
 }

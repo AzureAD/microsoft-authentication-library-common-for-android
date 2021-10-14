@@ -25,6 +25,7 @@ package com.microsoft.identity.common.adal.internal;
 import androidx.annotation.VisibleForTesting;
 
 import com.microsoft.identity.common.internal.logging.Logger;
+import com.microsoft.identity.common.java.broker.BrokerAccountDataName;
 
 import java.nio.charset.Charset;
 
@@ -166,82 +167,6 @@ public final class AuthenticationConstants {
          * Go-link URL for documentation on troubleshooting common SSL, ADFS issues.
          */
         public static final String SSL_HELP_URL = "https://go.microsoft.com/fwlink/?linkid=2138180";
-    }
-
-    /**
-     * Represents the response code.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class UIResponse {
-
-        /**
-         * Represents that user cancelled the flow.
-         */
-        public static final int BROWSER_CODE_CANCEL = 2001;
-
-        /**
-         * Represents that browser error is returned.
-         */
-        public static final int BROWSER_CODE_ERROR = 2002;
-
-        /**
-         * Represents that the authorization code is returned successfully.
-         */
-        public static final int BROWSER_CODE_COMPLETE = 2003;
-
-        /**
-         * Represents that broker successfully returns the response.
-         */
-        public static final int TOKEN_BROKER_RESPONSE = 2004;
-
-        /**
-         * Webview throws Authentication exception. It needs to be send to callback.
-         */
-        public static final int BROWSER_CODE_AUTHENTICATION_EXCEPTION = 2005;
-
-        /**
-         * CA flow, device doesn't have company portal or azure authenticator installed.
-         * Waiting for broker package to be installed, and resume request in broker.
-         */
-        public static final int BROKER_REQUEST_RESUME = 2006;
-
-        /**
-         * Device registration in broker apps.
-         */
-        public static final int BROWSER_CODE_DEVICE_REGISTER = 2007;
-
-        /**
-         * Represents that SDK signalled to cancelled the auth flow as app
-         * launched a new interactive auth request
-         */
-        public static final int BROWSER_CODE_SDK_CANCEL = 2008;
-
-        /**
-         * MDM Flow is triggered.
-         */
-        public static final int BROWSER_CODE_MDM = 2009;
-    }
-
-    /**
-     * Represents the request code.
-     */
-    @NoArgsConstructor(access = AccessLevel.PRIVATE)
-    public static final class UIRequest {
-
-        /**
-         * Represents the request of browser flow.
-         */
-        public static final int BROWSER_FLOW = 1001;
-
-        /**
-         * Represents the request of token flow.
-         */
-        public static final int TOKEN_FLOW = 1002;
-
-        /**
-         * Represents the request of broker flow.
-         */
-        public static final int BROKER_FLOW = 1003;
     }
 
     /**
@@ -502,16 +427,6 @@ public final class AuthenticationConstants {
         public static final String RESOURCE = "resource";
 
         /**
-         * AAD OAuth2 Challenge strings.
-         */
-        public static final String BEARER = "Bearer";
-
-        /**
-         * AAD Oauth2 authorization.
-         */
-        public static final String AUTHORIZATION = "authorization";
-
-        /**
          * String of authorization uri.
          */
         public static final String AUTHORIZATION_URI = "authorization_uri";
@@ -569,7 +484,7 @@ public final class AuthenticationConstants {
         /**
          * String of ADAL version.
          */
-        public static final String ADAL_ID_VERSION = "x-client-Ver";
+        public static final String ADAL_ID_VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
 
         /**
          * String of ADAL id CPU.
@@ -644,11 +559,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_RETURN_JSON = "broker.json";
 
         /**
-         * Account type string.
-         */
-        public static final String BROKER_ACCOUNT_TYPE = "com.microsoft.workaccount";
-
-        /**
          * String of account initial name.
          */
         public static final String ACCOUNT_INITIAL_NAME = "aad";
@@ -687,6 +597,16 @@ public final class AuthenticationConstants {
          * The newest Msal-To-Broker protocol version.
          */
         public static final String MSAL_TO_BROKER_PROTOCOL_VERSION_CODE = computeMaxMsalBrokerProtocol();
+
+        /**
+         * A client id for requesting the SSO token.
+         */
+        public static final String SSO_TOKEN_CLIENT_ID = "broker.sso.clientId";
+
+         /**
+         * The key indicating that this is an ssoUrl parameter in a Bundle.
+         */
+        public static final String BROKER_SSO_URL_KEY = "ssoUrl";
 
         @VisibleForTesting
         public static String computeMaxMsalBrokerProtocol() {
@@ -777,11 +697,6 @@ public final class AuthenticationConstants {
         public static final String BROKER_REDIRECT_URI = "urn:ietf:wg:oauth:2.0:oob";
 
         /**
-         * String of broker client ID.
-         */
-        public static final String BROKER_CLIENT_ID = "29d9ed98-a469-4536-ade2-f981bc1d605e";
-
-        /**
          * Authtoken type string.
          */
         public static final String AUTHTOKEN_TYPE = "adal.authtoken.type";
@@ -857,6 +772,11 @@ public final class AuthenticationConstants {
         public static final String ACCOUNT_AUTHORITY = "account.authority";
 
         /**
+         * String of account authority.
+         */
+        public static final String REQUEST_AUTHORITY = "request.authority";
+
+        /**
          * String of account refresh token.
          */
         public static final String ACCOUNT_REFRESH_TOKEN = "account.refresh.token";
@@ -897,69 +817,79 @@ public final class AuthenticationConstants {
         public static final String FLIGHT_INFO = "com.microsoft.identity.broker.flights";
 
         /**
+         * String with json-formatted account object.
+         */
+        public static final String ACCOUNT = "account.object";
+
+        /**
          * String of key for account name.
          */
         public static final String ACCOUNT_NAME = "account.name";
 
         /**
-         * String of key for account name.
+         * String of key for local account id.
          */
-        public static final String ACCOUNT_HOME_ACCOUNT_ID = "account.home.account.id";
+        public static final String ACCOUNT_LOCAL_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_LOCAL_ACCOUNT_ID;
+
+        /**
+         * String of key for home account id.
+         */
+        public static final String ACCOUNT_HOME_ACCOUNT_ID = BrokerAccountDataName.ACCOUNT_HOME_ACCOUNT_ID;
 
         /**
          * String of key for account id token.
          */
-        public static final String ACCOUNT_IDTOKEN = "account.idtoken";
+        public static final String ACCOUNT_IDTOKEN = BrokerAccountDataName.ACCOUNT_IDTOKEN;
 
         /**
          * String of key for user id.
          */
-        public static final String ACCOUNT_USERINFO_USERID = "account.userinfo.userid";
+        public static final String ACCOUNT_USERINFO_USERID = BrokerAccountDataName.ACCOUNT_USERINFO_USERID;
 
         /**
          * String of key for user id list.
          */
-        public static final String ACCOUNT_USERINFO_USERID_LIST = "account.userinfo.userid.list";
+        public static final String ACCOUNT_USERINFO_USERID_LIST = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_LIST;
 
         /**
          * String of key for given name.
          */
-        public static final String ACCOUNT_USERINFO_GIVEN_NAME = "account.userinfo.given.name";
+        public static final String ACCOUNT_USERINFO_GIVEN_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_GIVEN_NAME;
 
         /**
          * String of key for family name.
          */
-        public static final String ACCOUNT_USERINFO_FAMILY_NAME = "account.userinfo.family.name";
+        public static final String ACCOUNT_USERINFO_FAMILY_NAME = BrokerAccountDataName.ACCOUNT_USERINFO_FAMILY_NAME;
 
         /**
          * String of key for identity provider.
          */
-        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = "account.userinfo.identity.provider";
+        public static final String ACCOUNT_USERINFO_IDENTITY_PROVIDER = BrokerAccountDataName.ACCOUNT_USERINFO_IDENTITY_PROVIDER;
 
         /**
          * String of key for displayable id.
          */
-        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = "account.userinfo.userid.displayable";
+        public static final String ACCOUNT_USERINFO_USERID_DISPLAYABLE = BrokerAccountDataName.ACCOUNT_USERINFO_USERID_DISPLAYABLE;
 
         /**
          * String of key for tenant id.
          */
-        public static final String ACCOUNT_USERINFO_TENANTID = "account.userinfo.tenantid";
+        public static final String ACCOUNT_USERINFO_TENANTID = BrokerAccountDataName.ACCOUNT_USERINFO_TENANTID;
 
         /**
          * String of key for environment.
          */
-        public static final String ACCOUNT_USERINFO_ENVIRONMENT = "account.userinfo.environment";
+        public static final String ACCOUNT_USERINFO_ENVIRONMENT = BrokerAccountDataName.ACCOUNT_USERINFO_ENVIRONMENT;
 
         /**
          * String of key for authority type.
          */
-        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = "account.userinfo.authority.type";
+        public static final String ACCOUNT_USERINFO_AUTHORITY_TYPE = BrokerAccountDataName.ACCOUNT_USERINFO_AUTHORITY_TYPE;
 
         /**
          * String of key for account id token record.
          */
-        public static final String ACCOUNT_USERINFO_ID_TOKEN = "account.userinfo.id.token";
+        public static final String ACCOUNT_USERINFO_ID_TOKEN = BrokerAccountDataName.ACCOUNT_USERINFO_ID_TOKEN;
 
         /**
          * String of key for adal version.
@@ -994,7 +924,7 @@ public final class AuthenticationConstants {
         /**
          * String of key for user data broker RT.
          */
-        public static final String USERDATA_BROKER_RT = "userdata.broker.rt";
+        public static final String USERDATA_BROKER_RT = BrokerAccountDataName.USERDATA_BROKER_RT;
 
         /**
          * String of key for user data broker PRT, RT.
@@ -1139,11 +1069,6 @@ public final class AuthenticationConstants {
         public static final String REDIRECT_PREFIX = "msauth";
 
         /**
-         * Device Registration redirect url host name
-         */
-        public static final String DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME = "wpj";
-
-        /**
          * Encoded delimiter for redirect.
          */
         public static final Object REDIRECT_DELIMETER_ENCODED = "%2C";
@@ -1182,16 +1107,6 @@ public final class AuthenticationConstants {
          * Activity name to launch company portal.
          */
         public static final String COMPANY_PORTAL_APP_LAUNCH_ACTIVITY_NAME = Broker.COMPANY_PORTAL_APP_PACKAGE_NAME + ".views.SplashActivity";
-
-        /**
-         * Redirect URI parameter key to get link to install broker
-         */
-        public static final String INSTALL_URL_KEY = "app_link";
-
-        /**
-         * Redirect URI parameter key to get the upn
-         */
-        public static final String INSTALL_UPN_KEY = "username";
 
         /**
          * PRT nonce.
@@ -1243,6 +1158,11 @@ public final class AuthenticationConstants {
          * This is used to determine what PublicClientApplication MSAL will return to its caller.
          */
         public static final String BROKER_DEVICE_MODE = "broker_device_mode";
+
+        /**
+         * String for generate shr result.
+         */
+        public static final String BROKER_GENERATE_SSO_TOKEN_RESULT = "broker_generate_sso_token";
 
         /**
          * String for generate shr result.
@@ -1710,29 +1630,12 @@ public final class AuthenticationConstants {
 
         public static final String AUTHORIZATION_FINAL_URL = "com.microsoft.identity.client.final.url";
 
-        public static final String RESULT_CODE = "com.microsoft.identity.client.result.code";
-
-        public static final String REQUEST_CODE = "com.microsoft.identity.client.request.code";
-
-        public static final String REQUEST_CANCELLED_BY_USER = "com.microsoft.identity.client.request.cancelled.by.user";
-
         public static final String WEB_VIEW_ZOOM_CONTROLS_ENABLED = "com.microsoft.identity.web.view.zoom.controls.enabled";
 
         public static final String WEB_VIEW_ZOOM_ENABLED = "com.microsoft.identity.web.view.zoom.enabled";
     }
 
     public static final class AuthorizationIntentAction {
-
-        /**
-         * an intent action specifying that the current interactive action should be cancelled.
-         */
-        public static final String CANCEL_INTERACTIVE_REQUEST = "cancel_interactive_request";
-
-        /**
-         * an intent action specifying that the intent contains authorization results.
-         */
-        public static final String RETURN_INTERACTIVE_REQUEST_RESULT = "return_interactive_request_result";
-
         /**
          * An intent action specifying that the authorization result redirect was returned to the application.
          */
@@ -1751,147 +1654,14 @@ public final class AuthenticationConstants {
         public static final String REFRESH_TO_CLOSE= "refresh_to_close";
     }
 
-    /**
-     * Represents the oauth2 error code.
-     */
-    public static final class OAuth2ErrorCode {
-        /**
-         * Oauth2 error code invalid_grant.
-         */
-        public static final String INVALID_GRANT = "invalid_grant";
-
-        /**
-         * Oauth2 error code unauthorized_client.
-         */
-        public static final String UNAUTHORIZED_CLIENT = "unauthorized_client";
-
-        /**
-         * The refresh token used to redeem access token is invalid and auth code request is needed.
-         * This is deprecated in V2, but is kept here due to this bug https://identitydivision.visualstudio.com/Engineering/_workitems/edit/597793.
-         */
-        public static final String INTERACTION_REQUIRED = "interaction_required";
-    }
-
-    /**
-     * Represents the oauth2 sub error code.
-     */
-    public static final class OAuth2SubErrorCode {
-
-        /**
-         * Oauth2 suberror code for unauthorized_client.
-         * <p>
-         * Suberror code when Intune App Protection Policy is required.
-         */
-        public static final String PROTECTION_POLICY_REQUIRED = "protection_policy_required";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Suberror code when token is expired or invalid for all resources
-         * and scopes and shouldn't be retried again as-is.
-         */
-        public static final String BAD_TOKEN = "bad_token";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Suberror code when failed to do device authentication during a token request.
-         * Broker should make a request to DRS to get the current device status and act accordingly.
-         */
-        public static final String DEVICE_AUTHENTICATION_FAILED = "device_authentication_failed";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * SubError code for cases when client not in the Microsoft first party family group
-         * redeems auth code or refresh token given to a client in the family.
-         */
-        public static final String CLIENT_MISMATCH = "client_mismatch";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code when a policy enforces token lifetime.
-         */
-        public static final String TOKEN_EXPIRED = "token_expired";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code which indicates a simple action is required by the end user, like MFA.
-         */
-        public static final String BASIC_ACTION = "basic_action";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code which indicates additional action is
-         * required that is in the user control, but is outside of the sign in session.
-         * For example, enroll in MDM or register install an app that uses Intune app protection.
-         */
-        public static final String ADDITIONAL_ACTION = "additional_action";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Conditional access suberror code where user will be shown an informational
-         * message with no immediate remediation steps.
-         * For example access was blocked due to location or the device is not domain joined.
-         */
-        public static final String MESSAGE_ONLY = "message_only";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * OpenId connect suberror code, where user consent is required.
-         */
-        public static final String CONSENT_REQUIRED = "consent_required";
-
-        /**
-         * Oauth2 suberror code for invalid_grant.
-         * <p>
-         * Custom sub error that notifies the user that their password has expired.
-         */
-        public static final String USER_PASSWORD_EXPIRED = "user_password_expired";
-    }
-
-    /**
-     * HTTP header fields.
-     */
-    public static final class HeaderField {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc1945#appendix-D.2.1">RFC-1945</a>
-         */
-        public static final String ACCEPT = "Accept";
-
-        /**
-         * Header used to track SPE Ring for telemetry.
-         */
-        public static final String X_MS_CLITELEM = "x-ms-clitelem";
-    }
-
-    /**
-     * Identifiers for file formats and format contents.
-     */
-    public static final class MediaType {
-
-        /**
-         * @see <a href="https://tools.ietf.org/html/rfc7159">RFC-7159</a>
-         */
-        public static final String APPLICATION_JSON = "application/json";
-    }
-
     public static final class TelemetryEvents {
         public static final String DECRYPTION_ERROR = "decryption_error_v2";
 
-        public static final String KEYCHAIN_WRITE_START = "keychain_write_v2_start";
-
-        public static final String KEYCHAIN_WRITE_END = "keychain_write_v2_end";
-
-        public static final String KEYCHAIN_READ_START = "keychain_read_v2_start";
-
-        public static final String KEYCHAIN_READ_END = "keychain_read_v2_end";
+        // The event names have been wrong. It should be keystore, not keychain.
+        public static final String KEYSTORE_WRITE_START = "keychain_write_v2_start";
+        public static final String KEYSTORE_WRITE_END = "keychain_write_v2_end";
+        public static final String KEYSTORE_READ_START = "keychain_read_v2_start";
+        public static final String KEYSTORE_READ_END = "keychain_read_v2_end";
 
         public static final String KEY_RETRIEVAL_START = "key_retrieval_v2_start";
 
@@ -1922,17 +1692,7 @@ public final class AuthenticationConstants {
         /**
          * The String representing the sdk version.
          */
-        public static final String VERSION = "x-client-Ver";
-
-        /**
-         * The String representing the MSAL SdkType.
-         */
-        public static final String PRODUCT_NAME_MSAL = "MSAL.Android";
-
-        /**
-         * The String representing the MSAL.CPP SdkType.
-         */
-        public static final String PRODUCT_NAME_MSAL_CPP = "MSAL.xplat.Android";
+        @Deprecated
+        public static final String VERSION = com.microsoft.identity.common.java.AuthenticationConstants.SdkPlatformFields.VERSION;
     }
-
 }

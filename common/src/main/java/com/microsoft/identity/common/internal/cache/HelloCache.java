@@ -32,6 +32,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.microsoft.identity.common.java.interfaces.IPlatformComponents;
+import com.microsoft.identity.common.java.interfaces.INameValueStorage;
 import com.microsoft.identity.common.logging.Logger;
 
 /**
@@ -49,7 +51,7 @@ public class HelloCache {
 
     private static final String SHARED_PREFERENCE_NAME = "com.microsoft.common.ipc.hello.cache";
 
-    private final SharedPreferencesFileManager mFileManager;
+    private final INameValueStorage<String> mFileManager;
     private final Context mContext;
     private final String mProtocolName;
     private final String mTargetAppPackageName;
@@ -69,15 +71,16 @@ public class HelloCache {
 
     /**
      * Default constructor.
-     *
-     * @param context              application context.
+     *  @param context              application context.
      * @param protocolName         name of the protocol that invokes hello().
      * @param targetAppPackageName package name of the app that this client will hello() with.
+     * @param components
      */
     public HelloCache(final @NonNull Context context,
                       final @NonNull String protocolName,
-                      final @NonNull String targetAppPackageName) {
-        mFileManager = SharedPreferencesFileManager.getSharedPreferences(context, SHARED_PREFERENCE_NAME, null);
+                      final @NonNull String targetAppPackageName,
+                      final @NonNull IPlatformComponents components) {
+        mFileManager = components.getNameValueStore(SHARED_PREFERENCE_NAME, String.class);
         mContext = context;
         mProtocolName = protocolName;
         mTargetAppPackageName = targetAppPackageName;
@@ -106,7 +109,7 @@ public class HelloCache {
             return null;
         }
 
-        return mFileManager.getString(key);
+        return mFileManager.get(key);
     }
 
     /**
@@ -134,7 +137,7 @@ public class HelloCache {
             return;
         }
 
-        mFileManager.putString(key, negotiatedProtocolVersion);
+        mFileManager.put(key, negotiatedProtocolVersion);
     }
 
     /**

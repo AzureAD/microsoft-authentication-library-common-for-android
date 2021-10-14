@@ -28,7 +28,7 @@ import android.os.IBinder;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.internal.result.ResultFuture;
+import com.microsoft.identity.common.java.util.ResultFuture;
 import com.microsoft.identity.common.logging.Logger;
 
 /**

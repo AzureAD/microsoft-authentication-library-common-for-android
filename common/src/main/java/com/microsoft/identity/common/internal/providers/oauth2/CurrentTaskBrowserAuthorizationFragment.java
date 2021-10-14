@@ -26,37 +26,26 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.util.StringExtensions;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
 import com.microsoft.identity.common.internal.telemetry.Telemetry;
 import com.microsoft.identity.common.internal.telemetry.events.UiEndEvent;
 import com.microsoft.identity.common.internal.util.FindBugsConstants;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.exception.ErrorStrings;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.util.UrlUtil;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTHORIZATION_FINAL_URL;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.INSTALL_URL_KEY;
-import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.Broker.REDIRECT_PREFIX;
-import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR;
-import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_DESCRIPTION;
-import static com.microsoft.identity.common.internal.providers.oauth2.AuthorizationResultFactory.ERROR_SUBCODE;
 import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentAction.REDIRECT_RETURNED_ACTION;
+import static com.microsoft.identity.common.adal.internal.AuthenticationConstants.AuthorizationIntentKey.AUTH_INTENT;
+import static com.microsoft.identity.common.java.AuthenticationConstants.AAD.APP_LINK_KEY;
 
 /**
  * Authorization fragment with customTabs or browsers.
@@ -147,9 +136,8 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
                 // This is by design of Android OS.
                 startActivity(mAuthIntent);
             } else {
-                final Intent resultIntent = new Intent();
-                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL));
-                sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION, resultIntent);
+                sendResult(RawAuthorizationResult.fromException(
+                        new ClientException(ErrorStrings.AUTHORIZATION_INTENT_IS_NULL)));
                 finish();
             }
         } else {
@@ -159,76 +147,29 @@ public class CurrentTaskBrowserAuthorizationFragment extends CurrentTaskAuthoriz
 
     public void completeAuthorizationInBrowserFlow(@NonNull final String customTabResponseUri) {
         Logger.info(TAG, null, "Received redirect from customTab/browser.");
-        final Intent resultIntent = createResultIntent(customTabResponseUri);
-        final Map<String, String> urlQueryParameters = StringExtensions.getUrlParameters(customTabResponseUri);
-        final String userName = urlQueryParameters.get(AuthenticationConstants.Broker.INSTALL_UPN_KEY);
 
-        if (isDeviceRegisterRedirect(customTabResponseUri) && !TextUtils.isEmpty(userName)) {
-            Logger.info(TAG, " Device needs to be registered, sending BROWSER_CODE_DEVICE_REGISTER");
-            Logger.infoPII(TAG, "Device Registration triggered for user: " + userName);
-            resultIntent.putExtra(AuthenticationConstants.Broker.INSTALL_UPN_KEY, userName);
-            sendResult(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_DEVICE_REGISTER,
-                    resultIntent
-            );
-            return;
+        final RawAuthorizationResult data = RawAuthorizationResult.fromRedirectUri(customTabResponseUri);
+        switch (data.getResultCode()){
+            case BROKER_INSTALLATION_TRIGGERED:
+                final Map<String, String> urlQueryParameters = UrlUtil.getParameters(data.getAuthorizationFinalUri());
+                final String appLink = urlQueryParameters.get(APP_LINK_KEY);
+                final Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
+                startActivity(browserIntent);
+                break;
+
+            case COMPLETED:
+                Telemetry.emit(new UiEndEvent().isUiComplete());
+                break;
+
+            case CANCELLED:
+                Telemetry.emit(new UiEndEvent().isUserCancelled());
+                break;
+
+            default:
+                break;
         }
 
-        if (urlQueryParameters.containsKey(INSTALL_URL_KEY)) {
-            final String appLink = urlQueryParameters.get(INSTALL_URL_KEY);
-            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(appLink));
-            startActivity(browserIntent);
-            Logger.info(TAG, "Return to caller with BROKER_REQUEST_RESUME, and waiting for result.");
-            sendResult(AuthenticationConstants.UIResponse.BROKER_REQUEST_RESUME, resultIntent);
-        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AUTHORIZATION_FINAL_URL))) {
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_COMPLETE, resultIntent);
-            Telemetry.emit(new UiEndEvent().isUiComplete());
-        } else if (!StringUtil.isEmpty(resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE))
-                && resultIntent.getStringExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE).equalsIgnoreCase("cancel")) {
-            //when the user click the "cancel" button in the UI, server will send the the redirect uri with "cancel" error sub-code and redirects back to the calling app
-            Telemetry.emit(new UiEndEvent().isUserCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_CANCEL, resultIntent);
-        } else {
-            Telemetry.emit(new UiEndEvent().isUiCancelled());
-            sendResult(AuthenticationConstants.UIResponse.BROWSER_CODE_ERROR, resultIntent);
-        }
-
+        sendResult(data);
         finish();
-    }
-
-    private Intent createResultIntent(@NonNull final String url) {
-        Intent resultIntent = new Intent();
-        final Map<String, String> parameters = StringExtensions.getUrlParameters(url);
-        if (!StringExtensions.isNullOrBlank(parameters.get(ERROR))) {
-            Logger.info(TAG, "Sending intent to cancel authentication activity");
-
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_CODE, parameters.get(ERROR));
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_SUBCODE, parameters.get(ERROR_SUBCODE));
-
-            // Fallback logic on error_subcode when error_description is not provided.
-            // When error is "login_required", redirect url has error_description.
-            // When error is  "access_denied", redirect url has  error_subcode.
-            if (!StringUtil.isEmpty(parameters.get(ERROR_DESCRIPTION))) {
-                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_DESCRIPTION));
-            } else {
-                resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_ERROR_MESSAGE, parameters.get(ERROR_SUBCODE));
-            }
-        } else {
-            Logger.info(TAG, "It is pointing to redirect. Final url can be processed to get the code or error.");
-            resultIntent.putExtra(AUTHORIZATION_FINAL_URL, url);
-        }
-
-        return resultIntent;
-    }
-
-    private boolean isDeviceRegisterRedirect(@NonNull final String redirectUrl) {
-        try {
-            URI uri = new URI(redirectUrl);
-            return REDIRECT_PREFIX.equalsIgnoreCase(uri.getScheme()) &&
-                    DEVICE_REGISTRATION_REDIRECT_URI_HOSTNAME.equalsIgnoreCase(uri.getHost());
-        } catch (URISyntaxException e) {
-            Logger.error(TAG, "Uri construction failed", e);
-            return false;
-        }
     }
 }

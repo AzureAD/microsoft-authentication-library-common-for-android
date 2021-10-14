@@ -22,7 +22,7 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.providers.microsoft.azureactivedirectoryb2c;
 
-import com.microsoft.identity.common.internal.providers.oauth2.TokenResponse;
+import com.microsoft.identity.common.java.providers.oauth2.TokenResponse;
 
 /**
  * The Azure Active Directory B2C Token Response.

@@ -25,7 +25,7 @@ package com.microsoft.identity.common.adal.internal.util;
 import android.text.TextUtils;
 
 import com.microsoft.identity.common.adal.internal.net.HttpWebResponse;
-import com.microsoft.identity.common.internal.net.HttpResponse;
+import com.microsoft.identity.common.java.net.HttpResponse;
 import com.microsoft.identity.common.logging.Logger;
 
 import org.json.JSONArray;
@@ -122,26 +122,6 @@ public final class HashMapExtensions {
      * @throws JSONException
      */
     public static HashMap<String, String> getJsonResponse(HttpWebResponse webResponse) throws JSONException {
-        final HashMap<String, String> response = new HashMap<>();
-        if (webResponse != null && !TextUtils.isEmpty(webResponse.getBody())) {
-            JSONObject jsonObject = new JSONObject(webResponse.getBody());
-            Iterator<?> i = jsonObject.keys();
-            while (i.hasNext()) {
-                String key = (String) i.next();
-                response.put(key, jsonObject.getString(key));
-            }
-        }
-        return response;
-    }
-
-    /**
-     * get key value pairs from response.
-     *
-     * @param webResponse {@link HttpResponse} to convert to a map
-     * @return HashMap
-     * @throws JSONException
-     */
-    public static HashMap<String, String> getJsonResponse(HttpResponse webResponse) throws JSONException {
         final HashMap<String, String> response = new HashMap<>();
         if (webResponse != null && !TextUtils.isEmpty(webResponse.getBody())) {
             JSONObject jsonObject = new JSONObject(webResponse.getBody());

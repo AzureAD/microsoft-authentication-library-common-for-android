@@ -29,6 +29,7 @@ import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.UiSelector;
 
+import com.microsoft.identity.client.ui.automation.interaction.UiResponse;
 import com.microsoft.identity.client.ui.automation.logging.Logger;
 import com.microsoft.identity.client.ui.automation.utils.UiAutomatorUtils;
 
@@ -133,8 +134,8 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
 
     @Override
     public void confirmEnrollPageReceived() {
-        final UiObject enrollBtn = UiAutomatorUtils.obtainUiObjectWithText("Enroll now");
-        Assert.assertTrue("Enroll Page appears.", enrollBtn.exists());
+        final UiObject enrollmentHeader = UiAutomatorUtils.obtainUiObjectWithText("Set up your device to get access");
+        Assert.assertTrue("Enroll Page appears.", enrollmentHeader.exists());
     }
 
     @Override
@@ -156,5 +157,20 @@ public class AadLoginComponentHandler implements IMicrosoftStsLoginComponentHand
         Assert.assertTrue("Register page appears.", registerBtn.exists());
 
         handleNextButton();
+    }
+
+    @Override
+    public void handleStaySignedIn(final UiResponse staySignedInResponse) {
+        final UiObject staySignedInView = UiAutomatorUtils.obtainUiObjectWithText("Stay signed in?");
+
+        if (!staySignedInView.waitForExists(FIND_UI_ELEMENT_TIMEOUT)) {
+            fail("Stay signed in page did not show up");
+        }
+
+        if (staySignedInResponse == UiResponse.ACCEPT) {
+            handleNextButton();
+        } else {
+            handleBackButton();
+        }
     }
 }

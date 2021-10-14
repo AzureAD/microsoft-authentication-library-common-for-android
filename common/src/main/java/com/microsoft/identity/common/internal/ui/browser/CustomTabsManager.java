@@ -113,7 +113,7 @@ public class CustomTabsManager {
      * Method to bind Browser {@link androidx.browser.customtabs.CustomTabsService}.
      * Waits until the {@link CustomTabsServiceConnection} is connected.
      */
-    public synchronized boolean bind(final @NonNull Context context, @NonNull String browserPackage) {
+    public synchronized boolean bind(final @Nullable Context context, @NonNull String browserPackage) {
         // Initiate the service-bind action
         if (context == null
                 || !CustomTabsClient.bindCustomTabsService(context, browserPackage, mCustomTabsServiceConnection)) {

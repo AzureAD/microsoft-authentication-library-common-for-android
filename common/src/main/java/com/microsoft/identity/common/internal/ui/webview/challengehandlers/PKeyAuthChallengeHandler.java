@@ -22,31 +22,22 @@
 // THE SOFTWARE.
 package com.microsoft.identity.common.internal.ui.webview.challengehandlers;
 
-import android.content.Intent;
 import android.webkit.WebView;
 
 import androidx.annotation.NonNull;
 
-import com.microsoft.identity.common.WarningType;
-import com.microsoft.identity.common.adal.internal.AuthenticationConstants;
-import com.microsoft.identity.common.adal.internal.AuthenticationSettings;
-import com.microsoft.identity.common.adal.internal.IDeviceCertificate;
-import com.microsoft.identity.common.adal.internal.JWSBuilder;
-import com.microsoft.identity.common.exception.ClientException;
-import com.microsoft.identity.common.exception.ErrorStrings;
-import com.microsoft.identity.common.internal.util.StringUtil;
+import com.microsoft.identity.common.java.challengehandlers.PKeyAuthChallenge;
+import com.microsoft.identity.common.java.exception.ClientException;
+import com.microsoft.identity.common.java.providers.RawAuthorizationResult;
+import com.microsoft.identity.common.java.ui.webview.authorization.IAuthorizationCompletionCallback;
 import com.microsoft.identity.common.logging.Logger;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.security.interfaces.RSAPrivateKey;
-import java.util.HashMap;
 import java.util.Map;
 
 public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAuthChallenge, Void> {
     private static final String TAG = PKeyAuthChallengeHandler.class.getSimpleName();
-    private WebView mWebView;
-    private IAuthorizationCompletionCallback mChallengeCallback;
+    private final WebView mWebView;
+    private final IAuthorizationCompletionCallback mChallengeCallback;
 
     /**
      * @param view
@@ -65,7 +56,7 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
 
         try {
             //Get no device cert response
-            final Map<String, String> header = getChallengeHeader(pKeyAuthChallenge);
+            final Map<String, String> header = pKeyAuthChallenge.getChallengeHeader();
 
             mWebView.post(new Runnable() {
                 @Override
@@ -77,77 +68,22 @@ public final class PKeyAuthChallengeHandler implements IChallengeHandler<PKeyAut
                     mWebView.loadUrl(loadUrl, header);
                 }
             });
-        } catch (final ClientException e) {
+        } catch (final Throwable e) {
             // It should return error code and finish the
             // activity, so that onActivityResult implementation
             // returns errors to callback.
-            Intent resultIntent = new Intent();
-            resultIntent.putExtra(AuthenticationConstants.Browser.RESPONSE_AUTHENTICATION_EXCEPTION, e);
             //TODO log the request info
             mChallengeCallback.onChallengeResponseReceived(
-                    AuthenticationConstants.UIResponse.BROWSER_CODE_AUTHENTICATION_EXCEPTION,
-                    resultIntent
+                    RawAuthorizationResult.fromThrowable(e)
             );
-        }
-
-        return null;
-    }
-
-    public static Map<String, String> getChallengeHeader(final PKeyAuthChallenge pKeyAuthChallenge) throws ClientException {
-        String authorizationHeaderValue = String.format("%s Context=\"%s\",Version=\"%s\"",
-                AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, pKeyAuthChallenge.getContext(),
-                pKeyAuthChallenge.getVersion());
-
-        // If not device cert exists, alias or private key will not exist on the device
-        // Suppressing unchecked warnings due to the generic type not provided in the object returned from method getDeviceCertificateProxy
-        @SuppressWarnings(WarningType.unchecked_warning)
-        Class<IDeviceCertificate> certClazz = (Class<IDeviceCertificate>) AuthenticationSettings.INSTANCE
-                .getDeviceCertificateProxy();
-
-        if (certClazz != null) {
-            IDeviceCertificate deviceCertProxy = getWPJAPIInstance(certClazz);
-            if (deviceCertProxy.isValidIssuer(pKeyAuthChallenge.getCertAuthorities())
-                    || StringUtil.equalsIgnoreCase(deviceCertProxy.getThumbPrint(), pKeyAuthChallenge.getThumbprint())) {
-                RSAPrivateKey privateKey = deviceCertProxy.getRSAPrivateKey();
-                if (privateKey == null) {
-                    throw new ClientException(ErrorStrings.KEY_CHAIN_PRIVATE_KEY_EXCEPTION);
-                }
-                final String jwt = (new JWSBuilder()).generateSignedJWT(
-                        pKeyAuthChallenge.getNonce(),
-                        pKeyAuthChallenge.getSubmitUrl(),
-                        privateKey,
-                        deviceCertProxy.getRSAPublicKey(),
-                        deviceCertProxy.getCertificate());
-                authorizationHeaderValue = String.format(
-                        "%s AuthToken=\"%s\",Context=\"%s\",Version=\"%s\"",
-                        AuthenticationConstants.Broker.CHALLENGE_RESPONSE_TYPE, jwt,
-                        pKeyAuthChallenge.getContext(), pKeyAuthChallenge.getVersion());
-                Logger.info(TAG, "Receive challenge response. ");
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            if (e instanceof Error) {
+                throw (Error) e;
             }
         }
 
-        final Map<String, String> headers = new HashMap<>();
-        headers.put(AuthenticationConstants.Broker.CHALLENGE_RESPONSE_HEADER,
-                authorizationHeaderValue);
-        return headers;
-    }
-
-    private static IDeviceCertificate getWPJAPIInstance(Class<IDeviceCertificate> certClazz)
-            throws ClientException {
-        final IDeviceCertificate deviceCertProxy;
-        final Constructor<?> constructor;
-        try {
-            constructor = certClazz.getDeclaredConstructor();
-            deviceCertProxy = (IDeviceCertificate) constructor.newInstance((Object[]) null);
-        } catch (NoSuchMethodException | InstantiationException | IllegalAccessException
-                | IllegalArgumentException | InvocationTargetException e) {
-            throw new ClientException(ErrorStrings.DEVICE_CERTIFICATE_API_EXCEPTION,
-                    "WPJ Api constructor is not defined", e);
-        }
-        return deviceCertProxy;
-    }
-
-    enum RequestField {
-        Nonce, CertAuthorities, Version, SubmitUrl, Context, CertThumbprint
+        return null;
     }
 }

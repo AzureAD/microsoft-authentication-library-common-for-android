@@ -31,7 +31,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.microsoft.identity.common.adal.internal.AuthenticationConstants.OAuth2;
-import com.microsoft.identity.common.internal.cache.ADALTokenCacheItem;
+import com.microsoft.identity.common.adal.internal.cache.ADALTokenCacheItem;
 
 import java.lang.reflect.Type;
 

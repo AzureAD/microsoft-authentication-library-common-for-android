@@ -46,7 +46,7 @@ public class LabDeviceHelper {
 
         try {
             final CustomSuccessResponse customSuccessResponse;
-            customSuccessResponse = deleteDeviceApi.delete(upn, deviceId);
+            customSuccessResponse = deleteDeviceApi.apiDeleteDeviceDelete(upn, deviceId);
 
             return customSuccessResponse.getResult().contains(
                     deviceId + ", successfully deleted from AAD."
