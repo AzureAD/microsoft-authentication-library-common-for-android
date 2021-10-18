@@ -62,11 +62,11 @@ public class BrokerSupportRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                Log.i(TAG, "Applying rule....");
+                Logger.i(TAG, "Applying rule....");
                 SupportedBrokers supportedBrokersAnnotation = description.getAnnotation(SupportedBrokers.class);
 
                 if (supportedBrokersAnnotation == null) {
-                    Log.i(TAG, "Does not Received any supported broker annotation..");
+                    Logger.i(TAG, "Does not Received any supported broker annotation..");
                     // if the test didn't have the SupportedBrokers annotation, then we see if the
                     // class had that annotation and we try to honor that
                     supportedBrokersAnnotation = description.getTestClass().getAnnotation(SupportedBrokers.class);
@@ -75,9 +75,7 @@ public class BrokerSupportRule implements TestRule {
                 if (supportedBrokersAnnotation != null) {
                     final List<Class<? extends ITestBroker>> supportedBrokerClasses =
                             Arrays.asList(supportedBrokersAnnotation.brokers());
-
-                    Log.i(TAG, "Received supported broker annotation with value: " + supportedBrokerClasses.toString());
-                    Log.i(TAG, "Broker type: " + mBroker.getClass());
+                    Logger.i(TAG, "Received supported broker annotation with value: " + supportedBrokerClasses.toString());
                     Assume.assumeTrue(
                             "Ignoring test as not applicable with supplied broker",
                             supportedBrokerClasses.contains(mBroker.getClass())
