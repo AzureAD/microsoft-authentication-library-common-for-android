@@ -622,7 +622,7 @@ public class AuthenticationConstants {
      * Aliases for broadcasting events
      * to be used with {@link LocalBroadcaster}
      */
-    public static final class LobalBroadcasterAliases {
+    public static final class LocalBroadcasterAliases {
 
         /**
          * an alias specifying that the current authorization action should be cancelled.
@@ -630,7 +630,7 @@ public class AuthenticationConstants {
         public static final String CANCEL_AUTHORIZATION_REQUEST = "cancel_authorization_request";
 
         /**
-         * an alias that the intent contains authorization results.
+         * An alias that the intent contains authorization results, was formerly RETURN_INTERACTIVE_REQUEST_RESULT.
          */
         public static final String RETURN_AUTHORIZATION_REQUEST_RESULT = "return_authorization_request_result";
 
