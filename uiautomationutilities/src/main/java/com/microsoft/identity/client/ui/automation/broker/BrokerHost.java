@@ -263,7 +263,11 @@ public class BrokerHost extends AbstractTestBroker {
     @Nullable
     private final String basicButtonHandler(@NonNull final String resourceButtonId, @NonNull final String textId){
         launch(); // launch Broker Host app
-
+        try {
+        Thread.sleep(500);
+        } catch (InterruptedException e) {
+            throw new AssertionError(e);
+        }
         if (shouldHandleFirstRun) {
             handleFirstRun(); // handle first run experience
         }
