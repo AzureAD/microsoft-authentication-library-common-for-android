@@ -244,7 +244,7 @@ public class BrokerValidator {
         return certificates;
     }
 
-    private void verifyCertificateChain(final List<X509Certificate> certificates)
+    public static void verifyCertificateChain(final List<X509Certificate> certificates)
             throws GeneralSecurityException, ClientException {
         // create certificate chain, find the self signed cert first and chain all the way back
         // to the signer cert. Also perform certificate signing validation when chaining them back.
@@ -260,7 +260,7 @@ public class BrokerValidator {
     }
 
     // Will throw if there is more than one self-signed cert found.
-    private X509Certificate getSelfSignedCert(final List<X509Certificate> certs)
+    private static X509Certificate getSelfSignedCert(final List<X509Certificate> certs)
             throws ClientException {
         int count = 0;
         X509Certificate selfSignedCert = null;
