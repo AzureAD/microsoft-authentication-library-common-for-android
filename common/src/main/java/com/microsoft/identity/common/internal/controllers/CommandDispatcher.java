@@ -395,7 +395,7 @@ public class CommandDispatcher {
             if (result != null && result instanceof AcquireTokenResult) {
                 //Handler handler, final BaseCommand command, BaseException baseException, AcquireTokenResult result
                 commandResult = getCommandResultFromTokenResult(baseException, (AcquireTokenResult) result,
-                        command.getParameters().getCorrelationId());
+                        command.getParameters());
             } else {
                 //For commands that don't return an AcquireTokenResult
                 commandResult = new CommandResult(CommandResult.ResultStatus.COMPLETED, result,
@@ -509,18 +509,19 @@ public class CommandDispatcher {
      * @param result
      */
     private static CommandResult getCommandResultFromTokenResult(BaseException baseException,
-                                                                 @NonNull AcquireTokenResult result, @NonNull String correlationId) {
+                                                                 @NonNull AcquireTokenResult result,
+                                                                 @NonNull CommandParameters commandParameters) {
         //Token Commands
         if (result.getSucceeded()) {
             return new CommandResult(CommandResult.ResultStatus.COMPLETED,
-                    result.getLocalAuthenticationResult(), correlationId);
+                    result.getLocalAuthenticationResult(), commandParameters.getCorrelationId());
         } else {
             //Get MsalException from Authorization and/or Token Error Response
-            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result);
+            baseException = ExceptionAdapter.exceptionFromAcquireTokenResult(result, commandParameters);
             if (baseException instanceof UserCancelException) {
-                return new CommandResult(CommandResult.ResultStatus.CANCEL, null, correlationId);
+                return new CommandResult(CommandResult.ResultStatus.CANCEL, null, commandParameters.getCorrelationId());
             } else {
-                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, correlationId);
+                return new CommandResult(CommandResult.ResultStatus.ERROR, baseException, commandParameters.getCorrelationId());
             }
         }
     }

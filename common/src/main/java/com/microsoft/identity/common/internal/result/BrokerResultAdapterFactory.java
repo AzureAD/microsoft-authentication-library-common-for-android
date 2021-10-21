@@ -23,6 +23,7 @@
 package com.microsoft.identity.common.internal.result;
 
 import com.microsoft.identity.common.internal.request.SdkType;
+import com.microsoft.identity.common.logging.Logger;
 
 /**
  * Class which returns creates {@link IBrokerResultAdapter }  based on {@link SdkType}
@@ -32,8 +33,10 @@ public class BrokerResultAdapterFactory {
     public static IBrokerResultAdapter getBrokerResultAdapter(final SdkType sdkType) {
 
         if (sdkType == SdkType.ADAL) {
+            Logger.verbose("BrokerResultAdapterFactory", "Using AdalBrokerResultAdapter");
             return new AdalBrokerResultAdapter();
         } else {
+            Logger.verbose("BrokerResultAdapterFactory", "Using MsalBrokerResultAdapter");
             return new MsalBrokerResultAdapter();
         }
     }
